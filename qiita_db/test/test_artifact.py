@@ -49,8 +49,7 @@ class ArtifactTestsReadOnly(TestCase):
                ['Demultiplexed', 'Demultiplexed and QC sequences'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None],
-               ['distance_matrix', 'Distance matrix holding pairwise '
-                                   'distance between samples'],
+               ['beta_div_plots', 'Qiime 1 beta diversity results'],
                ['rarefaction_curves', 'Rarefaction curves'],
                ['taxa_summary', 'Taxa summary plots']]
         self.assertItemsEqual(obs, exp)
@@ -64,8 +63,7 @@ class ArtifactTestsReadOnly(TestCase):
                ['Demultiplexed', 'Demultiplexed and QC sequences'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None],
-               ['distance_matrix', 'Distance matrix holding pairwise '
-                                   'distance between samples'],
+               ['beta_div_plots', 'Qiime 1 beta diversity results'],
                ['rarefaction_curves', 'Rarefaction curves'],
                ['taxa_summary', 'Taxa summary plots'],
                ['NewType', 'NewTypeDesc']]

@@ -108,8 +108,7 @@ class TestArtifactAPIReadOnly(TestCase):
                          ['FASTQ', None],
                          ['SFF', None],
                          ['per_sample_FASTQ', None],
-                         ['distance_matrix', 'Distance matrix holding pairwise'
-                                             ' distance between samples'],
+                         ['beta_div_plots', 'Qiime 1 beta diversity results'],
                          ['rarefaction_curves', 'Rarefaction curves'],
                          ['taxa_summary', 'Taxa summary plots']]}
 

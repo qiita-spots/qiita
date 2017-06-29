@@ -55,13 +55,13 @@ class TestProcessingAPIReadOnly(TestCase):
         exp = {'status': 'success',
                'message': '',
                'commands': [
-                    {'command': 'Summarize Taxa', 'id': 11,
+                    {'command': 'Summarize Taxa', 'id': 9,
                      'output': [['taxa_summary', 'taxa_summary']]},
-                    {'command': 'Beta Diversity', 'id': 12,
-                     'output': [['distance_matrix', 'distance_matrix']]},
-                    {'command': 'Alpha Rarefaction', 'id': 13,
+                    {'command': 'Beta Diversity', 'id': 10,
+                     'output': [['distance_matrix', 'beta_div_plots']]},
+                    {'command': 'Alpha Rarefaction', 'id': 11,
                      'output': [['rarefaction_curves', 'rarefaction_curves']]},
-                    {'command': 'Single Rarefaction', 'id': 14,
+                    {'command': 'Single Rarefaction', 'id': 12,
                      'output': [['rarefied_table', 'BIOM']]}]}
         # since the order of the commands can change, test them separately
         self.assertItemsEqual(obs.pop('commands'), exp.pop('commands'))
