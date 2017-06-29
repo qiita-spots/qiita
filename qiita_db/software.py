@@ -360,6 +360,16 @@ class Command(qdb.base.QiitaObject):
                     sql_params = [[software.id, atid]
                                   for atid in supported_types]
                     qdb.sql_connection.TRN.add(sql, sql_params, many=True)
+                # If this is the validate command, we need to add the
+                # provenance parameter. This is used internally, that's why
+                # we are adding it here
+                if name == 'Validate':
+                    sql = """INSERT INTO qiita.command_parameter
+                                (command_id, parameter_name, parameter_type,
+                                 required, default_value)
+                             VALUES (%s, 'provenance', 'string', 'False', NULL)
+                             """
+                    qdb.sql_connection.TRN.add(sql, [c_id])
 
             # Add the outputs to the command
             if outputs:
