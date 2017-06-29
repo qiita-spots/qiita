@@ -272,7 +272,7 @@ class Command(qdb.base.QiitaObject):
             ptype, dflt = vals
             # Check that the type is one of the supported types
             supported_types = ['string', 'integer', 'float', 'reference',
-                               'boolean', 'prep_template']
+                               'boolean', 'prep_template', 'analysis']
             if ptype not in supported_types and not ptype.startswith(
                     ('choice', 'mchoice', 'artifact')):
                 supported_types.extend(['choice', 'mchoice', 'artifact'])
@@ -348,12 +348,18 @@ class Command(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(sql_type, sql_params, many=True)
                 supported_types.extend([atid for _, atid in sql_params])
 
+            # If the software type is 'artifact definition', there are a couple
+            # of extra steps
             if software.type == 'artifact definition':
-                sql = """INSERT INTO qiita.software_artifact_type
-                                (software_id, artifact_type_id)
-                            VALUES (%s, %s)"""
-                sql_params = [[software.id, atid] for atid in supported_types]
-                qdb.sql_connection.TRN.add(sql, sql_params, many=True)
+                # If supported types is not empty, link the software with these
+                # types
+                if supported_types:
+                    sql = """INSERT INTO qiita.software_artifact_type
+                                    (software_id, artifact_type_id)
+                                VALUES (%s, %s)"""
+                    sql_params = [[software.id, atid]
+                                  for atid in supported_types]
+                    qdb.sql_connection.TRN.add(sql, sql_params, many=True)
 
             # Add the outputs to the command
             if outputs:
