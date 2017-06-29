@@ -27,7 +27,7 @@ from qiita_db.software import Command, Parameters, DefaultParameters
 from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
-    artifact_delete_req, artifact_types_get_req, artifact_post_req,
+    artifact_types_get_req, artifact_post_req,
     artifact_summary_get_request, artifact_summary_post_request,
     artifact_patch_request, artifact_get_prep_req)
 
@@ -234,7 +234,7 @@ class TestArtifactAPI(TestCase):
         with open(fp, 'w') as f:
             f.write('<b>HTML TEST - not important</b>\n')
         a = Artifact(1)
-        a.html_summary_fp = fp
+        a.set_html_summary(fp)
         self._files_to_remove.extend([fp, a.html_summary_fp[1]])
         exp_files.append(
             (a.html_summary_fp[0],
@@ -391,22 +391,6 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'error',
                'message': 'Operation "add" not supported. Current supported '
                           'operations: replace'}
-        self.assertEqual(obs, exp)
-
-    def test_artifact_delete_req(self):
-        obs = artifact_delete_req(self.artifact.id, 'test@foo.bar')
-        exp = {'status': 'success', 'message': ''}
-        self.assertEqual(obs, exp)
-
-        # This is needed so the clean up works - this is a distributed system
-        # so we need to make sure that all processes are done before we reset
-        # the test database
-        wait_for_prep_information_job(1)
-
-    def test_artifact_delete_req_no_access(self):
-        obs = artifact_delete_req(self.artifact.id, 'demo@microbio.me')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
     def test_artifact_get_prep_req(self):

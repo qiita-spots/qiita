@@ -145,7 +145,7 @@ class TestBaseHandlersUtils(TestCase):
         with open(fp, 'w') as f:
             f.write('<b>HTML TEST - not important</b>\n')
         a = Artifact(1)
-        a.html_summary_fp = fp
+        a.set_html_summary(fp)
         self._files_to_remove.extend([fp, a.html_summary_fp[1]])
         exp_files.append(
             (a.html_summary_fp[0],
@@ -375,7 +375,7 @@ class TestBaseHandlers(TestHandlerBase):
         with open(fp, 'w') as f:
             f.write('<b>HTML TEST - not important</b>\n')
         a = Artifact(1)
-        a.html_summary_fp = fp
+        a.set_html_summary(fp)
         self._files_to_remove.extend([fp, a.html_summary_fp[1]])
 
         summary = relpath(a.html_summary_fp[1], qiita_config.base_data_dir)

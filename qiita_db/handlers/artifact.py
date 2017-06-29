@@ -131,8 +131,17 @@ class ArtifactHandler(OauthBaseHandler):
                 raise HTTPError(400, 'Incorrect path parameter value')
             else:
                 artifact = _get_artifact(artifact_id)
+
                 try:
-                    artifact.html_summary_fp = req_value
+                    html_data = loads(req_value)
+                    html_fp = html_data['html']
+                    html_dir = html_data['dir']
+                except ValueError:
+                    html_fp = req_value
+                    html_dir = None
+
+                try:
+                    artifact.set_html_summary(html_fp, html_dir)
                 except Exception as e:
                     raise HTTPError(500, str(e))
         else:
