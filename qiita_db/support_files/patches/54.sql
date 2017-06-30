@@ -120,4 +120,4 @@ BEGIN
 END $do$;
 
 -- Add a new filepath type
-INSERT INTO qiita.filepath_type (filepath_type) VALUES ('html_summary_dir');
+INSERT INTO qiita.filepath_type (filepath_type) VALUES ('html_summary_dir'), ('qzv');
