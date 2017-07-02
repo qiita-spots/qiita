@@ -19,7 +19,7 @@ from qiita_core.testing import wait_for_prep_information_job
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.artifact import Artifact
 from qiita_db.study import Study
-from qiita_db.util import get_mountpoint, get_db_files_base_dir
+from qiita_db.util import get_mountpoint
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBWarning
 
@@ -158,28 +158,20 @@ class ArtifactGetSamplesTest(TestHandlerBase):
 
 class ArtifactGetBIOMInfoTest(TestHandlerBase):
     def test_get(self):
-        bdir = get_db_files_base_dir()
-
         response = self.get('/artifact/info/', {'ids[]': [6, 7]})
         self.assertEqual(response.code, 200)
-        exp = (
-            {'status': 'success', 'msg': '', 'data': {
-                '7': '',
-                '6': {
-                    'files': [[12, join(bdir, (
-                        'processed_data/1_study_1001_closed_reference_'
-                        'otu_table_Silva.biom'))]],
-                    'target_subfragment': ['V4'],
-                    'algorithm': ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ (Defaults with reverse '
-                                  'complement mapping file barcodes)'),
-                    'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
-                    'parameters': {'reference': 2, 'similarity': 0.97,
-                                   'sortmerna_e_value': 1,
-                                   'sortmerna_max_pos': 10000,
-                                   'input_data': 2, 'threads': 1,
-                                   'sortmerna_coverage': 0.97},
-                    'name': 'BIOM'}}})
+        exp = {'status': 'success', 'msg': '', 'data': [{
+            'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
+            'target_subfragment': ['V4'], 'artifact_id': 6, 'data_type': '16S',
+            'timestamp': '2012-10-02 17:30:00',
+            'algorithm': 'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults',
+            'parameters': {'reference': 2, 'similarity': 0.97,
+                           'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
+                           'input_data': 2, 'threads': 1,
+                           'sortmerna_coverage': 0.97}, 'name': 'BIOM'}, {
+            'files': [], 'target_subfragment': ['V4'], 'artifact_id': 7,
+            'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
+            'algorithm': '', 'parameters': {}, 'name': 'BIOM'}]}
         self.assertEqual(loads(response.body), exp)
 
 
