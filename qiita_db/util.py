@@ -1268,7 +1268,8 @@ def generate_study_list(study_ids, public_only=False):
                 FROM qiita.study
                 LEFT JOIN qiita.study_person ON (
                     study_person_id=principal_investigator_id)
-                WHERE study_id IN %s ORDER BY study_id"""
+                WHERE study_id IN %s
+                ORDER BY study_id"""
         qdb.sql_connection.TRN.add(sql, [tuple(study_ids)])
         infolist = []
         for info in qdb.sql_connection.TRN.execute_fetchindex():
@@ -1378,7 +1379,7 @@ def get_artifacts_bioms_information(artifact_ids):
                     main_query.root_id = pt.artifact_id)
             )
             SELECT * FROM has_target_subfragment
-            ORDER BY command_id, data_type
+            ORDER BY command_id, data_type, artifact_id
             """
 
         sql_params = """
