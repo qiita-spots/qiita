@@ -246,6 +246,8 @@ class TestArtifactAPI(TestCase):
                  'artifact_id': 7, 'data_type': '16S',
                  'timestamp': '2012-10-02 17:30:00', 'parameters': {},
                  'name': 'BIOM'}]}
+        print obs
+        print exp
         self.assertEqual(obs, exp)
 
     def test_artifact_post_req(self):
