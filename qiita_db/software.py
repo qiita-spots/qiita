@@ -272,7 +272,7 @@ class Command(qdb.base.QiitaObject):
             ptype, dflt = vals
             # Check that the type is one of the supported types
             supported_types = ['string', 'integer', 'float', 'reference',
-                               'boolean', 'prep_template']
+                               'boolean', 'prep_template', 'analysis']
             if ptype not in supported_types and not ptype.startswith(
                     ('choice', 'mchoice', 'artifact')):
                 supported_types.extend(['choice', 'mchoice', 'artifact'])
@@ -337,6 +337,7 @@ class Command(qdb.base.QiitaObject):
             sql_type = """INSERT INTO qiita.parameter_artifact_type
                             (command_parameter_id, artifact_type_id)
                           VALUES (%s, %s)"""
+            supported_types = []
             for pname, p_type, atypes in sql_artifact_params:
                 sql_params = [c_id, pname, p_type, True, None]
                 qdb.sql_connection.TRN.add(sql, sql_params)
@@ -345,6 +346,30 @@ class Command(qdb.base.QiitaObject):
                     [pid, qdb.util.convert_to_id(at, 'artifact_type')]
                     for at in atypes]
                 qdb.sql_connection.TRN.add(sql_type, sql_params, many=True)
+                supported_types.extend([atid for _, atid in sql_params])
+
+            # If the software type is 'artifact definition', there are a couple
+            # of extra steps
+            if software.type == 'artifact definition':
+                # If supported types is not empty, link the software with these
+                # types
+                if supported_types:
+                    sql = """INSERT INTO qiita.software_artifact_type
+                                    (software_id, artifact_type_id)
+                                VALUES (%s, %s)"""
+                    sql_params = [[software.id, atid]
+                                  for atid in supported_types]
+                    qdb.sql_connection.TRN.add(sql, sql_params, many=True)
+                # If this is the validate command, we need to add the
+                # provenance parameter. This is used internally, that's why
+                # we are adding it here
+                if name == 'Validate':
+                    sql = """INSERT INTO qiita.command_parameter
+                                (command_id, parameter_name, parameter_type,
+                                 required, default_value)
+                             VALUES (%s, 'provenance', 'string', 'False', NULL)
+                             """
+                    qdb.sql_connection.TRN.add(sql, [c_id])
 
             # Add the outputs to the command
             if outputs:

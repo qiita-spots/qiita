@@ -117,4 +117,7 @@ BEGIN
     INSERT INTO qiita.command_parameter (command_id, parameter_name, parameter_type, required, default_value)
         VALUES (baf_cmd_id, 'analysis', 'analysis', True, NULL),
                (baf_cmd_id, 'merge_dup_sample_ids', 'bool', False, 'False');
-END $do$
+END $do$;
+
+-- Add a new filepath type
+INSERT INTO qiita.filepath_type (filepath_type) VALUES ('html_summary_dir'), ('qzv');

@@ -10,7 +10,10 @@ from __future__ import division
 from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
-from os import remove
+from os import remove, makedirs
+from os.path import isfile, exists
+from shutil import rmtree
+from functools import partial
 
 import networkx as nx
 
@@ -149,6 +152,19 @@ class Artifact(qdb.base.QiitaObject):
                 [at_id, qdb.util.convert_to_id(fpt, 'filepath_type'), req]
                 for fpt, req in filepath_types]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+
+            # When creating a type is expected that a new mountpoint is created
+            # for that type
+            sql = """INSERT INTO qiita.data_directory
+                        (data_type, mountpoint, subdirectory, active)
+                        VALUES (%s, %s, %s, %s)"""
+            qdb.sql_connection.TRN.add(sql, [name, name, True, True])
+
+            # We are intersted in the dirpath
+            dp = qdb.util.get_mountpoint(name)[0][1]
+            if not exists(dp):
+                makedirs(dp)
+
             qdb.sql_connection.TRN.execute()
 
     @classmethod
@@ -941,41 +957,55 @@ class Artifact(qdb.base.QiitaObject):
 
         return res
 
-    @html_summary_fp.setter
-    def html_summary_fp(self, value):
+    def set_html_summary(self, html_fp, support_dir=None):
         """Sets the HTML summary of the artifact
 
         Parameters
         ----------
-        value : str
+        html_fp : str
             Path to the new HTML summary
+        support_dir : str
+            Path to the directory containing any support files needed by
+            the HTML file
         """
         with qdb.sql_connection.TRN:
-            current = self.html_summary_fp
-            if current:
+            if self.html_summary_fp:
                 # Delete the current HTML summary
-                fp_id = current[0]
-                fp = current[1]
+                to_delete_ids = []
+                to_delete_fps = []
+                for fp_id, fp, fp_type in self.filepaths:
+                    if fp_type in ('html_summary', 'html_summary_dir'):
+                        to_delete_ids.append([fp_id])
+                        to_delete_fps.append(fp)
                 # From the artifact_filepath table
                 sql = """DELETE FROM qiita.artifact_filepath
                          WHERE filepath_id = %s"""
-                qdb.sql_connection.TRN.add(sql, [fp_id])
+                qdb.sql_connection.TRN.add(sql, to_delete_ids, many=True)
                 # From the filepath table
                 sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
-                qdb.sql_connection.TRN.add(sql, [fp_id])
+                qdb.sql_connection.TRN.add(sql, to_delete_ids, many=True)
                 # And from the filesystem only after the transaction is
                 # successfully completed (after commit)
-                qdb.sql_connection.TRN.add_post_commit_func(remove, fp)
+
+                def path_cleaner(fp):
+                    if isfile(fp):
+                        remove(fp)
+                    else:
+                        rmtree(fp)
+                qdb.sql_connection.TRN.add_post_commit_func(
+                    partial(map, path_cleaner, to_delete_fps))
 
             # Add the new HTML summary
+            filepaths = [(html_fp, 'html_summary')]
+            if support_dir is not None:
+                filepaths.append((support_dir, 'html_summary_dir'))
             fp_ids = qdb.util.insert_filepaths(
-                [(value, 'html_summary')], self.id, self.artifact_type,
-                "filepath")
+                filepaths, self.id, self.artifact_type, "filepath")
             sql = """INSERT INTO qiita.artifact_filepath
                         (artifact_id, filepath_id)
                      VALUES (%s, %s)"""
-            # We only inserted a single filepath, so using index 0
-            qdb.sql_connection.TRN.add(sql, [self.id, fp_ids[0]])
+            sql_args = [[self.id, id_] for id_ in fp_ids]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 
     @property

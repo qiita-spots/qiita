@@ -17,7 +17,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import (copy_raw_data, delete_artifact)
+from qiita_ware.dispatchable import copy_raw_data
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -530,37 +530,6 @@ def artifact_graph_get_req(artifact_id, direction, user_id):
     return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
             'node_labels': node_labels,
             'status': 'success',
-            'message': ''}
-
-
-def artifact_delete_req(artifact_id, user_id):
-    """Deletes the artifact
-
-    Parameters
-    ----------
-    artifact_id : int
-        Artifact being acted on
-    user_id : str
-        The user requesting the action
-
-    Returns
-    -------
-    dict
-        Status of action, in the form {'status': status, 'message': msg}
-        status: status of the action, either success or error
-        message: Human readable message for status
-    """
-    pd = Artifact(int(artifact_id))
-    pt_id = pd.prep_templates[0].id
-    access_error = check_access(pd.study.id, user_id)
-    if access_error:
-        return access_error
-
-    job_id = safe_submit(user_id, delete_artifact, artifact_id)
-    r_client.set(PREP_TEMPLATE_KEY_FORMAT % pt_id,
-                 dumps({'job_id': job_id, 'is_qiita_job': False}))
-
-    return {'status': 'success',
             'message': ''}
 
 

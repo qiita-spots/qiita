@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from tempfile import mkstemp
+from tempfile import mkstemp, mkdtemp
 from datetime import datetime
 from os import close, remove
 from os.path import exists, join, basename
@@ -49,8 +49,7 @@ class ArtifactTestsReadOnly(TestCase):
                ['Demultiplexed', 'Demultiplexed and QC sequences'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None],
-               ['distance_matrix', 'Distance matrix holding pairwise '
-                                   'distance between samples'],
+               ['beta_div_plots', 'Qiime 1 beta diversity results'],
                ['rarefaction_curves', 'Rarefaction curves'],
                ['taxa_summary', 'Taxa summary plots']]
         self.assertItemsEqual(obs, exp)
@@ -64,12 +63,12 @@ class ArtifactTestsReadOnly(TestCase):
                ['Demultiplexed', 'Demultiplexed and QC sequences'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None],
-               ['distance_matrix', 'Distance matrix holding pairwise '
-                                   'distance between samples'],
+               ['beta_div_plots', 'Qiime 1 beta diversity results'],
                ['rarefaction_curves', 'Rarefaction curves'],
                ['taxa_summary', 'Taxa summary plots'],
                ['NewType', 'NewTypeDesc']]
         self.assertItemsEqual(obs, exp)
+        self.assertTrue(exists(qdb.util.get_mountpoint('NewType')[0][1]))
 
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
             qdb.artifact.Artifact.create_type(
@@ -1129,7 +1128,7 @@ class ArtifactTests(TestCase):
         path_builder = partial(join, db_fastq_dir, str(a.id))
 
         # Check the setter works when the artifact does not have the summary
-        a.html_summary_fp = fp
+        a.set_html_summary(fp)
         exp1 = path_builder(basename(fp))
         self.assertEqual(a.html_summary_fp[1], exp1)
 
@@ -1137,11 +1136,32 @@ class ArtifactTests(TestCase):
         close(fd)
         self._clean_up_files.append(fp)
 
+        dp = mkdtemp()
+        self._clean_up_files.append(dp)
+
         # Check the setter works when the artifact already has a summary
-        a.html_summary_fp = fp
+        # and with a directory
+        a.set_html_summary(fp, support_dir=dp)
         exp2 = path_builder(basename(fp))
         self.assertEqual(a.html_summary_fp[1], exp2)
         self.assertFalse(exists(exp1))
+
+        # Check that the setter correctly removes the directory if a new
+        # summary is added. Magic number 0. There is only one html_summary_dir
+        # added on the previous test
+        old_dir_fp = [old_fp for _, old_fp, fptype in a.filepaths
+                      if fptype == 'html_summary_dir'][0]
+        fd, fp = mkstemp(suffix='.html')
+        close(fd)
+        self._clean_up_files.append(fp)
+        a.set_html_summary(fp)
+        exp3 = path_builder(basename(fp))
+        self.assertEqual(a.html_summary_fp[1], exp3)
+        self.assertFalse(exists(exp2))
+        self.assertFalse(exists(old_dir_fp))
+        summary_dir = [old_fp for _, old_fp, fptype in a.filepaths
+                       if fptype == 'html_summary_dir']
+        self.assertEqual(summary_dir, [])
 
     def test_descendants_with_jobs_one_element(self):
         artifact = qdb.artifact.Artifact.create(
