@@ -14,9 +14,8 @@ from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
     artifact_graph_get_req, artifact_types_get_req, artifact_post_req,
-    artifact_status_put_req, artifact_get_req,
-    artifact_summary_get_request, artifact_summary_post_request,
-    artifact_get_prep_req, artifact_get_biom_info)
+    artifact_status_put_req, artifact_get_req, artifact_get_prep_req,
+    artifact_get_biom_info)
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 
@@ -58,23 +57,6 @@ class NewArtifactHandler(BaseHandler):
             self.current_user.id, files, artifact_type, name, prep_id,
             artifact_id)
         self.write(artifact)
-
-
-class ArtifactSummaryAJAX(BaseHandler):
-    @authenticated
-    def get(self):
-        artifact_id = self.get_argument('artifact_id')
-        user_id = self.current_user.id
-        res = artifact_summary_get_request(user_id, artifact_id)
-        res['artifact_id'] = artifact_id
-        res['user_id'] = user_id
-        self.render("study_ajax/artifact_summary.html", **res)
-
-    @authenticated
-    def post(self):
-        artifact_id = self.get_argument('artifact_id')
-        res = artifact_summary_post_request(self.current_user.id, artifact_id)
-        self.write(res)
 
 
 class ArtifactGetSamples(BaseHandler):
