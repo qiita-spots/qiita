@@ -864,11 +864,9 @@ class UtilTests(TestCase):
              'target_subfragment': ['V4'],
              'algorithm': '', 'artifact_id': 7, 'data_type': '16S',
              'parameters': {}, 'name': 'BIOM'},
-            {'files': ['1_analysis_18S.biom'], 'target_subfragment': [],
+            {'files': ['biom_table.biom'], 'target_subfragment': [],
              'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
              'parameters': {}, 'name': 'noname'}]
-        print obs
-        print exp
         for o, e in zip(obs, exp):
             self.assertDictEqual(o, e)
 
