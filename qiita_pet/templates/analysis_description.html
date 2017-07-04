@@ -57,7 +57,7 @@
   function createJobHTML(data, target) {
     target = "#" + target;
     $(target).empty();
-    var keys = ['job_id', 'job_status', 'job_step'];
+    var keys = ['job_id', 'job_status'];
     var d = $("<div>").appendTo(target);
     for(var i in keys) {
       if (data[keys[i]]) {

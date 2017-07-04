@@ -129,7 +129,7 @@
       type: 'PATCH',
       data: {'op': 'add', 'path': workflow_id, 'value': JSON.stringify(value)},
       success: function(data) {
-        if(data.stats == 'error') {
+        if(data.status == 'error') {
           bootstrapAlert(data.message, "danger");
         }
         else {
@@ -177,6 +177,9 @@
    *
    */
   function add_job() {
+    show_loading('graph-network-div');
+    show_loading('processing-info-div');
+
     var command_id = $("#command-sel").val();
     var params_id = $("#params-sel").val();
     var params = {};

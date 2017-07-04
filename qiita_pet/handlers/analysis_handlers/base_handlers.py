@@ -21,7 +21,6 @@ from qiita_db.analysis import Analysis
 
 class CreateAnalysisHandler(BaseHandler):
     @authenticated
-    @execute_as_transaction
     def post(self):
         name = self.get_argument('name')
         desc = self.get_argument('description')
