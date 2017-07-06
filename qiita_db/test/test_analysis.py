@@ -1,17 +1,15 @@
 from unittest import TestCase, main
-from tempfile import mkstemp
-from os import remove, close
-from os.path import exists, join
+from os import remove
+from os.path import exists, join, basename
 from shutil import move
 
-from future.utils import viewitems
 from biom import load_table
-import pandas as pd
 from pandas.util.testing import assert_frame_equal
 from functools import partial
 import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.testing import wait_for_processing_job
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
@@ -33,7 +31,6 @@ class TestAnalysis(TestCase):
 
         self.get_fp = partial(join, self.fp)
         self.biom_fp = self.get_fp("1_analysis_dt-18S_r-1_c-3.biom")
-        self.map_fp = self.get_fp("1_analysis_mapping.txt")
         self._old_portal = qiita_config.portal
         self.table_fp = None
 
@@ -42,11 +39,16 @@ class TestAnalysis(TestCase):
             "not_merged_samples.txt")
         self.map_exp_fp = self.get_fp("1_analysis_mapping_exp.txt")
 
+        from glob import glob
+        conf_files = glob(join(qiita_config.plugin_dir, "*.conf"))
+        for i, fp in enumerate(conf_files):
+            qdb.software.Software.from_file(fp, update=True)
+
     def tearDown(self):
+        self.analysis.artifacts[0].visibility = 'private'
+
         qiita_config.portal = self.portal
         with open(self.biom_fp, 'w') as f:
-                f.write("")
-        with open(self.map_fp, 'w') as f:
                 f.write("")
 
         fp = self.get_fp('testfile.txt')
@@ -61,8 +63,22 @@ class TestAnalysis(TestCase):
 
         qiita_config.portal = self._old_portal
 
-    def _create_analyses_with_samples(self):
+    def _wait_for_jobs(self, analysis):
+        for j in analysis.jobs:
+            wait_for_processing_job(j.id)
+            if j.status == 'error':
+                print j.log.msg
+
+    def _create_analyses_with_samples(self, user='demo@microbio.me',
+                                      merge=False):
         """Aux function to create an analysis with samples
+
+        Parameters
+        ----------
+        user : qiita_db.user.User, optional
+            The user email to attach the analysis. Default: demo@microbio.me
+        merge : bool, optional
+            Merge duplicated ids or not
 
         Returns
         -------
@@ -73,42 +89,26 @@ class TestAnalysis(TestCase):
         Replicates the samples contained in Analysis(1) at the moment of
         creation of this function (September 15, 2016)
         """
+        user = qdb.user.User(user)
+        dflt_analysis = user.default_analysis
+        dflt_analysis.add_samples(
+            {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                 '1.SKM9.640192', '1.SKM4.640180']})
         new = qdb.analysis.Analysis.create(
-            qdb.user.User('demo@microbio.me'), "newAnalysis",
-            "A New Analysis")
+            user, "newAnalysis", "A New Analysis", from_default=True,
+            merge_duplicated_sample_ids=merge)
 
-        new.add_samples({4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                             '1.SKM9.640192', '1.SKM4.640180'],
-                         5: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                             '1.SKM9.640192', '1.SKM4.640180'],
-                         6: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                             '1.SKM9.640192', '1.SKM4.640180']})
+        self._wait_for_jobs(new)
         return new
 
-    def test_lock_check(self):
-        for status in ["queued", "running", "public", "completed",
-                       "error"]:
-            new = qdb.analysis.Analysis.create(
-                qdb.user.User("admin@foo.bar"), "newAnalysis",
-                "A New Analysis")
-            new.status = status
-            with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-                new._lock_check()
+    def test_lock_samples(self):
+        dflt = qdb.user.User('demo@microbio.me').default_analysis
+        # The default analysis can have samples added/removed
+        dflt._lock_samples()
 
-    def test_lock_check_ok(self):
-        analysis = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis",
-            "A New Analysis")
-        analysis.status = "in_construction"
-        analysis._lock_check()
-
-    def test_status_setter_checks(self):
-        analysis = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis",
-            "A New Analysis")
-        analysis.status = "public"
-        with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            analysis.status = "queued"
+        QE = qdb.exceptions
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
+            qdb.analysis.Analysis(1)._lock_samples()
 
     def test_get_by_status(self):
         qiita_config.portal = 'QIITA'
@@ -119,21 +119,35 @@ class TestAnalysis(TestCase):
             qdb.analysis.Analysis.get_by_status('public'), set([]))
 
         qiita_config.portal = 'QIITA'
-        analysis = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis",
-            "A New Analysis")
-        analysis.status = 'public'
+        self.analysis.artifacts[0].visibility = 'public'
+
         self.assertEqual(qdb.analysis.Analysis.get_by_status('public'),
-                         {analysis})
+                         {self.analysis})
         qiita_config.portal = 'EMP'
         self.assertEqual(
             qdb.analysis.Analysis.get_by_status('public'), set([]))
 
+    def test_can_be_publicized(self):
+        analysis = qdb.analysis.Analysis(1)
+        self.assertFalse(analysis.can_be_publicized)
+        a4 = qdb.artifact.Artifact(4)
+
+        a4.visibility = 'public'
+        self.assertTrue(analysis.can_be_publicized)
+
+        a4.visibility = 'private'
+        self.assertFalse(analysis.can_be_publicized)
+
+    def test_add_artifact(self):
+        obs = self._create_analyses_with_samples()
+        exp = qdb.artifact.Artifact(4)
+        obs.add_artifact(exp)
+        self.assertIn(exp, obs.artifacts)
+
     def test_has_access_public(self):
-        analysis = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis",
-            "A New Analysis")
-        analysis.status = 'public'
+        analysis = self._create_analyses_with_samples("admin@foo.bar")
+        analysis.artifacts[0].visibility = 'public'
+
         qiita_config.portal = 'QIITA'
         self.assertTrue(
             analysis.has_access(qdb.user.User("demo@microbio.me")))
@@ -161,36 +175,12 @@ class TestAnalysis(TestCase):
         self.assertFalse(
             self.analysis.has_access(qdb.user.User("demo@microbio.me")))
 
-    def test_create(self):
-        with qdb.sql_connection.TRN:
-            sql = "SELECT NOW()"
-            qdb.sql_connection.TRN.add(sql)
-            time1 = qdb.sql_connection.TRN.execute_fetchlast()
-
-        new_id = qdb.util.get_count("qiita.analysis") + 1
-        user = qdb.user.User("admin@foo.bar")
-        obs = qdb.analysis.Analysis.create(user, "newAnalysis",
-                                           "A New Analysis")
-
-        self.assertEqual(obs.id, new_id)
-        self.assertEqual(obs.owner, user)
-        self.assertEqual(obs.name, "newAnalysis")
-        self.assertEqual(obs._portals, ["QIITA"])
-        self.assertLess(time1, obs.timestamp)
-        self.assertEqual(obs.description, "A New Analysis")
-        self.assertEqual(obs.samples, {})
-        self.assertEqual(obs.dropped_samples, {})
-        self.assertEqual(obs.data_types, [])
-        self.assertEqual(obs.shared_with, [])
-        self.assertEqual(obs.all_associated_filepath_ids, set())
-        self.assertEqual(obs.biom_tables, {})
-        self.assertEqual(obs.mapping_file, None)
-        self.assertEqual(obs.tgz, None)
-        with self.assertRaises(ValueError):
-            obs.step
-        self.assertEqual(obs.jobs, [])
-        self.assertEqual(obs.pmid, None)
-        self.assertEqual(obs.status, "in_construction")
+    def test_can_edit(self):
+        a = qdb.analysis.Analysis(1)
+        self.assertTrue(a.can_edit(qdb.user.User('test@foo.bar')))
+        self.assertTrue(a.can_edit(qdb.user.User('shared@foo.bar')))
+        self.assertTrue(a.can_edit(qdb.user.User('admin@foo.bar')))
+        self.assertFalse(a.can_edit(qdb.user.User('demo@microbio.me')))
 
     def test_create_nonqiita_portal(self):
         qiita_config.portal = "EMP"
@@ -200,46 +190,39 @@ class TestAnalysis(TestCase):
         # make sure portal is associated
         self.assertItemsEqual(obs._portals, ["QIITA", "EMP"])
 
-    def test_create_parent(self):
-        new_id = qdb.util.get_count("qiita.analysis") + 1
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
-        self.assertEqual(new.id, new_id)
-
-        with qdb.sql_connection.TRN:
-            sql = "SELECT * FROM qiita.analysis_chain WHERE child_id = %s"
-            qdb.sql_connection.TRN.add(sql, [new_id])
-            obs = qdb.sql_connection.TRN.execute_fetchindex()
-            self.assertEqual(obs, [[1, new_id]])
-
     def test_create_from_default(self):
-        new_id = qdb.util.get_count("qiita.analysis") + 1
-        owner = qdb.user.User("test@foo.bar")
-        new = qdb.analysis.Analysis.create(
-            owner, "newAnalysis", "A New Analysis", from_default=True)
-        self.assertEqual(new.id, new_id)
-        self.assertEqual(new.step, 3)
+        with qdb.sql_connection.TRN:
+            sql = "SELECT NOW()"
+            qdb.sql_connection.TRN.add(sql)
+            time1 = qdb.sql_connection.TRN.execute_fetchlast()
 
-        # Make sure samples were transfered properly
-        # Magic number 4 -> the id of the artifact where the samples are taken
-        # from
-        self.assertEqual(owner.default_analysis.samples, {})
-        obs = new.samples
-        self.assertEqual(obs.keys(), [4])
-        exp = ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
-               '1.SKM4.640180']
-        self.assertItemsEqual(obs[4], exp)
+        owner = qdb.user.User("test@foo.bar")
+        obs = qdb.analysis.Analysis.create(
+            owner, "newAnalysis", "A New Analysis", from_default=True)
+
+        self.assertEqual(obs.owner, owner)
+        self.assertEqual(obs.name, "newAnalysis")
+        self.assertEqual(obs._portals, ["QIITA"])
+        self.assertLess(time1, obs.timestamp)
+        self.assertEqual(obs.description, "A New Analysis")
+        self.assertItemsEqual(obs.samples, [4])
+        self.assertItemsEqual(
+            obs.samples[4], ['1.SKD8.640184', '1.SKB7.640196',
+                             '1.SKM9.640192', '1.SKM4.640180'])
+        self.assertEqual(obs.data_types, ['18S'])
+        self.assertEqual(obs.shared_with, [])
+        self.assertEqual(obs.mapping_file, None)
+        self.assertEqual(obs.tgz, None)
+        self.assertNotEqual(obs.jobs, [])
+        self.assertEqual(obs.pmid, None)
 
     def test_exists(self):
         qiita_config.portal = 'QIITA'
         self.assertTrue(qdb.analysis.Analysis.exists(1))
-        new_id = qdb.util.get_count("qiita.analysis") + 1
-        self.assertFalse(qdb.analysis.Analysis.exists(new_id))
+        self.assertFalse(qdb.analysis.Analysis.exists(1000))
         qiita_config.portal = 'EMP'
         self.assertFalse(qdb.analysis.Analysis.exists(1))
-        new_id = qdb.util.get_count("qiita.analysis") + 1
-        self.assertFalse(qdb.analysis.Analysis.exists(new_id))
+        self.assertFalse(qdb.analysis.Analysis.exists(1000))
 
     def test_delete(self):
         # successful delete
@@ -251,8 +234,13 @@ class TestAnalysis(TestCase):
         self.assertFalse(qdb.analysis.Analysis.exists(new.id))
 
         # no possible to delete
-        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+        QE = qdb.exceptions
+        with self.assertRaises(QE.QiitaDBUnknownIDError):
             qdb.analysis.Analysis.delete(new.id)
+
+        # Analysis with artifacts
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
+            qdb.analysis.Analysis.delete(1)
 
     def test_retrieve_owner(self):
         self.assertEqual(self.analysis.owner, qdb.user.User("test@foo.bar"))
@@ -276,116 +264,6 @@ class TestAnalysis(TestCase):
                    '1.SKM9.640192', '1.SKM4.640180']}
         self.assertItemsEqual(self.analysis.samples, exp)
 
-    def test_retrieve_dropped_samples(self):
-        # Create and populate second study to do test with
-        info = {
-            "timeseries_type_id": 1,
-            "metadata_complete": True,
-            "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
-            "study_alias": "FCM",
-            "study_description": "Microbiome of people who eat nothing but "
-                                 "fried chicken",
-            "study_abstract": "Exploring how a high fat diet changes the "
-                              "gut microbiome",
-            "emp_person_id": qdb.study.StudyPerson(2),
-            "principal_investigator_id": qdb.study.StudyPerson(3),
-            "lab_person_id": qdb.study.StudyPerson(1)
-        }
-        metadata_dict = {
-            'SKB8.640193': {'physical_specimen_location': 'location1',
-                            'physical_specimen_remaining': True,
-                            'dna_extracted': True,
-                            'sample_type': 'type1',
-                            'required_sample_info_status': 'received',
-                            'collection_timestamp':
-                            '2014-05-29 12:24:51',
-                            'host_subject_id': 'NotIdentified',
-                            'Description': 'Test Sample 1',
-                            'str_column': 'Value for sample 1',
-                            'latitude': 42.42,
-                            'longitude': 41.41,
-                            'taxon_id': 9606,
-                            'scientific_name': 'homo sapiens'},
-            'SKD8.640184': {'physical_specimen_location': 'location1',
-                            'physical_specimen_remaining': True,
-                            'dna_extracted': True,
-                            'sample_type': 'type1',
-                            'required_sample_info_status': 'received',
-                            'collection_timestamp':
-                            '2014-05-29 12:24:51',
-                            'host_subject_id': 'NotIdentified',
-                            'Description': 'Test Sample 2',
-                            'str_column': 'Value for sample 2',
-                            'latitude': 4.2,
-                            'longitude': 1.1,
-                            'taxon_id': 9606,
-                            'scientific_name': 'homo sapiens'},
-            'SKB7.640196': {'physical_specimen_location': 'location1',
-                            'physical_specimen_remaining': True,
-                            'dna_extracted': True,
-                            'sample_type': 'type1',
-                            'required_sample_info_status': 'received',
-                            'collection_timestamp':
-                            '2014-05-29 12:24:51',
-                            'host_subject_id': 'NotIdentified',
-                            'Description': 'Test Sample 3',
-                            'str_column': 'Value for sample 3',
-                            'latitude': 4.8,
-                            'longitude': 4.41,
-                            'taxon_id': 9606,
-                            'scientific_name': 'homo sapiens'},
-            }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
-                                          dtype=str)
-
-        study = qdb.study.Study.create(
-            qdb.user.User("test@foo.bar"), "Test study 2", [1], info)
-
-        qdb.metadata_template.sample_template.SampleTemplate.create(
-            metadata, study)
-
-        metadata = pd.DataFrame.from_dict(
-            {'SKB8.640193': {'barcode': 'AAAAAAAAAAAA'},
-             'SKD8.640184': {'barcode': 'AAAAAAAAAAAC'},
-             'SKB7.640196': {'barcode': 'AAAAAAAAAAAG'}},
-            orient='index', dtype=str)
-
-        pt = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.prep_template.PrepTemplate.create,
-            metadata, study, "16S")
-
-        mp = qdb.util.get_mountpoint("processed_data")[0][1]
-        study_fp = join(mp, "2_study_1001_closed_reference_otu_table.biom")
-        artifact = qdb.artifact.Artifact.create([(study_fp, 7)], "BIOM",
-                                                prep_template=pt)
-        self.table_fp = artifact.filepaths[0][1]
-
-        new = self._create_analyses_with_samples()
-
-        new.add_samples({artifact.id: ['%s.SKB8.640193' % study.id,
-                                       '%s.SKD8.640184' % study.id,
-                                       '%s.SKB7.640196' % study.id]})
-
-        grouped_samples = {'18S.1.3': [
-            (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
-            (artifact.id, ['%s.SKB8.640193' % study.id,
-                           '%s.SKD8.640184' % study.id])]}
-        new._build_biom_tables(grouped_samples, 10000)
-        exp = {4: {'1.SKM4.640180', '1.SKM9.640192'},
-               5: {'1.SKM4.640180', '1.SKM9.640192'},
-               6: {'1.SKM4.640180', '1.SKM9.640192'},
-               artifact.id: {'%s.SKB7.640196' % study.id}}
-        self.assertEqual(new.dropped_samples, exp)
-
-    def test_empty_analysis(self):
-        analysis = qdb.analysis.Analysis(2)
-        # These should be empty as the analysis hasn't started
-        self.assertEqual(analysis.biom_tables, {})
-        self.assertEqual(analysis.dropped_samples, {})
-
     def test_retrieve_portal(self):
         self.assertEqual(self.analysis._portals, ["QIITA"])
 
@@ -397,80 +275,15 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.shared_with,
                          [qdb.user.User("shared@foo.bar")])
 
-    def test_retrieve_biom_tables(self):
-        exp = {"18S": join(self.fp, "1_analysis_18S.biom")}
-        self.assertEqual(self.analysis.biom_tables, exp)
-
-    def test_all_associated_filepaths(self):
-        exp = {13, 14, 15, 16}
-        self.assertItemsEqual(self.analysis.all_associated_filepath_ids, exp)
-
-    def test_retrieve_biom_tables_empty(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
-        self.assertEqual(new.biom_tables, {})
-
-    def test_set_step(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis",
-            "A New Analysis", qdb.analysis.Analysis(1))
-        new.step = 2
-        self.assertEqual(new.step, 2)
-
-    def test_set_step_twice(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
-        new.step = 2
-        new.step = 4
-        self.assertEqual(new.step, 4)
-
-    def test_retrieve_step(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
-        new.step = 2
-        self.assertEqual(new.step, 2)
-
-    def test_retrieve_step_new(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
-        with self.assertRaises(ValueError):
-            new.step
-
-    def test_retrieve_step_locked(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
-        new.status = "public"
-        with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            new.step = 3
-
     def test_retrieve_jobs(self):
-        self.assertEqual(self.analysis.jobs,
-                         [qdb.job.Job(1), qdb.job.Job(2)])
-
-    def test_retrieve_jobs_none(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
-        self.assertEqual(new.jobs, [])
+        self.assertEqual(self.analysis.jobs, [])
 
     def test_retrieve_pmid(self):
         self.assertEqual(self.analysis.pmid, "121112")
 
-    def test_retrieve_pmid_none(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
-        self.assertEqual(new.pmid, None)
-
     def test_set_pmid(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
+        new = self._create_analyses_with_samples("admin@foo.bar")
+        self.assertIsNone(new.pmid)
         new.pmid = "11211221212213"
         self.assertEqual(new.pmid, "11211221212213")
 
@@ -480,19 +293,10 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, exp)
         self.assertTrue(exists(exp))
 
-    def test_retrieve_mapping_file_none(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
-        obs = new.mapping_file
-        self.assertEqual(obs, None)
-
     def test_retrieve_tgz(self):
         # generating here as the tgz is only generated once the analysis runs
         # to completion (un)successfully
-        analysis = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
+        analysis = self._create_analyses_with_samples("admin@foo.bar")
         fp = self.get_fp('test.tgz')
         with open(fp, 'w') as f:
             f.write('')
@@ -502,33 +306,6 @@ class TestAnalysis(TestCase):
     def test_retrieve_tgz_none(self):
         self.assertIsNone(self.analysis.tgz)
 
-    def test_generate_tgz(self):
-        analysis = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
-            qdb.analysis.Analysis(1))
-
-        # Raises an error because there are no files attached to it
-        with self.assertRaises(qdb.exceptions.QiitaDBError):
-            analysis.generate_tgz()
-
-        analysis_mp = qdb.util.get_mountpoint('analysis')[0][1]
-        fd, fp = mkstemp(dir=analysis_mp, suffix='.txt')
-        close(fd)
-        with open(fp, 'w') as f:
-            f.write("")
-        analysis._add_file(fp, 'plain_text')
-        obs_sout, obs_serr, obs_return = analysis.generate_tgz()
-        # not testing obs_serr as it will change depending on the system's tar
-        # version
-        self.assertEqual(obs_sout, "")
-        self.assertEqual(obs_return, 0)
-
-    # def test_get_parent(self):
-    #     raise NotImplementedError()
-
-    # def test_get_children(self):
-    #     raise NotImplementedError()
-
     def test_summary_data(self):
         obs = self.analysis.summary_data()
         exp = {'studies': 1,
@@ -536,16 +313,20 @@ class TestAnalysis(TestCase):
                'samples': 5}
         self.assertEqual(obs, exp)
 
-    def test_add_samples(self):
-        new = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis")
-        new.add_samples({1: ['1.SKB8.640193', '1.SKD5.640186']})
-        obs = new.samples
-        self.assertEqual(obs.keys(), [1])
-        self.assertItemsEqual(obs[1], ['1.SKB8.640193', '1.SKD5.640186'])
+    def test_add_remove_samples(self):
+        analysis = qdb.user.User('shared@foo.bar').default_analysis
+        exp = {4: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
+                   '1.SKM4.640180', '1.SKB8.640193'],
+               5: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
+                   '1.SKM4.640180', '1.SKB8.640193'],
+               6: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
+                   '1.SKM4.640180', '1.SKB8.640193']}
+        analysis.add_samples(exp)
+        obs = analysis.samples
+        self.assertItemsEqual(obs.keys(), exp.keys())
+        for k in obs:
+            self.assertItemsEqual(obs[k], exp[k])
 
-    def test_remove_samples_both(self):
-        analysis = self._create_analyses_with_samples()
         analysis.remove_samples(artifacts=(qdb.artifact.Artifact(4), ),
                                 samples=('1.SKB8.640193', ))
         exp = {4: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
@@ -559,36 +340,24 @@ class TestAnalysis(TestCase):
         for k in obs:
             self.assertItemsEqual(obs[k], exp[k])
 
-    def test_remove_samples_samples(self):
-        analysis = self._create_analyses_with_samples()
         analysis.remove_samples(samples=('1.SKD8.640184', ))
-        exp = {4: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
-                   '1.SKM4.640180'],
+        exp = {4: ['1.SKB7.640196', '1.SKM9.640192', '1.SKM4.640180'],
                5: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
                    '1.SKM4.640180'],
                6: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
                    '1.SKM4.640180']}
         self.assertItemsEqual(analysis.samples, exp)
 
-    def test_remove_samples_artifact(self):
-        analysis = self._create_analyses_with_samples()
         analysis.remove_samples(
             artifacts=(qdb.artifact.Artifact(4), qdb.artifact.Artifact(5)))
-        exp = {6: {'1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+        exp = {6: {'1.SKB7.640196', '1.SKB8.640193',
                    '1.SKM4.640180', '1.SKM9.640192'}}
         self.assertItemsEqual(analysis.samples, exp)
 
-    def test_share(self):
+    def test_share_unshare(self):
         analysis = self._create_analyses_with_samples()
         user = qdb.user.User("admin@foo.bar")
         self.assertEqual(analysis.shared_with, [])
-        analysis.share(user)
-        exp = [user]
-        self.assertEqual(analysis.shared_with, exp)
-
-    def test_unshare(self):
-        analysis = self._create_analyses_with_samples()
-        user = qdb.user.User("admin@foo.bar")
         analysis.share(user)
         exp = [user]
         self.assertEqual(analysis.shared_with, exp)
@@ -646,12 +415,12 @@ class TestAnalysis(TestCase):
         analysis = self._create_analyses_with_samples()
         grouped_samples = {'18S.1.3': [(
             4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
-        analysis._build_biom_tables(grouped_samples, 100)
-        obs = analysis.biom_tables
+        obs_bioms = analysis._build_biom_tables(grouped_samples)
         biom_fp = self.get_fp("%s_analysis_dt-18S_r-1_c-3.biom" % analysis.id)
-        self.assertEqual(obs, {'18S': biom_fp})
+        obs = [(a, basename(b)) for a, b in obs_bioms]
+        self.assertEqual(obs, [('18S', basename(biom_fp))])
 
-        table = load_table(biom_fp)
+        table = load_table(obs_bioms[0][1])
         obs = set(table.ids(axis='sample'))
         exp = {'1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'}
         self.assertEqual(obs, exp)
@@ -669,12 +438,12 @@ class TestAnalysis(TestCase):
         grouped_samples = {'18S.1.3': [
             (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
             (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
-        analysis._build_biom_tables(grouped_samples, 100, True)
-        obs = analysis.biom_tables
-        biom_fp = self.get_fp("%s_analysis_dt-18S_r-1_c-3.biom" % analysis.id)
-        self.assertEqual(obs, {'18S': biom_fp})
+        obs_bioms = analysis._build_biom_tables(grouped_samples, True)
+        obs = [(a, basename(b)) for a, b in obs_bioms]
+        biom_fp = "%s_analysis_dt-18S_r-1_c-3.biom" % analysis.id
+        self.assertEqual(obs, [('18S', biom_fp)])
 
-        table = load_table(biom_fp)
+        table = load_table(obs_bioms[0][1])
         obs = set(table.ids(axis='sample'))
         exp = {'4.1.SKD8.640184', '4.1.SKB7.640196', '4.1.SKB8.640193',
                '5.1.SKB8.640193', '5.1.SKB7.640196', '5.1.SKD8.640184'}
@@ -686,21 +455,14 @@ class TestAnalysis(TestCase):
         with self.assertRaises(RuntimeError):
             self.analysis._build_biom_tables(grouped_samples)
 
-    def test_build_biom_tables_raise_error_due_to_rarefaction_level(self):
-        grouped_samples = {'18S.1.3': [
-            (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
-            (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
-        with self.assertRaises(RuntimeError):
-            self.analysis._build_biom_tables(grouped_samples, 100000)
-
     def test_build_files(self):
         analysis = self._create_analyses_with_samples()
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
-                         analysis.build_files)
+        biom_tables = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, analysis.build_files, False)
 
         # testing that the generated files have the same sample ids
-        biom_ids = load_table(
-            analysis.biom_tables['18S']).ids(axis='sample')
+        biom_fp = biom_tables[0][1]
+        biom_ids = load_table(biom_fp).ids(axis='sample')
         mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
             analysis.mapping_file, index='#SampleID').index
 
@@ -712,17 +474,31 @@ class TestAnalysis(TestCase):
         self.assertItemsEqual(biom_ids, exp)
 
     def test_build_files_merge_duplicated_sample_ids(self):
-        analysis = self._create_analyses_with_samples()
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
-                         analysis.build_files,
-                         merge_duplicated_sample_ids=True)
+        user = qdb.user.User("demo@microbio.me")
+        dflt_analysis = user.default_analysis
+        dflt_analysis.add_samples(
+            {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                 '1.SKM9.640192', '1.SKM4.640180'],
+             5: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
+                 '1.SKM4.640180', '1.SKD8.640184'],
+             6: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                 '1.SKM9.640192', '1.SKM4.640180']})
+        new = qdb.analysis.Analysis.create(
+            user, "newAnalysis", "A New Analysis", from_default=True,
+            merge_duplicated_sample_ids=True)
+
+        self._wait_for_jobs(new)
+
+        biom_tables = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, new.build_files, True)
 
         # testing that the generated files have the same sample ids
         biom_ids = []
-        for _, fp in viewitems(analysis.biom_tables):
+        for _, fp in biom_tables:
             biom_ids.extend(load_table(fp).ids(axis='sample'))
         mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
-            analysis.mapping_file, index='#SampleID').index
+            new.mapping_file, index='#SampleID').index
+
         self.assertItemsEqual(biom_ids, mf_ids)
 
         # now that the samples have been prefixed
@@ -734,183 +510,9 @@ class TestAnalysis(TestCase):
                '6.1.SKB8.640193', '6.1.SKB7.640196']
         self.assertItemsEqual(biom_ids, exp)
 
-    def test_build_files_raises_type_error(self):
-        with self.assertRaises(TypeError):
-            self.analysis.build_files('string')
-
-        with self.assertRaises(TypeError):
-            self.analysis.build_files(100.5)
-
-    def test_build_files_raises_value_error(self):
-        with self.assertRaises(ValueError):
-            self.analysis.build_files(0)
-
-        with self.assertRaises(ValueError):
-            self.analysis.build_files(-10)
-
     def test_add_file(self):
-        analysis = self._create_analyses_with_samples()
-        new_id = qdb.util.get_count('qiita.filepath') + 1
-        fp = self.get_fp('testfile.txt')
-        with open(fp, 'w') as f:
-            f.write('testfile!')
-
-        self.assertEqual(analysis.all_associated_filepath_ids, set())
-        analysis._add_file('testfile.txt', 'plain_text', '18S')
-        self.assertEqual(analysis.all_associated_filepath_ids, {new_id})
-
-
-@qiita_test_checker()
-class TestCollection(TestCase):
-    def setUp(self):
-        self.collection = qdb.analysis.Collection(1)
-
-    def test_create(self):
-        user = qdb.user.User('test@foo.bar')
-        obs = qdb.analysis.Collection.create(
-            user, 'TestCollection2', 'Some desc')
-
-        self.assertEqual(obs.name, 'TestCollection2')
-        self.assertEqual(obs.description, 'Some desc')
-        self.assertEqual(obs.owner, user)
-        self.assertEqual(obs.analyses, [])
-        self.assertEqual(obs.highlights, [])
-        self.assertEqual(obs.shared_with, [])
-
-    def test_create_no_desc(self):
-        user = qdb.user.User('test@foo.bar')
-        obs = qdb.analysis.Collection.create(user, 'Test Collection2')
-
-        self.assertEqual(obs.name, 'Test Collection2')
-        self.assertEqual(obs.description, None)
-        self.assertEqual(obs.owner, user)
-        self.assertEqual(obs.analyses, [])
-        self.assertEqual(obs.highlights, [])
-        self.assertEqual(obs.shared_with, [])
-
-    def test_delete(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2')
-        qdb.analysis.Collection.delete(obs.id)
-        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.analysis.Collection(obs.id)
-
-    def test_delete_public(self):
-        collection = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2')
-        collection.status = 'public'
-        with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            qdb.analysis.Collection.delete(collection.id)
-
-        # This should not raise an error
-        qdb.analysis.Collection(collection.id)
-
-    def test_retrieve_name(self):
-        obs = self.collection.name
-        exp = "TEST_COLLECTION"
-        self.assertEqual(obs, exp)
-
-    def test_set_name(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2')
-        self.assertEqual(obs.name, "Test Collection2")
-        obs.name = "NeW NaMe 123"
-        self.assertEqual(obs.name, "NeW NaMe 123")
-
-    def test_set_name_public(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2')
-        obs.status = "public"
-        with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            obs.name = "FAILBOAT"
-
-    def test_retrieve_desc(self):
-        obs = self.collection.description
-        exp = "collection for testing purposes"
-        self.assertEqual(obs, exp)
-
-    def test_set_desc(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
-        self.assertEqual(obs.description, 'SomeDesc')
-        obs.description = "NeW DeSc 123"
-        self.assertEqual(obs.description, "NeW DeSc 123")
-
-    def test_set_desc_public(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
-        obs.status = "public"
-        with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            obs.description = "FAILBOAT"
-
-    def test_retrieve_owner(self):
-        obs = self.collection.owner
-        exp = qdb.user.User("test@foo.bar")
-        self.assertEqual(obs, exp)
-
-    def test_retrieve_analyses(self):
-        obs = self.collection.analyses
-        exp = [qdb.analysis.Analysis(1)]
-        self.assertEqual(obs, exp)
-
-    def test_retrieve_highlights(self):
-        obs = self.collection.highlights
-        exp = [qdb.job.Job(1)]
-        self.assertEqual(obs, exp)
-
-    def test_retrieve_shared_with(self):
-        obs = self.collection.shared_with
-        exp = [qdb.user.User("shared@foo.bar")]
-        self.assertEqual(obs, exp)
-
-    def test_add_analysis(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
-        obs.add_analysis(qdb.analysis.Analysis(2))
-        obs = obs.analyses
-        exp = [qdb.analysis.Analysis(2)]
-        self.assertEqual(obs, exp)
-
-    def test_remove_analysis(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
-        obs.add_analysis(qdb.analysis.Analysis(2))
-        self.assertEqual(obs.analyses, [qdb.analysis.Analysis(2)])
-        obs.remove_analysis(qdb.analysis.Analysis(2))
-        self.assertEqual(obs.analyses, [])
-
-    def test_highlight_job(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
-        obs.add_analysis(qdb.analysis.Analysis(1))
-        obs.highlight_job(qdb.job.Job(2))
-        exp = [qdb.job.Job(2)]
-        self.assertEqual(obs.highlights, exp)
-
-    def test_remove_highlight(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
-        obs.add_analysis(qdb.analysis.Analysis(1))
-        obs.highlight_job(qdb.job.Job(1))
-        self.assertEqual(obs.highlights, [qdb.job.Job(1)])
-        obs.remove_highlight(qdb.job.Job(1))
-        self.assertEqual(obs.highlights, [])
-
-    def test_share(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
-        user = qdb.user.User("admin@foo.bar")
-        obs.share(user)
-        self.assertEqual(obs.shared_with, [user])
-
-    def test_unshare(self):
-        obs = qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
-        user = qdb.user.User("admin@foo.bar")
-        obs.share(user)
-        self.assertEqual(obs.shared_with, [user])
-        obs.unshare(user)
-        self.assertEqual(obs.shared_with, [])
+        # Tested indirectly through build_files
+        pass
 
 
 if __name__ == "__main__":

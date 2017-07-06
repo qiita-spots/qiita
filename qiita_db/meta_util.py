@@ -97,15 +97,12 @@ def validate_filepath_access_by_user(user, filepath_id):
             (SELECT array_agg(prep_template_id)
              FROM qiita.prep_template_filepath
              WHERE filepath_id = {0}) AS prep_info,
-            (SELECT array_agg(job_id)
-             FROM qiita.job_results_filepath
-             WHERE filepath_id = {0}) AS job_results,
             (SELECT array_agg(analysis_id)
              FROM qiita.analysis_filepath
              WHERE filepath_id = {0}) AS analysis""".format(filepath_id)
         TRN.add(sql)
 
-        arid, sid, pid, jid, anid = TRN.execute_fetchflatten()
+        arid, sid, pid, anid = TRN.execute_fetchflatten()
 
         # artifacts
         if arid:
@@ -114,8 +111,14 @@ def validate_filepath_access_by_user(user, filepath_id):
             if artifact.visibility == 'public':
                 return True
             else:
-                # let's take the visibility via the Study
-                return artifact.study.has_access(user)
+                study = artifact.study
+                if study:
+                    # let's take the visibility via the Study
+                    return artifact.study.has_access(user)
+                else:
+                    analysis = artifact.analysis
+                    return analysis in (
+                        user.private_analyses | user.shared_analyses)
         # sample info files
         elif sid:
             # the visibility of the sample info file is given by the
@@ -144,22 +147,13 @@ def validate_filepath_access_by_user(user, filepath_id):
                             return True
             return False
         # analyses
-        elif anid or jid:
-            if jid:
-                # [0] cause we should only have 1
-                sql = """SELECT analysis_id FROM qiita.analysis_job
-                         WHERE job_id = {0}""".format(jid[0])
-                TRN.add(sql)
-                aid = TRN.execute_fetchlast()
-            else:
-                aid = anid[0]
+        elif anid:
             # [0] cause we should only have 1
+            aid = anid[0]
             analysis = qdb.analysis.Analysis(aid)
-            if analysis.status == 'public':
-                return True
-            else:
-                return analysis in (
-                    user.private_analyses | user.shared_analyses)
+            return analysis in (
+                user.private_analyses | user.shared_analyses)
+        return False
 
 
 def update_redis_stats():

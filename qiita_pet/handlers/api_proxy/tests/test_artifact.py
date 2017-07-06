@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
-from os.path import join, exists, basename
+from os.path import join, exists
 from os import remove, close
 from datetime import datetime
 from tempfile import mkstemp
@@ -20,15 +20,12 @@ from qiita_core.testing import wait_for_prep_information_job
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
-from qiita_db.util import get_count, get_mountpoint
-from qiita_db.processing_job import ProcessingJob
-from qiita_db.user import User
-from qiita_db.software import Command, Parameters, DefaultParameters
+from qiita_db.util import get_mountpoint
+from qiita_db.software import Parameters, DefaultParameters
 from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
-    artifact_delete_req, artifact_types_get_req, artifact_post_req,
-    artifact_summary_get_request, artifact_summary_post_request,
+    artifact_types_get_req, artifact_post_req,
     artifact_patch_request, artifact_get_prep_req)
 
 
@@ -107,7 +104,10 @@ class TestArtifactAPIReadOnly(TestCase):
                          ['FASTA_Sanger', None],
                          ['FASTQ', None],
                          ['SFF', None],
-                         ['per_sample_FASTQ', None]]}
+                         ['per_sample_FASTQ', None],
+                         ['beta_div_plots', 'Qiime 1 beta diversity results'],
+                         ['rarefaction_curves', 'Rarefaction curves'],
+                         ['taxa_summary', 'Taxa summary plots']]}
 
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['status'], exp['status'])
@@ -158,195 +158,6 @@ class TestArtifactAPI(TestCase):
 
         r_client.flushdb()
 
-    def test_artifact_summary_get_request(self):
-        # Artifact w/o summary
-        obs = artifact_summary_get_request('test@foo.bar', 1)
-        exp_p_jobs = [
-            ['063e553b-327c-4818-ab4a-adfe58e49860', 'Split libraries FASTQ',
-             'queued', None, None],
-            ['bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'Split libraries',
-             'running', 'demultiplexing', None]]
-        exp_files = [
-            (1L, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)'),
-            (2L, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)')]
-        exp = {'status': 'success',
-               'message': '',
-               'name': 'Raw data 1',
-               'processing_parameters': {},
-               'summary': None,
-               'job': None,
-               'processing_jobs': exp_p_jobs,
-               'errored_jobs': [],
-               'visibility': 'private',
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 1?\')) { '
-                           'set_artifact_visibility(\'public\', 1) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button>'),
-               'files': exp_files,
-               'editable': True,
-               'prep_id': 1,
-               'study_id': 1}
-        self.assertEqual(obs, exp)
-
-        # Artifact with summary being generated
-        job = ProcessingJob.create(
-            User('test@foo.bar'),
-            Parameters.load(Command(7), values_dict={'input_data': 1})
-        )
-        job._set_status('queued')
-        obs = artifact_summary_get_request('test@foo.bar', 1)
-        exp = {'status': 'success',
-               'message': '',
-               'name': 'Raw data 1',
-               'processing_parameters': {},
-               'summary': None,
-               'job': [job.id, 'queued', None],
-               'processing_jobs': exp_p_jobs,
-               'errored_jobs': [],
-               'visibility': 'private',
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 1?\')) { '
-                           'set_artifact_visibility(\'public\', 1) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button>'),
-               'files': exp_files,
-               'editable': True,
-               'prep_id': 1,
-               'study_id': 1}
-        self.assertEqual(obs, exp)
-
-        # Artifact with summary
-        fd, fp = mkstemp(suffix=".html")
-        close(fd)
-        with open(fp, 'w') as f:
-            f.write('<b>HTML TEST - not important</b>\n')
-        a = Artifact(1)
-        a.html_summary_fp = fp
-        self._files_to_remove.extend([fp, a.html_summary_fp[1]])
-        exp_files.append(
-            (a.html_summary_fp[0],
-             '%s (html summary)' % basename(a.html_summary_fp[1])))
-        obs = artifact_summary_get_request('test@foo.bar', 1)
-        exp = {'status': 'success',
-               'message': '',
-               'name': 'Raw data 1',
-               'processing_parameters': {},
-               'summary': '<b>HTML TEST - not important</b>\n',
-               'job': None,
-               'processing_jobs': exp_p_jobs,
-               'errored_jobs': [],
-               'visibility': 'private',
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 1?\')) { '
-                           'set_artifact_visibility(\'public\', 1) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button>'),
-               'files': exp_files,
-               'editable': True,
-               'prep_id': 1,
-               'study_id': 1}
-        self.assertEqual(obs, exp)
-
-        # No access
-        obs = artifact_summary_get_request('demo@microbio.me', 1)
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-        # A non-owner/share user can't see the files
-        a.visibility = 'public'
-        obs = artifact_summary_get_request('demo@microbio.me', 1)
-        exp = {'status': 'success',
-               'message': '',
-               'name': 'Raw data 1',
-               'processing_parameters': {},
-               'summary': '<b>HTML TEST - not important</b>\n',
-               'job': None,
-               'processing_jobs': exp_p_jobs,
-               'errored_jobs': [],
-               'visibility': 'public',
-               'buttons': '',
-               'files': [],
-               'editable': False,
-               'prep_id': 1,
-               'study_id': 1}
-        self.assertEqual(obs, exp)
-
-        # returnig to private
-        a.visibility = 'sandbox'
-
-        # admin gets buttons
-        obs = artifact_summary_get_request('admin@foo.bar', 2)
-        exp_p_jobs = [
-            ['d19f76ee-274e-4c1b-b3a2-a12d73507c55',
-             'Pick closed-reference OTUs', 'error', 'generating demux file',
-             'Error message']]
-        exp_files = [
-            (3L, '1_seqs.fna (preprocessed fasta)'),
-            (4L, '1_seqs.qual (preprocessed fastq)'),
-            (5L, '1_seqs.demux (preprocessed demux)')]
-        exp = {'status': 'success',
-               'files': exp_files,
-               'errored_jobs': [],
-               'editable': True,
-               'visibility': 'sandbox',
-               'job': None,
-               'message': '',
-               'name': 'Demultiplexed 1',
-               'processing_jobs': exp_p_jobs,
-               'processing_parameters': {
-                   'max_barcode_errors': 1.5, 'sequence_max_n': 0,
-                   'max_bad_run_length': 3, 'phred_offset': u'auto',
-                   'rev_comp': False, 'phred_quality_threshold': 3,
-                   'input_data': 1, 'rev_comp_barcode': False,
-                   'rev_comp_mapping_barcodes': False,
-                   'min_per_read_length_fraction': 0.75,
-                   'barcode_type': u'golay_12'},
-               'summary': None,
-               'buttons': (
-                   '<button onclick="if (confirm(\'Are you sure you want to '
-                   'request approval for artifact id: 2?\')) { '
-                   'set_artifact_visibility(\'awaiting_approval\', 2) }" '
-                   'class="btn btn-primary btn-sm">Request approval</button> '
-                   '<a class="btn btn-primary btn-sm" href="/vamps/2"><span '
-                   'class="glyphicon glyphicon-export"></span> Submit to '
-                   'VAMPS</a>'),
-               'study_id': 1,
-               'prep_id': 1}
-        self.assertEqual(obs, exp)
-
-    def test_artifact_summary_post_request(self):
-        # No access
-        obs = artifact_summary_post_request('demo@microbio.me', 1)
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-        # Returns already existing job
-        job = ProcessingJob.create(
-            User('test@foo.bar'),
-            Parameters.load(Command(7), values_dict={'input_data': 2})
-        )
-        job._set_status('queued')
-        obs = artifact_summary_post_request('test@foo.bar', 2)
-        exp = {'status': 'success',
-               'message': '',
-               'job': [job.id, 'queued', None]}
-        self.assertEqual(obs, exp)
-
     def test_artifact_patch_request(self):
         obs = artifact_patch_request('test@foo.bar', 'replace',
                                      '/%d/name/' % self.artifact.id,
@@ -387,22 +198,6 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'error',
                'message': 'Operation "add" not supported. Current supported '
                           'operations: replace'}
-        self.assertEqual(obs, exp)
-
-    def test_artifact_delete_req(self):
-        obs = artifact_delete_req(self.artifact.id, 'test@foo.bar')
-        exp = {'status': 'success', 'message': ''}
-        self.assertEqual(obs, exp)
-
-        # This is needed so the clean up works - this is a distributed system
-        # so we need to make sure that all processes are done before we reset
-        # the test database
-        wait_for_prep_information_job(1)
-
-    def test_artifact_delete_req_no_access(self):
-        obs = artifact_delete_req(self.artifact.id, 'demo@microbio.me')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
     def test_artifact_get_prep_req(self):
@@ -447,7 +242,6 @@ class TestArtifactAPI(TestCase):
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
         self._files_to_remove.extend([fp for _, fp in pt.get_filepaths()])
 
-        new_artifact_id = get_count('qiita.artifact') + 1
         obs = artifact_post_req(
             'test@foo.bar', {}, 'Demultiplexed', 'New Test Artifact 2',
             pt.id, 3)
@@ -458,7 +252,7 @@ class TestArtifactAPI(TestCase):
         wait_for_prep_information_job(pt.id)
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
-        a = Artifact(new_artifact_id)
+        a = Artifact(pt.artifact.id)
         self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
 
     def test_artifact_post_req_error(self):

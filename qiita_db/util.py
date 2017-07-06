@@ -48,7 +48,7 @@ from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
-from os.path import join, basename, isdir, relpath, exists
+from os.path import join, basename, isdir, exists
 from os import walk, remove, listdir, makedirs, rename
 from shutil import move, rmtree, copy as shutil_copy
 from json import dumps
@@ -821,6 +821,10 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
     """
     with qdb.sql_connection.TRN:
         uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
+
+        if not exists(uploads_fp):
+            makedirs(uploads_fp)
+
         path_builder = partial(join, uploads_fp)
 
         # We can now go over and remove all the filepaths
@@ -839,44 +843,6 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
                 move(fp, destination)
 
         qdb.sql_connection.TRN.execute()
-
-
-def get_filepath_id(table, fp):
-    """Return the filepath_id of fp
-
-    Parameters
-    ----------
-    table : str
-        The table type so we can search on this one
-    fp : str
-        The full filepath
-
-    Returns
-    -------
-    int
-        The filepath id forthe given filepath
-
-    Raises
-    ------
-    QiitaDBError
-        If fp is not stored in the DB.
-    """
-    with qdb.sql_connection.TRN:
-        _, mp = get_mountpoint(table)[0]
-        base_fp = join(get_db_files_base_dir(), mp)
-
-        sql = "SELECT filepath_id FROM qiita.filepath WHERE filepath=%s"
-        qdb.sql_connection.TRN.add(sql, [relpath(fp, base_fp)])
-        fp_id = qdb.sql_connection.TRN.execute_fetchindex()
-
-        # check if the query has actually returned something
-        if not fp_id:
-            raise qdb.exceptions.QiitaDBError(
-                "Filepath not stored in the database")
-
-        # If there was a result it was a single row and and single value,
-        # hence access to [0][0]
-        return fp_id[0][0]
 
 
 def filepath_id_to_rel_path(filepath_id):
@@ -1104,49 +1070,6 @@ def get_pubmed_ids_from_dois(doi_ids):
         qdb.sql_connection.TRN.add(sql, [tuple(doi_ids)])
         return {row[0]: row[1]
                 for row in qdb.sql_connection.TRN.execute_fetchindex()}
-
-
-def check_access_to_analysis_result(user_id, requested_path):
-    """Get filepath IDs for a particular requested_path, if user has access
-
-    This function is only applicable for analysis results.
-
-    Parameters
-    ----------
-    user_id : str
-        The ID (email address) that identifies the user
-    requested_path : str
-        The path that the user requested
-
-    Returns
-    -------
-    list of int
-        The filepath IDs associated with the requested path
-    """
-    with qdb.sql_connection.TRN:
-        # Get all filepath ids associated with analyses that the user has
-        # access to where the filepath is the base_requested_fp from above.
-        # There should typically be only one matching filepath ID, but for
-        # safety we allow for the possibility of multiple.
-        sql = """SELECT fp.filepath_id
-                 FROM qiita.analysis_job aj JOIN (
-                    SELECT analysis_id FROM qiita.analysis A
-                    JOIN qiita.analysis_status stat
-                    ON A.analysis_status_id = stat.analysis_status_id
-                    WHERE stat.analysis_status_id = 6
-                    UNION
-                    SELECT analysis_id FROM qiita.analysis_users
-                    WHERE email = %s
-                    UNION
-                    SELECT analysis_id FROM qiita.analysis WHERE email = %s
-                 ) ids ON aj.analysis_id = ids.analysis_id
-                 JOIN qiita.job_results_filepath jrfp ON
-                    aj.job_id = jrfp.job_id
-                 JOIN qiita.filepath fp ON jrfp.filepath_id = fp.filepath_id
-                 WHERE fp.filepath = %s"""
-        qdb.sql_connection.TRN.add(sql, [user_id, user_id, requested_path])
-
-        return qdb.sql_connection.TRN.execute_fetchflatten()
 
 
 def infer_status(statuses):

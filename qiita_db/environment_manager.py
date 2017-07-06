@@ -405,4 +405,4 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                 if verbose:
                     print('\t\tApplying python patch %s...'
                           % py_patch_filename)
-                execfile(py_patch_fp)
+                execfile(py_patch_fp, {})

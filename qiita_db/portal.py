@@ -91,13 +91,9 @@ class Portal(qdb.base.QiitaObject):
                         SELECT email FROM qiita.qiita_user
                     LOOP
                         INSERT INTO qiita.analysis
-                            (email, name, description, dflt,
-                             analysis_status_id)
-                        VALUES (eml, eml || '-dflt', 'dflt', true, 1)
+                            (email, name, description, dflt)
+                        VALUES (eml, eml || '-dflt', 'dflt', true)
                         RETURNING analysis_id INTO aid;
-
-                        INSERT INTO qiita.analysis_workflow (analysis_id, step)
-                        VALUES (aid, 2);
 
                         INSERT INTO qiita.analysis_portal
                             (analysis_id, portal_type_id)
@@ -160,9 +156,6 @@ class Portal(qdb.base.QiitaObject):
                         WHERE portal_type_id = %s AND dflt = True
                     LOOP
                         DELETE FROM qiita.analysis_portal
-                        WHERE analysis_id = aid;
-
-                        DELETE FROM qiita.analysis_workflow
                         WHERE analysis_id = aid;
 
                         DELETE FROM qiita.analysis_sample
