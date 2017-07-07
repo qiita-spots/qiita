@@ -74,8 +74,9 @@ class TestSampleTemplateAJAX(TestHandlerBase):
         self.assertIsNotNone(obs)
         redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
-            sleep(0.5)
+            sleep(0.1)
             redis_info = loads(r_client.get(loads(obs)['job_id']))
+        sleep(0.1)
 
 
 class TestSampleAJAXReadOnly(TestHandlerBase):
