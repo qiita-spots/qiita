@@ -557,10 +557,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             table_name = cls._table_name(obj_id)
             column_datatype = ["%s varchar" % col for col in headers]
             sql = """CREATE TABLE qiita.{0} (
-                        sample_id varchar NOT NULL, {1},
-                        CONSTRAINT fk_{0} FOREIGN KEY (sample_id)
-                            REFERENCES qiita.study_sample (sample_id)
-                            ON UPDATE CASCADE
+                        sample_id varchar NOT NULL, {1}
                      )""".format(table_name, ', '.join(column_datatype))
             qdb.sql_connection.TRN.add(sql)
 
