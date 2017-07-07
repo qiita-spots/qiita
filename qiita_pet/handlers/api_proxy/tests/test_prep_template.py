@@ -290,9 +290,8 @@ class TestPrepAPI(TestCase):
         obs = r_client.get(key)
         redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
-            sleep(0.1)
+            sleep(0.5)
             redis_info = loads(r_client.get(loads(obs)['job_id']))
-        sleep(0.1)
 
     def test_prep_template_graph_get_req(self):
         obs = prep_template_graph_get_req(1, 'test@foo.bar')

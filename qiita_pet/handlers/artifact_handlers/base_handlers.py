@@ -405,11 +405,14 @@ class ArtifactSummaryHandler(StaticFileHandler, BaseHandler):
         """Overrides StaticFileHandler's method to include authentication"""
         user = self.current_user
 
-        # Magic number 1, the path structure for the summaries is
-        # root/ARTIFACTDIR/artifact_id/FILE. We are interested in the
-        # artifact_id. root is removed by relpath, so the second element of the
-        # list is the artifact id
-        artifact_id = relpath(absolute_path, root).split('/')[1]
+        # we are gonna inverse traverse the absolute_path and find the first
+        # instance of an int, which is the artifact_id
+        for s in reversed(absolute_path.split('/')):
+            try:
+                artifact_id = int(s)
+                break
+            except ValueError:
+                pass
 
         # This call will check if the user has access to the artifact or not,
         # taking into account admin privileges. If not it will raise a 403
