@@ -102,7 +102,6 @@ class ProcessingJobTest(TestCase):
     def _wait_for_job(self, job):
         while job.status not in ('error', 'success'):
             sleep(0.5)
-        sleep(0.5)
 
     def test_exists(self):
         self.assertTrue(qdb.processing_job.ProcessingJob.exists(
