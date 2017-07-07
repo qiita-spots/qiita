@@ -400,9 +400,8 @@ class TestSampleAPI(TestCase):
         # the test database
         redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
-            sleep(0.1)
+            sleep(0.5)
             redis_info = loads(r_client.get(loads(obs)['job_id']))
-        sleep(0.1)
 
     def test_sample_template_post_req_no_access(self):
         obs = sample_template_post_req(1, 'demo@microbio.me', '16S',
@@ -427,9 +426,8 @@ class TestSampleAPI(TestCase):
         # the test database
         redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
-            sleep(0.1)
+            sleep(0.5)
             redis_info = loads(r_client.get(loads(obs)['job_id']))
-        sleep(0.1)
 
     def test_sample_template_put_req_no_access(self):
         obs = sample_template_put_req(1, 'demo@microbio.me', 'filepath')
@@ -458,9 +456,8 @@ class TestSampleAPI(TestCase):
         # the test database
         redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
-            sleep(0.1)
+            sleep(0.5)
             redis_info = loads(r_client.get(loads(obs)['job_id']))
-        sleep(0.1)
 
     def test_sample_template_delete_req_no_access(self):
         obs = sample_template_delete_req(1, 'demo@microbio.me')
@@ -559,9 +556,8 @@ class TestSampleAPI(TestCase):
         self.assertIsNotNone(obs)
         redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
-            sleep(0.1)
+            sleep(0.5)
             redis_info = loads(r_client.get(loads(obs)['job_id']))
-        sleep(0.1)
 
         ST = qdb.metadata_template.sample_template.SampleTemplate
         self.assertNotIn("season_environment", ST(1).categories())
