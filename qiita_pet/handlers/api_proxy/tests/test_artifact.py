@@ -221,33 +221,28 @@ class TestArtifactAPI(TestCase):
 
     def test_artifact_get_biom_info(self):
         obs = artifact_get_biom_info('test@foo.bar', [5, 6, 7])
-        exp = {
-            'status': 'success', 'msg': '', 'data': [
-                {'files': ['1_study_1001_closed_reference_otu_table_Silva'
-                           '.biom'],
-                 'target_subfragment': ['V4'], 'algorithm': (
-                    'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults'),
-                 'artifact_id': 6, 'data_type': '16S',
-                 'timestamp': '2012-10-02 17:30:00', 'parameters': {
-                    'reference': 2, 'similarity': 0.97, 'sortmerna_e_value': 1,
-                    'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
-                    'sortmerna_coverage': 0.97},
-                 'name': 'BIOM'},
-                {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-                 'target_subfragment': ['V4'], 'algorithm': (
-                     'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults'),
-                 'artifact_id': 5, 'data_type': '18S',
-                 'timestamp': '2012-10-02 17:30:00', 'parameters': {
+        data = [
+            {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
+             'target_subfragment': ['V4'], 'algorithm': (
+                'Pick closed-reference OTUs, QIIMEv1.9.1 | barcode_type 8, '
+                'defaults'), 'artifact_id': 6, 'data_type': '16S',
+             'timestamp': '2012-10-02 17:30:00', 'parameters': {
+                'reference': 2, 'similarity': 0.97, 'sortmerna_e_value': 1,
+                'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
+                'sortmerna_coverage': 0.97}, 'name': 'BIOM'},
+            {'files': ['1_study_1001_closed_reference_otu_table.biom'],
+             'target_subfragment': ['V4'], 'algorithm': (
+                'Pick closed-reference OTUs, QIIMEv1.9.1 | barcode_type 8, '
+                'defaults'), 'artifact_id': 5, 'data_type': '18S',
+                'timestamp': '2012-10-02 17:30:00', 'parameters': {
                     'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
-
-                    'sortmerna_max_pos': 10000, 'input_data': 2, u'threads': 1,
+                    'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
                     'sortmerna_coverage': 0.97}, 'name': 'BIOM'},
-                {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
-                 'artifact_id': 7, 'data_type': '16S',
-                 'timestamp': '2012-10-02 17:30:00', 'parameters': {},
-                 'name': 'BIOM'}]}
-        print obs
-        print exp
+            {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
+             'artifact_id': 7, 'data_type': '16S',
+             'timestamp': '2012-10-02 17:30:00', 'parameters': {},
+             'name': 'BIOM'}
+        exp = {'status': 'success', 'msg': '', 'data': data}
         self.assertEqual(obs, exp)
 
     def test_artifact_post_req(self):

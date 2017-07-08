@@ -850,25 +850,22 @@ class UtilTests(TestCase):
         # not testing timestamp
         for i in range(len(obs)):
             del obs[i]['timestamp']
+
         exp = [
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'target_subfragment': ['V4'],
-             'algorithm': 'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults',
-             'artifact_id': 4, 'data_type': '18S',
-             'parameters': {'reference': 1, 'similarity': 0.97,
-                            'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000,
-                            'input_data': 2, 'threads': 1,
-                            'sortmerna_coverage': 0.97},
-             'name': 'BIOM'}, {
-             'files': [],
-             'target_subfragment': ['V4'],
-             'algorithm': '', 'artifact_id': 7, 'data_type': '16S',
-             'parameters': {}, 'name': 'BIOM'},
+             'target_subfragment': ['V4'], 'data_type': '18S',
+             'parameters': {
+                'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
+                'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
+                'sortmerna_coverage': 0.97}, 'name': 'BIOM',
+                'algorithm': ('Pick closed-reference OTUs, QIIMEv1.9.1 '
+                              '| Defaults'), 'artifact_id': 4},
+            {'files': [], 'target_subfragment': ['V4'], 'data_type': '16S',
+             'parameters': {}, 'name': 'BIOM', 'algorithm': '',
+             'artifact_id': 7},
             {'files': ['biom_table.biom'], 'target_subfragment': [],
-             'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
-             'parameters': {}, 'name': 'noname'}]
-        print obs
-        print exp
+             'data_type': '18S', 'parameters': {}, 'name': 'noname',
+             'algorithm': '', 'artifact_id': 8}]
         for o, e in zip(obs, exp):
             self.assertDictEqual(o, e)
 
