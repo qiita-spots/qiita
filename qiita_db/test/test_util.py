@@ -859,7 +859,7 @@ class UtilTests(TestCase):
                 'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
                 'sortmerna_coverage': 0.97}, 'name': 'BIOM',
                 'algorithm': ('Pick closed-reference OTUs, QIIMEv1.9.1 '
-                              '| Defaults'), 'artifact_id': 4},
+                              '| barcode_type 8, defaults'), 'artifact_id': 4},
             {'files': [], 'target_subfragment': ['V4'], 'data_type': '16S',
              'parameters': {}, 'name': 'BIOM', 'algorithm': '',
              'artifact_id': 7},
