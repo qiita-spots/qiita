@@ -90,7 +90,7 @@ class ArtifactHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
         db_test_raw_dir = qdb.util.get_mountpoint('analysis')[0][1]
         path_builder = partial(join, db_test_raw_dir)
-        exp_fps = {"biom": [path_builder('biom_table.biom')]}
+        exp_fps = {"biom": [path_builder('1_analysis_18S.biom')]}
         exp = {
             'name': 'noname',
             'visibility': 'sandbox',

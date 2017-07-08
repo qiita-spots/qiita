@@ -866,8 +866,7 @@ class UtilTests(TestCase):
             {'files': ['biom_table.biom'], 'target_subfragment': [],
              'data_type': '18S', 'parameters': {}, 'name': 'noname',
              'algorithm': '', 'artifact_id': 8}]
-        for o, e in zip(obs, exp):
-            self.assertDictEqual(o, e)
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':
