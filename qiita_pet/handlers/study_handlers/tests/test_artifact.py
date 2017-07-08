@@ -174,7 +174,7 @@ class ArtifactGetBIOMInfoTest(TestHandlerBase):
             {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
              'artifact_id': 7, 'data_type': '16S',
              'timestamp': '2012-10-02 17:30:00', 'parameters': {},
-             'name': 'BIOM'}
+             'name': 'BIOM'}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         self.assertEqual(loads(response.body), exp)
 
