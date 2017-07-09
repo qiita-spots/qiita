@@ -801,97 +801,72 @@ class UtilTests(TestCase):
             qdb.user.User('shared@foo.bar'), 'test_study_1', efo=[1],
             info=info)
 
-        exp_info = [{
-            'metadata_complete': True,
-            'ebi_submission_status': 'submitted',
-            'shared': [('shared@foo.bar', 'Shared')],
-            'pi': ('PI_dude@foo.bar', 'PIDude'),
-            'status': 'private',
-            'proc_data_info': [],
-            'publication_doi': ['10.100/123456', '10.100/7891011'],
-            'publication_pid': ['123456', '7891011'],
-            'study_abstract': (
+        exp_info = [
+            {'status': 'private', 'metadata_complete': True,
+             'study_tags': None, 'publication_doi': [
+                '10.100/123456', '10.100/7891011'],
+             'study_title': ('Identification of the Microbiomes for '
+                             'Cannabis Soils'),
+             'publication_pid': ['123456', '7891011'],
+             'ebi_submission_status': 'submitted', 'study_id': 1,
+             'ebi_study_accession': 'EBI123456-BB',
+             'shared': [('shared@foo.bar', 'Shared')],
+             'study_abstract': (
                 'This is a preliminary study to examine the microbiota '
-                'associated with the Cannabis plant. Soils samples from '
-                'the bulk soil, soil associated with the roots, and the '
-                'rhizosphere were extracted and the DNA sequenced. Roots '
-                'from three independent plants of different strains were '
-                'examined. These roots were obtained November 11, 2011 from '
-                'plants that had been harvested in the summer. Future studies '
-                'will attempt to analyze the soils and rhizospheres from the '
-                'same location at different time points in the plant '
-                'lifecycle.'),
-            'study_id': 1,
-            'ebi_study_accession': 'EBI123456-BB',
-            'study_title': ('Identification of the Microbiomes for Cannabis '
-                            'Soils'),
-            'number_samples_collected': 27,
-            'study_tags': None
-        }, {
-            'metadata_complete': True,
-            'ebi_submission_status': 'not submitted', 'publication_pid': [],
-            'study_abstract': 'Some abstract goes here',
-            'pi': ('lab_dude@foo.bar', 'LabDude'), 'status': 'sandbox',
-            'proc_data_info': [], 'study_tags': None, 'shared': [],
-            'publication_doi': [], 'study_id': new_study.id,
-            'ebi_study_accession': None, 'study_title': 'test_study_1',
-            'number_samples_collected': 0}]
+                'associated with the Cannabis plant. Soils samples from the '
+                'bulk soil, soil associated with the roots, and the '
+                'rhizosphere were extracted and the DNA sequenced. Roots from '
+                'three independent plants of different strains were examined. '
+                'These roots were obtained November 11, 2011 from plants that '
+                'had been harvested in the summer. Future studies will '
+                'attempt to analyze the soils and rhizospheres from the same '
+                'location at different time points in the plant lifecycle.'),
+             'pi': ('PI_dude@foo.bar', 'PIDude'),
+             'artifact_biom_ids': [4, 5, 6, 7],
+             'number_samples_collected': 27},
+            {'status': 'sandbox', 'metadata_complete': True,
+             'study_tags': None, 'publication_doi': [],
+             'study_title': 'test_study_1', 'publication_pid': [],
+             'ebi_submission_status': 'not submitted',
+             'study_id': new_study.id, 'ebi_study_accession': None,
+             'shared': [], 'study_abstract': 'Some abstract goes here',
+             'pi': ('lab_dude@foo.bar', 'LabDude'),
+             'artifact_biom_ids': None, 'number_samples_collected': 0}]
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
         self.assertEqual(obs_info, exp_info)
 
         qdb.artifact.Artifact(4).visibility = 'public'
         exp_info[0]['status'] = 'public'
-        exp_info[0]['proc_data_info'] = [
-            {'data_type': '18S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 4, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, u'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'}},
-            {'data_type': '18S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 5, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'}},
-            {'data_type': '16S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 6, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Silva',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': 'test'}}]
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
         self.assertEqual(obs_info, exp_info)
 
-        exp_info[0]['proc_data_info'] = [
-            {'data_type': '18S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 4, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'}},
-            {'data_type': '18S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 5, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'}},
-            {'data_type': '16S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 6, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Silva',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': 'test'}},
-            {'processed_date': '2012-10-02 17:30:00', 'pid': 7, 'name': 'BIOM',
-             'data_type': '16S'}]
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
+
+    def test_get_artifacts_bioms_information(self):
+        # we are gonna test that it ignores 1 and 2 cause they are not biom,
+        # 4 has all information and 7 and 8 don't
+        obs = qdb.util.get_artifacts_bioms_information([1, 2, 4, 7, 8])
+        # not testing timestamp
+        for i in range(len(obs)):
+            del obs[i]['timestamp']
+
+        exp = [
+            {'files': ['1_study_1001_closed_reference_otu_table.biom'],
+             'target_subfragment': ['V4'], 'data_type': '18S',
+             'parameters': {
+                'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
+                'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
+                'sortmerna_coverage': 0.97}, 'name': 'BIOM',
+                'algorithm': ('Pick closed-reference OTUs, QIIMEv1.9.1 '
+                              '| barcode_type 8, defaults'), 'artifact_id': 4},
+            {'files': [], 'target_subfragment': ['V4'], 'data_type': '16S',
+             'parameters': {}, 'name': 'BIOM', 'algorithm': '',
+             'artifact_id': 7},
+            {'files': ['biom_table.biom'], 'target_subfragment': [],
+             'data_type': '18S', 'parameters': {}, 'name': 'noname',
+             'algorithm': '', 'artifact_id': 8}]
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':

@@ -158,6 +158,27 @@ class ArtifactGetSamplesTest(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
 
 
+class ArtifactGetBIOMInfoTest(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/artifact/info/', {'ids[]': [6, 7]})
+        self.assertEqual(response.code, 200)
+        data = [
+            {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
+             'target_subfragment': ['V4'], 'algorithm': (
+                'Pick closed-reference OTUs, QIIMEv1.9.1 | barcode_type 8, '
+                'defaults'), 'artifact_id': 6, 'data_type': '16S',
+             'timestamp': '2012-10-02 17:30:00', 'parameters': {
+                'reference': 2, 'similarity': 0.97, 'sortmerna_e_value': 1,
+                'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
+                'sortmerna_coverage': 0.97}, 'name': 'BIOM'},
+            {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
+             'artifact_id': 7, 'data_type': '16S',
+             'timestamp': '2012-10-02 17:30:00', 'parameters': {},
+             'name': 'BIOM'}]
+        exp = {'status': 'success', 'msg': '', 'data': data}
+        self.assertEqual(loads(response.body), exp)
+
+
 class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):
     def test_get_admin(self):
         response = self.get('/admin/artifact/',

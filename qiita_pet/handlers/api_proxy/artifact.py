@@ -21,7 +21,8 @@ from qiita_ware.dispatchable import copy_raw_data
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.util import get_mountpoint, get_visibilities
+from qiita_db.util import (
+    get_mountpoint, get_visibilities, get_artifacts_bioms_information)
 from qiita_db.software import Command, Parameters
 from qiita_db.processing_job import ProcessingJob
 
@@ -106,6 +107,32 @@ def artifact_get_prep_req(user_id, artifact_ids):
             [pt.keys() for pt in Artifact(aid).prep_templates])
 
     return {'status': 'success', 'msg': '', 'data': samples}
+
+
+@execute_as_transaction
+def artifact_get_biom_info(user_id, artifact_ids):
+    """Returns all artifact info for the given artifact_ids
+
+    Parameters
+    ----------
+    user_id : str
+        user making the request
+    artifact_ids : list of int
+        list of artifact ids
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the artifact information
+        {'status': status,
+         'message': message,
+         'data': {artifact_id: {biom_info}}
+    """
+    artifact_info = {}
+
+    artifact_info = get_artifacts_bioms_information(artifact_ids)
+
+    return {'status': 'success', 'msg': '', 'data': artifact_info}
 
 
 @execute_as_transaction

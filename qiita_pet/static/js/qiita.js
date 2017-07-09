@@ -11,9 +11,6 @@
 var timeoutHandleForBoostrapAlert = null;
 
 function bootstrapAlert(message, severity, timeout){
-  // Clear the previous alert - so they don't keep stacking on top of each other
-  $('#bootstrap-alert').alert('close');
-
   // make timeout an optional parameter
   timeout = timeout || -1;
 
@@ -32,14 +29,14 @@ function bootstrapAlert(message, severity, timeout){
     alertDiv.append('<p style="text-align:center">Need help? Send us an <a href="mailto:qiita.help@gmail.com">email</a>.</p>');
   }
 
-  $('#qiita-main').prepend(alertDiv);
+  $('#template-content').prepend(alertDiv);
 
   if(timeout > 0) {
    if (timeoutHandleForBoostrapAlert != null) {
      window.clearTimeout(timeoutHandleForBoostrapAlert);
    }
    timeoutHandleForBoostrapAlert = window.setTimeout(function() {
-     $('#alert-message').alert('close');
+     $('#alert-message').remove();
      timeoutHandleForBoostrapAlert = null;
    }, timeout);
   }
