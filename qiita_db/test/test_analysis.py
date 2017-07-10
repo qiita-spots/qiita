@@ -40,7 +40,7 @@ class TestAnalysis(TestCase):
         self.map_exp_fp = self.get_fp("1_analysis_mapping_exp.txt")
 
         from glob import glob
-        conf_files = glob(join(qiita_config.plugin_dir, "*.conf"))
+        conf_files = glob(join(qiita_config.plugin_dir, "BIOM*.conf"))
         for i, fp in enumerate(conf_files):
             qdb.software.Software.from_file(fp, update=True)
 
@@ -413,10 +413,13 @@ class TestAnalysis(TestCase):
 
     def test_build_biom_tables(self):
         analysis = self._create_analyses_with_samples()
-        grouped_samples = {'18S.1.3': [(
-            4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+        grouped_samples = {
+            '18S || algorithm || target_subfragment || parameters '
+            '|| files': [(4, ['1.SKB8.640193', '1.SKD8.640184',
+                              '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples)
-        biom_fp = self.get_fp("%s_analysis_dt-18S_r-1_c-3.biom" % analysis.id)
+        biom_fp = self.get_fp("%s_analysis_18S_algorithm_target_subfra"
+                              "gment_parameters_files.biom" % analysis.id)
         obs = [(a, basename(b)) for a, b in obs_bioms]
         self.assertEqual(obs, [('18S', basename(biom_fp))])
 
@@ -425,22 +428,16 @@ class TestAnalysis(TestCase):
         exp = {'1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'}
         self.assertEqual(obs, exp)
 
-        obs = table.metadata('1.SKB8.640193')
-        exp = {'study':
-               'Identification of the Microbiomes for Cannabis Soils',
-               'artifact_ids': '4',
-               'reference_id': '1',
-               'command_id': '3'}
-        self.assertEqual(obs, exp)
-
     def test_build_biom_tables_duplicated_samples_not_merge(self):
         analysis = self._create_analyses_with_samples()
-        grouped_samples = {'18S.1.3': [
-            (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
-            (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+        grouped_samples = {
+            '18S || algorithm || target_subfragment || parameters || files': [
+                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
+                (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples, True)
         obs = [(a, basename(b)) for a, b in obs_bioms]
-        biom_fp = "%s_analysis_dt-18S_r-1_c-3.biom" % analysis.id
+        biom_fp = ("%s_analysis_18S_algorithm_target_subfragment_"
+                   "parameters_files.biom" % analysis.id)
         self.assertEqual(obs, [('18S', biom_fp)])
 
         table = load_table(obs_bioms[0][1])
@@ -450,8 +447,10 @@ class TestAnalysis(TestCase):
         self.assertItemsEqual(obs, exp)
 
     def test_build_biom_tables_raise_error_due_to_sample_selection(self):
-        grouped_samples = {'18S.1.3': [
-            (4, ['sample_name_1', 'sample_name_2', 'sample_name_3'])]}
+        grouped_samples = {
+            '18S || algorithm || target_subfragment || parameters '
+            '|| files': [(4, ['sample_name_1', 'sample_name_2',
+                              'sample_name_3'])]}
         with self.assertRaises(RuntimeError):
             self.analysis._build_biom_tables(grouped_samples)
 
