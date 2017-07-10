@@ -430,10 +430,10 @@ class TestAnalysis(TestCase):
 
     def test_build_biom_tables_duplicated_samples_not_merge(self):
         analysis = self._create_analyses_with_samples()
-        grouped_samples = {'18S || algorithm || target_subfragment || '
-                           'parameters || files': [
-            (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
-            (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+        grouped_samples = {
+            '18S || algorithm || target_subfragment || parameters || files': [
+                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
+                (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples, True)
         obs = [(a, basename(b)) for a, b in obs_bioms]
         biom_fp = ("%s_analysis_18S_algorithm_target_subfragment_"
