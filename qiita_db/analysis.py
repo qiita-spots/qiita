@@ -23,6 +23,7 @@ from os.path import join
 from future.utils import viewitems
 from biom import load_table
 from biom.util import biom_open
+from re import sub
 import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -789,15 +790,12 @@ class Analysis(qdb.base.QiitaObject):
                          if bi['artifact_id'] == aid][0]
 
                 data_type = ainfo['data_type']
-                algorithm = ainfo['algorithm']
-                target_subfragment = ainfo['target_subfragment']
-                parameters = ['%s: %s' % (k, v)
-                              for k, v in viewitems(ainfo['parameters'])]
+                # algorithm is: processing_method | parent_processing, just
+                # keeping processing_method
+                algorithm = ainfo['algorithm'].split('|')[0].strip()
                 files = ainfo['files']
 
-                l = "%s || %s || %s || %s" % (
-                    data_type, algorithm, ','.join(target_subfragment),
-                    ', '.join(parameters))
+                l = "%s || %s" % (data_type, algorithm)
                 # deblur special case, we need to account for file name
                 if 'deblur-workflow' in algorithm:
                     # [0] there is always just one biom
@@ -841,8 +839,8 @@ class Analysis(qdb.base.QiitaObject):
 
             biom_files = []
             for label, tables in viewitems(grouped_samples):
-                data_type, algorithm, target_subfragment, \
-                    parameters, files = [l.strip() for l in label.split('||')]
+                data_type, algorithm, files = [
+                    l.strip() for l in label.split('||')]
 
                 new_table = None
                 artifact_ids = []
@@ -891,9 +889,10 @@ class Analysis(qdb.base.QiitaObject):
                                        "analysis due to rarefaction level")
 
                 # write out the file
-                info = "%s_%s_%s_%s_%s" % (
-                    data_type, algorithm, target_subfragment, parameters,
-                    files)
+                data_type = sub('[^0-9a-zA-Z]+', '', data_type)
+                algorithm = sub('[^0-9a-zA-Z]+', '', algorithm)
+                files = sub('[^0-9a-zA-Z]+', '', files)
+                info = "%s_%s_%s" % (data_type, algorithm, files)
                 fn = "%d_analysis_%s.biom" % (self._id, info)
                 biom_fp = join(base_fp, fn)
                 with biom_open(biom_fp, 'w') as f:
