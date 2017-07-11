@@ -160,8 +160,9 @@ class Artifact(qdb.base.QiitaObject):
             # extra path for the mountpoint, which is useful for the test
             # environment
             qc = qiita_config
-            mp = relpath(qc.working_dir, qc.base_data_dir)[:-11]
-            mp = mp + name if mp != '/' else name
+            mp = relpath(qc.working_dir, qc.base_data_dir).replace(
+                'working_dir', '')
+            mp = mp + name if mp != '/' and mp != '' else name
             sql = """INSERT INTO qiita.data_directory
                         (data_type, mountpoint, subdirectory, active)
                         VALUES (%s, %s, %s, %s)"""
