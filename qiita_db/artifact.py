@@ -11,13 +11,15 @@ from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
 from os import remove, makedirs
-from os.path import isfile, exists
+from os.path import isfile, exists, relpath
 from shutil import rmtree
 from functools import partial
 
 import networkx as nx
 
 import qiita_db as qdb
+
+from qiita_core.qiita_settings import qiita_config
 
 
 class Artifact(qdb.base.QiitaObject):
@@ -154,11 +156,16 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
             # When creating a type is expected that a new mountpoint is created
-            # for that type
+            # for that type, note that we are going to check if there is an
+            # extra path for the mountpoint, which is useful for the test
+            # environment
+            qc = qiita_config
+            mp = relpath(qc.working_dir, qc.base_data_dir)[:-11]
+            mp = mp + name if mp != '/' else name
             sql = """INSERT INTO qiita.data_directory
                         (data_type, mountpoint, subdirectory, active)
                         VALUES (%s, %s, %s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [name, name, True, True])
+            qdb.sql_connection.TRN.add(sql, [name, mp, True, True])
 
             # We are intersted in the dirpath
             dp = qdb.util.get_mountpoint(name)[0][1]
