@@ -892,10 +892,15 @@ class Analysis(qdb.base.QiitaObject):
                                        "analysis due to rarefaction level")
 
                 # write out the file
+                data_type = sub('[^0-9a-zA-Z]+', '', data_type)
+                algorithm = sub('[^0-9a-zA-Z]+', '', algorithm)
+                target_subfragment = sub(
+                    '[^0-9a-zA-Z]+', '', target_subfragment)
+                parameters = sub('[^0-9a-zA-Z]+', '', parameters)
+                files = sub('[^0-9a-zA-Z]+', '', files)
                 info = "%s_%s_%s_%s_%s" % (
                     data_type, algorithm, target_subfragment, parameters,
                     files)
-                info = sub('[^0-9a-zA-Z]+', '', info)
                 fn = "%d_analysis_%s.biom" % (self._id, info)
                 biom_fp = join(base_fp, fn)
                 with biom_open(biom_fp, 'w') as f:
