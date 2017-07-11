@@ -447,8 +447,8 @@ class TestAnalysis(TestCase):
 
     def test_build_biom_tables_raise_error_due_to_sample_selection(self):
         grouped_samples = {
-            '18S || algorithm || files': [(4, ['sample_name_1', 'sample_name_2',
-                              'sample_name_3'])]}
+            '18S || algorithm || files': [
+                (4, ['sample_name_1', 'sample_name_2', 'sample_name_3'])]}
         with self.assertRaises(RuntimeError):
             self.analysis._build_biom_tables(grouped_samples)
 

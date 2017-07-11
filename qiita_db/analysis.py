@@ -791,9 +791,6 @@ class Analysis(qdb.base.QiitaObject):
 
                 data_type = ainfo['data_type']
                 algorithm = ainfo['algorithm']
-                target_subfragment = ainfo['target_subfragment']
-                parameters = ['%s: %s' % (k, v)
-                              for k, v in viewitems(ainfo['parameters'])]
                 files = ainfo['files']
 
                 l = "%s || %s" % (data_type, algorithm)
