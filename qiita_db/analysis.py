@@ -790,7 +790,9 @@ class Analysis(qdb.base.QiitaObject):
                          if bi['artifact_id'] == aid][0]
 
                 data_type = ainfo['data_type']
-                algorithm = ainfo['algorithm']
+                # algorithm is: processing_method | parent_processing, just
+                # keeping processing_method
+                algorithm = ainfo['algorithm'].split('|')[0].strip()
                 files = ainfo['files']
 
                 l = "%s || %s" % (data_type, algorithm)
