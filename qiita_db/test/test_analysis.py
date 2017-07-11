@@ -418,8 +418,9 @@ class TestAnalysis(TestCase):
             '|| files': [(4, ['1.SKB8.640193', '1.SKD8.640184',
                               '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples)
-        biom_fp = self.get_fp("%s_analysis_18S_algorithm_targetsubfra"
-                              "gment_parameters_files.biom" % analysis.id)
+        biom_fp = self.get_fp(
+            "%s_analysis_18S_algorithm_targetsubfragment_166e64f6c3677d0c513"
+            "901242a3e702d_files.biom" % analysis.id)
         obs = [(a, basename(b)) for a, b in obs_bioms]
         self.assertEqual(obs, [('18S', basename(biom_fp))])
 
@@ -436,8 +437,9 @@ class TestAnalysis(TestCase):
                 (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples, True)
         obs = [(a, basename(b)) for a, b in obs_bioms]
-        biom_fp = ("%s_analysis_18S_algorithm_targetsubfragment_"
-                   "parameters_files.biom" % analysis.id)
+        biom_fp = (
+            "%s_analysis_18S_algorithm_targetsubfragment_166e64f6c3677d0c5139"
+            "01242a3e702d_files.biom" % analysis.id)
         self.assertEqual(obs, [('18S', biom_fp)])
 
         table = load_table(obs_bioms[0][1])

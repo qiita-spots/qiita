@@ -24,6 +24,7 @@ from future.utils import viewitems
 from biom import load_table
 from biom.util import biom_open
 from re import sub
+from hashlib import md5
 import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -896,7 +897,9 @@ class Analysis(qdb.base.QiitaObject):
                 algorithm = sub('[^0-9a-zA-Z]+', '', algorithm)
                 target_subfragment = sub(
                     '[^0-9a-zA-Z]+', '', target_subfragment)
-                parameters = sub('[^0-9a-zA-Z]+', '', parameters)
+                phash = md5()
+                phash.update(parameters)
+                parameters = phash.hexdigest()
                 files = sub('[^0-9a-zA-Z]+', '', files)
                 info = "%s_%s_%s_%s_%s" % (
                     data_type, algorithm, target_subfragment, parameters,
