@@ -414,13 +414,11 @@ class TestAnalysis(TestCase):
     def test_build_biom_tables(self):
         analysis = self._create_analyses_with_samples()
         grouped_samples = {
-            '18S || algorithm || target_subfragment || parameters '
-            '|| files': [(4, ['1.SKB8.640193', '1.SKD8.640184',
-                              '1.SKB7.640196'])]}
+            '18S || algorithm || files': [
+                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples)
         biom_fp = self.get_fp(
-            "%s_analysis_18S_algorithm_targetsubfragment_166e64f6c3677d0c513"
-            "901242a3e702d_files.biom" % analysis.id)
+            "%s_analysis_18S_algorithm_files.biom" % analysis.id)
         obs = [(a, basename(b)) for a, b in obs_bioms]
         self.assertEqual(obs, [('18S', basename(biom_fp))])
 
@@ -432,14 +430,13 @@ class TestAnalysis(TestCase):
     def test_build_biom_tables_duplicated_samples_not_merge(self):
         analysis = self._create_analyses_with_samples()
         grouped_samples = {
-            '18S || algorithm || target_subfragment || parameters || files': [
+            '18S || algorithm || files': [
                 (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
                 (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples, True)
         obs = [(a, basename(b)) for a, b in obs_bioms]
         biom_fp = (
-            "%s_analysis_18S_algorithm_targetsubfragment_166e64f6c3677d0c5139"
-            "01242a3e702d_files.biom" % analysis.id)
+            "%s_analysis_18S_algorithm_files.biom" % analysis.id)
         self.assertEqual(obs, [('18S', biom_fp)])
 
         table = load_table(obs_bioms[0][1])
@@ -450,8 +447,7 @@ class TestAnalysis(TestCase):
 
     def test_build_biom_tables_raise_error_due_to_sample_selection(self):
         grouped_samples = {
-            '18S || algorithm || target_subfragment || parameters '
-            '|| files': [(4, ['sample_name_1', 'sample_name_2',
+            '18S || algorithm || files': [(4, ['sample_name_1', 'sample_name_2',
                               'sample_name_3'])]}
         with self.assertRaises(RuntimeError):
             self.analysis._build_biom_tables(grouped_samples)
