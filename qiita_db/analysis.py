@@ -23,6 +23,7 @@ from os.path import join
 from future.utils import viewitems
 from biom import load_table
 from biom.util import biom_open
+from re import sub
 import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -894,6 +895,7 @@ class Analysis(qdb.base.QiitaObject):
                 info = "%s_%s_%s_%s_%s" % (
                     data_type, algorithm, target_subfragment, parameters,
                     files)
+                info = sub('[^0-9a-zA-Z]+', '', info)
                 fn = "%d_analysis_%s.biom" % (self._id, info)
                 biom_fp = join(base_fp, fn)
                 with biom_open(biom_fp, 'w') as f:
