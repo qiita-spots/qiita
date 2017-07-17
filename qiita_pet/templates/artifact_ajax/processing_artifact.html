@@ -338,7 +338,7 @@
           }
           $("<div>").appendTo("#cmd-opts-div").attr('id', 'opt-vals-div').attr('name', 'opt-vals-div');
 
-          sel.change(function(event){
+          sel.change(function(){
             var v = $("#params-sel").val();
             $("#opt-vals-div").empty();
             if (v !== "") {
@@ -354,6 +354,14 @@
             }
             else {
               $("#add-cmd-btn-div").hide();
+            }
+          });
+
+          sel.show(function(){
+            // select first option if only 2 options ("Choose parameter set", "unique value")
+            if ($("#params-sel option").length == 2) {
+              $("#params-sel")[0].selectedIndex = 1;
+              $("#params-sel").trigger("change");
             }
           });
       });
@@ -422,6 +430,7 @@
     var data = {nodes: nodes, edges: edges};
 
     var options = {
+      clickToUse: true,
       nodes: {
         shape: 'dot',
         font: {
@@ -447,7 +456,7 @@
         zoomView: true,
         selectConnectedEdges: false,
         navigationButtons: true,
-        keyboard: true
+        keyboard: false
       },
       groups: {
         jobs: {

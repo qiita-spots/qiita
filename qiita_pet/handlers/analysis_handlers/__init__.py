@@ -11,8 +11,10 @@ from .base_handlers import (CreateAnalysisHandler, AnalysisDescriptionHandler,
                             AnalysisGraphHandler, AnalysisJobsHandler)
 from .listing_handlers import (ListAnalysesHandler, AnalysisSummaryAJAX,
                                SelectedSamplesHandler)
+from .sharing_handlers import ShareAnalysisAJAX
 
 __all__ = ['CreateAnalysisHandler', 'AnalysisDescriptionHandler',
            'AnalysisGraphHandler', 'AnalysisJobsHandler',
            'ListAnalysesHandler', 'AnalysisSummaryAJAX',
-           'SelectedSamplesHandler', 'check_analysis_access']
+           'SelectedSamplesHandler', 'check_analysis_access',
+           'ShareAnalysisAJAX']

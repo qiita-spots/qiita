@@ -54,6 +54,14 @@
     <link rel="shortcut icon" href="{% raw qiita_config.portal_dir %}/static/img/favicon.ico">
 
     <script>
+      $(window).resize(function () {
+        $('body').css('padding-top', parseInt($('#navigation-bar').css("height"))+10);
+      });
+
+      $(window).load(function () {
+        $('body').css('padding-top', parseInt($('#navigation-bar').css("height"))+10);
+      });
+
       function overlay_check() {
         // from http://stackoverflow.com/q/5916900/379593
         var ua=navigator.userAgent,tem,M=ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
@@ -359,10 +367,10 @@
     {% block head %}{% end %}
   </head>
 
-  <body style="padding-top: 0px; height: 100%" onload='overlay_check();'>
+  <body style="padding-top: 70px; height: 100%" onload='overlay_check();'>
 
     <div id="qiita-main" class="qiita-main">
-      <div id="navigation-bar" class="navbar navbar-inverse navbar-static-top" role="navigation">
+      <div id="navigation-bar" class="navbar navbar-default navbar-inverse navbar-fixed-top">
         <div class="container-fluid">
           <div class="navbar-header">
             <!-- button that appears if the window is re-sized to a smaller size -->
@@ -537,6 +545,7 @@
           </div> <!--/.navbar-collapse -->
         </div>
       </div> <!--/.main nav-bar -->
+
 
       {% if message != '' %}
           {% if level not in {'danger', 'success', 'info', 'warning'} %}

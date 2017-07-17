@@ -127,31 +127,44 @@
 <div class='row'>
   <div class='col-md-12'>
     {% if processing_jobs %}
-      <b>Jobs using this set of files:</b></br>
-    {% end %}
-    {% for j_id, c_name, j_status, j_step, j_error in processing_jobs %}
-      Job <b>{{j_id}}</b> ({{c_name}}). Status: <i>{{j_status}}</i>.
-      {% if j_step %}
-        Step: <i>{{j_step}}</i>
-      {% end %}
-      {% if j_error %}
-        Error message: <i>{{j_error}}</i>
-      {% end %}
-      </br>
+      <br/>
+      <button class="btn btn-info btn-sm" data-toggle="collapse" data-target="#jobs-description">Jobs using this data</button>
+      <div id="jobs-description" class="collapse">
+        {% for j_id, c_name, j_status, j_step, j_error in processing_jobs %}
+          Job <b>{{j_id}}</b> ({{c_name}}). Status: <i>{{j_status}}</i>.
+          {% if j_step %}
+            Step: <i>{{j_step}}</i>
+          {% end %}
+          {% if j_error %}
+            Error message: <i>{{j_error}}</i>
+          {% end %}
+          </br>
+        {% end %}
+        <br/>
+      </div>
     {% end %}
   </div>
 </div>
 <div class='row'>
   <div class='col-md-12' id='artifact-summary-content'>
     {% if summary is not None %}
+      <br/>
+      <a class="btn btn-info btn-sm" href="/artifact/html_summary/{{summary}}" target="_blank">Open summary in a new window</a>
+      <br/>
       <iframe width="100%" height="900" src="/artifact/html_summary/{{summary}}" frameBorder=0></iframe>
     {% elif job is not None %}
       Job <b>{{ job[0] }}</b>: <i>{{ job[1] }}</i> {{ job[2] }}
     {% else %}
       Currently, no summary exists. </br>
       <button class="btn btn-info btn-sm" onclick="generate_html_summary({{artifact_id}});">Generate summary</button></br>
-      {% for j_id, j_error in errored_jobs %}
-        Job <b>{{ j_id }}</b>: <i>{% raw j_error.replace('\n', '</br>') %}</i></br>
+      {% if errored_jobs %}
+        <br/>
+        <button class="btn btn-info btn-sm" data-toggle="collapse" data-target="#jobs-error-description">Errored jobs</button>
+        <div id="jobs-error-description" class="collapse">
+          {% for j_id, j_error in errored_jobs %}
+            Job <b>{{ j_id }}</b>: <i>{% raw j_error.replace('\n', '</br>') %}</i></br>
+          {% end %}
+        </div>
       {% end %}
     {% end %}
   </div>

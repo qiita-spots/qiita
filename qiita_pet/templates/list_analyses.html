@@ -2,9 +2,15 @@
 
 {% block head %}
 <script type="text/javascript">
+
+
   $(document).ready(function(){
     {% if analyses %}
       $('#no-analyses').hide()
+      $('#analyses-table').dataTable({
+        "order": [[ 3, "desc" ]]
+      });
+      $('#analyses-table').DataTable();
     {% end %}
   });
 </script>
@@ -18,43 +24,43 @@
 </div>
 
 {% if analyses %}
-  <table class="table">
-    <tr>
-      <th>Analysis Name</th>
-      <th>Analysis Description</th>
-      <th>Timestamp</th>
-      <th>Mapping File</th>
-      <th>Biom Files</th>
-      <th>tgz Files</th>
-      <th>Delete?</th>
-    </tr>
-    {% for analysis in analyses %}
-      {% set _id = analysis.id %}
+  <table id="analyses-table" class="table table-bordered gray-msg">
+    <thead>
       <tr>
-        <td>
-          <a href="{% raw qiita_config.portal_dir %}/analysis/description/{{analysis.id}}/">{{analysis.name}}</a>
-        </td>
-        <td>
-         {{analysis.description}}
-        </td>
-        <td>
-         {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
-        </td>
-        <td>
-          {% raw mappings[_id] %}
-        </td>
-        <td>
-          {% raw bioms[_id] %}
-        </td>
-        <td>
-          {% raw tgzs[_id] %}
-        </td>
-        <td>
-         <a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis('{{analysis.name}}', {{analysis.id}});"></a>
-        </td>
+        <th>Artifacts</th>
+        <th>Analysis Name</th>
+        <th>Timestamp</th>
+        <th>Mapping File</th>
+        <th>Delete?</th>
       </tr>
-    {% end %}
+      <tbody>
+      {% for analysis in analyses %}
+        {% set _id = analysis.id %}
+        <tr>
+          <td>
+            {{len(analysis.artifacts)}}
+          </td>
+          <td>
+            <a href="{% raw qiita_config.portal_dir %}/analysis/description/{{_id}}/">{{analysis.name}}</a>
+            {% if analysis.description %}
+              ({{analysis.description}})
+            {% end %}
+          </td>
+          <td>
+           {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
+          </td>
+          <td>
+            {% raw mappings[_id] %}
+          </td>
+          <td>
+           <a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis('{{analysis.name}}', {{_id}});"></a>
+          </td>
+        </tr>
+      {% end %}
+      </tbody>
+    </thead>
   </table>
+
 {% end %}
 
 {% end %}
