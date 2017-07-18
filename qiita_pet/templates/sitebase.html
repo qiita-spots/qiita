@@ -55,11 +55,11 @@
 
     <script>
       $(window).resize(function () {
-        $('body').css('padding-top', parseInt($('#navigation-bar').css("height"))+10);
+        $('body').css('padding-top', $('#navigation-bar').height()+10);
       });
 
       $(window).load(function () {
-        $('body').css('padding-top', parseInt($('#navigation-bar').css("height"))+10);
+        $('body').css('padding-top', $('#navigation-bar').height()+10);
       });
 
       function overlay_check() {
