@@ -75,7 +75,7 @@ class ArtifactGetInfo(BaseHandler):
         aids = map(int, self.request.arguments.get('ids[]', []))
         only_biom = self.get_argument('only_biom', 'True') == 'True'
 
-        response = artifact_get_info(self.current_user.id, aids)
+        response = artifact_get_info(self.current_user.id, aids, only_biom)
 
         self.write(response)
 
