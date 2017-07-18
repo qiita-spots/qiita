@@ -45,9 +45,9 @@ class TestShareStudyAjax(TestHandlerBase):
         self.assertEqual(a.shared_with, [u])
 
         # Make sure shared message added to the system
-        self.assertEqual('Analysis <a href="/analysis/results/1">\'SomeAnalys'
-                         'is\'</a> has been shared with you.',
-                         u.messages()[0][1])
+        self.assertEqual(
+            'Analysis <a href="/analysis/description/1">\'SomeAnalysis\'</a> '
+            'has been shared with you.', u.messages()[0][1])
 
     def test_get_no_access(self):
         args = {'selected': 'demo@microbio.me', 'id': 2}
