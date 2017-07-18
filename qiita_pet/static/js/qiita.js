@@ -147,6 +147,7 @@ function draw_processing_graph(nodes, edges, target, artifactFunc, jobFunc) {
     edges: edges
   };
   var options = {
+    clickToUse: true,
     nodes: {
       shape: 'dot',
       font: {
@@ -172,7 +173,7 @@ function draw_processing_graph(nodes, edges, target, artifactFunc, jobFunc) {
       zoomView: true,
       selectConnectedEdges: true,
       navigationButtons: true,
-      keyboard: true
+      keyboard: false
     },
     groups: {
       jobs: {
