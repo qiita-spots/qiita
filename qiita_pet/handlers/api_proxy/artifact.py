@@ -132,7 +132,7 @@ def artifact_get_info(user_id, artifact_ids, only_biom=True):
     """
     artifact_info = {}
 
-    artifact_info = get_artifacts_information(artifact_ids. only_biom)
+    artifact_info = get_artifacts_information(artifact_ids, only_biom)
 
     return {'status': 'success', 'msg': '', 'data': artifact_info}
 
