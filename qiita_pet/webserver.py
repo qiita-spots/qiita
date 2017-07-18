@@ -30,7 +30,7 @@ from qiita_pet.handlers.study_handlers import (
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX, StudyDeleteAjax,
     ArtifactAdminAJAX, NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
-    ArtifactGetSamples, ArtifactGetBIOMInfo, WorkflowHandler,
+    ArtifactGetSamples, ArtifactGetInfo, WorkflowHandler,
     WorkflowRunHandler, JobAJAX, AutocompleteHandler)
 from qiita_pet.handlers.artifact_handlers import (
     ArtifactSummaryAJAX, ArtifactAJAX, ArtifactSummaryHandler,
@@ -108,7 +108,7 @@ class Application(tornado.web.Application):
             (r"/analysis/description/(.*)/", AnalysisDescriptionHandler),
             (r"/analysis/sharing/", ShareAnalysisAJAX),
             (r"/artifact/samples/", ArtifactGetSamples),
-            (r"/artifact/info/", ArtifactGetBIOMInfo),
+            (r"/artifact/info/", ArtifactGetInfo),
             (r"/moi-ws/", MOIMessageHandler),
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),

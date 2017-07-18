@@ -773,8 +773,7 @@ class Analysis(qdb.base.QiitaObject):
             # different stages and possible errors.
             samples = self.samples
             # gettin the info of all the artifacts to save SQL time
-            bioms_info = qdb.util.get_artifacts_bioms_information(
-                samples.keys())
+            bioms_info = qdb.util.get_artifacts_information(samples.keys())
 
             # figuring out if we are going to have duplicated samples, again
             # doing it here cause it's computational cheaper

@@ -1324,18 +1324,20 @@ def generate_study_list(study_ids, public_only=False):
     return infolist
 
 
-def get_artifacts_bioms_information(artifact_ids):
-        """Returns processing information about the bioms in the artifact
+def get_artifacts_information(artifact_ids, only_biom=True):
+        """Returns processing information about the artifact ids
 
         Parameters
         ----------
         artifact_ids : list of ints
             The artifact ids to look for. Non-existing ids will be ignored
+        only_biom : bool
+            If true only the biom artifacts are retrieved
 
         Returns
         -------
         dict
-            The info of the bioms if artifact_type is BIOM or None if not.
+            The info of the artifacts
         """
         if not artifact_ids:
             return {}
@@ -1348,10 +1350,13 @@ def get_artifacts_bioms_information(artifact_ids):
                        array_agg(parent_info.command_parameters),
                        array_agg(filepaths.filepath),
                        qiita.find_artifact_roots(a.artifact_id) AS root_id
-                FROM qiita.artifact a
+                FROM qiita.artifact a"""
+        if only_biom:
+            sql += """
                 JOIN qiita.artifact_type at ON (
                     a.artifact_type_id = at .artifact_type_id
-                        AND artifact_type = 'BIOM')
+                        AND artifact_type = 'BIOM')"""
+        sql += """
                 LEFT JOIN qiita.parent_artifact pa ON (
                     a.artifact_id = pa.artifact_id)
                 LEFT JOIN qiita.data_type dt USING (data_type_id)

@@ -26,7 +26,7 @@ from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
     artifact_types_get_req, artifact_post_req, artifact_patch_request,
-    artifact_get_prep_req, artifact_get_biom_info)
+    artifact_get_prep_req, artifact_get_info)
 
 
 class TestArtifactAPIReadOnly(TestCase):
@@ -219,8 +219,8 @@ class TestArtifactAPI(TestCase):
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_artifact_get_biom_info(self):
-        obs = artifact_get_biom_info('test@foo.bar', [5, 6, 7])
+    def test_artifact_get_info(self):
+        obs = artifact_get_info('test@foo.bar', [5, 6, 7])
         data = [
             {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
              'target_subfragment': ['V4'], 'algorithm': (
