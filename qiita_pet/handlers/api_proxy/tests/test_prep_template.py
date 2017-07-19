@@ -282,6 +282,7 @@ class TestPrepAPI(TestCase):
                 f.write('')
 
         r_client.flushdb()
+        sleep(0.5)
 
     def _wait_for_parallel_job(self, key):
         # This is needed so the clean up works - this is a distributed system
