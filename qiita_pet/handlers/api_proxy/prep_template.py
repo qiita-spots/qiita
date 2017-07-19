@@ -114,7 +114,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
         job_info = loads(job_info)
         job_id = job_info['job_id']
         if job_id:
-            if 'is_qiita_job' in job_info and job_info['is_qiita_job']:
+            if job_info['is_qiita_job']:
                 job = ProcessingJob(job_id)
                 processing = job.status in ('queued', 'running')
                 success = job.status == 'success'
@@ -126,9 +126,9 @@ def prep_template_ajax_get_req(user_id, prep_id):
                 alert_msg = ''
                 # this is not actually necessary but in case of a system
                 # failure this will avoid the error
-                job_info = r_client.get(job_id)
-                if job_info:
-                    redis_info = loads(job_info)
+                ji = r_client.get(job_id)
+                if ji:
+                    redis_info = loads(ji)
                     processing = redis_info['status_msg'] == 'Running'
                     success = redis_info['status_msg'] == 'Success'
                     if redis_info['return'] is not None:
