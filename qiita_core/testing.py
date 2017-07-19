@@ -58,5 +58,5 @@ def wait_for_processing_job(job_id):
     """
     job = ProcessingJob(job_id)
     while job.status not in ('success', 'error'):
-        sleep(0.5)
-    sleep(0.5)
+        sleep(0.8)
+    sleep(0.8)
