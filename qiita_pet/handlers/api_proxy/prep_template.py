@@ -114,7 +114,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
         job_info = loads(job_info)
         job_id = job_info['job_id']
         if job_id:
-            if job_info['is_qiita_job']:
+            if 'is_qiita_job' in job_info and job_info['is_qiita_job']:
                 job = ProcessingJob(job_id)
                 processing = job.status in ('queued', 'running')
                 success = job.status == 'success'
