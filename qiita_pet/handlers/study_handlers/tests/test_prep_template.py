@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 from unittest import main
 from json import loads
-from time import sleep
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
