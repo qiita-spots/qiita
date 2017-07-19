@@ -59,6 +59,7 @@ class TestPrepTemplateGraphAJAX(TestHandlerBase):
 
 class TestPrepTemplateAJAXReadOnly(TestHandlerBase):
     def test_get(self):
+        sleep(1)
         response = self.get('/study/description/prep_template/',
                             {'prep_id': 1, 'study_id': 1})
         self.assertEqual(response.code, 200)
