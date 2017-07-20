@@ -158,7 +158,7 @@ class ArtifactGetSamplesTest(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
 
 
-class ArtifactGetBIOMInfoTest(TestHandlerBase):
+class ArtifactGetInfoTest(TestHandlerBase):
     def test_get(self):
         response = self.get('/artifact/info/', {'ids[]': [6, 7]})
         self.assertEqual(response.code, 200)

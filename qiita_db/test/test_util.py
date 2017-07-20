@@ -843,10 +843,10 @@ class UtilTests(TestCase):
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
 
-    def test_get_artifacts_bioms_information(self):
+    def test_get_artifacts_information(self):
         # we are gonna test that it ignores 1 and 2 cause they are not biom,
         # 4 has all information and 7 and 8 don't
-        obs = qdb.util.get_artifacts_bioms_information([1, 2, 4, 7, 8])
+        obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
         # not testing timestamp
         for i in range(len(obs)):
             del obs[i]['timestamp']

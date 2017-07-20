@@ -8,8 +8,74 @@
     {% if analyses %}
       $('#no-analyses').hide()
       $('#analyses-table').dataTable({
-        "order": [[ 2, "desc" ]]
+        "order": [[ 2, "desc" ]],
+        columnDefs: [
+          {"render": function ( data, type, row, meta ) {
+            data = JSON.parse(data);
+            if (data !== null && data !== undefined && data.length != 0){
+              return '<div class="container" style="max-width: 5em;">'+
+                       '<div class="row justify-content-md-center">' +
+                         '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
+                         '<div class="col-md-1 text-center">' + data.length + '</div>' +
+                       '</div>' +
+                     '</div>';
+            } else {
+              return 'No artifacts';
+            }
+          }, targets: [0]}]
       });
+
+      $('#analyses-table tbody').on('click', 'div.details-control', function () {
+          var table = $('#analyses-table').DataTable();
+          var tr = $(this).closest('tr');
+          var row = table.row( tr );
+
+          if ( row.child.isShown() ) {
+            // This row is already open - close it
+            row.child.hide();
+            tr.removeClass('shown');
+          } else {
+            // Open this row
+            // modified from: https://jsfiddle.net/8rejaL88/2/
+            tr.addClass('shown');
+            row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
+            $.get('/artifact/info/', {ids: JSON.parse(row.data()[0]), only_biom: 'False' })
+              .done(function ( data ) {
+                if (data['status']=='success') {
+                  $('td', row.child()).html(format_biom_rows(data.data, row.index())).show();
+                } else {
+                  bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+                }
+              });
+          }
+      });
+
+      function format_biom_rows(data, row) {
+        var proc_data_table = '<table class="table" cellpadding="0" cellspacing="0" border="0" style="padding-left:0px;width:95%">';
+        proc_data_table += '<tr>';
+        proc_data_table += '<th>Name</th>';
+        proc_data_table += '<th>Processing method</th>';
+        proc_data_table += '<th>Parameters</th>';
+        proc_data_table += '<th>Files</th>';
+        proc_data_table += '</tr>';
+        $.each(data, function (idx, info) {
+          if (typeof info !== 'string' && !(info instanceof String)) {
+            proc_data_table += '<tr>';
+            proc_data_table += '<td>' + info.name + ' (' + info.artifact_id + ' - ' + info.timestamp.split('.')[0] + ')</td>';
+            proc_data_table += '<td>' + info.algorithm + '</td>';
+            var params = '';
+            for (var key in info.parameters) {
+              params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
+            }
+            proc_data_table += '<td><small>' + params + '</small></td>';
+            proc_data_table += '<td><small>' + info.files.join('<br/>')  + '</small></td>';
+            proc_data_table += '</tr>';
+          }
+        });
+
+        proc_data_table += '</table>';
+        return proc_data_table;
+      }
     {% end %}
   });
 </script>
@@ -37,7 +103,7 @@
         {% set _id = analysis.id %}
         <tr>
           <td>
-            {{len(analysis.artifacts)}}
+            {{[ar.id for ar in analysis.artifacts]}}
           </td>
           <td>
             <a href="{% raw qiita_config.portal_dir %}/analysis/description/{{_id}}/">{{analysis.name}}</a>

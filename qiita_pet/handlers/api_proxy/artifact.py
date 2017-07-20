@@ -22,7 +22,7 @@ from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import (
-    get_mountpoint, get_visibilities, get_artifacts_bioms_information)
+    get_mountpoint, get_visibilities, get_artifacts_information)
 from qiita_db.software import Command, Parameters
 from qiita_db.processing_job import ProcessingJob
 
@@ -110,7 +110,7 @@ def artifact_get_prep_req(user_id, artifact_ids):
 
 
 @execute_as_transaction
-def artifact_get_biom_info(user_id, artifact_ids):
+def artifact_get_info(user_id, artifact_ids, only_biom=True):
     """Returns all artifact info for the given artifact_ids
 
     Parameters
@@ -119,6 +119,8 @@ def artifact_get_biom_info(user_id, artifact_ids):
         user making the request
     artifact_ids : list of int
         list of artifact ids
+    only_biom : bool
+        If true only the biom artifacts are retrieved
 
     Returns
     -------
@@ -130,7 +132,7 @@ def artifact_get_biom_info(user_id, artifact_ids):
     """
     artifact_info = {}
 
-    artifact_info = get_artifacts_bioms_information(artifact_ids)
+    artifact_info = get_artifacts_information(artifact_ids, only_biom)
 
     return {'status': 'success', 'msg': '', 'data': artifact_info}
 

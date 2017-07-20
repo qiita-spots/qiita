@@ -130,15 +130,11 @@ $(document).ready(function() {
         {"targets": [ 2 ], "visible": false},
         // render zero
         {"render": function ( data, type, row, meta ) {
-          var len = 0;
-          if (data !== null && data !== undefined){
-            len = data.length;
-          }
-          if (len != 0){
+          if (data !== null && data !== undefined && data.length != 0){
             return '<div class="container" style="max-width: 5em;">'+
                      '<div class="row justify-content-md-center">' +
                        '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
-                       '<div class="col-md-1 text-center">' + len + '</div>' +
+                       '<div class="col-md-1 text-center">' + data.length + '</div>' +
                      '</div>' +
                    '</div>';
           } else {
@@ -203,15 +199,11 @@ $(document).ready(function() {
         {"targets": [ 2 ], "visible": false},
         // render zero
         {"render": function ( data, type, row, meta ) {
-          var len = 0;
-          if (data !== null && data !== undefined){
-            len = data.length;
-           }
-          if (len != 0){
+          if (data !== null && data !== undefined && data.length != 0){
             return '<div class="container" style="max-width: 5em;">'+
                      '<div class="row justify-content-md-center">' +
                        '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
-                       '<div class="col-md-1 text-center">' + len + '</div>' +
+                       '<div class="col-md-1 text-center">' + data.length + '</div>' +
                      '</div>' +
                    '</div>';
           } else {
