@@ -21,6 +21,7 @@ before_install:
   - chmod +x ascp-install-3.5.4.102989-linux-64-qiita.sh
   - ./ascp-install-3.5.4.102989-linux-64-qiita.sh
   # once we have ebi testing we should uncomment this line
+  # look for EBI below as it's part of this
   # - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then openssl aes-256-cbc -K $encrypted_a2e23aea5f14_key -iv $encrypted_a2e23aea5f14_iv -in qiita_core/support_files/config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg -d ; fi
 install:
   # install a few of the dependencies that pip would otherwise try to install
@@ -43,10 +44,11 @@ before_script:
     # Some of the tests rely on the plugin system to complete successfuly.
     # Thus, we need a qiita webserver running to be able to execute the tests.
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
-  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
-    export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
-    export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
-    fi
+  # EBI, see the end of before_install about why this block is commented out
+  # - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
+  #   export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
+  #   export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
+  #   fi
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
