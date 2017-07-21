@@ -7,7 +7,26 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+
+from tornado.web import HTTPError
+
 from qiita_core.exceptions import QiitaError
+
+
+class QiitaHTTPError(HTTPError):
+    def __init__(self, status_code=500, log_message=None, *args, **kwargs):
+        super(QiitaHTTPError, self).__init__(
+            status_code, log_message, *args, **kwargs)
+        # The HTTPError has an attribute named "reason" that will get send to
+        # the requester if specified. However, the developer need to
+        # specifically pass the keyword "reason" when raising the exception.
+        # The vast majority of our code it is not using the keyword "reason"
+        # but we are using "log_message". By setting up the attribute reason
+        # with the value in log_message, we make sure that when the answer
+        # is sent to the requester, it will contain a useful error message,
+        # rather than a generic error message.
+        if not self.reason:
+            self.reason = log_message
 
 
 class QiitaPetAuthorizationError(QiitaError):

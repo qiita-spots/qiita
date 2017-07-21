@@ -28,6 +28,8 @@ class CommandTests(TestCase):
             'req_param': ['string', None],
             'opt_int_param': ['integer', '4'],
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
+            'opt_mchoice_param': ['mchoice:["opt1", "opt2", "opt3"]',
+                                  ['opt1', 'opt2']],
             'opt_bool': ['boolean', 'False']}
         self.outputs = {'out1': 'BIOM'}
 
@@ -53,6 +55,21 @@ class CommandTests(TestCase):
         obs = list(qdb.software.Command.get_commands_by_input_type(
             ['FASTQ', 'SFF'], active_only=False))
         exp = [qdb.software.Command(1), qdb.software.Command(2)]
+        self.assertItemsEqual(obs, exp)
+
+        new_cmd = qdb.software.Command.create(
+            self.software, "Analysis Only Command",
+            "This is a command for testing",
+            {'req_art': ['artifact:["FASTQ"]', None]},
+            analysis_only=True)
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ', 'SFF'], active_only=False))
+        exp = [qdb.software.Command(1), qdb.software.Command(2)]
+        self.assertItemsEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ', 'SFF'], active_only=False, exclude_analysis=False))
+        exp = [qdb.software.Command(1), qdb.software.Command(2), new_cmd]
         self.assertItemsEqual(obs, exp)
 
     def test_get_html_artifact(self):
@@ -276,22 +293,20 @@ class CommandTests(TestCase):
         exp_optional = {
             'opt_int_param': ['integer', '4'],
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
+            'opt_mchoice_param': ['mchoice:["opt1", "opt2", "opt3"]',
+                                  ['opt1', 'opt2']],
             'opt_bool': ['boolean', 'False']}
         self.assertEqual(obs.optional_parameters, exp_optional)
+        self.assertFalse(obs.analysis_only)
 
         obs = qdb.software.Command.create(
             self.software, "Test Command 2", "This is a command for testing",
-            self.parameters)
+            self.parameters, analysis_only=True)
         self.assertEqual(obs.name, "Test Command 2")
         self.assertEqual(obs.description, "This is a command for testing")
-        exp_required = {'req_param': ('string', [None]),
-                        'req_art': ('artifact', ['BIOM'])}
         self.assertEqual(obs.required_parameters, exp_required)
-        exp_optional = {
-            'opt_int_param': ['integer', '4'],
-            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
-            'opt_bool': ['boolean', 'False']}
         self.assertEqual(obs.optional_parameters, exp_optional)
+        self.assertTrue(obs.analysis_only)
 
     def test_activate(self):
         qdb.software.Software.deactivate_all()
@@ -359,7 +374,10 @@ class SoftwareTests(TestCase):
     def test_commands(self):
         exp = [qdb.software.Command(1), qdb.software.Command(2),
                qdb.software.Command(3)]
-        self.assertEqual(qdb.software.Software(1).commands, exp)
+        obs = qdb.software.Software(1).commands
+        self.assertEqual(len(obs), 7)
+        for e in exp:
+            self.assertIn(e, obs)
 
     def test_get_command(self):
         s = qdb.software.Software(1)

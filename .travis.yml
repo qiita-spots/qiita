@@ -4,7 +4,9 @@ env:
   global:
     - PYTHON_VERSION=2.7
   matrix:
-    - TEST_ADD_STUDIES=False
+    - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
+    - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
+    - TEST_ADD_STUDIES=False COVER_PACKAGE="qiita_core qiita_ware"
     - TEST_ADD_STUDIES=True
 before_install:
   - redis-server --version
@@ -18,7 +20,9 @@ before_install:
   - wget ftp://ftp.microbio.me/pub/qiita/ascp-install-3.5.4.102989-linux-64-qiita.sh -O ascp-install-3.5.4.102989-linux-64-qiita.sh
   - chmod +x ascp-install-3.5.4.102989-linux-64-qiita.sh
   - ./ascp-install-3.5.4.102989-linux-64-qiita.sh
-  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then openssl aes-256-cbc -K $encrypted_a2e23aea5f14_key -iv $encrypted_a2e23aea5f14_iv -in qiita_core/support_files/config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg -d ; fi
+  # once we have ebi testing we should uncomment this line
+  # look for EBI below as it's part of this
+  # - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then openssl aes-256-cbc -K $encrypted_a2e23aea5f14_key -iv $encrypted_a2e23aea5f14_iv -in qiita_core/support_files/config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg -d ; fi
 install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
@@ -27,22 +31,37 @@ install:
     'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate qiita
   - pip install -U pip
-  - pip install sphinx sphinx-bootstrap-theme coveralls 'ipython[all]==2.4.1'
+  - pip install sphinx sphinx-bootstrap-theme 'ipython[all]==2.4.1' nose-timer codecov
   - travis_retry pip install . --process-dependency-links
   - 'echo "backend: Agg" > matplotlibrc'
-script:
+  # Install the biom plugin so we can run the analysis tests
+  - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
+  - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
+  - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+  - mkdir ~/.qiita_plugins
+  - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins
+before_script:
+    # Some of the tests rely on the plugin system to complete successfuly.
+    # Thus, we need a qiita webserver running to be able to execute the tests.
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
-  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
-    export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
-    export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
-    fi
+  # EBI, see the end of before_install about why this block is commented out
+  # - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
+  #   export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
+  #   export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
+  #   fi
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
+  - |
+    if [ ${TEST_ADD_STUDIES} == "False" ]; then
+        qiita pet webserver --no-build-docs start &
+    fi
+script:
+  - sleep 5
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then qiita-cron-job ; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita-test-install ; fi
-  - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests --with-doctest --with-coverage -v --cover-package=qiita_db,qiita_pet,qiita_core,qiita_ware; fi
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE; fi
   - flake8 qiita_* setup.py scripts/*
   - ls -R /home/travis/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_pet/support_files/doc/
   - qiita pet webserver
@@ -52,4 +71,4 @@ services:
   - redis-server
   - postgresql
 after_success:
-  - if [ ${TEST_ADD_STUDIES} == "False" ]; then coveralls ; fi
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then codecov ; fi

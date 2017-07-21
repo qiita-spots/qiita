@@ -330,6 +330,7 @@
     var data = {nodes: nodes, edges: edges};
 
     var options = {
+      clickToUse: true,
       nodes: {
         shape: 'dot',
         font: {
@@ -355,7 +356,7 @@
         zoomView: true,
         selectConnectedEdges: false,
         navigationButtons: true,
-        keyboard: true
+        keyboard: false
       },
       groups: {
         jobs: {

@@ -2,6 +2,34 @@
 <script type="text/javascript">
   var network;
 
+  /**
+   *
+   * This function is needed by the artifact subsection of the page. Since the
+   * artifact can be either embedded in the analysis pipeline or in the study
+   * pipeline, we take advantage of the templating system to abstract the way
+   * the graph should be updated. In the study pipeline (current) the graph
+   * is simply relaoded by calling load_template_graph.
+   *
+   */
+  function reload_graph() {
+    load_template_graph();
+  }
+
+  /**
+   *
+   * This function is needed by the artifact subsection of the page. After the
+   * artifact is sent for deletion, we need to populate the main div with
+   * the current prep id
+   *
+   */
+  function reload_UI_post_artifact_delete() {
+      populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
+  };
+
+  function load_process_artifact_ui(artifact_id) {
+      populate_main_div('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/process/');
+  };
+
   /*
    * Function to draw a vis.Network
    *
@@ -25,6 +53,7 @@
       edges: edges
     };
     var options = {
+      clickToUse: true,
       nodes: {
         shape: 'dot',
         font: {
@@ -50,7 +79,7 @@
         zoomView: true,
         selectConnectedEdges: true,
         navigationButtons: true,
-        keyboard: true
+        keyboard: false
       },
       groups: {
         jobs: {
@@ -73,7 +102,7 @@
 
       if (clickedNode.group == 'artifact') {
         var artifact_id = +ids[0];
-        load_artifact_summary(artifact_id);
+        populateContentArtifact(artifact_id);
       } else {
         $("#prep-artifact-summary-div").html("");
       }
@@ -291,12 +320,14 @@
    * This function executes an AJAX call to populate the prep-artifact-summary-div
    *
    */
-  function load_artifact_summary(artifact_id) {
+  function populateContentArtifact(artifact_id) {
     show_loading("prep-artifact-summary-div");
-    $.get('{% raw qiita_config.portal_dir %}/study/description/artifact_summary/', {'artifact_id': artifact_id})
-      .done(function ( data ) {
-        $("#prep-artifact-summary-div").html(data);
-      });
+    $.get('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/summary/', function(data) {
+      $("#prep-artifact-summary-div").html(data);
+    })
+     .fail(function(object, status, error_msg) {
+       $("#prep-artifact-summary-div").html("Error loading artifact information " + object.statusText);
+     });
   }
 
   /*

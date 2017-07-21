@@ -100,16 +100,23 @@ class CommandListHandler(OauthBaseHandler):
             cmd_desc = self.get_argument('description')
             req_params = loads(self.get_argument('required_parameters'))
             opt_params = loads(self.get_argument('optional_parameters'))
+
+            for p_name, (p_type, dflt) in opt_params.items():
+                if p_type.startswith('mchoice'):
+                    opt_params[p_name] = [p_type, loads(dflt)]
+
             outputs = self.get_argument('outputs', None)
             if outputs:
                 outputs = loads(outputs)
             dflt_param_set = loads(self.get_argument('default_parameter_sets'))
+            analysis_only = self.get_argument('analysis_only', False)
 
             parameters = req_params
             parameters.update(opt_params)
 
             cmd = qdb.software.Command.create(
-                plugin, cmd_name, cmd_desc, parameters, outputs)
+                plugin, cmd_name, cmd_desc, parameters, outputs,
+                analysis_only=analysis_only)
 
             if dflt_param_set is not None:
                 for name, vals in dflt_param_set.items():
@@ -221,4 +228,6 @@ class ReloadPluginAPItestHandler(OauthBaseHandler):
         for fp in conf_files:
             s = qdb.software.Software.from_file(fp, update=True)
             s.activate()
+            s.register_commands()
+
         self.finish()

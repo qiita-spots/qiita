@@ -876,8 +876,6 @@ class TestPrepTemplate(TestCase):
         # prep and qiime files have been created
         filepaths = pt.get_filepaths()
         self.assertEqual(len(filepaths), 2)
-        self.assertEqual(filepaths[0][0], fp_count + 2)
-        self.assertEqual(filepaths[1][0], fp_count + 1)
 
     def test_create(self):
         """Creates a new PrepTemplate"""
@@ -932,7 +930,6 @@ class TestPrepTemplate(TestCase):
     def test_create_warning(self):
         """Warns if a required columns is missing for a given functionality
         """
-        fp_count = qdb.util.get_count("qiita.filepath")
         del self.metadata['barcode']
         pt = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning,
@@ -1000,8 +997,6 @@ class TestPrepTemplate(TestCase):
         # prep and qiime files have been created
         filepaths = pt.get_filepaths()
         self.assertEqual(len(filepaths), 2)
-        self.assertEqual(filepaths[0][0], fp_count + 2)
-        self.assertEqual(filepaths[1][0], fp_count + 1)
 
     def test_create_investigation_type_error(self):
         """Create raises an error if the investigation_type does not exists"""
