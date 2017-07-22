@@ -19,11 +19,21 @@ Analysis workflow
 * creating new analysis
 Select Analysis -> Create new analysis from the main Qiita toolbar. From the list of your studies, select which artifacts you want to add to your analysis.
 
-* subsetting (filter_samples)
+[image]
+
+The analysis workflow now has a similar layout to sample processing. By selecting artifacts and commands from the drop-down menu below the workflow visualization, an entire analysis workflow can be created.
+
+* filtering samples
+
+BIOM artifact can be filtered to include samples containing specific metadata categories, or minimum/maximum frequency or number of features.
 
 * rarefying
 
+BIOM artifact can be rarefied to a desired sampling depth and results in a new rarefied BIOM artifact.
+
 * taxa summary
+
+
 
 * alpha diversity
 
