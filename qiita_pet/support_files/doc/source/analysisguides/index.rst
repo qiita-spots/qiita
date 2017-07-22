@@ -21,12 +21,12 @@ Each analysis out of taxa summary, alpha diversity and beta diversity produces a
 Filtering samples and rarefaction produce downloadable BIOM artifacts.
 
 * creating new analysis
-Select Analysis -> Create new analysis from the main Qiita toolbar. From the list of your studies, select which studies and artifacts you want to add to your analysis.
+   Select Analysis -> Create new analysis from the main Qiita toolbar. From the list of your studies, select which studies and artifacts you want to add to your analysis.
 
 .. figure::  figure1.png
    :align:   center
 
-The analysis workflow now has a similar layout to sample processing. By selecting artifacts and commands from the drop-down menu below the workflow visualization, an entire analysis workflow can be created.
+   The analysis workflow now has a similar layout to sample processing. By selecting artifacts and commands from the drop-down menu below the workflow visualization, an entire analysis workflow can be created.
 
 .. figure::  figure2.png
    :align:   center
