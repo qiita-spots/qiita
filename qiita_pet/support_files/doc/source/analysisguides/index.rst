@@ -23,35 +23,35 @@ Filtering samples and rarefaction produce downloadable BIOM artifacts.
 * creating new analysis
 Select Analysis -> Create new analysis from the main Qiita toolbar. From the list of your studies, select which studies and artifacts you want to add to your analysis.
 
-.. figure::  images/figure1.png
+.. figure::  figure1.png
    :align:   center
 
 The analysis workflow now has a similar layout to sample processing. By selecting artifacts and commands from the drop-down menu below the workflow visualization, an entire analysis workflow can be created.
 
-.. figure::  images/figure2.png
+.. figure::  figure2.png
    :align:   center
 
 
 * filtering samples
 
-BIOM artifact can be filtered to include samples containing specific metadata categories, or minimum/maximum frequency or number of features.
+   BIOM artifact can be filtered to include samples containing specific metadata categories, or minimum/maximum frequency or number of features.
 
 * rarefying
 
-BIOM artifact can be rarefied to a desired sampling depth and results in a new rarefied BIOM artifact.
+   BIOM artifact can be rarefied to a desired sampling depth and results in a new rarefied BIOM artifact.
 
 * taxa summary
 
-Takes BIOM artifact as input and returns an interactive stacked barchart which can be investigated on different taxonomic levels, as well as using metadata categories.
+   Takes BIOM artifact as input and returns an interactive stacked barchart which can be investigated on different taxonomic levels, as well as using metadata categories.
 
 * alpha diversity
 
-Takes BIOM artifact as input. Produces a vector of alpha diversity results (text file) and downloadable interactive boxplots. Visualizations can be investigated using metadata categories and appropriate statistics are generated for all groups and pairwise.
+   Takes BIOM artifact as input. Produces a vector of alpha diversity results (text file) and downloadable interactive boxplots. Visualizations can be investigated using metadata categories and appropriate statistics are generated for all groups and pairwise.
 
 * beta diversity
 
-Beta diversity analysis on a BIOM artifact can be performed using a variety of phylogenetic and non-phylogenetic distance metrics. Produces a distance matrix as output. 
+   Beta diversity analysis on a BIOM artifact can be performed using a variety of phylogenetic and non-phylogenetic distance metrics. Produces a distance matrix as output. 
 
 * principal coordinate analysis
 
-Takes beta diversity distance matrix (result of beta diversity) and generates an interactive EMPeror plot.
+   Takes beta diversity distance matrix (result of beta diversity) and generates an interactive EMPeror plot.
