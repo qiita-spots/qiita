@@ -20,7 +20,7 @@ Looking for information about our new analysis pipeline? Please see the document
 .. toctree::
    :maxdepth: 1  
    
-   analysisguide/index.rst
+   analysisguides/index.rst
 
 Beginner's Guides:
 The latests tutorials can be found in: `CMI Qiita/GNPS workshop pages <http://cmi-workshop.readthedocs.io/en/latest/>`__.
