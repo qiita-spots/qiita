@@ -206,6 +206,7 @@
     else {
       create_job(command_id, params_id, req_params, opt_params, workflow_id);
     }
+
     $("#processing-info-div").empty();
     $('#run-btn').prop('disabled', false);
     $("#graph-network-div").attr("data-wf-job-count", +$("#graph-network-div").attr("data-wf-job-count") + 1);
