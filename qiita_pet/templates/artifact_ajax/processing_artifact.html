@@ -177,9 +177,6 @@
    *
    */
   function add_job() {
-    show_loading('graph-network-div');
-    show_loading('processing-info-div');
-
     var command_id = $("#command-sel").val();
     var params_id = $("#params-sel").val();
     var params = {};
@@ -197,6 +194,7 @@
     });
 
     var workflow_id = $("#graph-network-div").attr("data-wf-id");
+
     if (workflow_id == -1) {
       // This is the first command to be run, so the workflow still doesn't
       // exist in the system.
@@ -205,6 +203,7 @@
     else {
       create_job(command_id, params_id, req_params, opt_params, workflow_id);
     }
+
     $("#processing-info-div").empty();
     $('#run-btn').prop('disabled', false);
     $("#graph-network-div").attr("data-wf-job-count", +$("#graph-network-div").attr("data-wf-job-count") + 1);

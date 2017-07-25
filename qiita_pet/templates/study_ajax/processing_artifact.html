@@ -295,21 +295,22 @@
     $.get('{% raw qiita_config.portal_dir %}/study/process/commands/', {artifact_types: types})
       .done(function (data) {
         $("#processing-info-div").empty();
-        $("#processing-info-div").html("<i>Choose command: </i>");
+
         // Create the command select dropdown
-        var sel = $('<select>').appendTo('#processing-info-div').attr('id', 'command-sel').attr('name', 'command');
-        sel.append($("<option>").attr('value', "").text("Choose command..."));
+        var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#processing-info-div");
+        $('<label>').addClass('col-sm-2').addClass('col-form-label').text('Choose command:').appendTo($rowDiv).attr('for', 'command-sel');
+        var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
+        var sel = $('<select>').appendTo($colDiv).attr('id', 'command-sel').attr('name', 'command').addClass('form-control').attr('placeholder', 'Choose command...');
+        sel.append($("<option>").attr('value', "").text("Choose command...").prop('disabled', true).prop('selected', true));
         for(var i=0; i<data.commands.length; i++) {
           sel.append($("<option>").attr('value', data.commands[i].id).text(data.commands[i].command));
         }
         sel.change(function(event) {
+          $("#cmd-opts-div").empty();
+          $("#add-cmd-btn-div").hide();
           var v = $("#command-sel").val();
           if (v !== "") {
-            load_command_options(v, sel_artifacts_info);
-          }
-          else {
-            $("#cmd-opts-div").empty();
-            $("#add-cmd-btn-div").hide();
+            load_command_options(v, sel_artifacts_info, is_analysis_pipeline);
           }
         });
 
@@ -317,8 +318,9 @@
         $('<div>').appendTo('#processing-info-div').attr('id', 'cmd-opts-div').attr('name', 'cmd-opts-div');
 
         // Create the add command button - but not show it yet
-        $('<div hidden>').appendTo('#processing-info-div').attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
-        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(add_job);
+        var $rowDiv = $('<div hidden>').addClass('row').addClass('form-group').appendTo('#processing-info-div').attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
+        var $colDiv = $('<div>').addClass('col-sm-2').appendTo($rowDiv);
+        $('<button>').appendTo($colDiv).addClass('btn btn-info').text('Add Command').click(add_job);
       });
   }
 
