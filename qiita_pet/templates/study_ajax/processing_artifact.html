@@ -158,7 +158,7 @@
    *
    */
   function create_workflow(command_id, params_id, req_params) {
-    $.post('{% raw qiita_config.portal_dir %}/study/process/workflow/', {command_id: cmd_id, dflt_params_id: params_id, req_params: JSON.stringify(req_params) })
+    $.post('{% raw qiita_config.portal_dir %}/study/process/workflow/', {dflt_params_id: params_id, req_params: JSON.stringify(req_params) })
       .done(function(data) {
         if (data.status == 'success') {
           $("#graph-network-div").attr("data-wf-id", data.workflow_id);
