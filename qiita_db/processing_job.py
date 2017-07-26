@@ -599,12 +599,13 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # Get the validator command for the current artifact type and
                 # create a new job
                 cmd = qdb.software.Command.get_validator(atype)
+                values_dict = {
+                    'files': dumps(filepaths), 'artifact_type': atype,
+                    'template': template, 'provenance': dumps(provenance)}
+                if analysis is not None:
+                    values_dict['analysis'] = analysis
                 validate_params = qdb.software.Parameters.load(
-                    cmd, values_dict={'files': dumps(filepaths),
-                                      'artifact_type': atype,
-                                      'template': template,
-                                      'analysis': analysis,
-                                      'provenance': dumps(provenance)})
+                    cmd, values_dict=values_dict)
                 validator_jobs.append(
                     ProcessingJob.create(self.user, validate_params))
 

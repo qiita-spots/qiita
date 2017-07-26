@@ -298,7 +298,10 @@ def sample_template_summary_get_req(samp_id, user_id):
     for column in df.columns:
         counts = df[column].value_counts()
         out['stats'][str(column)] = [(str(key), counts[key])
-                                     for key in natsorted(counts.index)]
+                                     for key in natsorted(
+                                        counts.index,
+                                        key=lambda x: unicode(
+                                            x, errors='ignore'))]
 
     return out
 
