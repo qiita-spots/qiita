@@ -121,7 +121,7 @@ class StudyTags(BaseHandler):
         study_id = to_int(study_id)
         req_op = self.get_argument('op')
         req_path = self.get_argument('path')
-        req_value = self.request.arguments.get('value[]', None)
+        req_value = self.request.arguments.get('value[]', [])
         req_form = self.get_argument('form', None)
 
         response = study_tags_patch_request(
