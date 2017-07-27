@@ -135,15 +135,9 @@ class SampleTemplate(MetadataTemplate):
             sql = "DROP TABLE qiita.{0}".format(table_name)
             qdb.sql_connection.TRN.add(sql)
 
-            sql = 'ALTER TABLE qiita.{0} DISABLE TRIGGER ALL'.format(
-                cls._table)
-            qdb.sql_connection.TRN.add(sql)
             sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
                 cls._table, cls._id_column)
             qdb.sql_connection.TRN.add(sql, args)
-            sql = 'ALTER TABLE qiita.{0} ENABLE TRIGGER ALL'.format(
-                cls._table)
-            qdb.sql_connection.TRN.add(sql)
 
             qdb.sql_connection.TRN.execute()
 

@@ -256,22 +256,14 @@ class PrepTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.add(sql, args)
 
             # Remove the row from study_prep_template
-            sql = 'ALTER TABLE qiita.study_prep_template DISABLE TRIGGER ALL'
-            qdb.sql_connection.TRN.add(sql)
             sql = """DELETE FROM qiita.study_prep_template
                      WHERE {0} = %s""".format(cls._id_column)
             qdb.sql_connection.TRN.add(sql, args)
-            sql = 'ALTER TABLE qiita.study_prep_template ENABLE TRIGGER ALL'
-            qdb.sql_connection.TRN.add(sql)
 
             # Remove the row from prep_template
-            sql = 'ALTER TABLE qiita.prep_template DISABLE TRIGGER ALL'
-            qdb.sql_connection.TRN.add(sql)
             sql = "DELETE FROM qiita.prep_template WHERE {0} = %s".format(
                 cls._id_column)
             qdb.sql_connection.TRN.add(sql, args)
-            sql = 'ALTER TABLE qiita.prep_template ENABLE TRIGGER ALL'
-            qdb.sql_connection.TRN.add(sql)
 
             qdb.sql_connection.TRN.execute()
 
