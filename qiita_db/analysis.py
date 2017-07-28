@@ -800,6 +800,9 @@ class Analysis(qdb.base.QiitaObject):
                     # [0] there is always just one biom
                     l += " || %s" % [f for f in files
                                      if f.endswith('.biom')][0]
+                elif 'Pick closed-reference OTUs, QIIME' in algorithm:
+                    l = ("%s || Pick closed-reference OTUs, QIIME ||" % (
+                         data_type))
                 else:
                     l += " ||"
 
