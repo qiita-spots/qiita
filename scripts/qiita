@@ -460,12 +460,16 @@ def start(port, master):
             # registering definition artifacts
             for s in sdefinition:
                 s.register_commands()
-                sleep(0.5)
+                # sleep is required as we don't want to saturate workers with
+                # lots of requests
+                sleep(1)
             # sleep to make sure that all definitions are done
-            sleep(3)
+            sleep(4)
             for s in stransformation:
                 s.register_commands()
-                sleep(0.5)
+                # sleep is required as we don't want to saturate workers with
+                # lots of requests
+                sleep(1)
 
         ioloop.add_timeout(ioloop.time() + 0.5, callback_function)
 
