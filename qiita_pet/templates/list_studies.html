@@ -3,7 +3,6 @@
 
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.min.css" type="text/css">
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
-<link href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.tagit.css" rel="stylesheet" type="text/css">
 
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
@@ -46,7 +45,7 @@ function fillAbstract(table, row) {
 
 var admin_tags = [];
 var user_tags = [];
-var tag_selected = '';
+var tag_selected = [];
 $(document).ready(function() {
   var user_studies_ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&search_type=user&sEcho=" + Math.floor(Math.random()*1001);
   var studies_ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&search_type=public&sEcho=" + Math.floor(Math.random()*1001);
@@ -55,23 +54,30 @@ $(document).ready(function() {
 
   // we need to generate the tags before the study list so we can populate the
   // tags within the study list
-  $("#studyTags").tagit({
-    readOnly: true,
-    onTagClicked: function(evt, ui) {
-      var tag = $('.tagit').tagit('tagLabel', ui.tag);
-      var current_color = ui.tag.css('border-color');
-      $('.tagit-choice').each(function(){ $(this).css('border-color', '#D3D3D3') });
-      if (current_color != 'rgb(0, 0, 0)') {
-        ui.tag.css('border-color', '#000');
-        tag_selected = tag;
-      } else {
-        tag_selected = '';
-      }
-      $('#user-studies-table').DataTable().draw();
-      $('#studies-table').DataTable().draw();
-    },
+  $(".js-select2-multiple").select2({
+    placeholder: "Select tags for filtering"
   });
+
   update_tags();
+
+  $('.js-select2-multiple').on("change", function(e) {
+    tag_selected = []
+    var color_user = '#1E90FF';
+    var color_admin = '#FFA500';
+    $(".js-select2-multiple option:selected").each(function() {
+      var value = $(this).text();
+      tag_selected.push(value);
+      $("[title='" + value + "']").each(function () {
+        var color = color_user;
+        if (jQuery.inArray(value, admin_tags) >= 0) {
+          color = color_admin;
+        }
+        $(this).css('color', color);
+      });
+    });
+    $('#user-studies-table').DataTable().draw();
+    $('#studies-table').DataTable().draw();
+  });
 
   $("#search-waiting").hide();
   moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
@@ -301,12 +307,13 @@ $(document).ready(function() {
   // adding tag search/filter
   $.fn.dataTable.ext.search.push(
     function( settings, data, data_idx, row ) {
-      if (tag_selected == '') {
-        return true;
-      } else if (jQuery.inArray(tag_selected, row['study_tags']) >= 0) {
-          return true;
+      var tag_selected_len = tag_selected.length;
+      for (var i = 0; i < tag_selected_len; i++) {
+        if (!row['study_tags'].includes(tag_selected[i])) {
+          return false;
+        }
       }
-      return false;
+      return true;
     }
   );
 
@@ -359,22 +366,26 @@ function update_tags(){
       user_tags = data.tags.user;
     }
   });
-  jQuery.each(admin_tags.concat(user_tags), function( index, value ) {
-    $("#studyTags").tagit("createTag", value);
+
+  var optgroup = $('<optgroup>');
+  optgroup.attr('label', 'User Tags');
+  $.each(user_tags, function (index, value) {
+    var option = $("<option></option>");
+    option.val(index);
+    option.text(value);
+    optgroup.append(option);
   });
-  // for some unknown reason when we have tagit -> onTagClicked, the css/color
-  // is not respected; thus coloring here
-  var color_user = '#1E90FF';
-  var color_admin = '#FFA500';
-  $('.tagit-choice').children('a').each(function(){
-    var element = $(this);
-    var tag = element.text();
-    var color = color_user;
-    if (jQuery.inArray(tag, admin_tags) >= 0) {
-      color = color_admin;
-    }
-    element.css('color', color)
+  $("#study_tags_multiple").append(optgroup);
+
+  var optgroup = $('<optgroup>');
+  optgroup.attr('label', 'Admin Tags');
+  $.each(admin_tags, function (index, value) {
+    var option = $("<option></option>");
+    option.val(index);
+    option.text(value);
+    optgroup.append(option);
   });
+  $("#study_tags_multiple").append(optgroup);
 }
 
 function add_metacat(metacat) {
@@ -395,7 +406,8 @@ function add_metacat(metacat) {
         <span style="color: #1E90FF">User</span>
       )</small>
     </h5>
-    <ul id="studyTags"></ul>
+    <select class="js-select2-multiple form-control" id="study_tags_multiple" multiple="multiple" style="width: 100%"></select>
+
     <h3 class="gray-msg">Your Studies (includes shared with you)</h3>
     <table id="user-studies-table" class="table table-bordered gray-msg">
       <thead>
