@@ -98,6 +98,7 @@ def qiita_recover_jobs():
                 print ("Job '%s' has too many validators status (%d), check "
                        "them by hand" % (j, len(status)))
                 continue
+            status = list(status)[0]
 
             if status == 'waiting':
                 print "releasing job validators: %s" % j
@@ -114,8 +115,8 @@ def qiita_recover_jobs():
                     vjob._set_status('in_construction')
                 _submit_jobs(validators + ' validator, error')
             else:
-                print ("Check the status of this job (%s) and validators"
-                       "(%s)." % (j, validators))
+                print ("Check the status of this job %s : %s and validators"
+                       "%s." % (j, status, validators))
 
         jids_to_recover = jids_to_recover - set(jobs_with_validators)
 
