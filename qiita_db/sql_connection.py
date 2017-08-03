@@ -382,7 +382,9 @@ class SQLConnectionHandler(object):
                 executor()
                 yield cur
             except PostgresError as e:
-                self._raise_execution_error(sql, sql_args, e)
+                self._connection.rollback()
+                raise ValueError("Error running SQL: %s. MSG: %s\n" % (
+                    errorcodes.lookup(e.pgcode), e.message))
             else:
                 self._connection.commit()
 
