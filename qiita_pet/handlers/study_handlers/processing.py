@@ -26,7 +26,9 @@ class ListCommandsHandler(BaseHandler):
         # Fun fact - if the argument is a list, JS adds '[]' to the
         # argument name
         artifact_types = self.get_argument("artifact_types[]")
-        self.write(list_commands_handler_get_req(artifact_types))
+        exclude_analysis = self.get_argument('include_analysis') == 'false'
+        self.write(
+            list_commands_handler_get_req(artifact_types, exclude_analysis))
 
 
 class ListOptionsHandler(BaseHandler):
@@ -46,10 +48,10 @@ class WorkflowRunHandler(BaseHandler):
 class WorkflowHandler(BaseHandler):
     @authenticated
     def post(self):
-        dflt_params_id = self.get_argument('dflt_params_id')
-        req_params = self.get_argument('req_params')
+        command_id = self.get_argument('command_id')
+        params = self.get_argument('params')
         self.write(workflow_handler_post_req(
-            self.current_user.id, dflt_params_id, req_params))
+            self.current_user.id, command_id, params))
 
     @authenticated
     def patch(self):

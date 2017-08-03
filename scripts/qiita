@@ -16,6 +16,7 @@ from os.path import join, abspath, dirname, basename
 from future.utils import viewitems
 from glob import glob
 from time import sleep
+from multiprocessing import active_children
 
 import click
 import tornado.httpserver
@@ -414,6 +415,7 @@ def start(port, master):
     # into an entirely different script.
     from qiita_pet.webserver import Application
     from tornado.options import options, parse_command_line
+    from tornado.ioloop import PeriodicCallback
 
     if master:
         # Deactivate all the plugins and only activate those that are currently
@@ -450,14 +452,33 @@ def start(port, master):
 
     if master:
         def callback_function():
-            for s in qdb.software.Software.iter_active():
+            active_software = list(qdb.software.Software.iter_active())
+            sdefinition = [s for s in active_software
+                           if s.type == 'artifact definition']
+            stransformation = [s for s in active_software
+                               if s.type == 'artifact transformation']
+            # registering definition artifacts
+            for s in sdefinition:
                 s.register_commands()
-                # Not sure why this sleep is needed, but when testing in the
-                # test environment, some of the plugins were not registered
-                # unless this sleep was added here
-                sleep(0.5)
+                # sleep is required as we don't want to saturate workers with
+                # lots of requests
+                sleep(1)
+            # sleep to make sure that all definitions are done
+            sleep(4)
+            for s in stransformation:
+                s.register_commands()
+                # sleep is required as we don't want to saturate workers with
+                # lots of requests
+                sleep(1)
 
         ioloop.add_timeout(ioloop.time() + 0.5, callback_function)
+
+    # Set a PeriodicCallback for cleaning up the threads
+    # To understand why this is working as expected, check the multiprocessing
+    # documentation https://docs.python.org/2/library/multiprocessing.html
+    # 1200000 == 20 min
+    PeriodicCallback(lambda: active_children(), 1200000).start()
+
     ioloop.start()
 
 # #############################################################################

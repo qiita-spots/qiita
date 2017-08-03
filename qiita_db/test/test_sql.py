@@ -20,26 +20,6 @@ class TestSQL(TestCase):
             if exists(fp):
                 remove(fp)
 
-    def test_collection_job_trigger_bad_insert(self):
-        # make sure an incorrect job raises an error
-        with self.assertRaises(ValueError):
-            self.conn_handler.execute(
-                'INSERT INTO qiita.collection_job (collection_id, job_id) '
-                'VALUES (1, 3)')
-        obs = self.conn_handler.execute_fetchall(
-            'SELECT * FROM qiita.collection_job')
-        self.assertNotIn([[1, 3]], obs)
-
-    def test_collection_job_trigger(self):
-        # make sure a correct job inserts successfully
-        self.conn_handler.execute(
-            'INSERT INTO qiita.collection_job (collection_id, job_id) '
-            'VALUES (1, 2)')
-        obs = self.conn_handler.execute_fetchall(
-            'SELECT * FROM qiita.collection_job')
-        exp = [[1, 1], [1, 2]]
-        self.assertEqual(obs, exp)
-
     def test_find_artifact_roots_is_root(self):
         """Correctly returns the root if the artifact is already the root"""
         sql = "SELECT * FROM qiita.find_artifact_roots(%s)"

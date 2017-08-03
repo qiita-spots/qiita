@@ -298,7 +298,10 @@ def sample_template_summary_get_req(samp_id, user_id):
     for column in df.columns:
         counts = df[column].value_counts()
         out['stats'][str(column)] = [(str(key), counts[key])
-                                     for key in natsorted(counts.index)]
+                                     for key in natsorted(
+                                        counts.index,
+                                        key=lambda x: unicode(
+                                            x, errors='ignore'))]
 
     return out
 
@@ -521,7 +524,9 @@ def sample_template_patch_request(user_id, req_op, req_path, req_value=None,
     if req_op == 'remove':
         req_path = [v for v in req_path.split('/') if v]
 
-        # format: study_id/row_id/column|sample/attribute_id
+        # format
+        # column: study_id/row_id/columns/column_name
+        # sample: study_id/row_id/samples/sample_id
         if len(req_path) != 4:
             return {'status': 'error',
                     'message': 'Incorrect path parameter'}
