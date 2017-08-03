@@ -269,7 +269,7 @@ def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
         qdb.sql_connection.TRN.execute()
         qdb.util.move_filepaths_to_upload_folder(artifact.study.id, old_fps)
         fp_ids = qdb.util.insert_filepaths(
-            fps, artifact.id, artifact.artifact_type, "filepath")
+            fps, artifact.id, artifact.artifact_type)
         sql = """INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
                  VALUES (%s, %s)"""
         sql_args = [[artifact.id, fp_id] for fp_id in fp_ids]

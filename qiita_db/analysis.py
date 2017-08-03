@@ -976,7 +976,7 @@ class Analysis(qdb.base.QiitaObject):
             filetype_id = qdb.util.convert_to_id(filetype, 'filepath_type')
             _, mp = qdb.util.get_mountpoint('analysis')[0]
             fpid = qdb.util.insert_filepaths([
-                (join(mp, filename), filetype_id)], -1, 'analysis', 'filepath',
+                (join(mp, filename), filetype_id)], -1, 'analysis',
                 move_files=False)[0]
 
             col = ""

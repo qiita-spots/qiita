@@ -57,7 +57,7 @@ with TRN:
         a_id = a.id
         # Add the new tgz file to the artifact.
         fp_ids = insert_filepaths([(tgz, tgz_id)], a_id, a.artifact_type,
-                                  "filepath", move_files=False)
+                                  move_files=False)
         sql = """INSERT INTO qiita.artifact_filepath
                     (artifact_id, filepath_id)
                  VALUES (%s, %s)"""
@@ -104,7 +104,7 @@ with TRN:
 
         # Add the new tgz file to the analysis.
         fp_ids = insert_filepaths([(tgz, tgz_id)], analysis_id, 'analysis',
-                                  "filepath", move_files=False)
+                                  move_files=False)
         sql = """INSERT INTO qiita.analysis_filepath
                     (analysis_id, filepath_id)
                  VALUES (%s, %s)"""
