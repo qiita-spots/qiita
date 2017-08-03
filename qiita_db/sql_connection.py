@@ -133,7 +133,7 @@ from functools import partial, wraps
 from datetime import date, time, datetime
 
 from psycopg2 import (connect, ProgrammingError, Error as PostgresError,
-                      OperationalError)
+                      OperationalError, errorcodes)
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import (
     ISOLATION_LEVEL_AUTOCOMMIT, ISOLATION_LEVEL_READ_COMMITTED,
@@ -383,8 +383,8 @@ class SQLConnectionHandler(object):
                 yield cur
             except PostgresError as e:
                 self._connection.rollback()
-                raise ValueError("Error running SQL query: %s\nARGS: %s\n"
-                                 "Error: %s" % (sql, str(sql_args), e))
+                raise ValueError("Error running SQL: %s. MSG: %s\n" % (
+                    errorcodes.lookup(e.pgcode), e.message))
             else:
                 self._connection.commit()
 
@@ -645,10 +645,10 @@ class Transaction(object):
         ValueError
         """
         self.rollback()
+
         raise ValueError(
-            "Error running SQL query:\n"
-            "Query: %s\nArguments: %s\nError: %s\n"
-            % (sql, str(sql_args), str(error)))
+            "Error running SQL: %s. MSG: %s\n" % (
+                errorcodes.lookup(error.pgcode), error.message))
 
     @_checker
     def add(self, sql, sql_args=None, many=False):
