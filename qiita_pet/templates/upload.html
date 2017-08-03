@@ -32,14 +32,14 @@
             <td class="progress-text" nowrap="nowrap"></td>
             <td class="progress-pause" nowrap="nowrap">
               &nbsp;&nbsp;&nbsp;&nbsp;
-              <a href="#" onclick="uploader.resumable.upload(); return(false);" class="progress-resume-link"><span class="glyphicon glyphicon-play"></span></a>
-
-              <a href="#" onclick="uploader.resumable.pause(); return(false);" class="progress-pause-link"><span class="glyphicon glyphicon-pause"></span></a>
+              <a href="#" onclick="uploader.resumable.upload(); $('#uploader_status').html('~~ Uploading ~~'); return(false);" class="progress-resume-link"><span class="glyphicon glyphicon-play"></span></a>
+              <a href="#" onclick="uploader.resumable.pause(); $('#uploader_status').html('~~ Paused ~~'); return(false);" class="progress-pause-link"><span class="glyphicon glyphicon-pause"></span></a>
             </td>
           </tr>
           <tr>
             <td colspan="3">
               <div class="blinking-message">
+                <div id="uploader_status">~~ Uploading ~~</div>
                 Keep track of your upload or pause/resume it! <span class="glyphicon glyphicon-arrow-up"></span>
                 <br/>
                 <small>(you can even close your computer or change networks!)</small>
