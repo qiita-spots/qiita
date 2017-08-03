@@ -102,13 +102,13 @@
       {% end %}
     </h4>
     {% if processing_parameters %}
-      <small>
+      <p style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
         <b>Processing parameters:</b>
         {% for key in processing_parameters %}
           <i>{% raw key %}</i>: <i>{% raw processing_parameters[key] %}</i>
         {% end %}
-        <br/><br/>
-      </small>
+        <br/>
+      </p>
     {% end %}
   </div>
 </div>
