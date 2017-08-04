@@ -322,11 +322,11 @@ def submit(preprocessed_data_id, action, send):
 
 @maintenance.command()
 @click.option('--time', required=True, type=int,
-              help='The amount of time to lock the site, in seconds')
+              help='The amount of time to lock the site, in hours')
 @click.option('--message', required=True, type=str,
               help="Message to show users")
 def lock(message, time):
-    r_client.setex('maintenance', message, time)
+    r_client.setex('maintenance', message, time * 60 * 60)
 
 
 @maintenance.command()
@@ -336,7 +336,7 @@ def unlock():
 
 @maintenance.command()
 @click.option('--time', required=True, type=int,
-              help='The amount of time to show message, in seconds')
+              help='The amount of time to show message, in hours')
 @click.option('--message', required=True, type=str,
               help="Message to show users")
 @click.option('--banner', is_flag=True,
@@ -345,7 +345,7 @@ def sysmessage(message, time, banner):
     if banner:
         r_client.setex('sysmessage', message, time)
     else:
-        expires = datetime.now() + timedelta(seconds=time)
+        expires = datetime.now() + timedelta(seconds=(time * 60 * 60))
         qdb.util.add_system_message(message, expires)
 
 
