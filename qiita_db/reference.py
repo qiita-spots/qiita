@@ -66,7 +66,7 @@ class Reference(qdb.base.QiitaObject):
             fps = [(seqs_fp,
                     qdb.util.convert_to_id("reference_seqs", "filepath_type"))]
             seq_id = qdb.util.insert_filepaths(
-                fps, "%s_%s" % (name, version), "reference", "filepath")[0]
+                fps, "%s_%s" % (name, version), "reference")[0]
 
             # Check if the database has taxonomy file
             tax_id = None
@@ -75,7 +75,7 @@ class Reference(qdb.base.QiitaObject):
                     (tax_fp,
                      qdb.util.convert_to_id("reference_tax", "filepath_type"))]
                 tax_id = qdb.util.insert_filepaths(
-                    fps, "%s_%s" % (name, version), "reference", "filepath")[0]
+                    fps, "%s_%s" % (name, version), "reference")[0]
 
             # Check if the database has tree file
             tree_id = None
@@ -85,7 +85,7 @@ class Reference(qdb.base.QiitaObject):
                      qdb.util.convert_to_id("reference_tree", "filepath_type"))
                     ]
                 tree_id = qdb.util.insert_filepaths(
-                    fps, "%s_%s" % (name, version), "reference", "filepath")[0]
+                    fps, "%s_%s" % (name, version), "reference")[0]
 
             # Insert the actual object to the db
             sql = """INSERT INTO qiita.{0}

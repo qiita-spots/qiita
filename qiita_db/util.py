@@ -563,8 +563,7 @@ def get_mountpoint_path_by_id(mount_id):
         return join(get_db_files_base_dir(), mountpoint)
 
 
-def insert_filepaths(filepaths, obj_id, table, filepath_table,
-                     move_files=True, copy=False):
+def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
     r"""Inserts `filepaths` in the database.
 
     Since the files live outside the database, the directory in which the files
@@ -579,9 +578,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
         Id of the object calling the functions. Disregarded if move_files
         is False
     table : str
-        Table that holds the file data.
-    filepath_table : str
-        Table that holds the filepath information
+        Table that holds the file data
     move_files : bool, optional
         Whether or not to move the given filepaths to the db filepaths
         default: True
@@ -636,11 +633,11 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
         values = [[path, pid, checksum, 1, dd_id]
                   for path, pid, checksum in paths_w_checksum]
         # Insert all the filepaths at once and get the filepath_id back
-        sql = """INSERT INTO qiita.{0}
+        sql = """INSERT INTO qiita.filepath
                     (filepath, filepath_type_id, checksum,
                      checksum_algorithm_id, data_directory_id)
                  VALUES (%s, %s, %s, %s, %s)
-                 RETURNING filepath_id""".format(filepath_table)
+                 RETURNING filepath_id"""
         idx = qdb.sql_connection.TRN.index
         qdb.sql_connection.TRN.add(sql, values, many=True)
         # Since we added the query with many=True, we've added len(values)
