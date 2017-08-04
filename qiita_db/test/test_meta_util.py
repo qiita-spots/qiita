@@ -87,7 +87,7 @@ class MetaUtilTests(TestCase):
             "lab_person_id": 1
         }
         study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Test study", [1], info)
+            qdb.user.User('test@foo.bar'), "Test study", info)
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
@@ -180,7 +180,7 @@ class MetaUtilTests(TestCase):
             'study_abstract': 'abstract'}
 
         study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), 'test_study_1', efo=[1], info=info)
+            qdb.user.User('test@foo.bar'), 'test_study_1', info=info)
         qdb.portal.Portal('EMP').add_studies([study.id])
 
         md = {

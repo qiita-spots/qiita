@@ -170,7 +170,7 @@ class TestLoadSampleTemplateFromCmd(TestCase):
             "lab_person_id": qdb.study.StudyPerson(1)
         }
         self.study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Test study", [1], info)
+            qdb.user.User('test@foo.bar'), "Test study", info)
 
     def test_load_sample_template_from_cmd(self):
         """Correctly adds a sample template to the DB"""

@@ -112,7 +112,7 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'study_description': 'desc',
             'study_alias': 'alias',
             'study_abstract': 'abstract'}
-        Study.create(User('test@foo.bar'), "My study", efo=[1], info=info)
+        Study.create(User('test@foo.bar'), "My study", info=info)
         obs = _build_study_info(User('test@foo.bar'), 'user')
 
         self.exp.append({
@@ -235,7 +235,7 @@ class TestShareStudyAjax(TestHandlerBase):
             'study_alias': 'alias',
             'study_abstract': 'abstract'}
         u = User('shared@foo.bar')
-        s = Study.create(u, 'test_study', efo=[1], info=info)
+        s = Study.create(u, 'test_study', info=info)
         self.assertEqual(s.shared_with, [])
 
         args = {'selected': 'test@foo.bar', 'id': s.id}

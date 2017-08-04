@@ -74,7 +74,7 @@ class CommandsTests(TestCase):
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)
         }
-        study = Study.create(User('test@foo.bar'), "Test EBI study", [1], info)
+        study = Study.create(User('test@foo.bar'), "Test EBI study", info)
         metadata_dict = {
             'Sample1': {'collection_timestamp': datetime(2015, 6, 1, 7, 0, 0),
                         'physical_specimen_location': 'location1',

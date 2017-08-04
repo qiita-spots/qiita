@@ -106,7 +106,7 @@ class StudyCreatorHandler(RESTHandler):
                 'mixs_compliant': False,
                 'metadata_complete': False,
                 'timeseries_type_id': 1}
-        study = Study.create(owner, title, [1], info)
+        study = Study.create(owner, title, info)
 
         self.set_status(201)
         self.write({'id': study.id})

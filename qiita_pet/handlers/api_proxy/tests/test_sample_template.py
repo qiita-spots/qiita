@@ -43,8 +43,7 @@ class TestSampleAPI(TestCase):
         }
 
         self.new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study", [1],
-            info)
+            qdb.user.User('test@foo.bar'), "Some New Study", info)
 
         base_dir = join(qdb.util.get_mountpoint('uploads')[0][1],
                         str(self.new_study.id))

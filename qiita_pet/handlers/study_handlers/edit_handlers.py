@@ -280,8 +280,7 @@ class StudyEditHandler(BaseHandler):
         else:
             # create the study
             # TODO: Fix this EFO once ontology stuff from emily is added
-            the_study = Study.create(self.current_user, study_title,
-                                     efo=[1], info=info)
+            the_study = Study.create(self.current_user, study_title, info=info)
 
             msg = ('Study <a href="%s/study/description/%d">%s</a> '
                    'successfully created' %

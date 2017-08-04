@@ -117,8 +117,7 @@ class TestStudyAPI(TestCase):
         }
 
         new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study for test", [1],
-            info)
+            qdb.user.User('test@foo.bar'), "Some New Study for test", info)
 
         obs = study_get_req(new_study.id, 'test@foo.bar')
         exp = {
@@ -266,7 +265,7 @@ class TestStudyAPI(TestCase):
             "lab_person_id": qdb.study.StudyPerson(1)
         }
         study = qdb.study.Study.create(
-            qdb.user.User(user_email), "Test EBI study", [1], info)
+            qdb.user.User(user_email), "Test EBI study", info)
 
         # (B)
         metadata_dict = {
@@ -366,8 +365,7 @@ class TestStudyAPI(TestCase):
         }
 
         new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study to delete", [1],
-            info)
+            qdb.user.User('test@foo.bar'), "Some New Study to delete", info)
 
         study_delete_req(new_study.id, 'test@foo.bar')
 
@@ -434,8 +432,7 @@ class TestStudyAPI(TestCase):
             "lab_person_id": qdb.study.StudyPerson(1)
         }
         new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study to get files", [1],
-            info)
+            qdb.user.User('test@foo.bar'), "Some New Study to get files", info)
 
         # check that you can't call a this function using two unrelated
         # study_id and prep_template_id
