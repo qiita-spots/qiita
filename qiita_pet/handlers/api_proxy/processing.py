@@ -10,35 +10,8 @@ from json import loads
 
 from qiita_db.user import User
 from qiita_db.software import Command, Parameters, DefaultParameters
-from qiita_db.artifact import Artifact
 from qiita_db.processing_job import ProcessingWorkflow, ProcessingJob
 from qiita_db.exceptions import QiitaDBUnknownIDError
-
-
-def process_artifact_handler_get_req(artifact_id):
-    """Returns the information for the process artifact handler
-
-    Parameters
-    ----------
-    artifact_id : int
-        The artifact to be processed
-
-    Returns
-    -------
-    dict of str
-        A dictionary containing the artifact information
-        {'status': str,
-         'message': str,
-         'name': str,
-         'type': str}
-    """
-    artifact = Artifact(artifact_id)
-
-    return {'status': 'success',
-            'message': '',
-            'name': artifact.name,
-            'type': artifact.artifact_type,
-            'study_id': artifact.study.id}
 
 
 def list_commands_handler_get_req(artifact_types, exclude_analysis):
