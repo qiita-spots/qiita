@@ -13,29 +13,11 @@ from qiita_db.processing_job import ProcessingWorkflow
 from qiita_db.software import Command, Parameters
 from qiita_db.user import User
 from qiita_pet.handlers.api_proxy.processing import (
-    process_artifact_handler_get_req, list_commands_handler_get_req,
-    list_options_handler_get_req, workflow_handler_post_req,
-    workflow_handler_patch_req, job_ajax_get_req)
+    list_commands_handler_get_req, list_options_handler_get_req,
+    workflow_handler_post_req, workflow_handler_patch_req, job_ajax_get_req)
 
 
 class TestProcessingAPIReadOnly(TestCase):
-    def test_process_artifact_handler_get_req(self):
-        obs = process_artifact_handler_get_req(1)
-        exp = {'status': 'success',
-               'message': '',
-               'name': 'Raw data 1',
-               'type': 'FASTQ',
-               'study_id': 1}
-        self.assertEqual(obs, exp)
-
-        obs = process_artifact_handler_get_req(2)
-        exp = {'status': 'success',
-               'message': '',
-               'name': 'Demultiplexed 1',
-               'type': 'Demultiplexed',
-               'study_id': 1}
-        self.assertEqual(obs, exp)
-
     def test_list_commands_handler_get_req(self):
         obs = list_commands_handler_get_req('FASTQ', True)
         exp = {'status': 'success',
