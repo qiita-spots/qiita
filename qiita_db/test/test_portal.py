@@ -100,8 +100,7 @@ class TestPortal(TestCase):
         qdb.portal.Portal.create("NEWPORTAL3", "SOMEDESC")
         qiita_config.portal = "NEWPORTAL3"
         qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Fried chicken microbiome",
-            [1], info)
+            qdb.user.User('test@foo.bar'), "Fried chicken microbiome", info)
         qiita_config.portal = "QIITA"
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.portal.Portal.delete("NEWPORTAL3")

@@ -41,7 +41,7 @@ class TestMetadataPipeline(TestCase):
             "lab_person_id": StudyPerson(1)
         }
         self.new_study = Study.create(
-            User('test@foo.bar'), "Fried Chicken Microbiome", [1], info)
+            User('test@foo.bar'), "Fried Chicken Microbiome", info)
         self._clean_up_files = []
 
     def tearDown(self):

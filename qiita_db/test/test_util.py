@@ -797,8 +797,7 @@ class UtilTests(TestCase):
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
         new_study = qdb.study.Study.create(
-            qdb.user.User('shared@foo.bar'), 'test_study_1', efo=[1],
-            info=info)
+            qdb.user.User('shared@foo.bar'), 'test_study_1', info=info)
 
         exp_info = [
             {'status': 'private', 'metadata_complete': True,
