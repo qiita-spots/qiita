@@ -176,12 +176,11 @@ def artifact_summary_get_request(user, artifact_id):
 
         if user.level == 'admin':
             if artifact.can_be_submitted_to_ebi:
-                if not artifact.is_submitted_to_ebi:
-                    buttons.append(
-                        '<a class="btn btn-primary btn-sm" '
-                        'href="/ebi_submission/%d">'
-                        '<span class="glyphicon glyphicon-export"></span>'
-                        ' Submit to EBI</a>' % artifact_id)
+                buttons.append(
+                    '<a class="btn btn-primary btn-sm" '
+                    'href="/ebi_submission/%d">'
+                    '<span class="glyphicon glyphicon-export"></span>'
+                    ' Submit to EBI</a>' % artifact_id)
             if artifact.can_be_submitted_to_vamps:
                 if not artifact.is_submitted_to_vamps:
                     buttons.append(
