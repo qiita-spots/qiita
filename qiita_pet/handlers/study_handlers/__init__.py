@@ -17,9 +17,8 @@ from .base import (StudyIndexHandler, StudyBaseInfoAJAX, StudyDeleteAjax,
 from .prep_template import (
     PrepTemplateGraphAJAX, PrepTemplateAJAX, PrepFilesHandler,
     NewPrepTemplateAjax, PrepTemplateSummaryAJAX)
-from .processing import (ProcessArtifactHandler, ListCommandsHandler,
-                         ListOptionsHandler, WorkflowHandler,
-                         WorkflowRunHandler, JobAJAX)
+from .processing import (ListCommandsHandler, ListOptionsHandler,
+                         WorkflowHandler, WorkflowRunHandler, JobAJAX)
 from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
                        ArtifactAdminAJAX, ArtifactGetSamples, ArtifactGetInfo)
 from .sample_template import SampleTemplateAJAX, SampleAJAX
@@ -29,7 +28,7 @@ __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'VAMPSHandler', 'SearchStudiesAJAX', 'PrepTemplateGraphAJAX',
            'ArtifactGraphAJAX', 'ArtifactAdminAJAX', 'StudyIndexHandler',
            'StudyBaseInfoAJAX', 'SampleTemplateAJAX', 'PrepTemplateAJAX',
-           'NewArtifactHandler', 'PrepFilesHandler', 'ProcessArtifactHandler',
+           'NewArtifactHandler', 'PrepFilesHandler',
            'ListCommandsHandler', 'ListOptionsHandler', 'SampleAJAX',
            'StudyDeleteAjax', 'NewPrepTemplateAjax',
            'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX',
