@@ -56,7 +56,9 @@ class PluginHandlerTests(OauthTestingBase):
                            'for performing microbiome analysis from raw DNA '
                            'sequencing data',
             'commands': ['Split libraries FASTQ', 'Split libraries',
-                         'Pick closed-reference OTUs'],
+                         'Pick closed-reference OTUs', 'Summarize Taxa',
+                         'Beta Diversity', 'Alpha Rarefaction',
+                         'Single Rarefaction'],
             'publications': [{'DOI': '10.1038/nmeth.f.303',
                               'PubMed': '20383131'}],
             'default_workflows': ['FASTQ upstream workflow',
@@ -74,9 +76,12 @@ class CommandListHandlerTests(OauthTestingBase):
             'description': 'Command added for testing',
             'required_parameters': dumps(
                 {'in_data': ['artifact:["FASTA"]', None]}),
-            'optional_parameters': dumps({'param1': ['string', ''],
-                                          'param2': ['float', '1.5'],
-                                          'param3': ['boolean', 'True']}),
+            'optional_parameters': dumps(
+                {'param1': ['string', ''],
+                 'param2': ['float', '1.5'],
+                 'param3': ['boolean', 'True'],
+                 'param4': ['mchoice:["opt1", "opt2", "opt3"]',
+                            dumps(['opt1', 'opt2'])]}),
             'outputs': dumps({'out1': 'BIOM'}),
             'default_parameter_sets': dumps(
                 {'dflt1': {'param1': 'test',
@@ -88,6 +93,25 @@ class CommandListHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
         obs = _get_command('QIIME', '1.9.1', 'New Command')
         self.assertEqual(obs.name, 'New Command')
+        self.assertFalse(obs.analysis_only)
+
+        # Create a new command that is analysis only
+        data = {
+            'name': 'New analysis command',
+            'description': 'Analysis command added for testing',
+            'required_parameters': dumps(
+                {'in_data': ['artifact:["BIOM"]', None]}),
+            'optional_parameters': dumps({'param1': ['string', 'default']}),
+            'outputs': dumps({'outtable': 'BIOM'}),
+            'default_parameter_sets': dumps({'dflt1': {'param1': 'test'}}),
+            'analysis_only': True
+        }
+        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/', data=data,
+                        headers=self.header)
+        self.assertEqual(obs.code, 200)
+        obs = _get_command('QIIME', '1.9.1', 'New analysis command')
+        self.assertEqual(obs.name, 'New analysis command')
+        self.assertTrue(obs.analysis_only)
 
 
 class CommandHandlerTests(OauthTestingBase):

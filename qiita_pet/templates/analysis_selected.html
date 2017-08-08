@@ -133,7 +133,7 @@ $(document).ready(function() {
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h4 class="modal-title" id="myModalLabel">Processed Data {{pid}}</h4>
           </div>
-          <form role="form" action="{% raw qiita_config.portal_dir %}/analysis/3" method="post">
+          <form role="form" action="{% raw qiita_config.portal_dir %}/analysis/create/" method="post">
           <input type="hidden" name="action" value="create">
             <div class="modal-body">
               <b>Datatype</b>: {{proc_info[pid]["data_type"]}} <br/>
@@ -172,7 +172,7 @@ $(document).ready(function() {
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h4 class="modal-title" id="myModalLabel">Create new analysis</h4>
           </div>
-          <form role="form" action="{% raw qiita_config.portal_dir %}/analysis/3" method="post">
+          <form role="form" action="{% raw qiita_config.portal_dir %}/analysis/create/" method="post">
           <input type="hidden" name="action" value="create">
             <div class="modal-body">
               <div>

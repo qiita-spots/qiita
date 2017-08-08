@@ -80,7 +80,7 @@ future.
 
 .. |Build Status| image:: https://travis-ci.org/biocore/qiita.png?branch=master
    :target: https://travis-ci.org/biocore/qiita
-.. |Coverage Status| image:: https://coveralls.io/repos/biocore/qiita/badge.png?branch=master
-   :target: https://coveralls.io/r/biocore/qiita
+.. |Coverage Status| image:: https://codecov.io/gh/biocore/qiita/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/biocore/qiita
 .. |Gitter| image:: https://badges.gitter.im/Join%20Chat.svg
    :target: https://gitter.im/biocore/qiita?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge

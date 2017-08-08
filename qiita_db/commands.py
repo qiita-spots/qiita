@@ -49,19 +49,13 @@ def load_study_from_cmd(owner, title, info):
     required_fields = ['timeseries_type_id', 'mixs_compliant',
                        'reprocess', 'study_alias',
                        'study_description', 'study_abstract',
-                       'metadata_complete', 'efo_ids',
-                       'principal_investigator']
+                       'metadata_complete', 'principal_investigator']
     optional_fields = ['funding', 'most_recent_contact', 'spatial_series',
                        'number_samples_collected', 'number_samples_promised',
                        'vamps_id', 'study_id']
     infodict = {}
     for value in required_fields:
         infodict[value] = get_required(value)
-
-    # this will eventually change to using the Experimental Factory Ontolgoy
-    # names
-    efo_ids = infodict.pop('efo_ids')
-    efo_ids = [x.strip() for x in efo_ids.split(',')]
 
     for value in optional_fields:
         optvalue = get_optional(value)
@@ -86,8 +80,7 @@ def load_study_from_cmd(owner, title, info):
         infodict['principal_investigator_id'] = qdb.study.StudyPerson.create(
             pi_name.strip(), pi_email.strip(), pi_affiliation.strip())
 
-        return qdb.study.Study.create(
-            qdb.user.User(owner), title, efo_ids, infodict)
+        return qdb.study.Study.create(qdb.user.User(owner), title, infodict)
 
 
 def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
@@ -269,7 +262,7 @@ def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
         qdb.sql_connection.TRN.execute()
         qdb.util.move_filepaths_to_upload_folder(artifact.study.id, old_fps)
         fp_ids = qdb.util.insert_filepaths(
-            fps, artifact.id, artifact.artifact_type, "filepath")
+            fps, artifact.id, artifact.artifact_type)
         sql = """INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
                  VALUES (%s, %s)"""
         sql_args = [[artifact.id, fp_id] for fp_id in fp_ids]

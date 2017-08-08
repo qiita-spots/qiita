@@ -9,47 +9,44 @@ from unittest import TestCase, main
 from json import dumps
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.util import get_count
 from qiita_db.processing_job import ProcessingWorkflow
 from qiita_db.software import Command, Parameters
 from qiita_db.user import User
 from qiita_pet.handlers.api_proxy.processing import (
-    process_artifact_handler_get_req, list_commands_handler_get_req,
-    list_options_handler_get_req, workflow_handler_post_req,
-    workflow_handler_patch_req, job_ajax_get_req)
+    list_commands_handler_get_req, list_options_handler_get_req,
+    workflow_handler_post_req, workflow_handler_patch_req, job_ajax_get_req)
 
 
 class TestProcessingAPIReadOnly(TestCase):
-    def test_process_artifact_handler_get_req(self):
-        obs = process_artifact_handler_get_req(1)
-        exp = {'status': 'success',
-               'message': '',
-               'name': 'Raw data 1',
-               'type': 'FASTQ',
-               'study_id': 1}
-        self.assertEqual(obs, exp)
-
-        obs = process_artifact_handler_get_req(2)
-        exp = {'status': 'success',
-               'message': '',
-               'name': 'Demultiplexed 1',
-               'type': 'Demultiplexed',
-               'study_id': 1}
-        self.assertEqual(obs, exp)
-
     def test_list_commands_handler_get_req(self):
-        obs = list_commands_handler_get_req('FASTQ')
+        obs = list_commands_handler_get_req('FASTQ', True)
         exp = {'status': 'success',
                'message': '',
                'commands': [{'id': 1, 'command': 'Split libraries FASTQ',
                              'output': [['demultiplexed', 'Demultiplexed']]}]}
         self.assertEqual(obs, exp)
 
-        obs = list_commands_handler_get_req('Demultiplexed')
+        obs = list_commands_handler_get_req('Demultiplexed', True)
         exp = {'status': 'success',
                'message': '',
                'commands': [{'id': 3, 'command': 'Pick closed-reference OTUs',
                              'output': [['OTU table', 'BIOM']]}]}
+        self.assertEqual(obs, exp)
+
+        obs = list_commands_handler_get_req('BIOM', False)
+        exp = {'status': 'success',
+               'message': '',
+               'commands': [
+                    {'command': 'Summarize Taxa', 'id': 9,
+                     'output': [['taxa_summary', 'taxa_summary']]},
+                    {'command': 'Beta Diversity', 'id': 10,
+                     'output': [['distance_matrix', 'beta_div_plots']]},
+                    {'command': 'Alpha Rarefaction', 'id': 11,
+                     'output': [['rarefaction_curves', 'rarefaction_curves']]},
+                    {'command': 'Single Rarefaction', 'id': 12,
+                     'output': [['rarefied_table', 'BIOM']]}]}
+        # since the order of the commands can change, test them separately
+        self.assertItemsEqual(obs.pop('commands'), exp.pop('commands'))
         self.assertEqual(obs, exp)
 
     def test_list_options_handler_get_req(self):
@@ -64,11 +61,20 @@ class TestProcessingAPIReadOnly(TestCase):
                                        'sortmerna_e_value': 1,
                                        'sortmerna_max_pos': 10000,
                                        'threads': 1}}],
-               'req_options': {'input_data': ('artifact', ['Demultiplexed'])}}
+               'req_options': {'input_data': ('artifact', ['Demultiplexed'])},
+               'opt_options': {'reference': ['reference', '1'],
+                               'similarity': ['float', '0.97'],
+                               'sortmerna_coverage': ['float', '0.97'],
+                               'sortmerna_e_value': ['float', '1'],
+                               'sortmerna_max_pos': ['integer', '10000'],
+                               'threads': ['integer', '1']}}
+        # First check that the keys are the same
+        self.assertItemsEqual(obs, exp)
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['options'], exp['options'])
         self.assertEqual(obs['req_options'], exp['req_options'])
+        self.assertEqual(obs['opt_options'], exp['opt_options'])
 
     def test_job_ajax_get_req(self):
         obs = job_ajax_get_req("063e553b-327c-4818-ab4a-adfe58e49860")
@@ -94,15 +100,21 @@ class TestProcessingAPIReadOnly(TestCase):
 @qiita_test_checker()
 class TestProcessingAPI(TestCase):
     def test_workflow_handler_post_req(self):
-        next_id = get_count('qiita.processing_job_workflow_root') + 1
-        obs = workflow_handler_post_req("test@foo.bar", 1, '{"input_data": 1}')
-        wf = ProcessingWorkflow(next_id)
+        params = ('{"max_barcode_errors": 1.5, "barcode_type": "golay_12", '
+                  '"max_bad_run_length": 3, "phred_offset": "auto", '
+                  '"rev_comp": false, "phred_quality_threshold": 3, '
+                  '"input_data": 1, "rev_comp_barcode": false, '
+                  '"rev_comp_mapping_barcodes": false, '
+                  '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        obs = workflow_handler_post_req("test@foo.bar", 1, params)
+        wf_id = obs['workflow_id']
+        wf = ProcessingWorkflow(wf_id)
         nodes = wf.graph.nodes()
         self.assertEqual(len(nodes), 1)
         job = nodes[0]
         exp = {'status': 'success',
                'message': '',
-               'workflow_id': next_id,
+               'workflow_id': wf_id,
                'job': {'id': job.id,
                        'inputs': [1],
                        'label': "Split libraries FASTQ",

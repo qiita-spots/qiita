@@ -69,6 +69,30 @@ def _job_submitter(job, cmd):
         job.complete(False, error=error)
 
 
+def private_job_submitter(job_name, command, args):
+    """Submits a private job
+
+    Parameters
+    ----------
+    job_name : str
+        The name of the job
+    command: str
+        The private command to be executed
+    args: list of str
+        The arguments to the private command
+    """
+
+    cmd = "%s '%s' %s %s" % (qiita_config.private_launcher,
+                             qiita_config.qiita_env, command,
+                             ' '.join("'%s'" % a for a in args))
+    std_out, std_err, return_value = _system_call(cmd)
+    error = ""
+    if return_value != 0:
+        error = ("Can't submit private task '%s':\n"
+                 "Std output:%s\nStd error: %s" % (command, std_out, std_err))
+    return (return_value == 0), error
+
+
 class ProcessingJob(qdb.base.QiitaObject):
     r"""Models a job that executes a command in a set of artifacts
 
@@ -352,30 +376,49 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             a_info = qdb.sql_connection.TRN.execute_fetchlast()
 
-            atype = a_info['artifact_type']
-            filepaths = a_info['filepaths']
             provenance = loads(self.parameters.values['provenance'])
             job = ProcessingJob(provenance['job'])
-            parents = job.input_artifacts
-            params = job.parameters
+            if 'data_type' in a_info:
+                # This job is resulting from a private job
+                parents = None
+                params = None
+                cmd_out_id = None
+                data_type = a_info['data_type']
+                analysis = qdb.analysis.Analysis(
+                    job.parameters.values['analysis'])
+                a_info = a_info['artifact_data']
+            else:
+                # This job is resulting from a plugin job
+                parents = job.input_artifacts
+                params = job.parameters
+                cmd_out_id = provenance['cmd_out_id']
+                analysis = None
+                data_type = None
 
             # Create the artifact
+            atype = a_info['artifact_type']
+            filepaths = a_info['filepaths']
             a = qdb.artifact.Artifact.create(
                 filepaths, atype, parents=parents,
-                processing_parameters=params)
+                processing_parameters=params,
+                analysis=analysis, data_type=data_type)
 
-            cmd_out_id = provenance['cmd_out_id']
-            mapping = {cmd_out_id: a.id}
             self._set_status('success')
+
+            mapping = {}
+            if cmd_out_id is not None:
+                mapping = {cmd_out_id: a.id}
 
             return mapping
 
     def release_validators(self):
         """Allows all the validator job spawned by this job to complete"""
         with qdb.sql_connection.TRN:
-            if self.command.software.type != 'artifact transformation':
+            if self.command.software.type not in ('artifact transformation',
+                                                  'private'):
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Only artifact transformation jobs can release validators")
+                    "Only artifact transformation and private jobs can "
+                    "release validators")
 
             # Check if all the validators are ready by checking that there is
             # no validator processing job whose status is not waiting
@@ -405,16 +448,17 @@ class ProcessingJob(qdb.base.QiitaObject):
                     vjob = ProcessingJob(jid)
                     mapping.update(vjob.release())
 
-                sql = """INSERT INTO
-                            qiita.artifact_output_processing_job
-                            (artifact_id, processing_job_id,
-                            command_output_id)
-                         VALUES (%s, %s, %s)"""
-                sql_args = [[aid, self.id, outid]
-                            for outid, aid in viewitems(mapping)]
-                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+                if mapping:
+                    sql = """INSERT INTO
+                                qiita.artifact_output_processing_job
+                                (artifact_id, processing_job_id,
+                                command_output_id)
+                             VALUES (%s, %s, %s)"""
+                    sql_args = [[aid, self.id, outid]
+                                for outid, aid in viewitems(mapping)]
+                    qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
-                self._update_and_launch_children(mapping)
+                    self._update_and_launch_children(mapping)
                 self._set_status('success')
             else:
                 self.step = "Validating outputs (%d remaining)" % remaining
@@ -444,6 +488,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # The artifact is a result from a previous job
                 provenance = loads(job_params['provenance'])
                 job = ProcessingJob(provenance['job'])
+                if provenance.get('data_type') is not None:
+                    artifact_data = {'data_type': provenance['data_type'],
+                                     'artifact_data': artifact_data}
 
                 sql = """UPDATE qiita.processing_job_validator
                          SET artifact_info = %s
@@ -455,11 +502,27 @@ class ProcessingJob(qdb.base.QiitaObject):
                 self._set_status('waiting')
                 job.release_validators()
             else:
-                # The artifact is uploaded by the user
-                pt = qdb.metadata_template.prep_template.PrepTemplate(
-                    job_params['template'])
+                # The artifact is uploaded by the user or is the initial
+                # artifact of an analysis
+                if ('analysis' in job_params and
+                        job_params['analysis'] is not None):
+                    pt = None
+                    an = qdb.analysis.Analysis(job_params['analysis'])
+                    sql = """SELECT data_type
+                             FROM qiita.analysis_processing_job
+                             WHERE analysis_id = %s
+                                AND processing_job_id = %s"""
+                    qdb.sql_connection.TRN.add(sql, [an.id, self.id])
+                    data_type = qdb.sql_connection.TRN.execute_fetchlast()
+                else:
+                    pt = qdb.metadata_template.prep_template.PrepTemplate(
+                        job_params['template'])
+                    an = None
+                    data_type = None
+
                 qdb.artifact.Artifact.create(
-                    filepaths, atype, prep_template=pt)
+                    filepaths, atype, prep_template=pt, analysis=an,
+                    data_type=data_type)
                 self._set_status('success')
 
     def _complete_artifact_transformation(self, artifacts_data):
@@ -505,11 +568,21 @@ class ProcessingJob(qdb.base.QiitaObject):
                 templates = set()
                 for artifact in self.input_artifacts:
                     templates.update(pt.id for pt in artifact.prep_templates)
+                template = None
+                analysis = None
                 if len(templates) > 1:
                     raise qdb.exceptions.QiitaDBError(
                         "Currently only single prep template "
                         "is allowed, found %d" % len(templates))
-                template = templates.pop()
+                elif len(templates) == 1:
+                    template = templates.pop()
+                else:
+                    # In this case we have 0 templates. What this means is that
+                    # this artifact is being generated in the analysis pipeline
+                    # All the artifacts included in the analysis pipeline
+                    # belong to the same analysis, so we can just ask the
+                    # first artifact for the analysis that it belongs to
+                    analysis = self.input_artifacts[0].analysis.id
 
                 # Once the validate job completes, it needs to know if it has
                 # been generated from a command (and how) or if it has been
@@ -526,11 +599,13 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # Get the validator command for the current artifact type and
                 # create a new job
                 cmd = qdb.software.Command.get_validator(atype)
+                values_dict = {
+                    'files': dumps(filepaths), 'artifact_type': atype,
+                    'template': template, 'provenance': dumps(provenance)}
+                if analysis is not None:
+                    values_dict['analysis'] = analysis
                 validate_params = qdb.software.Parameters.load(
-                    cmd, values_dict={'files': dumps(filepaths),
-                                      'artifact_type': atype,
-                                      'template': template,
-                                      'provenance': dumps(provenance)})
+                    cmd, values_dict=values_dict)
                 validator_jobs.append(
                     ProcessingJob.create(self.user, validate_params))
 
@@ -1134,7 +1209,16 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                      WHERE processing_job_workflow_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchflatten()
-            if len(res) != 1 or res[0] != 'in_construction':
+            # If the above SQL query returns a single element and the value
+            # is different from in construction, it means that all the jobs
+            # in the workflow are in the same status and it is not
+            # 'in_construction', hence raise the error. If the above SQL query
+            # returns more than value (len(res) > 1) it means that the workflow
+            # is no longer in construction cause some jobs have been submited
+            # for processing. Note that if the above query doesn't retrun any
+            # value, it means that no jobs are in the workflow and that means
+            # that the workflow is in construction.
+            if (len(res) == 1 and res[0] != 'in_construction') or len(res) > 1:
                 # The workflow is no longer in construction, raise an error
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                     "Workflow not in construction")

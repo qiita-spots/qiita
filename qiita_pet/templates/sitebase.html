@@ -35,6 +35,8 @@
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/chosen.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/css/style.css" type="text/css">
+    <link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.min.css" type="text/css">
+    <link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis-network.min.css" type="text/css">
     {% if portal_styling.custom_css %}
     <style type="text/css">
       {% raw portal_styling.custom_css %}
@@ -47,10 +49,19 @@
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.min.js" type="text/javascript"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/vue.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/js/qiita.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.min.js"></script>
 
     <link rel="shortcut icon" href="{% raw qiita_config.portal_dir %}/static/img/favicon.ico">
 
     <script>
+      $(window).resize(function () {
+        $('body').css('padding-top', $('#navigation-bar').height()+10);
+      });
+
+      $(window).load(function () {
+        $('body').css('padding-top', $('#navigation-bar').height()+10);
+      });
+
       function overlay_check() {
         // from http://stackoverflow.com/q/5916900/379593
         var ua=navigator.userAgent,tem,M=ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
@@ -356,10 +367,10 @@
     {% block head %}{% end %}
   </head>
 
-  <body style="padding-top: 0px; height: 100%" onload='overlay_check();'>
+  <body style="padding-top: 70px; height: 100%" onload='overlay_check();'>
 
     <div id="qiita-main" class="qiita-main">
-      <div id="navigation-bar" class="navbar navbar-inverse navbar-static-top navbar-custom" role="navigation">
+      <div id="navigation-bar" class="navbar navbar-default navbar-inverse navbar-fixed-top">
         <div class="container-fluid">
           <div class="navbar-header">
             <!-- button that appears if the window is re-sized to a smaller size -->
@@ -386,7 +397,7 @@
                 <ul class="dropdown-menu">
                   <li><a href="{% raw qiita_config.portal_dir %}/study/list/">Create new analysis</a>
                   <li id="selected_samples_menu"><a id="selected_samples_link" href="{% raw qiita_config.portal_dir %}/analysis/selected/">Create From Selected Samples</a></li>
-                  <li><a href="{% raw qiita_config.portal_dir %}/analysis/show/">See Previous Analyses</a></li>
+                  <li><a href="{% raw qiita_config.portal_dir %}/analysis/list/">See Previous Analyses</a></li>
                 </ul>
               </li>
               <li class="dropdown">
@@ -481,6 +492,9 @@
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle">More Info<b class="caret"></b></a>
                 <ul class="dropdown-menu">
                   <li>
+                    <a href="http://cmi-workshop.readthedocs.io/en/latest/">Tutorials</a>
+                  </li>
+                  <li>
                     <a href="{% raw qiita_config.portal_dir %}/static/doc/html/index.html">Help</a>
                   </li>
                   <li>
@@ -531,6 +545,7 @@
           </div> <!--/.navbar-collapse -->
         </div>
       </div> <!--/.main nav-bar -->
+
 
       {% if message != '' %}
           {% if level not in {'danger', 'success', 'info', 'warning'} %}

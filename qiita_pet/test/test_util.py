@@ -1,9 +1,3 @@
-from unittest import TestCase, main
-
-from qiita_pet.util import (clean_str, generate_param_str, is_localhost,
-                            convert_text_html)
-from qiita_db.software import DefaultParameters
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -11,6 +5,12 @@ from qiita_db.software import DefaultParameters
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+
+from unittest import TestCase, main
+
+from qiita_pet.util import (clean_str, generate_param_str, is_localhost,
+                            convert_text_html)
+from qiita_db.software import DefaultParameters
 
 
 class TestUtil(TestCase):

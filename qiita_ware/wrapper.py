@@ -1,40 +1,19 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from __future__ import division
 
 from shutil import rmtree
 from os import remove
 from sys import stderr
 
-from skbio.util import flatten
 import networkx as nx
-from moi.job import system_call, submit, ctxs, ctx_default
-
-from qiita_db.job import Job
-
-
-def system_call_from_job(job_id, **kwargs):
-    """Executes a system call described by a Job
-
-    Parameters
-    ----------
-    job_id : int
-        The job object ID
-    """
-    job = Job(job_id)
-    name, command = job.command
-    options = job.options
-
-    cmd = [command]
-    cmd.extend(flatten(options.items()))
-    cmd_fmt = ' '.join((str(i) for i in cmd))
-
-    try:
-        so, se, status = system_call(cmd_fmt)
-    except Exception as e:
-        job.set_error(str(e))
-        raise
-
-    # FIX THIS add_results should not be hard coded  Issue #269
-    job.add_results([(job.options["--output_dir"], "directory")])
+from moi.job import submit, ctxs, ctx_default
 
 
 class ParallelWrapper(object):

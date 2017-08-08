@@ -113,7 +113,6 @@ class Study(qdb.base.QiitaObject):
     Attributes
     ----------
     data_types
-    efo
     info
     investigation
     name
@@ -302,7 +301,7 @@ class Study(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def create(cls, owner, title, efo, info, investigation=None):
+    def create(cls, owner, title, info, investigation=None):
         """Creates a new study on the database
 
         Parameters
@@ -311,8 +310,6 @@ class Study(qdb.base.QiitaObject):
             the study's owner
         title : str
             Title of the study
-        efo : list
-            Experimental Factor Ontology id(s) for the study
         info : dict
             the information attached to the study. All "*_id" keys must pass
             the objects associated with them.
@@ -326,23 +323,18 @@ class Study(qdb.base.QiitaObject):
             All required keys not passed
         IncompetentQiitaDeveloperError
             email, study_id, study_status_id, or study_title passed as a key
-            empty efo list passed
         QiitaDBDuplicateError
             If a study with the given title already exists
 
         Notes
         -----
-        All keys in info, except the efo, must be equal to columns in
-        qiita.study table in the database.
+        All keys in info, must be equal to columns in qiita.study table in the
+        database.
         """
         # make sure not passing non-info columns in the info dict
         if cls._non_info.intersection(info):
             raise qdb.exceptions.QiitaDBColumnError(
                 "non info keys passed: %s" % cls._non_info.intersection(info))
-
-        # make sure efo info passed
-        if not efo:
-            raise IncompetentQiitaDeveloperError("Need EFO information!")
 
         with qdb.sql_connection.TRN:
             if cls.exists(title):
@@ -382,13 +374,6 @@ class Study(qdb.base.QiitaObject):
 
             qdb.sql_connection.TRN.add(sql, data)
             study_id = qdb.sql_connection.TRN.execute_fetchlast()
-
-            # insert efo information into database
-            sql = """INSERT INTO qiita.{0}_experimental_factor
-                        (study_id, efo_id)
-                     VALUES (%s, %s)""".format(cls._table)
-            qdb.sql_connection.TRN.add(
-                sql, [[study_id, e] for e in efo], many=True)
 
             # Add to both QIITA and given portal (if not QIITA)
             portal_id = qdb.util.convert_to_id(
@@ -440,10 +425,6 @@ class Study(qdb.base.QiitaObject):
             args = [id_]
 
             sql = "DELETE FROM qiita.study_portal WHERE study_id = %s"
-            qdb.sql_connection.TRN.add(sql, args)
-
-            sql = """DELETE FROM qiita.study_experimental_factor
-                     WHERE study_id = %s"""
             qdb.sql_connection.TRN.add(sql, args)
 
             sql = "DELETE FROM qiita.study_publication WHERE study_id = %s"
@@ -629,44 +610,6 @@ class Study(qdb.base.QiitaObject):
             sql = "UPDATE qiita.{0} SET {1} WHERE study_id = %s".format(
                 self._table, ','.join(sql_vals))
             qdb.sql_connection.TRN.add(sql, data)
-            qdb.sql_connection.TRN.execute()
-
-    @property
-    def efo(self):
-        with qdb.sql_connection.TRN:
-            sql = """SELECT efo_id FROM qiita.{0}_experimental_factor
-                     WHERE study_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchflatten()
-
-    @efo.setter
-    def efo(self, efo_vals):
-        """Sets the efo for the study
-
-        Parameters
-        ----------
-        efo_vals : list
-            Id(s) for the new efo values
-
-        Raises
-        ------
-        IncompetentQiitaDeveloperError
-            Empty efo list passed
-        """
-        if not efo_vals:
-            raise IncompetentQiitaDeveloperError("Need EFO information!")
-        with qdb.sql_connection.TRN:
-            self._lock_non_sandbox()
-            # wipe out any EFOs currently attached to study
-            sql = """DELETE FROM qiita.{0}_experimental_factor
-                     WHERE study_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [self._id])
-            # insert new EFO information into database
-            sql = """INSERT INTO qiita.{0}_experimental_factor
-                        (study_id, efo_id)
-                     VALUES (%s, %s)""".format(self._table)
-            qdb.sql_connection.TRN.add(
-                sql, [[self._id, efo] for efo in efo_vals], many=True)
             qdb.sql_connection.TRN.execute()
 
     @property

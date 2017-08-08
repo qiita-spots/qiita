@@ -24,25 +24,6 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 GPARAMS = {'similarity': 0.97, 'reference_name': 'Greengenes',
            'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000, 'threads': 1,
            'sortmerna_coverage': 0.97, 'reference_version': u'13_8'}
-PROC_DATA_INFO = [
-    {'data_type': u'18S',
-     'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-     'pid': 4, 'processed_date': '2012-10-02 17:30:00', 'params': GPARAMS,
-     'name': 'BIOM'},
-    {'data_type': '18S',
-     'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-     'pid': 5, 'processed_date': '2012-10-02 17:30:00', 'params': GPARAMS,
-     'name': 'BIOM'},
-    {'data_type': '16S',
-     'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-     'pid': 6, 'processed_date': '2012-10-02 17:30:00',
-     'params': {'similarity': 0.97, 'reference_name': u'Silva',
-                'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000,
-                'threads': 1, 'sortmerna_coverage': 0.97,
-                'reference_version': 'test'},
-     'name': 'BIOM'},
-    {'processed_date': '2012-10-02 17:30:00', 'pid': 7, 'data_type': '16S',
-     'name': 'BIOM'}]
 
 
 class TestHelpers(TestHandlerBase):
@@ -74,8 +55,8 @@ class TestHelpers(TestHandlerBase):
             'publication_doi': ['10.100/123456', '10.100/7891011'],
             'publication_pid': ['123456', '7891011'],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
+            'artifact_biom_ids': [4, 5, 6, 7],
             'study_tags': None,
-            'proc_data_info': PROC_DATA_INFO
         }
         self.exp = [self.single_exp]
 
@@ -131,7 +112,7 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'study_description': 'desc',
             'study_alias': 'alias',
             'study_abstract': 'abstract'}
-        Study.create(User('test@foo.bar'), "My study", efo=[1], info=info)
+        Study.create(User('test@foo.bar'), "My study", info=info)
         obs = _build_study_info(User('test@foo.bar'), 'user')
 
         self.exp.append({
@@ -142,15 +123,14 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'publication_pid': [],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
             'status': 'sandbox',
-            'proc_data_info': [],
             'publication_doi': [],
             'study_abstract': 'abstract',
             'study_id': 2,
             'ebi_study_accession': None,
             'study_title': 'My study',
             'study_tags': None,
+            'artifact_biom_ids': None,
             'number_samples_collected': 0})
-
         self.assertItemsEqual(obs, self.exp)
 
         # Now testing that admin also sees this study
@@ -255,7 +235,7 @@ class TestShareStudyAjax(TestHandlerBase):
             'study_alias': 'alias',
             'study_abstract': 'abstract'}
         u = User('shared@foo.bar')
-        s = Study.create(u, 'test_study', efo=[1], info=info)
+        s = Study.create(u, 'test_study', info=info)
         self.assertEqual(s.shared_with, [])
 
         args = {'selected': 'test@foo.bar', 'id': s.id}
@@ -277,7 +257,6 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                              ' (submitted)'),
                 'study_title': ('Identification of the Microbiomes for '
                                 'Cannabis Soils'),
-                'proc_data_info': PROC_DATA_INFO,
                 'metadata_complete': True,
                 'ebi_submission_status': 'submitted',
                 'study_id': 1,
@@ -305,6 +284,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                     'Future studies will attempt to analyze the soils and '
                     'rhizospheres from the same location at different time '
                     'points in the plant lifecycle.'),
+                'artifact_biom_ids': [4, 5, 6, 7],
                 'number_samples_collected': 27,
                 'study_tags': None}],
             'sEcho': 1021,

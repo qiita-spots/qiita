@@ -1,3 +1,11 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
@@ -19,26 +27,6 @@ class TestSQL(TestCase):
         for fp in self._files_to_remove:
             if exists(fp):
                 remove(fp)
-
-    def test_collection_job_trigger_bad_insert(self):
-        # make sure an incorrect job raises an error
-        with self.assertRaises(ValueError):
-            self.conn_handler.execute(
-                'INSERT INTO qiita.collection_job (collection_id, job_id) '
-                'VALUES (1, 3)')
-        obs = self.conn_handler.execute_fetchall(
-            'SELECT * FROM qiita.collection_job')
-        self.assertNotIn([[1, 3]], obs)
-
-    def test_collection_job_trigger(self):
-        # make sure a correct job inserts successfully
-        self.conn_handler.execute(
-            'INSERT INTO qiita.collection_job (collection_id, job_id) '
-            'VALUES (1, 2)')
-        obs = self.conn_handler.execute_fetchall(
-            'SELECT * FROM qiita.collection_job')
-        exp = [[1, 1], [1, 2]]
-        self.assertEqual(obs, exp)
 
     def test_find_artifact_roots_is_root(self):
         """Correctly returns the root if the artifact is already the root"""

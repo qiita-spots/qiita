@@ -45,13 +45,6 @@ class TestEBISubmission(TestCase):
         self.study_id = None
 
     def tearDown(self):
-        for f in self.files_to_remove:
-            if exists(f):
-                if isdir(f):
-                    rmtree(f)
-                else:
-                    remove(f)
-
         if self.study_id and Study.exists("Test EBI study"):
             study = Study(self.study_id)
             for a in study.artifacts():
@@ -60,6 +53,13 @@ class TestEBISubmission(TestCase):
                 PrepTemplate.delete(pt.id)
             SampleTemplate.delete(self.study_id)
             Study.delete(self.study_id)
+
+        for f in self.files_to_remove:
+            if exists(f):
+                if isdir(f):
+                    rmtree(f)
+                else:
+                    remove(f)
 
     def test_init(self):
         artifact_id = 3
@@ -375,7 +375,7 @@ class TestEBISubmission(TestCase):
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)
         }
-        study = Study.create(User('test@foo.bar'), "Test EBI study", [1], info)
+        study = Study.create(User('test@foo.bar'), "Test EBI study", info)
         self.study_id = study.id
         metadata_dict = {
             'Sample1': {'collection_timestamp': '06/01/15 07:00:00',

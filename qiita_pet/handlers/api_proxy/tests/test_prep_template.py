@@ -52,7 +52,7 @@ class TestPrepAPIReadOnly(TestCase):
             'status': 'success',
             'prep_files': ['uploaded_file.txt'],
             'data_types': ['16S', '18S', 'ITS', 'Metabolomic', 'Metagenomic',
-                           'Proteomic'],
+                           'Multiomic', 'Proteomic'],
             'ontology': {
                 'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
                         'Forensic or Paleo-genomics', 'Gene Regulation Study',
@@ -290,7 +290,7 @@ class TestPrepAPI(TestCase):
         obs = r_client.get(key)
         redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
-            sleep(0.05)
+            sleep(0.5)
             redis_info = loads(r_client.get(loads(obs)['job_id']))
 
     def test_prep_template_graph_get_req(self):

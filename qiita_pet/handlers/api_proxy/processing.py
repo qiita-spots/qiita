@@ -10,44 +10,19 @@ from json import loads
 
 from qiita_db.user import User
 from qiita_db.software import Command, Parameters, DefaultParameters
-from qiita_db.artifact import Artifact
 from qiita_db.processing_job import ProcessingWorkflow, ProcessingJob
 from qiita_db.exceptions import QiitaDBUnknownIDError
 
 
-def process_artifact_handler_get_req(artifact_id):
-    """Returns the information for the process artifact handler
-
-    Parameters
-    ----------
-    artifact_id : int
-        The artifact to be processed
-
-    Returns
-    -------
-    dict of str
-        A dictionary containing the artifact information
-        {'status': str,
-         'message': str,
-         'name': str,
-         'type': str}
-    """
-    artifact = Artifact(artifact_id)
-
-    return {'status': 'success',
-            'message': '',
-            'name': artifact.name,
-            'type': artifact.artifact_type,
-            'study_id': artifact.study.id}
-
-
-def list_commands_handler_get_req(artifact_types):
+def list_commands_handler_get_req(artifact_types, exclude_analysis):
     """Retrieves the commands that can process the given artifact types
 
     Parameters
     ----------
     artifact_types : str
         Comma-separated list of artifact types
+    exclude_analysis : bool
+        If True, return commands that are not part of the analysis pipeline
 
     Returns
     -------
@@ -62,7 +37,8 @@ def list_commands_handler_get_req(artifact_types):
     artifact_types = artifact_types.split(',')
     cmd_info = [
         {'id': cmd.id, 'command': cmd.name, 'output': cmd.outputs}
-        for cmd in Command.get_commands_by_input_type(artifact_types)]
+        for cmd in Command.get_commands_by_input_type(
+            artifact_types, exclude_analysis=exclude_analysis)]
 
     return {'status': 'success',
             'message': '',
@@ -92,21 +68,22 @@ def list_options_handler_get_req(command_id):
     return {'status': 'success',
             'message': '',
             'options': options,
-            'req_options': command.required_parameters}
+            'req_options': command.required_parameters,
+            'opt_options': command.optional_parameters}
 
 
-def workflow_handler_post_req(user_id, dflt_params_id, req_params):
+def workflow_handler_post_req(user_id, command_id, params):
     """Creates a new workflow in the system
 
     Parameters
     ----------
     user_id : str
         The user creating the workflow
-    dflt_params_id : int
-        The default parameters to use for the first command of the workflow
-    req_params : str
-        JSON representations of the required parameters for the first
-        command of the workflow
+    command_id : int
+        The first command to execute in the workflow
+    params : str
+        JSON representations of the parameters for the first command of
+        the workflow
 
     Returns
     -------
@@ -116,9 +93,7 @@ def workflow_handler_post_req(user_id, dflt_params_id, req_params):
          'message': str,
          'workflow_id': int}
     """
-    dflt_params = DefaultParameters(dflt_params_id)
-    req_params = loads(req_params)
-    parameters = Parameters.from_default_params(dflt_params, req_params)
+    parameters = Parameters.load(Command(command_id), json_str=params)
     wf = ProcessingWorkflow.from_scratch(User(user_id), parameters)
     # this is safe as we are creating the workflow for the first time and there
     # is only one node. Remember networkx doesn't assure order of nodes
@@ -136,14 +111,14 @@ def workflow_handler_post_req(user_id, dflt_params_id, req_params):
 
 def workflow_handler_patch_req(req_op, req_path, req_value=None,
                                req_from=None):
-    """Patches an ontology
+    """Patches a workflow
 
     Parameters
     ----------
     req_op : str
-        The operation to perform on the ontology
+        The operation to perform on the workflow
     req_path : str
-        The ontology to patch
+        Path parameter with the workflow to patch
     req_value : str, optional
         The value that needs to be modified
     req_from : str, optional

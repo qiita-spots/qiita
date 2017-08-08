@@ -253,8 +253,7 @@ class TestSampleTemplate(TestCase):
         }
         self.new_study = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'),
-            "Fried Chicken Microbiome %s" % time(), [1],
-            info)
+            "Fried Chicken Microbiome %s" % time(), info)
 
         self.metadata_dict = {
             'Sample1': {'physical_specimen_location': 'location1',
@@ -1320,7 +1319,7 @@ class TestSampleTemplate(TestCase):
         # change based on time and the same functionality is being tested
         # in data.py
         exp_id = self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.filepath")[0] + 1
+            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0] + 1
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)

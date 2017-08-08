@@ -123,21 +123,11 @@ class NewArtifactHandlerTests(TestHandlerBase):
             'import-artifact': ''}
         response = self.post('/study/new_artifact/', args)
         self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body),
+                         {'status': 'success', 'message': ''})
 
         # make sure new artifact created
         wait_for_prep_information_job(self.prep.id)
-
-
-class ArtifactAJAXTests(TestHandlerBase):
-
-    def test_delete_artifact(self):
-        response = self.post('/artifact/',
-                             {'artifact_id': 2})
-        self.assertEqual(response.code, 200)
-        # This is needed so the clean up works - this is a distributed system
-        # so we need to make sure that all processes are done before we reset
-        # the test database
-        wait_for_prep_information_job(1)
 
 
 class ArtifactGetSamplesTest(TestHandlerBase):
@@ -165,6 +155,27 @@ class ArtifactGetSamplesTest(TestHandlerBase):
                        "1.SKD3.640198", "1.SKB5.640181", "1.SKB4.640189",
                        "1.SKB9.640200", "1.SKM9.640192", "1.SKD8.640184",
                        "1.SKM5.640177", "1.SKM7.640188", "1.SKD7.640191"]}})
+        self.assertEqual(loads(response.body), exp)
+
+
+class ArtifactGetInfoTest(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/artifact/info/', {'ids[]': [6, 7]})
+        self.assertEqual(response.code, 200)
+        data = [
+            {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
+             'target_subfragment': ['V4'], 'algorithm': (
+                'Pick closed-reference OTUs, QIIMEv1.9.1 | barcode_type 8, '
+                'defaults'), 'artifact_id': 6, 'data_type': '16S',
+             'timestamp': '2012-10-02 17:30:00', 'parameters': {
+                'reference': 2, 'similarity': 0.97, 'sortmerna_e_value': 1,
+                'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
+                'sortmerna_coverage': 0.97}, 'name': 'BIOM'},
+            {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
+             'artifact_id': 7, 'data_type': '16S',
+             'timestamp': '2012-10-02 17:30:00', 'parameters': {},
+             'name': 'BIOM'}]
+        exp = {'status': 'success', 'msg': '', 'data': data}
         self.assertEqual(loads(response.body), exp)
 
 

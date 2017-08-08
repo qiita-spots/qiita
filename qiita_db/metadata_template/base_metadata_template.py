@@ -557,10 +557,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             table_name = cls._table_name(obj_id)
             column_datatype = ["%s varchar" % col for col in headers]
             sql = """CREATE TABLE qiita.{0} (
-                        sample_id varchar NOT NULL, {1},
-                        CONSTRAINT fk_{0} FOREIGN KEY (sample_id)
-                            REFERENCES qiita.study_sample (sample_id)
-                            ON UPDATE CASCADE
+                        sample_id varchar NOT NULL, {1}
                      )""".format(table_name, ', '.join(column_datatype))
             qdb.sql_connection.TRN.add(sql)
 
@@ -760,7 +757,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
                              SET {1}
                              WHERE sample_id=%s""".format(table_name,
                                                           ",".join(set_str))
-                    qdb.sql_connection.TRN.add(sql, values, many=True)
+                    for v in values:
+                        qdb.sql_connection.TRN.add(sql, v)
 
             if new_samples:
                 warnings.warn(
@@ -1077,7 +1075,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             try:
                 fpp_id = qdb.util.insert_filepaths(
-                    [(filepath, fp_id)], None, "templates", "filepath",
+                    [(filepath, fp_id)], None, "templates",
                     move_files=False)[0]
                 sql = """INSERT INTO qiita.{0} ({1}, filepath_id)
                          VALUES (%s, %s)""".format(self._filepath_table,
@@ -1227,7 +1225,6 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # We add 1 because we need to add the sample name
             single_value = "(%s)" % ', '.join(
                 ["%s"] * (len(cols_to_update) + 1))
-            sql_values = ', '.join([single_value] * len(samples_to_update))
             sql_cols = ', '.join(cols_to_update)
 
             sql = """UPDATE qiita.{0} AS t SET
@@ -1236,14 +1233,12 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         AS c(sample_id, {3})
                      WHERE c.sample_id = t.sample_id
                     """.format(self._table_name(self._id), sql_eq_cols,
-                               sql_values, sql_cols)
-            sql_args = []
+                               single_value, sql_cols)
             for sample in samples_to_update:
                 sample_vals = [new_map[col][sample] for col in cols_to_update]
                 sample_vals.insert(0, sample)
-                sql_args.extend(sample_vals)
+                qdb.sql_connection.TRN.add(sql, sample_vals)
 
-            qdb.sql_connection.TRN.add(sql, sql_args)
             qdb.sql_connection.TRN.execute()
 
             self.validate(self.columns_restrictions)

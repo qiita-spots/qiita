@@ -32,14 +32,11 @@ class SetupTest(TestCase):
     def test_investigation_study(self):
         self.assertEqual(get_count("qiita.investigation_study"), 1)
 
-    def test_study_experimental_factor(self):
-        self.assertEqual(get_count("qiita.study_experimental_factor"), 1)
-
     def test_filepath(self):
-        self.assertEqual(get_count("qiita.filepath"), 26)
+        self.assertEqual(get_count("qiita.filepath"), 25)
 
     def test_filepath_type(self):
-        self.assertEqual(get_count("qiita.filepath_type"), 21)
+        self.assertEqual(get_count("qiita.filepath_type"), 23)
 
     def test_study_prep_template(self):
         self.assertEqual(get_count("qiita.study_prep_template"), 2)
@@ -62,32 +59,17 @@ class SetupTest(TestCase):
     def test_reference(self):
         self.assertEqual(get_count("qiita.reference"), 2)
 
-    def test_job(self):
-        self.assertEqual(get_count("qiita.job"), 3)
-
     def test_analysis(self):
         self.assertEqual(get_count("qiita.analysis"), 10)
 
-    def test_analysis_job(self):
-        self.assertEqual(get_count("qiita.analysis_job"), 3)
-
-    def test_analysis_workflow(self):
-        self.assertEqual(get_count("qiita.analysis_workflow"), 2)
-
     def test_analysis_filepath(self):
-        self.assertEqual(get_count("qiita.analysis_filepath"), 2)
+        self.assertEqual(get_count("qiita.analysis_filepath"), 1)
 
     def test_analysis_sample(self):
         self.assertEqual(get_count("qiita.analysis_sample"), 31)
 
     def test_analysis_users(self):
         self.assertEqual(get_count("qiita.analysis_users"), 1)
-
-    def test_job_results_filepath(self):
-        self.assertEqual(get_count("qiita.job_results_filepath"), 2)
-
-    def test_command_data_type(self):
-        self.assertEqual(get_count("qiita.command_data_type"), 14)
 
     def test_ontology(self):
         self.assertTrue(check_count('qiita.ontology', 1))
