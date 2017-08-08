@@ -309,7 +309,7 @@ $(document).ready(function() {
     function( settings, data, data_idx, row ) {
       var tag_selected_len = tag_selected.length;
       for (var i = 0; i < tag_selected_len; i++) {
-        if (!row['study_tags'].includes(tag_selected[i])) {
+        if (row['study_tags'] === null || data === undefined || !row['study_tags'].includes(tag_selected[i])) {
           return false;
         }
       }
