@@ -14,6 +14,7 @@ from os.path import join
 from itertools import chain
 from collections import defaultdict
 from json import dumps, loads
+from time import sleep
 
 from future.utils import viewitems, viewvalues
 import networkx as nx
@@ -429,12 +430,49 @@ class ProcessingJob(qdb.base.QiitaObject):
                         JOIN qiita.processing_job_status USING
                             (processing_job_status_id)
                      WHERE pjv.processing_job_id = %s
-                        AND processing_job_status != %s"""
-            qdb.sql_connection.TRN.add(sql, [self.id, 'waiting'])
+                        AND processing_job_status NOT IN %s"""
+            sql_args = [self.id, ('waiting', 'error')]
+            qdb.sql_connection.TRN.add(sql, sql_args)
             remaining = qdb.sql_connection.TRN.execute_fetchlast()
 
-            if remaining == 0:
-                # All validators have completed
+            # Active polling - wait until all validator jobs are completed
+            while remaining != 0:
+                self.step = "Validating outputs (%d remaining)" % remaining
+                sleep(10)
+                qdb.sql_connection.TRN.add(sql, sql_args)
+                remaining = qdb.sql_connection.TRN.execute_fetchlast()
+
+            # Check if any of the validators errored
+            sql = """SELECT validator_id
+                     FROM qiita.processing_job_validator pjv
+                        JOIN qiita.processing_job pj
+                            ON pjv.validator_id = pj.processing_job_id
+                        JOIN qiita.processing_job_status USING
+                            (processing_job_status_id)
+                        WHERE pjv.processing_job_id = %s AND
+                            processing_job_status = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id, 'error'])
+            errored = qdb.sql_connection.TRN.execute_fetchflatten()
+
+            if errored:
+                # At least one of the validators failed, Set the rest of the
+                # validators and the current job as failed
+                qdb.sql_connection.TRN.add(sql, [self.id, 'waiting'])
+                waiting = qdb.sql_connection.TRN.execute_fetchflatten()
+
+                common_error = "\n".join(
+                    ["Validator %s error message: %s"
+                     % (j, ProcessingJob(j).log.msg) for j in errored])
+
+                val_error = "%d sister validator jobs failed: %s" % (
+                    len(errored), common_error)
+                for j in waiting:
+                    ProcessingJob(j)._set_error(val_error)
+
+                self._set_error('%d validator jobs failed: %s'
+                                % (len(errored), common_error))
+            else:
+                # All validators have successfully completed
                 sql = """SELECT validator_id
                          FROM qiita.processing_job_validator
                          WHERE processing_job_id = %s"""
@@ -460,8 +498,6 @@ class ProcessingJob(qdb.base.QiitaObject):
 
                     self._update_and_launch_children(mapping)
                 self._set_status('success')
-            else:
-                self.step = "Validating outputs (%d remaining)" % remaining
 
     def _complete_artifact_definition(self, artifact_data):
         """"Performs the needed steps to complete an artifact definition job
@@ -487,7 +523,6 @@ class ProcessingJob(qdb.base.QiitaObject):
             if job_params['provenance'] is not None:
                 # The artifact is a result from a previous job
                 provenance = loads(job_params['provenance'])
-                job = ProcessingJob(provenance['job'])
                 if provenance.get('data_type') is not None:
                     artifact_data = {'data_type': provenance['data_type'],
                                      'artifact_data': artifact_data}
@@ -500,7 +535,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.execute()
                 # Can't create the artifact until all validators are completed
                 self._set_status('waiting')
-                job.release_validators()
             else:
                 # The artifact is uploaded by the user or is the initial
                 # artifact of an analysis
@@ -673,15 +707,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                 else:
                     self._set_status('success')
             else:
-                if self.command.software.type == 'artifact definition':
-                    job_params = self.parameters.values
-                    if job_params.get('provenance') is not None:
-                        # This artifact definition job is a result of a command
-                        # run, if it fails, set up the status of the "parent"
-                        # job also as failed, and assign the sem error message
-                        provenance = loads(job_params['provenance'])
-                        job = ProcessingJob(provenance['job'])
-                        job._set_error(error)
                 self._set_error(error)
 
     @property
