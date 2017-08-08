@@ -36,7 +36,7 @@ def qiita_recover_jobs():
     qiita_jids = []
     for qj in qiita_jobs:
         # to retrieve info about the jobs we need to use the fullname, so
-        # prepending .ucsd.edu
+        # appending .ucsd.edu
         args = ["qstat", "-f", "%s.ucsd.edu" % qj]
         # the name is the last string of the line and has .txt prepended
         qji = [line.split()[-1].split(".")[0]
@@ -89,7 +89,7 @@ def qiita_recover_jobs():
             status = set([ProcessingJob(v).status
                           for v in validators if v not in qiita_jids])
             # if there are no status, that means that the validators weren't
-            # created and we shour rerun from scratch (Step 4)
+            # created and we should rerun from scratch (Step 4)
             if not bool(status):
                 continue
             # it multiple status in the validators, it's a complex behaivor
@@ -120,7 +120,7 @@ def qiita_recover_jobs():
 
         jids_to_recover = jids_to_recover - set(jobs_with_validators)
 
-    # Step 4: Finally, we recover all the left over jobs
+    # Step 4: Finally, we recover all the leftover jobs
     for i, j in enumerate(jids_to_recover):
         job = ProcessingJob(j)
         status = job.status
