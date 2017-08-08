@@ -47,6 +47,10 @@ def build_analysis_files(job):
             j.submit()
             sleep(1)
 
+    # The validator jobs no longer finish the job automatically so we need
+    # to release the validators here
+    release_validators(job)
+
 
 def release_validators(job):
     """Waits until all the validators of a job are completed
