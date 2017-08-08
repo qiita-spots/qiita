@@ -253,8 +253,7 @@ class TestSampleTemplate(TestCase):
         }
         self.new_study = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'),
-            "Fried Chicken Microbiome %s" % time(), [1],
-            info)
+            "Fried Chicken Microbiome %s" % time(), info)
 
         self.metadata_dict = {
             'Sample1': {'physical_specimen_location': 'location1',

@@ -1075,7 +1075,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             try:
                 fpp_id = qdb.util.insert_filepaths(
-                    [(filepath, fp_id)], None, "templates", "filepath",
+                    [(filepath, fp_id)], None, "templates",
                     move_files=False)[0]
                 sql = """INSERT INTO qiita.{0} ({1}, filepath_id)
                          VALUES (%s, %s)""".format(self._filepath_table,

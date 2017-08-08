@@ -220,7 +220,7 @@ class Artifact(qdb.base.QiitaObject):
             # Associate the artifact with its filepaths
             filepaths = [(fp, f_type) for _, fp, f_type in artifact.filepaths]
             fp_ids = qdb.util.insert_filepaths(
-                filepaths, a_id, atype, "filepath", copy=True)
+                filepaths, a_id, atype, copy=True)
             sql = """INSERT INTO qiita.artifact_filepath
                         (artifact_id, filepath_id)
                      VALUES (%s, %s)"""
@@ -462,7 +462,7 @@ class Artifact(qdb.base.QiitaObject):
 
             # Associate the artifact with its filepaths
             fp_ids = qdb.util.insert_filepaths(
-                filepaths, instance.id, artifact_type, "filepath",
+                filepaths, instance.id, artifact_type,
                 move_files=move_files, copy=(not move_files))
             sql = """INSERT INTO qiita.artifact_filepath
                         (artifact_id, filepath_id)
@@ -1008,7 +1008,7 @@ class Artifact(qdb.base.QiitaObject):
             if support_dir is not None:
                 filepaths.append((support_dir, 'html_summary_dir'))
             fp_ids = qdb.util.insert_filepaths(
-                filepaths, self.id, self.artifact_type, "filepath")
+                filepaths, self.id, self.artifact_type)
             sql = """INSERT INTO qiita.artifact_filepath
                         (artifact_id, filepath_id)
                      VALUES (%s, %s)"""

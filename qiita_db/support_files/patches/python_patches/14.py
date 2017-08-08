@@ -1,3 +1,11 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 # Feberuary 7, 2015
 # This patch recreates all the QIIME mapping files to avoid lower/upper case
 # problems. See https://github.com/biocore/qiita/issues/799

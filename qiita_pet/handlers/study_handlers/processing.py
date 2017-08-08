@@ -1,23 +1,20 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from __future__ import division
 
 from tornado.web import authenticated
 
-from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    list_commands_handler_get_req, process_artifact_handler_get_req,
-    list_options_handler_get_req, workflow_handler_post_req,
-    workflow_handler_patch_req, job_ajax_get_req,
+    list_commands_handler_get_req, list_options_handler_get_req,
+    workflow_handler_post_req, workflow_handler_patch_req, job_ajax_get_req,
     workflow_run_post_req)
-
-
-class ProcessArtifactHandler(BaseHandler):
-    @authenticated
-    def get(self):
-        artifact_id = to_int(self.get_argument('artifact_id'))
-        res = process_artifact_handler_get_req(artifact_id)
-        res['artifact_id'] = artifact_id
-        self.render('study_ajax/processing_artifact.html', **res)
 
 
 class ListCommandsHandler(BaseHandler):

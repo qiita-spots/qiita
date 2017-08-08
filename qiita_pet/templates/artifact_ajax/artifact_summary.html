@@ -102,27 +102,16 @@
       {% end %}
     </h4>
     {% if processing_parameters %}
-      <small>
+      <p style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
         <b>Processing parameters:</b>
         {% for key in processing_parameters %}
           <i>{% raw key %}</i>: <i>{% raw processing_parameters[key] %}</i>
         {% end %}
-        <br/><br/>
-      </small>
+        <br/>
+      </p>
     {% end %}
   </div>
 </div>
-
-{% if files %}
-<div class='row'>
-  <div class='col-md-12'>
-    Available files:
-    {% for f_id, f_name in files %}
-      </br><a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a>
-    {% end %}
-  </div>
-</div>
-{% end %}
 
 <div class='row'>
   <div class='col-md-12'>
@@ -145,6 +134,18 @@
     {% end %}
   </div>
 </div>
+
+{% if files %}
+<div class='row'>
+  <div class='col-md-12'>
+    Available files:
+    {% for f_id, f_name in files %}
+      </br><a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a>
+    {% end %}
+  </div>
+</div>
+{% end %}
+
 <div class='row'>
   <div class='col-md-12' id='artifact-summary-content'>
     {% if summary is not None %}

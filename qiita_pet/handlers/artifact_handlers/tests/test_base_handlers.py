@@ -221,6 +221,9 @@ class TestBaseHandlersUtils(TestCase):
                            '2?\')) { set_artifact_visibility(\'sandbox\', 2) '
                            '}" class="btn btn-primary btn-sm">Revert to '
                            'sandbox</button> <a class="btn btn-primary '
+                           'btn-sm" href="/ebi_submission/2"><span '
+                           'class="glyphicon glyphicon-export"></span> '
+                           'Submit to EBI</a> <a class="btn btn-primary '
                            'btn-sm" href="/vamps/2"><span class="glyphicon '
                            'glyphicon-export"></span> Submit to VAMPS</a>'),
                'processing_parameters': {

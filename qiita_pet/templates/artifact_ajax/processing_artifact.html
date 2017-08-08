@@ -400,7 +400,9 @@
         var sel = $('<select>').appendTo($colDiv).attr('id', 'command-sel').attr('name', 'command').addClass('form-control').attr('placeholder', 'Choose command...');
         sel.append($("<option>").attr('value', "").text("Choose command...").prop('disabled', true).prop('selected', true));
         for(var i=0; i<data.commands.length; i++) {
-          sel.append($("<option>").attr('value', data.commands[i].id).text(data.commands[i].command));
+          if (data.commands[i].output.length != 0) {
+            sel.append($("<option>").attr('value', data.commands[i].id).text(data.commands[i].command));
+          }
         }
         sel.change(function(event) {
           $("#cmd-opts-div").empty();

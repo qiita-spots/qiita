@@ -1,3 +1,11 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from unittest import TestCase, main
 
 import numpy.testing as npt
@@ -92,8 +100,7 @@ class TestPortal(TestCase):
         qdb.portal.Portal.create("NEWPORTAL3", "SOMEDESC")
         qiita_config.portal = "NEWPORTAL3"
         qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Fried chicken microbiome",
-            [1], info)
+            qdb.user.User('test@foo.bar'), "Fried chicken microbiome", info)
         qiita_config.portal = "QIITA"
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.portal.Portal.delete("NEWPORTAL3")

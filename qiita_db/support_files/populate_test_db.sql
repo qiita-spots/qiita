@@ -62,9 +62,6 @@ INSERT INTO qiita.investigation (investigation_name, investigation_description, 
 -- Insert investigation_study (link study 1 with investigation 1)
 INSERT INTO qiita.investigation_study (investigation_id, study_id) VALUES (1, 1);
 
--- Insert the study experimental factor for study 1
-INSERT INTO qiita.study_experimental_factor (study_id, efo_id) VALUES (1, 1);
-
 -- Add the study_sample for study 1
 INSERT INTO qiita.study_sample (study_id, sample_id, ebi_sample_accession, biosample_accession) VALUES
     (1, '1.SKB8.640193', 'ERS000000', 'SAMEA0000000'),

@@ -171,7 +171,7 @@ class DBUtilTests(TestCase):
 
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
             "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
-        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data", "filepath")
+        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data")
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
@@ -201,8 +201,7 @@ class DBUtilTests(TestCase):
         # autoincremented for each element introduced.
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
             "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
-        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data", "filepath",
-                                        copy=True)
+        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data", copy=True)
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
@@ -231,7 +230,7 @@ class DBUtilTests(TestCase):
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
             "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
         obs = qdb.util.insert_filepaths(
-            [(fp, "raw_forward_seqs")], 2, "raw_data", "filepath")
+            [(fp, "raw_forward_seqs")], 2, "raw_data")
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
@@ -637,7 +636,7 @@ class DBUtilTests(TestCase):
             f.write('\n')
         self.files_to_remove.append(fp)
         test = qdb.util.insert_filepaths(
-            [(fp, "raw_forward_seqs")], 2, "FASTQ", "filepath")[0]
+            [(fp, "raw_forward_seqs")], 2, "FASTQ")[0]
         with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.artifact_filepath
                             (artifact_id, filepath_id)
@@ -656,7 +655,7 @@ class DBUtilTests(TestCase):
             f.write('\n')
         self.files_to_remove.append(fp)
         test = qdb.util.insert_filepaths(
-            [(fp, "raw_forward_seqs")], 2, "FASTQ", "filepath")[0]
+            [(fp, "raw_forward_seqs")], 2, "FASTQ")[0]
         with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.artifact_filepath
                             (artifact_id, filepath_id)
@@ -798,8 +797,7 @@ class UtilTests(TestCase):
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
         new_study = qdb.study.Study.create(
-            qdb.user.User('shared@foo.bar'), 'test_study_1', efo=[1],
-            info=info)
+            qdb.user.User('shared@foo.bar'), 'test_study_1', info=info)
 
         exp_info = [
             {'status': 'private', 'metadata_complete': True,
