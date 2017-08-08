@@ -653,6 +653,16 @@ class ProcessingJob(qdb.base.QiitaObject):
             for j in validator_jobs:
                 j.submit()
 
+            # Submit the job that will release all the validators
+            plugin = qdb.software.Software.from_name_and_version(
+                'Qiita', 'alpha')
+            cmd = plugin.get_command('release_validators')
+            params = qdb.software.Parameters.load(
+                cmd, values_dict={'job': self.id})
+            job = ProcessingJob.create(self.user, params)
+        # Doing the submission outside of the transaction
+        job.submit()
+
     def _set_validator_jobs(self, validator_jobs):
         """Sets the validator jobs for the current job
 

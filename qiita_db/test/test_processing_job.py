@@ -483,11 +483,9 @@ class ProcessingJobTest(TestCase):
 
         obsjobs = set(self._get_all_job_ids())
 
-        self.assertEqual(len(obsjobs), len(alljobs) + 1)
-
-        # Release the validators of the job. This will make sure that all
-        # the validator jobs have been completed
-        job.release_validators()
+        # The complete submits the release validators job
+        self.assertEqual(len(obsjobs), len(alljobs) + 2)
+        self._wait_for_job(job)
 
     def test_complete_failure(self):
         job = _create_job()
