@@ -1,0 +1,2 @@
+ignore:
+  - "qiita_db/support_files/**/*"
