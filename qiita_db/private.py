@@ -49,7 +49,7 @@ def build_analysis_files(job):
 
     # The validator jobs no longer finish the job automatically so we need
     # to release the validators here
-    release_validators(job)
+    job.release_validators()
 
 
 def release_validators(job):
