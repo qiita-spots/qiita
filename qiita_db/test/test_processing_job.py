@@ -483,7 +483,8 @@ class ProcessingJobTest(TestCase):
 
         obsjobs = set(self._get_all_job_ids())
 
-        # The complete submits the release validators job
+        # The complete call above submits 2 new jobs: the validator job and
+        # the release validators job. Hence the +2
         self.assertEqual(len(obsjobs), len(alljobs) + 2)
         self._wait_for_job(job)
 

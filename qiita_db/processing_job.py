@@ -421,8 +421,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                     "Only artifact transformation and private jobs can "
                     "release validators")
 
-            # Check if all the validators are ready by checking that there is
-            # no validator processing job whose status is not waiting
+            # Check if all the validators are completed. Validator jobs can be
+            # in two states when completed: 'waiting' in case of success
+            # or 'error' otherwise
             sql = """SELECT COUNT(1)
                      FROM qiita.processing_job_validator pjv
                         JOIN qiita.processing_job pj ON
