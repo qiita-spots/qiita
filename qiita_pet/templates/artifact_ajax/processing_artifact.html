@@ -189,8 +189,12 @@
     // Collect the optional parameters
     var opt_params = {};
     $(".optional-parameter").each( function () {
-      params[this.id] = this.value;
-      opt_params[this.id] = this.value;
+      var value = this.value;
+      if ( $(this).attr('type') === 'checkbox' ) {
+        value = this.checked;
+      }
+      params[this.id] = value;
+      opt_params[this.id] = value;
     });
 
     var workflow_id = $("#graph-network-div").attr("data-wf-id");
