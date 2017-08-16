@@ -10,6 +10,7 @@ from __future__ import division
 from collections import defaultdict
 from future.utils import PY3, viewitems
 from six import StringIO
+from string import printable
 
 import pandas as pd
 import numpy as np
@@ -103,7 +104,9 @@ def load_template_to_dataframe(fn, index='sample_name'):
     # Load in file lines
     holdfile = None
     with open_file(fn, mode='U') as f:
-        holdfile = f.readlines()
+        # here we are removing all non printable chars AKA non UTF-8 chars
+        holdfile = [''.join([c for c in l if c in printable])
+                    for l in f.readlines()]
     if not holdfile:
         raise ValueError('Empty file passed!')
 

@@ -386,21 +386,21 @@ EXP_SAMPLE_TEMPLATE_WHITESPACE = (
     "Value for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "\x00sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "\x01has_physical_specimen\thost_subject_id\tint_column\tlatitude\t"
+    "longitude\t   physical_location\trequired_sample_info_status"
+    "\tsample_type\tstr_column\n"
+    "   2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2  \t2014-05-29 12:24:51\t"
+    " 2.Sample2  \t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
     "\t\t\t\t\t\t\t\t\t\t\t\t\n"
-    "\t\t\t\t\t\t\t\t\t\t\t\t\n")
+    "\t\t\t\t\t\t\t\t\t\t   \t\t\n")
 
 EXP_ST_SPACES_EMPTY_COLUMN = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
