@@ -10,42 +10,39 @@
   </div>
   <div id="summary-table-div">
 
-        <table class="table">
-          {% for i, (category, summary) in enumerate(stats, -1) %}
-            <tr id="row_{{i}}">
-              <td>
-                {% if editable %}
-                <a class="btn btn-danger" onclick="delete_prep_column({{pid}}, '{{category}}', {{i}});"><span class="glyphicon glyphicon-trash"></span></a>
-                {% else %}
-                  &nbsp;
-                {% end %}
+    <table class="table">
+      {% for i, (category, summary) in enumerate(stats, -1) %}
+        <tr id="row_{{i}}">
+          <td>
+            {% if editable %}
+            <a class="btn btn-danger" onclick="delete_prep_column({{pid}}, '{{category}}', {{i}});"><span class="glyphicon glyphicon-trash"></span></a>
+            {% else %}
+              &nbsp;
+            {% end %}
+          </td>
+          <td colspan="2">
+            {% if len(summary) == 1 %}
+                <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
+            </td>
+            {% elif len(summary) == num_samples %}
+                <b>{{category}}</b>: All the values in this category are different.
               </td>
-              <td colspan="2">
-                {% if len(summary) == 1 %}
-                    <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
-                </td>
-                {% elif len(summary) == num_samples %}
-                    <b>{{category}}</b>: All the values in this category are different.
-                  </td>
-                {% else %}
-                    <b>{{category}}<b>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <button type="button" class="btn" data-toggle="collapse" data-target=".{{i}}collapsed">values</button>
-                  </td>
-                  {% for row in summary %}
-                  </tr>
-                  <tr class="collapse {{i}}collapsed">
-                    <td>&nbsp;</td>
-                    <td>{{row[0]}}</td>
-                    <td>{{row[1]}}</td>
-                  {% end %}
+            {% else %}
+                <b>{{category}}<b>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="button" class="btn" data-toggle="collapse" data-target=".{{i}}collapsed">values</button>
+              </td>
+              {% for row in summary %}
+              </tr>
+              <tr class="collapse {{i}}collapsed">
+                <td>&nbsp;</td>
+                <td>{{row[0]}}</td>
+                <td>{{row[1]}}</td>
               {% end %}
-            </tr>
           {% end %}
-        </table>
-
-
-
+        </tr>
+      {% end %}
+    </table>
 
   </div>
 </div>
