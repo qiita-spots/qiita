@@ -48,7 +48,8 @@ class PrepTemplateSummaryAJAX(BaseHandler):
         res = prep_template_summary_get_req(prep_id, self.current_user.id)
 
         self.render('study_ajax/prep_summary_table.html', pid=prep_id,
-                    stats=res['summary'], editable=res['editable'])
+                    stats=res['summary'], editable=res['editable'],
+                    num_samples=res['num_samples'])
 
 
 class PrepTemplateAJAX(BaseHandler):
