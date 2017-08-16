@@ -1205,7 +1205,7 @@ def generate_study_list(study_ids, public_only=False):
     -----
     The main select might look scary but it's pretty simple:
     - We select the requiered fields from qiita.study and qiita.study_person
-        SELECT metadata_complete, study_abstract, study_id,
+        SELECT email, metadata_complete, study_abstract, study_id,
             study_title, ebi_study_accession, ebi_submission_status,
             qiita.study_person.name AS pi_name,
             qiita.study_person.email AS pi_email,
@@ -1238,8 +1238,9 @@ def generate_study_list(study_ids, public_only=False):
     """
     with qdb.sql_connection.TRN:
         sql = """
-            SELECT metadata_complete, study_abstract, study_id,
-                study_title, ebi_study_accession, ebi_submission_status,
+            SELECT qiita.study.email as owner, metadata_complete,
+                study_abstract, study_id, study_title, ebi_study_accession,
+                ebi_submission_status,
                 qiita.study_person.name AS pi_name,
                 qiita.study_person.email AS pi_email,
                 (SELECT COUNT(sample_id) FROM qiita.study_sample
@@ -1303,6 +1304,7 @@ def generate_study_list(study_ids, public_only=False):
             del info["shared_with_email"]
 
             infolist.append({
+                'owner': 'test@foo.bar',
                 'metadata_complete': info['metadata_complete'],
                 'publication_pid': info['publication_pid'],
                 'ebi_submission_status': info['ebi_submission_status'],

@@ -27,7 +27,7 @@ permissions that the owner of the Study has. These permissions are:
 Sharing a Study
 ---------------
 
-In the “Your Studies (includes shared with you)” section of the Studies List
+In the “Your Studies” section of the Studies List
 you have a “Shared With These Users” column that lists all User names that
 your study is shared with. You can click on the “Modify” button and add/remove
 users. See below.
@@ -47,5 +47,5 @@ will have a link to share it. See below
 
 .. figure::  images/sharing_study.gif
    :align:   center
-   
+
    Analysis sharing example

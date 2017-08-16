@@ -127,15 +127,17 @@ $(document).ready(function() {
         { "data": "number_samples_collected" },
         { "data": "shared" },
         { "data": "pi" },
+        { "data": "owner" },
         { "data": "pubs" },
         { "data": "status" },
         { "data": "ebi_info" }
       ],
       columnDefs: [
-        {type:'natural', targets:[2,6,7]},
+        {type:'natural', targets:[2,5,6,7]},
         {"targets": [ 2 ], "visible": false},
         // render zero
         {"render": function ( data, type, row, meta ) {
+          console.log(row)
           if (data !== null && data !== undefined && data.length != 0){
             return '<div class="container" style="max-width: 5em;">'+
                      '<div class="row justify-content-md-center">' +
@@ -408,7 +410,7 @@ function add_metacat(metacat) {
     </h5>
     <select class="js-select2-multiple form-control" id="study_tags_multiple" multiple="multiple" style="width: 100%"></select>
 
-    <h3 class="gray-msg">Your Studies (includes shared with you)</h3>
+    <h3 class="gray-msg">Your Studies</h3>
     <table id="user-studies-table" class="table table-bordered gray-msg">
       <thead>
         <tr>
@@ -419,13 +421,14 @@ function add_metacat(metacat) {
           <th>Samples</th>
           <th>Shared With These Users</th>
           <th>Principal Investigator</th>
+          <th>Owner</th>
           <th>Publications</th>
           <th>Status</th>
           <th>Qiita EBI submission</th>
         </tr>
       </thead>
     </table>
-    <h3 class="gray-msg">Other Studies</h3>
+    <h3 class="gray-msg">Public Studies</h3>
     <table id="studies-table" class="table table-bordered gray-msg">
       <thead>
         <tr>

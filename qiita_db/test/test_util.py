@@ -800,9 +800,9 @@ class UtilTests(TestCase):
             qdb.user.User('shared@foo.bar'), 'test_study_1', info=info)
 
         exp_info = [
-            {'status': 'private', 'metadata_complete': True,
-             'study_tags': None, 'publication_doi': [
-                '10.100/123456', '10.100/7891011'],
+            {'owner': 'test@foo.bar', 'status': 'private',
+             'metadata_complete': True, 'study_tags': None,
+             'publication_doi': ['10.100/123456', '10.100/7891011'],
              'study_title': ('Identification of the Microbiomes for '
                              'Cannabis Soils'),
              'publication_pid': ['123456', '7891011'],

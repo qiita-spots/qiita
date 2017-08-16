@@ -32,6 +32,7 @@ class TestHelpers(TestHandlerBase):
 
         self.single_exp = {
             'study_id': 1,
+            'owner': 'test@foo.bar',
             'status': 'private',
             'study_abstract':
                 'This is a preliminary study to examine the microbiota '
@@ -126,6 +127,7 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'publication_doi': [],
             'study_abstract': 'abstract',
             'study_id': 2,
+            'owner': 'test@foo.bar',
             'ebi_study_accession': None,
             'study_title': 'My study',
             'study_tags': None,
@@ -260,6 +262,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                 'metadata_complete': True,
                 'ebi_submission_status': 'submitted',
                 'study_id': 1,
+                'owner': 'test@foo.bar',
                 'ebi_study_accession': 'EBI123456-BB',
                 'shared': ('<a target="_blank" href="mailto:shared@foo.bar">'
                            'Shared</a>'),
