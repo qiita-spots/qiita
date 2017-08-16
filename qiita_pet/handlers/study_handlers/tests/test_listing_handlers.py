@@ -262,7 +262,8 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                 'metadata_complete': True,
                 'ebi_submission_status': 'submitted',
                 'study_id': 1,
-                'owner': 'test@foo.bar',
+                'owner': ('<a target="_blank" href="mailto:test@foo.bar">'
+                          'test@foo.bar</a>'),
                 'ebi_study_accession': 'EBI123456-BB',
                 'shared': ('<a target="_blank" href="mailto:shared@foo.bar">'
                            'Shared</a>'),

@@ -217,7 +217,6 @@ class SearchStudiesAJAX(BaseHandler):
             study_proc = proc_samples = None
         info = _build_study_info(self.current_user, search_type, study_proc,
                                  proc_samples)
-        print info
         # linkifying data
         len_info = len(info)
         for i in range(len_info):
