@@ -104,9 +104,19 @@ def load_template_to_dataframe(fn, index='sample_name'):
     # Load in file lines
     holdfile = None
     with open_file(fn, mode='U') as f:
-        # here we are removing all non printable chars AKA non UTF-8 chars
-        holdfile = [''.join([c for c in l if c in printable])
-                    for l in f.readlines()]
+        errors = []
+        holdfile = f.readlines()
+        # here we are checking for non printable chars AKA non UTF-8 chars
+        for row, line in enumerate(holdfile):
+            for col, block in enumerate(line.split('\t')):
+                tblock = ''.join([c for c in block if c in printable])
+                if len(block) != len(tblock):
+                    errors.append('(%d, %d)' % (row, col))
+        if errors:
+            raise ValueError(
+                "There are non valid UTF-8 characters in the following "
+                "positions (row, col): %s" % ', '.join(errors))
+
     if not holdfile:
         raise ValueError('Empty file passed!')
 
@@ -140,7 +150,7 @@ def load_template_to_dataframe(fn, index='sample_name'):
             # .strip will remove odd chars, newlines, tabs and multiple
             # spaces but we need to read a new line at the end of the
             # line(+'\n')
-            newcols = [d.strip(" \r\x0b\x0c\n") for d in cols]
+            newcols = [d.strip(" \r\n") for d in cols]
 
         holdfile[pos] = '\t'.join(newcols) + '\n'
 

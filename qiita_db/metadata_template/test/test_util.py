@@ -149,7 +149,7 @@ class TestUtil(TestCase):
 
     def test_load_template_to_dataframe_non_utf8(self):
         bad = EXP_SAMPLE_TEMPLATE.replace('Test Sample 2', 'Test Sample\x962')
-        with self.assertRaises(qdb.exceptions.QiitaDBError):
+        with self.assertRaises(ValueError):
             qdb.metadata_template.util.load_template_to_dataframe(
                 StringIO(bad))
 
@@ -386,8 +386,8 @@ EXP_SAMPLE_TEMPLATE_WHITESPACE = (
     "Value for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
-    "\x00sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "\x01has_physical_specimen\thost_subject_id\tint_column\tlatitude\t"
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\t"
     "longitude\t   physical_location\trequired_sample_info_status"
     "\tsample_type\tstr_column\n"
     "   2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
