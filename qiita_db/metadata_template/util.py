@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from collections import defaultdict
 from future.utils import PY3, viewitems
 from six import StringIO
 from string import printable
@@ -104,18 +103,24 @@ def load_template_to_dataframe(fn, index='sample_name'):
     # Load in file lines
     holdfile = None
     with open_file(fn, mode='U') as f:
-        errors = []
+        errors = {}
         holdfile = f.readlines()
         # here we are checking for non printable chars AKA non UTF-8 chars
         for row, line in enumerate(holdfile):
             for col, block in enumerate(line.split('\t')):
                 tblock = ''.join([c for c in block if c in printable])
                 if len(block) != len(tblock):
-                    errors.append('(%d, %d)' % (row, col))
-        if errors:
+                    tblock = ''.join([c if c in printable else '&#9829;'
+                                      for c in block])
+                    if tblock not in errors:
+                        errors[tblock] = []
+                    errors[tblock].append('(%d, %d)' % (row, col))
+        if bool(errors):
             raise ValueError(
-                "There are non valid UTF-8 characters in the following "
-                "positions (row, col): %s" % ', '.join(errors))
+                "There are non valid UTF-8 characters. The errors are "
+                "shown as &#9829;: %s" % '; '.join(
+                    ['%s = %s' % (k, ', '.join(v))
+                     for k, v in viewitems(errors)]))
 
     if not holdfile:
         raise ValueError('Empty file passed!')
@@ -162,34 +167,19 @@ def load_template_to_dataframe(fn, index='sample_name'):
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
-    try:
-        template = pd.read_csv(
-            StringIO(''.join(holdfile)),
-            sep='\t',
-            dtype=str,
-            encoding='utf-8',
-            infer_datetime_format=False,
-            keep_default_na=False,
-            index_col=False,
-            comment='\t',
-            converters={index: lambda x: str(x).strip()})
-        # remove newlines and tabs from fields
-        template.replace(to_replace='[\t\n\r\x0b\x0c]+', value='',
-                         regex=True, inplace=True)
-    except UnicodeDecodeError:
-        # Find row number and col number for utf-8 encoding errors
-        headers = holdfile[0].strip().split('\t')
-        errors = defaultdict(list)
-        for row, line in enumerate(holdfile, 1):
-            for col, cell in enumerate(line.split('\t')):
-                try:
-                    cell.encode('utf-8')
-                except UnicodeError:
-                    errors[headers[col]].append(row)
-        lines = ['%s: row(s) %s' % (header, ', '.join(map(str, rows)))
-                 for header, rows in viewitems(errors)]
-        raise qdb.exceptions.QiitaDBError(
-            'Non UTF-8 characters found in columns:\n' + '\n'.join(lines))
+    template = pd.read_csv(
+        StringIO(''.join(holdfile)),
+        sep='\t',
+        dtype=str,
+        encoding='utf-8',
+        infer_datetime_format=False,
+        keep_default_na=False,
+        index_col=False,
+        comment='\t',
+        converters={index: lambda x: str(x).strip()})
+    # remove newlines and tabs from fields
+    template.replace(to_replace='[\t\n\r\x0b\x0c]+', value='',
+                     regex=True, inplace=True)
 
     initial_columns = set(template.columns)
 
