@@ -50,18 +50,16 @@ class TestStudyAPI(TestCase):
         obs = study_get_req(1, 'test@foo.bar')
         exp = {
             'status': 'success',
-            'message': '',
             'study_info': {
-                'mixs_compliant': True,
-                'metadata_complete': True,
-                'reprocess': False,
-                'emp_person_id': 2,
-                'number_samples_promised': 27,
-                'funding': None,
-                'vamps_id': None,
+                'mixs_compliant': True, 'metadata_complete': True,
+                'reprocess': False, 'owner': 'test@foo.bar',
+                'emp_person_id': 2, 'number_samples_promised': 27,
+                'funding': None, 'show_biom_download_button': True,
+                'publication_pid': ['123456', '7891011'], 'vamps_id': None,
                 'first_contact': datetime(2014, 5, 19, 16, 10),
-                'timeseries_type_id': 1,
-                'study_abstract':
+                'ebi_submission_status': 'submitted',
+                'show_raw_download_button': True, 'timeseries_type_id': 1,
+                'study_abstract': (
                     'This is a preliminary study to examine the microbiota '
                     'associated with the Cannabis plant. Soils samples from '
                     'the bulk soil, soil associated with the roots, and the '
@@ -71,33 +69,25 @@ class TestStudyAPI(TestCase):
                     'from plants that had been harvested in the summer. '
                     'Future studies will attempt to analyze the soils and '
                     'rhizospheres from the same location at different time '
-                    'points in the plant lifecycle.',
-                'status': 'private',
-                'spatial_series': False,
-                'study_description': 'Analysis of the Cannabis Plant '
-                                     'Microbiome',
-                'shared_with': ['shared@foo.bar'],
-                'lab_person': {'affiliation': 'knight lab',
-                               'name': 'LabDude',
-                               'email': 'lab_dude@foo.bar'},
-                'principal_investigator': {'affiliation': 'Wash U',
-                                           'name': 'PIDude',
-                                           'email': 'PI_dude@foo.bar'},
-                'study_alias': 'Cannabis Soils',
-                'study_id': 1,
+                    'points in the plant lifecycle.'),
+                'status': 'private', 'spatial_series': False,
+                'study_description': (
+                    'Analysis of the Cannabis Plant Microbiome'),
+                'shared_with': ['shared@foo.bar'], 'publication_doi': [
+                    '10.100/123456', '10.100/7891011'],
+                'has_access_to_raw_data': True, 'lab_person': {
+                    'affiliation': 'knight lab', 'name': 'LabDude',
+                    'email': 'lab_dude@foo.bar'},
+                'principal_investigator': {
+                    'affiliation': 'Wash U', 'name': 'PIDude',
+                    'email': 'PI_dude@foo.bar'},
+                'study_alias': 'Cannabis Soils', 'study_id': 1,
                 'most_recent_contact': datetime(2014, 5, 19, 16, 11),
-                'publication_doi': ['10.100/123456', '10.100/7891011'],
-                'publication_pid': ['123456', '7891011'],
-                'num_samples': 27,
-                'study_title': 'Identification of the Microbiomes for '
-                               'Cannabis Soils',
-                'number_samples_collected': 27,
-                'owner': 'Dude',
-                'ebi_submission_status': 'submitted',
-                'has_access_to_raw_data': True,
-                'show_biom_download_button': True,
-                'show_raw_download_button': True,
-                'ebi_study_accession': 'EBI123456-BB'},
+                'ebi_study_accession': 'EBI123456-BB', 'num_samples': 27,
+                'study_title': (
+                    'Identification of the Microbiomes for Cannabis Soils'),
+                'number_samples_collected': 27},
+            'message': '',
             'editable': True}
         self.assertEqual(obs, exp)
 
@@ -139,6 +129,8 @@ class TestStudyAPI(TestCase):
                 'study_description': 'DESC',
                 'shared_with': [],
                 'lab_person': None,
+                'study_alias': "FCM",
+                'owner': 'Dude',
                 'principal_investigator': {'affiliation': 'Wash U',
                                            'name': 'PIDude',
                                            'email': 'PI_dude@foo.bar'},
