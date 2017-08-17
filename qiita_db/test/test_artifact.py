@@ -1011,6 +1011,7 @@ class ArtifactTests(TestCase):
         job.complete(True, artifacts_data=data)
         job = qdb.processing_job.ProcessingJob(
             "bcc7ebcd-39c1-43e4-af2d-822e3589f14d")
+        job.release_validators()
         artifact = job.outputs['OTU table']
         self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
 

@@ -359,6 +359,12 @@ class ProcessingJobTest(TestCase):
         artifact_data_2 = {'filepaths': [(fp2, 'biom')],
                            'artifact_type': 'BIOM'}
         obs2._complete_artifact_definition(artifact_data_2)
+        self.assertEqual(obs1.status, 'waiting')
+        self.assertEqual(obs2.status, 'waiting')
+        self.assertEqual(job.status, 'running')
+
+        job.release_validators()
+
         self.assertEqual(obs1.status, 'success')
         self.assertEqual(obs2.status, 'success')
         self.assertEqual(job.status, 'success')
@@ -386,7 +392,8 @@ class ProcessingJobTest(TestCase):
             qdb.user.User('test@foo.bar'), params)
         job._set_validator_jobs([obs])
         obs._complete_artifact_definition(artifact_data)
-        self.assertEqual(job.status, 'success')
+        self.assertEqual(obs.status, 'waiting')
+        self.assertEqual(job.status, 'running')
         # Upload case implicitly tested by "test_complete_type"
 
     def test_complete_artifact_transformation(self):
@@ -476,7 +483,9 @@ class ProcessingJobTest(TestCase):
 
         obsjobs = set(self._get_all_job_ids())
 
-        self.assertEqual(len(obsjobs), len(alljobs) + 1)
+        # The complete call above submits 2 new jobs: the validator job and
+        # the release validators job. Hence the +2
+        self.assertEqual(len(obsjobs), len(alljobs) + 2)
         self._wait_for_job(job)
 
     def test_complete_failure(self):
@@ -501,12 +510,17 @@ class ProcessingJobTest(TestCase):
         )
         obs = qdb.processing_job.ProcessingJob.create(
             qdb.user.User('test@foo.bar'), params)
+        job._set_validator_jobs([obs])
         obs.complete(False, error="Validation failure")
         self.assertEqual(obs.status, 'error')
         self.assertEqual(obs.log.msg, 'Validation failure')
 
+        self.assertEqual(job.status, 'running')
+        job.release_validators()
         self.assertEqual(job.status, 'error')
-        self.assertEqual(job.log.msg, 'Validation failure')
+        self.assertEqual(
+            job.log.msg, '1 validator jobs failed: Validator %s '
+                         'error message: Validation failure' % obs.id)
 
     def test_complete_error(self):
         with self.assertRaises(
@@ -628,6 +642,7 @@ class ProcessingJobTest(TestCase):
         job._set_validator_jobs([obs])
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         obs._complete_artifact_definition(artifact_data)
+        job.release_validators()
         self.assertEqual(job.status, 'success')
 
         obs = job.outputs
