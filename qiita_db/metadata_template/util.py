@@ -110,16 +110,18 @@ def load_template_to_dataframe(fn, index='sample_name'):
             for col, block in enumerate(line.split('\t')):
                 tblock = ''.join([c for c in block if c in printable])
                 if len(block) != len(tblock):
-                    tblock = ''.join([c if c in printable else '&#9829;'
+                    tblock = ''.join([c if c in printable else '&#128062;'
                                       for c in block])
                     if tblock not in errors:
                         errors[tblock] = []
                     errors[tblock].append('(%d, %d)' % (row, col))
         if bool(errors):
             raise ValueError(
-                "There are non valid UTF-8 characters. The errors are "
-                "shown as &#9829;: %s" % '; '.join(
-                    ['%s = %s' % (k, ', '.join(v))
+                "There are invalid (non UTF-8) characters in your information "
+                "file. The offending fields and their location (row, column) "
+                "are listed below, invalid characters are represented using "
+                "&#128062;: %s" % '; '.join(
+                    ['"%s" = %s' % (k, ', '.join(v))
                      for k, v in viewitems(errors)]))
 
     if not holdfile:

@@ -84,9 +84,11 @@ class TestDispatchable(TestCase):
                   'sample_info_utf8_error.txt')
         obs = create_sample_template(fp, Study(1), False)
         exp = {'status': 'danger',
-               'message': "There are non valid UTF-8 characters. The errors "
-                          "are shown as &#9829;: &#9829;collection_timestamp "
-                          "= (0, 13)"}
+               'message': 'There are invalid (non UTF-8) characters in your '
+                          'information file. The offending fields and their '
+                          'location (row, column) are listed below, invalid '
+                          'characters are represented using &#128062;: '
+                          '"&#128062;collection_timestamp" = (0, 13)'}
         self.assertEqual(obs, exp)
 
     def test_update_sample_template(self):
