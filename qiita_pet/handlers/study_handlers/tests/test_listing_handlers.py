@@ -32,7 +32,7 @@ class TestHelpers(TestHandlerBase):
 
         self.single_exp = {
             'study_id': 1,
-            'owner': 'test@foo.bar',
+            'owner': 'Dude',
             'study_alias': 'Cannabis Soils',
             'status': 'private',
             'study_abstract':
@@ -115,8 +115,8 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'study_alias': 'alias',
             'study_abstract': 'abstract'}
         Study.create(User('test@foo.bar'), "My study", info=info)
-        obs = _build_study_info(User('test@foo.bar'), 'user')
 
+        obs = _build_study_info(User('test@foo.bar'), 'user')
         self.exp.append({
             'metadata_complete': False,
             'ebi_submission_status':
@@ -128,8 +128,8 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'publication_doi': [],
             'study_abstract': 'abstract',
             'study_id': 2,
-            'owner': 'test@foo.bar',
-            'study_alias': 'Cannabis Soils',
+            'owner': 'Dude',
+            'study_alias': 'alias',
             'ebi_study_accession': None,
             'study_title': 'My study',
             'study_tags': None,
@@ -265,8 +265,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                 'ebi_submission_status': 'submitted',
                 'study_id': 1,
                 'study_alias': 'Cannabis Soils',
-                'owner': ('<a target="_blank" href="mailto:test@foo.bar">'
-                          'test@foo.bar</a>'),
+                'owner': 'Dude',
                 'ebi_study_accession': 'EBI123456-BB',
                 'shared': ('<a target="_blank" href="mailto:shared@foo.bar">'
                            'Shared</a>'),

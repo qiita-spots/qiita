@@ -92,7 +92,7 @@ class TestStudyAPI(TestCase):
                 'study_title': 'Identification of the Microbiomes for '
                                'Cannabis Soils',
                 'number_samples_collected': 27,
-                'owner': 'test@foo.bar',
+                'owner': 'Dude',
                 'ebi_submission_status': 'submitted',
                 'has_access_to_raw_data': True,
                 'show_biom_download_button': True,

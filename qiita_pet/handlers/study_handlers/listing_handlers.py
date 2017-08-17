@@ -222,8 +222,6 @@ class SearchStudiesAJAX(BaseHandler):
         for i in range(len_info):
             info[i]['shared'] = ", ".join([study_person_linkifier(element)
                                            for element in info[i]['shared']])
-            info[i]['owner'] = study_person_linkifier(
-                (info[i]['owner'], info[i]['owner']))
 
             ppid = [pubmed_linkifier([p]) for p in info[i]['publication_pid']]
             pdoi = [doi_linkifier([p]) for p in info[i]['publication_doi']]

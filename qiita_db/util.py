@@ -1205,7 +1205,7 @@ def generate_study_list(study_ids, public_only=False):
     -----
     The main select might look scary but it's pretty simple:
     - We select the requiered fields from qiita.study and qiita.study_person
-        SELECT email, metadata_complete, study_abstract, study_id, study_alias,
+        SELECT metadata_complete, study_abstract, study_id, study_alias,
             study_title, ebi_study_accession, ebi_submission_status,
             qiita.study_person.name AS pi_name,
             qiita.study_person.email AS pi_email,
@@ -1235,12 +1235,14 @@ def generate_study_list(study_ids, public_only=False):
     - all study tags
             (SELECT array_agg(study_tag) FROM qiita.per_study_tags
                 WHERE study_id=qiita.study.study_id) AS study_tags
+    - study owner
+            (SELECT name FROM qiita.qiita_user
+                WHERE email=qiita.study.email) AS owner
     """
     with qdb.sql_connection.TRN:
         sql = """
-            SELECT qiita.study.email as owner, metadata_complete,
-                study_abstract, study_id, study_alias, study_title,
-                ebi_study_accession, ebi_submission_status,
+            SELECT metadata_complete, study_abstract, study_id, study_alias,
+                study_title, ebi_study_accession, ebi_submission_status,
                 qiita.study_person.name AS pi_name,
                 qiita.study_person.email AS pi_email,
                 (SELECT COUNT(sample_id) FROM qiita.study_sample
@@ -1262,7 +1264,9 @@ def generate_study_list(study_ids, public_only=False):
                     LEFT JOIN qiita.qiita_user USING (email)
                     WHERE study_id=qiita.study.study_id) AS shared_with_email,
                 (SELECT array_agg(study_tag) FROM qiita.per_study_tags
-                    WHERE study_id=qiita.study.study_id) AS study_tags
+                    WHERE study_id=qiita.study.study_id) AS study_tags,
+                (SELECT name FROM qiita.qiita_user
+                    WHERE email=qiita.study.email) AS owner
                 FROM qiita.study
                 LEFT JOIN qiita.study_person ON (
                     study_person_id=principal_investigator_id)
