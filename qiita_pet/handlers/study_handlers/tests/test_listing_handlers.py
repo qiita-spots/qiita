@@ -33,6 +33,7 @@ class TestHelpers(TestHandlerBase):
         self.single_exp = {
             'study_id': 1,
             'owner': 'test@foo.bar',
+            'study_alias': 'Cannabis Soils',
             'status': 'private',
             'study_abstract':
                 'This is a preliminary study to examine the microbiota '
@@ -128,6 +129,7 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'study_abstract': 'abstract',
             'study_id': 2,
             'owner': 'test@foo.bar',
+            'study_alias': 'Cannabis Soils',
             'ebi_study_accession': None,
             'study_title': 'My study',
             'study_tags': None,
@@ -262,6 +264,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                 'metadata_complete': True,
                 'ebi_submission_status': 'submitted',
                 'study_id': 1,
+                'study_alias': 'Cannabis Soils',
                 'owner': ('<a target="_blank" href="mailto:test@foo.bar">'
                           'test@foo.bar</a>'),
                 'ebi_study_accession': 'EBI123456-BB',

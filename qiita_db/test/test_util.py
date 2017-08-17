@@ -801,6 +801,7 @@ class UtilTests(TestCase):
 
         exp_info = [
             {'owner': 'test@foo.bar', 'status': 'private',
+             'study_alias': 'Cannabis Soils',
              'metadata_complete': True, 'study_tags': None,
              'publication_doi': ['10.100/123456', '10.100/7891011'],
              'study_title': ('Identification of the Microbiomes for '
@@ -822,7 +823,7 @@ class UtilTests(TestCase):
              'pi': ('PI_dude@foo.bar', 'PIDude'),
              'artifact_biom_ids': [4, 5, 6, 7],
              'number_samples_collected': 27},
-            {'owner': 'test@foo.bar',
+            {'owner': 'test@foo.bar', "study_alias": "TST",
              'status': 'sandbox', 'metadata_complete': True,
              'study_tags': None, 'publication_doi': [],
              'study_title': 'test_study_1', 'publication_pid': [],
