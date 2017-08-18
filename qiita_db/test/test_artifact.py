@@ -721,6 +721,9 @@ class ArtifactTests(TestCase):
         self.assertIsNone(obs.study)
         self.assertEqual(obs.analysis, qdb.analysis.Analysis(1))
 
+        # testing that it can be deleted
+        qdb.artifact.Artifact.delete(obs.id)
+
     def test_create_processed(self):
         exp_params = qdb.software.Parameters.from_default_params(
             qdb.software.DefaultParameters(1), {'input_data': 1})
