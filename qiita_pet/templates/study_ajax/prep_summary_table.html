@@ -4,39 +4,45 @@
   });
 </script>
 
-
-{% from future.utils import viewitems %}
 <div class="panel panel-default">
   <div class="panel-heading">
     Information summary
   </div>
   <div id="summary-table-div">
+
     <table class="table">
       {% for i, (category, summary) in enumerate(stats, -1) %}
         <tr id="row_{{i}}">
           <td>
-              <a class="btn btn-danger" onclick="delete_prep_column({{pid}}, '{{category}}', {{i}});"><span class="glyphicon glyphicon-trash"></span></a>
+            {% if editable %}
+            <a class="btn btn-danger" onclick="delete_prep_column({{pid}}, '{{category}}', {{i}});"><span class="glyphicon glyphicon-trash"></span></a>
+            {% else %}
+              &nbsp;
+            {% end %}
           </td>
-        {% if len(summary) == 1 %}
           <td colspan="2">
-            <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
-          </td>
-        {% elif len(set([row[1] for row in summary])) == 1 %}
-          <td colspan="2">
-            <b>{{category}}</b>: All the values in this category are different.
-          </td>
-        {% else %}
-          <th colspan="2" align="center">{{category}}</th>
-          {% for row in summary %}
-            <tr>
-              <td width="5px">&nbsp;</td>
-              <td>{{row[0]}}</td>
-              <td>{{row[1]}}</td>
-            </tr>
+            {% if len(summary) == 1 %}
+                <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
+            </td>
+            {% elif len(summary) == num_samples %}
+                <b>{{category}}</b>: All the values in this category are different.
+              </td>
+            {% else %}
+                <b>{{category}}<b>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="button" class="btn" data-toggle="collapse" data-target=".{{i}}collapsed">values</button>
+              </td>
+              {% for row in summary %}
+              </tr>
+              <tr class="collapse {{i}}collapsed">
+                <td>&nbsp;</td>
+                <td>{{row[0]}}</td>
+                <td>{{row[1]}}</td>
+              {% end %}
           {% end %}
-        {% end %}
         </tr>
       {% end %}
     </table>
+
   </div>
 </div>
