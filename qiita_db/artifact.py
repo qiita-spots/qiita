@@ -573,21 +573,25 @@ class Artifact(qdb.base.QiitaObject):
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [artifact_id])
 
-            # If the artifact doesn't have parents, we move the files to the
-            # uploads folder. We also need to nullify the column in the prep
-            # template table
-            if not instance.parents:
-                qdb.util.move_filepaths_to_upload_folder(study.id, filepaths)
+            # This block only applies if the artifact has a study AKA not an
+            # analysis
+            if study is not None:
+                # If the artifact doesn't have parents, we move the files to
+                # the uploads folder. We also need to nullify the column in
+                # the prep template table
+                if not instance.parents:
+                    qdb.util.move_filepaths_to_upload_folder(
+                        study.id, filepaths)
 
-                sql = """UPDATE qiita.prep_template
-                         SET artifact_id = NULL
-                         WHERE prep_template_id IN %s"""
-                qdb.sql_connection.TRN.add(
-                    sql, [tuple(pt.id for pt in instance.prep_templates)])
-            else:
-                sql = """DELETE FROM qiita.parent_artifact
-                         WHERE artifact_id = %s"""
-                qdb.sql_connection.TRN.add(sql, [artifact_id])
+                    sql = """UPDATE qiita.prep_template
+                             SET artifact_id = NULL
+                             WHERE prep_template_id IN %s"""
+                    qdb.sql_connection.TRN.add(
+                        sql, [tuple(pt.id for pt in instance.prep_templates)])
+                else:
+                    sql = """DELETE FROM qiita.parent_artifact
+                             WHERE artifact_id = %s"""
+                    qdb.sql_connection.TRN.add(sql, [artifact_id])
 
             # Detach the artifact from the study_artifact table
             sql = "DELETE FROM qiita.study_artifact WHERE artifact_id = %s"
