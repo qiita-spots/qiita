@@ -852,15 +852,15 @@ class UtilTests(TestCase):
 
         exp = [
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'target_subfragment': ['V4'],
+             'target_subfragment': ['V4'], 'artifact_id': 4,
              'algorithm': 'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults',
-             'artifact_id': 4, 'data_type': '18S', 'prep_samples': 27,
+             'data_type': '18S', 'prep_samples': 27,
              'parameters': {
                 'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
                 'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
                 'sortmerna_coverage': 0.97}, 'name': 'BIOM'},
             {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
-             'artifact_id': 7L, 'data_type': '16S', 'prep_samples': 27,
+             'artifact_id': 7, 'data_type': '16S', 'prep_samples': 27,
              'parameters': {}, 'name': 'BIOM'},
             {'files': ['biom_table.biom'], 'target_subfragment': [],
              'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
