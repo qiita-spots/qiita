@@ -96,7 +96,7 @@ $(document).ready(function() {
     <h4>Processed Data</h4>
     <table class='table table-striped' id='study{{study.id}}-table'>
     <tr>
-      <th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Algorithm</th><th class="col-sm-2">Parameters</th><th class="col-sm-1">Samples</th><th></th><th></th>
+      <th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Algorithm</th><th class="col-sm-2">Parameters</th><th class="col-sm-1">Samples selected from Prep Info</th><th></th><th></th>
     </tr>
   {% for pid, samples in viewitems(proc_datas) %}
     <tr id="proc{{pid}}">
