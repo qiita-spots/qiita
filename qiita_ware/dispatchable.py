@@ -199,8 +199,7 @@ def update_sample_template(study_id, fp):
             # deleting previous uploads and inserting new one
             st = SampleTemplate(study_id)
             df = load_template_to_dataframe(fp)
-            st.extend(df)
-            st.update(df)
+            st.extend_and_update(df)
             remove(fp)
 
             # join all the warning messages into one. Note that this info

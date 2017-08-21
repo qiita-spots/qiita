@@ -1732,8 +1732,8 @@ class TestSampleTemplate(TestCase):
         md_ext['TOT_NITRO'] = pd.Series(['val1', 'val2', 'val3', 'val4'],
                                         index=md_ext.index)
 
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend, md_ext)
-        st.update(md_ext)
+        npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend_and_update,
+                         md_ext)
         exp_sample_ids = {"%s.Sample1" % st.id, "%s.Sample2" % st.id,
                           "%s.Sample3" % st.id, "%s.Sample4" % st.id}
         self.assertEqual(st._get_sample_ids(), exp_sample_ids)
@@ -1799,6 +1799,100 @@ class TestSampleTemplate(TestCase):
                 'tot_nitro': 'val4'}}
         for s_id in exp_sample_ids:
             self.assertEqual(st[s_id]._to_dict(), exp_dict[s_id])
+
+    # def test_extend_and_update(self):
+    #     st = qdb.metadata_template.sample_template.SampleTemplate.create(
+    #         self.metadata, self.new_study)
+    #     self.metadata_dict['Sample4'] = {
+    #         'physical_specimen_location': 'location1',
+    #         'physical_specimen_remaining': 'true',
+    #         'dna_extracted': 'true',
+    #         'sample_type': 'type1',
+    #         'collection_timestamp': '2014-05-29 12:24:15',
+    #         'host_subject_id': 'NotIdentified',
+    #         'Description': 'Test Sample 4',
+    #         'latitude': '42.42',
+    #         'longitude': '41.41',
+    #         'taxon_id': '9606',
+    #         'scientific_name': 'homo sapiens'}
+    #
+    #     # Change a couple of values on the existent samples to test that
+    #     # they actually change
+    #     self.metadata_dict['Sample1']['Description'] = 'Changed'
+    #     self.metadata_dict['Sample2']['dna_extracted'] = 'Changed dynamic'
+    #
+    #     md_ext = pd.DataFrame.from_dict(self.metadata_dict, orient='index',
+    #                                     dtpye=str)
+    #     md_ext['TOT_NITRO'] = pd.Series(['val1', 'val2', 'val3', 'val4'],
+    #                                     index=md_ext.index)
+    #
+    #     npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend, md_ext)
+    #
+    #     exp_sample_ids = {"%s.Sample1" % st.id, "%s.Sample2" % st.id,
+    #                       "%s.Sample3" % st.id, "%s.Sample4" % st.id}
+    #     self.assertEqual(st._get_sample_ids(), exp_sample_ids)
+    #     self.assertEqual(len(st), 4)
+    #     exp_categories = {'collection_timestamp', 'description',
+    #                       'dna_extracted', 'host_subject_id', 'latitude',
+    #                       'longitude', 'physical_specimen_location',
+    #                       'physical_specimen_remaining', 'sample_type',
+    #                       'scientific_name', 'taxon_id', 'tot_nitro'}
+    #     self.assertItemsEqual(st.categories(), exp_categories)
+    #     exp_dict = {
+    #         "%s.Sample1" % st.id: {
+    #             'collection_timestamp': '2014-05-29 12:24:15',
+    #             'description': "Changed",
+    #             'dna_extracted': 'true',
+    #             'host_subject_id': "NotIdentified",
+    #             'latitude': '42.42',
+    #             'longitude': '41.41',
+    #             'physical_specimen_location': "location1",
+    #             'physical_specimen_remaining': 'true',
+    #             'sample_type': "type1",
+    #             'taxon_id': '9606',
+    #             'scientific_name': 'homo sapiens',
+    #             'tot_nitro': 'val1'},
+    #         "%s.Sample2" % st.id: {
+    #             'collection_timestamp': '2014-05-29 12:24:15',
+    #             'description': "Test Sample 2",
+    #             'dna_extracted': 'Changed dynamic',
+    #             'host_subject_id': "NotIdentified",
+    #             'latitude': '4.2',
+    #             'longitude': '1.1',
+    #             'physical_specimen_location': "location1",
+    #             'physical_specimen_remaining': 'true',
+    #             'sample_type': "type1",
+    #             'taxon_id': '9606',
+    #             'scientific_name': 'homo sapiens',
+    #             'tot_nitro': 'val2'},
+    #         "%s.Sample3" % st.id: {
+    #             'collection_timestamp': '2014-05-29 12:24:15',
+    #             'description': "Test Sample 3",
+    #             'dna_extracted': 'true',
+    #             'host_subject_id': "NotIdentified",
+    #             'latitude': '4.8',
+    #             'longitude': '4.41',
+    #             'physical_specimen_location': "location1",
+    #             'physical_specimen_remaining': 'true',
+    #             'sample_type': "type1",
+    #             'taxon_id': '9606',
+    #             'scientific_name': 'homo sapiens',
+    #             'tot_nitro': 'val3'},
+    #         '%s.Sample4' % st.id: {
+    #             'physical_specimen_location': 'location1',
+    #             'physical_specimen_remaining': 'true',
+    #             'dna_extracted': 'true',
+    #             'sample_type': 'type1',
+    #             'collection_timestamp': '2014-05-29 12:24:15',
+    #             'host_subject_id': 'NotIdentified',
+    #             'description': 'Test Sample 4',
+    #             'latitude': '42.42',
+    #             'longitude': '41.41',
+    #             'taxon_id': '9606',
+    #             'scientific_name': 'homo sapiens',
+    #             'tot_nitro': 'val4'}}
+    #     for s_id in exp_sample_ids:
+    #         self.assertEqual(st[s_id]._to_dict(), exp_dict[s_id])
 
     def test_to_dataframe(self):
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
