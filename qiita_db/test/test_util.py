@@ -853,7 +853,8 @@ class UtilTests(TestCase):
         exp = [
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
              'target_subfragment': ['V4'], 'artifact_id': 4,
-             'algorithm': 'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults',
+             'algorithm': ('Pick closed-reference OTUs, QIIMEv1.9.1 |'
+                           'barcode_type 8, defaults'),
              'data_type': '18S', 'prep_samples': 27,
              'parameters': {
                 'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
