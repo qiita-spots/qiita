@@ -854,7 +854,7 @@ class UtilTests(TestCase):
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
              'target_subfragment': ['V4'], 'artifact_id': 4,
              'algorithm': ('Pick closed-reference OTUs, QIIMEv1.9.1 |'
-                           ' Defaults'),
+                           ' barcode_type 8, defaults'),
              'data_type': '18S', 'prep_samples': 27,
              'parameters': {
                 'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
@@ -866,18 +866,6 @@ class UtilTests(TestCase):
             {'files': ['biom_table.biom'], 'target_subfragment': [],
              'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
              'prep_samples': 0, 'parameters': {}, 'name': 'noname'}]
-        print len(obs), len(exp)
-        for o, e in zip(obs, exp):
-            if o != e:
-                print o
-                print e
-                print "---------------"
-                for k in o:
-                    if o[k] != e[k]:
-                        print k
-                        print o[k]
-                        print e[k]
-                print "==============="
         self.assertItemsEqual(obs, exp)
 
 

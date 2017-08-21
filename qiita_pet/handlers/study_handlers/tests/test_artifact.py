@@ -167,7 +167,8 @@ class ArtifactGetInfoTest(TestHandlerBase):
              'target_subfragment': ['V4'], 'artifact_id': 6,
              'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
              'prep_samples': 27,
-             'algorithm': 'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults',
+             'algorithm': 'Pick closed-reference OTUs, QIIMEv1.9.1 | '
+                          'barcode_type 8, defaults',
              'parameters': {
                 'reference': 2, 'similarity': 0.97, 'sortmerna_e_value': 1,
                 'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
@@ -181,24 +182,7 @@ class ArtifactGetInfoTest(TestHandlerBase):
         self.assertItemsEqual(obs.keys(), exp.keys())
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['msg'], exp['msg'])
-
-        obs = obs['data']
-        exp = exp['data']
-        print len(obs), len(exp)
-        for o, e in zip(obs, exp):
-            if o != e:
-                print o
-                print e
-                print "---------------"
-                for k in o:
-                    if o[k] != e[k]:
-                        print k
-                        print o[k]
-                        print e[k]
-                print "==============="
-
-        # self.assertItemsEqual(obs['data'], exp['data'])
-        self.assertItemsEqual(obs, exp)
+        self.assertItemsEqual(obs['data'], exp['data'])
 
 
 class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):
