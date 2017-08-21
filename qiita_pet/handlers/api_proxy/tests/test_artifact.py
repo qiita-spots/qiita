@@ -245,7 +245,10 @@ class TestArtifactAPI(TestCase):
              'timestamp': '2012-10-02 17:30:00', 'prep_samples': 27,
              'parameters': {}, 'name': 'BIOM'}]
         exp = {'status': 'success', 'msg': '', 'data': data}
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs.keys(), exp.keys())
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['msg'], exp['msg'])
+        self.assertItemsEqual(obs['data'], exp['data'])
 
     def test_artifact_post_req(self):
         # Create new prep template to attach artifact to
