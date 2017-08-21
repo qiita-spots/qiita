@@ -90,6 +90,7 @@ $(document).ready(function() {
     proc_data_table += '<th>Data type</th>';
     proc_data_table += '<th>Processing method</th>';
     proc_data_table += '<th>Parameters</th>';
+    proc_data_table += '<th>Samples in Prep Info</th>';
     proc_data_table += '<th>Files</th>';
     proc_data_table += '</tr>';
 
@@ -106,6 +107,7 @@ $(document).ready(function() {
           params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
         }
         proc_data_table += '<td><small>' + params + '</small></td>';
+        proc_data_table += '<td>' + info.prep_samples + '</td>';
         proc_data_table += '<td><small>' + info.files.join('<br/>')  + '</small></td>';
 
         proc_data_table += '</tr>';
@@ -129,11 +131,11 @@ $(document).ready(function() {
         { "data": "pi" },
         { "data": "pubs" },
         { "data": "status" },
-        { "data": "ebi_info" }
-      ],
+        { "data": "ebi_info" },
+        { "data": "study_alias" }],
       columnDefs: [
         {type:'natural', targets:[2,6,7]},
-        {"targets": [ 2 ], "visible": false},
+        {"targets": [ 2, 10 ], "visible": false},
         // render zero
         {"render": function ( data, type, row, meta ) {
           if (data !== null && data !== undefined && data.length != 0){
@@ -166,7 +168,10 @@ $(document).ready(function() {
         {"render": function ( data, type, row, meta ) {
             var glyph = 'remove';
             if(data === true) { glyph = 'ok' }
-            return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
+            result = "<a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a><br/>";
+            result += "<b>Owner:</b> " + row.owner + "</br>";
+            result += "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span>";
+            return result;
         }, targets: [5]},
         ],
       "language": {
@@ -408,7 +413,7 @@ function add_metacat(metacat) {
     </h5>
     <select class="js-select2-multiple form-control" id="study_tags_multiple" multiple="multiple" style="width: 100%"></select>
 
-    <h3 class="gray-msg">Your Studies (includes shared with you)</h3>
+    <h3 class="gray-msg">Your Studies</h3>
     <table id="user-studies-table" class="table table-bordered gray-msg">
       <thead>
         <tr>
@@ -422,10 +427,11 @@ function add_metacat(metacat) {
           <th>Publications</th>
           <th>Status</th>
           <th>Qiita EBI submission</th>
+          <th>Study Alias</th>
         </tr>
       </thead>
     </table>
-    <h3 class="gray-msg">Other Studies</h3>
+    <h3 class="gray-msg">Public Studies</h3>
     <table id="studies-table" class="table table-bordered gray-msg">
       <thead>
         <tr>

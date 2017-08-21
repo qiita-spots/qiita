@@ -1205,7 +1205,7 @@ def generate_study_list(study_ids, public_only=False):
     -----
     The main select might look scary but it's pretty simple:
     - We select the requiered fields from qiita.study and qiita.study_person
-        SELECT metadata_complete, study_abstract, study_id,
+        SELECT metadata_complete, study_abstract, study_id, study_alias,
             study_title, ebi_study_accession, ebi_submission_status,
             qiita.study_person.name AS pi_name,
             qiita.study_person.email AS pi_email,
@@ -1235,10 +1235,13 @@ def generate_study_list(study_ids, public_only=False):
     - all study tags
             (SELECT array_agg(study_tag) FROM qiita.per_study_tags
                 WHERE study_id=qiita.study.study_id) AS study_tags
+    - study owner
+            (SELECT name FROM qiita.qiita_user
+                WHERE email=qiita.study.email) AS owner
     """
     with qdb.sql_connection.TRN:
         sql = """
-            SELECT metadata_complete, study_abstract, study_id,
+            SELECT metadata_complete, study_abstract, study_id, study_alias,
                 study_title, ebi_study_accession, ebi_submission_status,
                 qiita.study_person.name AS pi_name,
                 qiita.study_person.email AS pi_email,
@@ -1261,7 +1264,9 @@ def generate_study_list(study_ids, public_only=False):
                     LEFT JOIN qiita.qiita_user USING (email)
                     WHERE study_id=qiita.study.study_id) AS shared_with_email,
                 (SELECT array_agg(study_tag) FROM qiita.per_study_tags
-                    WHERE study_id=qiita.study.study_id) AS study_tags
+                    WHERE study_id=qiita.study.study_id) AS study_tags,
+                (SELECT name FROM qiita.qiita_user
+                    WHERE email=qiita.study.email) AS owner
                 FROM qiita.study
                 LEFT JOIN qiita.study_person ON (
                     study_person_id=principal_investigator_id)
@@ -1303,6 +1308,8 @@ def generate_study_list(study_ids, public_only=False):
             del info["shared_with_email"]
 
             infolist.append({
+                'owner': info['owner'],
+                'study_alias': info['study_alias'],
                 'metadata_complete': info['metadata_complete'],
                 'publication_pid': info['publication_pid'],
                 'ebi_submission_status': info['ebi_submission_status'],
@@ -1375,7 +1382,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                         WHERE table_name = 'prep_' || CAST(
                             prep_template_id AS TEXT)
                         AND column_name='target_subfragment')
-                    THEN prep_template_id ELSE NULL END
+                    THEN prep_template_id ELSE NULL END, prep_template_id
                 FROM main_query
                 LEFT JOIN qiita.prep_template pt ON (
                     main_query.root_id = pt.artifact_id)
@@ -1402,10 +1409,13 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                       qdb.sql_connection.TRN.execute_fetchindex()}
 
             # now let's get the actual artifacts
+            ts = {}
+            ps = {}
+            PT = qdb.metadata_template.prep_template.PrepTemplate
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
                 aid, name, cid, gt, aparams, dt, pid, pparams, filepaths, _, \
-                    target = row
+                    target, prep_template_id = row
 
                 # cleaning fields:
                 # - [0] due to the array_agg
@@ -1442,30 +1452,32 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
                     algorithm = '%s | %s' % (commands[cid], pparams)
 
+                if target is None:
+                    target = []
+                else:
+                    if target not in ts:
+                        qdb.sql_connection.TRN.add(sql_ts, [target])
+                        ts[target] = \
+                            qdb.sql_connection.TRN.execute_fetchflatten()
+                    target = ts[target]
+
+                if prep_template_id is None:
+                    prep_samples = 0
+                else:
+                    if prep_template_id not in ps:
+                        ps[prep_template_id] = len(list(
+                            PT(prep_template_id).keys()))
+                    prep_samples = ps[prep_template_id]
+
                 results.append({
                     'artifact_id': aid,
                     'target_subfragment': target,
+                    'prep_samples': prep_samples,
                     'name': name,
                     'data_type': dt,
                     'timestamp': str(gt),
                     'parameters': aparams,
                     'algorithm': algorithm,
                     'files': filepaths})
-
-            # let's get the values for target_subfragment from the
-            # prep_template, note that we have to do it in a separate sql
-            # doing crosstab is really difficult and in another loop cause we
-            # need to loop over all execute_fetchindex before doing another
-            # query
-            ts = {}
-            for i, r in enumerate(results):
-                pid = r['target_subfragment']
-                if pid is None:
-                    results[i]['target_subfragment'] = []
-                else:
-                    if pid not in ts:
-                        qdb.sql_connection.TRN.add(sql_ts, [pid])
-                        ts[pid] = qdb.sql_connection.TRN.execute_fetchflatten()
-                    results[i]['target_subfragment'] = ts[pid]
 
             return results

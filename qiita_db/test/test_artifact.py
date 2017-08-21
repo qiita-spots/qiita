@@ -721,6 +721,9 @@ class ArtifactTests(TestCase):
         self.assertIsNone(obs.study)
         self.assertEqual(obs.analysis, qdb.analysis.Analysis(1))
 
+        # testing that it can be deleted
+        qdb.artifact.Artifact.delete(obs.id)
+
     def test_create_processed(self):
         exp_params = qdb.software.Parameters.from_default_params(
             qdb.software.DefaultParameters(1), {'input_data': 1})
@@ -1011,6 +1014,7 @@ class ArtifactTests(TestCase):
         job.complete(True, artifacts_data=data)
         job = qdb.processing_job.ProcessingJob(
             "bcc7ebcd-39c1-43e4-af2d-822e3589f14d")
+        job.release_validators()
         artifact = job.outputs['OTU table']
         self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
 

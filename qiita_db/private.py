@@ -47,8 +47,27 @@ def build_analysis_files(job):
             j.submit()
             sleep(1)
 
+    # The validator jobs no longer finish the job automatically so we need
+    # to release the validators here
+    job.release_validators()
 
-TASK_DICT = {'build_analysis_files': build_analysis_files}
+
+def release_validators(job):
+    """Waits until all the validators of a job are completed
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job with the information of the parent job
+    """
+    with qdb.sql_connection.TRN:
+        qdb.processing_job.ProcessingJob(
+            job.parameters.values['job']).release_validators()
+        job._set_status('success')
+
+
+TASK_DICT = {'build_analysis_files': build_analysis_files,
+             'release_validators': release_validators}
 
 
 def private_task(job_id):

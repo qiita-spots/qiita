@@ -1124,7 +1124,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             self.validate(self.columns_restrictions)
             self.generate_files()
 
-    def update(self, md_template):
+    def _update(self, md_template):
         r"""Update values in the template
 
         Parameters
@@ -1143,22 +1143,19 @@ class MetadataTemplate(qdb.base.QiitaObject):
             passed md_template
         """
         with qdb.sql_connection.TRN:
-            # Clean and validate the metadata template given
-            new_map = self._clean_validate_template(
-                md_template, self.study_id, current_columns=self.categories())
             # Retrieving current metadata
             current_map = self.to_dataframe()
 
             # simple validations of sample ids and column names
-            samples_diff = set(new_map.index).difference(current_map.index)
+            samples_diff = set(md_template.index).difference(current_map.index)
             if samples_diff:
                 raise qdb.exceptions.QiitaDBError(
                     'The new template differs from what is stored '
                     'in database by these samples names: %s'
                     % ', '.join(samples_diff))
 
-            if not set(current_map.columns).issuperset(new_map.columns):
-                columns_diff = set(new_map.columns).difference(
+            if not set(current_map.columns).issuperset(md_template.columns):
+                columns_diff = set(md_template.columns).difference(
                     current_map.columns)
                 raise qdb.exceptions.QiitaDBError(
                     'Some of the columns in your template are not present in '
@@ -1168,15 +1165,16 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             # In order to speed up some computation, let's compare only the
             # common columns and rows. current_map.columns and
-            # current_map.index are supersets of new_map.columns and
-            # new_map.index, respectivelly, so this will not fail
-            current_map = current_map[new_map.columns].loc[new_map.index]
+            # current_map.index are supersets of md_template.columns and
+            # md_template.index, respectivelly, so this will not fail
+            current_map = current_map[
+                md_template.columns].loc[md_template.index]
 
             # Get the values that we need to change
             # diff_map is a DataFrame that hold boolean values. If a cell is
-            # True, means that the new_map is different from the current_map
-            # while False means that the cell has the same value
-            diff_map = current_map != new_map
+            # True, means that the md_template is different from the
+            # current_map while False means that the cell has the same value
+            diff_map = current_map != md_template
             # ne_stacked holds a MultiIndexed DataFrame in which the first
             # level of indexing is the sample_name and the second one is the
             # columns. We only have 1 column, which holds if that
@@ -1195,8 +1193,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             changed.index.names = ['sample_name', 'column']
             # the combination of np.where and boolean indexing produces
             # a numpy array with only the values that actually changed
-            # between the current_map and new_map
-            changed_to = new_map.values[np.where(diff_map)]
+            # between the current_map and md_template
+            changed_to = md_template.values[np.where(diff_map)]
 
             # to_update is a MultiIndexed DataFrame, in which the index 0 is
             # the samples and the index 1 is the columns, we define these
@@ -1235,12 +1233,57 @@ class MetadataTemplate(qdb.base.QiitaObject):
                     """.format(self._table_name(self._id), sql_eq_cols,
                                single_value, sql_cols)
             for sample in samples_to_update:
-                sample_vals = [new_map[col][sample] for col in cols_to_update]
+                sample_vals = [md_template[col][sample]
+                               for col in cols_to_update]
                 sample_vals.insert(0, sample)
                 qdb.sql_connection.TRN.add(sql, sample_vals)
 
             qdb.sql_connection.TRN.execute()
 
+    def update(self, md_template):
+        r"""Update values in the template
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by samples ids
+
+        Raises
+        ------
+        QiitaDBError
+            If md_template and db do not have the same sample ids
+            If md_template and db do not have the same column headers
+            If self.can_be_updated is not True
+        QiitaDBWarning
+            If there are no differences between the contents of the DB and the
+            passed md_template
+        """
+        with qdb.sql_connection.TRN:
+            # Clean and validate the metadata template given
+            new_map = self._clean_validate_template(
+                md_template, self.study_id, current_columns=self.categories())
+            self._update(new_map)
+            self.validate(self.columns_restrictions)
+            self.generate_files()
+
+    def extend_and_update(self, md_template):
+        """Performs the update and extend operations at once
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template contents indexed by sample ids
+
+        See Also
+        --------
+        update
+        extend
+        """
+        with qdb.sql_connection.TRN:
+            md_template = self._clean_validate_template(
+                md_template, self.study_id, current_columns=self.categories())
+            self._common_extend_steps(md_template)
+            self._update(md_template)
             self.validate(self.columns_restrictions)
             self.generate_files()
 
