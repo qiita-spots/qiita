@@ -1280,8 +1280,7 @@ class TestPrepTemplate(TestCase):
         self.metadata['str_column']['SKB7.640196'] = 'NEW VAL'
 
         npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning, pt.extend, self.metadata)
-        pt.update(self.metadata)
+            qdb.exceptions.QiitaDBWarning, pt.extend_and_update, self.metadata)
 
         sql = "SELECT * FROM qiita.prep_{0}".format(pt.id)
         obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
