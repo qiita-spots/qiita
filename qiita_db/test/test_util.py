@@ -852,20 +852,21 @@ class UtilTests(TestCase):
 
         exp = [
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'target_subfragment': ['V4'], 'data_type': '18S',
+             'target_subfragment': ['V4'], 'artifact_id': 4,
+             'algorithm': ('Pick closed-reference OTUs, QIIMEv1.9.1 |'
+                           ' barcode_type 8, defaults'),
+             'data_type': '18S', 'prep_samples': 27,
              'parameters': {
                 'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
                 'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
-                'sortmerna_coverage': 0.97}, 'name': 'BIOM',
-                'algorithm': ('Pick closed-reference OTUs, QIIMEv1.9.1 '
-                              '| barcode_type 8, defaults'), 'artifact_id': 4},
-            {'files': [], 'target_subfragment': ['V4'], 'data_type': '16S',
-             'parameters': {}, 'name': 'BIOM', 'algorithm': '',
-             'artifact_id': 7},
+                'sortmerna_coverage': 0.97}, 'name': 'BIOM'},
+            {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
+             'artifact_id': 7, 'data_type': '16S', 'prep_samples': 27,
+             'parameters': {}, 'name': 'BIOM'},
             {'files': ['biom_table.biom'], 'target_subfragment': [],
-             'data_type': '18S', 'parameters': {}, 'name': 'noname',
-             'algorithm': '', 'artifact_id': 8}]
-        self.assertEqual(obs, exp)
+             'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
+             'prep_samples': 0, 'parameters': {}, 'name': 'noname'}]
+        self.assertItemsEqual(obs, exp)
 
 
 if __name__ == '__main__':

@@ -90,6 +90,7 @@ $(document).ready(function() {
     proc_data_table += '<th>Data type</th>';
     proc_data_table += '<th>Processing method</th>';
     proc_data_table += '<th>Parameters</th>';
+    proc_data_table += '<th>Samples in Prep Info</th>';
     proc_data_table += '<th>Files</th>';
     proc_data_table += '</tr>';
 
@@ -106,6 +107,7 @@ $(document).ready(function() {
           params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
         }
         proc_data_table += '<td><small>' + params + '</small></td>';
+        proc_data_table += '<td>' + info.prep_samples + '</td>';
         proc_data_table += '<td><small>' + info.files.join('<br/>')  + '</small></td>';
 
         proc_data_table += '</tr>';
