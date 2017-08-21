@@ -866,6 +866,18 @@ class UtilTests(TestCase):
             {'files': ['biom_table.biom'], 'target_subfragment': [],
              'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
              'prep_samples': 0, 'parameters': {}, 'name': 'noname'}]
+        print len(obs), len(exp)
+        for o, e in zip(obs, exp):
+            if o != e:
+                print o
+                print e
+                print "---------------"
+                for k in o:
+                    if o[k] != e[k]:
+                        print k
+                        print o[k]
+                        print e[k]
+                print "==============="
         self.assertItemsEqual(obs, exp)
 
 

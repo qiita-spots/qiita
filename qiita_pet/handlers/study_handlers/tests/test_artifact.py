@@ -181,7 +181,24 @@ class ArtifactGetInfoTest(TestHandlerBase):
         self.assertItemsEqual(obs.keys(), exp.keys())
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['msg'], exp['msg'])
-        self.assertItemsEqual(obs['data'], exp['data'])
+
+        obs = obs['data']
+        exp = exp['data']
+        print len(obs), len(exp)
+        for o, e in zip(obs, exp):
+            if o != e:
+                print o
+                print e
+                print "---------------"
+                for k in o:
+                    if o[k] != e[k]:
+                        print k
+                        print o[k]
+                        print e[k]
+                print "==============="
+
+        # self.assertItemsEqual(obs['data'], exp['data'])
+        self.assertItemsEqual(obs, exp)
 
 
 class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):
