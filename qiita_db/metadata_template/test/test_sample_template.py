@@ -1732,8 +1732,8 @@ class TestSampleTemplate(TestCase):
         md_ext['TOT_NITRO'] = pd.Series(['val1', 'val2', 'val3', 'val4'],
                                         index=md_ext.index)
 
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend, md_ext)
-        st.update(md_ext)
+        npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend_and_update,
+                         md_ext)
         exp_sample_ids = {"%s.Sample1" % st.id, "%s.Sample2" % st.id,
                           "%s.Sample3" % st.id, "%s.Sample4" % st.id}
         self.assertEqual(st._get_sample_ids(), exp_sample_ids)

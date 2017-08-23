@@ -573,11 +573,12 @@ class Artifact(qdb.base.QiitaObject):
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [artifact_id])
 
-            # If the artifact doesn't have parents, we move the files to the
-            # uploads folder. We also need to nullify the column in the prep
-            # template table
-            if not instance.parents:
-                qdb.util.move_filepaths_to_upload_folder(study.id, filepaths)
+            # If the artifact doesn't have parents and study is not None (is an
+            # analysis), we move the files to the uploads folder. We also need
+            # to nullify the column in the prep template table
+            if not instance.parents and study is not None:
+                qdb.util.move_filepaths_to_upload_folder(
+                    study.id, filepaths)
 
                 sql = """UPDATE qiita.prep_template
                          SET artifact_id = NULL

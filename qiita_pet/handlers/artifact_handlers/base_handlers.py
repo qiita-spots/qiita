@@ -216,6 +216,8 @@ def artifact_summary_get_request(user, artifact_id):
             'processing_jobs': processing_jobs,
             'summary': summary,
             'job': job_info,
+            'artifact_timestamp': artifact.timestamp.strftime(
+                "%Y-%m-%d %H:%m"),
             'errored_jobs': errored_jobs}
 
 
