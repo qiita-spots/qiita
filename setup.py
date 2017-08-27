@@ -108,7 +108,7 @@ setup(name='qiita-spots',
                         'tornado==3.1.1', 'toredis', 'redis', 'six',
                         'ipython[all] >= 2.4.1, < 2.5', 'pyparsing',
                         'h5py >= 2.3.1', 'biom-format', 'natsort', 'networkx',
-                        'scikit-bio >= 0.2.3, < 0.3.0', 'wtforms == 2.0.1',
+                        'scikit-bio >= 0.4.2, < 0.3.0', 'wtforms == 2.0.1',
                         'moi', 'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
                         'gitpython', 'qiita-files', 'redbiom'],
       dependency_links=[
