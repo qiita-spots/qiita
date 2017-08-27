@@ -1,5 +1,5 @@
 language: python
-sudo: false
+sudo: required
 env:
   global:
     - PYTHON_VERSION=2.7
@@ -10,6 +10,7 @@ env:
     - TEST_ADD_STUDIES=True
 before_install:
   # we need libevent-dev for webdis
+  - sudo apt-get -qq update
   - sudo apt-get install -y libevent-dev
   - redis-server --version
   - redis-server /etc/redis/redis.conf --port 7777 &
