@@ -114,7 +114,7 @@ setup(name='qiita-spots',
       dependency_links=[
         'https://github.com/qiita-spots/qiita-files/archive/master.zip#'
         'egg=qiita-files-0.1.0-dev',
-        'https://github.com/wasade/redbiom/archive/master.zip#'
+        'https://github.com/biocore/redbiom/archive/master.zip#'
         'egg=redbiom-2017.0.1.dev0'],
       classifiers=classifiers
       )
