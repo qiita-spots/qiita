@@ -10,6 +10,7 @@ env:
     - TEST_ADD_STUDIES=True
 before_install:
   - redis-server --version
+  - redis-server /etc/redis/redis.conf --port 7777 &
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
@@ -32,8 +33,13 @@ install:
   - source activate qiita
   - pip install -U pip
   - pip install sphinx sphinx-bootstrap-theme 'ipython[all]==2.4.1' nose-timer codecov
-  - travis_retry pip install . --process-dependency-links
   - 'echo "backend: Agg" > matplotlibrc'
+  - git clone https://github.com/nicolasff/webdis
+  - pushd webdis
+  - make
+  - ./webdis &
+  - popd
+  - travis_retry pip install . --process-dependency-links
   # Install the biom plugin so we can run the analysis tests
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
@@ -56,6 +62,14 @@ before_script:
     if [ ${TEST_ADD_STUDIES} == "False" ]; then
         qiita pet webserver --no-build-docs start &
     fi
+  # loading redbiom with Qiita's test set
+  # first let's make sure redis is empty
+  - curl -s http://127.0.0.1:7379/FLUSHALL > /dev/null
+  - redbiom admin create-context --name "qiita-test" --description "qiita-test context"
+  - redbiom admin load-sample-metadata --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
+  - redbiom admin load-sample-metadata-search --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
+  - redbiom admin load-observations --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test
+  - redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test
 script:
   - sleep 5
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
