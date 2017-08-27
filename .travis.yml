@@ -34,6 +34,8 @@ install:
   - pip install -U pip
   - pip install sphinx sphinx-bootstrap-theme 'ipython[all]==2.4.1' nose-timer codecov
   - 'echo "backend: Agg" > matplotlibrc'
+  # installing redbiom, first webdis
+  - conda install --yes conda-forge libevent
   - git clone https://github.com/nicolasff/webdis
   - pushd webdis
   - make
