@@ -9,6 +9,8 @@ env:
     - TEST_ADD_STUDIES=False COVER_PACKAGE="qiita_core qiita_ware"
     - TEST_ADD_STUDIES=True
 before_install:
+  # we need libevent-dev for webdis
+  - sudo apt-get install -y libevent-dev
   - redis-server --version
   - redis-server /etc/redis/redis.conf --port 7777 &
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -35,7 +37,6 @@ install:
   - pip install sphinx sphinx-bootstrap-theme 'ipython[all]==2.4.1' nose-timer codecov
   - 'echo "backend: Agg" > matplotlibrc'
   # installing redbiom, first webdis
-  - conda install --yes libevent
   - git clone https://github.com/nicolasff/webdis
   - pushd webdis
   - make
