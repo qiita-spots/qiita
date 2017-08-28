@@ -116,7 +116,7 @@ class TestMetadataPipeline(TestCase):
 
 
 QIIME_MAP = (
-    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tinstrument_model\t"
+    u"#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tinstrument_model\t"
     "physical_specimen_location\tphysical_specimen_remaining\tdna_extracted\t"
     "sample_type\thost_subject_id\tlatitude\tlongitude\ttaxon_id\t"
     "scientific_name\tcenter_name\trun_prefix\tplatform\t"
@@ -133,7 +133,7 @@ QIIME_MAP = (
     "ILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00:00\tDescription S3\n")
 
 QIIME_MAP_WITH_REVERSE_LINKER_PRIMER = (
-    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tReverseLinkerPrimer\t"
+    u"#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tReverseLinkerPrimer\t"
     "physical_specimen_location\tphysical_specimen_remaining\tdna_extracted\t"
     "sample_type\thost_subject_id\tlatitude\tlongitude\ttaxon_id\t"
     "scientific_name\tcenter_name\trun_prefix\tplatform\tinstrument_model\t"
@@ -153,7 +153,7 @@ QIIME_MAP_WITH_REVERSE_LINKER_PRIMER = (
     "Description S3\n")
 
 QIIME_MAP_ERROR = (
-    "#SampleID\tBarcodeSequence\tphysical_specimen_location\t"
+    u"#SampleID\tBarcodeSequence\tphysical_specimen_location\t"
     "physical_specimen_remaining\tdna_extracted\tsample_type\t"
     "host_subject_id\tlatitude\tlongitude\ttaxon_id\tscientific_name\t"
     "center_name\trun_prefix\tplatform\tlibrary_construction_protocol\t"
