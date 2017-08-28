@@ -50,6 +50,7 @@ install:
   - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
   # loading redbiom with Qiita's test set
   # but first let's make sure redis is empty
+  - export REDBIOM_HOST=http://127.0.0.1:7379
   - curl -s http://127.0.0.1:7379/FLUSHALL > /dev/null
   - redbiom admin create-context --name "qiita-test" --description "qiita-test context"
   - redbiom admin load-sample-metadata --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
