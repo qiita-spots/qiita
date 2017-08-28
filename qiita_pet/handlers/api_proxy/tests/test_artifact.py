@@ -257,7 +257,6 @@ class TestArtifactAPI(TestCase):
         pt = npt.assert_warns(
             QiitaDBWarning, PrepTemplate.create,
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
-        wait_for_prep_information_job(pt.id)
         self._files_to_remove.extend([fp for _, fp in pt.get_filepaths()])
 
         filepaths = {'raw_forward_seqs': 'uploaded_file.txt',
@@ -267,13 +266,13 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)
+        wait_for_prep_information_job(pt.id)
 
         # Test importing an artifact
         # Create new prep template to attach artifact to
         pt = npt.assert_warns(
             QiitaDBWarning, PrepTemplate.create,
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
-        wait_for_prep_information_job(pt.id)
         self._files_to_remove.extend([fp for _, fp in pt.get_filepaths()])
 
         obs = artifact_post_req(
@@ -283,6 +282,7 @@ class TestArtifactAPI(TestCase):
                'message': ''}
         self.assertEqual(obs, exp)
 
+        wait_for_prep_information_job(pt.id)
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
         a = Artifact(pt.artifact.id)

@@ -16,7 +16,6 @@ from future import standard_library
 from functools import partial
 from operator import itemgetter
 from json import dumps
-from time import sleep
 
 import pandas as pd
 import numpy.testing as npt
@@ -415,11 +414,6 @@ class TestCompleteJobCmd(TestCase):
             if exists(fp):
                 remove(fp)
 
-    def _wait_for_job(self, job):
-        while job.status not in ('success', 'error'):
-            sleep(0.8)
-        sleep(0.8)
-
     def test_complete_success(self):
         pt = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning,
@@ -448,7 +442,6 @@ class TestCompleteJobCmd(TestCase):
              'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
                                          'artifact_type': 'BIOM'}}})
         qdb.commands.complete_job_cmd(job.id, payload)
-        self._wait_for_job(job)
         self.assertEqual(job.status, 'success')
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
