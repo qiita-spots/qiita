@@ -12,11 +12,17 @@ import sys
 from collections import defaultdict
 from heapq import heappush, heappop
 from contextlib import contextmanager
+from future.builtins import bytes, str
 
 import h5py
 import numpy as np
-from skbio.io.util import _is_string_or_bytes
 from future.utils import viewitems
+
+
+def _is_string_or_bytes(s):
+    """Returns True if input argument is string (unicode or not) or bytes.
+    """
+    return isinstance(s, str) or isinstance(s, bytes)
 
 
 def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
