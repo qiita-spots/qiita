@@ -122,12 +122,12 @@ class NewArtifactHandlerTests(TestHandlerBase):
             'raw_reverse_seqs': [],
             'import-artifact': ''}
         response = self.post('/study/new_artifact/', args)
+        # make sure new artifact created
+        wait_for_prep_information_job(self.prep.id)
+
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body),
                          {'status': 'success', 'message': ''})
-
-        # make sure new artifact created
-        wait_for_prep_information_job(self.prep.id)
 
 
 class ArtifactGetSamplesTest(TestHandlerBase):
