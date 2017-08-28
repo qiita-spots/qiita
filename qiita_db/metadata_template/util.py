@@ -102,7 +102,7 @@ def load_template_to_dataframe(fn, index='sample_name'):
     """
     # Load in file lines
     holdfile = None
-    with open_file(fn, mode='w') as f:
+    with open_file(fn, mode='r') as f:
         errors = {}
         holdfile = f.readlines()
         # here we are checking for non printable chars AKA non UTF-8 chars
@@ -334,7 +334,7 @@ def looks_like_qiime_mapping_file(fp):
     some other different column.
     """
     first_line = None
-    with open_file(fp, mode='w') as f:
+    with open_file(fp, mode='r') as f:
         first_line = f.readline()
     if not first_line:
         return False
