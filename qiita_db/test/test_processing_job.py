@@ -473,20 +473,20 @@ class ProcessingJobTest(TestCase):
         alljobs = set(self._get_all_job_ids())
 
         job.complete(True, artifacts_data=artifacts_data)
-        self._wait_for_job(job)
         # When completing the previous job, it creates a new job that needs
         # to validate the BIOM table that is being added as new artifact.
         # Hence, this job is still in running state until the validation job
         # is completed. Note that this is tested by making sure that the status
         # of this job is running, and that we have one more job than before
         # (see assertEqual with len of all jobs)
-        self.assertEqual(job.status, 'success')
+        self.assertEqual(job.status, 'running')
 
         obsjobs = set(self._get_all_job_ids())
 
         # The complete call above submits 2 new jobs: the validator job and
         # the release validators job. Hence the +2
         self.assertEqual(len(obsjobs), len(alljobs) + 2)
+        self._wait_for_job(job)
 
     def test_complete_failure(self):
         job = _create_job()
