@@ -10,8 +10,8 @@ from functools import partial
 from json import dumps
 
 from future.utils import viewitems
+from itertools import chain
 from moi import r_client
-from skbio.util import flatten
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
@@ -103,8 +103,8 @@ def artifact_get_prep_req(user_id, artifact_ids):
         if access_error:
             return access_error
 
-        samples[aid] = flatten(
-            [pt.keys() for pt in Artifact(aid).prep_templates])
+        samples[aid] = list(chain(
+            *[pt.keys() for pt in Artifact(aid).prep_templates]))
 
     return {'status': 'success', 'msg': '', 'data': samples}
 
