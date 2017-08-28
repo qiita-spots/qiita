@@ -9,7 +9,6 @@
 from __future__ import division
 from future.utils import PY3, viewitems
 from six import StringIO
-from string import printable
 
 import pandas as pd
 import numpy as np
@@ -105,13 +104,20 @@ def load_template_to_dataframe(fn, index='sample_name'):
     with open_file(fn, mode='U') as f:
         errors = {}
         holdfile = f.readlines()
-        # here we are checking for non printable chars AKA non UTF-8 chars
+        # here we are checking for non UTF-8 chars
         for row, line in enumerate(holdfile):
             for col, block in enumerate(line.split('\t')):
-                tblock = ''.join([c for c in block if c in printable])
-                if len(block) != len(tblock):
-                    tblock = ''.join([c if c in printable else '&#128062;'
-                                      for c in block])
+                try:
+                    tblock = block.encode('utf-8')
+                except UnicodeDecodeError:
+                    tblock = []
+                    for c in block:
+                        try:
+                            c.encode('utf-8')
+                            tblock.append(c)
+                        except UnicodeDecodeError:
+                            tblock.append('&#128062;')
+                    tblock = ''.join(tblock)
                     if tblock not in errors:
                         errors[tblock] = []
                     errors[tblock].append('(%d, %d)' % (row, col))
