@@ -9,6 +9,7 @@
 from __future__ import division
 from future.utils import PY3, viewitems
 from six import StringIO
+from collections import defaultdict
 
 import pandas as pd
 import numpy as np
@@ -101,8 +102,8 @@ def load_template_to_dataframe(fn, index='sample_name'):
     """
     # Load in file lines
     holdfile = None
-    with open_file(fn, mode='r') as f:
-        errors = {}
+    with open_file(fn, mode='U') as f:
+        errors = defaultdict(list)
         holdfile = f.readlines()
         # here we are checking for non UTF-8 chars
         for row, line in enumerate(holdfile):
@@ -110,16 +111,8 @@ def load_template_to_dataframe(fn, index='sample_name'):
                 try:
                     tblock = block.encode('utf-8')
                 except UnicodeDecodeError:
-                    tblock = []
-                    for c in block:
-                        try:
-                            c.encode('utf-8')
-                            tblock.append(c)
-                        except UnicodeDecodeError:
-                            tblock.append('&#128062;')
-                    tblock = ''.join(tblock)
-                    if tblock not in errors:
-                        errors[tblock] = []
+                    tblock = unicode(block, errors='replace')
+                    tblock = tblock.replace(u'\ufffd', '&#128062;')
                     errors[tblock].append('(%d, %d)' % (row, col))
         if bool(errors):
             raise ValueError(
