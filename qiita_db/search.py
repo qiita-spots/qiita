@@ -69,7 +69,7 @@ from collections import defaultdict
 
 import pandas as pd
 from future.utils import viewitems
-from future.builtins import bytes, str
+from future.builtins import str
 
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb

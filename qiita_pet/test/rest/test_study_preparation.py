@@ -162,7 +162,7 @@ class StudyPrepArtifactCreatorTests(RESTHandlerTestCase):
 
 
 EXP_PREP_TEMPLATE = (
-    u'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
+    'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
     'instrument_model\tlibrary_construction_protocol\tplatform\tprimer\t'
     'bar\trun_prefix\tstr_column\n'
