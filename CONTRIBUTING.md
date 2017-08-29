@@ -23,7 +23,7 @@ The Qiita repository contains three branches:
 
 * `master`: This branch reflects the code deployed in our [main Qiita server](http://qiita.microbio.me).
 * `dev`: This branch is the active development branch. All new Pull Requests should be performed against this branch.
-* `release-candidate`: This branch is used to freeze the code from the `dev` branch, so we can deploy in our test servers and exercise the code extensively before deploying in our main system.
+* `release-candidate`: This branch is used to freeze the code from the `dev` branch, so we can deploy in our test servers and exercise the code extensively before deploying in our main system. Code freezes typically occur one week before the scheduled deployment. Check our [milestones page](https://github.com/biocore/qiita/milestones) to see the scheduled deployments.
 
 ### The Qiita development rules
 
