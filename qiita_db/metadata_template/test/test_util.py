@@ -147,11 +147,22 @@ class TestUtil(TestCase):
         exp.rename(columns={"str_column": "str_CoLumn"}, inplace=True)
         assert_frame_equal(obs, exp)
 
-    def test_load_template_to_dataframe_non_utf8(self):
+    def test_load_template_to_dataframe_non_utf8_error(self):
         bad = EXP_SAMPLE_TEMPLATE.replace('Test Sample 2', 'Test Sample\x962')
         with self.assertRaises(ValueError):
             qdb.metadata_template.util.load_template_to_dataframe(
                 StringIO(bad))
+
+    def test_load_template_to_dataframe_non_utf8(self):
+        replace = EXP_SAMPLE_TEMPLATE.replace(
+            'Test Sample 2', u'Test Sample\x962')
+        qdb.metadata_template.util.load_template_to_dataframe(
+            StringIO(replace))
+        # setting back
+        replace = EXP_SAMPLE_TEMPLATE.replace(
+            u'Test Sample\x962', 'Test Sample 2')
+        qdb.metadata_template.util.load_template_to_dataframe(
+            StringIO(replace))
 
     def test_load_template_to_dataframe_typechecking(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
