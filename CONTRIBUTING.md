@@ -17,6 +17,14 @@ always take into consideration how these new features affect users and whether
 or not adding a new section or document to the documentation (found under the
 `doc` folder) would be useful.
 
+###Repository branch structure
+
+The Qiita repository contains three branches:
+
+* `master`: This branch reflects the code deployed in our [main Qiita server](http://qiita.microbio.me).
+* `dev`: This branch is the active development branch. All new Pull Requests should be performed against this branch.
+* `release-candidate`: This branch is used to freeze the code from the `dev` branch, so we can deploy in our test servers and exercise the code extensively before deploying in our main system.
+
 ###The Qiita development rules
 
 Since Qiita is a package that is continuously growing, we found ourselves in a position where development rules needed to be established so we can reduce both development and reviewer time. These rules are:
