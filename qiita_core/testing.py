@@ -31,23 +31,21 @@ def wait_for_prep_information_job(prep_id, raise_if_none=True):
         If `raise_if_none` is True and the correspondent redis key is not set
     """
     res = r_client.get('prep_template_%d' % prep_id)
-    print res, 'prep_template_%d' % prep_id
 
     if raise_if_none and res is None:
         raise AssertionError("unexpectedly None")
 
     if res is not None:
         payload = loads(res)
-        print payload
         job_id = payload['job_id']
         if payload['is_qiita_job']:
             wait_for_processing_job(job_id)
         else:
             redis_info = loads(r_client.get(job_id))
             while redis_info['status_msg'] == 'Running':
-                sleep(0.5)
+                sleep(0.7)
                 redis_info = loads(r_client.get(job_id))
-        sleep(0.5)
+        sleep(0.7)
 
 
 def wait_for_processing_job(job_id):

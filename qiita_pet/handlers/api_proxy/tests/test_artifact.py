@@ -16,7 +16,6 @@ import numpy.testing as npt
 from moi import r_client
 
 from qiita_core.util import qiita_test_checker
-from qiita_core.testing import wait_for_prep_information_job
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
@@ -266,35 +265,25 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)
-        wait_for_prep_information_job(pt.id)
 
-        print '\n\ntest 2\n\n'
         # Test importing an artifact
         # Create new prep template to attach artifact to
-        print 'creating prep with assert_warns'
         pt = npt.assert_warns(
             QiitaDBWarning, PrepTemplate.create,
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
         self._files_to_remove.extend([fp for _, fp in pt.get_filepaths()])
 
-        print 'post'
         obs = artifact_post_req(
             'test@foo.bar', {}, 'Demultiplexed', 'New Test Artifact 2',
             pt.id, 3)
         exp = {'status': 'success',
                'message': ''}
-        print 'assert'
-
         self.assertEqual(obs, exp)
-        print 'test 2 - wait'
-        wait_for_prep_information_job(pt.id)
 
-        print 'cleaning'
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
         a = Artifact(pt.artifact.id)
         self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
-        print 'cleaning - end'
 
     def test_artifact_post_req_error(self):
         # Create a new prep template to attach the artifact to
