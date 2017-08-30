@@ -77,7 +77,7 @@ before_script:
 script:
   - sleep 5
   - qiita-test-install
-  - python qiita_pet/handlers/api_proxy/tests/test_artifact.py
+  - python qiita_pet/handlers/api_proxy/tests/test_artifact.py -vvvv
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then qiita-cron-job ; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE; fi
