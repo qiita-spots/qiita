@@ -47,7 +47,7 @@ def wait_for_prep_information_job(prep_id, raise_if_none=True):
                 sleep(0.5)
                 redis_info = loads(r_client.get(job_id))
                 if counter >= 10:
-                    print "%d, %s" % (counter, redis_info)
+                    break
                 counter += 1
         sleep(0.5)
 
