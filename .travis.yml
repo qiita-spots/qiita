@@ -77,9 +77,10 @@ before_script:
 script:
   - sleep 5
   - qiita-test-install
+  - python qiita_pet/handlers/api_proxy/tests/test_artifact.py
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then qiita-cron-job ; fi
-  - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -vvv --cover-package=$COVER_PACKAGE; fi
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE; fi
   - flake8 qiita_* setup.py scripts/*
   - ls -R /home/travis/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_pet/support_files/doc/
   - qiita pet webserver
