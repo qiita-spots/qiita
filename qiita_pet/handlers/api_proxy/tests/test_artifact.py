@@ -252,7 +252,7 @@ class TestArtifactAPI(TestCase):
         self.assertEqual(obs['msg'], exp['msg'])
         self.assertItemsEqual(obs['data'], exp['data'])
 
-    def test_artifact_post_req(self):
+    def test_artifact_post_req_fastq(self):
         print 'test 1'
         # Create new prep template to attach artifact to
         pt = npt.assert_warns(
@@ -270,6 +270,14 @@ class TestArtifactAPI(TestCase):
         print 'test 1 - wait'
         wait_for_prep_information_job(pt.id)
 
+        print 'cleaning'
+        # Instantiate the artifact to make sure it was made and
+        # to clean the environment
+        a = Artifact(pt.artifact.id)
+        self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
+        print 'cleaning - end'
+
+    def test_artifact_post_req_demultiplexed(self):
         print 'test 2'
         # Test importing an artifact
         # Create new prep template to attach artifact to
