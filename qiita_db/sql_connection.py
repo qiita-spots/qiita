@@ -606,7 +606,6 @@ class Transaction(object):
         return self
 
     def _clean_up(self, exc_type):
-        print '\n-->', exc_type, '\n'
         if exc_type is not None:
             # An exception occurred during the execution of the transaction
             # Make sure that we leave the DB w/o any modification
