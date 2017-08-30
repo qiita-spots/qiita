@@ -281,6 +281,8 @@ class TestArtifactAPI(TestCase):
         print 'test 2'
         # Test importing an artifact
         # Create new prep template to attach artifact to
+        pt = PrepTemplate.create(pd.DataFrame(
+            {'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
         pt = npt.assert_warns(
             QiitaDBWarning, PrepTemplate.create,
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
