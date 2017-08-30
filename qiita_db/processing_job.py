@@ -759,6 +759,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                     "Can only set up the log for jobs whose status is 'error'")
 
+            print '\n\n\n-->>', error, '\n\n'
+
             self._set_status('error')
             log = qdb.logger.LogEntry.create('Runtime', error)
 
