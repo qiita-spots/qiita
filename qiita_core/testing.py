@@ -30,8 +30,8 @@ def wait_for_prep_information_job(prep_id, raise_if_none=True):
     AssertionError
         If `raise_if_none` is True and the correspondent redis key is not set
     """
-    print res, 'prep_template_%d' % prep_id
     res = r_client.get('prep_template_%d' % prep_id)
+    print res, 'prep_template_%d' % prep_id
 
     if raise_if_none and res is None:
         raise AssertionError("unexpectedly None")
