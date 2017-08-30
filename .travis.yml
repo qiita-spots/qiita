@@ -1,6 +1,6 @@
 dist: precise
 language: python
-sudo: false
+sudo: required
 env:
   global:
     - PYTHON_VERSION=2.7
@@ -10,8 +10,7 @@ env:
     - TEST_ADD_STUDIES=False COVER_PACKAGE="qiita_core qiita_ware"
     - TEST_ADD_STUDIES=True
 before_install:
-  - redis-server --version
-  - redis-server /etc/redis/redis.conf --port 7777 &
+  - sudo -H -u redis redis-server /etc/redis/redis.conf --port 7777 &
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
