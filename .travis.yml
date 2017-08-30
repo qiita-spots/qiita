@@ -4,11 +4,11 @@ sudo: required
 env:
   global:
     - PYTHON_VERSION=2.7
-  matrix:
-    - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
-    - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
-    - TEST_ADD_STUDIES=False COVER_PACKAGE="qiita_core qiita_ware"
-    - TEST_ADD_STUDIES=True
+  # matrix:
+  #   - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
+  #   - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
+  #   - TEST_ADD_STUDIES=False COVER_PACKAGE="qiita_core qiita_ware"
+  #   - TEST_ADD_STUDIES=True
 before_install:
   - sudo -H -u redis redis-server /etc/redis/redis.conf --port 7777 &
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -75,6 +75,7 @@ before_script:
     fi
 script:
   - sleep 5
+  - pip freeze
   - qiita-test-install
   - python qiita_pet/handlers/api_proxy/tests/test_artifact.py -vvvv
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
