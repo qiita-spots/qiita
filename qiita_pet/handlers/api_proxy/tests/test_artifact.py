@@ -284,8 +284,8 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)
-        wait_for_prep_information_job(pt.id)
         print 'test 2 - wait'
+        wait_for_prep_information_job(pt.id)
 
         print 'cleaning'
         # Instantiate the artifact to make sure it was made and
