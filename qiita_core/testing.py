@@ -43,9 +43,9 @@ def wait_for_prep_information_job(prep_id, raise_if_none=True):
         else:
             redis_info = loads(r_client.get(job_id))
             while redis_info['status_msg'] == 'Running':
-                sleep(0.7)
+                sleep(0.2)
                 redis_info = loads(r_client.get(job_id))
-        sleep(0.7)
+        sleep(0.2)
 
 
 def wait_for_processing_job(job_id):

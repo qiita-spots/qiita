@@ -16,6 +16,7 @@ import numpy.testing as npt
 from moi import r_client
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.testing import wait_for_prep_information_job
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
@@ -265,6 +266,7 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)
+        wait_for_prep_information_job(pt.id)
 
         # Test importing an artifact
         # Create new prep template to attach artifact to
@@ -279,6 +281,7 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)
+        wait_for_prep_information_job(pt.id)
 
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
