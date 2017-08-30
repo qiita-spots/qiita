@@ -253,6 +253,7 @@ class TestArtifactAPI(TestCase):
         self.assertItemsEqual(obs['data'], exp['data'])
 
     def test_artifact_post_req(self):
+        print 'test 1'
         # Create new prep template to attach artifact to
         pt = npt.assert_warns(
             QiitaDBWarning, PrepTemplate.create,
@@ -266,8 +267,10 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)
+        print 'test 1 - wait'
         wait_for_prep_information_job(pt.id)
 
+        print 'test 2'
         # Test importing an artifact
         # Create new prep template to attach artifact to
         pt = npt.assert_warns(
@@ -282,11 +285,14 @@ class TestArtifactAPI(TestCase):
                'message': ''}
         self.assertEqual(obs, exp)
         wait_for_prep_information_job(pt.id)
+        print 'test 2 - wait'
 
+        print 'cleaning'
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
         a = Artifact(pt.artifact.id)
         self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
+        print 'cleaning - end'
 
     def test_artifact_post_req_error(self):
         # Create a new prep template to attach the artifact to
