@@ -44,7 +44,6 @@ install:
   # Install the biom plugin so we can run the analysis tests
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
-  - pip install https://github.com/qiita-spots/qtp-target-gene/archive/master.zip --process-dependency-links
   - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
   # loading redbiom with Qiita's test set
   # but first let's make sure redis is empty
