@@ -170,8 +170,6 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     prep = PrepTemplate(prep_template_id)
     study_id = prep.study_id
 
-    print '   posting'
-
     # First check if the user has access to the study
     access_error = check_access(study_id, user_id)
     if access_error:
@@ -181,13 +179,14 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
 
     if artifact_id:
         # if the artifact id has been provided, import the artifact
+        print '   safe_submit: ', copy_raw_data, prep, prep.id, artifact_id
         job_id = safe_submit(user_id, copy_raw_data, prep, artifact_id)
         is_qiita_job = False
     else:
         uploads_path = get_mountpoint('uploads')[0][1]
         path_builder = partial(join, uploads_path, str(study_id))
         cleaned_filepaths = {}
-        print '   posting: ', filepaths
+
         for ftype, file_list in viewitems(filepaths):
             # JavaScript sends us this list as a comma-separated list
             for fp in file_list.split(','):
@@ -207,14 +206,11 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
                         cleaned_filepaths[ftype] = []
                     cleaned_filepaths[ftype].append(full_fp)
 
-        print '   posting: ', cleaned_filepaths
         # This should never happen, but it doesn't hurt to actually have
         # a explicit check, in case there is something odd with the JS
         if not cleaned_filepaths:
             return {'status': 'error',
                     'message': "Can't create artifact, no files provided."}
-
-        print '   posting: ', artifact_type
 
         command = Command.get_validator(artifact_type)
         job = ProcessingJob.create(
@@ -224,8 +220,6 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
                 'files': dumps(cleaned_filepaths),
                 'artifact_type': artifact_type
                 }))
-
-        print '   posting: ', job.id
         job.submit()
         job_id = job.id
         is_qiita_job = True
