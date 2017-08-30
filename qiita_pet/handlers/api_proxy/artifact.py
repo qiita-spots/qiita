@@ -170,10 +170,14 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     prep = PrepTemplate(prep_template_id)
     study_id = prep.study_id
 
+    print '   posting'
+
     # First check if the user has access to the study
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
+
+    print '   posting: ', artifact_id
 
     if artifact_id:
         # if the artifact id has been provided, import the artifact
@@ -208,6 +212,8 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             return {'status': 'error',
                     'message': "Can't create artifact, no files provided."}
 
+        print '   posting: ', artifact_type
+
         command = Command.get_validator(artifact_type)
         job = ProcessingJob.create(
             User(user_id),
@@ -216,6 +222,8 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
                 'files': dumps(cleaned_filepaths),
                 'artifact_type': artifact_type
                 }))
+
+        print '   posting: ', job.id
         job.submit()
         job_id = job.id
         is_qiita_job = True
