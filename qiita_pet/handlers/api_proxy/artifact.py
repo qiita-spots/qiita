@@ -175,11 +175,8 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     if access_error:
         return access_error
 
-    print '   posting: ', artifact_id
-
     if artifact_id:
         # if the artifact id has been provided, import the artifact
-        print '   safe_submit: ', copy_raw_data, prep, prep.id, artifact_id
         job_id = safe_submit(user_id, copy_raw_data, prep, artifact_id)
         is_qiita_job = False
     else:
@@ -224,7 +221,6 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         job_id = job.id
         is_qiita_job = True
 
-    print '   posting: ', is_qiita_job, job_id
     r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id,
                  dumps({'job_id': job_id, 'is_qiita_job': is_qiita_job}))
 
