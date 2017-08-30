@@ -296,6 +296,7 @@ def safe_submit(*args, **kwargs):
     """
     job_id = submit(*args, **kwargs)
     payload = r_client.get(job_id)
+    print payload, job_id, r_client.config_get()
     while not payload:
         sleep(0.005)
         payload = r_client.get(job_id)
