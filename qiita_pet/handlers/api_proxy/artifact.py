@@ -187,6 +187,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         uploads_path = get_mountpoint('uploads')[0][1]
         path_builder = partial(join, uploads_path, str(study_id))
         cleaned_filepaths = {}
+        print '   posting: ', filepaths
         for ftype, file_list in viewitems(filepaths):
             # JavaScript sends us this list as a comma-separated list
             for fp in file_list.split(','):
@@ -206,6 +207,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
                         cleaned_filepaths[ftype] = []
                     cleaned_filepaths[ftype].append(full_fp)
 
+        print '   posting: ', cleaned_filepaths
         # This should never happen, but it doesn't hurt to actually have
         # a explicit check, in case there is something odd with the JS
         if not cleaned_filepaths:
@@ -228,6 +230,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         job_id = job.id
         is_qiita_job = True
 
+    print '   posting: ', is_qiita_job, job_id
     r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id,
                  dumps({'job_id': job_id, 'is_qiita_job': is_qiita_job}))
 
