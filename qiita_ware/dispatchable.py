@@ -5,17 +5,12 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from qiita_ware.commands import submit_EBI, submit_VAMPS
+from qiita_ware.commands import submit_EBI
 
 
 def submit_to_ebi(preprocessed_data_id, submission_type):
     """Submit a study to EBI"""
     submit_EBI(preprocessed_data_id, submission_type, True)
-
-
-def submit_to_VAMPS(preprocessed_data_id):
-    """Submit a study to VAMPS"""
-    return submit_VAMPS(preprocessed_data_id)
 
 
 def create_raw_data(artifact_type, prep_template, filepaths, name=None):
