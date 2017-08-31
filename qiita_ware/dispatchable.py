@@ -94,49 +94,6 @@ def create_sample_template(fp, study, is_mapping_file, data_type=None):
     return {'status': status, 'message': msg.decode('utf-8', 'replace')}
 
 
-def update_sample_template(study_id, fp):
-    """Updates a sample template
-
-    Parameters
-    ----------
-    study_id : int
-        Study id whose template is going to be updated
-    fp : str
-        The file path to the template file
-
-    Returns
-    -------
-    dict of {str: str}
-        A dict of the form {'status': str, 'message': str}
-    """
-    import warnings
-    from os import remove
-    from qiita_db.metadata_template.util import load_template_to_dataframe
-    from qiita_db.metadata_template.sample_template import SampleTemplate
-
-    msg = ''
-    status = 'success'
-
-    try:
-        with warnings.catch_warnings(record=True) as warns:
-            # deleting previous uploads and inserting new one
-            st = SampleTemplate(study_id)
-            df = load_template_to_dataframe(fp)
-            st.extend_and_update(df)
-            remove(fp)
-
-            # join all the warning messages into one. Note that this info
-            # will be ignored if an exception is raised
-            if warns:
-                msg = '\n'.join(set(str(w.message) for w in warns))
-                status = 'warning'
-    except Exception as e:
-            status = 'danger'
-            msg = str(e)
-
-    return {'status': status, 'message': msg}
-
-
 def delete_sample_template(study_id):
     """Delete a sample template
 

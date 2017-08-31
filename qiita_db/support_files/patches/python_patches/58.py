@@ -23,3 +23,8 @@ with TRN:
                   'prep_template': ['prep_template', None]}
     Command.create(qiita_plugin, "copy_artifact",
                    "Creates a copy of an artifact", parameters)
+
+    # Create the update sample template command
+    parameters = {'study': ['integer', None], 'template_fp': ['string', None]}
+    Command.create(qiita_plugin, "update_sample_template",
+                   "Updates the sample template", parameters)

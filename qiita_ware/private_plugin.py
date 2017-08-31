@@ -9,7 +9,9 @@
 from json import dumps
 from sys import exc_info
 from time import sleep
+from os import remove
 import traceback
+import warnings
 
 import qiita_db as qdb
 from qiita_ware.commands import submit_VAMPS
@@ -97,10 +99,37 @@ def copy_artifact(job):
         job._set_status('success')
 
 
+def update_sample_template(job):
+    """Updates the sample template
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        param_vals = job.parameters.values
+        study_id = param_vals['study']
+        fp = param_vals['template_fp']
+        with warnings.catch_warnings(record=True) as warns:
+            st = qdb.metadata_template.sample_template.SampleTemplate(study_id)
+            df = qdb.metadata_template.util.load_template_to_dataframe(fp)
+            st.extend_and_update(df)
+            remove(fp)
+
+            # Join all the warning messages into one.NOte that this info
+            # will be ignored if an exception is raised
+            if warns:
+                msg = '\n'.join(set(str(w.message) for w in warns))
+
+        job._set_status('success')
+
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
              'submit_to_VAMPS': submit_to_VAMPS,
-             'copy_artifact': copy_artifact}
+             'copy_artifact': copy_artifact,
+             'update_sample_template': update_sample_template}
 
 
 def private_task(job_id):
