@@ -110,11 +110,6 @@ Install Qiita (this occurs through setuptools' `setup.py` file in the qiita dire
 pip install -e . --process-dependency-links
 ```
 
-Install the development version of moi:
-```bash
-pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
-```
-
 At this point, Qiita will be installed and the system will start. However,
 you will need to install plugins in order to process any kind of data. For a list
 of available plugins, visit the [Qiita Spots](https://github.com/qiita-spots)
@@ -151,12 +146,6 @@ Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.ba
   source activate qiita
 ```
 
-Setup ipython profile for qiita:
-
-```bash
-ipython profile create qiita-general --parallel
-```
-
 Next, make a test environment:
 
 ```bash
@@ -171,12 +160,6 @@ Next, start redis server (the command may differ depending on your operating sys
 
 ```bash
 redis-server
-```
-
-Start the IPython cluster:
-
-```bash
-qiita-env start_cluster qiita-general && sleep 30
 ```
 
 Start the qiita server:

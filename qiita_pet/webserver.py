@@ -11,12 +11,9 @@ import tornado.auth
 import tornado.escape
 import tornado.web
 import tornado.websocket
-from os.path import dirname, join, exists
-from shutil import copy
+from os.path import dirname, join
 from base64 import b64encode
 from uuid import uuid4
-from moi import moi_js, moi_list_js
-from moi.websocket import MOIMessageHandler
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import is_test_environment
@@ -85,9 +82,6 @@ DEBUG = qiita_config.test_environment
 
 
 _vendor_js = join(STATIC_PATH, 'vendor', 'js')
-if not exists(join(_vendor_js, 'moi.js')):
-    copy(moi_js(), _vendor_js)
-    copy(moi_list_js(), _vendor_js)
 
 
 class Application(tornado.web.Application):
@@ -117,7 +111,6 @@ class Application(tornado.web.Application):
             (r"/analysis/sharing/", ShareAnalysisAJAX),
             (r"/artifact/samples/", ArtifactGetSamples),
             (r"/artifact/info/", ArtifactGetInfo),
-            (r"/moi-ws/", MOIMessageHandler),
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
