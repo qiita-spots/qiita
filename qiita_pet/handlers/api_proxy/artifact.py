@@ -16,13 +16,12 @@ from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import copy_raw_data
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import (
     get_mountpoint, get_visibilities, get_artifacts_information)
-from qiita_db.software import Command, Parameters
+from qiita_db.software import Command, Parameters, Software
 from qiita_db.processing_job import ProcessingJob
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
@@ -174,10 +173,15 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     if access_error:
         return access_error
 
+    user = User(user_id)
+
     if artifact_id:
         # if the artifact id has been provided, import the artifact
-        job_id = safe_submit(user_id, copy_raw_data, prep, artifact_id)
-        is_qiita_job = False
+        qiita_plugin = Software.from_name_and_version('Qiita',  'alpha')
+        cmd = qiita_plugin.get_command('copy_artifact')
+        params = Parameters.load(cmd, values_dict={'artifact': artifact_id,
+                                                   'prep_template': prep.id})
+        job = ProcessingJob.create(user, params)
     else:
         uploads_path = get_mountpoint('uploads')[0][1]
         path_builder = partial(join, uploads_path, str(study_id))
@@ -210,18 +214,18 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
 
         command = Command.get_validator(artifact_type)
         job = ProcessingJob.create(
-            User(user_id),
+            user,
             Parameters.load(command, values_dict={
                 'template': prep_template_id,
                 'files': dumps(cleaned_filepaths),
                 'artifact_type': artifact_type
                 }))
-        job.submit()
-        job_id = job.id
-        is_qiita_job = True
+
+    # Submit the job
+    job.submit()
 
     r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id,
-                 dumps({'job_id': job_id, 'is_qiita_job': is_qiita_job}))
+                 dumps({'job_id': job.id, 'is_qiita_job': True}))
 
     return {'status': 'success', 'message': ''}
 
