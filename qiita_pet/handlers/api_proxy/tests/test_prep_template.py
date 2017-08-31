@@ -15,9 +15,9 @@ from json import loads
 
 import pandas as pd
 import numpy.testing as npt
-from moi import r_client
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import r_client
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.ontology import Ontology

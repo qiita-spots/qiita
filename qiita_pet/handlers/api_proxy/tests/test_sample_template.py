@@ -11,9 +11,8 @@ from os.path import join, exists
 from time import sleep
 from json import loads, dumps
 
-from moi import r_client
-
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import r_client
 import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_summary_get_req, sample_template_post_req,

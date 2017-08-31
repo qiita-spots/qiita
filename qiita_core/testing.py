@@ -9,7 +9,7 @@
 from json import loads
 from time import sleep
 
-from moi import r_client
+from qiita_core.qiita_settings import r_client
 
 from qiita_db.processing_job import ProcessingJob
 

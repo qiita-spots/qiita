@@ -9,12 +9,12 @@ from __future__ import division
 from json import loads, dumps
 
 from natsort import natsorted
-from moi import r_client
 
+from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import r_client
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
-from qiita_core.util import execute_as_transaction
 from qiita_db.metadata_template.util import looks_like_qiime_mapping_file
 from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.user import User

@@ -12,7 +12,7 @@ from functools import partial
 from time import sleep
 
 from IPython.parallel import Client
-from moi import r_client
+from qiita_core.qiita_settings import r_client
 
 from .exceptions import ComputeError
 
@@ -206,7 +206,7 @@ def _redis_wrap(f, redis_deets, *args, **kwargs):
         class function does not work.
         """
         from json import dumps
-        from moi import r_client
+        from qiita_core.qiita_settings import r_client
 
         job_id = redis_deets['job_id']
         pubsub = redis_deets['pubsub']

@@ -12,3 +12,8 @@ from __future__ import division
 from qiita_core.configuration_manager import ConfigurationManager
 
 qiita_config = ConfigurationManager()
+
+r_client = Redis(host=qiita_config.redis_host,
+                 port=qiita_config.redis_port,
+                 password=qiita_config.redis_password,
+                 db=qiita_config.redis_db)
