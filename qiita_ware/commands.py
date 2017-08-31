@@ -12,10 +12,10 @@ from tarfile import open as taropen
 from tempfile import mkdtemp
 from os import environ
 from traceback import format_exc
-from moi.job import system_call
 
 from qiita_db.artifact import Artifact
 from qiita_db.logger import LogEntry
+from qiita_db.processing_job import _system_call as system_call
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import ComputeError, EBISubmissionError
