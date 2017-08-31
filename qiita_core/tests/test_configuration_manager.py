@@ -94,10 +94,6 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.ebi_center_name, "qiita-test")
         self.assertEqual(obs.ebi_organization_prefix, "example_organization")
 
-        # IPython section
-        self.assertEqual(obs.ipython_contexts, ["qiita-general"])
-        self.assertEqual(obs.ipython_default, "qiita-general")
-
         # VAMPS section
         self.assertEqual(obs.vamps_user, "user")
         self.assertEqual(obs.vamps_pass, "password")
@@ -332,13 +328,6 @@ EBI_CENTER_NAME = qiita-test
 # This string (with an underscore) will be prefixed to your EBI submission and
 # study aliases
 EBI_ORGANIZATION_PREFIX = example_organization
-
-
-# ----------------------------- IPython settings -----------------------------
-[ipython]
-# context is expected to be a comma separated list
-context = qiita-general
-default = qiita-general
 
 # ----------------------------- VAMPS settings -----------------------------
 [vamps]
