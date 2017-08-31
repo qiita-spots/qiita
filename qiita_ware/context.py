@@ -48,6 +48,7 @@ class Dispatch(object):
     def __init__(self):
         pass
 
+
 def _redis_wrap(f, redis_deets, *args, **kwargs):
     """Wrap something to compute, and notify about state
 
