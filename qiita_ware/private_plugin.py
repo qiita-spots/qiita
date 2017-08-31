@@ -77,11 +77,29 @@ def submit_to_VAMPS(job):
     """
     with qdb.sql_connection.TRN:
         submit_VAMPS(job.parameters.values['artifact'])
+        job._set_status('success')
+
+
+def copy_artifact(job):
+    """Creates a copy of an artifact
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        param_vals = job.parameters.values
+        qdb.artifact.Artifact.copy(
+            qdb.artifact.Artifact(param_vals['artifact']),
+            param_vals['prep_template'])
+        job._set_status('success')
 
 
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
-             'submit_to_VAMPS': submit_to_VAMPS}
+             'submit_to_VAMPS': submit_to_VAMPS,
+             'copy_artifact': copy_artifact}
 
 
 def private_task(job_id):
