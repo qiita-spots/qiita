@@ -10,9 +10,8 @@ from os.path import basename, relpath
 from json import dumps
 
 from tornado.web import authenticated, StaticFileHandler
-from moi import r_client
 
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import safe_execution
 from qiita_pet.exceptions import QiitaHTTPError

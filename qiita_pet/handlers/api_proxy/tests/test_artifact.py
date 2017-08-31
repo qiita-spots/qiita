@@ -13,10 +13,10 @@ from tempfile import mkstemp
 
 import pandas as pd
 import numpy.testing as npt
-from moi import r_client
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.testing import wait_for_prep_information_job
+from qiita_core.qiita_settings import r_client
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study

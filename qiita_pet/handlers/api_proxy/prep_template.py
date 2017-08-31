@@ -12,9 +12,9 @@ from os.path import basename
 from json import loads, dumps
 
 from natsort import natsorted
-from moi import r_client
 
 from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_ware.context import safe_submit
 from qiita_ware.dispatchable import (

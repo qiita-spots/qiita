@@ -17,7 +17,7 @@ from tornado.websocket import WebSocketHandler
 from tornado.gen import engine, Task
 from future.utils import viewvalues
 
-from moi import r_client
+from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.artifact import Artifact
 from qiita_core.util import execute_as_transaction

@@ -22,10 +22,9 @@ import click
 import tornado.httpserver
 import tornado.ioloop
 from psycopg2 import OperationalError
-from moi import r_client
 
 import qiita_db as qdb
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
 from qiita_ware.context import system_call, ComputeError

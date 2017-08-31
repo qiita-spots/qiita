@@ -128,8 +128,8 @@ def test(runner):
 def job_details(job):
     """Pretty print moi job details"""
     from json import loads
-    from moi import r_client
     from redis.exceptions import ResponseError
+    from qiita_core.qiita_settings import r_client
 
     try:
         data = r_client.get(job)

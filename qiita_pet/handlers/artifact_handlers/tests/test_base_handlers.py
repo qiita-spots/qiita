@@ -13,9 +13,8 @@ from os.path import basename, exists, relpath
 from json import loads
 
 from tornado.web import HTTPError
-from moi import r_client
 
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.testing import wait_for_prep_information_job
 from qiita_core.util import qiita_test_checker
 from qiita_db.user import User
