@@ -53,11 +53,14 @@ before_script:
   - qiita-test-install
 script:
   - sleep 5
+  - qiita pet webserver --no-build-docs start &
+  - QIITA_PID=$!
+  - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE
+  - kill $QIITA_PID
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then qiita-cron-job ; fi
-  - qiita pet webserver --no-build-docs start &
-  - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE
   - flake8 qiita_* setup.py scripts/*
+  - qiita pet webserver
 addons:
   postgresql: "9.3"
 services:
