@@ -44,6 +44,7 @@ install:
   # Install the biom plugin so we can run the analysis tests
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
+  - pip install https://github.com/qiita-spots/qtp-target-gene/archive/master.zip --process-dependency-links
   - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
   # loading redbiom with Qiita's test set
   # but first let's make sure redis is empty
@@ -57,6 +58,7 @@ install:
   - redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test
   - mkdir ~/.qiita_plugins
   - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins
+  - cp $PWD/qiita_core/support_files/Target\ Gene\ type_0.1.0.conf ~/.qiita_plugins
 before_script:
     # Some of the tests rely on the plugin system to complete successfuly.
     # Thus, we need a qiita webserver running to be able to execute the tests.
