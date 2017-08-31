@@ -90,9 +90,10 @@ def copy_artifact(job):
     """
     with qdb.sql_connection.TRN:
         param_vals = job.parameters.values
-        qdb.artifact.Artifact.copy(
-            qdb.artifact.Artifact(param_vals['artifact']),
+        orig_artifact = qdb.artifact.Artifact(param_vals['artifact'])
+        prep_template = qdb.metadata_template.prep_template.PrepTemplate(
             param_vals['prep_template'])
+        qdb.artifact.Artifact.copy(orig_artifact, prep_template)
         job._set_status('success')
 
 

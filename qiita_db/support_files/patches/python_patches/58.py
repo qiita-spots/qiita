@@ -17,3 +17,9 @@ with TRN:
     parameters = {'artifact': ['artifact:["Demultiplexed"]', None]}
     Command.create(qiita_plugin, "submit_to_VAMPS",
                    "submits an artifact to VAMPS", parameters)
+
+    # Create the copy artifact command
+    parameters = {'artifact': ['artifact:["Demultiplexed"]', None],
+                  'prep_template': ['prep_template', None]}
+    Command.create(qiita_plugin, "copy_artifact",
+                   "Creates a copy of an artifact", parameters)

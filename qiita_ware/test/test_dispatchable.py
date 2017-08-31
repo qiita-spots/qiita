@@ -42,13 +42,6 @@ class TestDispatchable(TestCase):
             if exists(fp):
                 remove(fp)
 
-    def test_copy_raw_data(self):
-        obs = copy_raw_data(PrepTemplate(1), 1)
-        exp = {'status': 'danger',
-               'message': "Error creating artifact: Prep template 1 already "
-                          "has an artifact associated"}
-        self.assertEqual(obs, exp)
-
     def test_delete_artifact(self):
         obs = delete_artifact(1)
         exp = {'status': 'danger',
