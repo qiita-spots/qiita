@@ -17,8 +17,7 @@ import numpy.testing as npt
 from qiita_core.util import qiita_test_checker
 from qiita_ware.dispatchable import (
     create_sample_template, update_sample_template, delete_sample_template,
-    update_prep_template, delete_artifact, copy_raw_data,
-    delete_sample_or_column)
+    update_prep_template, delete_artifact, delete_sample_or_column)
 from qiita_db.study import Study
 from qiita_db.artifact import Artifact
 from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBWarning
@@ -41,13 +40,6 @@ class TestDispatchable(TestCase):
         for fp in self._clean_up_files:
             if exists(fp):
                 remove(fp)
-
-    def test_copy_raw_data(self):
-        obs = copy_raw_data(PrepTemplate(1), 1)
-        exp = {'status': 'danger',
-               'message': "Error creating artifact: Prep template 1 already "
-                          "has an artifact associated"}
-        self.assertEqual(obs, exp)
 
     def test_delete_artifact(self):
         obs = delete_artifact(1)

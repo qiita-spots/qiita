@@ -13,39 +13,6 @@ def submit_to_ebi(preprocessed_data_id, submission_type):
     submit_EBI(preprocessed_data_id, submission_type, True)
 
 
-def copy_raw_data(prep_template, artifact_id):
-    """Creates a new raw data by copying from artifact_id
-
-    Parameters
-    ----------
-    prep_template : qiita_db.metadata_template.prep_template.PrepTemplate
-        The template to attach the artifact
-    artifact_id : int
-        The id of the artifact to duplicate
-
-    Returns
-    -------
-    dict of {str: str}
-        A dict of the form {'status': str, 'message': str}
-    """
-    from qiita_db.artifact import Artifact
-
-    status = 'success'
-    msg = ''
-
-    try:
-        Artifact.copy(Artifact(artifact_id), prep_template)
-    except Exception as e:
-        # We should hit this exception rarely (that's why it is an
-        # exception)  since at this point we have done multiple checks.
-        # However, it can occur in weird cases, so better let the GUI know
-        # that this failed
-        return {'status': 'danger',
-                'message': "Error creating artifact: %s" % str(e)}
-
-    return {'status': status, 'message': msg}
-
-
 def delete_artifact(artifact_id):
     """Deletes an artifact from the system
 
