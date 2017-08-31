@@ -10,17 +10,11 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-import os
 from unittest import TestCase, main
-import tempfile
-
-import h5py
 import numpy as np
-from six import StringIO, BytesIO
 
 from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_ware.util import (per_sample_sequences, open_file,
-                             _is_string_or_bytes)
+from qiita_ware.util import per_sample_sequences
 
 
 def mock_sequence_iter(items):
@@ -109,78 +103,6 @@ class UtilTests(TestCase):
             u'target_gene', u'center_project_name', u'illumina_technology',
             u'sequencing_meth', u'platform', u'experiment_title',
             u'study_center'})
-
-
-class TestFilePathOpening(TestCase):
-    """Tests adapted from scikit-bio's skbio.io.util tests"""
-    def test_is_string_or_bytes(self):
-        self.assertTrue(_is_string_or_bytes('foo'))
-        self.assertTrue(_is_string_or_bytes(u'foo'))
-        self.assertTrue(_is_string_or_bytes(b'foo'))
-        self.assertFalse(_is_string_or_bytes(StringIO('bar')))
-        self.assertFalse(_is_string_or_bytes([1]))
-
-    def test_file_closed(self):
-        """File gets closed in decorator"""
-        f = tempfile.NamedTemporaryFile('r')
-        filepath = f.name
-        with open_file(filepath) as fh:
-            pass
-        self.assertTrue(fh.closed)
-
-    def test_file_closed_harder(self):
-        """File gets closed in decorator, even if exceptions happen."""
-        f = tempfile.NamedTemporaryFile('r')
-        filepath = f.name
-        try:
-            with open_file(filepath) as fh:
-                raise TypeError
-        except TypeError:
-            self.assertTrue(fh.closed)
-        else:
-            # If we're here, no exceptions have been raised inside the
-            # try clause, so the context manager swallowed them. No
-            # good.
-            raise Exception("`open_file` didn't propagate exceptions")
-
-    def test_filehandle(self):
-        """Filehandles slip through untouched"""
-        with tempfile.TemporaryFile('r') as fh:
-            with open_file(fh) as ffh:
-                self.assertTrue(fh is ffh)
-            # And it doesn't close the file-handle
-            self.assertFalse(fh.closed)
-
-    def test_StringIO(self):
-        """StringIO (useful e.g. for testing) slips through."""
-        f = StringIO("File contents")
-        with open_file(f) as fh:
-            self.assertTrue(fh is f)
-
-    def test_BytesIO(self):
-        """BytesIO (useful e.g. for testing) slips through."""
-        f = BytesIO(b"File contents")
-        with open_file(f) as fh:
-            self.assertTrue(fh is f)
-
-    def test_hdf5IO(self):
-        f = h5py.File('test', driver='core', backing_store=False)
-        with open_file(f) as fh:
-            self.assertTrue(fh is f)
-
-    def test_hdf5IO_open(self):
-        name = None
-        with tempfile.NamedTemporaryFile(delete=False) as fh:
-            name = fh.name
-            fh.close()
-
-            h5file = h5py.File(name, 'w')
-            h5file.close()
-
-            with open_file(name) as fh_inner:
-                self.assertTrue(isinstance(fh_inner, h5py.File))
-
-        os.remove(name)
 
 
 # comment indicates the expected random value
