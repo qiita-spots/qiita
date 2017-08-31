@@ -10,7 +10,7 @@ from unittest import TestCase, main
 
 import pandas as pd
 from os import close, remove
-from os.path import join, dirname, abspath
+from os.path import join, dirname, abspath, exists
 from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
@@ -35,6 +35,11 @@ class TestPrivatePlugin(TestCase):
                     "1.SKD6.640190\tnew_vale")
 
         self._clean_up_files = [self.fp]
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                remove(fp)
 
     def _create_job(self, cmd, values_dict):
         user = User('test@foo.bar')
