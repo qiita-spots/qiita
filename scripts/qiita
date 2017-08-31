@@ -408,10 +408,6 @@ def log(n):
 @click.option('--master', is_flag=True,
               help="If set, update available plugins")
 def start(port, master):
-    # in order to use this command you need to have an IPython cluster running,
-    # for now this makes it so that you can use other sub-commands without
-    # having to do that. The solution will (perhaps) be to move this subcommand
-    # into an entirely different script.
     from qiita_pet.webserver import Application
     from tornado.options import options, parse_command_line
     from tornado.ioloop import PeriodicCallback

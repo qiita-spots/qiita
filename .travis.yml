@@ -32,7 +32,7 @@ install:
     'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate qiita
   - pip install -U pip
-  - pip install sphinx sphinx-bootstrap-theme 'ipython[all]==2.4.1' nose-timer codecov
+  - pip install sphinx sphinx-bootstrap-theme nose-timer codecov
   - travis_retry pip install . --process-dependency-links
   - 'echo "backend: Agg" > matplotlibrc'
   # Install the biom plugin so we can run the analysis tests
@@ -50,8 +50,6 @@ before_script:
   #   export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
   #   export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
   #   fi
-  - ipython profile create qiita-general --parallel
-  - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
   - |
     if [ ${TEST_ADD_STUDIES} == "False" ]; then

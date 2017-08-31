@@ -11,7 +11,6 @@ from uuid import uuid4
 from functools import partial
 from time import sleep
 
-from IPython.parallel import Client
 from qiita_core.qiita_settings import r_client
 
 from .exceptions import ComputeError
@@ -46,132 +45,8 @@ def system_call(cmd):
 
 
 class Dispatch(object):
-    """Dispatch compute
-
-    Attributes
-    ----------
-    reserved
-    reserved_lview
-    general
-    general_lview
-    demo
-    demo_lview
-
-    Methods
-    -------
-    submit_async
-    submit_async_deps
-    submit_sync
-    sync
-
-    """
     def __init__(self):
-        from moi import ctx_default
-        self.demo = Client(profile=ctx_default)
-
-        # checking that at least 2 workers exist, see:
-        # https://github.com/biocore/qiita/issues/1066
-        workers = len(self.demo.ids)
-        if workers < 2:
-            raise ValueError('You need to have at least 2 IPython workers '
-                             'but you have %d' % workers)
-
-        self.demo_lview = self.demo.load_balanced_view()
-
-    def sync(self, data):
-        """Sync data to engines
-
-        Parameters
-        ----------
-        data : dict
-            dict of objects and to sync
-
-        """
-        self.demo[:].update(data)
-
-    def submit_async(self, cmd, *args, **kwargs):
-        """Submit an async command to execute
-
-        Parameters
-        ----------
-        cmd : {function, str}
-            A function to execute or a system call to execute
-        args : list
-            Arguments to pass to a function (if cmd is function)
-        kwargs : dict
-            Keyword arguments to pass to a function (if cmd is function)
-
-        Returns
-        -------
-        IPython.parallel.client.asyncresult.AsyncResult
-
-        """
-        if isinstance(cmd, str):
-            task = self.demo_lview.apply_async(system_call, cmd)
-        else:
-            task = self.demo_lview.apply_async(cmd, *args, **kwargs)
-
-        return task
-
-    def submit_async_deps(self, deps, cmd, *args, **kwargs):
-        """Submit as async command to execute after all dependencies are done
-
-        Parameters
-        ----------
-        deps : list of AsyncResult
-            The list of job dependencies for cmd
-        cmd : {function, str}
-            A function to execute or a system call to execute
-        args : list
-            Arguments to pass to a function (if cmd is function)
-        kwargs : dict
-            Keyword arguments to pass to a function (if cmd is function)
-
-        Returns
-        -------
-        IPython.parallel.client.asyncresult.AsyncResult
-        """
-        with self.demo_lview.temp_flags(after=deps, block=False):
-            if isinstance(cmd, str):
-                task = self.demo_lview.apply_async(system_call, cmd)
-            else:
-                task = self.demo_lview.apply_async(cmd, *args, **kwargs)
-
-        return task
-
-    def submit_sync(self, cmd, *args, **kwargs):
-        """Submit an sync command to execute
-
-        Parameters
-        ----------
-        cmd : {function, str}
-            A function to execute or a system call to execute
-        args : list
-            Arguments to pass to a function (if cmd is function)
-        kwargs : dict
-            Keyword arguments to pass to a function (if cmd is function)
-
-        Returns
-        -------
-        Dependent on cmd
-
-        """
-        if isinstance(cmd, str):
-            result = self.demo_lview.apply_sync(system_call, cmd)
-        else:
-            result = self.demo_lview.apply_sync(cmd, *args, **kwargs)
-
-        return result
-
-    def wait(self, handlers):
-        """Waits until all async jobs in handlers have finished
-
-        Parameters
-        ----------
-        handlers : list of AsyncResult
-            The AsyncResult objects to wait for
-        """
-        return self.demo_lview.wait(handlers)
+        pass
 
 
 def _redis_wrap(f, redis_deets, *args, **kwargs):
