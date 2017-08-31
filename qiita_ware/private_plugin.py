@@ -12,6 +12,7 @@ from time import sleep
 import traceback
 
 import qiita_db as qdb
+from qiita_ware.commands import submit_VAMPS
 
 
 def build_analysis_files(job):
@@ -66,8 +67,21 @@ def release_validators(job):
         job._set_status('success')
 
 
+def submit_to_VAMPS(job):
+    """Submits an artifact to VAMPS
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        submit_VAMPS(job.parameters.values['artifact'])
+
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
-             'release_validators': release_validators}
+             'release_validators': release_validators,
+             'submit_to_VAMPS': submit_to_VAMPS}
 
 
 def private_task(job_id):
