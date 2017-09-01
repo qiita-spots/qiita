@@ -25,7 +25,8 @@ with TRN:
                    "Creates a copy of an artifact", parameters)
 
     # Create the submit command for EBI command
-    parameters = {'artifact': ['artifact:["Demultiplexed"]', None]}
+    parameters = {'artifact': ['artifact:["Demultiplexed"]', None],
+                  'submission_type': ['choice:["ADD", "MODIFY"]', 'ADD']}
     Command.create(qiita_plugin, "submit_to_EBI",
                    "submits an artifact to EBI", parameters)
 
@@ -35,6 +36,8 @@ with TRN:
                    "Delete an artifact", parameters)
 
     # Create the submit command for create a sample template
-    parameters = {'artifact': ['artifact:["Demultiplexed"]', None]}
+    parameters = {
+        'fp': ['string', None], 'study_id': ['integer', None],
+        'is_mapping_file': ['boolean', True], 'data_type': ['string', None]}
     Command.create(qiita_plugin, "create_sample_template",
                    "Create a sample template", parameters)

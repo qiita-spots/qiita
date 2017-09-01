@@ -10,9 +10,12 @@ from json import dumps
 from sys import exc_info
 from time import sleep
 import traceback
+from os import remove
 
 import qiita_db as qdb
 from qiita_ware.commands import submit_VAMPS, submit_EBI
+from qiita_ware.metadata_pipeline import (
+    create_templates_from_qiime_mapping_file)
 
 
 def build_analysis_files(job):
@@ -102,85 +105,45 @@ def submit_to_ebi(preprocessed_data_id, submission_type):
     submit_EBI(preprocessed_data_id, submission_type, True)
 
 
-def delete_artifact(artifact_id):
+def delete_artifact(job):
     """Deletes an artifact from the system
 
     Parameters
     ----------
-    artifact_id : int
-        The artifact to delete
-
-    Returns
-    -------
-    dict of {str: str}
-        A dict of the form {'status': str, 'message': str}
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
     """
-    from qiita_db.artifact import Artifact
-
-    status = 'success'
-    msg = ''
-    try:
-        Artifact.delete(artifact_id)
-    except Exception as e:
-        status = 'danger'
-        msg = str(e)
-
-    return {'status': status, 'message': msg}
+    with qdb.sql_connection.TRN:
+        artifact_id = job.parameters.values['artifact']
+        qdb.artifact.Artifact.delete(artifact_id)
+        job._set_status('success')
 
 
-def create_sample_template(fp, study, is_mapping_file, data_type=None):
+def create_sample_template(job):
     """Creates a sample template
 
     Parameters
     ----------
-    fp : str
-        The file path to the template file
-    study : qiita_db.study.Study
-        The study to add the sample template to
-    is_mapping_file : bool
-        Whether `fp` contains a mapping file or a sample template
-    data_type : str, optional
-        If `is_mapping_file` is True, the data type of the prep template to be
-        created
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
 
-    Returns
-    -------
-    dict of {str: str}
-        A dict of the form {'status': str, 'message': str}
     """
-    # The imports need to be in here because this code is executed in
-    # the ipython workers
-    import warnings
-    from os import remove
-    from qiita_db.metadata_template.sample_template import SampleTemplate
-    from qiita_db.metadata_template.util import load_template_to_dataframe
-    from qiita_ware.metadata_pipeline import (
-        create_templates_from_qiime_mapping_file)
+    with qdb.sql_connection.TRN:
+        params = job.parameters.values
+        fp = params['fp']
+        study = qdb.study.Study(int(params['study_id']))
+        is_mapping_file = params['is_mapping_file']
+        data_type = params['data_type']
 
-    status = 'success'
-    msg = ''
-    try:
-        with warnings.catch_warnings(record=True) as warns:
-            if is_mapping_file:
-                create_templates_from_qiime_mapping_file(fp, study,
-                                                         data_type)
-            else:
-                SampleTemplate.create(load_template_to_dataframe(fp),
-                                      study)
-            remove(fp)
+        if is_mapping_file:
+            create_templates_from_qiime_mapping_file(fp, study, data_type)
+        else:
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                qdb.metadata_template.util.load_template_to_dataframe(fp),
+                study)
+        remove(fp)
 
-            # join all the warning messages into one. Note that this
-            # info will be ignored if an exception is raised
-            if warns:
-                msg = '\n'.join(set(str(w.message) for w in warns))
-                status = 'warning'
-    except Exception as e:
-        # Some error occurred while processing the sample template
-        # Show the error to the user so they can fix the template
-        status = 'danger'
-        msg = str(e)
-
-    return {'status': status, 'message': msg.decode('utf-8', 'replace')}
+        job._set_status('success')
 
 
 TASK_DICT = {
