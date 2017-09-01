@@ -84,7 +84,7 @@ class TestPrivatePlugin(TestCase):
         self.assertEqual(SampleTemplate(1)['1.SKD6.640190']['new_col'],
                          'new_value')
 
-        # Check that redis has been updated with:
+        # TODO: Check that redis has been updated with:
         "Sample names were already prefixed with the study "
         "id.\nThe following columns have been added to the "
         "existing template: new_col\nThere are no "

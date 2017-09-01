@@ -16,7 +16,7 @@ import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
 from qiita_ware.dispatchable import (
-    create_sample_template, update_sample_template, delete_sample_template,
+    create_sample_template, delete_sample_template,
     update_prep_template, delete_artifact, delete_sample_or_column)
 from qiita_db.study import Study
 from qiita_db.artifact import Artifact

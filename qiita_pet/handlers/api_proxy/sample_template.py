@@ -18,8 +18,10 @@ from qiita_db.study import Study
 from qiita_db.metadata_template.util import looks_like_qiime_mapping_file
 from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.user import User
+from qiita_db.software import Software, Parameters
+from qiita_db.processing_job import ProcessingJob
 from qiita_ware.dispatchable import (
-    create_sample_template, update_sample_template, delete_sample_template,
+    create_sample_template, delete_sample_template,
     delete_sample_or_column)
 from qiita_ware.context import safe_submit
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
@@ -191,6 +193,7 @@ def sample_template_category_get_req(category, samp_id, user_id):
 
 
 def get_sample_template_processing_status(st_id):
+    # TODO: Adapt code for using only ProcessingJob objects
     job_info = r_client.get(SAMPLE_TEMPLATE_KEY_FORMAT % st_id)
     if job_info:
         job_info = loads(job_info)
@@ -407,11 +410,15 @@ def sample_template_put_req(study_id, user_id, sample_template):
     status = 'success'
 
     # Offload the update of the sample template to the cluster
-    job_id = safe_submit(user_id, update_sample_template, int(study_id),
-                         fp_rsp)
+    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+    cmd = qiita_plugin.get_command('update_sample_template')
+    params = Parameters.load(cmd, values_dict={'study': int(study_id),
+                                               'template_fp': fp_rsp})
+    job = ProcessingJob.create(User(user_id), params)
+
     # Store the job id attaching it to the sample template id
     r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
-                 dumps({'job_id': job_id}))
+                 dumps({'job_id': job.id}))
 
     return {'status': status,
             'message': msg,
