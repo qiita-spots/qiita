@@ -18,8 +18,9 @@ from qiita_db.study import Study
 from qiita_db.metadata_template.util import looks_like_qiime_mapping_file
 from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.user import User
+from qiita_ware.private_plugin import create_sample_template
 from qiita_ware.dispatchable import (
-    create_sample_template, update_sample_template, delete_sample_template,
+    update_sample_template, delete_sample_template,
     delete_sample_or_column)
 from qiita_ware.context import safe_submit
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp

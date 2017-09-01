@@ -16,7 +16,7 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import safe_execution
 from qiita_pet.exceptions import QiitaHTTPError
 from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import delete_artifact
+from qiita_ware.private_plugin import delete_artifact
 from qiita_db.artifact import Artifact
 from qiita_db.software import Command, Parameters
 from qiita_db.processing_job import ProcessingJob

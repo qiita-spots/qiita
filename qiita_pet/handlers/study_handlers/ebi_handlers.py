@@ -12,7 +12,7 @@ from tornado.web import authenticated, HTTPError
 from qiita_files.demux import stats as demux_stats
 
 from qiita_ware.context import submit
-from qiita_ware.dispatchable import submit_to_ebi
+from qiita_ware.private_plugin import submit_to_ebi
 from qiita_db.metadata_template.constants import (SAMPLE_TEMPLATE_COLUMNS,
                                                   PREP_TEMPLATE_COLUMNS)
 from qiita_db.exceptions import QiitaDBUnknownIDError
