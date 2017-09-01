@@ -21,8 +21,7 @@ from qiita_db.study import Study
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
-from qiita_ware.private_plugin import (
-    private_task, create_sample_template, delete_artifact)
+from qiita_ware.private_plugin import private_task
 
 
 @qiita_test_checker()
@@ -44,7 +43,7 @@ class TestPrivatePlugin(TestCase):
     def _create_job(self, cmd, values_dict):
         user = User('test@foo.bar')
         qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-        cmd = qiita_plugin.get_command('copy_artifact')
+        cmd = qiita_plugin.get_command(cmd)
         params = Parameters.load(cmd, values_dict=values_dict)
         job = ProcessingJob.create(user, params)
         job._set_status('queued')
@@ -79,37 +78,41 @@ class TestPrivatePlugin(TestCase):
         self.assertEqual(job.status, 'success')
 
     def test_delete_artifact(self):
-        obs = delete_artifact(1)
-        exp = {'status': 'danger',
-               'message': 'Cannot delete artifact 1: it has children: 2, 3'}
-        self.assertEqual(obs, exp)
+        job = self._create_job('delete_artifact', {'artifact': 1})
+        private_task(job.id)
+        self.assertEqual(job.status, 'error')
+        self.assertIn(
+            'Cannot delete artifact 1: it has children: 2, 3', job.log.msg)
 
-        obs = delete_artifact(3)
-        exp = {'status': 'success',
-               'message': ''}
-        self.assertEqual(obs, exp)
-
+        job = self._create_job('delete_artifact', {'artifact': 3})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
         with self.assertRaises(QiitaDBUnknownIDError):
             Artifact(3)
 
     def test_create_sample_template(self):
-        obs = create_sample_template(self.fp, Study(1), False)
-        exp = {'status': 'danger',
-               'message': "The 'SampleTemplate' object with attributes "
-                          "(id: 1) already exists."}
-        self.assertEqual(obs, exp)
+        job = self._create_job('create_sample_template', {
+            'fp': self.fp, 'study_id': 1, 'is_mapping_file': False,
+            'data_type': None})
+        private_task(job.id)
+        self.assertEqual(job.status, 'error')
+        self.assertIn("The 'SampleTemplate' object with attributes (id: 1) "
+                      "already exists.", job.log.msg)
 
     def test_create_sample_template_nonutf8(self):
         fp = join(dirname(abspath(__file__)), 'test_data',
                   'sample_info_utf8_error.txt')
-        obs = create_sample_template(fp, Study(1), False)
-        exp = {'status': 'danger',
-               'message': 'There are invalid (non UTF-8) characters in your '
-                          'information file. The offending fields and their '
-                          'location (row, column) are listed below, invalid '
-                          'characters are represented using &#128062;: '
-                          '"&#128062;collection_timestamp" = (0, 13)'}
-        self.assertEqual(obs, exp)
+        job = self._create_job('create_sample_template', {
+            'fp': fp, 'study_id': 1, 'is_mapping_file': False,
+            'data_type': None})
+        private_task(job.id)
+        self.assertEqual(job.status, 'error')
+        self.assertIn(
+            'There are invalid (non UTF-8) characters in your information '
+            'file. The offending fields and their location (row, column) are '
+            'listed below, invalid characters are represented using '
+            '&#128062;: "&#128062;collection_timestamp" = (0, 13)',
+            job.log.msg)
 
 
 if __name__ == '__main__':

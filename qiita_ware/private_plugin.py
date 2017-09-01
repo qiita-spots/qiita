@@ -100,9 +100,20 @@ def copy_artifact(job):
         job._set_status('success')
 
 
-def submit_to_ebi(preprocessed_data_id, submission_type):
-    """Submit a study to EBI"""
-    submit_EBI(preprocessed_data_id, submission_type, True)
+def submit_to_EBI(job):
+    """Submit a study to EBI
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        param_vals = job.parameters.values
+        artifact_id = int(param_vals['artifact'])
+        submission_type = param_vals['submission_type']
+        submit_EBI(artifact_id, submission_type, False)
+        job._set_status('success')
 
 
 def delete_artifact(job):
@@ -126,7 +137,6 @@ def create_sample_template(job):
     ----------
     job : qiita_db.processing_job.ProcessingJob
         The processing job performing the task
-
     """
     with qdb.sql_connection.TRN:
         params = job.parameters.values
@@ -151,7 +161,7 @@ TASK_DICT = {
     'release_validators': release_validators,
     'submit_to_VAMPS': submit_to_VAMPS,
     'copy_artifact': copy_artifact,
-    'submit_to_ebi': submit_to_ebi,
+    'submit_to_EBI': submit_to_EBI,
     'delete_artifact': delete_artifact,
     'create_sample_template': create_sample_template,
 }

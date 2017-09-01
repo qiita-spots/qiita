@@ -8,11 +8,12 @@
 from __future__ import division
 
 from tornado.web import authenticated, HTTPError
+from tornado.escape import url_escape
 from json import dumps
 
 from qiita_files.demux import stats as demux_stats
 
-from qiita_core.qiita_settings import r_client
+from qiita_core.qiita_settings import r_client, qiita_config
 from qiita_core.util import execute_as_transaction
 from qiita_db.metadata_template.constants import (SAMPLE_TEMPLATE_COLUMNS,
                                                   PREP_TEMPLATE_COLUMNS)
@@ -109,9 +110,6 @@ class EBISubmitHandler(BaseHandler):
     @authenticated
     @execute_as_transaction
     def post(self, preprocessed_data_id):
-        status = 'success'
-        message = ''
-
         user = self.current_user
         # make sure user is admin and can therefore actually submit to EBI
         if user.level != 'admin':
@@ -123,10 +121,11 @@ class EBISubmitHandler(BaseHandler):
             raise HTTPError(403, "User: %s, %s is not a recognized submission "
                             "type" % (user.id, submission_type))
 
-        state = Artifact(preprocessed_data_id).study.ebi_submission_status
+        study = Artifact(preprocessed_data_id).study
+        state = study.ebi_submission_status
         if state == 'submitting':
+            level = 'danger'
             message = "Cannot resubmit! Current state is: %s" % state
-            status = 'danger'
         else:
             qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
             cmd = qiita_plugin.get_command('submit_to_EBI')
@@ -137,5 +136,10 @@ class EBISubmitHandler(BaseHandler):
 
             r_client.set('ebi_submission_%s' % preprocessed_data_id,
                          dumps({'job_id': job.id, 'is_qiita_job': True}))
+            job.submit()
 
-        return {'status': status, 'message': message}
+            level = 'success'
+            message = 'EBI submission started. Job id: %s' % job.id
+
+            self.redirect("%s/study/description/%d?level=%s&message=%s" % (
+                qiita_config.portal_dir, study.id, level, url_escape(message)))
