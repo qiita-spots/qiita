@@ -543,11 +543,15 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [artifact_id])
             jobs = qdb.sql_connection.TRN.execute_fetchflatten()
             if jobs:
-                # as the delete happens on the queue, we need to check that
-                # there is more than the job running is not delete_artifact
+                # if the artifact has active jobs we need to raise an error
+                # but we also need to check that if it's only 1 job, that the
+                # job is not the delete_artifact actual job
+                raise_error = True
                 job_name = qdb.processing_job.ProcessingJob(
                     jobs[0]).command.name
-                if len(jobs) != 1 and job_name != 'delete_artifact':
+                if len(jobs) == 1 and job_name == 'delete_artifact':
+                    raise_error = False
+                if raise_error:
                     raise qdb.exceptions.QiitaDBArtifactDeletionError(
                         artifact_id, "there is a queued/running job that "
                         "uses this artifact")
