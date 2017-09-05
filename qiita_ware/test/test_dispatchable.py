@@ -11,18 +11,12 @@ from tempfile import mkstemp
 from os import close, remove
 from os.path import exists, join, dirname, abspath
 
-import pandas as pd
-import numpy.testing as npt
-
 from qiita_core.util import qiita_test_checker
 from qiita_ware.dispatchable import (
-    create_sample_template, delete_sample_template,
-    update_prep_template, delete_artifact, delete_sample_or_column)
+    create_sample_template, delete_artifact)
 from qiita_db.study import Study
 from qiita_db.artifact import Artifact
-from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBWarning
-from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.exceptions import QiitaDBUnknownIDError
 
 
 @qiita_test_checker()
@@ -73,69 +67,6 @@ class TestDispatchable(TestCase):
                           'characters are represented using &#128062;: '
                           '"&#128062;collection_timestamp" = (0, 13)'}
         self.assertEqual(obs, exp)
-
-    def test_delete_sample_or_column(self):
-        st = SampleTemplate(1)
-
-        # Delete a sample template column
-        obs = delete_sample_or_column(SampleTemplate, 1, "columns",
-                                      "season_environment")
-        exp = {'status': "success", 'message': ""}
-        self.assertEqual(obs, exp)
-        self.assertNotIn('season_environment', st.categories())
-
-        # Delete a sample template sample - need to add one sample that we
-        # will remove
-        npt.assert_warns(
-            QiitaDBWarning, st.extend,
-            pd.DataFrame.from_dict({'Sample1': {'taxon_id': '9606'}},
-                                   orient='index', dtype=str))
-        self.assertIn('1.Sample1', st.keys())
-        obs = delete_sample_or_column(SampleTemplate, 1, "samples",
-                                      "1.Sample1")
-        exp = {'status': "success", 'message': ""}
-        self.assertEqual(obs, exp)
-        self.assertNotIn('1.Sample1', st.keys())
-
-        # Delete a prep template column
-        pt = PrepTemplate(2)
-
-        obs = delete_sample_or_column(PrepTemplate, 2, "columns",
-                                      "target_subfragment")
-        exp = {'status': "success", 'message': ""}
-        self.assertEqual(obs, exp)
-        self.assertNotIn('target_subfragment', pt.categories())
-
-        # Delte a prep template sample
-        metadata = pd.DataFrame.from_dict(
-            {'1.SKB8.640193': {'barcode': 'GTCCGCAAGTTA',
-                               'primer': 'GTGCCAGCMGCCGCGGTAA'},
-             '1.SKD8.640184': {'barcode': 'CGTAGAGCTCTC',
-                               'primer': 'GTGCCAGCMGCCGCGGTAA'}},
-            orient='index', dtype=str)
-        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create, metadata,
-                              Study(1), "16S")
-        obs = delete_sample_or_column(PrepTemplate, pt.id, "samples",
-                                      '1.SKD8.640184')
-        exp = {'status': "success", 'message': ""}
-        self.assertEqual(obs, exp)
-        self.assertNotIn('1.SKD8.640184', pt.categories())
-
-        # Exception
-        obs = delete_sample_or_column(PrepTemplate, 2, "samples",
-                                      "1.SKM9.640192")
-        exp = {'status': "danger",
-               'message': "Prep info file '2' has files attached, you cannot "
-                          "delete samples."}
-        self.assertEqual(obs, exp)
-
-        # No "samples" or "columns"
-        obs = delete_sample_or_column(PrepTemplate, 2, "not_samples", "NOP")
-        exp = {'status': 'danger',
-               'message': 'Unknown value "not_samples". Choose between '
-                          '"samples" and "columns"'}
-        self.assertEqual(obs, exp)
-
 
 if __name__ == '__main__':
     main()
