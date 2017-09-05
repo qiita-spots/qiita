@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 from json import loads, dumps
+from collections import defaultdict
 
 from natsort import natsorted
 
@@ -20,9 +21,6 @@ from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.user import User
 from qiita_db.software import Software, Parameters
 from qiita_db.processing_job import ProcessingJob
-from qiita_ware.dispatchable import (delete_sample_template,
-                                     delete_sample_or_column)
-from qiita_ware.context import safe_submit
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 
 SAMPLE_TEMPLATE_KEY_FORMAT = 'sample_template_%s'
@@ -192,45 +190,26 @@ def sample_template_category_get_req(category, samp_id, user_id):
 
 
 def get_sample_template_processing_status(st_id):
-    # TODO: Adapt code for using only ProcessingJob objects
+    # Initialize variables here
+    processing = False
+    alert_type = ''
+    alert_msg = ''
     job_info = r_client.get(SAMPLE_TEMPLATE_KEY_FORMAT % st_id)
     if job_info:
-        job_info = loads(job_info)
+        job_info = defaultdict(lambda: '', loads(job_info))
         job_id = job_info['job_id']
-        if job_id:
-            redis_info = r_client.get(job_id)
-            if redis_info:
-                redis_info = loads(redis_info)
-                processing = redis_info['status_msg'] == 'Running'
-                if processing:
-                    alert_type = 'info'
-                    alert_msg = ('This sample template is currently being '
-                                 'processed')
-                elif redis_info['status_msg'] == 'Success':
-                    alert_type = redis_info['return']['status']
-                    alert_msg = redis_info['return']['message'].replace(
-                        '\n', '</br>')
-                    payload = {'job_id': None,
-                               'status': alert_type,
-                               'message': alert_msg}
-                    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % st_id,
-                                 dumps(payload))
-                else:
-                    alert_type = redis_info['return']['status']
-                    alert_msg = redis_info['return']['message'].replace(
-                        '\n', '</br>')
-            else:
-                processing = False
-                alert_type = ''
-                alert_msg = ''
+        job = ProcessingJob(job_id)
+        job_status = job.status
+        processing = job_status not in ('success', 'error')
+        if processing:
+            alert_type = 'info'
+            alert_msg = 'This sample template is currently being processed'
+        elif job_status == 'error':
+            alert_type = 'danger'
+            alert_msg = job.log.msg.replace('\n', '</br>')
         else:
-            processing = False
-            alert_type = job_info['status']
-            alert_msg = job_info['message'].replace('\n', '</br>')
-    else:
-        processing = False
-        alert_type = ''
-        alert_msg = ''
+            alert_type = job_info['alert_type']
+            alert_msg = job_info['alert_msg']
 
     return processing, alert_type, alert_msg
 
@@ -361,7 +340,7 @@ def sample_template_post_req(study_id, user_id, data_type,
     job = ProcessingJob.create(User(user_id), params)
 
     r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
-                 dumps({'job_id': job.id, 'is_qiita_job': True}))
+                 dumps({'job_id': job.id}))
 
     # Store the job id attaching it to the sample template id
     job.submit()
@@ -453,11 +432,14 @@ def sample_template_delete_req(study_id, user_id):
     if access_error:
         return access_error
 
-    # Offload the deletion of the sample template to the cluster
-    job_id = safe_submit(user_id, delete_sample_template, int(study_id))
+    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+    cmd = qiita_plugin.get_command('delete_sample_template')
+    params = Parameters.load(cmd, values_dict={'study': int(study_id)})
+    job = ProcessingJob.create(User(user_id), params)
+
     # Store the job id attaching it to the sample template id
     r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
-                 dumps({'job_id': job_id}))
+                 dumps({'job_id': job.id}))
 
     return {'status': 'success', 'message': ''}
 
@@ -549,12 +531,17 @@ def sample_template_patch_request(user_id, req_op, req_path, req_value=None,
         if access_error:
             return access_error
 
-        # Offload the deletion of the sample or column to the cluster
-        job_id = safe_submit(user_id, delete_sample_or_column, SampleTemplate,
-                             int(st_id), attribute, attr_id)
+        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+        cmd = qiita_plugin.get_command('delete_sample_or_column')
+        params = Parameters.load(
+            cmd, values_dict={'obj_class': 'SampleTemplate',
+                              'obj_id': int(st_id), 'sample_or_col': attribute,
+                              'name': attr_id})
+        job = ProcessingJob(User(user_id), params)
+
         # Store the job id attaching it to the sample template id
         r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % st_id,
-                     dumps({'job_id': job_id}))
+                     dumps({'job_id': job.id}))
 
         return {'status': 'success', 'message': '', 'row_id': row_id}
 

@@ -14,6 +14,7 @@ import traceback
 import warnings
 
 import qiita_db as qdb
+from qiita_core.qiita_settings import r_client
 from qiita_ware.commands import submit_VAMPS, submit_EBI
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
@@ -146,13 +147,21 @@ def create_sample_template(job):
         is_mapping_file = params['is_mapping_file']
         data_type = params['data_type']
 
-        if is_mapping_file:
-            create_templates_from_qiime_mapping_file(fp, study, data_type)
-        else:
-            qdb.metadata_template.sample_template.SampleTemplate.create(
-                qdb.metadata_template.util.load_template_to_dataframe(fp),
-                study)
-        remove(fp)
+        with warnings.catch_warnings(record=True) as warns:
+            if is_mapping_file:
+                create_templates_from_qiime_mapping_file(fp, study, data_type)
+            else:
+                qdb.metadata_template.sample_template.SampleTemplate.create(
+                    qdb.metadata_template.util.load_template_to_dataframe(fp),
+                    study)
+            remove(fp)
+
+            if warns:
+                msg = '\n'.join(set(str(w.message) for w in warns))
+                r_client.set("sample_template_%s" % study.id,
+                             dumps({'job_id': job.id, 'alert_type': 'warning',
+                                    'alert_msg': msg}))
+
         job._set_status('success')
 
 
@@ -178,6 +187,9 @@ def update_sample_template(job):
             # will be ignored if an exception is raised
             if warns:
                 msg = '\n'.join(set(str(w.message) for w in warns))
+                r_client.set("sample_template_%s" % study_id,
+                             dumps({'job_id': job.id, 'alert_type': 'warning',
+                                    'alert_msg': msg}))
 
         job._set_status('success')
 
@@ -219,6 +231,9 @@ def update_prep_template(job):
             # will be ignored if an exception is raised
             if warns:
                 msg = '\n'.join(set(str(w.message) for w in warns))
+                r_client.set("prep_template_%s" % prep_id,
+                             dumps({'job_id': job.id, 'alert_type': 'warning',
+                                    'alert_msg': msg}))
 
         job._set_status('success')
 

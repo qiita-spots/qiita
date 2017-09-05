@@ -10,12 +10,13 @@ from unittest import TestCase, main
 from os.path import join, dirname, abspath, exists
 from os import close, remove
 from tempfile import mkstemp
+from json import loads
 
 import pandas as pd
 import numpy.testing as npt
 
-
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import r_client
 from qiita_db.software import Software, Parameters
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
@@ -43,6 +44,8 @@ class TestPrivatePlugin(TestCase):
         for fp in self._clean_up_files:
             if exists(fp):
                 remove(fp)
+
+        r_client.flushdb()
 
     def _create_job(self, cmd_name, values_dict):
         user = User('test@foo.bar')
@@ -95,6 +98,7 @@ class TestPrivatePlugin(TestCase):
             Artifact(3)
 
     def test_create_sample_template(self):
+        # Test error
         job = self._create_job('create_sample_template', {
             'fp': self.fp, 'study_id': 1, 'is_mapping_file': False,
             'data_type': None})
@@ -102,6 +106,33 @@ class TestPrivatePlugin(TestCase):
         self.assertEqual(job.status, 'error')
         self.assertIn("The 'SampleTemplate' object with attributes (id: 1) "
                       "already exists.", job.log.msg)
+
+        # Test success with a warning
+        info = {"timeseries_type_id": '1',
+                "metadata_complete": 'true',
+                "mixs_compliant": 'true',
+                "number_samples_collected": 25,
+                "number_samples_promised": 28,
+                "study_alias": "TDST",
+                "study_description": "Test create sample template",
+                "study_abstract": "Test create sample template",
+                "principal_investigator_id": StudyPerson(1)}
+        study = Study.create(User('test@foo.bar'),
+                             "Create Sample Template test", info)
+        job = self._create_job('create_sample_template',
+                               {'fp': self.fp, 'study_id': study.id,
+                                'is_mapping_file': False, 'data_type': None})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        obs = r_client.get("sample_template_%d" % study.id)
+        self.assertIsNotNone(obs)
+        obs = loads(obs)
+        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertEqual(obs['job_id'], job.id)
+        self.assertEqual(obs['alert_type'], 'warning')
+        self.assertIn(
+            'Some functionality will be disabled due to missing columns:',
+            obs['alert_msg'])
 
     def test_create_sample_template_nonutf8(self):
         fp = join(dirname(abspath(__file__)), 'test_data',
@@ -131,13 +162,14 @@ class TestPrivatePlugin(TestCase):
         self.assertEqual(job.status, 'success')
         self.assertEqual(SampleTemplate(1)['1.SKD6.640190']['new_col'],
                          'new_value')
-
-        # TODO: Check that redis has been updated with:
-        "Sample names were already prefixed with the study "
-        "id.\nThe following columns have been added to the "
-        "existing template: new_col\nThere are no "
-        "differences between the data stored in the DB and "
-        "the new data provided"
+        obs = r_client.get("sample_template_1")
+        self.assertIsNotNone(obs)
+        obs = loads(obs)
+        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertEqual(obs['job_id'], job.id)
+        self.assertEqual(obs['alert_type'], 'warning')
+        self.assertIn('The following columns have been added to the existing '
+                      'template: new_col', obs['alert_msg'])
 
     def test_delete_sample_template(self):
         # Error case
@@ -190,13 +222,14 @@ class TestPrivatePlugin(TestCase):
         self.assertEqual(job.status, 'success')
         self.assertEqual(PrepTemplate(1)['1.SKD6.640190']['new_col'],
                          'new_value')
-
-        # TODO: Check that redis has been updated with:
-        'Sample names were already prefixed with the study '
-        'id.\nThe following columns have been added to the '
-        'existing template: new_col\nThere are no '
-        'differences between the data stored in the DB and '
-        'the new data provided'
+        obs = r_client.get("prep_template_1")
+        self.assertIsNotNone(obs)
+        obs = loads(obs)
+        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertEqual(obs['job_id'], job.id)
+        self.assertEqual(obs['alert_type'], 'warning')
+        self.assertIn('The following columns have been added to the existing '
+                      'template: new_col', obs['alert_msg'])
 
     def test_delete_sample_or_column(self):
         st = SampleTemplate(1)
