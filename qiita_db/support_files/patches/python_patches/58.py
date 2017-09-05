@@ -34,8 +34,18 @@ with TRN:
     Command.create(qiita_plugin, "delete_sample_template",
                    "Deletes a sample template", parameters)
 
-    # Crate the update prep template command
+    # Create the update prep template command
     parameters = {'prep_template': ['integer', None],
                   'template_fp': ['string', None]}
     Command.create(qiita_plugin, "update_prep_template",
                    "Updates the prep template", parameters)
+
+    # Create the delete sample or column command
+    parameters = {
+        'obj_class': ['choice:["SampleTemplate", "PrepTemplate"]', None],
+        'obj_id': ['integer', None],
+        'sample_or_col': ['choice:["samples", "columns"]', None],
+        'name': ['string', None]}
+    Command.create(qiita_plugin, "delete_sample_or_column",
+                   "Deletes a sample or a columns from the metadata",
+                   parameters)

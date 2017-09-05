@@ -12,6 +12,7 @@ from os import close, remove
 from tempfile import mkstemp
 
 import pandas as pd
+import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.software import Software, Parameters
@@ -20,6 +21,7 @@ from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.exceptions import QiitaDBWarning
 from qiita_ware.private_plugin import private_task
 
 
@@ -149,6 +151,76 @@ class TestPrivatePlugin(TestCase):
         'existing template: new_col\nThere are no '
         'differences between the data stored in the DB and '
         'the new data provided'
+
+    def test_delete_sample_or_column(self):
+        st = SampleTemplate(1)
+
+        # Delete a sample template column
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'SampleTemplate', 'obj_id': 1,
+                                'sample_or_col': 'columns',
+                                'name': 'season_environment'})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        self.assertNotIn('season_environment', st.categories())
+
+        # Delete a sample template sample - need to add one
+        # sample that we will remove
+        npt.assert_warns(
+            QiitaDBWarning, st.extend,
+            pd.DataFrame.from_dict({'Sample1': {'taxon_id': '9606'}},
+                                   orient='index', dtype=str))
+        self.assertIn('1.Sample1', st.keys())
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'SampleTemplate', 'obj_id': 1,
+                                'sample_or_col': 'samples',
+                                'name': '1.Sample1'})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        self.assertNotIn('1.Sample1', st.keys())
+
+        # Delete a prep template column
+        pt = PrepTemplate(1)
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'PrepTemplate', 'obj_id': 1,
+                                'sample_or_col': 'columns',
+                                'name': 'target_subfragment'})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        self.assertNotIn('target_subfragment', pt.categories())
+
+        # Delete a prep template sample
+        metadata = pd.DataFrame.from_dict(
+            {'1.SKB8.640193': {'barcode': 'GTCCGCAAGTTA',
+                               'primer': 'GTGCCAGCMGCCGCGGTAA'},
+             '1.SKD8.640184': {'barcode': 'CGTAGAGCTCTC',
+                               'primer': 'GTGCCAGCMGCCGCGGTAA'}},
+            orient='index', dtype=str)
+        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create, metadata,
+                              Study(1), "16S")
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'PrepTemplate', 'obj_id': pt.id,
+                                'sample_or_col': 'samples',
+                                'name': '1.SKD8.640184'})
+        private_task(job.id)
+        self.assertNotIn('1.SKD8.640184', pt.keys())
+
+        # Test exceptions
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'UnknownClass', 'obj_id': 1,
+                                'sample_or_col': 'columns', 'name': 'column'})
+        private_task(job.id)
+        self.assertEqual(job.status, 'error')
+        self.assertIn('Unknown value "UnknownClass". Choose between '
+                      '"SampleTemplate" and "PrepTemplate"', job.log.msg)
+
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'SampleTemplate', 'obj_id': 1,
+                                'sample_or_col': 'unknown', 'name': 'column'})
+        private_task(job.id)
+        self.assertEqual(job.status, 'error')
+        self.assertIn('Unknown value "unknown". Choose between "samples" '
+                      'and "columns"', job.log.msg)
 
 
 if __name__ == '__main__':

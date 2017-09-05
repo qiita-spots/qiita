@@ -166,13 +166,48 @@ def update_prep_template(job):
         job._set_status('success')
 
 
+def delete_sample_or_column(job):
+    """Deletes a sample or a column from the metadata
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        param_vals = job.parameters.values
+        obj_class = param_vals['obj_class']
+        obj_id = param_vals['obj_id']
+        sample_or_col = param_vals['sample_or_col']
+        name = param_vals['name']
+
+        if obj_class == 'SampleTemplate':
+            constructor = qdb.metadata_template.sample_template.SampleTemplate
+        elif obj_class == 'PrepTemplate':
+            constructor = qdb.metadata_template.prep_template.PrepTemplate
+        else:
+            raise ValueError('Unknown value "%s". Choose between '
+                             '"SampleTemplate" and "PrepTemplate"' % obj_class)
+
+        if sample_or_col == 'columns':
+            del_func = constructor(obj_id).delete_column
+        elif sample_or_col == 'samples':
+            del_func = constructor(obj_id).delete_sample
+        else:
+            raise ValueError('Unknown value "%s". Choose between "samples" '
+                             'and "columns"' % sample_or_col)
+
+        del_func(name)
+        job._set_status('success')
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
              'submit_to_VAMPS': submit_to_VAMPS,
              'copy_artifact': copy_artifact,
              'update_sample_template': update_sample_template,
              'delete_sample_template': delete_sample_template,
-             'update_prep_template': update_prep_template}
+             'update_prep_template': update_prep_template,
+             'delete_sample_or_column': delete_sample_or_column}
 
 
 def private_task(job_id):
