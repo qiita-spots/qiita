@@ -17,7 +17,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.software import Software, Parameters
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
-from qiita_db.study import Study
+from qiita_db.study import Study, StudyPerson
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_ware.private_plugin import private_task
@@ -90,6 +90,65 @@ class TestPrivatePlugin(TestCase):
         "existing template: new_col\nThere are no "
         "differences between the data stored in the DB and "
         "the new data provided"
+
+    def test_delete_sample_template(self):
+        # Error case
+        job = self._create_job('delete_sample_template', {'study': 1})
+        private_task(job.id)
+        self.assertEqual(job.status, 'error')
+        self.assertIn("Sample template cannot be erased because there are "
+                      "prep templates associated", job.log.msg)
+
+        # Success case
+        info = {"timeseries_type_id": '1',
+                "metadata_complete": 'true',
+                "mixs_compliant": 'true',
+                "number_samples_collected": 25,
+                "number_samples_promised": 28,
+                "study_alias": "TDST",
+                "study_description": "Test delete sample template",
+                "study_abstract": "Test delete sample template",
+                "principal_investigator_id": StudyPerson(1)}
+        study = Study.create(User('test@foo.bar'),
+                             "Delete Sample Template test", info)
+        metadata = pd.DataFrame.from_dict(
+            {'Sample1': {'physical_specimen_location': 'location1',
+                         'physical_specimen_remaining': 'true',
+                         'dna_extracted': 'true',
+                         'sample_type': 'type1',
+                         'collection_timestamp': '2014-05-29 12:24:15',
+                         'host_subject_id': 'NotIdentified',
+                         'Description': 'Test Sample 1',
+                         'latitude': '42.42',
+                         'longitude': '41.41',
+                         'taxon_id': '9606',
+                         'scientific_name': 'homo sapiens'}},
+            orient='index', dtype=str)
+        SampleTemplate.create(metadata, study)
+
+        job = self._create_job('delete_sample_template', {'study': study.id})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        self.assertFalse(SampleTemplate.exists(study.id))
+
+    def test_update_prep_template(self):
+        fd, fp = mkstemp(suffix=".txt")
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write("sample_name\tnew_col\n1.SKD6.640190\tnew_value")
+        job = self._create_job('update_prep_template', {'prep_template': 1,
+                                                        'template_fp': fp})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        self.assertEqual(PrepTemplate(1)['1.SKD6.640190']['new_col'],
+                         'new_value')
+
+        # TODO: Check that redis has been updated with:
+        'Sample names were already prefixed with the study '
+        'id.\nThe following columns have been added to the '
+        'existing template: new_col\nThere are no '
+        'differences between the data stored in the DB and '
+        'the new data provided'
 
 
 if __name__ == '__main__':

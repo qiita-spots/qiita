@@ -74,25 +74,6 @@ class TestDispatchable(TestCase):
                           '"&#128062;collection_timestamp" = (0, 13)'}
         self.assertEqual(obs, exp)
 
-    def test_delete_sample_template(self):
-        obs = delete_sample_template(1)
-        exp = {'status': 'danger',
-               'message': 'Sample template cannot be erased because there '
-                          'are prep templates associated.'}
-        self.assertEqual(obs, exp)
-
-    def test_update_prep_template(self):
-        obs = update_prep_template(1, self.fp)
-        exp = {'status': 'warning',
-               'message': 'Sample names were already prefixed with the study '
-                          'id.\nThe following columns have been added to the '
-                          'existing template: new_col\nThere are no '
-                          'differences between the data stored in the DB and '
-                          'the new data provided'}
-        self.assertItemsEqual(obs['message'].split('\n'),
-                              exp['message'].split('\n'))
-        self.assertEqual(obs['status'], exp['status'])
-
     def test_delete_sample_or_column(self):
         st = SampleTemplate(1)
 

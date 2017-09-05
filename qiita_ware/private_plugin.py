@@ -100,7 +100,7 @@ def copy_artifact(job):
 
 
 def update_sample_template(job):
-    """Updates the sample template
+    """Updates a sample template
 
     Parameters
     ----------
@@ -125,11 +125,54 @@ def update_sample_template(job):
         job._set_status('success')
 
 
+def delete_sample_template(job):
+    """Deletes a sample template
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        qdb.metadata_template.sample_template.SampleTemplate.delete(
+            job.parameters.values['study'])
+        job._set_status('success')
+
+
+def update_prep_template(job):
+    """Updates a prep template
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        param_vals = job.parameters.values
+        prep_id = param_vals['prep_template']
+        fp = param_vals['template_fp']
+
+        prep = qdb.metadata_template.prep_template.PrepTemplate(prep_id)
+        with warnings.catch_warnings(record=True) as warns:
+            df = qdb.metadata_template.util.load_template_to_dataframe(fp)
+            prep.extend_and_update(df)
+            remove(fp)
+
+            # Join all the warning messages into one. Note that this info
+            # will be ignored if an exception is raised
+            if warns:
+                msg = '\n'.join(set(str(w.message) for w in warns))
+
+        job._set_status('success')
+
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
              'submit_to_VAMPS': submit_to_VAMPS,
              'copy_artifact': copy_artifact,
-             'update_sample_template': update_sample_template}
+             'update_sample_template': update_sample_template,
+             'delete_sample_template': delete_sample_template,
+             'update_prep_template': update_prep_template}
 
 
 def private_task(job_id):

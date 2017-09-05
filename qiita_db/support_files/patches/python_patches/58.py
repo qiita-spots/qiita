@@ -28,3 +28,14 @@ with TRN:
     parameters = {'study': ['integer', None], 'template_fp': ['string', None]}
     Command.create(qiita_plugin, "update_sample_template",
                    "Updates the sample template", parameters)
+
+    # Create the delete sample template command
+    parameters = {'study': ['integer', None]}
+    Command.create(qiita_plugin, "delete_sample_template",
+                   "Deletes a sample template", parameters)
+
+    # Crate the update prep template command
+    parameters = {'prep_template': ['integer', None],
+                  'template_fp': ['string', None]}
+    Command.create(qiita_plugin, "update_prep_template",
+                   "Updates the prep template", parameters)
