@@ -10,15 +10,13 @@ import warnings
 from os import remove
 from os.path import basename
 from json import loads, dumps
+from collections import defaultdict
 
 from natsort import natsorted
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
-from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import (
-    update_prep_template, delete_sample_or_column)
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
@@ -26,6 +24,7 @@ from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.processing_job import ProcessingJob
+from qiita_db.software import Software, Parameters
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
@@ -109,51 +108,26 @@ def prep_template_ajax_get_req(user_id, prep_id):
     name = "Prep information %d" % prep_id
     pt = PrepTemplate(prep_id)
 
+    # Initialize variables here
+    processing = False
+    alert_type = ''
+    alert_msg = ''
     job_info = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
     if job_info:
-        job_info = loads(job_info)
+        job_info = defaultdict(lambda: '', loads(job_info))
         job_id = job_info['job_id']
-        if job_id:
-            if job_info['is_qiita_job']:
-                job = ProcessingJob(job_id)
-                processing = job.status in ('queued', 'running')
-                success = job.status == 'success'
-                alert_type = 'info' if processing or success else 'danger'
-                alert_msg = (job.log.msg.replace('\n', '</br>')
-                             if job.log is not None else "")
-            else:
-                alert_type = 'info'
-                alert_msg = ''
-                # this is not actually necessary but in case of a system
-                # failure this will avoid the error
-                ji = r_client.get(job_id)
-                if ji:
-                    redis_info = loads(ji)
-                    processing = redis_info['status_msg'] == 'Running'
-                    success = redis_info['status_msg'] == 'Success'
-                    if redis_info['return'] is not None:
-                        alert_type = redis_info['return']['status']
-                        alert_msg = redis_info['return']['message'].replace(
-                            '\n', '</br>')
-
-            if processing:
-                alert_type = 'info'
-                alert_msg = 'This prep template is currently being updated'
-            elif success:
-                payload = {'job_id': None,
-                           'status': alert_type,
-                           'message': alert_msg,
-                           'is_qiita_job': job_info['is_qiita_job']}
-                r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
-                             dumps(payload))
+        job = ProcessingJob(job_id)
+        job_status = job.status
+        processing = job_status not in ('success', 'error')
+        if processing:
+            alert_type = 'info'
+            alert_msg = 'This prep template is currently being updated'
+        elif job_status == 'error':
+            alert_type = 'danger'
+            alert_msg = job.log.msg.replace('\n', '</br>')
         else:
-            processing = False
-            alert_type = job_info['status']
-            alert_msg = job_info['message'].replace('\n', '</br>')
-    else:
-        processing = False
-        alert_type = ''
-        alert_msg = ''
+            alert_type = job_info['alert_type']
+            alert_msg = job_info['alert_msg']
 
     artifact_attached = pt.artifact is not None
     study_id = pt.study_id
@@ -456,9 +430,14 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             if fp['status'] != 'success':
                 return fp
             fp = fp['file']
-            job_id = safe_submit(user_id, update_prep_template, prep_id, fp)
+            qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+            cmd = qiita_plugin.get_command('update_prep_template')
+            params = Parameters.load(
+                cmd, values_dict={'prep_template': prep_id, 'template_fp': fp})
+            job = ProcessingJob.create(User(user_id), params)
+
             r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
-                         dumps({'job_id': job_id, 'is_qiita_job': False}))
+                         dumps({'job_id': job.id}))
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',
@@ -483,12 +462,17 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         if access_error:
             return access_error
 
-        # Offload the deletion of the column to the cluster
-        job_id = safe_submit(user_id, delete_sample_or_column, PrepTemplate,
-                             prep_id, attribute, attr_id)
+        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+        cmd = qiita_plugin.get_command('delete_sample_or_column')
+        params = Parameters.load(
+            cmd, values_dict={'obj_class': 'PrepTemplate',
+                              'obj_id': prep_id,
+                              'sample_or_col': attribute,
+                              'name': attr_id})
+        job = ProcessingJob.create(User(user_id), params)
         # Store the job id attaching it to the sample template id
         r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
-                     dumps({'job_id': job_id, 'is_qiita_job': False}))
+                     dumps({'job_id': job.id}))
         return {'status': 'success', 'message': '', 'row_id': row_id}
     else:
         return {'status': 'error',
