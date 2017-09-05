@@ -15,10 +15,8 @@ from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import safe_execution
 from qiita_pet.exceptions import QiitaHTTPError
-from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import delete_artifact
 from qiita_db.artifact import Artifact
-from qiita_db.software import Command, Parameters
+from qiita_db.software import Command, Software, Parameters
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.util import get_visibilities
 
@@ -370,8 +368,14 @@ def artifact_post_req(user, artifact_id):
         pt_id = artifact.prep_templates[0].id
         redis_key = PREP_TEMPLATE_KEY_FORMAT % pt_id
 
-    job_id = safe_submit(user.id, delete_artifact, artifact_id)
-    r_client.set(redis_key, dumps({'job_id': job_id, 'is_qiita_job': False}))
+    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+    cmd = qiita_plugin.get_command('delete_artifact')
+    params = Parameters.load(cmd, values_dict={'artifact': artifact_id})
+    job = ProcessingJob.create(user, params)
+
+    r_client.set(redis_key, dumps({'job_id': job.id, 'is_qiita_job': True}))
+
+    job.submit()
 
 
 class ArtifactAJAX(BaseHandler):

@@ -10,9 +10,12 @@ from json import dumps
 from sys import exc_info
 from time import sleep
 import traceback
+from os import remove
 
 import qiita_db as qdb
-from qiita_ware.commands import submit_VAMPS
+from qiita_ware.commands import submit_VAMPS, submit_EBI
+from qiita_ware.metadata_pipeline import (
+    create_templates_from_qiime_mapping_file)
 
 
 def build_analysis_files(job):
@@ -97,10 +100,71 @@ def copy_artifact(job):
         job._set_status('success')
 
 
-TASK_DICT = {'build_analysis_files': build_analysis_files,
-             'release_validators': release_validators,
-             'submit_to_VAMPS': submit_to_VAMPS,
-             'copy_artifact': copy_artifact}
+def submit_to_EBI(job):
+    """Submit a study to EBI
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        param_vals = job.parameters.values
+        artifact_id = int(param_vals['artifact'])
+        submission_type = param_vals['submission_type']
+        submit_EBI(artifact_id, submission_type, False)
+        job._set_status('success')
+
+
+def delete_artifact(job):
+    """Deletes an artifact from the system
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        artifact_id = job.parameters.values['artifact']
+        qdb.artifact.Artifact.delete(artifact_id)
+        job._set_status('success')
+
+
+def create_sample_template(job):
+    """Creates a sample template
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        params = job.parameters.values
+        fp = params['fp']
+        study = qdb.study.Study(int(params['study_id']))
+        is_mapping_file = params['is_mapping_file']
+        data_type = params['data_type']
+
+        if is_mapping_file:
+            create_templates_from_qiime_mapping_file(fp, study, data_type)
+        else:
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                qdb.metadata_template.util.load_template_to_dataframe(fp),
+                study)
+        remove(fp)
+
+        job._set_status('success')
+
+
+TASK_DICT = {
+    'build_analysis_files': build_analysis_files,
+    'release_validators': release_validators,
+    'submit_to_VAMPS': submit_to_VAMPS,
+    'copy_artifact': copy_artifact,
+    'submit_to_EBI': submit_to_EBI,
+    'delete_artifact': delete_artifact,
+    'create_sample_template': create_sample_template,
+}
 
 
 def private_task(job_id):
