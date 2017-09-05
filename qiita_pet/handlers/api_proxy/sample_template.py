@@ -20,9 +20,8 @@ from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.user import User
 from qiita_db.software import Software, Parameters
 from qiita_db.processing_job import ProcessingJob
-from qiita_ware.dispatchable import (
-    create_sample_template, delete_sample_template,
-    delete_sample_or_column)
+from qiita_ware.dispatchable import (delete_sample_template,
+                                     delete_sample_or_column)
 from qiita_ware.context import safe_submit
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 
@@ -336,7 +335,8 @@ def sample_template_post_req(study_id, user_id, data_type,
     message has the warnings or errors
     file has the file name
     """
-    access_error = check_access(int(study_id), user_id)
+    study_id = int(study_id)
+    access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
     fp_rsp = check_fp(study_id, sample_template)
@@ -346,8 +346,6 @@ def sample_template_post_req(study_id, user_id, data_type,
     fp_rsp = fp_rsp['file']
 
     # Define here the message and message level in case of success
-    msg = ''
-    status = 'success'
     is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
     if is_mapping_file and not data_type:
         return {'status': 'error',
@@ -355,18 +353,20 @@ def sample_template_post_req(study_id, user_id, data_type,
                            'QIIME mapping file',
                 'file': sample_template}
 
-    study = Study(int(study_id))
+    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+    cmd = qiita_plugin.get_command('create_sample_template')
+    params = Parameters.load(cmd, values_dict={
+        'fp': fp_rsp, 'study_id': study_id, 'is_mapping_file': is_mapping_file,
+        'data_type': data_type})
+    job = ProcessingJob.create(User(user_id), params)
 
-    # Offload the creation of the sample template to the cluster
-    job_id = safe_submit(user_id, create_sample_template, fp_rsp, study,
-                         is_mapping_file, data_type)
+    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
+                 dumps({'job_id': job.id, 'is_qiita_job': True}))
+
     # Store the job id attaching it to the sample template id
-    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study.id,
-                 dumps({'job_id': job_id}))
+    job.submit()
 
-    return {'status': status,
-            'message': msg,
-            'file': sample_template}
+    return {'status': 'success', 'message': '', 'file': sample_template}
 
 
 def sample_template_put_req(study_id, user_id, sample_template):

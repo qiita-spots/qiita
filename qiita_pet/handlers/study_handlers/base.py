@@ -21,10 +21,16 @@ class StudyIndexHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
         study = to_int(study_id)
+        level = self.get_argument('level', '')
+        message = self.get_argument('message', '')
 
         study_info = study_get_req(study, self.current_user.id)
         if study_info['status'] != 'success':
             raise HTTPError(404, study_info['message'])
+
+        if message != '':
+            study_info['level'] = level
+            study_info['message'] = message
 
         self.render("study_base.html", **study_info)
 

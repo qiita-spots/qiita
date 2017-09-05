@@ -8,17 +8,20 @@
 from __future__ import division
 
 from tornado.web import authenticated, HTTPError
+from tornado.escape import url_escape
+from json import dumps
 
 from qiita_files.demux import stats as demux_stats
 
-from qiita_ware.context import submit
-from qiita_ware.dispatchable import submit_to_ebi
+from qiita_core.qiita_settings import r_client, qiita_config
+from qiita_core.util import execute_as_transaction
 from qiita_db.metadata_template.constants import (SAMPLE_TEMPLATE_COLUMNS,
                                                   PREP_TEMPLATE_COLUMNS)
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.artifact import Artifact
+from qiita_db.processing_job import ProcessingJob
+from qiita_db.software import Software, Parameters
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_core.util import execute_as_transaction
 
 
 class EBISubmitHandler(BaseHandler):
@@ -118,25 +121,25 @@ class EBISubmitHandler(BaseHandler):
             raise HTTPError(403, "User: %s, %s is not a recognized submission "
                             "type" % (user.id, submission_type))
 
-        msg = ''
-        msg_level = 'success'
         study = Artifact(preprocessed_data_id).study
-        study_id = study.id
         state = study.ebi_submission_status
         if state == 'submitting':
-            msg = "Cannot resubmit! Current state is: %s" % state
-            msg_level = 'danger'
+            level = 'danger'
+            message = "Cannot resubmit! Current state is: %s" % state
         else:
-            channel = user.id
-            job_id = submit(channel, submit_to_ebi, int(preprocessed_data_id),
-                            submission_type)
+            qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+            cmd = qiita_plugin.get_command('submit_to_EBI')
+            params = Parameters.load(
+                cmd, values_dict={'artifact': preprocessed_data_id,
+                                  'submission_type': submission_type})
+            job = ProcessingJob.create(user, params)
 
-            self.render('compute_wait.html',
-                        job_id=job_id, title='EBI Submission',
-                        completion_redirect=('/study/description/%s?top_tab='
-                                             'preprocessed_data_tab&sub_tab=%s'
-                                             % (study_id,
-                                                preprocessed_data_id)))
-            return
+            r_client.set('ebi_submission_%s' % preprocessed_data_id,
+                         dumps({'job_id': job.id, 'is_qiita_job': True}))
+            job.submit()
 
-        self.display_template(preprocessed_data_id, msg, msg_level)
+            level = 'success'
+            message = 'EBI submission started. Job id: %s' % job.id
+
+            self.redirect("%s/study/description/%d?level=%s&message=%s" % (
+                qiita_config.portal_dir, study.id, level, url_escape(message)))
