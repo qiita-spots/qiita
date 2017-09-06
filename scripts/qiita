@@ -27,7 +27,6 @@ import qiita_db as qdb
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
-from qiita_ware.context import system_call, ComputeError
 
 
 try:
@@ -63,8 +62,8 @@ def webserver(build_docs):
         cmd = 'make -C %s html' % sphinx_fp
         print('Building documentation ...')
         try:
-            system_call(cmd)
-        except ComputeError as e:
+            qdb.processing_job.ProcessingJob._system_call(cmd)
+        except Exception as e:
             raise click.ClickException('Could not build documentation: %s' %
                                        str(e))
         else:

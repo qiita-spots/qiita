@@ -272,6 +272,7 @@ def delete_sample_or_column(job):
         del_func(name)
         job._set_status('success')
 
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
              'submit_to_VAMPS': submit_to_VAMPS,
