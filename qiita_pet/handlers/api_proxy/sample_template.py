@@ -399,6 +399,8 @@ def sample_template_put_req(study_id, user_id, sample_template):
     r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
                  dumps({'job_id': job.id}))
 
+    job.submit()
+
     return {'status': status,
             'message': msg,
             'file': sample_template}
@@ -440,6 +442,8 @@ def sample_template_delete_req(study_id, user_id):
     # Store the job id attaching it to the sample template id
     r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
                  dumps({'job_id': job.id}))
+
+    job.submit()
 
     return {'status': 'success', 'message': ''}
 
@@ -542,6 +546,8 @@ def sample_template_patch_request(user_id, req_op, req_path, req_value=None,
         # Store the job id attaching it to the sample template id
         r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % st_id,
                      dumps({'job_id': job.id}))
+
+        job.submit()
 
         return {'status': 'success', 'message': '', 'row_id': row_id}
 

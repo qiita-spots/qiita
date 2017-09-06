@@ -438,6 +438,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
 
             r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                          dumps({'job_id': job.id}))
+            job.submit()
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',
@@ -473,6 +474,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         # Store the job id attaching it to the sample template id
         r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                      dumps({'job_id': job.id}))
+        job.submit()
         return {'status': 'success', 'message': '', 'row_id': row_id}
     else:
         return {'status': 'error',
