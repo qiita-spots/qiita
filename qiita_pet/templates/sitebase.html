@@ -588,15 +588,28 @@
       </div>
     </div>
 
-    <div id="qiita-processing" class="pre-scrollable" style="max-height: 100%">
-      <div id="processing-jobs-table" style="padding: 5px 5px;">
-        <h3>
-            Processing Jobs <br/>
-            <small>(skipping successful jobs)</small>
-        </h3>
-        Search: <input v-model="search">
-        <hr>
-        <data-table-processing-jobs :jobs="filteredJobs"></data-table-processing-jobs>
+    <!-- the jobs list is shown as a modal view -->
+    <div id="qiita-processing" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Active Jobs</h4>
+            <h6 class="modal-title">succesful jobs are not shown</h6>
+          </div>
+
+          <div class="modal-body">
+              Search: <input v-model="search">
+              <hr>
+              <data-table-processing-jobs :jobs="filteredJobs"></data-table-processing-jobs>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
