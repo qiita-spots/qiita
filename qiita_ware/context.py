@@ -297,7 +297,7 @@ def safe_submit(*args, **kwargs):
     job_id = submit(*args, **kwargs)
     payload = r_client.get(job_id)
     while not payload:
-        sleep(0.005)
+        sleep(0.05)
         payload = r_client.get(job_id)
 
     return job_id

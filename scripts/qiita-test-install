@@ -258,18 +258,15 @@ class QiitaConfig(TestCase):
                            string_acceptable_version))
 
     def test_ipython_version(self):
-        acceptable_min_version = (2, 4, 1)
-        acceptable_max_version = (2, 5, 0)
-        str_acceptable_min_version = '.'.join(map(str, acceptable_min_version))
-        str_acceptable_max_version = '.'.join(map(str, acceptable_max_version))
+        acceptable_version = (3, 2, 0)
+        str_acceptable_version = '.'.join(map(str, acceptable_version))
         version = tuple(map(int, ipython_lib_version.split('.')))
 
         self.assertTrue(
-            acceptable_min_version <= version < acceptable_max_version,
+            acceptable_version == version,
             'Unsupported ipython version. You have %s but you should use a '
-            'version between %s and %s (not including)' %
-            ('.'.join(map(str, version)), str_acceptable_min_version,
-             str_acceptable_max_version))
+            'version %s' % ('.'.join(map(str, version)),
+                            str_acceptable_version))
 
 
 system_info_header = """

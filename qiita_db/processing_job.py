@@ -754,6 +754,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         qiita_db.exceptions.QiitaDBOperationNotPermittedError
             If the status of the job is 'success'
         """
+        print '\n\n\n-->>', error, '\n\n'
         with qdb.sql_connection.TRN:
             if self.status == 'success':
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
