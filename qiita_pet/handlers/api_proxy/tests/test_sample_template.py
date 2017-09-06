@@ -8,11 +8,11 @@
 from unittest import TestCase, main
 from os import remove, mkdir
 from os.path import join, exists
-from time import sleep
 from json import loads, dumps
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import r_client
+from qiita_core.testing import wait_for_processing_job
 import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_summary_get_req, sample_template_post_req,
@@ -140,17 +140,16 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs_at, "")
         self.assertEqual(obs_am, "")
 
-        # Without job id
-        r_client.set(key, dumps({'job_id': None, 'status': "success",
-                                 'message': ""}))
-        obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
-        self.assertFalse(obs_proc)
-        self.assertEqual(obs_at, "success")
-        self.assertEqual(obs_am, "")
-
         # With job id and processing
-        r_client.set(key, dumps({'job_id': "test_job_id"}))
-        r_client.set("test_job_id", dumps({'status_msg': 'Running'}))
+        qiita_plugin = qdb.software.Software.from_name_and_version('Qiita',
+                                                                   'alpha')
+        cmd = qiita_plugin.get_command('update_sample_template')
+        params = qdb.software.Parameters.load(
+            cmd, values_dict={'study': 1, 'template_fp': 'ignored'})
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params)
+        job._set_status('running')
+        r_client.set(key, dumps({'job_id': job.id}))
         obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
         self.assertTrue(obs_proc)
         self.assertEqual(obs_at, "info")
@@ -158,36 +157,24 @@ class TestSampleAPI(TestCase):
             obs_am, "This sample template is currently being processed")
 
         # With job id and success
-        r_client.set(key, dumps({'job_id': "test_job_id"}))
-        r_client.set("test_job_id",
-                     dumps({'status_msg': 'Success',
-                            'return': {'status': 'success',
-                                       'message': 'Some\nwarning'}}))
+        job._set_status('success')
+        r_client.set(key, dumps({'job_id': job.id, 'alert_type': 'warning',
+                                 'alert_msg': 'Some\nwarning'}))
         obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
         self.assertFalse(obs_proc)
-        self.assertEqual(obs_at, "success")
+        self.assertEqual(obs_at, "warning")
         self.assertEqual(obs_am, "Some</br>warning")
-        obs = loads(r_client.get(key))
-        self.assertEqual(obs, {'job_id': None, 'status': 'success',
-                               'message': 'Some</br>warning'})
 
         # With job and not success
-        r_client.set(key, dumps({'job_id': "test_job_id"}))
-        r_client.set("test_job_id",
-                     dumps({'status_msg': 'Failed',
-                            'return': {'status': 'error',
-                                       'message': 'Some\nerror'}}))
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params)
+        job._set_status('running')
+        job._set_error('Some\nerror')
+        r_client.set(key, dumps({'job_id': job.id}))
         obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
         self.assertFalse(obs_proc)
-        self.assertEqual(obs_at, "error")
+        self.assertEqual(obs_at, "danger")
         self.assertEqual(obs_am, "Some</br>error")
-
-        # With job expired
-        r_client.set(key, dumps({'job_id': "non_existent_job"}))
-        obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
-        self.assertFalse(obs_proc)
-        self.assertEqual(obs_at, "")
-        self.assertEqual(obs_am, "")
 
     def test_sample_template_summary_get_req(self):
         obs = sample_template_summary_get_req(1, 'test@foo.bar')
@@ -396,10 +383,7 @@ class TestSampleAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.5)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        wait_for_processing_job(loads(obs)['job_id'])
 
     def test_sample_template_post_req_no_access(self):
         obs = sample_template_post_req(1, 'demo@microbio.me', '16S',
@@ -422,10 +406,7 @@ class TestSampleAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.5)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        wait_for_processing_job(loads(obs)['job_id'])
 
     def test_sample_template_put_req_no_access(self):
         obs = sample_template_put_req(1, 'demo@microbio.me', 'filepath')
@@ -452,10 +433,7 @@ class TestSampleAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.5)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        wait_for_processing_job(loads(obs)['job_id'])
 
     def test_sample_template_delete_req_no_access(self):
         obs = sample_template_delete_req(1, 'demo@microbio.me')
@@ -552,10 +530,7 @@ class TestSampleAPI(TestCase):
         # the test database
         obs = r_client.get('sample_template_1')
         self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.5)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        wait_for_processing_job(loads(obs)['job_id'])
 
         ST = qdb.metadata_template.sample_template.SampleTemplate
         self.assertNotIn("season_environment", ST(1).categories())

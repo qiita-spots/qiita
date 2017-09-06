@@ -209,7 +209,7 @@ def get_sample_template_processing_status(st_id):
             alert_msg = job.log.msg.replace('\n', '</br>')
         else:
             alert_type = job_info['alert_type']
-            alert_msg = job_info['alert_msg']
+            alert_msg = job_info['alert_msg'].replace('\n', '</br>')
 
     return processing, alert_type, alert_msg
 
@@ -541,7 +541,7 @@ def sample_template_patch_request(user_id, req_op, req_path, req_value=None,
             cmd, values_dict={'obj_class': 'SampleTemplate',
                               'obj_id': int(st_id), 'sample_or_col': attribute,
                               'name': attr_id})
-        job = ProcessingJob(User(user_id), params)
+        job = ProcessingJob.create(User(user_id), params)
 
         # Store the job id attaching it to the sample template id
         r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % st_id,

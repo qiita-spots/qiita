@@ -127,7 +127,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
             alert_msg = job.log.msg.replace('\n', '</br>')
         else:
             alert_type = job_info['alert_type']
-            alert_msg = job_info['alert_msg']
+            alert_msg = job_info['alert_msg'].replace('\n', '</br>')
 
     artifact_attached = pt.artifact is not None
     study_id = pt.study_id
