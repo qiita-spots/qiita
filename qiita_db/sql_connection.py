@@ -646,9 +646,12 @@ class Transaction(object):
         """
         self.rollback()
 
-        raise ValueError(
-            "Error running SQL: %s. MSG: %s\n" % (
-                errorcodes.lookup(error.pgcode), error.message))
+        try:
+            ec_lu = errorcodes.lookup(error.pgcode)
+            raise ValueError(
+                "Error running SQL: %s. MSG: %s\n" % (ec_lu, error.message))
+        except KeyError:
+            raise ValueError("Error running SQL query: %s" % error.message)
 
     @_checker
     def add(self, sql, sql_args=None, many=False):
