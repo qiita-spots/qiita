@@ -15,10 +15,8 @@ from six import StringIO
 from future import standard_library
 from functools import partial
 from operator import itemgetter
-from json import dumps
 
 import pandas as pd
-import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
 
@@ -402,84 +400,6 @@ class TestUpdateArtifactFromCmd(TestCase):
         for obs, exp in zip(sorted(artifact.filepaths, key=itemgetter(1)),
                             self.checksums):
             self.assertEqual(qdb.util.compute_checksum(obs[1]), exp)
-
-
-@qiita_test_checker()
-class TestCompleteJobCmd(TestCase):
-    def setUp(self):
-        self._clean_up_files = []
-
-    def tearDown(self):
-        for fp in self._clean_up_files:
-            if exists(fp):
-                remove(fp)
-
-    def test_complete_success(self):
-        pt = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.prep_template.PrepTemplate.create,
-            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
-            qdb.study.Study(1), '16S')
-        job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'),
-            qdb.software.Parameters.load(
-                qdb.software.Command.get_validator('BIOM'),
-                values_dict={'template': pt.id, 'files':
-                             dumps({'BIOM': ['file']}),
-                             'artifact_type': 'BIOM'}))
-        job._set_status('running')
-
-        fd, fp = mkstemp(suffix='_table.biom')
-        close(fd)
-        with open(fp, 'w') as f:
-            f.write('\n')
-
-        self._clean_up_files.append(fp)
-
-        exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
-        payload = dumps(
-            {'success': True, 'error': '',
-             'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
-                                         'artifact_type': 'BIOM'}}})
-        qdb.commands.complete_job_cmd(job.id, payload)
-        self.assertEqual(job.status, 'success')
-        self.assertEqual(qdb.util.get_count('qiita.artifact'),
-                         exp_artifact_count)
-
-    def test_complete_job_error(self):
-        payload = dumps({'success': False, 'error': 'Job failure'})
-        qdb.commands.complete_job_cmd(
-            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d', payload)
-        job = qdb.processing_job.ProcessingJob(
-            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')
-        self.assertEqual(job.status, 'error')
-        self.assertEqual(job.log,
-                         qdb.logger.LogEntry.newest_records(numrecords=1)[0])
-        self.assertEqual(job.log.msg, 'Job failure')
-
-    def test_complete_error(self):
-        pt = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.prep_template.PrepTemplate.create,
-            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
-            qdb.study.Study(1), '16S')
-        job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'),
-            qdb.software.Parameters.load(
-                qdb.software.Command.get_validator('BIOM'),
-                values_dict={'template': pt.id, 'files':
-                             dumps({'BIOM': ['file']}),
-                             'artifact_type': 'BIOM'}))
-        job._set_status('running')
-
-        fp = '/surprised/if/this/path/exists.biom'
-        payload = dumps(
-            {'success': True, 'error': '',
-             'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
-                                         'artifact_type': 'BIOM'}}})
-        qdb.commands.complete_job_cmd(job.id, payload)
-        self.assertEqual(job.status, 'error')
-        self.assertIn('No such file or directory', job.log.msg)
 
 
 CONFIG_1 = """[required]

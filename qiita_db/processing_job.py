@@ -63,7 +63,6 @@ def _job_submitter(job_id, cmd):
     cmd : str
         The command to execute the job
     """
-    qdb.sql_connection.TRN.close()
     job = ProcessingJob(job_id)
     std_out, std_err, return_value = _system_call(cmd)
     if return_value != 0:

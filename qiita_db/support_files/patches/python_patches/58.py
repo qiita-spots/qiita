@@ -67,3 +67,8 @@ with TRN:
     Command.create(qiita_plugin, "delete_sample_or_column",
                    "Deletes a sample or a columns from the metadata",
                    parameters)
+
+    # Create the command to complete a job
+    parameters = {'job_id': ['string', None], 'payload': ['string', None]}
+    Command.create(qiita_plugin, "complete_job", "Completes a given job",
+                   parameters)

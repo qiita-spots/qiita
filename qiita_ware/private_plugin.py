@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from json import dumps
+from json import dumps, loads
 from sys import exc_info
 from time import sleep
 from os import remove
@@ -273,6 +273,32 @@ def delete_sample_or_column(job):
         job._set_status('success')
 
 
+def complete_job(job):
+    """Deletes a sample or a column from the metadata
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        param_vals = job.parameters.values
+        payload = loads(param_vals['payload'])
+        if payload['success']:
+            artifacts = payload['artifacts']
+            error = None
+        else:
+            artifacts = None
+            error = payload['error']
+        c_job = qdb.processing_job.ProcessingJob(param_vals['job_id'])
+        try:
+            c_job.complete(payload['success'], artifacts, error)
+        except:
+            c_job._set_error(traceback.format_exception(*exc_info()))
+
+        job._set_status('success')
+
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
              'submit_to_VAMPS': submit_to_VAMPS,
@@ -283,7 +309,8 @@ TASK_DICT = {'build_analysis_files': build_analysis_files,
              'update_sample_template': update_sample_template,
              'delete_sample_template': delete_sample_template,
              'update_prep_template': update_prep_template,
-             'delete_sample_or_column': delete_sample_or_column}
+             'delete_sample_or_column': delete_sample_or_column,
+             'complete_job': complete_job}
 
 
 def private_task(job_id):

@@ -10,14 +10,14 @@ from unittest import TestCase, main
 from os.path import join, dirname, abspath, exists
 from os import close, remove
 from tempfile import mkstemp
-from json import loads
+from json import loads, dumps
 
 import pandas as pd
 import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import r_client
-from qiita_db.software import Software, Parameters
+from qiita_db.software import Software, Parameters, Command
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
@@ -26,6 +26,8 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBWarning
 from qiita_db.artifact import Artifact
 from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.util import get_count
+from qiita_db.logger import LogEntry
 from qiita_ware.private_plugin import private_task
 
 
@@ -300,6 +302,74 @@ class TestPrivatePlugin(TestCase):
         self.assertEqual(job.status, 'error')
         self.assertIn('Unknown value "unknown". Choose between "samples" '
                       'and "columns"', job.log.msg)
+
+    def test_complete_job(self):
+        # Complete success
+        pt = npt.assert_warns(
+            QiitaDBWarning, PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
+            Study(1), '16S')
+        c_job = ProcessingJob.create(
+            User('test@foo.bar'),
+            Parameters.load(
+                Command.get_validator('BIOM'),
+                values_dict={'template': pt.id,
+                             'files': dumps({'BIOM': ['file']}),
+                             'artifact_type': 'BIOM'}))
+        c_job._set_status('running')
+        fd, fp = mkstemp(suffix='_table.biom')
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+        self._clean_up_files.append(fp)
+        exp_artifact_count = get_count('qiita.artifact') + 1
+        payload = dumps(
+            {'success': True, 'error': '',
+             'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
+                                         'artifact_type': 'BIOM'}}})
+        job = self._create_job('complete_job', {'job_id': c_job.id,
+                                                'payload': payload})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        self.assertEqual(c_job.status, 'success')
+        self.assertEqual(get_count('qiita.artifact'), exp_artifact_count)
+
+        # Complete job error
+        payload = dumps({'success': False, 'error': 'Job failure'})
+        job = self._create_job(
+            'complete_job', {'job_id': 'bcc7ebcd-39c1-43e4-af2d-822e3589f14d',
+                             'payload': payload})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        c_job = ProcessingJob('bcc7ebcd-39c1-43e4-af2d-822e3589f14d')
+        self.assertEqual(c_job.status, 'error')
+        self.assertEqual(c_job.log, LogEntry.newest_records(numrecords=1)[0])
+        self.assertEqual(c_job.log.msg, 'Job failure')
+
+        # Complete internal error
+        pt = npt.assert_warns(
+            QiitaDBWarning, PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
+            Study(1), '16S')
+        c_job = ProcessingJob.create(
+            User('test@foo.bar'),
+            Parameters.load(
+                Command.get_validator('BIOM'),
+                values_dict={'template': pt.id,
+                             'files': dumps({'BIOM': ['file']}),
+                             'artifact_type': 'BIOM'}))
+        c_job._set_status('running')
+        fp = '/surprised/if/this/path/exists.biom'
+        payload = dumps(
+            {'success': True, 'error': '',
+             'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
+                                         'artifact_type': 'BIOM'}}})
+        job = self._create_job('complete_job', {'job_id': c_job.id,
+                                                'payload': payload})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        self.assertEqual(c_job.status, 'error')
+        self.assertIn('No such file or directory', c_job.log.msg)
 
 
 if __name__ == '__main__':
