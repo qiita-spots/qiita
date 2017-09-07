@@ -214,7 +214,7 @@ class TestLoadParametersFromCmd(TestCase):
     def test_load_parameters_from_cmd_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.commands.load_parameters_from_cmd(
-                "test", self.fp, 20)
+                "test", self.fp, 20000)
 
     def test_load_parameters_from_cmd_error_format(self):
         with self.assertRaises(ValueError):
