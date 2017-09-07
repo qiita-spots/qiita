@@ -58,6 +58,7 @@ def _job_completer(job_id, payload):
         completing the job
     """
     import qiita_db as qdb
+    qdb.sql_connection.TRN.close()
 
     success, error = qdb.processing_job.private_job_submitter(
         "Complete job %s" % job_id, 'complete_job', [job_id, payload])

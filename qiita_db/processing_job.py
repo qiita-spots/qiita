@@ -53,16 +53,18 @@ def _system_call(cmd):
     return stdout, stderr, return_value
 
 
-def _job_submitter(job, cmd):
+def _job_submitter(job_id, cmd):
     """Executes the commands `cmd` and updates the job in case of failure
 
     Parameters
     ----------
-    job : qiita_db.processing_job.ProcesingJob
-        The job that is executed by cmd
+    job_id : str
+        The job id that is executed by cmd
     cmd : str
         The command to execute the job
     """
+    qdb.sql_connection.TRN.close()
+    job = ProcessingJob(job_id)
     std_out, std_err, return_value = _system_call(cmd)
     if return_value != 0:
         error = ("Error submitting job '%s':\nStd output:%s\nStd error:%s"
@@ -354,7 +356,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 "'waiting' status. Current status: %s" % status)
         self._set_status('queued')
         cmd = self._generate_cmd()
-        p = Process(target=_job_submitter, args=(self, cmd))
+        p = Process(target=_job_submitter, args=(self.id, cmd))
         p.start()
 
     def release(self):
