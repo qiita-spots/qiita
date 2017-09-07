@@ -942,3 +942,12 @@ class Transaction(object):
 
 # Singleton pattern, create the transaction for the entire system
 TRN = Transaction()
+
+
+def create_new_transacion():
+    """Creates a new global transaction
+
+    This is needed when using multiprocessing
+    """
+    global TRN
+    TRN = Transaction()

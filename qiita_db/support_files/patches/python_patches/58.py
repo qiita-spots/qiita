@@ -14,24 +14,24 @@ with TRN:
     qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
 
     # Create the submit command for VAMPS command
-    parameters = {'artifact': ['artifact:["Demultiplexed"]', None]}
+    parameters = {'artifact': ['integer', None]}
     Command.create(qiita_plugin, "submit_to_VAMPS",
                    "submits an artifact to VAMPS", parameters)
 
     # Create the copy artifact command
-    parameters = {'artifact': ['artifact:["Demultiplexed"]', None],
+    parameters = {'artifact': ['integer', None],
                   'prep_template': ['prep_template', None]}
     Command.create(qiita_plugin, "copy_artifact",
                    "Creates a copy of an artifact", parameters)
 
     # Create the submit command for EBI command
-    parameters = {'artifact': ['artifact:["Demultiplexed"]', None],
+    parameters = {'artifact': ['integer', None],
                   'submission_type': ['choice:["ADD", "MODIFY"]', 'ADD']}
     Command.create(qiita_plugin, "submit_to_EBI",
                    "submits an artifact to EBI", parameters)
 
     # Create the submit command for delete_artifact
-    parameters = {'artifact': ['artifact:["Demultiplexed"]', None]}
+    parameters = {'artifact': ['integer', None]}
     Command.create(qiita_plugin, "delete_artifact",
                    "Delete an artifact", parameters)
 

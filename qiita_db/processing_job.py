@@ -63,12 +63,13 @@ def _job_submitter(job_id, cmd):
     cmd : str
         The command to execute the job
     """
-    job = ProcessingJob(job_id)
     std_out, std_err, return_value = _system_call(cmd)
     if return_value != 0:
-        error = ("Error submitting job '%s':\nStd output:%s\nStd error:%s"
-                 % (job.id, std_out, std_err))
-        job.complete(False, error=error)
+        error = ("Error submitting job:\nStd output:%s\nStd error:%s"
+                 % (std_out, std_err))
+        # Forcing the creation of a new connection
+        qdb.sql_connection.create_new_transacion()
+        ProcessingJob(job_id).complete(False, error=error)
 
 
 class ProcessingJob(qdb.base.QiitaObject):
