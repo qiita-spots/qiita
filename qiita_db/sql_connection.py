@@ -882,11 +882,13 @@ class Transaction(object):
         # Reset the queries, the results and the index
         self._queries = []
         self._results = []
-        try:
-            self._connection.rollback()
-        except Exception:
-            self._connection.close()
-            raise
+
+        if self._connection is not None and self._connection.closed == 0:
+            try:
+                self._connection.rollback()
+            except Exception:
+                self._connection.close()
+                raise
         # Execute the post rollback functions
         self._funcs_executor(self._post_rollback_funcs, "rollback")
 
