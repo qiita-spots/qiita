@@ -62,7 +62,7 @@ def webserver(build_docs):
         cmd = 'make -C %s html' % sphinx_fp
         print('Building documentation ...')
         try:
-            qdb.processing_job.ProcessingJob._system_call(cmd)
+            qdb.processing_job._system_call(cmd)
         except Exception as e:
             raise click.ClickException('Could not build documentation: %s' %
                                        str(e))
