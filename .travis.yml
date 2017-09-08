@@ -41,19 +41,17 @@ install:
   - mkdir ~/.qiita_plugins
   - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins
 before_script:
-    # Some of the tests rely on the plugin system to complete successfuly.
-    # Thus, we need a qiita webserver running to be able to execute the tests.
-  - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   # EBI, see the end of before_install about why this block is commented out
   # - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
   #   export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
-  #   export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
   #   fi
   - qiita-env make --no-load-ontologies
   - qiita-test-install
 script:
-  - sleep 5
+  # Some of the tests rely on the plugin system to complete successfuly.
+  # Thus, we need a qiita webserver running to be able to execute the tests.
   - qiita pet webserver --no-build-docs start &
+  - sleep 5
   - QIITA_PID=$!
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE
   - kill $QIITA_PID

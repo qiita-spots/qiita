@@ -10,7 +10,6 @@ from os import remove
 from os.path import join, exists
 from string import ascii_letters
 from random import choice
-from time import sleep
 from json import loads
 
 import pandas as pd
@@ -18,6 +17,7 @@ import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import r_client
+from qiita_core.testing import wait_for_processing_job
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.ontology import Ontology
@@ -288,10 +288,7 @@ class TestPrepAPI(TestCase):
         # so we need to make sure that all processes are done before we reset
         # the test database
         obs = r_client.get(key)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.5)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        wait_for_processing_job(loads(obs)['job_id'])
 
     def test_prep_template_graph_get_req(self):
         obs = prep_template_graph_get_req(1, 'test@foo.bar')
@@ -527,9 +524,8 @@ class TestPrepAPI(TestCase):
     def test_prep_template_delete_req_attached_artifact(self):
         obs = prep_template_delete_req(1, 'test@foo.bar')
         exp = {'status': 'error',
-               'message': "Couldn't remove prep template: Cannot remove prep "
-                          "template 1 because it has an artifact associated "
-                          "with it"}
+               'message': "Cannot remove prep template 1 because it has an "
+                          "artifact associated with it"}
         self.assertEqual(obs, exp)
 
     def test_prep_template_delete_req_no_access(self):

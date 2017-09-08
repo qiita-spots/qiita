@@ -9,8 +9,6 @@
 from functools import partial
 from future import standard_library
 from json import loads
-from sys import exc_info
-import traceback
 
 import qiita_db as qdb
 
@@ -270,27 +268,3 @@ def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
         qdb.sql_connection.TRN.execute()
 
     return artifact
-
-
-def complete_job_cmd(job_id, payload):
-    """Completes the given job
-
-    Parameters
-    ----------
-    job_id : str
-        The job id
-    payload : str
-        JSON string with the payload to complete the job
-    """
-    payload = loads(payload)
-    if payload['success']:
-        artifacts = payload['artifacts']
-        error = None
-    else:
-        artifacts = None
-        error = payload['error']
-    job = qdb.processing_job.ProcessingJob(job_id)
-    try:
-        job.complete(payload['success'], artifacts, error)
-    except:
-        job._set_error(traceback.format_exception(*exc_info()))

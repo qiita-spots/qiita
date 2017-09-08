@@ -286,8 +286,9 @@ class TestBaseHandlersUtils(TestCase):
         # Wait until the job is completed
         wait_for_prep_information_job(1)
         # Check that the delete function has been actually called
-        obs = r_client.get(loads(r_client.get('prep_template_1'))['job_id'])
-        self.assertIn('Cannot delete artifact 2', obs)
+        job = ProcessingJob(loads(r_client.get('prep_template_1'))['job_id'])
+        self.assertEqual(job.status, 'error')
+        self.assertIn('Cannot delete artifact 2', job.log.msg)
 
     def test_artifact_patch_request(self):
         a = Artifact(1)
