@@ -68,7 +68,7 @@ def _job_submitter(job_id, cmd):
         error = ("Error submitting job:\nStd output:%s\nStd error:%s"
                  % (std_out, std_err))
         # Forcing the creation of a new connection
-        qdb.sql_connection.create_new_transacion()
+        qdb.sql_connection.create_new_transaction()
         ProcessingJob(job_id).complete(False, error=error)
 
 
@@ -334,7 +334,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             self._set_status('queued')
             # At this point we are going to involve other processes. We need
             # to commit the changes to the DB or the other processes will not
-            # see this changes
+            # see these changes
             qdb.sql_connection.TRN.commit()
         cmd = self._generate_cmd()
         p = Process(target=_job_submitter, args=(self.id, cmd))

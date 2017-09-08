@@ -944,7 +944,7 @@ class Transaction(object):
 TRN = Transaction()
 
 
-def create_new_transacion():
+def create_new_transaction():
     """Creates a new global transaction
 
     This is needed when using multiprocessing

@@ -183,7 +183,7 @@ def update_sample_template(job):
             st.extend_and_update(df)
             remove(fp)
 
-            # Join all the warning messages into one.NOte that this info
+            # Join all the warning messages into one. Note that this info
             # will be ignored if an exception is raised
             if warns:
                 msg = '\n'.join(set(str(w.message) for w in warns))
