@@ -545,7 +545,7 @@ def prep_template_delete_req(prep_id, user_id):
     try:
         PrepTemplate.delete(prep.id)
     except Exception as e:
-        msg = ("Couldn't remove prep template: %s" % str(e))
+        msg = str(e)
         status = 'error'
 
     return {'status': status,

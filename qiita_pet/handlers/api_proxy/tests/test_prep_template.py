@@ -524,9 +524,8 @@ class TestPrepAPI(TestCase):
     def test_prep_template_delete_req_attached_artifact(self):
         obs = prep_template_delete_req(1, 'test@foo.bar')
         exp = {'status': 'error',
-               'message': "Couldn't remove prep template: Cannot remove prep "
-                          "template 1 because it has an artifact associated "
-                          "with it"}
+               'message': "Cannot remove prep template 1 because it has an "
+                          "artifact associated with it"}
         self.assertEqual(obs, exp)
 
     def test_prep_template_delete_req_no_access(self):
