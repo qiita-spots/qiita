@@ -331,6 +331,8 @@ def private_task(job_id):
 
     try:
         TASK_DICT[task_name](job)
-    except Exception:
-        job.complete(False, error="Error executing private task: %s"
-                                  % traceback.format_exception(*exc_info()))
+    except Exception as e:
+        log_msg = "Error on job %s: %s" % (
+            job.id, ''.join(traceback.format_exception(*exc_info())))
+        le = qdb.logger.LogEntry.create('Runtime', log_msg)
+        job.complete(False, error="Error (log id: %d): %s" % (le.id, e))

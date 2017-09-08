@@ -303,6 +303,9 @@ class TestPrivatePlugin(TestCase):
         self.assertIn('Unknown value "unknown". Choose between "samples" '
                       'and "columns"', job.log.msg)
 
+    # This is a long test but it includes the 3 important cases that need
+    # to be tested on this function (job success, job error, and internal error
+    # when completing the job)
     def test_complete_job(self):
         # Complete success
         pt = npt.assert_warns(
