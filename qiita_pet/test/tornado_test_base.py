@@ -18,6 +18,7 @@ from qiita_pet.webserver import Application
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.environment_manager import clean_test_environment
 from qiita_db.user import User
+from qiita_core.qiita_settings import r_client
 
 
 class TestHandlerBase(AsyncHTTPTestCase):
@@ -32,6 +33,7 @@ class TestHandlerBase(AsyncHTTPTestCase):
     @classmethod
     def tearDownClass(cls):
         clean_test_environment()
+        r_client.flushdb()
 
     # helpers from http://www.peterbe.com/plog/tricks-asynchttpclient-tornado
     def get(self, url, data=None, headers=None, doseq=True):

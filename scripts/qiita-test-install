@@ -93,21 +93,6 @@ except ImportError as e:
     mock_lib_version = 'Not installed'
 
 try:
-    if 'MOI_CONFIG_FP' not in environ:
-        missing_deps_errors.append((None, 'You need to add to your enviroment '
-                                    'the MOI configuration using '
-                                    'MOI_CONFIG_FP'))
-
-    from moi import __version__ as moi_lib_version
-except ImportError as e:
-    missing_deps_errors.append((e, core_dependency_missing_msg % 'moi'))
-
-try:
-    from IPython import __version__ as ipython_lib_version
-except ImportError as e:
-    missing_deps_errors.append((e, core_dependency_missing_msg % 'ipython'))
-
-try:
     from psycopg2 import __version__ as psycopg2_lib_version
 except ImportError as e:
     missing_deps_errors.append((e, core_dependency_missing_msg % 'psycopg2'))
@@ -156,7 +141,6 @@ if missing_deps_warnings:
 if True:
     from qiita_db.sql_connection import SQLConnectionHandler
     from redis import StrictRedis
-    from moi.job import submit_nouser
 
 
 class QiitaConfig(TestCase):
@@ -257,20 +241,6 @@ class QiitaConfig(TestCase):
                         % ('.'.join(map(str, version)),
                            string_acceptable_version))
 
-    def test_ipython_version(self):
-        acceptable_min_version = (2, 4, 1)
-        acceptable_max_version = (2, 5, 0)
-        str_acceptable_min_version = '.'.join(map(str, acceptable_min_version))
-        str_acceptable_max_version = '.'.join(map(str, acceptable_max_version))
-        version = tuple(map(int, ipython_lib_version.split('.')))
-
-        self.assertTrue(
-            acceptable_min_version <= version < acceptable_max_version,
-            'Unsupported ipython version. You have %s but you should use a '
-            'version between %s and %s (not including)' %
-            ('.'.join(map(str, version)), str_acceptable_min_version,
-             str_acceptable_max_version))
-
 
 system_info_header = """
 System information
@@ -327,9 +297,6 @@ def main():
         ('networkX library version', networkx_lib_version),
         ('WTForms library version', wtforms_lib_version),
         ('mock library version', mock_lib_version),
-        ('MOI library version', moi_lib_version),
-        ('MOI config file path', environ['MOI_CONFIG_FP']),
-        ('IPython library version', ipython_lib_version),
         ('psycopg2 library version', psycopg2_lib_version),
         ('Qiita core library version', qiita_core_lib_version),
         ('Qiita db library version', qiita_db_lib_version),
@@ -380,21 +347,6 @@ def main():
         redis_running = True
     except:
         redis_running = False
-    try:
-        def sum(a, b):
-            return a, b
-
-        _, _, ar = submit_nouser(sum, 1, 2)
-        # wait up to 5 secs to hear back
-        ar.wait(timeout=5)
-        if ar.ready():
-            ipython_running = True
-        else:
-            ipython_running = False
-    except:
-        ipython_running = False
-        extra_info = ('IPython test failed, perhaps due to an old MOI '
-                      'version, please review')
     qiita_config_info = [
         ('QIITA_CONFIG_FP filepath', qiita_conf_fp),
         ('Test environment', str(qiita_config.test_environment)),
@@ -408,7 +360,6 @@ def main():
          qiita_config.valid_upload_extension)),
         ('PostgreSQL is up and configuration can connect?', psql_running),
         ('Redis is up and configuracion can connect?', redis_running),
-        ('IPython is running', ipython_running),
         ('Extra info', extra_info)
     ]
     max_len = max([len(e[0]) for e in qiita_config_info])

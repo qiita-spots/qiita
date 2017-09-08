@@ -9,12 +9,11 @@
 from __future__ import division
 from future.utils import PY3, viewitems
 from six import StringIO
-from string import printable
+from collections import defaultdict
 
 import pandas as pd
 import numpy as np
 import warnings
-from skbio.io.util import open_file
 from skbio.util import find_duplicates
 
 import qiita_db as qdb
@@ -102,18 +101,17 @@ def load_template_to_dataframe(fn, index='sample_name'):
     """
     # Load in file lines
     holdfile = None
-    with open_file(fn, mode='U') as f:
-        errors = {}
+    with qdb.util.open_file(fn, mode='U') as f:
+        errors = defaultdict(list)
         holdfile = f.readlines()
-        # here we are checking for non printable chars AKA non UTF-8 chars
+        # here we are checking for non UTF-8 chars
         for row, line in enumerate(holdfile):
             for col, block in enumerate(line.split('\t')):
-                tblock = ''.join([c for c in block if c in printable])
-                if len(block) != len(tblock):
-                    tblock = ''.join([c if c in printable else '&#128062;'
-                                      for c in block])
-                    if tblock not in errors:
-                        errors[tblock] = []
+                try:
+                    tblock = block.encode('utf-8')
+                except UnicodeDecodeError:
+                    tblock = unicode(block, errors='replace')
+                    tblock = tblock.replace(u'\ufffd', '&#128062;')
                     errors[tblock].append('(%d, %d)' % (row, col))
         if bool(errors):
             raise ValueError(
@@ -334,7 +332,7 @@ def looks_like_qiime_mapping_file(fp):
     some other different column.
     """
     first_line = None
-    with open_file(fp, mode='U') as f:
+    with qdb.util.open_file(fp, mode='U') as f:
         first_line = f.readline()
     if not first_line:
         return False

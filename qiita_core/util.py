@@ -11,9 +11,8 @@ from functools import wraps
 from os.path import dirname
 from git import Repo
 from git.exc import InvalidGitRepositoryError
-from moi import r_client
 
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_pet import __version__ as qiita_pet_lib_version
 import qiita_db as qdb
 
