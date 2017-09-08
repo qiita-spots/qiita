@@ -598,7 +598,7 @@
             <h6 class="modal-title">succesful jobs are not shown</h6>
           </div>
 
-          <div class="modal-body">
+          <div id='processing-jobs-table' class="modal-body">
               Search: <input v-model="search">
               <hr>
               <data-table-processing-jobs :jobs="filteredJobs"></data-table-processing-jobs>

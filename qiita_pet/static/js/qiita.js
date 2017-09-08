@@ -98,6 +98,7 @@ function delete_analysis(aname, analysis_id) {
 }
 
 function show_hide_process_list() {
+  processing_jobs_vue.update_processing_job_data();
   $('#qiita-processing').modal('show');
 }
 
