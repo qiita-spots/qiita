@@ -89,6 +89,14 @@
   function validate_new_name() {
     $("#update-name-btn").prop('disabled', $("#new-artifact-name").val() === "");
   }
+
+  $(document).ready(function() {
+    // Set the focus on the text input when the modal to change the artifact
+    // name is shown
+    $('#update-artifact-name').on('shown.bs.modal', function() {
+      $('#new-artifact-name').focus();
+    });
+  });
 </script>
 <div class='row'>
   <div class='col-md-12'>
