@@ -6,8 +6,81 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from json import loads, dumps
+
+from qiita_core.qiita_settings import r_client
 from qiita_db.sql_connection import TRN
-from qiita_db.software import Software, Command
+from qiita_db.software import Software, Command, Parameters
+from qiita_db.processing_job import ProcessingJob
+from qiita_db.study import Study
+from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.metadata_template.prep_template import PrepTemplate
+
+
+def correct_redis_data(key, cmd, values_dict, user):
+    """Corrects the data stored in the redis DB
+
+    Parameters
+    ----------
+    key: str
+        The redis key to fix
+    cmd : qiita_db.software.Command
+        Command to use to create the processing job
+    values_dict : dict
+        Dictionary used to instantiate the parameters of the command
+    user : qiita_db.user. User
+        The user that will own the job
+    """
+    info = r_client.get(key)
+    if info:
+        info = loads(info)
+        if info['job_id'] is not None:
+            if 'is_qiita_job' in info:
+                if info['is_qiita_job']:
+                    job = ProcessingJob(info['job_id'])
+                    payload = {'job_id': info['job_id'],
+                               'alert_type': info['status'],
+                               'alert_msg': info['alert_msg']}
+                    r_client.set(key, dumps(payload))
+                else:
+                    # These jobs don't contain any information on the live
+                    # dump. We can safely delete the key
+                    r_client.delete(key)
+            else:
+                # These jobs don't contain any information on the live
+                # dump. We can safely delete the key
+                r_client.delete(key)
+        else:
+            # Job is null, we have the information here
+            if info['status'] == 'success':
+                # In the success case no information is stored. We can
+                # safely delete the key
+                r_client.delete(key)
+            elif info['status'] == 'warning':
+                # In case of warning the key message stores the warning
+                # message. We need to create a new job, mark it as
+                # successful and store the error message as expected by
+                # the new structure
+                params = Parameters.load(cmd, values_dict=values_dict)
+                job = ProcessingJob.create(user, params)
+                job._set_status('success')
+                payload = {'job_id': job.id,
+                           'alert_type': 'warning',
+                           'alert_msg': info['message']}
+                r_client.set(key, dumps(payload))
+            else:
+                # The status is error. The key message stores the error
+                # message. We need to create a new job and mark it as
+                # failed with the given error message
+                params = Parameters.load(cmd, values_dict=values_dict)
+                job = ProcessingJob(user, params)
+                job._set_error(info['message'])
+                payload = {'job_id': job.id}
+                r_client.set(key, dumps(payload))
+    else:
+        # The key doesn't contain any information. Delete the key
+        r_client.delete(key)
+
 
 with TRN:
     # Retrieve the Qiita plugin
@@ -44,8 +117,8 @@ with TRN:
 
     # Create the update sample template command
     parameters = {'study': ['integer', None], 'template_fp': ['string', None]}
-    Command.create(qiita_plugin, "update_sample_template",
-                   "Updates the sample template", parameters)
+    st_cmd = Command.create(qiita_plugin, "update_sample_template",
+                            "Updates the sample template", parameters)
 
     # Create the delete sample template command
     parameters = {'study': ['integer', None]}
@@ -55,8 +128,8 @@ with TRN:
     # Create the update prep template command
     parameters = {'prep_template': ['integer', None],
                   'template_fp': ['string', None]}
-    Command.create(qiita_plugin, "update_prep_template",
-                   "Updates the prep template", parameters)
+    pt_cmd = Command.create(qiita_plugin, "update_prep_template",
+                            "Updates the prep template", parameters)
 
     # Create the delete sample or column command
     parameters = {
@@ -72,3 +145,32 @@ with TRN:
     parameters = {'job_id': ['string', None], 'payload': ['string', None]}
     Command.create(qiita_plugin, "complete_job", "Completes a given job",
                    parameters)
+
+    # Assumptions on the structure of the data in the redis database has
+    # changed, we need to fix to avoid failures
+    # Get all the sample template keys
+    for key in r_client.keys('sample_template_[0-9]*'):
+        try:
+            study = Study(int(key.split('_')[-1]))
+            user = study.owner
+        except QiitaDBUnknownIDError:
+            # This means that the study no longer exists - delete the key
+            # and continue
+            r_client.delete(key)
+            continue
+        values_dict = {'study': study.id, 'template_fp': 'ignored-patch58'}
+        correct_redis_data(key, st_cmd, values_dict, user)
+
+    # Get all the prep template keys
+    for key in r_client.keys('prep_template_[0-9]*'):
+        try:
+            pt = PrepTemplate(int(key.split('_')[-1]))
+            user = Study(pt.study_id).owner
+        except QiitaDBUnknownIDError:
+            # This means that the prep template no longer exists - delete the
+            # key and continue
+            r_client.delete(key)
+            continue
+        values_dict = {'prep_template': pt.id,
+                       'template_fp': 'ignored-patch58'}
+        correct_redis_data(key, pt_cmd, values_dict, user)

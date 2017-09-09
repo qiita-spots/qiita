@@ -308,6 +308,7 @@ def drop_and_rebuild_tst_database():
     """Drops the qiita schema and rebuilds the test database
     """
     with qdb.sql_connection.TRN:
+        r_client.flushdb()
         # Drop the schema
         qdb.sql_connection.TRN.add("DROP SCHEMA IF EXISTS qiita CASCADE")
         # Set the database to unpatched
@@ -317,8 +318,6 @@ def drop_and_rebuild_tst_database():
         create_layout_and_patch(test=True)
 
         qdb.sql_connection.TRN.execute()
-
-        r_client.flushdb()
 
 
 def reset_test_database(wrapped_fn):
