@@ -16,6 +16,72 @@ from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.metadata_template.prep_template import PrepTemplate
 
+
+def correct_redis_data(key, cmd, values_dict, user):
+    """Corrects the data stored in the redis DB
+
+    Parameters
+    ----------
+    key: str
+        The redis key to fix
+    cmd : qiita_db.software.Command
+        Command to use to create the processing job
+    values_dict : dict
+        Dictionary used to instantiate the parameters of the command
+    user : qiita_db.user. User
+        The user that will own the job
+    """
+    info = r_client.get(key)
+    if info:
+        info = loads(info)
+        if info['job_id'] is not None:
+            if 'is_qiita_job' in info:
+                if info['is_qiita_job']:
+                    job = ProcessingJob(info['job_id'])
+                    payload = {'job_id': info['job_id'],
+                               'alert_type': info['status'],
+                               'alert_msg': info['alert_msg']}
+                    r_client.set(key, dumps(payload))
+                else:
+                    # These jobs don't contain any information on the live
+                    # dump. We can safely delete the key
+                    r_client.delete(key)
+            else:
+                # These jobs don't contain any information on the live
+                # dump. We can safely delete the key
+                r_client.delete(key)
+        else:
+            # Job is null, we have the information here
+            if info['status'] == 'success':
+                # In the success case no information is stored. We can
+                # safely delete the key
+                r_client.delete(key)
+            elif info['status'] == 'warning':
+                # In case of warning the key message stores the warning
+                # message. We need to create a new job, mark it as
+                # successful and store the error message as expected by
+                # the new structure
+                params = Parameters.load(cmd, values_dict=values_dict)
+                job = ProcessingJob.create(user, params)
+                job._set_status('success')
+                payload = {'job_id': job.id,
+                           'alert_type': 'warning',
+                           'alert_msg': info['message']}
+                r_client.set(key, dumps(payload))
+            else:
+                # The status is error. The key message stores the error
+                # message. We need to create a new job and mark it as
+                # failed with the given error message
+                params = Parameters.load(cmd, values_dict=values_dict)
+                job = ProcessingJob(user, params)
+                job._set_error(info['message'])
+                payload = {'job_id': job.id}
+                r_client.set(key, dumps(payload))
+    else:
+        # The key doesn't contain any information. Delete the key
+        r_client.delete(key)
+
+
 with TRN:
     # Retrieve the Qiita plugin
     qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
@@ -92,51 +158,8 @@ with TRN:
             # and continue
             r_client.delete(key)
             continue
-
-        info = r_client.get(key)
-        if info:
-            info = loads(info)
-            if info['job_id'] is not None:
-                # Case 1: The job id is not null. After exploring the redis
-                # dump from the live system, in all this cases the job_id
-                # has already expired. That means that the information about
-                # the job is lost -> delete the key
-                r_client.delete(key)
-            else:
-                # Case 2: job is null, which means that we already have the job
-                # information here
-                if info['status'] == 'success':
-                    # Case 2.1: In case of success, no information is stored
-                    # we can safely delete the key
-                    r_client.delete(key)
-                elif info['status'] == 'warning':
-                    # Case 2.2: In case of warning, the key 'message' stores
-                    # the warning message. We need to create a new job, mark
-                    # it as successful and store the error message as expected
-                    # by the new structure
-                    params = Parameters.load(
-                        st_cmd, values_dict={'study': study.id,
-                                             'template_fp': 'ignored-patch58'})
-                    job = ProcessingJob.create(user, params)
-                    job._set_status('success')
-                    payload = {'job_id': job.id,
-                               'alert_type': 'warning',
-                               'alert_msg': info['message']}
-                    r_client.set(key, dumps(payload))
-                else:
-                    # Case 2.3: Status is 'error'. Here, the key 'message'
-                    # stores the error message. We need to create a new job
-                    # and mark it as failed with the given error message
-                    params = Parameters.load(
-                        st_cmd, values_dict={'study': study.id,
-                                             'template_fp': 'ignored-patch58'})
-                    job = ProcessingJob.create(user, params)
-                    job._set_error(info['message'])
-                    payload = {'job_id': job.id}
-                    r_client.set(key, dumps(payload))
-        else:
-            # The key doesn't contain any information. Delete the key
-            r_client.delete(key)
+        values_dict = {'study': study.id, 'template_fp': 'ignored-patch58'}
+        correct_redis_data(key, st_cmd, values_dict, user)
 
     # Get all the prep template keys
     for key in r_client.keys('prep_template_[0-9]*'):
@@ -148,57 +171,6 @@ with TRN:
             # key and continue
             r_client.delete(key)
             continue
-
-        info = r_client.get(key)
-        if info:
-            info = loads(info)
-            if info['job_id'] is not None:
-                if 'is_qiita_job' in info:
-                    if info['is_qiita_job']:
-                        job = ProcessingJob(info['job_id'])
-                        payload = {'job_id': info['job_id'],
-                                   'alert_type': info['status'],
-                                   'alert_msg': info['alert_msg']}
-                        r_client.set(key, dumps(payload))
-                    else:
-                        # These jobs don't contain any information on the live
-                        # dump. We can safely delete the key
-                        r_client.delete(key)
-                else:
-                    # These jobs don't contain any information on the live
-                    # dump. We can safely delete the key
-                    r_client.delete(key)
-            else:
-                # Job is null, we have the information here
-                if info['status'] == 'success':
-                    # In the success case no information is stored. We can
-                    # safely delete the key
-                    r_client.delete(key)
-                elif info['status'] == 'warning':
-                    # In case of warning the key message stores the warning
-                    # message. We need to create a new job, mark it as
-                    # successful and store the error message as expected by
-                    # the new structure
-                    params = Parameters.load(
-                        pt_cmd, values_dict={'prep_template': pt.id,
-                                             'template_fp': 'ignored-patch58'})
-                    job = ProcessingJob.create(user, params)
-                    job._set_status('success')
-                    payload = {'job_id': job.id,
-                               'alert_type': 'warning',
-                               'alert_msg': info['message']}
-                    r_client.set(key, dumps(payload))
-                else:
-                    # The status is error. The key message stores the error
-                    # message. We need to create a new job and mark it as
-                    # failed with the given error message
-                    params = Parameters.load(
-                        pt_cmd, values_dict={'prep_template': pt.id,
-                                             'template_fp': 'ignored-patch58'})
-                    job = ProcessingJob(user, params)
-                    job._set_error(info['message'])
-                    payload = {'job_id': job.id}
-                    r_client.set(key, dumps(payload))
-        else:
-            # The key doesn't contain any information. Delete the key
-            r_client.delete(key)
+        values_dict = {'prep_template': pt.id,
+                       'template_fp': 'ignored-patch58'}
+        correct_redis_data(key, pt_cmd, values_dict, user)
