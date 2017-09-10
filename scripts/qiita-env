@@ -13,9 +13,7 @@ from sys import exit
 import click
 
 import qiita_db as qdb
-from qiita_core.environment_manager import (
-    start_cluster as _start_cluster, stop_cluster as _stop_cluster,
-    test as _test, TEST_RUNNERS)
+from qiita_core.environment_manager import test as _test, TEST_RUNNERS
 from qiita_core.configuration_manager import ConfigurationManager
 
 _CONFIG = ConfigurationManager()
@@ -24,30 +22,6 @@ _CONFIG = ConfigurationManager()
 @click.group()
 def env():
     pass
-
-
-@env.command()
-@click.argument('clusters', type=click.Choice(_CONFIG.ipython_contexts),
-                nargs=-1)
-def start_cluster(clusters):
-    """Start a compute environment"""
-    if not clusters:
-        clusters = ('qiita-general',)
-    for cluster in clusters:
-        print "Starting cluster", cluster
-        _start_cluster(cluster)
-
-
-@env.command()
-@click.argument('clusters', type=click.Choice(_CONFIG.ipython_contexts),
-                nargs=-1)
-def stop_cluster(clusters):
-    """Stop a compute environment"""
-    if not clusters:
-        clusters = ('qiita-general',)
-    for cluster in clusters:
-        print "Stopping cluster", cluster
-        _stop_cluster(cluster)
 
 
 @env.command()
@@ -128,8 +102,8 @@ def test(runner):
 def job_details(job):
     """Pretty print moi job details"""
     from json import loads
-    from moi import r_client
     from redis.exceptions import ResponseError
+    from qiita_core.qiita_settings import r_client
 
     try:
         data = r_client.get(job)

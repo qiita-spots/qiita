@@ -10,10 +10,10 @@ from __future__ import division
 from tornado.web import authenticated, HTTPError
 from qiita_files.demux import stats as demux_stats
 
-from qiita_ware.context import submit
-from qiita_ware.dispatchable import submit_to_VAMPS
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.artifact import Artifact
+from qiita_db.software import Software, Parameters
+from qiita_db.processing_job import ProcessingJob
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.util import execute_as_transaction
 
@@ -99,23 +99,23 @@ class VAMPSHandler(BaseHandler):
                             user.id)
         msg = ''
         msg_level = 'success'
-        study = Artifact(preprocessed_data_id).study
-        study_id = study.id
-        state = study.ebi_submission_status
-        if state == 'submitting':
-            msg = "Cannot resubmit! Current state is: %s" % state
+
+        plugin = Software.from_name_and_version('Qiita', 'alpha')
+        cmd = plugin.get_command('submit_to_VAMPS')
+        artifact = Artifact(preprocessed_data_id)
+
+        # Check if the artifact is already being submitted to VAMPS
+        is_being_submitted = any(
+            [j.status in ('queued', 'running')
+             for j in artifact.jobs(cmd=cmd)])
+
+        if is_being_submitted == 'submitting':
+            msg = "Cannot resubmit! Data is already being submitted"
             msg_level = 'danger'
+            self.display_template(preprocessed_data_id, msg, msg_level)
         else:
-            channel = user.id
-            job_id = submit(channel, submit_to_VAMPS,
-                            int(preprocessed_data_id))
-
-            self.render('compute_wait.html',
-                        job_id=job_id, title='VAMPS Submission',
-                        completion_redirect=('/study/description/%s?top_tab='
-                                             'preprocessed_data_tab&sub_tab=%s'
-                                             % (study_id,
-                                                preprocessed_data_id)))
-            return
-
-        self.display_template(preprocessed_data_id, msg, msg_level)
+            params = Parameters.load(
+                cmd, values_dict={'artifact': preprocessed_data_id})
+            job = ProcessingJob.create(user, params)
+            job.submit()
+            self.redirect('/study/description/%s' % artifact.study.study_id)
