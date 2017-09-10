@@ -14,7 +14,6 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 import warnings
-from skbio.io.util import open_file
 from skbio.util import find_duplicates
 
 import qiita_db as qdb
@@ -102,7 +101,7 @@ def load_template_to_dataframe(fn, index='sample_name'):
     """
     # Load in file lines
     holdfile = None
-    with open_file(fn, mode='U') as f:
+    with qdb.util.open_file(fn, mode='U') as f:
         errors = defaultdict(list)
         holdfile = f.readlines()
         # here we are checking for non UTF-8 chars
@@ -333,7 +332,7 @@ def looks_like_qiime_mapping_file(fp):
     some other different column.
     """
     first_line = None
-    with open_file(fp, mode='U') as f:
+    with qdb.util.open_file(fp, mode='U') as f:
         first_line = f.readline()
     if not first_line:
         return False

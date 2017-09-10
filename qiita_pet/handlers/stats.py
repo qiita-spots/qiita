@@ -10,11 +10,10 @@ from __future__ import division
 
 from random import choice
 
-from moi import r_client
 from tornado.gen import coroutine, Task
 
 from qiita_core.util import execute_as_transaction
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_db.study import Study
 from .base_handlers import BaseHandler
 

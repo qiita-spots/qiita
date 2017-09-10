@@ -8,7 +8,7 @@
 
 from unittest import main
 
-from moi import r_client
+from qiita_core.qiita_settings import r_client
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 

@@ -22,10 +22,9 @@ from qiita_files.demux import to_per_sample_ascii
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.exceptions import EBISubmissionError
-from qiita_ware.util import open_file
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
-from qiita_db.util import convert_to_id, get_mountpoint
+from qiita_db.util import convert_to_id, get_mountpoint, open_file
 from qiita_db.artifact import Artifact
 
 

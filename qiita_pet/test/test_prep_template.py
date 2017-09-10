@@ -69,9 +69,8 @@ class TestPrepTemplateHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         exp = {
             "status": "error",
-            "message": "Couldn't remove prep template: Cannot remove prep "
-                       "template 1 because it has an artifact associated "
-                       "with it"}
+            "message": "Cannot remove prep template 1 because it has an "
+                       "artifact associated with it"}
         self.assertEqual(loads(response.body), exp)
 
 

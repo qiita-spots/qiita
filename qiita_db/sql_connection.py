@@ -646,9 +646,12 @@ class Transaction(object):
         """
         self.rollback()
 
-        raise ValueError(
-            "Error running SQL: %s. MSG: %s\n" % (
-                errorcodes.lookup(error.pgcode), error.message))
+        try:
+            ec_lu = errorcodes.lookup(error.pgcode)
+            raise ValueError(
+                "Error running SQL: %s. MSG: %s\n" % (ec_lu, error.message))
+        except KeyError:
+            raise ValueError("Error running SQL query: %s" % error.message)
 
     @_checker
     def add(self, sql, sql_args=None, many=False):
@@ -882,11 +885,13 @@ class Transaction(object):
         # Reset the queries, the results and the index
         self._queries = []
         self._results = []
-        try:
-            self._connection.rollback()
-        except Exception:
-            self._connection.close()
-            raise
+
+        if self._connection is not None and self._connection.closed == 0:
+            try:
+                self._connection.rollback()
+            except Exception:
+                self._connection.close()
+                raise
         # Execute the post rollback functions
         self._funcs_executor(self._post_rollback_funcs, "rollback")
 
@@ -937,3 +942,12 @@ class Transaction(object):
 
 # Singleton pattern, create the transaction for the entire system
 TRN = Transaction()
+
+
+def create_new_transaction():
+    """Creates a new global transaction
+
+    This is needed when using multiprocessing
+    """
+    global TRN
+    TRN = Transaction()

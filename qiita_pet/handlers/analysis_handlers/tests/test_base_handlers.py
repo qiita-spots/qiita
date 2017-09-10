@@ -10,9 +10,9 @@ from unittest import TestCase, main
 from json import loads, dumps
 
 from tornado.web import HTTPError
-from moi import r_client
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import r_client
 from qiita_core.testing import wait_for_processing_job
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
