@@ -2,7 +2,6 @@
 {% block head %}
 {% from future.utils import viewitems %}
 {% from itertools import chain %}
-<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
 <script type="text/javascript">
 
 function error(evt) { $('#ws-error').html("<b>Server communication error. Sample removal will not be recorded. Please try again later.</b>"); };
@@ -16,7 +15,7 @@ function check_empty() {
 
 function clear() {
   if(confirm('Are you sure you want to remove all samples?')) {
-    moi.send('clear', {'pids': {% raw [int(p) for p in chain.from_iterable(pid.keys() for sid, pid in viewitems(sel_data))] %} });
+    qiita_websocket.send('clear', {'pids': {% raw [int(p) for p in chain.from_iterable(pid.keys() for sid, pid in viewitems(sel_data))] %} });
   }
 }
 
@@ -27,7 +26,7 @@ function clear_from_html(data) {
 
 function remove_proc_data(pid, sid) {
   if(confirm('Are you sure you want to remove all samples for this processed data?')) {
-    moi.send('remove_pd', {'proc_data': pid, 'samples': [], 'sid': sid});
+    qiita_websocket.send('remove_pd', {'proc_data': pid, 'samples': [], 'sid': sid});
   }
 }
 
@@ -41,7 +40,7 @@ function remove_pd_from_html(data) {
     check_empty();
 }
 
-function remove_sample(sid, pid, sample) { moi.send('remove_sample', {'proc_data': pid, 'samples': [sample], 'sid': sid}); }
+function remove_sample(sid, pid, sample) { qiita_websocket.send('remove_sample', {'proc_data': pid, 'samples': [sample], 'sid': sid}); }
 
 function remove_sample_from_html(data) {
     pid = data.proc_data;
@@ -58,10 +57,10 @@ function remove_sample_from_html(data) {
     check_empty();
 }
 $(document).ready(function() {
-      moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/analysis/selected/socket/', function(){}, error, error);
-      moi.add_callback('remove_pd', remove_pd_from_html);
-      moi.add_callback('remove_sample', remove_sample_from_html);
-      moi.add_callback('clear', clear_from_html);
+      qiita_websocket.init(window.location.host + '{% raw qiita_config.portal_dir %}/analysis/selected/socket/', error, error);
+      qiita_websocket.add_callback('remove_pd', remove_pd_from_html);
+      qiita_websocket.add_callback('remove_sample', remove_sample_from_html);
+      qiita_websocket.add_callback('clear', clear_from_html);
       $('#clear-button').on('click', clear);
       {% if sel_data %}$('#no-selected').hide(){% end %}
     });
