@@ -56,7 +56,7 @@ Since Qiita is a package that is continuously growing, we found ourselves in a p
 
 ### Configuration file
 
-The Qiita configuration file determines how the package interacts with your system’s resources (redis, postgres and the IPython cluster). Thus you should review the documentation detailed [here](https://docs.google.com/document/d/1u7kwLP31NM513-8xwpwvLbSQxYu0ehI6Jau1APR13e0/edit#), but especially bear in mind the following points:
+The Qiita configuration file determines how the package interacts with your system’s resources (redis and postgres). Thus you should review the documentation detailed [here](https://docs.google.com/document/d/1u7kwLP31NM513-8xwpwvLbSQxYu0ehI6Jau1APR13e0/edit#), but especially bear in mind the following points:
 
 * An example version of this file can be found here `qiita_core/support_files/qiita_config.txt` and if you don’t set a `QIITA_CONFIG_FP` environment variable, that’s the file that Qiita will use.
 * The `[main]` section sets a `TEST_ENVIRONMENT` variable, which determines whether your system will be running unit tests or if it a demo/production system. You will want to set the value to TRUE if you are running the unit tests.
@@ -83,8 +83,6 @@ Scripts in Qiita are located inside the scripts directory, their actions will re
 
 * `qiita-env make` will create a new environment (as specified by the Qiita config file).
 * `qiita-env drop` will delete the environment (as specified by the Qiita config file).
-* `qiita-env start_cluster qiita-general`, starts an IPython cluster named ‘qiita-general’. Normally you’ll want to wait a few seconds for the engines to start and become responsive (30-40 seconds depending on your system).
-* `qiita-env stop_cluster qiita-general`, terminates a cluster named ‘qiita-general’.
 * `qiita pet webserver start`, will start the Qiita web-application running on port 21174, you can change this using the `--port` flag, for example `--port=7532`.
 
 ## Making Database Changes

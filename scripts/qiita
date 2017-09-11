@@ -22,13 +22,11 @@ import click
 import tornado.httpserver
 import tornado.ioloop
 from psycopg2 import OperationalError
-from moi import r_client
 
 import qiita_db as qdb
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
-from qiita_ware.context import system_call, ComputeError
 
 
 try:
@@ -64,8 +62,8 @@ def webserver(build_docs):
         cmd = 'make -C %s html' % sphinx_fp
         print('Building documentation ...')
         try:
-            system_call(cmd)
-        except ComputeError as e:
+            qdb.processing_job._system_call(cmd)
+        except Exception as e:
             raise click.ClickException('Could not build documentation: %s' %
                                        str(e))
         else:
@@ -409,10 +407,6 @@ def log(n):
 @click.option('--master', is_flag=True,
               help="If set, update available plugins")
 def start(port, master):
-    # in order to use this command you need to have an IPython cluster running,
-    # for now this makes it so that you can use other sub-commands without
-    # having to do that. The solution will (perhaps) be to move this subcommand
-    # into an entirely different script.
     from qiita_pet.webserver import Application
     from tornado.options import options, parse_command_line
     from tornado.ioloop import PeriodicCallback

@@ -57,7 +57,3 @@ gg_13_8-*
 
 # sphinx documentation
 qiita_pet/static/doc/
-
-# moi static files
-qiita_pet/static/vendor/js/moi.js
-qiita_pet/static/vendor/js/moi_list.js
