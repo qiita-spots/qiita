@@ -140,7 +140,6 @@ Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.ba
 
 ```bash
   echo "export QIITA_CONFIG_FP=$HOME/.qiita_config_test.cfg" >> ~/.bashrc
-  echo "export MOI_CONFIG_FP=$HOME/.qiita_config_test.cfg" >> ~/.bashrc
   source ~/.bashrc
   # Re-enable conda environment for qiita
   source activate qiita

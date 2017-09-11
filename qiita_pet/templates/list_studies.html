@@ -4,7 +4,6 @@
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.min.css" type="text/css">
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
 
-<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
@@ -21,7 +20,7 @@ function send_samples_to_moi(button, aids) {
   $.get('/artifact/samples/', {ids:aids})
     .done(function ( data ) {
       if (data['status']=='success') {
-        moi.send('sel', data['data']);
+        qiita_websocket.send('sel', data['data']);
         button.value = 'Added';
         $(button).removeClass("btn-info");
       } else {
@@ -80,8 +79,8 @@ $(document).ready(function() {
   });
 
   $("#search-waiting").hide();
-  moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
-  moi.add_callback('sel', show_alert);
+  qiita_websocket.init(window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', error, error);
+  qiita_websocket.add_callback('sel', show_alert);
   function format_biom_rows(data, row) {
     var proc_data_table = '<table class="table" cellpadding="0" cellspacing="0" border="0" style="padding-left:0px;width:95%">';
     proc_data_table += '<tr>';
