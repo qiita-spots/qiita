@@ -8,8 +8,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from sys import exit
-
 import click
 
 import qiita_db as qdb
@@ -89,42 +87,11 @@ def test(runner):
     """Test the environment
 
     Check to make sure that basic services are up and working. These include
-    connectivity to postgres, redis, and the ability to submit jobs through
-    moi.
+    connectivity to postgres, and redis.
 
     Tests are performed both on localhost and ipengines.
     """
     _test(runner)
-
-
-@env.command()
-@click.option('--job', required=True, type=str, help='The job ID')
-def job_details(job):
-    """Pretty print moi job details"""
-    from json import loads
-    from redis.exceptions import ResponseError
-    from qiita_core.qiita_settings import r_client
-
-    try:
-        data = r_client.get(job)
-    except ResponseError:
-        click.echo("ID does not appear to be a job")
-        exit(1)
-
-    if data is None:
-        click.echo("Job cannot be found")
-    else:
-        data = loads(data)
-        for k in sorted(data):
-            value = data[k]
-
-            if k == 'result':
-                if isinstance(value, list):
-                    value = ''.join(value)
-                else:
-                    value = str(value)
-
-            click.echo("%s : %s" % (k, value))
 
 
 @env.command(name="create-portal")
