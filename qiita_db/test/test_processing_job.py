@@ -66,17 +66,17 @@ class ProcessingJobUtilTest(TestCase):
         # it doesn't raise an error
         job = _create_job()
         cmd = 'echo "Test system call stdout"'
-        qdb.processing_job._job_submitter(job, cmd)
+        qdb.processing_job._job_submitter(job.id, cmd)
 
     def test_job_submitter_error(self):
         # Same comment as above, but here we are going to force failure, and
         # check that the job is updated correctly
         job = _create_job()
         cmd = '>&2  echo "Test system call stderr"; exit 1'
-        qdb.processing_job._job_submitter(job, cmd)
+        qdb.processing_job._job_submitter(job.id, cmd)
         self.assertEqual(job.status, 'error')
-        exp = ("Error submitting job '%s':\nStd output:\nStd error:"
-               "Test system call stderr\n" % job.id)
+        exp = ("Error submitting job:\nStd output:\nStd error:"
+               "Test system call stderr\n")
         self.assertEqual(job.log.msg, exp)
 
 

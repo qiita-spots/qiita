@@ -17,7 +17,7 @@ from future import standard_library
 from future.utils import viewitems
 
 from qiita_core.exceptions import QiitaEnvironmentError
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 import qiita_db as qdb
 
 
@@ -308,6 +308,7 @@ def drop_and_rebuild_tst_database():
     """Drops the qiita schema and rebuilds the test database
     """
     with qdb.sql_connection.TRN:
+        r_client.flushdb()
         # Drop the schema
         qdb.sql_connection.TRN.add("DROP SCHEMA IF EXISTS qiita CASCADE")
         # Set the database to unpatched

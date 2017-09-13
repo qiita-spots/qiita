@@ -9,10 +9,9 @@ from unittest import main
 from json import loads
 
 from mock import Mock
-from moi import r_client
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_db.artifact import Artifact
 from qiita_db.study import Study
 from qiita_db.user import User

@@ -13,8 +13,10 @@ from collections import defaultdict
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 from pyparsing import ParseException
-from moi import r_client
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.study import Study
@@ -22,9 +24,6 @@ from qiita_db.search import QiitaStudySearch
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import (add_message, generate_study_list)
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.util import execute_as_transaction
-from qiita_core.qiita_settings import qiita_config
 from qiita_pet.util import EBI_LINKIFIER
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import (

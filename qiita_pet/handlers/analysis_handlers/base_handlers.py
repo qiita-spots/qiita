@@ -9,10 +9,9 @@
 from json import loads
 
 from tornado.web import authenticated
-from moi import r_client
 
 from qiita_core.util import execute_as_transaction
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.analysis_handlers import check_analysis_access
 from qiita_pet.handlers.util import to_int
