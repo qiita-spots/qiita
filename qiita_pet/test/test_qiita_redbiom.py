@@ -26,7 +26,9 @@ class TestRedbiom(TestHandlerBase):
         }
         response = self.post('/redbiom/', post_args)
         self.assertEqual(response.code, 200)
-        exp = {'status': 'success', 'message': '', 'data': DATA}
+        data = DATA
+        data[0]['artifact_biom_ids'] = [4, 5, 6, 7]
+        exp = {'status': 'success', 'message': '', 'data': data}
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
@@ -56,7 +58,9 @@ class TestRedbiom(TestHandlerBase):
             'search_on': 'feature'
         }
         response = self.post('/redbiom/', post_args)
-        exp = {'status': 'success', 'message': '', 'data': DATA}
+        data = DATA
+        data[0]['artifact_biom_ids'] = ['5', '4']
+        exp = {'status': 'success', 'message': '', 'data': data}
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
 
@@ -75,8 +79,10 @@ class TestRedbiom(TestHandlerBase):
             'search': 'o__0319-7L14',
             'search_on': 'taxon'
         }
+        data = DATA
+        data[0]['artifact_biom_ids'] = ['5', '4']
         response = self.post('/redbiom/', post_args)
-        exp = {'status': 'success', 'message': '', 'data': DATA}
+        exp = {'status': 'success', 'message': '', 'data': data}
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
 
@@ -117,7 +123,7 @@ DATA = [
     {'status': 'private',
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'metadata_complete': True, 'publication_pid': ['123456', '7891011'],
-     'artifact_biom_ids': ['1'], 'ebi_submission_status': 'submitted',
+     'ebi_submission_status': 'submitted',
      'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
      'study_abstract': ('This is a preliminary study to examine the '
                         'microbiota associated with the Cannabis plant. Soils '

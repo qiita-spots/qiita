@@ -18,6 +18,7 @@ from tornado.gen import coroutine, Task
 
 from qiita_core.util import execute_as_transaction
 from qiita_db.util import generate_study_list_without_artifacts
+from qiita_db.study import Study
 
 from .base_handlers import BaseHandler
 
@@ -54,18 +55,11 @@ class RedbiomPublicSearch(BaseHandler):
                     message = (
                         'Not a valid search: "%s", your query is too small '
                         '(too few letters), try a longer query' % query)
-
                 if message == '':
-                    config = redbiom.get_config()
-                    get = redbiom._requests.make_get(config)
-                    ambs = {ctx: redbiom.util.resolve_ambiguities(
-                        ctx, samples, get)[2] for ctx in contexts}
-                    for ctx, amb in viewitems(ambs):
-                        for i in (samples & set(amb)):
-                            for rid in amb[i]:
-                                aid = rid.split('_', 1)[0]
-                                sid = i.split('.', 1)[0]
-                                study_artifacts[sid].append(aid)
+                    sids = set([s.split('.', 1)[0] for s in samples])
+                    for s in sids:
+                        study_artifacts[s] = [a.id for a in Study(s).artifacts(
+                            artifact_type='BIOM')]
             elif search_on == 'feature':
                 query = [f for f in query.split(' ')]
                 for ctx in contexts:

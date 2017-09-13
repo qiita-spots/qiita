@@ -12,53 +12,21 @@
       "dom": '<"ps">lfr<t><"footer">ip',
       'footerCallback': function ( row, data, start, end, display ) {
 
-        // // adding total features found
-        //
-        // var api = this.api(), data;
-        // var total_features = api
-        //   .column(4)
-        //   .data()
-        //   .reduce( function (a, b) { return a + b.samples.length; }, 0);
-        //
-        // $('.footer').addClass("col-md-12 text-right");
-        // if (total_features == 0) {
-        //   text = '';
-        // } else {
-        //   if ($("#search_on").val() == 'categories'){
-        //     text = 'Found ' + total_features + ' categories.';
-        //   } else {
-        //     text = 'Found ' + total_features + ' samples.';
-        //   }
-        // }
-        // $('.footer').html(text)
-        //
-        // // adding selectors for filtering
-        //
-        // this.api().columns().every( function (iterator) {
-        //   var column = this;
-        //   if (iterator == 3 && column.data().length != 0) {
-        //     var placer = $(".ps");
-        //     placer.empty();
-        //     placer.append("<b>Filter by Processing paramters</b>: ")
-        //     var selector = $('<select><option value=""></option></select>')
-        //       .appendTo( placer )
-        //       .on('change', function () {
-        //         var val = $.fn.dataTable.util.escapeRegex( $(this).val() );
-        //         column
-        //           .search( val ? '^'+val+'$' : '', true, false )
-        //           .draw();
-        //       });
-        //
-        //     var added = [];
-        //     column.data().each(function (d){
-        //       var cmd = d.command;
-        //       if (added.indexOf(cmd) == -1){
-        //         added.push(cmd);
-        //         selector.append('<option value="' + cmd + '">' + cmd + '</option>');
-        //       }
-        //     });
-        //   }
-        // });
+        // adding total features found
+
+        var api = this.api(), data;
+        var total_features = api
+          .column(0)
+          .data()
+          .reduce( function (a, b) {return a + b.length}, 0);
+
+        $('.footer').addClass("col-md-12 text-right");
+        if (total_features == 0) {
+          text = '';
+        } else {
+            text = 'Found ' + total_features + ' artifacts.';
+        }
+        $('.footer').html(text)
       },
       "columns": [
         { "orderable": false,       "width": "15%", "data": "artifact_biom_ids"},
@@ -72,12 +40,20 @@
         // render zero
         {"render": function ( data, type, row, meta ) {
           if (data !== null && data !== undefined && data.length != 0){
-            return '<div class="container" style="max-width: 5em;">'+
-                     '<div class="row justify-content-md-center">' +
-                       '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
-                       '<div class="col-md-1 text-center">' + data.length + '</div>' +
-                     '</div>' +
-                   '</div>';
+            {% if current_user is not None %}
+              return '<div class="container" style="max-width: 5em;">'+
+                       '<div class="row justify-content-md-center">' +
+                         '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
+                         '<div class="col-md-1 text-center">' + data.length + '</div>' +
+                       '</div>' +
+                     '</div>';
+            {% else %}
+              return '<div class="container" style="max-width: 5em;">'+
+                       '<div class="row justify-content-md-center">' +
+                         '<div class="col-md-1 text-center">' + data.length + '</div>' +
+                       '</div>' +
+                     '</div>';
+            {% end %}
           } else {
             return 'No BIOMs';
           }
@@ -85,11 +61,10 @@
         // render the title cell
         {"render": function ( data, type, row, meta ) {
           {% if current_user is not None %}
-            result = "<a target='_blank' href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\">" +
-              "<span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='{% raw qiita_config.portal_dir %}/study/description/" +
-              row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
+            result = "<a target='_blank' href='{% raw qiita_config.portal_dir %}/study/description/" + row.study_id +
+              "' id='study"+ meta.row +"-title'>"+ data +"</a>";
           {% else %}
-             result = ""
+             result = data
           {% end %}
             return result
         }, targets: [1]},
@@ -99,6 +74,32 @@
           "loadingRecords": "Please wait - loading information ...",
           "zeroRecords": "  "
       },
+  });
+
+  // Add event listener for opening and closing details
+  $('#redbiom-table tbody').on('click', 'div.details-control', function () {
+      var table = $('#redbiom-table').DataTable();
+      var tr = $(this).closest('tr');
+      var row = table.row( tr );
+
+      if ( row.child.isShown() ) {
+        // This row is already open - close it
+        row.child.hide();
+        tr.removeClass('shown');
+      } else {
+        // Open this row
+        // modified from: https://jsfiddle.net/8rejaL88/2/
+        tr.addClass('shown');
+        row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
+        $.get('/artifact/info/', {ids: row.data().artifact_biom_ids})
+          .done(function ( data ) {
+            if (data['status']=='success') {
+              $('td', row.child()).html(format_biom_rows(data.data, row.index())).show();
+            } else {
+              bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+            }
+          });
+      }
   });
 
   $("#submitForm").submit(function(event){
@@ -139,8 +140,17 @@
 {%end%}
 
 {%block content%}
-  <small>Some general instructions!</small>
-  <br/><br/>
+  <small>
+    Redbiom only searches on public data and the data is updated nightly. Note that you will only be able to expand and add artifacts to analyses if you are signed into Qiita.
+    <br/>
+    We have 3 search options:
+    <ul>
+      <li><b>Metadata</b>: The search will be on the full metadata and will return any ocurrances of the search.</li>
+      <li><b>Feature</b>: The seach will be on all the features, in specific: OTU ids for close reference and exact sequences for deblur</li>
+      <li><b>Taxon</b>: The search will be only on close reference and based on the taxonomies available</li>
+    </ul>
+  </small>
+  <br/>
   <form data-toggle="validator" role="form" id="submitForm">
     <div class="form-group row">
       <div class="col-xs-9">
