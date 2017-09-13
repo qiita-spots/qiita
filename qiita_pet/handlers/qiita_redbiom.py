@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from future.utils import viewitems
 from requests import ConnectionError
 from collections import defaultdict
 import redbiom.summarize
