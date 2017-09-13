@@ -173,7 +173,8 @@ Next, make a test environment:
 qiita-env make --no-load-ontologies
 ```
 
-Finally, redbiom relies on the REDBIOM_HOST environment variable to set the URL to query. By default is set to http://127.0.0.1:7379, which is the webdis default. For example you could:
+Finally, redbiom relies on the REDBIOM_HOST environment variable to set the URL to query. By default is set to Qiita redbiom public repository. To change it you could do:
+
 
 ```bash
 export REDBIOM_HOST=http://my_host.com:7379
