@@ -26,7 +26,7 @@ class TestRedbiom(TestHandlerBase):
         }
         response = self.post('/redbiom/', post_args)
         self.assertEqual(response.code, 200)
-        exp = {'status': 'success', 'message': '', 'data': OBSERVATION}
+        exp = {'status': 'success', 'message': '', 'data': DATA}
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
@@ -50,19 +50,19 @@ class TestRedbiom(TestHandlerBase):
                            'is a valid metadata value?'), 'data': []}
         self.assertEqual(loads(response.body), exp)
 
-    def test_post_observations(self):
+    def test_post_features(self):
         post_args = {
             'search': '4479944',
-            'search_on': 'observations'
+            'search_on': 'feature'
         }
         response = self.post('/redbiom/', post_args)
-        exp = {'status': 'success', 'message': '', 'data': SEQUENCE}
+        exp = {'status': 'success', 'message': '', 'data': DATA}
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
             'search': 'TT',
-            'search_on': 'observations'
+            'search_on': 'feature'
         }
         response = self.post('/redbiom/', post_args)
         exp = {'status': 'success',
@@ -70,35 +70,24 @@ class TestRedbiom(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
 
-    def test_post_categories(self):
+    def test_post_taxon(self):
         post_args = {
-            'search': 'texture',
-            'search_on': 'categories'
+            'search': 'o__0319-7L14',
+            'search_on': 'taxon'
         }
         response = self.post('/redbiom/', post_args)
-        exp = {'status': 'success', 'message': '', 'data': CATEGORIES}
+        exp = {'status': 'success', 'message': '', 'data': DATA}
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
-            'search': 'longtext',
-            'search_on': 'categories'
+            'search': 'o_0319-7L14',
+            'search_on': 'taxon'
         }
         response = self.post('/redbiom/', post_args)
         exp = {'status': 'success',
                'message': 'No samples where found! Try again ...', 'data': []}
         self.assertEqual(response.code, 200)
-        self.assertEqual(loads(response.body), exp)
-
-        post_args = {
-            'search': '4353076',
-            'search_on': 'categories'
-        }
-        response = self.post('/redbiom/', post_args)
-        self.assertEqual(response.code, 200)
-        exp = {'status': 'success',
-               'message': ('Not a valid search: "4353076", are you sure this '
-                           'is a valid metadata category?'), 'data': []}
         self.assertEqual(loads(response.body), exp)
 
     def test_post_errors(self):
@@ -118,58 +107,33 @@ class TestRedbiom(TestHandlerBase):
         response = self.post('/redbiom/', post_args)
         self.assertEqual(response.code, 200)
         exp = {'status': 'success',
-               'message': 'Not a valid option for search_on', 'data': []}
+               'message': ('Incorrect search by: you can use metadata, '
+                           'features or taxon and you passed: error'),
+               'data': []}
         self.assertEqual(loads(response.body), exp)
 
 
-OBSERVATION = [
-    {'artifact_id': 4, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
-     'samples': [
-        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198', '1.SKD4.640185',
-        '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191', '1.SKD8.640184',
-        '1.SKD9.640182'],
+DATA = [
+    {'status': 'private',
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
-     'aname': 'BIOM'},
-    {'artifact_id': 5, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
-     'samples': [
-        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198', '1.SKD4.640185',
-        '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191', '1.SKD8.640184',
-        '1.SKD9.640182'],
-     'study_title': 'Identification of the Microbiomes for Cannabis Soils',
-     'aname': 'BIOM'},
-    {'artifact_id': 6, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
-     'samples': [
-        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198', '1.SKD4.640185',
-        '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191', '1.SKD8.640184',
-        '1.SKD9.640182'],
-     'study_title': 'Identification of the Microbiomes for Cannabis Soils',
-     'aname': 'BIOM'}]
+     'metadata_complete': True, 'publication_pid': ['123456', '7891011'],
+     'artifact_biom_ids': ['1'], 'ebi_submission_status': 'submitted',
+     'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
+     'study_abstract': ('This is a preliminary study to examine the '
+                        'microbiota associated with the Cannabis plant. Soils '
+                        'samples from the bulk soil, soil associated with the '
+                        'roots, and the rhizosphere were extracted and the '
+                        'DNA sequenced. Roots from three independent plants '
+                        'of different strains were examined. These roots were '
+                        'obtained November 11, 2011 from plants that had been '
+                        'harvested in the summer. Future studies will attempt '
+                        'to analyze the soils and rhizospheres from the same '
+                        'location at different time points in the plant '
+                        'lifecycle.'),
+     'pi': ['PI_dude@foo.bar', 'PIDude'],
+     'publication_doi': ['10.100/123456', '10.100/7891011'],
+     'study_alias': 'Cannabis Soils', 'number_samples_collected': 27}]
 
-SEQUENCE = [
-    {'artifact_id': 4, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
-     'samples': ['1.SKM3.640197'],
-     'study_title': 'Identification of the Microbiomes for Cannabis Soils',
-     'aname': 'BIOM'},
-    {'artifact_id': 5, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
-     'samples': ['1.SKM3.640197'],
-     'study_title': 'Identification of the Microbiomes for Cannabis Soils',
-     'aname': 'BIOM'},
-    {'artifact_id': 6, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
-     'samples': ['1.SKM3.640197'],
-     'study_title': 'Identification of the Microbiomes for Cannabis Soils',
-     'aname': 'BIOM'}]
-
-CATEGORIES = [
-    {'artifact_id': None, 'study_id': 1, 'version': None,
-     'command': 'texture', 'samples': ['texture'],
-     'study_title': 'Identification of the Microbiomes for Cannabis Soils',
-     'aname': None, u'software': None}]
 
 if __name__ == "__main__":
     main()

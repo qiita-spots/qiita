@@ -843,6 +843,60 @@ class UtilTests(TestCase):
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
 
+    def test_generate_study_list_without_artifacts(self):
+        # creating a new study to make sure that empty studies are also
+        # returned
+        info = {"timeseries_type_id": 1, "metadata_complete": True,
+                "mixs_compliant": True, "number_samples_collected": 25,
+                "number_samples_promised": 28, "study_alias": "TST",
+                "study_description": "Some description of the study goes here",
+                "study_abstract": "Some abstract goes here",
+                "emp_person_id": qdb.study.StudyPerson(1),
+                "principal_investigator_id": qdb.study.StudyPerson(1),
+                "lab_person_id": qdb.study.StudyPerson(1)}
+        new_study = qdb.study.Study.create(
+            qdb.user.User('shared@foo.bar'), 'test_study_1', info=info)
+
+        exp_info = [
+            {'status': 'private', 'study_title': (
+                'Identification of the Microbiomes for Cannabis Soils'),
+             'metadata_complete': True, 'publication_pid': [
+                '123456', '7891011'], 'ebi_submission_status': 'submitted',
+             'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
+             'study_abstract': (
+                'This is a preliminary study to examine the microbiota '
+                'associated with the Cannabis plant. Soils samples from '
+                'the bulk soil, soil associated with the roots, and the '
+                'rhizosphere were extracted and the DNA sequenced. Roots '
+                'from three independent plants of different strains were '
+                'examined. These roots were obtained November 11, 2011 from '
+                'plants that had been harvested in the summer. Future studies '
+                'will attempt to analyze the soils and rhizospheres from the '
+                'same location at different time points in the plant '
+                'lifecycle.'), 'pi': ('PI_dude@foo.bar', 'PIDude'),
+             'publication_doi': ['10.100/123456', '10.100/7891011'],
+             'study_alias': 'Cannabis Soils', 'number_samples_collected': 27},
+            {'status': 'sandbox', 'study_title': 'test_study_1',
+             'metadata_complete': True, 'publication_pid': [],
+             'ebi_submission_status': 'not submitted',
+             'study_id': new_study.id, 'ebi_study_accession': None,
+             'study_abstract': 'Some abstract goes here',
+             'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
+             'study_alias': 'TST', 'number_samples_collected': 0}]
+        obs_info = qdb.util.generate_study_list_without_artifacts(
+            [1, 2, 3, 4], True)
+        self.assertEqual(obs_info, exp_info)
+
+        qdb.artifact.Artifact(4).visibility = 'public'
+        exp_info[0]['status'] = 'public'
+        obs_info = qdb.util.generate_study_list_without_artifacts(
+            [1, 2, 3, 4], True)
+        self.assertEqual(obs_info, exp_info)
+
+        obs_info = qdb.util.generate_study_list_without_artifacts(
+            [1, 2, 3, 4], False)
+        self.assertEqual(obs_info, exp_info)
+
     def test_get_artifacts_information(self):
         # we are gonna test that it ignores 1 and 2 cause they are not biom,
         # 4 has all information and 7 and 8 don't

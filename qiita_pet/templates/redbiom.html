@@ -12,104 +12,88 @@
       "dom": '<"ps">lfr<t><"footer">ip',
       'footerCallback': function ( row, data, start, end, display ) {
 
-        // adding total features found
-
-        var api = this.api(), data;
-        var total_features = api
-          .column(4)
-          .data()
-          .reduce( function (a, b) { return a + b.samples.length; }, 0);
-
-        $('.footer').addClass("col-md-12 text-right");
-        if (total_features == 0) {
-          text = '';
-        } else {
-          if ($("#search_on").val() == 'categories'){
-            text = 'Found ' + total_features + ' categories.';
-          } else {
-            text = 'Found ' + total_features + ' samples.';
-          }
-        }
-        $('.footer').html(text)
-
-        // adding selectors for filtering
-
-        this.api().columns().every( function (iterator) {
-          var column = this;
-          if (iterator == 3 && column.data().length != 0) {
-            var placer = $(".ps");
-            placer.empty();
-            placer.append("<b>Filter by Processing paramters</b>: ")
-            var selector = $('<select><option value=""></option></select>')
-              .appendTo( placer )
-              .on('change', function () {
-                var val = $.fn.dataTable.util.escapeRegex( $(this).val() );
-                column
-                  .search( val ? '^'+val+'$' : '', true, false )
-                  .draw();
-              });
-
-            var added = [];
-            column.data().each(function (d){
-              var cmd = d.command;
-              if (added.indexOf(cmd) == -1){
-                added.push(cmd);
-                selector.append('<option value="' + cmd + '">' + cmd + '</option>');
-              }
-            });
-          }
-        });
+        // // adding total features found
+        //
+        // var api = this.api(), data;
+        // var total_features = api
+        //   .column(4)
+        //   .data()
+        //   .reduce( function (a, b) { return a + b.samples.length; }, 0);
+        //
+        // $('.footer').addClass("col-md-12 text-right");
+        // if (total_features == 0) {
+        //   text = '';
+        // } else {
+        //   if ($("#search_on").val() == 'categories'){
+        //     text = 'Found ' + total_features + ' categories.';
+        //   } else {
+        //     text = 'Found ' + total_features + ' samples.';
+        //   }
+        // }
+        // $('.footer').html(text)
+        //
+        // // adding selectors for filtering
+        //
+        // this.api().columns().every( function (iterator) {
+        //   var column = this;
+        //   if (iterator == 3 && column.data().length != 0) {
+        //     var placer = $(".ps");
+        //     placer.empty();
+        //     placer.append("<b>Filter by Processing paramters</b>: ")
+        //     var selector = $('<select><option value=""></option></select>')
+        //       .appendTo( placer )
+        //       .on('change', function () {
+        //         var val = $.fn.dataTable.util.escapeRegex( $(this).val() );
+        //         column
+        //           .search( val ? '^'+val+'$' : '', true, false )
+        //           .draw();
+        //       });
+        //
+        //     var added = [];
+        //     column.data().each(function (d){
+        //       var cmd = d.command;
+        //       if (added.indexOf(cmd) == -1){
+        //         added.push(cmd);
+        //         selector.append('<option value="' + cmd + '">' + cmd + '</option>');
+        //       }
+        //     });
+        //   }
+        // });
       },
       "columns": [
-        { "data": null, "orderable": false, "width": "10%" },
-        { "data": null, "width": "40%"  },
-        { "data": null, "width": "10%"  },
-        { "data": null, "width": "30%"  },
-        { "data": null, "width": "10%" }
-      ],
+        { "orderable": false,       "width": "15%", "data": "artifact_biom_ids"},
+        { "data": "study_title",    "width": "70%" },
+        { "data": "study_abstract", "width": "0%" },
+        { "data": "study_id",       "width": "15%" },
+        { "data": "study_alias",    "width": "0%" }],
       columnDefs: [
-        { type:'natural', targets: [1,2,3,4] },
-        // render Add to Analysis button
+        // {type:'natural', targets:[2,6,7]},
+        {"targets": [ 2, 4 ], "visible": false},
+        // render zero
         {"render": function ( data, type, row, meta ) {
-          var text = '';
-          {% if current_user is not None %}
-            if ($("#search_on").val() != 'categories'){
-              var text = '<input type="button" class="btn btn-sm" value="Add" onclick="send_samples_to_analysis(this, [' + row.artifact_id + '])"></td>';
-            }
-          {% end %}
-          return text;
+          if (data !== null && data !== undefined && data.length != 0){
+            return '<div class="container" style="max-width: 5em;">'+
+                     '<div class="row justify-content-md-center">' +
+                       '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
+                       '<div class="col-md-1 text-center">' + data.length + '</div>' +
+                     '</div>' +
+                   '</div>';
+          } else {
+            return 'No BIOMs';
+          }
         }, targets: [0]},
-        // render Study title
+        // render the title cell
         {"render": function ( data, type, row, meta ) {
           {% if current_user is not None %}
-            var text = '<a target="_blank" href="{% raw qiita_config.portal_dir %}/study/description/' +
-                       row.study_id + '" role="button">' + row.study_title + ' (ID: ' + row.study_id + ')</a>';
+            result = "<a target='_blank' href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\">" +
+              "<span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='{% raw qiita_config.portal_dir %}/study/description/" +
+              row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
           {% else %}
-            var text = row.study_title + ' (ID: ' + row.study_id + ')';
+             result = ""
           {% end %}
-          return text;
+            return result
         }, targets: [1]},
-        // render Artifact Name
-        {"render": function ( data, type, row, meta ) {
-          var text = row.aname;
-          if ($("#search_on").val() == 'categories'){
-            text = '';
-          }
-          return text;
-        }, targets: [2]},
-        // render Processing Parameters or Metadata Categories
-        {"render": function ( data, type, row, meta ) {
-          var text = row.command;
-          if ($("#search_on").val() == 'categories'){
-            text = row.samples.join(', ');
-          }
-          return text;
-        }, targets: [3]},
-        // render # of samples/categories
-        {"render": function ( data, type, row, meta ) {
-          return row.samples.length;
-        }, targets: [4]}
-      ],
+        ],
       "language": {
           "search": "Filter results by column data:",
           "loadingRecords": "Please wait - loading information ...",
@@ -143,24 +127,6 @@
               <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
               <strong>Warning!</strong> ` + data.message + `</div><br/>`)
           } else if(data.data){
-            {% if current_user is not None %}
-              var header_0 =  "Add to Analysis";
-            {% else %}
-              var header_0 =  "";
-            {% end %}
-            var header_2 = "Artifact Name";
-            var header_3 = "Processing Parameters";
-            var header_4 = "# of Samples";
-            if (search_on == 'categories') {
-              header_2 = "";
-              header_3 = "Metadata Categories";
-              header_4 = "# of Categories";
-            }
-            $('#redbiom-table tr:eq(0) th:eq(0)').text(header_0);
-            $('#redbiom-table tr:eq(0) th:eq(1)').text("Study Title");
-            $('#redbiom-table tr:eq(0) th:eq(2)').text(header_2);
-            $('#redbiom-table tr:eq(0) th:eq(3)').text(header_3);
-            $('#redbiom-table tr:eq(0) th:eq(4)').text(header_4);
             redbiom_table.rows.add(data.data).draw();
             redbiom_info.html('');
           }
@@ -184,8 +150,8 @@
       <div class="col-xs-2">
         <select class="selectpicker form-control col-xs-2" name="search_on" id="search_on">
           <option value="metadata">Metadata</option>
-          <option checked value="observations">Observation</option>
-          <option checked value="categories">Metadata Categories</option>
+          <option checked value="feature">Feature</option>
+          <option checked value="taxon">Taxon</option>
         </select>
       </div>
       <div class="col-xs-1">
@@ -203,11 +169,11 @@
     <table id="redbiom-table" class="table table-bordered gray-msg">
       <thead>
         <tr>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
+          <th>Expand for analysis</th>
+          <th>Title</th>
+          <th>Abstract</th>
+          <th>Study ID</th>
+          <th>Study Alias</th>
         </tr>
       </thead>
     </table>

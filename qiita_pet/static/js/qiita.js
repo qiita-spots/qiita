@@ -257,20 +257,6 @@ function draw_processing_graph(nodes, edges, target, artifactFunc, jobFunc) {
   });
 };
 
-/**
- *
- * Function to show the loading gif in a given div
- *
- * @param portal_dir: string. The portal that qiita is running under
- * @param target: string. The id of the div to populate with the loading gif
- *
- * This function replaces the content of the given div with the
- * gif to show that the section of page is loading
- *
- */
-function show_loading(portal_dir, target) {
-  $("#" + target).html("<img src='" + portal_dir + "/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
-}
 
 /**
  *

@@ -53,7 +53,7 @@ install:
   - redbiom admin create-context --name "qiita-test" --description "qiita-test context"
   - redbiom admin load-sample-metadata --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
   - redbiom admin load-sample-metadata-search --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
-  - redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test
+  - redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test --tag 1
   - mkdir ~/.qiita_plugins
   - export REDBIOM_HOST=http://127.0.0.1:7379
   - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins
