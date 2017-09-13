@@ -843,6 +843,10 @@ class UtilTests(TestCase):
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
 
+        # resetting to private and deleting the old study
+        qdb.artifact.Artifact(4).visibility = 'private'
+        qdb.study.Study.delete(new_study.id)
+
     def test_generate_study_list_without_artifacts(self):
         # creating a new study to make sure that empty studies are also
         # returned
@@ -896,6 +900,10 @@ class UtilTests(TestCase):
         obs_info = qdb.util.generate_study_list_without_artifacts(
             [1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
+
+        # resetting to private and deleting the old study
+        qdb.artifact.Artifact(4).visibility = 'private'
+        qdb.study.Study.delete(new_study.id)
 
     def test_get_artifacts_information(self):
         # we are gonna test that it ignores 1 and 2 cause they are not biom,
