@@ -1,6 +1,6 @@
 dist: precise
 language: python
-sudo: false
+sudo: required
 env:
   global:
     - PYTHON_VERSION=2.7
@@ -10,6 +10,7 @@ env:
     - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_core qiita_ware"
 before_install:
   - redis-server --version
+  - sudo -H -u redis redis-server /etc/redis/redis.conf --port 7777 &
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
@@ -27,17 +28,32 @@ install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
   - travis_retry conda create --yes -n qiita python=$PYTHON_VERSION pip nose flake8
-    pyzmq networkx pyparsing natsort mock future libgfortran seaborn
+    pyzmq networkx pyparsing natsort mock future libgfortran seaborn nltk
     'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate qiita
   - pip install -U pip
   - pip install sphinx sphinx-bootstrap-theme nose-timer codecov
-  - travis_retry pip install . --process-dependency-links
   - 'echo "backend: Agg" > matplotlibrc'
+  - git clone https://github.com/nicolasff/webdis
+  - pushd webdis
+  - make
+  - ./webdis &
+  - popd
+  - travis_retry pip install . --process-dependency-links
   # Install the biom plugin so we can run the analysis tests
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
   - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+  # loading redbiom with Qiita's test set
+  # but first let's make sure redis is empty
+  # following https://github.com/biocore/redbiom/blob/master/Makefile
+  - export REDBIOM_HOST=http://127.0.0.1:7379
+  - curl -s http://127.0.0.1:7379/FLUSHALL > /dev/null
+  - redbiom admin scripts-writable
+  - redbiom admin create-context --name "qiita-test" --description "qiita-test context"
+  - redbiom admin load-sample-metadata --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
+  - redbiom admin load-sample-metadata-search --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
+  - redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test
   - mkdir ~/.qiita_plugins
   - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins
 before_script:

@@ -60,6 +60,7 @@ Install the non-python dependencies
 
 * [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.5, we have tested most extensively with 9.3.6)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
+* [webdis] (https://github.com/nicolasff/webdis) (latest version should be fine but we have tested the most with 9ee6fe2 - Feb 6, 2016)
 
 There are several options to install these dependencies depending on your needs:
 
@@ -87,6 +88,27 @@ brew update
 brew install homebrew/versions/redis28
 ```
 
+### webdis
+
+Note that this is the only package that assumes that Qiita is already installed (due to library dependencies). Also, that the general suggestion is to have 2 redis servers running, one for webdis/redbiom and the other for Qiita. The reason for multiple redis servers is so that the redbiom cache can be flushed without impacting the operation of the qiita server itself.
+
+The following instructions install, compile and pre-populates the redbiom redis DB so we assume that redis is running on the default port and that Qiita is fully installed as the redbiom package is installed with Qiita.
+
+```
+git clone https://github.com/nicolasff/webdis
+pushd webdis
+make
+./webdis &
+popd
+# note that this assumes that Qiita is already installed
+fp=`python -c 'import qiita_db; print qiita_db.__file__'`
+qdbd=`dirname $fp`
+redbiom admin scripts-writable
+redbiom admin create-context --name "qiita-test" --description "qiita-test context"
+redbiom admin load-sample-metadata --metadata ${qdbd}/support_files/test_data/templates/1_19700101-000000.txt
+redbiom admin load-sample-metadata-search --metadata ${qdbd}/support_files/test_data/templates/1_19700101-000000.txt
+redbiom admin load-sample-data --table ${qdbd}/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test
+```
 
 Install Qiita development version and its python dependencies
 -------------------------------------------------------------
@@ -149,6 +171,13 @@ Next, make a test environment:
 
 ```bash
 qiita-env make --no-load-ontologies
+```
+
+Finally, redbiom relies on the REDBIOM_HOST environment variable to set the URL to query. By default is set to Qiita redbiom public repository. To change it you could do:
+
+
+```bash
+export REDBIOM_HOST=http://my_host.com:7379
 ```
 
 ## Start Qiita
