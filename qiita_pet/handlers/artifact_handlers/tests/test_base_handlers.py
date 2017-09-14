@@ -91,6 +91,7 @@ class TestBaseHandlersUtils(TestCase):
             (2L, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)')]
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
+               'artifact_type': 'FASTQ',
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
@@ -120,6 +121,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
+               'artifact_type': 'FASTQ',
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
@@ -156,6 +158,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
+               'artifact_type': 'FASTQ',
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
@@ -186,6 +189,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(demo_u, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
+               'artifact_type': 'FASTQ',
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'public',
                'editable': False,
@@ -213,6 +217,7 @@ class TestBaseHandlersUtils(TestCase):
             (5L, '1_seqs.demux (preprocessed demux)')]
         exp = {'name': 'Demultiplexed 1',
                'artifact_id': 2,
+               'artifact_type': 'Demultiplexed',
                'artifact_timestamp': '2012-10-01 10:10',
                'visibility': 'private',
                'editable': True,
@@ -249,6 +254,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 8)
         exp = {'name': 'noname',
                'artifact_id': 8,
+               'artifact_type': 'BIOM',
                # this value changes on build so copy from obs
                'artifact_timestamp': obs['artifact_timestamp'],
                'visibility': 'sandbox',
