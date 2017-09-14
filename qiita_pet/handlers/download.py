@@ -7,7 +7,9 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import authenticated, HTTPError
+from tornado.gen import coroutine
 
+from future.utils import viewitems
 from os.path import basename, getsize, join
 from os import walk
 from datetime import datetime
@@ -17,11 +19,14 @@ from qiita_pet.handlers.api_proxy import study_get_req
 from qiita_db.study import Study
 from qiita_db.util import filepath_id_to_rel_path, get_db_files_base_dir
 from qiita_db.meta_util import validate_filepath_access_by_user
+from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_core.util import execute_as_transaction, get_release_info
 
 
 class DownloadHandler(BaseHandler):
     @authenticated
+    @coroutine
     @execute_as_transaction
     def get(self, filepath_id):
         fid = int(filepath_id)
@@ -53,6 +58,7 @@ class DownloadHandler(BaseHandler):
 
 class DownloadStudyBIOMSHandler(BaseHandler):
     @authenticated
+    @coroutine
     @execute_as_transaction
     def get(self, study_id):
         study_id = int(study_id)
@@ -125,6 +131,7 @@ class DownloadStudyBIOMSHandler(BaseHandler):
 
 
 class DownloadRelease(BaseHandler):
+    @coroutine
     def get(self, extras):
         _, relpath, _ = get_release_info()
 
@@ -149,6 +156,7 @@ class DownloadRelease(BaseHandler):
 
 class DownloadRawData(BaseHandler):
     @authenticated
+    @coroutine
     @execute_as_transaction
     def get(self, study_id):
         study_id = int(study_id)
@@ -221,4 +229,60 @@ class DownloadRawData(BaseHandler):
         self.set_header('X-Archive-Files', 'zip')
         self.set_header('Content-Disposition',
                         'attachment; filename=%s' % zip_fn)
+        self.finish()
+
+
+class DownloadEBISampleAccessions(BaseHandler):
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def get(self, study_id):
+        sid = int(study_id)
+        # Check general access to study
+        study_info = study_get_req(sid, self.current_user.id)
+        if study_info['status'] != 'success':
+            raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
+                                                 self.current_user.email,
+                                                 study_id))
+
+        st = SampleTemplate(sid)
+
+        text = "sample_name\tsample_accession\n%s" % '\n'.join(
+            ["%s\t%s" % (k, v)
+             for k, v in viewitems(st.ebi_sample_accessions)])
+
+        self.set_header('Content-Description', 'text/csv')
+        self.set_header('Expires', '0')
+        self.set_header('Cache-Control', 'no-cache')
+        self.set_header('Content-Disposition', 'attachment; '
+                        'filename=ebi_sample_accessions_study_%s.tsv' % sid)
+        self.write(text)
+        self.finish()
+
+
+class DownloadEBIPrepAccessions(BaseHandler):
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def get(self, prep_template_id):
+        pid = int(prep_template_id)
+        pt = PrepTemplate(pid)
+        sid = pt.study_id
+        # Check general access to study
+        study_info = study_get_req(sid, self.current_user.id)
+        if study_info['status'] != 'success':
+            raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
+                                                 self.current_user.email,
+                                                 str(sid)))
+
+        text = "sample_name\texperiment_accession\n%s" % '\n'.join(
+            ["%s\t%s" % (k, v)
+             for k, v in viewitems(pt.ebi_experiment_accessions)])
+
+        self.set_header('Content-Description', 'text/csv')
+        self.set_header('Expires', '0')
+        self.set_header('Cache-Control', 'no-cache')
+        self.set_header('Content-Disposition', 'attachment; '
+                        'filename=ebi_sample_accessions_study_%s.tsv' % sid)
+        self.write(text)
         self.finish()

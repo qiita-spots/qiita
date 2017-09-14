@@ -134,6 +134,10 @@
   </tr>
 </table>
 
+{% if study_info['ebi_submission_status'] == 'submitted' %}
+  <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_ebi_accessions/samples/{{study_info['study_id']}}"><span class="glyphicon glyphicon-download-alt"></span> EBI sample accessions</a>
+{% end %}
+
 {% if share_access %}
 <a class="btn btn-default" data-toggle="modal" data-target="#share-study-modal-view" onclick="modify_sharing({{study_info['study_id']}});"><span class="glyphicon glyphicon-share"></span> Share</a>
 {% end %}
