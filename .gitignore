@@ -57,3 +57,6 @@ gg_13_8-*
 
 # sphinx documentation
 qiita_pet/static/doc/
+
+# webdis log
+webdis.log

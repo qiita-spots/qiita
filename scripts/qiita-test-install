@@ -67,6 +67,11 @@ except ImportError as e:
     missing_deps_errors.append((e, core_dependency_missing_msg % 'toredis'))
 
 try:
+    from redbiom import __version__ as redbiom_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'redbiom'))
+
+try:
     from bcrypt import __version__ as bcrypt_lib_version
 except ImportError as e:
     missing_deps_errors.append((e, core_dependency_missing_msg % 'bcrypt'))
@@ -241,6 +246,17 @@ class QiitaConfig(TestCase):
                         % ('.'.join(map(str, version)),
                            string_acceptable_version))
 
+    def test_redbiom_version(self):
+        acceptable_version = (0, 1, 0)
+        string_acceptable_version = '.'.join(map(str, acceptable_version))
+        version = tuple(map(int, redbiom_lib_version.split('.')))
+
+        self.assertTrue(acceptable_version == version,
+                        'Unsupported redis version. You have %s but the '
+                        'minimum required version is %s'
+                        % ('.'.join(map(str, version)),
+                           string_acceptable_version))
+
 
 system_info_header = """
 System information
@@ -285,6 +301,12 @@ def main():
         "SELECT current_patch FROM settings")[0]
     qiita_db_patch_number = splitext(current_patch)[0]
 
+    # Getting required environment variables
+    if 'REDBIOM_HOST' in environ:
+        redbiom_host = environ['REDBIOM_HOST']
+    else:
+        redbiom_host = None
+
     version_info = [
         ('click library version', click_lib_version),
         ('future library version', future_lib_version),
@@ -292,6 +314,8 @@ def main():
         ('pandas library version', pandas_lib_version),
         ('tornado library version', tornado_lib_version),
         ('redis library version', redis_lib_version),
+        ('redbiom library version', '%s - host: %s' % (
+            redbiom_lib_version, redbiom_host)),
         ('bcrypt library version', bcrypt_lib_version),
         ('pyparsing library version', pyparsing_lib_version),
         ('networkX library version', networkx_lib_version),
@@ -347,6 +371,18 @@ def main():
         redis_running = True
     except:
         redis_running = False
+
+    try:
+        StrictRedis(
+             host=qiita_config.redbiom_redis_host,
+             password=qiita_config.redbiom_redis_password,
+             port=qiita_config.redbiom_redis_port,
+             db=qiita_config.redbiom_redis_db)
+        redbiom_redis_running = True
+    except:
+        redbiom_redis_running = False
+
+    print qiita_config_header
     qiita_config_info = [
         ('QIITA_CONFIG_FP filepath', qiita_conf_fp),
         ('Test environment', str(qiita_config.test_environment)),
@@ -359,7 +395,13 @@ def main():
         ('Valid file extensions for upload', ', '.join(
          qiita_config.valid_upload_extension)),
         ('PostgreSQL is up and configuration can connect?', psql_running),
-        ('Redis is up and configuracion can connect?', redis_running),
+        ('Redis is up and configuracion can connect?',
+            redis_running if not redis_running else '%s --port %d' % (
+                redis_running, qiita_config.redis_port)),
+        ('Redbiom redis is up and configuracion can connect?',
+            redbiom_redis_running if not redbiom_redis_running else
+            '%s --port %d' % (redbiom_redis_running,
+                              qiita_config.redbiom_redis_port)),
         ('Extra info', extra_info)
     ]
     max_len = max([len(e[0]) for e in qiita_config_info])

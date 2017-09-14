@@ -42,16 +42,23 @@ function bootstrapAlert(message, severity, timeout){
   }
 }
 
+
+/*
+ * format_extra_info_processing_jobs will add new rows to the study lists
+ *
+ * @param message: data, the original data object for the row
+ *     0: blank +/- button
+ *     1: heartbeat
+ *     2: name
+ *     3: status
+ *     4: step
+ *     5: id
+ *     6: params
+ *     7: processing_job_workflow_id
+ *
+ */
+
 function format_extra_info_processing_jobs ( data ) {
-    // `data` is the original data object for the row
-    // 0: blank +/- button
-    // 1: heartbeat
-    // 2: name
-    // 3: status
-    // 4: step
-    // 5: id
-    // 6: params
-    // 7: processing_job_workflow_id
 
     let row = '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'+
                 '<tr>'+
@@ -74,10 +81,24 @@ function format_extra_info_processing_jobs ( data ) {
     return row
 }
 
+/*
+ * show_hide toggles visibility for the given div
+ *
+ * @param message: div, the div to toggle visibility
+ *
+ */
 
 function show_hide(div) {
 	$('#' + div).toggle();
 }
+
+/*
+ * delete_analysis will delete an analysis
+ *
+ * @param aname: The name of the analysis to delete
+ * @param analysis_id: The id of the analysis to delete
+ *
+ */
 
 function delete_analysis(aname, analysis_id) {
   if (confirm('Are you sure you want to delete analysis: ' + aname + '?')) {
@@ -97,6 +118,10 @@ function delete_analysis(aname, analysis_id) {
   }
 }
 
+/*
+ * show_hide_process_list will toggle the process/job listing visibility
+ */
+
 function show_hide_process_list() {
   if ($("#qiita-main").width() == $("#qiita-main").parent().width()) {
     // let's update the job list
@@ -113,6 +138,36 @@ function show_hide_process_list() {
     $("#qiita-processing").width("0%");
     $("#qiita-processing").hide();
   }
+}
+
+/*
+ * send_samples_to_analysis send the selected samples for the given artifact ids to analysis
+ *
+ * @param button: the button object that triggered this request
+ * @param aids: A list of artifact ids to add
+ *
+ * Note that we have a list of artifact ids cause the user can select one single
+ * artifact to add or all study artifacts
+ */
+function send_samples_to_analysis(button, aids) {
+  button.value = 'Adding';
+  button.disabled = true;
+  $(button).addClass("btn-info");
+  bootstrapAlert('We are adding ' + aids.length + ' artifact(s) to the analysis. This ' +
+                 'might take some time based on the number of samples on each artifact.', "warning", 10000);
+  $.get('/artifact/samples/', {ids:aids})
+    .done(function ( data ) {
+      if (data['status']=='success') {
+        qiita_websocket.send('sel', data['data']);
+        button.value = 'Added';
+        $(button).removeClass("btn-info");
+      } else {
+        bootstrapAlert('ERROR: ' + data['msg'], "danger");
+        button.value = 'There was an error, scroll up to see it';
+        button.disabled = false;
+        $(button).addClass("btn-danger");
+      }
+    });
 }
 
 /**
@@ -202,20 +257,6 @@ function draw_processing_graph(nodes, edges, target, artifactFunc, jobFunc) {
   });
 };
 
-/**
- *
- * Function to show the loading gif in a given div
- *
- * @param portal_dir: string. The portal that qiita is running under
- * @param target: string. The id of the div to populate with the loading gif
- *
- * This function replaces the content of the given div with the
- * gif to show that the section of page is loading
- *
- */
-function show_loading(portal_dir, target) {
-  $("#" + target).html("<img src='" + portal_dir + "/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
-}
 
 /**
  *
@@ -337,3 +378,39 @@ var qiita_websocket = new function () {
         };
     };
 };
+
+function error(evt) {
+  $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>");
+}
+
+function show_alert(data) {
+  bootstrapAlert(data + ' samples selected.', "success", 10000);
+   $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
+}
+
+function format_biom_rows(data, row) {
+  var proc_data_table = '<table class="table" cellpadding="0" cellspacing="0" border="0" style="padding-left:0px;width:95%">';
+  proc_data_table += '<tr>';
+  proc_data_table += '<th>Name</th>';
+  proc_data_table += '<th>Processing method</th>';
+  proc_data_table += '<th>Parameters</th>';
+  proc_data_table += '<th>Files</th>';
+  proc_data_table += '</tr>';
+  $.each(data, function (idx, info) {
+    if (typeof info !== 'string' && !(info instanceof String)) {
+      proc_data_table += '<tr>';
+      proc_data_table += '<td>' + info.name + ' (' + info.artifact_id + ' - ' + info.timestamp.split('.')[0] + ')</td>';
+      proc_data_table += '<td>' + info.algorithm + '</td>';
+      var params = '';
+      for (var key in info.parameters) {
+        params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
+      }
+      proc_data_table += '<td><small>' + params + '</small></td>';
+      proc_data_table += '<td><small>' + info.files.join('<br/>')  + '</small></td>';
+      proc_data_table += '</tr>';
+    }
+  });
+
+  proc_data_table += '</table>';
+  return proc_data_table;
+}

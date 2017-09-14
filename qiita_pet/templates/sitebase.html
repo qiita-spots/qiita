@@ -61,6 +61,20 @@
         $('body').css('padding-top', $('#navigation-bar').height()+10);
       });
 
+      /**
+       *
+       * Function to show the loading gif in a given div
+       *
+       * @param div_name string with the name of the div to populate with the loading gif
+       *
+       * This function replaces the content of the given div with the
+       * gif to show that the section of page is loading
+       *
+       */
+      function show_loading(div_name) {
+        $("#" + div_name).html("<img src='{% raw qiita_config.portal_dir %}/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
+      }
+
       function overlay_check() {
         // from http://stackoverflow.com/q/5916900/379593
         var ua=navigator.userAgent,tem,M=ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
@@ -522,6 +536,11 @@
             <ul class="nav navbar-nav">
               <li>
                 <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
+              <li>
+                <a href="{% raw qiita_config.portal_dir %}/redbiom/">Redbiom</a>
               </li>
             </ul>
             <ul class="nav navbar-nav">

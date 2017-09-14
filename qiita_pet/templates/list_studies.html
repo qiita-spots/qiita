@@ -9,33 +9,6 @@
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
 
 <script type="text/javascript">
-function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
-
-function send_samples_to_moi(button, aids) {
-  button.value = 'Adding';
-  button.disabled = true;
-  $(button).addClass("btn-info");
-  bootstrapAlert('We are adding ' + aids.length + ' artifact(s) to the analysis. This ' +
-                 'might take some time based on the number of samples on each artifact.', "warning", 10000);
-  $.get('/artifact/samples/', {ids:aids})
-    .done(function ( data ) {
-      if (data['status']=='success') {
-        qiita_websocket.send('sel', data['data']);
-        button.value = 'Added';
-        $(button).removeClass("btn-info");
-      } else {
-        bootstrapAlert('ERROR: ' + data['msg'], "danger");
-        button.value = 'There was an error, scroll up to see it';
-        button.disabled = false;
-        $(button).addClass("btn-danger");
-      }
-    });
-}
-
-function show_alert(data) {
-  bootstrapAlert(data + ' samples selected.', "success", 10000);
-   $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
-}
 
 function fillAbstract(table, row) {
   $('#title-text-area').text($('#' + table).find('#study' + row + "-title").text());
@@ -96,7 +69,7 @@ $(document).ready(function() {
     $.each(data, function (idx, info) {
       if (typeof info !== 'string' && !(info instanceof String)) {
         proc_data_table += '<tr>';
-        proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="send_samples_to_moi(this, [' + info.artifact_id + '])"></td>';
+        proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="send_samples_to_analysis(this, [' + info.artifact_id + '])"></td>';
         proc_data_table += '<td>' + info.name + ' (' + info.artifact_id + ' - ' + info.timestamp.split('.')[0] + ')</td>';
         proc_data_table += '<td>' + info.data_type + ' (' + info.target_subfragment.join(', ') + ')</td>';
         proc_data_table += '<td>' + info.algorithm + '</td>';

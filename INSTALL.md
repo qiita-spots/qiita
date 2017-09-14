@@ -107,7 +107,7 @@ redbiom admin scripts-writable
 redbiom admin create-context --name "qiita-test" --description "qiita-test context"
 redbiom admin load-sample-metadata --metadata ${qdbd}/support_files/test_data/templates/1_19700101-000000.txt
 redbiom admin load-sample-metadata-search --metadata ${qdbd}/support_files/test_data/templates/1_19700101-000000.txt
-redbiom admin load-sample-data --table ${qdbd}/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test
+redbiom admin load-sample-data --table ${qdbd}/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test --tag 1
 ```
 
 Install Qiita development version and its python dependencies

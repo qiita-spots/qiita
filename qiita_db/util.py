@@ -1310,24 +1310,86 @@ def generate_study_list(study_ids, public_only=False):
             del info["shared_with_name"]
             del info["shared_with_email"]
 
-            infolist.append({
-                'owner': info['owner'],
-                'study_alias': info['study_alias'],
-                'metadata_complete': info['metadata_complete'],
-                'publication_pid': info['publication_pid'],
-                'ebi_submission_status': info['ebi_submission_status'],
-                'shared': info['shared'],
-                'study_abstract': info['study_abstract'], 'pi': info['pi'],
-                'status': qdb.study.Study(info['study_id']).status,
-                'study_tags': info['study_tags'],
-                'publication_doi': info['publication_doi'],
-                'study_id': info['study_id'],
-                'ebi_study_accession': info['ebi_study_accession'],
-                'study_title': info['study_title'],
-                'number_samples_collected': info['number_samples_collected'],
-                'artifact_biom_ids': info['artifact_biom_ids']
-            })
+            info['status'] = qdb.study.Study(info['study_id']).status
+            infolist.append(info)
+    return infolist
 
+
+def generate_study_list_without_artifacts(study_ids, public_only=False):
+    """Get general study information without artifacts
+
+    Parameters
+    ----------
+    study_ids : list of ints
+        The study ids to look for. Non-existing ids will be ignored
+    public_only : bool, optional
+        If true, return only public BIOM artifacts. Default: false.
+
+    Returns
+    -------
+    list of dict
+        The list of studies and their information
+
+    Notes
+    -----
+    The main select might look scary but it's pretty simple:
+    - We select the requiered fields from qiita.study and qiita.study_person
+        SELECT metadata_complete, study_abstract, study_id, study_alias,
+            study_title, ebi_study_accession, ebi_submission_status,
+            qiita.study_person.name AS pi_name,
+            qiita.study_person.email AS pi_email,
+    - the total number of samples collected by counting sample_ids
+            (SELECT COUNT(sample_id) FROM qiita.study_sample
+                WHERE study_id=qiita.study.study_id)
+                AS number_samples_collected]
+    - all the publications that belong to the study
+            (SELECT array_agg((publication, is_doi)))
+                FROM qiita.study_publication
+                WHERE study_id=qiita.study.study_id) AS publications
+    """
+    with qdb.sql_connection.TRN:
+        sql = """
+            SELECT metadata_complete, study_abstract, study_id, study_alias,
+                study_title, ebi_study_accession, ebi_submission_status,
+                qiita.study_person.name AS pi_name,
+                qiita.study_person.email AS pi_email,
+                (SELECT COUNT(sample_id) FROM qiita.study_sample
+                    WHERE study_id=qiita.study.study_id)
+                    AS number_samples_collected,
+                (SELECT array_agg(row_to_json((publication, is_doi), true))
+                    FROM qiita.study_publication
+                    WHERE study_id=qiita.study.study_id) AS publications
+                FROM qiita.study
+                LEFT JOIN qiita.study_person ON (
+                    study_person_id=principal_investigator_id)
+                WHERE study_id IN %s
+                ORDER BY study_id"""
+        qdb.sql_connection.TRN.add(sql, [tuple(study_ids)])
+        infolist = []
+        for info in qdb.sql_connection.TRN.execute_fetchindex():
+            info = dict(info)
+
+            # publication info
+            info['publication_doi'] = []
+            info['publication_pid'] = []
+            if info['publications'] is not None:
+                for p in info['publications']:
+                    # f1-2 are the default names given
+                    pub = p['f1']
+                    is_doi = p['f2']
+                    if is_doi:
+                        info['publication_doi'].append(pub)
+                    else:
+                        info['publication_pid'].append(pub)
+            del info['publications']
+
+            # pi info
+            info["pi"] = (info['pi_email'], info['pi_name'])
+            del info["pi_email"]
+            del info["pi_name"]
+
+            info['status'] = qdb.study.Study(info['study_id']).status
+            infolist.append(info)
     return infolist
 
 
