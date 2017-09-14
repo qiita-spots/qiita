@@ -40,20 +40,14 @@
         // render zero
         {"render": function ( data, type, row, meta ) {
           if (data !== null && data !== undefined && data.length != 0){
-            {% if current_user is not None %}
-              return '<div class="container" style="max-width: 5em;">'+
-                       '<div class="row justify-content-md-center">' +
-                         '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
-                         '<div class="col-md-1 text-center">' + data.length + '</div>' +
-                       '</div>' +
-                     '</div>';
-            {% else %}
-              return '<div class="container" style="max-width: 5em;">'+
-                       '<div class="row justify-content-md-center">' +
-                         '<div class="col-md-1 text-center">' + data.length + '</div>' +
-                       '</div>' +
-                     '</div>';
-            {% end %}
+            return '<div class="container" style="max-width: 5em;">'+
+              '<div class="row justify-content-md-center">' +
+                {% if current_user is not None %}
+                  '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
+                {% end %}
+                '<div class="col-md-1 text-center">' + data.length + '</div>' +
+              '</div>' +
+            '</div>';
           } else {
             return 'No BIOMs';
           }

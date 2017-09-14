@@ -101,10 +101,7 @@ class TestRedbiom(TestHandlerBase):
             'search_on': 'metadata'
         }
         response = self.post('/redbiom/', post_args)
-        self.assertEqual(response.code, 200)
-        exp = {'status': 'success', 'message': "Nothing to search for ...",
-               'data': []}
-        self.assertEqual(loads(response.body), exp)
+        self.assertEqual(response.code, 400)
 
         post_args = {
             'search': 'infant',

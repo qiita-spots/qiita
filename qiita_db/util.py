@@ -1310,24 +1310,8 @@ def generate_study_list(study_ids, public_only=False):
             del info["shared_with_name"]
             del info["shared_with_email"]
 
-            infolist.append({
-                'owner': info['owner'],
-                'study_alias': info['study_alias'],
-                'metadata_complete': info['metadata_complete'],
-                'publication_pid': info['publication_pid'],
-                'ebi_submission_status': info['ebi_submission_status'],
-                'shared': info['shared'],
-                'study_abstract': info['study_abstract'], 'pi': info['pi'],
-                'status': qdb.study.Study(info['study_id']).status,
-                'study_tags': info['study_tags'],
-                'publication_doi': info['publication_doi'],
-                'study_id': info['study_id'],
-                'ebi_study_accession': info['ebi_study_accession'],
-                'study_title': info['study_title'],
-                'number_samples_collected': info['number_samples_collected'],
-                'artifact_biom_ids': info['artifact_biom_ids']
-            })
-
+            info['status'] = qdb.study.Study(info['study_id']).status
+            infolist.append(info)
     return infolist
 
 
@@ -1404,19 +1388,8 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
             del info["pi_email"]
             del info["pi_name"]
 
-            infolist.append({
-                'study_alias': info['study_alias'],
-                'metadata_complete': info['metadata_complete'],
-                'publication_pid': info['publication_pid'],
-                'ebi_submission_status': info['ebi_submission_status'],
-                'study_abstract': info['study_abstract'], 'pi': info['pi'],
-                'status': qdb.study.Study(info['study_id']).status,
-                'publication_doi': info['publication_doi'],
-                'study_id': info['study_id'],
-                'ebi_study_accession': info['ebi_study_accession'],
-                'study_title': info['study_title'],
-                'number_samples_collected': info['number_samples_collected'],
-            })
+            info['status'] = qdb.study.Study(info['study_id']).status
+            infolist.append(info)
     return infolist
 
 

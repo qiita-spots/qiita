@@ -143,8 +143,8 @@ function show_hide_process_list() {
 /*
  * send_samples_to_analysis send the selected samples for the given artifact ids to analysis
  *
+ * @param button: the button object that triggered this request
  * @param aids: A list of artifact ids to add
- * @param samples: The ids of the samples to add
  *
  * Note that we have a list of artifact ids cause the user can select one single
  * artifact to add or all study artifacts
