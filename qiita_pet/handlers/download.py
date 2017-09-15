@@ -232,7 +232,21 @@ class DownloadRawData(BaseHandler):
         self.finish()
 
 
-class DownloadEBISampleAccessions(BaseHandler):
+class BaseHandlerDownloadEBI(BaseHandler):
+    def _generate_files(self, header_name, accessions, filename):
+        text = "sample_name\t%s\n%s" % (header_name, '\n'.join(
+            ["%s\t%s" % (k, v) for k, v in viewitems(accessions)]))
+
+        self.set_header('Content-Description', 'text/csv')
+        self.set_header('Expires', '0')
+        self.set_header('Cache-Control', 'no-cache')
+        self.set_header('Content-Disposition', 'attachment; '
+                        'filename=%s' % filename)
+        self.write(text)
+        self.finish()
+
+
+class DownloadEBISampleAccessions(BaseHandlerDownloadEBI):
     @authenticated
     @coroutine
     @execute_as_transaction
@@ -244,23 +258,12 @@ class DownloadEBISampleAccessions(BaseHandler):
             raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
                                                  self.current_user.email,
                                                  study_id))
-
-        st = SampleTemplate(sid)
-
-        text = "sample_name\tsample_accession\n%s" % '\n'.join(
-            ["%s\t%s" % (k, v)
-             for k, v in viewitems(st.ebi_sample_accessions)])
-
-        self.set_header('Content-Description', 'text/csv')
-        self.set_header('Expires', '0')
-        self.set_header('Cache-Control', 'no-cache')
-        self.set_header('Content-Disposition', 'attachment; '
-                        'filename=ebi_sample_accessions_study_%s.tsv' % sid)
-        self.write(text)
-        self.finish()
+        self._generate_files(
+            'sample_accession', SampleTemplate(sid).ebi_sample_accessions,
+            'ebi_sample_accessions_study_%s.tsv' % sid)
 
 
-class DownloadEBIPrepAccessions(BaseHandler):
+class DownloadEBIPrepAccessions(BaseHandlerDownloadEBI):
     @authenticated
     @coroutine
     @execute_as_transaction
@@ -275,14 +278,6 @@ class DownloadEBIPrepAccessions(BaseHandler):
                                                  self.current_user.email,
                                                  str(sid)))
 
-        text = "sample_name\texperiment_accession\n%s" % '\n'.join(
-            ["%s\t%s" % (k, v)
-             for k, v in viewitems(pt.ebi_experiment_accessions)])
-
-        self.set_header('Content-Description', 'text/csv')
-        self.set_header('Expires', '0')
-        self.set_header('Cache-Control', 'no-cache')
-        self.set_header('Content-Disposition', 'attachment; '
-                        'filename=ebi_sample_accessions_study_%s.tsv' % sid)
-        self.write(text)
-        self.finish()
+        self._generate_files(
+            'experiment_accession', pt.ebi_experiment_accessions,
+            'ebi_experiment_accessions_study_%s_prep_%s.tsv' % (sid, pid))
