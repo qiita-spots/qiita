@@ -49,8 +49,7 @@ class ShareAnalysisAJAX(BaseHandler):
     def get(self):
         analysis_id = int(self.get_argument('id'))
         analysis = Analysis(analysis_id)
-        if self.current_user != analysis.owner and \
-           self.current_user not in analysis.shared_with:
+        if not analysis.has_access(self.current_user):
             raise HTTPError(403, 'User %s does not have permissions to share '
                             'analysis %s' % (
                                 self.current_user.id, analysis.id))

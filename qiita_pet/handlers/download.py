@@ -7,7 +7,9 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import authenticated, HTTPError
+from tornado.gen import coroutine
 
+from future.utils import viewitems
 from os.path import basename, getsize, join
 from os import walk
 from datetime import datetime
@@ -17,11 +19,14 @@ from qiita_pet.handlers.api_proxy import study_get_req
 from qiita_db.study import Study
 from qiita_db.util import filepath_id_to_rel_path, get_db_files_base_dir
 from qiita_db.meta_util import validate_filepath_access_by_user
+from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_core.util import execute_as_transaction, get_release_info
 
 
 class DownloadHandler(BaseHandler):
     @authenticated
+    @coroutine
     @execute_as_transaction
     def get(self, filepath_id):
         fid = int(filepath_id)
@@ -51,20 +56,36 @@ class DownloadHandler(BaseHandler):
         self.finish()
 
 
-class DownloadStudyBIOMSHandler(BaseHandler):
+class BaseHandlerDownload(BaseHandler):
+    def _check_permissions(self, sid):
+        # Check general access to study
+        study_info = study_get_req(sid, self.current_user.id)
+        if study_info['status'] != 'success':
+            raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
+                                                 self.current_user.email, sid))
+        return Study(sid)
+
+    def _generate_files(self, header_name, accessions, filename):
+        text = "sample_name\t%s\n%s" % (header_name, '\n'.join(
+            ["%s\t%s" % (k, v) for k, v in viewitems(accessions)]))
+
+        self.set_header('Content-Description', 'text/csv')
+        self.set_header('Expires', '0')
+        self.set_header('Cache-Control', 'no-cache')
+        self.set_header('Content-Disposition', 'attachment; '
+                        'filename=%s' % filename)
+        self.write(text)
+        self.finish()
+
+
+class DownloadStudyBIOMSHandler(BaseHandlerDownload):
     @authenticated
+    @coroutine
     @execute_as_transaction
     def get(self, study_id):
         study_id = int(study_id)
-        # Check access to study
-        study_info = study_get_req(study_id, self.current_user.id)
+        study = self._check_permissions(study_id)
 
-        if study_info['status'] != 'success':
-            raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
-                                                 self.current_user.email,
-                                                 str(study_id)))
-
-        study = Study(study_id)
         basedir = get_db_files_base_dir()
         basedir_len = len(basedir) + 1
         # loop over artifacts and retrieve those that we have access to
@@ -125,6 +146,7 @@ class DownloadStudyBIOMSHandler(BaseHandler):
 
 
 class DownloadRelease(BaseHandler):
+    @coroutine
     def get(self, extras):
         _, relpath, _ = get_release_info()
 
@@ -147,19 +169,13 @@ class DownloadRelease(BaseHandler):
         self.finish()
 
 
-class DownloadRawData(BaseHandler):
+class DownloadRawData(BaseHandlerDownload):
     @authenticated
+    @coroutine
     @execute_as_transaction
     def get(self, study_id):
         study_id = int(study_id)
-        # Check general access to study
-        study_info = study_get_req(study_id, self.current_user.id)
-        if study_info['status'] != 'success':
-            raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
-                                                 self.current_user.email,
-                                                 str(study_id)))
-
-        study = Study(study_id)
+        study = self._check_permissions(study_id)
         user = self.current_user
         # Check "owner" access to the study
         if not study.has_access(user, True):
@@ -222,3 +238,32 @@ class DownloadRawData(BaseHandler):
         self.set_header('Content-Disposition',
                         'attachment; filename=%s' % zip_fn)
         self.finish()
+
+
+class DownloadEBISampleAccessions(BaseHandlerDownload):
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def get(self, study_id):
+        sid = int(study_id)
+        self._check_permissions(sid)
+
+        self._generate_files(
+            'sample_accession', SampleTemplate(sid).ebi_sample_accessions,
+            'ebi_sample_accessions_study_%s.tsv' % sid)
+
+
+class DownloadEBIPrepAccessions(BaseHandlerDownload):
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def get(self, prep_template_id):
+        pid = int(prep_template_id)
+        pt = PrepTemplate(pid)
+        sid = pt.study_id
+
+        self._check_permissions(sid)
+
+        self._generate_files(
+            'experiment_accession', pt.ebi_experiment_accessions,
+            'ebi_experiment_accessions_study_%s_prep_%s.tsv' % (sid, pid))
