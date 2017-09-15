@@ -119,15 +119,6 @@ function delete_analysis(aname, analysis_id) {
 }
 
 /*
- * show_hide_process_list will toggle the process/job listing visibility
- */
-
-function show_hide_process_list() {
-  processing_jobs_vue.update_processing_job_data();
-  $('#qiita-processing').modal('show');
-}
-
-/*
  * send_samples_to_analysis send the selected samples for the given artifact ids to analysis
  *
  * @param button: the button object that triggered this request
