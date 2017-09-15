@@ -96,6 +96,9 @@
     $('#update-artifact-name').on('shown.bs.modal', function() {
       $('#new-artifact-name').focus();
     });
+
+    qiita_websocket.init(window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', error, error);
+    qiita_websocket.add_callback('sel', show_alert);
   });
 </script>
 <div class='row'>
@@ -104,7 +107,11 @@
       <i id='summary-title'>{{name}}</i><i> (ID: {{artifact_id}}) Visibility: {{visibility}}</i>
       {% if editable %}
         <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit</a>
-        <a class="btn btn-default btn-sm" onclick="load_process_artifact_ui({{artifact_id}});"><span class="glyphicon glyphicon-play"></span> Process</a>
+        {% if artifact_type == 'BIOM' %}
+          <a class="btn btn-default btn-sm" onclick="send_samples_to_analysis(this, [{{artifact_id}}]);"> Add to analysis</a>
+        {% else %}
+          <a class="btn btn-default btn-sm" onclick="load_process_artifact_ui({{artifact_id}});"><span class="glyphicon glyphicon-play"></span> Process</a>
+        {% end %}
         <a class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete artifact {{artifact_id}}?')){ delete_artifact({{artifact_id}}) };"><span class="glyphicon glyphicon-trash"></span> Delete</a>
         {% raw buttons %}
       {% end %}

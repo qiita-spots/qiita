@@ -86,6 +86,7 @@ def artifact_summary_get_request(user, artifact_id):
     """
     artifact_id = int(artifact_id)
     artifact = Artifact(artifact_id)
+    artifact_type = artifact.artifact_type
 
     check_artifact_access(user, artifact)
 
@@ -113,7 +114,7 @@ def artifact_summary_get_request(user, artifact_id):
         summary = relpath(summary[1], qiita_config.base_data_dir)
     else:
         # Check if the summary is being generated
-        command = Command.get_html_generator(artifact.artifact_type)
+        command = Command.get_html_generator(artifact_type)
         all_jobs = set(artifact.jobs(cmd=command))
         jobs = [j for j in all_jobs if j.status in ['queued', 'running']]
         errored_jobs = [(j.id, j.log.msg)
@@ -192,8 +193,8 @@ def artifact_summary_get_request(user, artifact_id):
     # TODO: https://github.com/biocore/qiita/issues/1724 Remove this hardcoded
     # values to actually get the information from the database once it stores
     # the information
-    if artifact.artifact_type in ['SFF', 'FASTQ', 'FASTA', 'FASTA_Sanger',
-                                  'per_sample_FASTQ']:
+    if artifact_type in ['SFF', 'FASTQ', 'FASTA', 'FASTA_Sanger',
+                         'per_sample_FASTQ']:
         # If the artifact is one of the "raw" types, only the owner of the
         # study and users that has been shared with can see the files
         if not artifact.study.has_access(user, no_public=True):
@@ -205,6 +206,7 @@ def artifact_summary_get_request(user, artifact_id):
 
     return {'name': artifact.name,
             'artifact_id': artifact_id,
+            'artifact_type': artifact_type,
             'visibility': visibility,
             'editable': editable,
             'buttons': ' '.join(buttons),
