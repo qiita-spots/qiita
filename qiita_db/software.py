@@ -369,7 +369,6 @@ class Command(qdb.base.QiitaObject):
                                  required, default_value)
                              VALUES (%s, 'name', 'string', 'False', NULL),
                                     (%s, 'provenance', 'string', 'False', NULL)
-
                              """
                     qdb.sql_connection.TRN.add(sql, [c_id, c_id])
 
