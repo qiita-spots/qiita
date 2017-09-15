@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from requests import ConnectionError
+from future.utils import viewitems
 from collections import defaultdict
 import redbiom.summarize
 import redbiom.search
@@ -42,35 +43,38 @@ class RedbiomPublicSearch(BaseHandler):
                 'Not a valid search: "%s", your query is too small '
                 '(too few letters), try a longer query' % query)
         if not message:
-            sids = set([s.split('.', 1)[0] for s in samples])
-            for s in sids:
-                study_artifacts[s] = [a.id for a in Study(s).artifacts(
-                    artifact_type='BIOM')]
+            study_samples = defaultdict(list)
+            for s in samples:
+                study_samples[s.split('.', 1)[0]].append(s)
+            for sid, samps in viewitems(study_samples):
+                study_artifacts[sid] = {
+                    a.id: samps for a in Study(sid).artifacts(
+                        artifact_type='BIOM')}
 
         return message, study_artifacts
 
     def _redbiom_feature_search(self, query, contexts):
-        study_artifacts = defaultdict(list)
+        study_artifacts = defaultdict(lambda: defaultdict(list))
         query = [f for f in query.split(' ')]
         for ctx in contexts:
             for idx in redbiom.util.ids_from(query, True, 'feature', ctx):
-                aid, sid = idx.split('_', 1)
-                sid = sid.split('.', 1)[0]
-                study_artifacts[sid].append(aid)
+                aid, sample_id = idx.split('_', 1)
+                sid = sample_id.split('.', 1)[0]
+                study_artifacts[sid][aid].append(sample_id)
 
         return '', study_artifacts
 
     def _redbiom_taxon_search(self, query, contexts):
-        study_artifacts = defaultdict(list)
+        study_artifacts = defaultdict(lambda: defaultdict(list))
         for ctx in contexts:
             # find the features with those taxonomies and then search
             # those features in the samples
             features = redbiom.fetch.taxon_descendents(ctx, query)
             for idx in redbiom.util.ids_from(features, True, 'feature',
                                              ctx):
-                aid, sid = idx.split('_', 1)
-                sid = sid.split('.', 1)[0]
-                study_artifacts[sid].append(aid)
+                aid, sample_id = idx.split('_', 1)
+                sid = sample_id.split('.', 1)[0]
+                study_artifacts[sid][aid].append(sample_id)
 
         return '', study_artifacts
 
@@ -98,8 +102,8 @@ class RedbiomPublicSearch(BaseHandler):
                             study_artifacts.keys(), True)
                         # inserting the artifact_biom_ids to the results
                         for i in range(len(results)):
-                            results[i]['artifact_biom_ids'] = list(set(
-                                study_artifacts[str(results[i]['study_id'])]))
+                            results[i]['artifact_biom_ids'] = study_artifacts[
+                                str(results[i]['study_id'])]
                     else:
                         message = "No samples where found! Try again ..."
             else:
