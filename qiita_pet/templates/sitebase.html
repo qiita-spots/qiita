@@ -367,8 +367,8 @@
         mounted() {
           let vm = this;
           setInterval(function (){
-            // the div is hidden
-            if ($("#qiita-main").width() != $("#qiita-main").parent().width()) {
+            // if modal is shown, https://stackoverflow.com/a/3282893
+            if (($('#qiita-processing').data('bs.modal') || {}).isShown){
               vm.update_processing_job_data();
             }
           }, 30000);
