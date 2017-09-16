@@ -33,6 +33,10 @@ class TestRedbiom(TestHandlerBase):
         data[0]['artifact_biom_ids'] = {
             '5': samples, '4': samples, '7': samples, '6': samples}
         exp = {'status': 'success', 'message': '', 'data': data}
+        print '\n\n'
+        print data
+        print exp
+        print ''
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
