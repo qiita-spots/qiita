@@ -273,6 +273,40 @@ def delete_sample_or_column(job):
         job._set_status('success')
 
 
+def delete_study(job):
+    """Deletes a full study
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        study_id = job.parameters.values['study']
+        study = qdb.study.Study(study_id)
+
+        for a in study.analyses():
+            artifacts = sorted(
+                a.artifacts, key=lambda a: a.id, reverse=True)
+            for artifact in artifacts:
+                qdb.artifact.Artifact.delete(artifact.id)
+            qdb.analysis.Analysis.delete(a.id)
+
+        artifacts = sorted(
+            study.artifacts(), key=lambda a: a.id, reverse=True)
+        for a in artifacts:
+            qdb.artifact.Artifact.delete(a.id)
+
+        for pt in study.prep_templates():
+            qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
+
+        qdb.metadata_template.sample_template.SampleTemplate.delete(study_id)
+
+        qdb.study.Study.delete(study_id)
+
+        job._set_status('success')
+
+
 def complete_job(job):
     """Deletes a sample or a column from the metadata
 
@@ -310,6 +344,7 @@ TASK_DICT = {'build_analysis_files': build_analysis_files,
              'delete_sample_template': delete_sample_template,
              'update_prep_template': update_prep_template,
              'delete_sample_or_column': delete_sample_or_column,
+             'delete_study': delete_study,
              'complete_job': complete_job}
 
 

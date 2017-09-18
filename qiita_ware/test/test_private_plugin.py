@@ -28,6 +28,7 @@ from qiita_db.artifact import Artifact
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.util import get_count
 from qiita_db.logger import LogEntry
+from qiita_db.sql_connection import TRN
 from qiita_ware.private_plugin import private_task
 
 
@@ -373,6 +374,31 @@ class TestPrivatePlugin(TestCase):
         self.assertEqual(job.status, 'success')
         self.assertEqual(c_job.status, 'error')
         self.assertIn('No such file or directory', c_job.log.msg)
+
+@qiita_test_checker()
+class TestPrivatePluginDeleteStudy(TestPrivatePlugin):
+    def test_delete_study(self):
+        # as samples have been submitted to EBI, this will fail
+        job = self._create_job('delete_study', {'study': 1})
+        private_task(job.id)
+        self.assertEqual(job.status, 'error')
+        self.assertIn("Cannot delete artifact 2: it has been "
+                      "submitted to EBI", job.log.msg)
+
+        # delete everything from the EBI submissions and the processing job so
+        # we can try again: test success
+        with TRN:
+            sql = """DELETE FROM qiita.ebi_run_accession"""
+            TRN.add(sql)
+            sql = """DELETE FROM qiita.artifact_processing_job"""
+            TRN.add(sql)
+            TRN.execute()
+            job = self._create_job('delete_study', {'study': 1})
+            private_task(job.id)
+
+            self.assertEqual(job.status, 'success')
+            with self.assertRaises(QiitaDBUnknownIDError):
+                Study(1)
 
 
 if __name__ == '__main__':

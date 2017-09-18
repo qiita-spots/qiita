@@ -766,6 +766,9 @@ class TestStudy(TestCase):
         self.assertEqual(new.prep_templates(), [])
         qdb.study.Study.delete(new.id)
 
+    def test_analyses(self):
+        self.assertEqual(qdb.study.Study(1).analyses(), [1, 2, 3])
+
     def test_environmental_packages(self):
         obs = self.study.environmental_packages
         exp = ['soil', 'plant-associated']

@@ -152,12 +152,7 @@
     else if(confirm("Are you sure you want to delete {% raw study_title_msg %}?")) {
       $.post('{% raw qiita_config.portal_dir %}/study/delete/', { study_id: {{study_info['study_id']}} })
         .done(function ( data ) {
-          if(data.status == "error") {
-            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
-            $("#delete-study").modal('hide');
-          } else {
-            window.location.replace('{% raw qiita_config.portal_dir %}/study/list/');
-          }
+          location.reload();
         });
     }
   }
