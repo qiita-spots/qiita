@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import main
-
+from copy import deepcopy
 from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
@@ -26,14 +26,18 @@ class TestRedbiom(TestHandlerBase):
         }
         response = self.post('/redbiom/', post_args)
         self.assertEqual(response.code, 200)
-        data = DATA
+
         samples = ['1.SKD6.640190', '1.SKD9.640182', '1.SKD8.640184',
                    '1.SKD5.640186', '1.SKD2.640178', '1.SKD4.640185',
                    '1.SKD1.640179', '1.SKD3.640198', '1.SKD7.640191']
-        data[0]['artifact_biom_ids'] = {
+        exp_artifact_biom_ids = {
             '5': samples, '4': samples, '7': samples, '6': samples}
-        exp = {'status': 'success', 'message': '', 'data': data}
-        self.assertEqual(loads(response.body), exp)
+        response_body = loads(response.body)
+        obs_artifact_biom_ids = response_body['data'][0].pop(
+            'artifact_biom_ids')
+        self.assertItemsEqual(obs_artifact_biom_ids, exp_artifact_biom_ids)
+        exp = {'status': 'success', 'message': '', 'data': DATA}
+        self.assertEqual(response_body, exp)
 
         post_args = {
             'search': 'inf',
@@ -62,7 +66,7 @@ class TestRedbiom(TestHandlerBase):
             'search_on': 'feature'
         }
         response = self.post('/redbiom/', post_args)
-        data = DATA
+        data = deepcopy(DATA)
         data[0]['artifact_biom_ids'] = {
             '5': ['1.SKM3.640197'], '4': ['1.SKM3.640197']}
         exp = {'status': 'success', 'message': '', 'data': data}
@@ -84,7 +88,7 @@ class TestRedbiom(TestHandlerBase):
             'search': 'o__0319-7L14',
             'search_on': 'taxon'
         }
-        data = DATA
+        data = deepcopy(DATA)
         data[0]['artifact_biom_ids'] = {
             '5': ['1.SKM3.640197'], '4': ['1.SKM3.640197']}
         response = self.post('/redbiom/', post_args)
