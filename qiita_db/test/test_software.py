@@ -308,6 +308,33 @@ class CommandTests(TestCase):
         self.assertEqual(obs.optional_parameters, exp_optional)
         self.assertTrue(obs.analysis_only)
 
+        # Test that the internal parameters in "Validate"
+        # are created automatically
+        software = qdb.software.Software.create(
+            "New Type Software", "1.0.0",
+            "This is adding a new software for testing", "env_name",
+            "start_plugin", "artifact definition")
+        parameters = {
+            'template': ('prep_template', None),
+            'analysis': ('analysis', None),
+            'files': ('string', None),
+            'artifact_type': ('string', None)}
+        obs = qdb.software.Command.create(
+            software, "Validate", "Test creating a validate command",
+            parameters)
+        self.assertEqual(obs.name, "Validate")
+        self.assertEqual(obs.description, "Test creating a validate command")
+        exp_required = {
+            'template': ('prep_template', [None]),
+            'analysis': ('analysis', [None]),
+            'files': ('string', [None]),
+            'artifact_type': ('string', [None])}
+        self.assertEqual(obs.required_parameters, exp_required)
+        exp_optional = {'name': ['string', 'dflt_name'],
+                        'provenance': ['string', None]}
+        self.assertEqual(obs.optional_parameters, exp_optional)
+        self.assertFalse(obs.analysis_only)
+
     def test_activate(self):
         qdb.software.Software.deactivate_all()
         tester = qdb.software.Command(1)

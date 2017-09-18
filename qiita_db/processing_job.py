@@ -367,6 +367,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 parents = None
                 params = None
                 cmd_out_id = None
+                name = None
                 data_type = a_info['data_type']
                 analysis = qdb.analysis.Analysis(
                     job.parameters.values['analysis'])
@@ -376,6 +377,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 parents = job.input_artifacts
                 params = job.parameters
                 cmd_out_id = provenance['cmd_out_id']
+                name = provenance['name']
                 analysis = None
                 data_type = None
 
@@ -385,7 +387,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             a = qdb.artifact.Artifact.create(
                 filepaths, atype, parents=parents,
                 processing_parameters=params,
-                analysis=analysis, data_type=data_type)
+                analysis=analysis, data_type=data_type, name=name)
 
             self._set_status('success')
 
@@ -540,7 +542,7 @@ class ProcessingJob(qdb.base.QiitaObject):
 
                 qdb.artifact.Artifact.create(
                     filepaths, atype, prep_template=pt, analysis=an,
-                    data_type=data_type)
+                    data_type=data_type, name=job_params['name'])
                 self._set_status('success')
 
     def _complete_artifact_transformation(self, artifacts_data):
@@ -612,7 +614,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                 cmd_out_id = qdb.util.convert_to_id(
                     out_name, "command_output", "name")
                 provenance = {'job': self.id,
-                              'cmd_out_id': cmd_out_id}
+                              'cmd_out_id': cmd_out_id,
+                              'name': out_name}
 
                 # Get the validator command for the current artifact type and
                 # create a new job
