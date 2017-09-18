@@ -42,7 +42,7 @@
             $.get('/artifact/info/', {ids: JSON.parse(row.data()[0]), only_biom: 'False' })
               .done(function ( data ) {
                 if (data['status']=='success') {
-                  $('td', row.child()).html(format_biom_rows(data.data, row.index())).show();
+                  $('td', row.child()).html(format_biom_rows(data.data, row.index(), for_study_list=false)).show();
                 } else {
                   bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
                 }

@@ -54,41 +54,6 @@ $(document).ready(function() {
   $("#search-waiting").hide();
   qiita_websocket.init(window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', error, error);
   qiita_websocket.add_callback('sel', show_alert);
-  function format_biom_rows(data, row) {
-    var proc_data_table = '<table class="table" cellpadding="0" cellspacing="0" border="0" style="padding-left:0px;width:95%">';
-    proc_data_table += '<tr>';
-    proc_data_table += '<th></th>';
-    proc_data_table += '<th>Name</th>';
-    proc_data_table += '<th>Data type</th>';
-    proc_data_table += '<th>Processing method</th>';
-    proc_data_table += '<th>Parameters</th>';
-    proc_data_table += '<th>Samples in Prep Info</th>';
-    proc_data_table += '<th>Files</th>';
-    proc_data_table += '</tr>';
-
-    $.each(data, function (idx, info) {
-      if (typeof info !== 'string' && !(info instanceof String)) {
-        proc_data_table += '<tr>';
-        proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="send_samples_to_analysis(this, [' + info.artifact_id + '])"></td>';
-        proc_data_table += '<td>' + info.name + ' (' + info.artifact_id + ' - ' + info.timestamp.split('.')[0] + ')</td>';
-        proc_data_table += '<td>' + info.data_type + ' (' + info.target_subfragment.join(', ') + ')</td>';
-        proc_data_table += '<td>' + info.algorithm + '</td>';
-
-        var params = '';
-        for (var key in info.parameters) {
-          params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
-        }
-        proc_data_table += '<td><small>' + params + '</small></td>';
-        proc_data_table += '<td>' + info.prep_samples + '</td>';
-        proc_data_table += '<td><small>' + info.files.join('<br/>')  + '</small></td>';
-
-        proc_data_table += '</tr>';
-      }
-    });
-
-    proc_data_table += '</table>';
-    return proc_data_table;
-  }
 
   $('#user-studies-table').dataTable({
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],

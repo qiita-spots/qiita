@@ -127,25 +127,35 @@ function delete_analysis(aname, analysis_id) {
  * Note that we have a list of artifact ids cause the user can select one single
  * artifact to add or all study artifacts
  */
-function send_samples_to_analysis(button, aids) {
+function send_samples_to_analysis(button, aids, samples = null) {
   button.value = 'Adding';
   button.disabled = true;
   $(button).addClass("btn-info");
   bootstrapAlert('We are adding ' + aids.length + ' artifact(s) to the analysis. This ' +
                  'might take some time based on the number of samples on each artifact.', "warning", 10000);
-  $.get('/artifact/samples/', {ids:aids})
-    .done(function ( data ) {
-      if (data['status']=='success') {
-        qiita_websocket.send('sel', data['data']);
-        button.value = 'Added';
-        $(button).removeClass("btn-info");
-      } else {
-        bootstrapAlert('ERROR: ' + data['msg'], "danger");
-        button.value = 'There was an error, scroll up to see it';
-        button.disabled = false;
-        $(button).addClass("btn-danger");
-      }
+  if (samples === null) {
+    $.get('/artifact/samples/', {ids:aids})
+      .done(function ( data ) {
+        if (data['status']=='success') {
+          qiita_websocket.send('sel', data['data']);
+          button.value = 'Added';
+          $(button).removeClass("btn-info");
+        } else {
+          bootstrapAlert('ERROR: ' + data['msg'], "danger");
+          button.value = 'There was an error, scroll up to see it';
+          button.disabled = false;
+          $(button).addClass("btn-danger");
+        }
     });
+  } else {
+    $.each(aids, function(i, aid) {
+      var to_send = {};
+      to_send[aid] = samples.split(',');
+      qiita_websocket.send('sel', to_send);
+    });
+    button.value = 'Added';
+    $(button).removeClass("btn-info");
+  }
 }
 
 /**
@@ -366,25 +376,51 @@ function show_alert(data) {
    $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
 }
 
-function format_biom_rows(data, row) {
+function format_biom_rows(data, row, for_study_list = true, samples = null) {
   var proc_data_table = '<table class="table" cellpadding="0" cellspacing="0" border="0" style="padding-left:0px;width:95%">';
   proc_data_table += '<tr>';
+  if (for_study_list) {
+    proc_data_table += '<th></th>';
+  }
   proc_data_table += '<th>Name</th>';
+  if (for_study_list) {
+    proc_data_table += '<th>Data type</th>';
+  }
   proc_data_table += '<th>Processing method</th>';
   proc_data_table += '<th>Parameters</th>';
+  if (for_study_list) {
+    proc_data_table += '<th>Samples in Prep Info</th>';
+  }
   proc_data_table += '<th>Files</th>';
   proc_data_table += '</tr>';
+
   $.each(data, function (idx, info) {
     if (typeof info !== 'string' && !(info instanceof String)) {
       proc_data_table += '<tr>';
+      if (for_study_list) {
+        if (samples === null) {
+          proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="send_samples_to_analysis(this, [' + info.artifact_id + '])"></td>';
+        } else {
+          proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="send_samples_to_analysis(this, [' + info.artifact_id + "], '" + samples[info.artifact_id].join(',') + "'" + ')"></td>';
+        }
+      }
       proc_data_table += '<td>' + info.name + ' (' + info.artifact_id + ' - ' + info.timestamp.split('.')[0] + ')</td>';
+
+      if (for_study_list) {
+        proc_data_table += '<td>' + info.data_type + ' (' + info.target_subfragment.join(', ') + ')</td>';
+      }
       proc_data_table += '<td>' + info.algorithm + '</td>';
+
       var params = '';
       for (var key in info.parameters) {
         params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
       }
       proc_data_table += '<td><small>' + params + '</small></td>';
+      if (for_study_list) {
+        proc_data_table += '<td>' + info.prep_samples + '</td>';
+      }
       proc_data_table += '<td><small>' + info.files.join('<br/>')  + '</small></td>';
+
       proc_data_table += '</tr>';
     }
   });
