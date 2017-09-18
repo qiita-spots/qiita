@@ -60,6 +60,38 @@ class BaseHandlerDownload(BaseHandler):
                 to_download.append((fullpath, spath, spath))
         return to_download
 
+    def _list_artifact_files_nginx(self, artifact):
+        """"""
+        basedir = get_db_files_base_dir()
+        basedir_len = len(basedir) + 1
+        to_download = []
+        for i, (fid, path, data_type) in enumerate(artifact.filepaths):
+            # ignore if tgz as they could create problems and the
+            # raw data is in the folder
+            if data_type == 'tgz':
+                continue
+            if data_type == 'directory':
+                # If we have a directory, we actually need to list all the
+                # files from the directory so NGINX can actually download all
+                # of them
+                to_download.extend(self._list_dir_files_nginx(path))
+            elif path.startswith(basedir):
+                spath = path[basedir_len:]
+                to_download.append((path, spath, spath))
+            else:
+                to_download.append((path, path, path))
+
+        for pt in artifact.prep_templates:
+            qmf = pt.qiime_map_fp
+            if qmf is not None:
+                sqmf = qmf
+                if qmf.startswith(basedir):
+                    sqmf = qmf[basedir_len:]
+                to_download.append(
+                    (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
+                                % artifact.id))
+        return to_download
+
     def _write_nginx_file_list(self, to_download):
         """"""
         all_files = '\n'.join(
@@ -117,42 +149,11 @@ class DownloadStudyBIOMSHandler(BaseHandlerDownload):
     def get(self, study_id):
         study_id = int(study_id)
         study = self._check_permissions(study_id)
-
-        basedir = get_db_files_base_dir()
-        basedir_len = len(basedir) + 1
         # loop over artifacts and retrieve those that we have access to
         to_download = []
         for a in study.artifacts():
             if a.artifact_type == 'BIOM':
-                for i, (fid, path, data_type) in enumerate(a.filepaths):
-                    # ignore if tgz as they could create problems and the
-                    # raw data is in the folder
-                    if data_type == 'tgz':
-                        continue
-                    if data_type == 'directory':
-                        # If we have a directory, we actually need to list
-                        # all the files from the directory so NGINX can
-                        # actually download all of them
-                        to_download.extend(self._list_dir_files_nginx(path))
-                    elif path.startswith(basedir):
-                        spath = path[basedir_len:]
-                        to_download.append((path, spath, spath))
-                    else:
-                        # We are not aware of any case that can trigger this
-                        # situation, but we wanted to be overly cautious
-                        # There is no test for this line cause we don't know
-                        # how to trigger it
-                        to_download.append((path, path, path))
-
-                for pt in a.prep_templates:
-                    qmf = pt.qiime_map_fp
-                    if qmf is not None:
-                        sqmf = qmf
-                        if qmf.startswith(basedir):
-                            sqmf = qmf[basedir_len:]
-                        to_download.append(
-                            (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
-                                        % a.id))
+                to_download.extend(self._list_artifact_files_nginx(a))
 
         self._write_nginx_file_list(to_download)
 
@@ -205,34 +206,11 @@ class DownloadRawData(BaseHandlerDownload):
                                                  self.current_user.email,
                                                  str(study_id)))
 
-        basedir = get_db_files_base_dir()
-        basedir_len = len(basedir) + 1
         # loop over artifacts and retrieve raw data (no parents)
         to_download = []
         for a in study.artifacts():
             if not a.parents:
-                for i, (fid, path, data_type) in enumerate(a.filepaths):
-                    if data_type == 'directory':
-                        to_download.append(path)
-                    elif path.startswith(basedir):
-                        spath = path[basedir_len:]
-                        to_download.append((path, spath, spath))
-                    else:
-                        # We are not aware of any case that can trigger this
-                        # situation, but we wanted to be overly cautious
-                        # There is no test for this line cause we don't know
-                        # how to trigger it
-                        to_download.append((path, path, path))
-
-                for pt in a.prep_templates:
-                    qmf = pt.qiime_map_fp
-                    if qmf is not None:
-                        sqmf = qmf
-                        if qmf.startswith(basedir):
-                            sqmf = qmf[basedir_len:]
-                        to_download.append(
-                            (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
-                                        % a.id))
+                to_download.extend(self._list_artifact_files_nginx(a))
 
         self._write_nginx_file_list(to_download)
 
