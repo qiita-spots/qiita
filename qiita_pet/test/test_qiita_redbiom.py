@@ -27,7 +27,11 @@ class TestRedbiom(TestHandlerBase):
         response = self.post('/redbiom/', post_args)
         self.assertEqual(response.code, 200)
         data = DATA
-        data[0]['artifact_biom_ids'] = [4, 5, 6, 7]
+        samples = ['1.SKD6.640190', '1.SKD9.640182', '1.SKD8.640184',
+                   '1.SKD5.640186', '1.SKD2.640178', '1.SKD4.640185',
+                   '1.SKD1.640179', '1.SKD3.640198', '1.SKD7.640191']
+        data[0]['artifact_biom_ids'] = {
+            '5': samples, '4': samples, '7': samples, '6': samples}
         exp = {'status': 'success', 'message': '', 'data': data}
         self.assertEqual(loads(response.body), exp)
 
@@ -59,7 +63,8 @@ class TestRedbiom(TestHandlerBase):
         }
         response = self.post('/redbiom/', post_args)
         data = DATA
-        data[0]['artifact_biom_ids'] = ['5', '4']
+        data[0]['artifact_biom_ids'] = {
+            '5': ['1.SKM3.640197'], '4': ['1.SKM3.640197']}
         exp = {'status': 'success', 'message': '', 'data': data}
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
@@ -80,7 +85,8 @@ class TestRedbiom(TestHandlerBase):
             'search_on': 'taxon'
         }
         data = DATA
-        data[0]['artifact_biom_ids'] = ['5', '4']
+        data[0]['artifact_biom_ids'] = {
+            '5': ['1.SKM3.640197'], '4': ['1.SKM3.640197']}
         response = self.post('/redbiom/', post_args)
         exp = {'status': 'success', 'message': '', 'data': data}
         self.assertEqual(response.code, 200)

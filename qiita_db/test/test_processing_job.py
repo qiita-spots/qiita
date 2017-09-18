@@ -325,7 +325,8 @@ class ProcessingJobTest(TestCase):
                          'provenance': dumps(
                             {'job': job.id,
                              'cmd_out_id': qdb.util.convert_to_id(
-                                'out1', "command_output", "name")})})
+                                'out1', "command_output", "name"),
+                             'name': 'out1'})})
         user = qdb.user.User('test@foo.bar')
         obs1 = qdb.processing_job.ProcessingJob.create(user, params)
         obs1._set_status('running')
@@ -336,7 +337,8 @@ class ProcessingJobTest(TestCase):
                          'provenance': dumps(
                             {'job': job.id,
                              'cmd_out_id': qdb.util.convert_to_id(
-                                'out1', "command_output", "name")})})
+                                'out1', "command_output", "name"),
+                             'name': 'out1'})})
         obs2 = qdb.processing_job.ProcessingJob.create(user, params)
         obs2._set_status('running')
         # Make sure that we link the original job with its validator jobs
@@ -635,7 +637,8 @@ class ProcessingJobTest(TestCase):
                          'artifact_type': 'BIOM',
                          'provenance': dumps(
                             {'job': job.id,
-                             'cmd_out_id': 3})}
+                             'cmd_out_id': 3,
+                             'name': 'outArtifact'})}
         )
         obs = qdb.processing_job.ProcessingJob.create(
             qdb.user.User('test@foo.bar'), params)
@@ -645,12 +648,11 @@ class ProcessingJobTest(TestCase):
         job.release_validators()
         self.assertEqual(job.status, 'success')
 
+        artifact = qdb.artifact.Artifact(exp_artifact_count)
         obs = job.outputs
-        self.assertEqual(
-            obs, {'OTU table': qdb.artifact.Artifact(exp_artifact_count)})
-        self._clean_up_files.extend(
-            [afp for _, afp, _ in
-                qdb.artifact.Artifact(exp_artifact_count).filepaths])
+        self.assertEqual(obs, {'OTU table': artifact})
+        self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
+        self.assertEqual(artifact.name, 'outArtifact')
 
     def test_processing_job_worflow(self):
         # testing None

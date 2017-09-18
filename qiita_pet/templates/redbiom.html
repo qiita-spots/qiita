@@ -15,42 +15,55 @@
         // adding total features found
 
         var api = this.api(), data;
-        var total_features = api
+        var artifacts_samples = api
           .column(0)
           .data()
-          .reduce( function (a, b) {return a + b.length}, 0);
-
+          .reduce( function (a, b) {
+            var artifacts = 0, samples = 0;
+            $.each( b, function( key, value ) {
+              artifacts += 1;
+              samples += value.length;
+            });
+            return [artifacts, samples]}, [0, 0]);
+        var artifacts = artifacts_samples[0];
+        var samples = artifacts_samples[1];
         $('.footer').addClass("col-md-12 text-right");
-        if (total_features == 0) {
+        if (artifacts == 0) {
           text = '';
         } else {
-            text = 'Found ' + total_features + ' artifacts.';
+            text = 'Found ' + artifacts + ' artifacts with ' + samples + ' samples.';
         }
         $('.footer').html(text)
       },
       "columns": [
-        { "orderable": false,       "width": "15%", "data": "artifact_biom_ids"},
+        { "orderable": false,       "width": "20%", "data": "artifact_biom_ids"},
         { "data": "study_title",    "width": "70%" },
         { "data": "study_abstract", "width": "0%" },
-        { "data": "study_id",       "width": "15%" },
+        { "data": "study_id",       "width": "10%" },
         { "data": "study_alias",    "width": "0%" }],
       columnDefs: [
         // {type:'natural', targets:[2,6,7]},
         {"targets": [ 2, 4 ], "visible": false},
         // render zero
         {"render": function ( data, type, row, meta ) {
-          if (data !== null && data !== undefined && data.length != 0){
-            return '<div class="container" style="max-width: 5em;">'+
-              '<div class="row justify-content-md-center">' +
-                {% if current_user is not None %}
-                  '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
-                {% end %}
-                '<div class="col-md-1 text-center">' + data.length + '</div>' +
-              '</div>' +
-            '</div>';
-          } else {
-            return 'No BIOMs';
+          if (data !== null && data !== undefined){
+            var artifacts = 0, samples = 0;
+            for (var d in data) { if (data.hasOwnProperty(d)) { artifacts++; } }
+            if (artifacts != 0) {
+              return '<div class="container" style="max-width: 15em;">'+
+                '<div class="row justify-content-md-center">' +
+                  {% if current_user is not None %}
+                    '<div class="col-md-12 text-center details-control">&nbsp;</div>' +
+                  {% end %}
+                  '<div class="col-md-12 text-center">' +
+                    'Artifacts: ' + artifacts + ' | ' +
+                    'Samples: ' + artifacts +
+                  '</div>' +
+                '</div>' +
+              '</div>';
+            }
           }
+          return 'No BIOMs';
         }, targets: [0]},
         // render the title cell
         {"render": function ( data, type, row, meta ) {
@@ -85,10 +98,14 @@
         // modified from: https://jsfiddle.net/8rejaL88/2/
         tr.addClass('shown');
         row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
-        $.get('/artifact/info/', {ids: row.data().artifact_biom_ids})
+
+        var artifact_biom_ids = row.data().artifact_biom_ids;
+        var artifact_biom_ids_keys = []
+        $.each(artifact_biom_ids, function(e){ artifact_biom_ids_keys.push(e) });
+        $.get('/artifact/info/', {ids: artifact_biom_ids_keys })
           .done(function ( data ) {
             if (data['status']=='success') {
-              $('td', row.child()).html(format_biom_rows(data.data, row.index())).show();
+              $('td', row.child()).html(format_biom_rows(data.data, row.index(), true, samples=artifact_biom_ids)).show();
             } else {
               bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
             }
