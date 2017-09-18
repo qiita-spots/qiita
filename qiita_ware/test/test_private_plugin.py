@@ -32,8 +32,19 @@ from qiita_db.sql_connection import TRN
 from qiita_ware.private_plugin import private_task
 
 
+class BaseTestPrivatePlugin(TestCase):
+    def _create_job(self, cmd_name, values_dict):
+        user = User('test@foo.bar')
+        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+        cmd = qiita_plugin.get_command(cmd_name)
+        params = Parameters.load(cmd, values_dict=values_dict)
+        job = ProcessingJob.create(user, params)
+        job._set_status('queued')
+        return job
+
+
 @qiita_test_checker()
-class TestPrivatePlugin(TestCase):
+class TestPrivatePlugin(BaseTestPrivatePlugin):
     def setUp(self):
         fd, self.fp = mkstemp(suffix=".txt")
         close(fd)
@@ -49,15 +60,6 @@ class TestPrivatePlugin(TestCase):
                 remove(fp)
 
         r_client.flushdb()
-
-    def _create_job(self, cmd_name, values_dict):
-        user = User('test@foo.bar')
-        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-        cmd = qiita_plugin.get_command(cmd_name)
-        params = Parameters.load(cmd, values_dict=values_dict)
-        job = ProcessingJob.create(user, params)
-        job._set_status('queued')
-        return job
 
     def test_copy_artifact(self):
         # Failure test
@@ -377,7 +379,7 @@ class TestPrivatePlugin(TestCase):
 
 
 @qiita_test_checker()
-class TestPrivatePluginDeleteStudy(TestPrivatePlugin):
+class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
     def test_delete_study(self):
         # as samples have been submitted to EBI, this will fail
         job = self._create_job('delete_study', {'study': 1})
