@@ -25,7 +25,43 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_core.util import execute_as_transaction, get_release_info
 
 
-class DownloadHandler(BaseHandler):
+class BaseHandlerDownload(BaseHandler):
+    def _check_permissions(self, sid):
+        # Check general access to study
+        study_info = study_get_req(sid, self.current_user.id)
+        if study_info['status'] != 'success':
+            raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
+                                                 self.current_user.email, sid))
+        return Study(sid)
+
+    def _generate_files(self, header_name, accessions, filename):
+        text = "sample_name\t%s\n%s" % (header_name, '\n'.join(
+            ["%s\t%s" % (k, v) for k, v in viewitems(accessions)]))
+
+        self.set_header('Content-Description', 'text/csv')
+        self.set_header('Expires', '0')
+        self.set_header('Cache-Control', 'no-cache')
+        self.set_header('Content-Disposition', 'attachment; '
+                        'filename=%s' % filename)
+        self.write(text)
+        self.finish()
+
+    def _list_dir_files_nginx(self, dirpath):
+        """"""
+        basedir = get_db_files_base_dir()
+        basedir_len = len(basedir) + 1
+        to_download = []
+        for dp, _, fps in walk(dirpath):
+            for fn in fps:
+                fullpath = join(dp, fn)
+                spath = fullpath
+                if fullpath.startswith(basedir):
+                    spath = fullpath[basedir_len:]
+                to_download.append((fullpath, spath, spath))
+        return to_download
+
+
+class DownloadHandler(BaseHandlerDownload):
     @authenticated
     @coroutine
     @execute_as_transaction
@@ -44,17 +80,7 @@ class DownloadHandler(BaseHandler):
         if fp_info['filepath_type'] in ('directory', 'html_summary_dir'):
             # This is a directory, we need to list all the files so NGINX
             # can download all of them
-            basedir = get_db_files_base_dir()
-            basedir_len = len(basedir) + 1
-            to_download = []
-            for dp, _, fps in walk(fp_info['fullpath']):
-                for fn in fps:
-                    fullpath = join(dp, fn)
-                    spath = fullpath
-                    if fullpath.startswith(basedir):
-                        spath = fullpath[basedir_len:]
-                    to_download.append((fullpath, spath, spath))
-
+            to_download = self._list_dir_files_nginx(fp_info['fullpath'])
             all_files = '\n'.join(
                 ["- %s /protected/%s %s" % (getsize(fp), sfp, n)
                  for fp, sfp, n in to_download])
@@ -77,28 +103,6 @@ class DownloadHandler(BaseHandler):
         self.set_header('Content-Disposition',
                         'attachment; filename=%s' % fname)
 
-        self.finish()
-
-
-class BaseHandlerDownload(BaseHandler):
-    def _check_permissions(self, sid):
-        # Check general access to study
-        study_info = study_get_req(sid, self.current_user.id)
-        if study_info['status'] != 'success':
-            raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
-                                                 self.current_user.email, sid))
-        return Study(sid)
-
-    def _generate_files(self, header_name, accessions, filename):
-        text = "sample_name\t%s\n%s" % (header_name, '\n'.join(
-            ["%s\t%s" % (k, v) for k, v in viewitems(accessions)]))
-
-        self.set_header('Content-Description', 'text/csv')
-        self.set_header('Expires', '0')
-        self.set_header('Cache-Control', 'no-cache')
-        self.set_header('Content-Disposition', 'attachment; '
-                        'filename=%s' % filename)
-        self.write(text)
         self.finish()
 
 
@@ -125,13 +129,7 @@ class DownloadStudyBIOMSHandler(BaseHandlerDownload):
                         # If we have a directory, we actually need to list
                         # all the files from the directory so NGINX can
                         # actually download all of them
-                        for dp, _, fps in walk(path):
-                            for fname in fps:
-                                fullpath = join(dp, fname)
-                                spath = fullpath
-                                if fullpath.startswith(basedir):
-                                    spath = fullpath[basedir_len:]
-                                to_download.append((fullpath, spath, spath))
+                        to_download.extend(self._list_dir_files_nginx(path))
                     elif path.startswith(basedir):
                         spath = path[basedir_len:]
                         to_download.append((path, spath, spath))
@@ -215,16 +213,7 @@ class DownloadRawData(BaseHandlerDownload):
             if not a.parents:
                 for i, (fid, path, data_type) in enumerate(a.filepaths):
                     if data_type == 'directory':
-                        # If we have a directory, we actually need to list
-                        # all the files from the directory so NGINX can
-                        # actually download all of them
-                        for dp, _, fps in walk(path):
-                            for fname in fps:
-                                fullpath = join(dp, fname)
-                                spath = fullpath
-                                if fullpath.startswith(basedir):
-                                    spath = fullpath[basedir_len:]
-                                to_download.append((fullpath, spath, spath))
+                        to_download.append(path)
                     elif path.startswith(basedir):
                         spath = path[basedir_len:]
                         to_download.append((path, spath, spath))
