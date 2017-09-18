@@ -120,6 +120,11 @@ with TRN:
     st_cmd = Command.create(qiita_plugin, "update_sample_template",
                             "Updates the sample template", parameters)
 
+    # Create the delete study command
+    parameters = {'study': ['integer', None]}
+    Command.create(qiita_plugin, "delete_study",
+                   "Deletes a full study", parameters)
+
     # Create the delete sample template command
     parameters = {'study': ['integer', None]}
     Command.create(qiita_plugin, "delete_sample_template",

@@ -28,7 +28,7 @@ class StudyIndexHandler(BaseHandler):
         if study_info['status'] != 'success':
             raise HTTPError(404, study_info['message'])
 
-        if message != '':
+        if message != '' and level != '':
             study_info['level'] = level
             study_info['message'] = message
 
