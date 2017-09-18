@@ -144,6 +144,19 @@ class BaseHandlerDownload(BaseHandler):
         self.set_header('Content-Disposition',
                         'attachment; filename=%s' % fname)
 
+    def _write_nginx_placeholder_file(self, fp):
+        """Writes nginx placeholder file in case that nginx is not set up
+
+        Parameters
+        ----------
+        fp : str
+            The path to be downloaded through nginx
+        """
+        # If we don't have nginx, write a file that indicates this
+        self.write("This installation of Qiita was not equipped with "
+                   "nginx, so it is incapable of serving files. The file "
+                   "you attempted to download is located at %s" % fp)
+
 
 class DownloadHandler(BaseHandlerDownload):
     @authenticated
@@ -168,10 +181,7 @@ class DownloadHandler(BaseHandlerDownload):
             self._write_nginx_file_list(to_download)
             fname = '%s.zip' % fname
         else:
-            # If we don't have nginx, write a file that indicates this
-            self.write("This installation of Qiita was not equipped with "
-                       "nginx, so it is incapable of serving files. The file "
-                       "you attempted to download is located at %s" % relpath)
+            self._write_nginx_placeholder_file(relpath)
             self.set_header('Content-Type', 'application/octet-stream')
             self.set_header('Content-Transfer-Encoding', 'binary')
             self.set_header('X-Accel-Redirect', '/protected/' + relpath)
@@ -210,9 +220,7 @@ class DownloadRelease(BaseHandlerDownload):
         # If we don't have nginx, write a file that indicates this
         # Note that this configuration will automatically create and download
         # ("on the fly") the zip file via the contents in all_files
-        self.write("This installation of Qiita was not equipped with nginx, "
-                   "so it is incapable of serving files. The file you "
-                   "attempted to download is located at %s" % relpath)
+        self._write_nginx_placeholder_file(relpath)
 
         self._set_nginx_headers(basename(relpath))
 
