@@ -767,9 +767,18 @@ class TestStudy(TestCase):
         qdb.study.Study.delete(new.id)
 
     def test_analyses(self):
+        new = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'),
+            'NOT Identification of the Microbiomes for Cannabis Soils 13',
+            self.info)
+
         self.assertEqual(qdb.study.Study(1).analyses(), [
             qdb.analysis.Analysis(1), qdb.analysis.Analysis(2),
             qdb.analysis.Analysis(3)])
+
+        self.assertEqual(qdb.study.Study(2).analyses(), [])
+
+        qdb.study.Study.delete(new.id)
 
     def test_environmental_packages(self):
         obs = self.study.environmental_packages

@@ -999,22 +999,26 @@ class Study(qdb.base.QiitaObject):
                     for ptid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     def analyses(self):
-        """Get all analysis where samples from this study have been used
+        """Get all analyses where samples from this study have been used
 
         Returns
         -------
         list of qiita_db.analysis.Analysis
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT DISTINCT analysis_id
-                     FROM qiita.analysis_sample
-                     WHERE sample_id IN %s
-                     ORDER BY analysis_id"""
-            qdb.sql_connection.TRN.add(
-                sql, [tuple(self.sample_template.keys())])
+            if self.sample_template is not None:
+                sids = self.sample_template.keys()
+                if sids:
+                    sql = """SELECT DISTINCT analysis_id
+                             FROM qiita.analysis_sample
+                             WHERE sample_id IN %s
+                             ORDER BY analysis_id"""
+                    qdb.sql_connection.TRN.add(
+                        sql, [tuple(self.sample_template.keys())])
 
-            return [qdb.analysis.Analysis(_id)
-                    for _id in qdb.sql_connection.TRN.execute_fetchflatten()]
+                    return [qdb.analysis.Analysis(_id) for _id in
+                            qdb.sql_connection.TRN.execute_fetchflatten()]
+            return []
 
     def has_access(self, user, no_public=False):
         """Returns whether the given user has access to the study

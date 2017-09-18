@@ -140,7 +140,7 @@ def study_get_req(study_id, user_id):
                 '\n', '</br>')
 
     return {'status': 'success',
-            'message': study_info['message'],
+            'message': '',
             'study_info': study_info,
             'editable': study.can_edit(User(user_id))}
 
