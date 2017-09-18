@@ -767,7 +767,9 @@ class TestStudy(TestCase):
         qdb.study.Study.delete(new.id)
 
     def test_analyses(self):
-        self.assertEqual(qdb.study.Study(1).analyses(), [1, 2, 3])
+        self.assertEqual(qdb.study.Study(1).analyses(), [
+            qdb.analysis.Analysis(1), qdb.analysis.Analysis(2),
+            qdb.analysis.Analysis(3)])
 
     def test_environmental_packages(self):
         obs = self.study.environmental_packages

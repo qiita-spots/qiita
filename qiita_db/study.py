@@ -1014,8 +1014,7 @@ class Study(qdb.base.QiitaObject):
                 sql, [tuple(self.sample_template.keys())])
 
             return [qdb.analysis.Analysis(_id)
-                for _id in qdb.sql_connection.TRN.execute_fetchflatten()]
-
+                    for _id in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     def has_access(self, user, no_public=False):
         """Returns whether the given user has access to the study

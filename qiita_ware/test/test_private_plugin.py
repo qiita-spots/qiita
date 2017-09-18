@@ -375,6 +375,7 @@ class TestPrivatePlugin(TestCase):
         self.assertEqual(c_job.status, 'error')
         self.assertIn('No such file or directory', c_job.log.msg)
 
+
 @qiita_test_checker()
 class TestPrivatePluginDeleteStudy(TestPrivatePlugin):
     def test_delete_study(self):
