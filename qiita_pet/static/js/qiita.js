@@ -119,28 +119,6 @@ function delete_analysis(aname, analysis_id) {
 }
 
 /*
- * show_hide_process_list will toggle the process/job listing visibility
- */
-
-function show_hide_process_list() {
-  if ($("#qiita-main").width() == $("#qiita-main").parent().width()) {
-    // let's update the job list
-    processing_jobs_vue.update_processing_job_data();
-    $("#qiita-main").width("76%");
-    $("#user-studies-table").width("76%");
-    $("#studies-table").width("76%");
-    $("#qiita-processing").width("24%");
-    $("#qiita-processing").show();
-  } else {
-    $("#qiita-main").width("100%");
-    $("#user-studies-table").width("100%");
-    $("#studies-table").width("100%");
-    $("#qiita-processing").width("0%");
-    $("#qiita-processing").hide();
-  }
-}
-
-/*
  * send_samples_to_analysis send the selected samples for the given artifact ids to analysis
  *
  * @param button: the button object that triggered this request
