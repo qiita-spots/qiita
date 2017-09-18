@@ -60,6 +60,15 @@ class BaseHandlerDownload(BaseHandler):
                 to_download.append((fullpath, spath, spath))
         return to_download
 
+    def _write_nginx_file_list(self, to_download):
+        """"""
+        all_files = '\n'.join(
+            ["- %s /protected/%s %s" % (getsize(fp), sfp, n)
+             for fp, sfp, n in to_download])
+
+        self.set_header('X-Archive-Files', 'zip')
+        self.write("%s\n" % all_files)
+
 
 class DownloadHandler(BaseHandlerDownload):
     @authenticated
@@ -81,12 +90,7 @@ class DownloadHandler(BaseHandlerDownload):
             # This is a directory, we need to list all the files so NGINX
             # can download all of them
             to_download = self._list_dir_files_nginx(fp_info['fullpath'])
-            all_files = '\n'.join(
-                ["- %s /protected/%s %s" % (getsize(fp), sfp, n)
-                 for fp, sfp, n in to_download])
-
-            self.set_header('X-Archive-Files', 'zip')
-            self.write("%s\n" % all_files)
+            self._write_nginx_file_list(to_download)
             fname = '%s.zip' % fname
         else:
             # If we don't have nginx, write a file that indicates this
@@ -150,10 +154,7 @@ class DownloadStudyBIOMSHandler(BaseHandlerDownload):
                             (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
                                         % a.id))
 
-        # If we don't have nginx, write a file that indicates this
-        all_files = '\n'.join(["- %s /protected/%s %s" % (getsize(fp), sfp, n)
-                               for fp, sfp, n in to_download])
-        self.write("%s\n" % all_files)
+        self._write_nginx_file_list(to_download)
 
         zip_fn = 'study_%d_%s.zip' % (
             study_id, datetime.now().strftime('%m%d%y-%H%M%S'))
@@ -161,7 +162,6 @@ class DownloadStudyBIOMSHandler(BaseHandlerDownload):
         self.set_header('Content-Description', 'File Transfer')
         self.set_header('Expires', '0')
         self.set_header('Cache-Control', 'no-cache')
-        self.set_header('X-Archive-Files', 'zip')
         self.set_header('Content-Disposition',
                         'attachment; filename=%s' % zip_fn)
         self.finish()
@@ -234,12 +234,7 @@ class DownloadRawData(BaseHandlerDownload):
                             (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
                                         % a.id))
 
-        # If we don't have nginx, write a file that indicates this
-        # Note that this configuration will automatically create and download
-        # ("on the fly") the zip file via the contents in all_files
-        all_files = '\n'.join(["- %s /protected/%s %s" % (getsize(fp), sfp, n)
-                               for fp, sfp, n in to_download])
-        self.write("%s\n" % all_files)
+        self._write_nginx_file_list(to_download)
 
         zip_fn = 'study_raw_data_%d_%s.zip' % (
             study_id, datetime.now().strftime('%m%d%y-%H%M%S'))
@@ -247,7 +242,6 @@ class DownloadRawData(BaseHandlerDownload):
         self.set_header('Content-Description', 'File Transfer')
         self.set_header('Expires', '0')
         self.set_header('Cache-Control', 'no-cache')
-        self.set_header('X-Archive-Files', 'zip')
         self.set_header('Content-Disposition',
                         'attachment; filename=%s' % zip_fn)
         self.finish()
