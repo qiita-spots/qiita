@@ -107,7 +107,7 @@
       <i id='summary-title'>{{name}}</i><i> (ID: {{artifact_id}}) Visibility: {{visibility}}</i>
       {% if editable %}
         <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit</a>
-        {% if artifact_type == 'BIOM' %}
+        {% if artifact_type == 'BIOM' and not is_from_analysis %}
           <input type="button" class="btn btn-default btn-sm" value="Add to Analysis" onclick="send_samples_to_analysis(this, [{{artifact_id}}]);">
         {% else %}
           <a class="btn btn-default btn-sm" onclick="load_process_artifact_ui({{artifact_id}});"><span class="glyphicon glyphicon-play"></span> Process</a>
