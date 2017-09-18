@@ -217,7 +217,8 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             Parameters.load(command, values_dict={
                 'template': prep_template_id,
                 'files': dumps(cleaned_filepaths),
-                'artifact_type': artifact_type
+                'artifact_type': artifact_type,
+                'name': name
                 }))
 
     # Submit the job
