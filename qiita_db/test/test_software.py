@@ -330,7 +330,7 @@ class CommandTests(TestCase):
             'files': ('string', [None]),
             'artifact_type': ('string', [None])}
         self.assertEqual(obs.required_parameters, exp_required)
-        exp_optional = {'name': ['string', None],
+        exp_optional = {'name': ['string', 'dflt_name'],
                         'provenance': ['string', None]}
         self.assertEqual(obs.optional_parameters, exp_optional)
         self.assertFalse(obs.analysis_only)

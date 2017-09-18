@@ -367,7 +367,8 @@ class Command(qdb.base.QiitaObject):
                     sql = """INSERT INTO qiita.command_parameter
                                 (command_id, parameter_name, parameter_type,
                                  required, default_value)
-                             VALUES (%s, 'name', 'string', 'False', NULL),
+                             VALUES (%s, 'name', 'string', 'False',
+                                     'dflt_name'),
                                     (%s, 'provenance', 'string', 'False', NULL)
                              """
                     qdb.sql_connection.TRN.add(sql, [c_id, c_id])
