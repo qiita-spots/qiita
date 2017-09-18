@@ -845,6 +845,44 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
         qdb.sql_connection.TRN.execute()
 
 
+def get_filepath_information(filepath_id):
+    """Gets the filepath information of filepath_id
+
+    Parameters
+    ----------
+    filepath_id : int
+        The filepath id
+
+    Returns
+    -------
+    dict
+        The filepath information
+    """
+    with qdb.sql_connection.TRN:
+        sql = """SELECT filepath_id, filepath, filepath_type, checksum,
+                        data_type, mountpoint, subdirectory, active,
+                        artifact_id
+                 FROM qiita.filepath
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                    JOIN qiita.data_directory USING (data_directory_id)
+                    LEFT JOIN qiita.artifact_filepath USING (filepath_id)
+                 WHERE filepath_id = %s"""
+        qdb.sql_connection.TRN.add(sql, [filepath_id])
+        res = dict(qdb.sql_connection.TRN.execute_fetchindex()[0])
+
+        def path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
+            if subdirectory:
+                return join(db_dir, mountpoint, str(obj_id), filepath)
+            else:
+                return join(db_dir, mountpoint, filepath)
+
+        obj_id = res.pop('artifact_id')
+        res['fullpath'] = path_builder(get_db_files_base_dir(),
+                                       res['filepath'], res['mountpoint'],
+                                       res['subdirectory'], obj_id)
+        return res
+
+
 def filepath_id_to_rel_path(filepath_id):
     """Gets the relative to the base directory of filepath_id
 

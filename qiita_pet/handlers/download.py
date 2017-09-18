@@ -17,7 +17,8 @@ from datetime import datetime
 from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import study_get_req
 from qiita_db.study import Study
-from qiita_db.util import filepath_id_to_rel_path, get_db_files_base_dir
+from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
+                           get_filepath_information)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -37,19 +38,42 @@ class DownloadHandler(BaseHandler):
                 "filepath_id: %s" % (self.current_user.email, str(fid)))
 
         relpath = filepath_id_to_rel_path(fid)
+        fp_info = get_filepath_information(fid)
         fname = basename(relpath)
 
-        # If we don't have nginx, write a file that indicates this
-        self.write("This installation of Qiita was not equipped with nginx, "
-                   "so it is incapable of serving files. The file you "
-                   "attempted to download is located at %s" % relpath)
+        if fp_info['filepath_type'] in ('directory', 'html_summary_dir'):
+            # This is a directory, we need to list all the files so NGINX
+            # can download all of them
+            basedir = get_db_files_base_dir()
+            basedir_len = len(basedir) + 1
+            to_download = []
+            for dp, _, fps in walk(fp_info['fullpath']):
+                for fn in fps:
+                    fullpath = join(dp, fn)
+                    spath = fullpath
+                    if fullpath.startswith(basedir):
+                        spath = fullpath[basedir_len:]
+                    to_download.append((fullpath, spath, spath))
+
+            all_files = '\n'.join(
+                ["- %s /protected/%s %s" % (getsize(fp), sfp, n)
+                 for fp, sfp, n in to_download])
+
+            self.set_header('X-Archive-Files', 'zip')
+            self.write("%s\n" % all_files)
+            fname = '%s.zip' % fname
+        else:
+            # If we don't have nginx, write a file that indicates this
+            self.write("This installation of Qiita was not equipped with "
+                       "nginx, so it is incapable of serving files. The file "
+                       "you attempted to download is located at %s" % relpath)
+            self.set_header('Content-Type', 'application/octet-stream')
+            self.set_header('Content-Transfer-Encoding', 'binary')
+            self.set_header('X-Accel-Redirect', '/protected/' + relpath)
 
         self.set_header('Content-Description', 'File Transfer')
-        self.set_header('Content-Type', 'application/octet-stream')
-        self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('Expires',  '0')
         self.set_header('Cache-Control',  'no-cache')
-        self.set_header('X-Accel-Redirect', '/protected/' + relpath)
         self.set_header('Content-Disposition',
                         'attachment; filename=%s' % fname)
 
