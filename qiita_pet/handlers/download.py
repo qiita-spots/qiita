@@ -47,7 +47,19 @@ class BaseHandlerDownload(BaseHandler):
         self.finish()
 
     def _list_dir_files_nginx(self, dirpath):
-        """"""
+        """Generates a nginx list of files in the given dirpath for nginx
+
+        Parameters
+        ----------
+        dirpath : str
+            Path to the directory
+
+        Returns
+        -------
+        list of (str, str, str)
+            The path information needed by nginx for each file in the
+            directory
+        """
         basedir = get_db_files_base_dir()
         basedir_len = len(basedir) + 1
         to_download = []
@@ -61,7 +73,18 @@ class BaseHandlerDownload(BaseHandler):
         return to_download
 
     def _list_artifact_files_nginx(self, artifact):
-        """"""
+        """Generates a nginx list of files for the given artifact
+
+        Parameters
+        ----------
+        artifact : qiita_db.artifact.Artifact
+            The artifact to retrieve the files
+
+        Returns
+        -------
+        list of (str, str, str)
+            The path information needed by nginx for each file in the artifact
+        """
         basedir = get_db_files_base_dir()
         basedir_len = len(basedir) + 1
         to_download = []
@@ -93,13 +116,33 @@ class BaseHandlerDownload(BaseHandler):
         return to_download
 
     def _write_nginx_file_list(self, to_download):
-        """"""
+        """Writes out the nginx file list
+
+        Parameters
+        ----------
+        to_download : list of (str, str, str)
+            The file list information
+        """
         all_files = '\n'.join(
             ["- %s /protected/%s %s" % (getsize(fp), sfp, n)
              for fp, sfp, n in to_download])
 
         self.set_header('X-Archive-Files', 'zip')
         self.write("%s\n" % all_files)
+
+    def _set_nginx_headers(self, fname):
+        """Sets commong nginx headers
+
+        Parameters
+        ----------
+        fname : str
+            Nginx's output filename
+        """
+        self.set_header('Content-Description', 'File Transfer')
+        self.set_header('Expires',  '0')
+        self.set_header('Cache-Control',  'no-cache')
+        self.set_header('Content-Disposition',
+                        'attachment; filename=%s' % fname)
 
 
 class DownloadHandler(BaseHandlerDownload):
@@ -133,12 +176,7 @@ class DownloadHandler(BaseHandlerDownload):
             self.set_header('Content-Transfer-Encoding', 'binary')
             self.set_header('X-Accel-Redirect', '/protected/' + relpath)
 
-        self.set_header('Content-Description', 'File Transfer')
-        self.set_header('Expires',  '0')
-        self.set_header('Cache-Control',  'no-cache')
-        self.set_header('Content-Disposition',
-                        'attachment; filename=%s' % fname)
-
+        self._set_nginx_headers(fname)
         self.finish()
 
 
@@ -160,15 +198,11 @@ class DownloadStudyBIOMSHandler(BaseHandlerDownload):
         zip_fn = 'study_%d_%s.zip' % (
             study_id, datetime.now().strftime('%m%d%y-%H%M%S'))
 
-        self.set_header('Content-Description', 'File Transfer')
-        self.set_header('Expires', '0')
-        self.set_header('Cache-Control', 'no-cache')
-        self.set_header('Content-Disposition',
-                        'attachment; filename=%s' % zip_fn)
+        self._set_nginx_headers(zip_fn)
         self.finish()
 
 
-class DownloadRelease(BaseHandler):
+class DownloadRelease(BaseHandlerDownload):
     @coroutine
     def get(self, extras):
         _, relpath, _ = get_release_info()
@@ -180,15 +214,12 @@ class DownloadRelease(BaseHandler):
                    "so it is incapable of serving files. The file you "
                    "attempted to download is located at %s" % relpath)
 
-        self.set_header('Content-Description', 'File Transfer')
+        self._set_nginx_headers(basename(relpath))
+
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Transfer-Encoding', 'binary')
-        self.set_header('Expires',  '0')
-        self.set_header('Cache-Control',  'no-cache')
         self.set_header('X-Accel-Redirect',
                         '/protected-working_dir/' + relpath)
-        self.set_header('Content-Disposition',
-                        'attachment; filename=%s' % basename(relpath))
         self.finish()
 
 
@@ -217,11 +248,7 @@ class DownloadRawData(BaseHandlerDownload):
         zip_fn = 'study_raw_data_%d_%s.zip' % (
             study_id, datetime.now().strftime('%m%d%y-%H%M%S'))
 
-        self.set_header('Content-Description', 'File Transfer')
-        self.set_header('Expires', '0')
-        self.set_header('Cache-Control', 'no-cache')
-        self.set_header('Content-Disposition',
-                        'attachment; filename=%s' % zip_fn)
+        self._set_nginx_headers(zip_fn)
         self.finish()
 
 
