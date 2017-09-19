@@ -73,7 +73,7 @@ def correct_redis_data(key, cmd, values_dict, user):
                 # message. We need to create a new job and mark it as
                 # failed with the given error message
                 params = Parameters.load(cmd, values_dict=values_dict)
-                job = ProcessingJob(user, params)
+                job = ProcessingJob.create(user, params)
                 job._set_error(info['message'])
                 payload = {'job_id': job.id}
                 r_client.set(key, dumps(payload))
