@@ -11,12 +11,9 @@ import tornado.auth
 import tornado.escape
 import tornado.web
 import tornado.websocket
-from os.path import dirname, join, exists
-from shutil import copy
+from os.path import dirname, join
 from base64 import b64encode
 from uuid import uuid4
-from moi import moi_js, moi_list_js
-from moi.websocket import MOIMessageHandler
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import is_test_environment
@@ -50,7 +47,7 @@ from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import (
     DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease,
-    DownloadRawData)
+    DownloadRawData, DownloadEBISampleAccessions, DownloadEBIPrepAccessions)
 from qiita_pet.handlers.prep_template import PrepTemplateHandler
 from qiita_pet.handlers.ontology import OntologyHandler
 from qiita_db.handlers.processing_job import (
@@ -71,6 +68,8 @@ from qiita_db.handlers.analysis import APIAnalysisMetadataHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 from qiita_pet.handlers.rest import ENDPOINTS as REST_ENDPOINTS
+from qiita_pet.handlers.qiita_redbiom import RedbiomPublicSearch
+
 if qiita_config.portal == "QIITA":
     from qiita_pet.handlers.portal import (
         StudyPortalHandler, StudyPortalAJAXHandler)
@@ -85,9 +84,6 @@ DEBUG = qiita_config.test_environment
 
 
 _vendor_js = join(STATIC_PATH, 'vendor', 'js')
-if not exists(join(_vendor_js, 'moi.js')):
-    copy(moi_js(), _vendor_js)
-    copy(moi_list_js(), _vendor_js)
 
 
 class Application(tornado.web.Application):
@@ -117,7 +113,6 @@ class Application(tornado.web.Application):
             (r"/analysis/sharing/", ShareAnalysisAJAX),
             (r"/artifact/samples/", ArtifactGetSamples),
             (r"/artifact/info/", ArtifactGetInfo),
-            (r"/moi-ws/", MOIMessageHandler),
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
@@ -167,9 +162,14 @@ class Application(tornado.web.Application):
             (r"/stats/", StatsHandler),
             (r"/download/(.*)", DownloadHandler),
             (r"/download_study_bioms/(.*)", DownloadStudyBIOMSHandler),
-            (r"/release/download/(.*)", DownloadRelease),
             (r"/download_raw_data/(.*)", DownloadRawData),
+            (r"/download_ebi_accessions/samples/(.*)",
+                DownloadEBISampleAccessions),
+            (r"/download_ebi_accessions/experiments/(.*)",
+                DownloadEBIPrepAccessions),
+            (r"/release/download/(.*)", DownloadRelease),
             (r"/vamps/(.*)", VAMPSHandler),
+            (r"/redbiom/(.*)", RedbiomPublicSearch),
             # Plugin handlers - the order matters here so do not change
             # qiita_db/jobs/(.*) should go after any of the
             # qiita_db/jobs/(.*)/XXXX because otherwise it will match the

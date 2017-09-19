@@ -532,20 +532,29 @@ class Artifact(qdb.base.QiitaObject):
 
             # Check if there is a job queued, running, waiting or
             # in_construction that will use/is using the artifact
-            sql = """SELECT EXISTS(
-                        SELECT *
-                        FROM qiita.artifact_processing_job
-                            JOIN qiita.processing_job USING (processing_job_id)
-                            JOIN qiita.processing_job_status
-                                USING (processing_job_status_id)
-                        WHERE artifact_id = %s
-                            AND processing_job_status IN (
-                                'queued', 'running', 'waiting'))"""
+            sql = """SELECT processing_job_id
+                     FROM qiita.artifact_processing_job
+                         JOIN qiita.processing_job USING (processing_job_id)
+                         JOIN qiita.processing_job_status
+                             USING (processing_job_status_id)
+                     WHERE artifact_id = %s
+                         AND processing_job_status IN (
+                             'queued', 'running', 'waiting')"""
             qdb.sql_connection.TRN.add(sql, [artifact_id])
-            if qdb.sql_connection.TRN.execute_fetchlast():
-                raise qdb.exceptions.QiitaDBArtifactDeletionError(
-                    artifact_id,
-                    "there is a queued/running job that uses this artifact")
+            jobs = qdb.sql_connection.TRN.execute_fetchflatten()
+            if jobs:
+                # if the artifact has active jobs we need to raise an error
+                # but we also need to check that if it's only 1 job, that the
+                # job is not the delete_artifact actual job
+                raise_error = True
+                job_name = qdb.processing_job.ProcessingJob(
+                    jobs[0]).command.name
+                if len(jobs) == 1 and job_name == 'delete_artifact':
+                    raise_error = False
+                if raise_error:
+                    raise qdb.exceptions.QiitaDBArtifactDeletionError(
+                        artifact_id, "there is a queued/running job that "
+                        "uses this artifact")
 
             # We can now remove the artifact
             filepaths = instance.filepaths

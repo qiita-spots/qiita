@@ -8,9 +8,11 @@
 
 from unittest import main
 from json import loads
+from mock import Mock
 
 from qiita_db.analysis import Analysis
 from qiita_db.user import User
+from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
@@ -48,6 +50,15 @@ class TestShareStudyAjax(TestHandlerBase):
         self.assertEqual(
             'Analysis <a href="/analysis/description/1">\'SomeAnalysis\'</a> '
             'has been shared with you.', u.messages()[0][1])
+
+        # admins can share
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
+        args = {'deselected': u.id, 'id': a.id}
+        response = self.get('/analysis/sharing/', args)
+        self.assertEqual(response.code, 200)
+        exp = {'users': [], 'links': ''}
+        self.assertEqual(loads(response.body), exp)
+        self.assertEqual(a.shared_with, [])
 
     def test_get_no_access(self):
         args = {'selected': 'demo@microbio.me', 'id': 2}

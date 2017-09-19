@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import main
-from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
@@ -25,17 +24,6 @@ class StudyIndexHandlerTests(TestHandlerBase):
 class StudyBaseInfoAJAX(TestHandlerBase):
     # TODO: Missing tests
     pass
-
-
-class StudyDeleteAjaxTests(TestHandlerBase):
-    def test_delete_study(self):
-        response = self.post('/study/delete/', {'study_id': 1})
-        self.assertEqual(response.code, 200)
-        exp = {'status': 'error',
-               'message': 'Unable to delete study: Study "Identification of '
-                          'the Microbiomes for Cannabis Soils" cannot be '
-                          'erased because it has a sample template'}
-        self.assertEqual(loads(response.body), exp)
 
 
 class DataTypesMenuAJAXTests(TestHandlerBase):

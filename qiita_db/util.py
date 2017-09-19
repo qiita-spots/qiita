@@ -54,6 +54,9 @@ from shutil import move, rmtree, copy as shutil_copy
 from json import dumps
 from datetime import datetime
 from itertools import chain
+from contextlib import contextmanager
+from future.builtins import bytes, str
+import h5py
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
@@ -646,6 +649,33 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
             chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:])))
 
 
+def _path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
+    """Builds the path of a DB stored file
+
+    Parameters
+    ----------
+    db_dir : str
+        The DB base dir
+    filepath : str
+        The path stored in the DB
+    mountpoint : str
+        The mountpoint of the given file
+    subdirectory : bool
+        Whether the file is stored in a subdirectory in the mountpoint or not
+    obj_id : int
+        The id of the object to which the file is attached
+
+    Returns
+    -------
+    str
+        The full path of the given file
+    """
+    if subdirectory:
+        return join(db_dir, mountpoint, str(obj_id), filepath)
+    else:
+        return join(db_dir, mountpoint, filepath)
+
+
 def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
                        fp_type=None):
     """Retrieves the filepaths for the given object id
@@ -670,12 +700,6 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
         The list of (filepath id, filepath, filepath_type) attached to the
         object id
     """
-
-    def path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
-        if subdirectory:
-            return join(db_dir, mountpoint, str(obj_id), filepath)
-        else:
-            return join(db_dir, mountpoint, filepath)
 
     sql_sort = ""
     if sort == 'ascending':
@@ -707,7 +731,7 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
         results = qdb.sql_connection.TRN.execute_fetchindex()
         db_dir = get_db_files_base_dir()
 
-        return [(fpid, path_builder(db_dir, fp, m, s, obj_id), fp_type_)
+        return [(fpid, _path_builder(db_dir, fp, m, s, obj_id), fp_type_)
                 for fpid, fp, fp_type_, m, s in results]
 
 
@@ -840,6 +864,38 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
                 move(fp, destination)
 
         qdb.sql_connection.TRN.execute()
+
+
+def get_filepath_information(filepath_id):
+    """Gets the filepath information of filepath_id
+
+    Parameters
+    ----------
+    filepath_id : int
+        The filepath id
+
+    Returns
+    -------
+    dict
+        The filepath information
+    """
+    with qdb.sql_connection.TRN:
+        sql = """SELECT filepath_id, filepath, filepath_type, checksum,
+                        data_type, mountpoint, subdirectory, active,
+                        artifact_id
+                 FROM qiita.filepath
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                    JOIN qiita.data_directory USING (data_directory_id)
+                    LEFT JOIN qiita.artifact_filepath USING (filepath_id)
+                 WHERE filepath_id = %s"""
+        qdb.sql_connection.TRN.add(sql, [filepath_id])
+        res = dict(qdb.sql_connection.TRN.execute_fetchindex()[0])
+
+        obj_id = res.pop('artifact_id')
+        res['fullpath'] = _path_builder(get_db_files_base_dir(),
+                                        res['filepath'], res['mountpoint'],
+                                        res['subdirectory'], obj_id)
+        return res
 
 
 def filepath_id_to_rel_path(filepath_id):
@@ -1307,24 +1363,86 @@ def generate_study_list(study_ids, public_only=False):
             del info["shared_with_name"]
             del info["shared_with_email"]
 
-            infolist.append({
-                'owner': info['owner'],
-                'study_alias': info['study_alias'],
-                'metadata_complete': info['metadata_complete'],
-                'publication_pid': info['publication_pid'],
-                'ebi_submission_status': info['ebi_submission_status'],
-                'shared': info['shared'],
-                'study_abstract': info['study_abstract'], 'pi': info['pi'],
-                'status': qdb.study.Study(info['study_id']).status,
-                'study_tags': info['study_tags'],
-                'publication_doi': info['publication_doi'],
-                'study_id': info['study_id'],
-                'ebi_study_accession': info['ebi_study_accession'],
-                'study_title': info['study_title'],
-                'number_samples_collected': info['number_samples_collected'],
-                'artifact_biom_ids': info['artifact_biom_ids']
-            })
+            info['status'] = qdb.study.Study(info['study_id']).status
+            infolist.append(info)
+    return infolist
 
+
+def generate_study_list_without_artifacts(study_ids, public_only=False):
+    """Get general study information without artifacts
+
+    Parameters
+    ----------
+    study_ids : list of ints
+        The study ids to look for. Non-existing ids will be ignored
+    public_only : bool, optional
+        If true, return only public BIOM artifacts. Default: false.
+
+    Returns
+    -------
+    list of dict
+        The list of studies and their information
+
+    Notes
+    -----
+    The main select might look scary but it's pretty simple:
+    - We select the requiered fields from qiita.study and qiita.study_person
+        SELECT metadata_complete, study_abstract, study_id, study_alias,
+            study_title, ebi_study_accession, ebi_submission_status,
+            qiita.study_person.name AS pi_name,
+            qiita.study_person.email AS pi_email,
+    - the total number of samples collected by counting sample_ids
+            (SELECT COUNT(sample_id) FROM qiita.study_sample
+                WHERE study_id=qiita.study.study_id)
+                AS number_samples_collected]
+    - all the publications that belong to the study
+            (SELECT array_agg((publication, is_doi)))
+                FROM qiita.study_publication
+                WHERE study_id=qiita.study.study_id) AS publications
+    """
+    with qdb.sql_connection.TRN:
+        sql = """
+            SELECT metadata_complete, study_abstract, study_id, study_alias,
+                study_title, ebi_study_accession, ebi_submission_status,
+                qiita.study_person.name AS pi_name,
+                qiita.study_person.email AS pi_email,
+                (SELECT COUNT(sample_id) FROM qiita.study_sample
+                    WHERE study_id=qiita.study.study_id)
+                    AS number_samples_collected,
+                (SELECT array_agg(row_to_json((publication, is_doi), true))
+                    FROM qiita.study_publication
+                    WHERE study_id=qiita.study.study_id) AS publications
+                FROM qiita.study
+                LEFT JOIN qiita.study_person ON (
+                    study_person_id=principal_investigator_id)
+                WHERE study_id IN %s
+                ORDER BY study_id"""
+        qdb.sql_connection.TRN.add(sql, [tuple(study_ids)])
+        infolist = []
+        for info in qdb.sql_connection.TRN.execute_fetchindex():
+            info = dict(info)
+
+            # publication info
+            info['publication_doi'] = []
+            info['publication_pid'] = []
+            if info['publications'] is not None:
+                for p in info['publications']:
+                    # f1-2 are the default names given
+                    pub = p['f1']
+                    is_doi = p['f2']
+                    if is_doi:
+                        info['publication_doi'].append(pub)
+                    else:
+                        info['publication_pid'].append(pub)
+            del info['publications']
+
+            # pi info
+            info["pi"] = (info['pi_email'], info['pi_name'])
+            del info["pi_email"]
+            del info["pi_name"]
+
+            info['status'] = qdb.study.Study(info['study_id']).status
+            infolist.append(info)
     return infolist
 
 
@@ -1481,3 +1599,67 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     'files': filepaths})
 
             return results
+
+
+def _is_string_or_bytes(s):
+    """Returns True if input argument is string (unicode or not) or bytes.
+    """
+    return isinstance(s, str) or isinstance(s, bytes)
+
+
+def _get_filehandle(filepath_or, *args, **kwargs):
+    """Open file if `filepath_or` looks like a string/unicode/bytes, else
+    pass through.
+    """
+    if _is_string_or_bytes(filepath_or):
+        if h5py.is_hdf5(filepath_or):
+            fh, own_fh = h5py.File(filepath_or, *args, **kwargs), True
+        else:
+            fh, own_fh = open(filepath_or, *args, **kwargs), True
+    else:
+        fh, own_fh = filepath_or, False
+    return fh, own_fh
+
+
+@contextmanager
+def open_file(filepath_or, *args, **kwargs):
+    """Context manager, like ``open``, but lets file handles and file like
+    objects pass untouched.
+
+    It is useful when implementing a function that can accept both
+    strings and file-like objects (like numpy.loadtxt, etc).
+
+    This method differs slightly from scikit-bio's implementation in that it
+    handles HDF5 files appropriately.
+
+    Parameters
+    ----------
+    filepath_or : str/bytes/unicode string or file-like
+         If string, file to be opened using ``h5py.File`` if the file is an
+         HDF5 file, otherwise builtin ``open`` will be used. If it is not a
+         string, the object is just returned untouched.
+
+    Other parameters
+    ----------------
+    args, kwargs : tuple, dict
+        When `filepath_or` is a string, any extra arguments are passed
+        on to the ``open`` builtin.
+
+    Examples
+    --------
+    >>> with open_file('filename') as f:  # doctest: +SKIP
+    ...     pass
+    >>> fh = open('filename')             # doctest: +SKIP
+    >>> with open_file(fh) as f:          # doctest: +SKIP
+    ...     pass
+    >>> fh.closed                         # doctest: +SKIP
+    False
+    >>> fh.close()                        # doctest: +SKIP
+
+    """
+    fh, own_fh = _get_filehandle(filepath_or, *args, **kwargs)
+    try:
+        yield fh
+    finally:
+        if own_fh:
+            fh.close()

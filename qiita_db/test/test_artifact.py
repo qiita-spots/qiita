@@ -1004,7 +1004,7 @@ class ArtifactTests(TestCase):
                              'template': 1,
                              'provenance': dumps(
                                 {'job': "bcc7ebcd-39c1-43e4-af2d-822e3589f14d",
-                                 'cmd_out_id': 3})}
+                                 'cmd_out_id': 3, 'name': 'test-delete'})}
             )
         )
         parent = qdb.processing_job.ProcessingJob(

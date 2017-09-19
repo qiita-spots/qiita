@@ -13,9 +13,8 @@ from os.path import basename, exists, relpath
 from json import loads
 
 from tornado.web import HTTPError
-from moi import r_client
 
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.testing import wait_for_prep_information_job
 from qiita_core.util import qiita_test_checker
 from qiita_db.user import User
@@ -92,6 +91,7 @@ class TestBaseHandlersUtils(TestCase):
             (2L, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)')]
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
+               'artifact_type': 'FASTQ',
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
@@ -106,6 +106,7 @@ class TestBaseHandlersUtils(TestCase):
                            'sandbox</button>'),
                'processing_parameters': {},
                'files': exp_files,
+               'is_from_analysis': False,
                'summary': None,
                'job': None,
                'processing_jobs': exp_p_jobs,
@@ -121,6 +122,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
+               'artifact_type': 'FASTQ',
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
@@ -135,6 +137,7 @@ class TestBaseHandlersUtils(TestCase):
                            'sandbox</button>'),
                'processing_parameters': {},
                'files': exp_files,
+               'is_from_analysis': False,
                'summary': None,
                'job': [job.id, 'queued', None],
                'processing_jobs': exp_p_jobs,
@@ -157,6 +160,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
+               'artifact_type': 'FASTQ',
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
@@ -171,6 +175,7 @@ class TestBaseHandlersUtils(TestCase):
                            'sandbox</button>'),
                'processing_parameters': {},
                'files': exp_files,
+               'is_from_analysis': False,
                'summary': exp_summary_path,
                'job': None,
                'processing_jobs': exp_p_jobs,
@@ -187,12 +192,14 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(demo_u, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
+               'artifact_type': 'FASTQ',
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'public',
                'editable': False,
                'buttons': '',
                'processing_parameters': {},
                'files': [],
+               'is_from_analysis': False,
                'summary': exp_summary_path,
                'job': None,
                'processing_jobs': exp_p_jobs,
@@ -214,6 +221,7 @@ class TestBaseHandlersUtils(TestCase):
             (5L, '1_seqs.demux (preprocessed demux)')]
         exp = {'name': 'Demultiplexed 1',
                'artifact_id': 2,
+               'artifact_type': 'Demultiplexed',
                'artifact_timestamp': '2012-10-01 10:10',
                'visibility': 'private',
                'editable': True,
@@ -240,6 +248,7 @@ class TestBaseHandlersUtils(TestCase):
                    'min_per_read_length_fraction': 0.75,
                    'barcode_type': u'golay_12'},
                'files': exp_files,
+               'is_from_analysis': False,
                'summary': None,
                'job': None,
                'processing_jobs': exp_p_jobs,
@@ -250,6 +259,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 8)
         exp = {'name': 'noname',
                'artifact_id': 8,
+               'artifact_type': 'BIOM',
                # this value changes on build so copy from obs
                'artifact_timestamp': obs['artifact_timestamp'],
                'visibility': 'sandbox',
@@ -257,6 +267,7 @@ class TestBaseHandlersUtils(TestCase):
                'buttons': '',
                'processing_parameters': {},
                'files': [(27, 'biom_table.biom (biom)')],
+               'is_from_analysis': True,
                'summary': None,
                'job': None,
                'processing_jobs': [],
@@ -287,8 +298,9 @@ class TestBaseHandlersUtils(TestCase):
         # Wait until the job is completed
         wait_for_prep_information_job(1)
         # Check that the delete function has been actually called
-        obs = r_client.get(loads(r_client.get('prep_template_1'))['job_id'])
-        self.assertIn('Cannot delete artifact 2', obs)
+        job = ProcessingJob(loads(r_client.get('prep_template_1'))['job_id'])
+        self.assertEqual(job.status, 'error')
+        self.assertIn('Cannot delete artifact 2', job.log.msg)
 
     def test_artifact_patch_request(self):
         a = Artifact(1)
