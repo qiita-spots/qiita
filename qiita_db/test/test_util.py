@@ -622,6 +622,16 @@ class DBUtilTests(TestCase):
                [10, 'mixed', 'combo intervention']]
         self.assertEqual(obs, exp)
 
+    def test_get_filepath_information(self):
+        obs = qdb.util.get_filepath_information(1)
+        # This path is machine specific. Just checking that is not empty
+        self.assertIsNotNone(obs.pop('fullpath'))
+        exp = {'filepath_id': 1L, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
+               'filepath_type': 'raw_forward_seqs', 'checksum': '852952723',
+               'data_type': 'raw_data', 'mountpoint': 'raw_data',
+               'subdirectory': False, 'active': True}
+        self.assertEqual(obs, exp)
+
     def test_filepath_id_to_rel_path(self):
         obs = qdb.util.filepath_id_to_rel_path(1)
         exp = 'raw_data/1_s_G1_L001_sequences.fastq.gz'

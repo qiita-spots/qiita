@@ -8,10 +8,10 @@
 
 from unittest import main
 from mock import Mock
-from os.path import exists, isdir, join
-from os import remove, makedirs
+from os.path import exists, isdir, join, basename
+from os import remove, makedirs, close
 from shutil import rmtree
-from tempfile import mkdtemp
+from tempfile import mkdtemp, mkstemp
 
 from biom.util import biom_open
 from biom import example_table as et
@@ -28,9 +28,16 @@ class TestDownloadHandler(TestHandlerBase):
 
     def setUp(self):
         super(TestDownloadHandler, self).setUp()
+        self._clean_up_files = []
 
     def tearDown(self):
         super(TestDownloadHandler, self).tearDown()
+        for fp in self._clean_up_files:
+            if exists(fp):
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
 
     def test_download(self):
         # check success
@@ -44,6 +51,32 @@ class TestDownloadHandler(TestHandlerBase):
         # failure
         response = self.get('/download/1000')
         self.assertEqual(response.code, 403)
+
+        # directory
+        a = Artifact(1)
+        fd, fp = mkstemp(suffix='.html')
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+        self._clean_up_files.append(fp)
+        dirpath = mkdtemp()
+        fd, fp2 = mkstemp(suffix='.txt', dir=dirpath)
+        close(fd)
+        with open(fp2, 'w') as f:
+            f.write('\n')
+        self._clean_up_files.append(dirpath)
+        a.set_html_summary(fp, support_dir=dirpath)
+        for fp_id, _, fp_type in a.filepaths:
+            if fp_type == 'html_summary_dir':
+                break
+        response = self.get('/download/%d' % fp_id)
+        self.assertEqual(response.code, 200)
+
+        fp_name = basename(fp2)
+        dirname = basename(dirpath)
+        self.assertEqual(
+            response.body, "- 1 /protected/FASTQ/1/%s/%s FASTQ/1/%s/%s\n"
+                           % (dirname, fp_name, dirname, fp_name))
 
 
 class TestDownloadStudyBIOMSHandler(TestHandlerBase):
