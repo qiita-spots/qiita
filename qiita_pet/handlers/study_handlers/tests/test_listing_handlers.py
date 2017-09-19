@@ -74,6 +74,9 @@ class TestHelpers(TestHandlerBase):
         obs = _build_study_info(User('demo@microbio.me'), 'public')
         self.assertEqual(obs, [])
 
+        obs = _build_study_info(User('admin@foo.bar'), 'user')
+        self.assertEqual(obs, self.exp)
+
         # make all the artifacts public - (1) the only study in the tests,
         for a in Study(1).artifacts():
             a.visibility = 'public'
@@ -88,6 +91,28 @@ class TestHelpers(TestHandlerBase):
         obs = _build_study_info(User('demo@microbio.me'), 'public')
         self.assertEqual(obs, self.exp)
 
+        obs = _build_study_info(User('admin@foo.bar'), 'user')
+        self.assertEqual(obs, [])
+
+        # make all the artifacts awaiting_approval - (1) the only study
+        # in the tests,
+        for a in Study(1).artifacts():
+            a.visibility = 'awaiting_approval'
+        self.exp[0]['status'] = 'awaiting_approval'
+
+        obs = _build_study_info(User('test@foo.bar'), 'user')
+        self.assertEqual(obs, self.exp)
+
+        obs = _build_study_info(User('test@foo.bar'), 'public')
+        self.assertEqual(obs, [])
+
+        obs = _build_study_info(User('demo@microbio.me'), 'public')
+        self.assertEqual(obs, [])
+
+        obs = _build_study_info(User('admin@foo.bar'), 'user')
+        self.assertEqual(obs, self.exp)
+
+        # awaiting_approval
         # return to it's private status
         for a in Study(1).artifacts():
             a.visibility = 'private'

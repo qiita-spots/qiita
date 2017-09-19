@@ -72,7 +72,8 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
         if user.level == 'admin':
             user_study_set = (user_study_set |
                               Study.get_by_status('sandbox') |
-                              Study.get_by_status('private') -
+                              Study.get_by_status('private') |
+                              Study.get_by_status('awaiting_approval') -
                               Study.get_by_status('public'))
         study_set = user_study_set
     elif search_type == 'public':
