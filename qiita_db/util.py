@@ -649,6 +649,33 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
             chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:])))
 
 
+def _path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
+    """Builds the path of a DB stored file
+
+    Parameters
+    ----------
+    db_dir : str
+        The DB base dir
+    filepath : str
+        The path stored in the DB
+    mountpoint : str
+        The mountpoint of the given file
+    subdirectory : bool
+        Whether the file is stored in a subdirectory in the mountpoint or not
+    obj_id : int
+        The id of the object to which the file is attached
+
+    Returns
+    -------
+    str
+        The full path of the given file
+    """
+    if subdirectory:
+        return join(db_dir, mountpoint, str(obj_id), filepath)
+    else:
+        return join(db_dir, mountpoint, filepath)
+
+
 def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
                        fp_type=None):
     """Retrieves the filepaths for the given object id
@@ -673,12 +700,6 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
         The list of (filepath id, filepath, filepath_type) attached to the
         object id
     """
-
-    def path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
-        if subdirectory:
-            return join(db_dir, mountpoint, str(obj_id), filepath)
-        else:
-            return join(db_dir, mountpoint, filepath)
 
     sql_sort = ""
     if sort == 'ascending':
@@ -710,7 +731,7 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
         results = qdb.sql_connection.TRN.execute_fetchindex()
         db_dir = get_db_files_base_dir()
 
-        return [(fpid, path_builder(db_dir, fp, m, s, obj_id), fp_type_)
+        return [(fpid, _path_builder(db_dir, fp, m, s, obj_id), fp_type_)
                 for fpid, fp, fp_type_, m, s in results]
 
 
@@ -870,16 +891,10 @@ def get_filepath_information(filepath_id):
         qdb.sql_connection.TRN.add(sql, [filepath_id])
         res = dict(qdb.sql_connection.TRN.execute_fetchindex()[0])
 
-        def path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
-            if subdirectory:
-                return join(db_dir, mountpoint, str(obj_id), filepath)
-            else:
-                return join(db_dir, mountpoint, filepath)
-
         obj_id = res.pop('artifact_id')
-        res['fullpath'] = path_builder(get_db_files_base_dir(),
-                                       res['filepath'], res['mountpoint'],
-                                       res['subdirectory'], obj_id)
+        res['fullpath'] = _path_builder(get_db_files_base_dir(),
+                                        res['filepath'], res['mountpoint'],
+                                        res['subdirectory'], obj_id)
         return res
 
 

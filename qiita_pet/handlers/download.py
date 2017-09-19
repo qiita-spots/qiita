@@ -10,7 +10,7 @@ from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine
 
 from future.utils import viewitems
-from os.path import basename, getsize, join
+from os.path import basename, getsize, join, isdir
 from os import walk
 from datetime import datetime
 
@@ -93,7 +93,7 @@ class BaseHandlerDownload(BaseHandler):
             # raw data is in the folder
             if data_type == 'tgz':
                 continue
-            if data_type == 'directory':
+            if isdir(path):
                 # If we have a directory, we actually need to list all the
                 # files from the directory so NGINX can actually download all
                 # of them
