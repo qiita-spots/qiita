@@ -53,45 +53,23 @@ def _system_call(cmd):
     return stdout, stderr, return_value
 
 
-def _job_submitter(job, cmd):
+def _job_submitter(job_id, cmd):
     """Executes the commands `cmd` and updates the job in case of failure
 
     Parameters
     ----------
-    job : qiita_db.processing_job.ProcesingJob
-        The job that is executed by cmd
+    job_id : str
+        The job id that is executed by cmd
     cmd : str
         The command to execute the job
     """
     std_out, std_err, return_value = _system_call(cmd)
     if return_value != 0:
-        error = ("Error submitting job '%s':\nStd output:%s\nStd error:%s"
-                 % (job.id, std_out, std_err))
-        job.complete(False, error=error)
-
-
-def private_job_submitter(job_name, command, args):
-    """Submits a private job
-
-    Parameters
-    ----------
-    job_name : str
-        The name of the job
-    command: str
-        The private command to be executed
-    args: list of str
-        The arguments to the private command
-    """
-
-    cmd = "%s '%s' %s %s" % (qiita_config.private_launcher,
-                             qiita_config.qiita_env, command,
-                             ' '.join("'%s'" % a for a in args))
-    std_out, std_err, return_value = _system_call(cmd)
-    error = ""
-    if return_value != 0:
-        error = ("Can't submit private task '%s':\n"
-                 "Std output:%s\nStd error: %s" % (command, std_out, std_err))
-    return (return_value == 0), error
+        error = ("Error submitting job:\nStd output:%s\nStd error:%s"
+                 % (std_out, std_err))
+        # Forcing the creation of a new connection
+        qdb.sql_connection.create_new_transaction()
+        ProcessingJob(job_id).complete(False, error=error)
 
 
 class ProcessingJob(qdb.base.QiitaObject):
@@ -347,14 +325,19 @@ class ProcessingJob(qdb.base.QiitaObject):
         QiitaDBOperationNotPermittedError
             If the job is not in 'waiting' or 'in_construction' status
         """
-        status = self.status
-        if status not in {'in_construction', 'waiting'}:
-            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                "Can't submit job, not in 'in_construction' or "
-                "'waiting' status. Current status: %s" % status)
-        self._set_status('queued')
+        with qdb.sql_connection.TRN:
+            status = self.status
+            if status not in {'in_construction', 'waiting'}:
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Can't submit job, not in 'in_construction' or "
+                    "'waiting' status. Current status: %s" % status)
+            self._set_status('queued')
+            # At this point we are going to involve other processes. We need
+            # to commit the changes to the DB or the other processes will not
+            # see these changes
+            qdb.sql_connection.TRN.commit()
         cmd = self._generate_cmd()
-        p = Process(target=_job_submitter, args=(self, cmd))
+        p = Process(target=_job_submitter, args=(self.id, cmd))
         p.start()
 
     def release(self):
@@ -384,6 +367,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 parents = None
                 params = None
                 cmd_out_id = None
+                name = None
                 data_type = a_info['data_type']
                 analysis = qdb.analysis.Analysis(
                     job.parameters.values['analysis'])
@@ -393,6 +377,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 parents = job.input_artifacts
                 params = job.parameters
                 cmd_out_id = provenance['cmd_out_id']
+                name = provenance['name']
                 analysis = None
                 data_type = None
 
@@ -402,7 +387,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             a = qdb.artifact.Artifact.create(
                 filepaths, atype, parents=parents,
                 processing_parameters=params,
-                analysis=analysis, data_type=data_type)
+                analysis=analysis, data_type=data_type, name=name)
 
             self._set_status('success')
 
@@ -557,7 +542,7 @@ class ProcessingJob(qdb.base.QiitaObject):
 
                 qdb.artifact.Artifact.create(
                     filepaths, atype, prep_template=pt, analysis=an,
-                    data_type=data_type)
+                    data_type=data_type, name=job_params['name'])
                 self._set_status('success')
 
     def _complete_artifact_transformation(self, artifacts_data):
@@ -629,7 +614,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                 cmd_out_id = qdb.util.convert_to_id(
                     out_name, "command_output", "name")
                 provenance = {'job': self.id,
-                              'cmd_out_id': cmd_out_id}
+                              'cmd_out_id': cmd_out_id,
+                              'name': out_name}
 
                 # Get the validator command for the current artifact type and
                 # create a new job

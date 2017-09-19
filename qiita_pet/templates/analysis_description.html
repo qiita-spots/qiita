@@ -38,7 +38,7 @@
   function load_process_artifact_ui(artifact_id) {
     $("#analysis-content-div").hide()
     $("#processing-content-div").show()
-    show_loading('{% raw qiita_config.portal_dir %}', 'processing-content-div');
+    show_loading('processing-content-div');
     $.get('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/process/', function(data){
       $("#processing-content-div").html(data);
     })
@@ -81,7 +81,7 @@
    */
   function populateContentArtifact(artifactId) {
     // Put the loading gif in the div
-    show_loading('{% raw qiita_config.portal_dir %}', 'analysis-results');
+    show_loading('analysis-results');
     $.get('{% raw qiita_config.portal_dir %}/artifact/' + artifactId + '/summary/', function(data){
       $("#analysis-results").html(data);
     })
@@ -100,7 +100,7 @@
    */
   function populateContentJob(jobId) {
     // Put the loading gif in the div
-    show_loading('{% raw qiita_config.portal_dir %}', 'analysis-results');
+    show_loading('analysis-results');
     $.get('{% raw qiita_config.portal_dir %}/study/process/job/', {job_id: jobId}, function(data){
       createJobHTML(data, "analysis-results");
     })
@@ -202,7 +202,7 @@
       },
       mounted() {
         let vm = this;
-        show_loading('{% raw qiita_config.portal_dir %}', 'analysis-network-div');
+        show_loading('analysis-network-div');
         $("#analysis-network-div").hide();
         // This call to udpate graph will take care of updating the jobs
         // if the graph is not available

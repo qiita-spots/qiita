@@ -10,7 +10,7 @@
 
 import click
 
-import qiita_db as qdb
+from qiita_ware.private_plugin import private_task
 
 
 @click.command()
@@ -23,7 +23,7 @@ def execute(url, job_id, output_dir):
     The parameters url and output_dir are ignored, but they are added for
     compatibility with the plugin system.
     """
-    qdb.private.private_task(job_id)
+    private_task(job_id)
 
 
 if __name__ == '__main__':

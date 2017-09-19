@@ -14,8 +14,7 @@ from os.path import exists, join
 
 import pandas as pd
 
-from moi import r_client
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.util import qiita_test_checker
 
 import qiita_db as qdb

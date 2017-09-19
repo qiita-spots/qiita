@@ -42,16 +42,23 @@ function bootstrapAlert(message, severity, timeout){
   }
 }
 
+
+/*
+ * format_extra_info_processing_jobs will add new rows to the study lists
+ *
+ * @param message: data, the original data object for the row
+ *     0: blank +/- button
+ *     1: heartbeat
+ *     2: name
+ *     3: status
+ *     4: step
+ *     5: id
+ *     6: params
+ *     7: processing_job_workflow_id
+ *
+ */
+
 function format_extra_info_processing_jobs ( data ) {
-    // `data` is the original data object for the row
-    // 0: blank +/- button
-    // 1: heartbeat
-    // 2: name
-    // 3: status
-    // 4: step
-    // 5: id
-    // 6: params
-    // 7: processing_job_workflow_id
 
     let row = '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'+
                 '<tr>'+
@@ -74,10 +81,24 @@ function format_extra_info_processing_jobs ( data ) {
     return row
 }
 
+/*
+ * show_hide toggles visibility for the given div
+ *
+ * @param message: div, the div to toggle visibility
+ *
+ */
 
 function show_hide(div) {
 	$('#' + div).toggle();
 }
+
+/*
+ * delete_analysis will delete an analysis
+ *
+ * @param aname: The name of the analysis to delete
+ * @param analysis_id: The id of the analysis to delete
+ *
+ */
 
 function delete_analysis(aname, analysis_id) {
   if (confirm('Are you sure you want to delete analysis: ' + aname + '?')) {
@@ -97,21 +118,43 @@ function delete_analysis(aname, analysis_id) {
   }
 }
 
-function show_hide_process_list() {
-  if ($("#qiita-main").width() == $("#qiita-main").parent().width()) {
-    // let's update the job list
-    processing_jobs_vue.update_processing_job_data();
-    $("#qiita-main").width("76%");
-    $("#user-studies-table").width("76%");
-    $("#studies-table").width("76%");
-    $("#qiita-processing").width("24%");
-    $("#qiita-processing").show();
+/*
+ * send_samples_to_analysis send the selected samples for the given artifact ids to analysis
+ *
+ * @param button: the button object that triggered this request
+ * @param aids: A list of artifact ids to add
+ *
+ * Note that we have a list of artifact ids cause the user can select one single
+ * artifact to add or all study artifacts
+ */
+function send_samples_to_analysis(button, aids, samples = null) {
+  button.value = 'Adding';
+  button.disabled = true;
+  $(button).addClass("btn-info");
+  bootstrapAlert('We are adding ' + aids.length + ' artifact(s) to the analysis. This ' +
+                 'might take some time based on the number of samples on each artifact.', "warning", 10000);
+  if (samples === null) {
+    $.get('/artifact/samples/', {ids:aids})
+      .done(function ( data ) {
+        if (data['status']=='success') {
+          qiita_websocket.send('sel', data['data']);
+          button.value = 'Added';
+          $(button).removeClass("btn-info");
+        } else {
+          bootstrapAlert('ERROR: ' + data['msg'], "danger");
+          button.value = 'There was an error, scroll up to see it';
+          button.disabled = false;
+          $(button).addClass("btn-danger");
+        }
+    });
   } else {
-    $("#qiita-main").width("100%");
-    $("#user-studies-table").width("100%");
-    $("#studies-table").width("100%");
-    $("#qiita-processing").width("0%");
-    $("#qiita-processing").hide();
+    $.each(aids, function(i, aid) {
+      var to_send = {};
+      to_send[aid] = samples.split(',');
+      qiita_websocket.send('sel', to_send);
+    });
+    button.value = 'Added';
+    $(button).removeClass("btn-info");
   }
 }
 
@@ -202,20 +245,6 @@ function draw_processing_graph(nodes, edges, target, artifactFunc, jobFunc) {
   });
 };
 
-/**
- *
- * Function to show the loading gif in a given div
- *
- * @param portal_dir: string. The portal that qiita is running under
- * @param target: string. The id of the div to populate with the loading gif
- *
- * This function replaces the content of the given div with the
- * gif to show that the section of page is loading
- *
- */
-function show_loading(portal_dir, target) {
-  $("#" + target).html("<img src='" + portal_dir + "/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
-}
 
 /**
  *
@@ -239,4 +268,163 @@ function change_artifact_name(portal_dir, artifact_id, new_name, on_success_func
       bootstrapAlert("Error changing artifact name: " + error_msg, "danger");
     }
   });
+}
+
+/**
+ * Taken from https://goo.gl/KkQ1S4
+ *
+ * Original script information:
+ * @author Daniel McDonald
+ * @copyright Copyright 2014, biocore
+ * @credits Daniel McDonald, Joshua Shorenstein, Jose Navas
+ * @license BSD
+ * @version 0.1.0-dev
+ * @maintainer Daniel McDonald
+ * @email mcdonadt@colorado.edu
+ * @status Development
+ *
+ *
+ * @name qiita_websocket
+ *
+ * @class manages WebSocket for job information
+ *
+ */
+
+var qiita_websocket = new function () {
+    var
+      /* the server end of the websocket */
+      host = null,
+      /* the websocket */
+      ws = null,
+
+      /* registered callbacks */
+      callbacks = {},
+
+      /* the encode and decode methods used for communication */
+      encode = JSON.stringify,
+      decode = JSON.parse;
+
+    /**
+     *
+     * Registers a callback method for a given action
+     *
+     * @param {action} The associated action verb, str.
+     * @param {func} The associated function, function. This function must
+     * accept an object. Any return is ignored.
+     *
+     */
+    this.add_callback = function(action, func) { callbacks[action] = func; };
+
+    /**
+     *
+     * Packages data into an object, and passes an encoded version of the
+     * object to the websocket.
+     *
+     * @param {action} The associated action to send, str.
+     * @param {data} The data to send, str or Array of str.
+     */
+    this.send = function(action, data) {
+        to_send = {};
+        to_send[action] = data;
+        ws.send(encode(to_send));
+    };
+
+    /**
+     *
+     * Verify the browser supports websockets, and if so, initialize the
+     * websocket. On construction, this method will send a message over the
+     * socket to get all known job information associated with this client.
+     *
+     * @param {host} The URL for the websocket, minus the ws:// header, or null
+     * to use the default qiita_websocket-ws.
+     * @param {on_close} Optional function for action when websocket is closed.
+     * @param {on_error} Optional function for action when websocket errors.
+     */
+    this.init = function(host, on_close, on_error) {
+        if (!("WebSocket" in window)) {
+            alert("Your browser does not appear to support websockets!");
+            return;
+        }
+        //check if we need regular or secure websocket
+        socket = window.location.protocol == "https:" ? 'wss://' : 'ws://';
+        ws = new WebSocket(socket + host);
+
+        // retrive all messages
+        var on_open_message = [];
+
+        ws.onopen = function(){};
+        ws.onclose = on_close;
+        ws.onerror = on_error;
+
+        ws.onmessage = function(evt) {
+            message = decode(evt.data);
+            for(var action in message) {
+                if(action in callbacks) {
+                    callbacks[action](message[action]);
+                }
+            }
+        };
+    };
+};
+
+function error(evt) {
+  $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>");
+}
+
+function show_alert(data) {
+  bootstrapAlert(data + ' samples selected.', "success", 10000);
+   $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
+}
+
+function format_biom_rows(data, row, for_study_list = true, samples = null) {
+  var proc_data_table = '<table class="table" cellpadding="0" cellspacing="0" border="0" style="padding-left:0px;width:95%">';
+  proc_data_table += '<tr>';
+  if (for_study_list) {
+    proc_data_table += '<th></th>';
+  }
+  proc_data_table += '<th>Name</th>';
+  if (for_study_list) {
+    proc_data_table += '<th>Data type</th>';
+  }
+  proc_data_table += '<th>Processing method</th>';
+  proc_data_table += '<th>Parameters</th>';
+  if (for_study_list) {
+    proc_data_table += '<th>Samples in Prep Info</th>';
+  }
+  proc_data_table += '<th>Files</th>';
+  proc_data_table += '</tr>';
+
+  $.each(data, function (idx, info) {
+    if (typeof info !== 'string' && !(info instanceof String)) {
+      proc_data_table += '<tr>';
+      if (for_study_list) {
+        if (samples === null) {
+          proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="send_samples_to_analysis(this, [' + info.artifact_id + '])"></td>';
+        } else {
+          proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="send_samples_to_analysis(this, [' + info.artifact_id + "], '" + samples[info.artifact_id].join(',') + "'" + ')"></td>';
+        }
+      }
+      proc_data_table += '<td>' + info.name + ' (' + info.artifact_id + ' - ' + info.timestamp.split('.')[0] + ')</td>';
+
+      if (for_study_list) {
+        proc_data_table += '<td>' + info.data_type + ' (' + info.target_subfragment.join(', ') + ')</td>';
+      }
+      proc_data_table += '<td>' + info.algorithm + '</td>';
+
+      var params = '';
+      for (var key in info.parameters) {
+        params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
+      }
+      proc_data_table += '<td><small>' + params + '</small></td>';
+      if (for_study_list) {
+        proc_data_table += '<td>' + info.prep_samples + '</td>';
+      }
+      proc_data_table += '<td><small>' + info.files.join('<br/>')  + '</small></td>';
+
+      proc_data_table += '</tr>';
+    }
+  });
+
+  proc_data_table += '</table>';
+  return proc_data_table;
 }
