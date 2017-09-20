@@ -264,7 +264,7 @@
         <h3>Deleting:<br/></h3><h4>{% raw study_title %}</h4>
       </div>
       <div class="modal-body">
-        You will only be able to delete a study that has no data associated with it.<br/>
+        You will only be able to delete a sandboxed study. This will delete all data associated with the study, including analysis using this data.<br/>
         To continue you need to write the title of the study:<br/>
         <input type="text" name="study-alias" id="study-alias" onkeyup="validate_delete_study_text();" size="{{ len(study_title) }}">
         <button class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_study();" id="delete-study-button" disabled></button>
