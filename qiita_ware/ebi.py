@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from os.path import basename, join, isdir, isfile, exists
+from shutil import copyfile
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
 from urllib import quote
@@ -945,36 +946,72 @@ class EBISubmission(object):
         ar = self.artifact
 
         dir_not_exists = not isdir(self.full_ebi_dir)
+        missing_samples = []
         if dir_not_exists or rewrite_fastq:
             makedirs(self.full_ebi_dir)
 
-            # An artifact will hold only one file of type `preprocessed_demux`
-            # Thus, we only use the first one (the only one present)
-            demux = [path for _, path, ftype in ar.filepaths
-                     if ftype == 'preprocessed_demux'][0]
-
-            demux_samples = set()
-            with open_file(demux) as demux_fh:
-                if not isinstance(demux_fh, File):
-                    error_msg = "'%s' doesn't look like a demux file" % demux
+            if ar.artifact_type == 'per_sample_FASTQ':
+                fps = [(basename(fp), fp) for _, fp, fpt in ar.filepaths
+                       if fpt == 'raw_forward_seqs']
+                fps.sort(key=lambda x: x[1])
+                rps = [(k, v) for k, v in viewitems(
+                    self.prep_template.get_category('run_prefix'))]
+                rps.sort(key=lambda x: x[1])
+                demux_samples = set()
+                fpb = partial(join, self.full_ebi_dir)
+                for sn, rp in rps:
+                    for i, (bn, fp) in enumerate(fps):
+                        if bn.startswith(rp):
+                            demux_samples.add(sn)
+                            new_fp = self.sample_demux_fps[sn]
+                            if fp.endswith('.gz'):
+                                copyfile(fp, new_fp)
+                            else:
+                                with open(fp, 'rb') as fin:
+                                    with GzipFile(new_fp, mode='w',
+                                                  mtime=mtime) as fh:
+                                        fh.writelines(fin)
+                            del fps[i]
+                            break
+                if fps:
+                    error_msg = (
+                        'Discrepancy between filepaths and sample names. Extra'
+                        ' filepaths: %s' % ', '.join([fp[0] for fp in fps]))
                     LogEntry.create('Runtime', error_msg)
                     raise EBISubmissionError(error_msg)
-                for s, i in to_per_sample_ascii(demux_fh,
-                                                self.prep_template.keys()):
-                    sample_fp = self.sample_demux_fps[s]
-                    wrote_sequences = False
-                    with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
-                        for record in i:
-                            fh.write(record)
-                            wrote_sequences = True
 
-                    if wrote_sequences:
-                        demux_samples.add(s)
-                    else:
-                        del(self.samples[s])
-                        del(self.samples_prep[s])
-                        del(self.sample_demux_fps[s])
-                        remove(sample_fp)
+                missing_samples = set(
+                    self.samples.keys()).difference(set(demux_samples))
+            else:
+                # An artifact will hold only one file of type
+                # `preprocessed_demux`. Thus, we only use the first one
+                # (the only one present)
+                demux = [path for _, path, ftype in ar.filepaths
+                         if ftype == 'preprocessed_demux'][0]
+
+                demux_samples = set()
+                with open_file(demux) as demux_fh:
+                    if not isinstance(demux_fh, File):
+                        error_msg = (
+                            "'%s' doesn't look like a demux file" % demux)
+                        LogEntry.create('Runtime', error_msg)
+                        raise EBISubmissionError(error_msg)
+                    for s, i in to_per_sample_ascii(demux_fh,
+                                                    self.prep_template.keys()):
+                        sample_fp = self.sample_demux_fps[s]
+                        wrote_sequences = False
+                        with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
+                            for record in i:
+                                fh.write(record)
+                                wrote_sequences = True
+
+                        if wrote_sequences:
+                            demux_samples.add(s)
+                        else:
+                            del(self.samples[s])
+                            del(self.samples_prep[s])
+                            del(self.sample_demux_fps[s])
+                            remove(sample_fp)
         else:
             demux_samples = set()
             extension = '.fastq.gz'
@@ -984,8 +1021,10 @@ class EBISubmission(object):
                 if isfile(fpath) and f.endswith(extension):
                     demux_samples.add(f[:-extension_len])
 
-            missing_samples = set(self.samples.keys()).difference(
-                set(demux_samples))
+            missing_samples = set(
+                self.samples.keys()).difference(demux_samples)
+
+        if missing_samples:
             for ms in missing_samples:
                 del(self.samples[ms])
                 del(self.samples_prep[ms])
@@ -997,4 +1036,5 @@ class EBISubmission(object):
                          "do not match.")
             LogEntry.create('Runtime', error_msg)
             raise EBISubmissionError(error_msg)
+
         return demux_samples
