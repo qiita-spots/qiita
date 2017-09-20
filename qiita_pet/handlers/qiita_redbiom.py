@@ -32,16 +32,17 @@ class RedbiomPublicSearch(BaseHandler):
         study_artifacts = defaultdict(list)
         message = ''
         query = query.lower()
+        print query, type(query)
         try:
             samples = redbiom.search.metadata_full(query, False)
-        except TypeError:
-            message = (
-                'Not a valid search: "%s", are you sure this is a '
-                'valid metadata value?' % query)
         except ValueError:
             message = (
                 'Not a valid search: "%s", your query is too small '
                 '(too few letters), try a longer query' % query)
+        except:
+            message = (
+                'Not a valid search: "%s", are you sure this is a '
+                'valid query value?' % query)
         if not message:
             study_samples = defaultdict(list)
             for s in samples:
