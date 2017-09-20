@@ -32,7 +32,6 @@ class RedbiomPublicSearch(BaseHandler):
         study_artifacts = defaultdict(list)
         message = ''
         query = query.lower()
-        print query, type(query)
         try:
             samples = redbiom.search.metadata_full(query, False)
         except ValueError:
@@ -97,16 +96,16 @@ class RedbiomPublicSearch(BaseHandler):
             if search_on in search_f:
                 message, study_artifacts = search_f[search_on](query, contexts)
                 if not message:
-                    keys = study_artifacts.keys()
-                    if keys:
+                    studies = study_artifacts.keys()
+                    if studies:
                         results = generate_study_list_without_artifacts(
-                            study_artifacts.keys(), True)
+                            studies, True)
                         # inserting the artifact_biom_ids to the results
                         for i in range(len(results)):
                             results[i]['artifact_biom_ids'] = study_artifacts[
                                 str(results[i]['study_id'])]
                     else:
-                        message = "No samples where found! Try again ..."
+                        message = "No samples were found! Try again ..."
             else:
                 message = ('Incorrect search by: you can use metadata, '
                            'features or taxon and you passed: %s' % search_on)

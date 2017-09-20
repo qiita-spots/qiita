@@ -46,7 +46,7 @@ class TestRedbiom(TestHandlerBase):
         response = self.post('/redbiom/', post_args)
         self.assertEqual(response.code, 200)
         exp = {'status': 'success',
-               'message': 'No samples where found! Try again ...', 'data': []}
+               'message': 'No samples were found! Try again ...', 'data': []}
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
@@ -57,7 +57,7 @@ class TestRedbiom(TestHandlerBase):
         self.assertEqual(response.code, 200)
         exp = {'status': 'success',
                'message': ('Not a valid search: "4353076", are you sure this '
-                           'is a valid metadata value?'), 'data': []}
+                           'is a valid query value?'), 'data': []}
         self.assertEqual(loads(response.body), exp)
 
     def test_post_features(self):
@@ -79,7 +79,7 @@ class TestRedbiom(TestHandlerBase):
         }
         response = self.post('/redbiom/', post_args)
         exp = {'status': 'success',
-               'message': 'No samples where found! Try again ...', 'data': []}
+               'message': 'No samples were found! Try again ...', 'data': []}
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
 
@@ -102,7 +102,7 @@ class TestRedbiom(TestHandlerBase):
         }
         response = self.post('/redbiom/', post_args)
         exp = {'status': 'success',
-               'message': 'No samples where found! Try again ...', 'data': []}
+               'message': 'No samples were found! Try again ...', 'data': []}
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
 
