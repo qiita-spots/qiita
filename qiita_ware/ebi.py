@@ -958,7 +958,6 @@ class EBISubmission(object):
                     self.prep_template.get_category('run_prefix'))]
                 rps.sort(key=lambda x: x[1])
                 demux_samples = set()
-                fpb = partial(join, self.full_ebi_dir)
                 for sn, rp in rps:
                     for i, (bn, fp) in enumerate(fps):
                         if bn.startswith(rp):
