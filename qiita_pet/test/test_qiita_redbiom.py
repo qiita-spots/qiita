@@ -56,8 +56,9 @@ class TestRedbiom(TestHandlerBase):
         response = self.post('/redbiom/', post_args)
         self.assertEqual(response.code, 200)
         exp = {'status': 'success',
-               'message': ('Not a valid search: "4353076", are you sure this '
-                           'is a valid query value?'), 'data': []}
+               'message': ('The query ("4353076") did not work and may be '
+                           'malformed. Please check the search help for more '
+                           'information on the queries.'), 'data': []}
         self.assertEqual(loads(response.body), exp)
 
     def test_post_features(self):

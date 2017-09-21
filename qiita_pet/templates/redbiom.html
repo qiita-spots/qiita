@@ -211,18 +211,24 @@
         <br/>
         <ul>
           <li>
-            Find all samples in which the GreenGenes feature 4479944 is found: "4479944"
+            Find all samples in which the Greengenes feature 4479944 is found: "4479944"
           </li>
         </ul>
       </li>
       <li><b>Taxon</b>:<br/>
-        The search will be only on closed reference and based on the taxonomies available. Note that you need to use the GreenGenes nomenclature.
+        The search will be only on closed reference and based on the taxonomies available.
+        Only exact matches are returned. Note that currently only the Greengenes taxonomy is
+        searchable, and that it requires nomenclature of a rank prefix, two underscores, and then the
+        name.
         <br/><br/>
         Examples:
         <br/>
         <ul>
           <li>
             Find all samples in which the genera Escherichia is found: "g__Escherichia"
+          </li>
+          <li>
+            Find all samples in which the order Clostridiales is found: "o__Clostridiales"
           </li>
         </ul>
       </li>

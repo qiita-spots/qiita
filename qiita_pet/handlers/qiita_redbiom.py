@@ -40,8 +40,9 @@ class RedbiomPublicSearch(BaseHandler):
                 '(too few letters), try a longer query' % query)
         except:
             message = (
-                'Not a valid search: "%s", are you sure this is a '
-                'valid query value?' % query)
+                'The query ("%s") did not work and may be malformed. Please '
+                'check the search help for more information on the queries.'
+                % query)
         if not message:
             study_samples = defaultdict(list)
             for s in samples:
