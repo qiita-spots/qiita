@@ -178,12 +178,10 @@ class EBISubmission(object):
         st_restrictions = [self.sample_template.columns_restrictions['EBI']]
         pt_restrictions = [self.prep_template.columns_restrictions['EBI']]
         if self.artifact.data_type in TARGET_GENE_DATA_TYPES:
-            if self.artifact.artifact_type == 'per_sample_FASTQ':
-                field = 'demultiplex_multiple'
-            else:
-                field = 'demultiplex'
-            pt_restrictions[0].columns.update(
-                PREP_TEMPLATE_COLUMNS_TARGET_GENE[field].columns)
+            # adding restictions on primer and barcode as these are
+            # conditionally requiered for target gene
+            pt_restrictions.append(
+                PREP_TEMPLATE_COLUMNS_TARGET_GENE['demultiplex'])
         st_missing = self.sample_template.check_restrictions(st_restrictions)
         pt_missing = self.prep_template.check_restrictions(pt_restrictions)
         # testing if there are any missing columns
@@ -918,6 +916,80 @@ class EBISubmission(object):
         return (study_accession, sample_accessions, biosample_accessions,
                 experiment_accessions, run_accessions)
 
+    def _generate_demultiplexed_fastq_per_sample_FASTQ(self):
+        """Modularity helper"""
+        ar = self.artifact
+        fps = [(basename(fp), fp) for _, fp, fpt in ar.filepaths
+               if fpt == 'raw_forward_seqs']
+        fps.sort(key=lambda x: x[1])
+        if 'run_prefix' in self.prep_template.categories():
+            rps = [(k, v) for k, v in viewitems(
+                self.prep_template.get_category('run_prefix'))]
+        else:
+            rps = [(v, v.split('.', 1)[1]) for v in self.prep_template.keys()]
+        rps.sort(key=lambda x: x[1])
+        demux_samples = set()
+        for sn, rp in rps:
+            for i, (bn, fp) in enumerate(fps):
+                if bn.startswith(rp):
+                    demux_samples.add(sn)
+                    new_fp = self.sample_demux_fps[sn]
+                    if fp.endswith('.gz'):
+                        copyfile(fp, new_fp)
+                    else:
+                        cmd = "gzip -c %s > %s" % (fp, new_fp)
+                        stdout, stderr, rv = system_call(cmd)
+                        if rv != 0:
+                            error_msg = (
+                                "Error:\nStd output:%s\nStd error:%s"
+                                % (stdout, stderr))
+                            raise EBISubmissionError(error_msg)
+                    del fps[i]
+                    break
+        if fps:
+            error_msg = (
+                'Discrepancy between filepaths and sample names. Extra'
+                ' filepaths: %s' % ', '.join([fp[0] for fp in fps]))
+            LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(error_msg)
+
+        return demux_samples, \
+            set(self.samples.keys()).difference(set(demux_samples))
+
+    def _generate_demultiplexed_fastq_demux(self, mtime):
+        """Modularity helper"""
+        # An artifact will hold only one file of type
+        # `preprocessed_demux`. Thus, we only use the first one
+        # (the only one present)
+        ar = self.artifact
+        demux = [path for _, path, ftype in ar.filepaths
+                 if ftype == 'preprocessed_demux'][0]
+
+        demux_samples = set()
+        with open_file(demux) as demux_fh:
+            if not isinstance(demux_fh, File):
+                error_msg = (
+                    "'%s' doesn't look like a demux file" % demux)
+                LogEntry.create('Runtime', error_msg)
+                raise EBISubmissionError(error_msg)
+            for s, i in to_per_sample_ascii(demux_fh,
+                                            self.prep_template.keys()):
+                sample_fp = self.sample_demux_fps[s]
+                wrote_sequences = False
+                with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
+                    for record in i:
+                        fh.write(record)
+                        wrote_sequences = True
+
+                if wrote_sequences:
+                    demux_samples.add(s)
+                else:
+                    del(self.samples[s])
+                    del(self.samples_prep[s])
+                    del(self.sample_demux_fps[s])
+                    remove(sample_fp)
+        return demux_samples
+
     def generate_demultiplexed_fastq(self, rewrite_fastq=False, mtime=None):
         """Generates demultiplexed fastq
 
@@ -953,77 +1025,16 @@ class EBISubmission(object):
             - The demux file couldn't be read
             - All samples are removed
         """
-        ar = self.artifact
-
         dir_not_exists = not isdir(self.full_ebi_dir)
         missing_samples = []
         if dir_not_exists or rewrite_fastq:
             makedirs(self.full_ebi_dir)
 
-            if ar.artifact_type == 'per_sample_FASTQ':
-                fps = [(basename(fp), fp) for _, fp, fpt in ar.filepaths
-                       if fpt == 'raw_forward_seqs']
-                fps.sort(key=lambda x: x[1])
-                rps = [(k, v) for k, v in viewitems(
-                    self.prep_template.get_category('run_prefix'))]
-                rps.sort(key=lambda x: x[1])
-                demux_samples = set()
-                for sn, rp in rps:
-                    for i, (bn, fp) in enumerate(fps):
-                        if bn.startswith(rp):
-                            demux_samples.add(sn)
-                            new_fp = self.sample_demux_fps[sn]
-                            if fp.endswith('.gz'):
-                                copyfile(fp, new_fp)
-                            else:
-                                cmd = "gzip -c %s > %s" % (fp, new_fp)
-                                stdout, stderr, rv = system_call(cmd)
-                                if rv != 0:
-                                    error_msg = (
-                                        "Error:\nStd output:%s\nStd error:%s"
-                                        % (stdout, stderr))
-                                    raise EBISubmissionError(error_msg)
-                            del fps[i]
-                            break
-                if fps:
-                    error_msg = (
-                        'Discrepancy between filepaths and sample names. Extra'
-                        ' filepaths: %s' % ', '.join([fp[0] for fp in fps]))
-                    LogEntry.create('Runtime', error_msg)
-                    raise EBISubmissionError(error_msg)
-
-                missing_samples = set(
-                    self.samples.keys()).difference(set(demux_samples))
+            if self.artifact.artifact_type == 'per_sample_FASTQ':
+                demux_samples, missing_samples = \
+                    self._generate_demultiplexed_fastq_per_sample_FASTQ()
             else:
-                # An artifact will hold only one file of type
-                # `preprocessed_demux`. Thus, we only use the first one
-                # (the only one present)
-                demux = [path for _, path, ftype in ar.filepaths
-                         if ftype == 'preprocessed_demux'][0]
-
-                demux_samples = set()
-                with open_file(demux) as demux_fh:
-                    if not isinstance(demux_fh, File):
-                        error_msg = (
-                            "'%s' doesn't look like a demux file" % demux)
-                        LogEntry.create('Runtime', error_msg)
-                        raise EBISubmissionError(error_msg)
-                    for s, i in to_per_sample_ascii(demux_fh,
-                                                    self.prep_template.keys()):
-                        sample_fp = self.sample_demux_fps[s]
-                        wrote_sequences = False
-                        with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
-                            for record in i:
-                                fh.write(record)
-                                wrote_sequences = True
-
-                        if wrote_sequences:
-                            demux_samples.add(s)
-                        else:
-                            del(self.samples[s])
-                            del(self.samples_prep[s])
-                            del(self.sample_demux_fps[s])
-                            remove(sample_fp)
+                demux_samples = self._generate_demultiplexed_fastq_demux(mtime)
         else:
             demux_samples = set()
             extension = '.fastq.gz'
