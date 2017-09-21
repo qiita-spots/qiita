@@ -27,6 +27,9 @@ from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id, get_mountpoint, open_file
 from qiita_db.artifact import Artifact
+from qiita_db.metadata_template.constants import (
+    TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+from qiita_db.processing_job import _system_call as system_call
 
 
 def clean_whitespace(text):
@@ -172,10 +175,17 @@ class EBISubmission(object):
         self.publications = self.study.publications
 
         # getting the restrictions
-        st_missing = self.sample_template.check_restrictions(
-            [self.sample_template.columns_restrictions['EBI']])
-        pt_missing = self.prep_template.check_restrictions(
-            [self.prep_template.columns_restrictions['EBI']])
+        st_restrictions = [self.sample_template.columns_restrictions['EBI']]
+        pt_restrictions = [self.prep_template.columns_restrictions['EBI']]
+        if self.artifact.data_type in TARGET_GENE_DATA_TYPES:
+            if self.artifact.artifact_type == 'per_sample_FASTQ':
+                field = 'demultiplex_multiple'
+            else:
+                field = 'demultiplex'
+            pt_restrictions[0].columns.update(
+                PREP_TEMPLATE_COLUMNS_TARGET_GENE[field].columns)
+        st_missing = self.sample_template.check_restrictions(st_restrictions)
+        pt_missing = self.prep_template.check_restrictions(pt_restrictions)
         # testing if there are any missing columns
         if st_missing:
             error_msgs.append("Missing column in the sample template: %s" %
@@ -966,10 +976,13 @@ class EBISubmission(object):
                             if fp.endswith('.gz'):
                                 copyfile(fp, new_fp)
                             else:
-                                with open(fp, 'rb') as fin:
-                                    with GzipFile(new_fp, mode='w',
-                                                  mtime=mtime) as fh:
-                                        fh.writelines(fin)
+                                cmd = "gzip -c %s > %s" % (fp, new_fp)
+                                stdout, stderr, rv = system_call(cmd)
+                                if rv != 0:
+                                    error_msg = (
+                                        "Error:\nStd output:%s\nStd error:%s"
+                                        % (stdout, stderr))
+                                    raise EBISubmissionError(error_msg)
                             del fps[i]
                             break
                 if fps:

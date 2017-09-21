@@ -16,6 +16,7 @@ from unittest import TestCase, main
 from xml.etree import ElementTree as ET
 from functools import partial
 import pandas as pd
+import warnings
 from datetime import date
 from skbio.util import safe_md5
 from future.utils import viewitems
@@ -302,13 +303,13 @@ class TestEBISubmission(TestCase):
         # creating prep template without required EBI submission columns
         if not valid_metadata:
             metadata_dict = {
-                'SKD6.640190': {'center_name': 'ANL',
+                'SKD6.640190': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project'},
-                'SKM6.640187': {'center_name': 'ANL',
+                'SKM6.640187': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
                                 'instrument_model': 'Not valid'},
-                'SKD9.640182': {'center_name': 'ANL',
+                'SKD9.640182': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
                                 'instrument_model': 'Illumina MiSeq',
@@ -321,7 +322,7 @@ class TestEBISubmission(TestCase):
             investigation_type = None
         else:
             metadata_dict = {
-                'SKD6.640190': {'center_name': 'ANL',
+                'SKD6.640190': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
                                 'instrument_model': 'Illumina MiSeq',
@@ -330,7 +331,7 @@ class TestEBISubmission(TestCase):
                                     'microbiome of soil and rhizosphere',
                                 'library_construction_protocol':
                                     'PMID: 22402401'},
-                'SKM6.640187': {'center_name': 'ANL',
+                'SKM6.640187': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
                                 'instrument_model': 'Illumina MiSeq',
@@ -340,7 +341,7 @@ class TestEBISubmission(TestCase):
                                 'library_construction_protocol':
                                     'PMID: 22402401',
                                 'extra_value': 1.2},
-                'SKD9.640182': {'center_name': 'ANL',
+                'SKD9.640182': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
                                 'instrument_model': 'Illumina MiSeq',
@@ -354,8 +355,10 @@ class TestEBISubmission(TestCase):
             investigation_type = "Metagenomics"
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
-        pt = PrepTemplate.create(metadata, Study(1), "18S",
-                                 investigation_type=investigation_type)
+
+        with warnings.catch_warnings(record=True):
+            pt = PrepTemplate.create(metadata, Study(1), "18S",
+                                     investigation_type=investigation_type)
         artifact = self.write_demux_files(pt)
 
         return artifact
@@ -396,7 +399,8 @@ class TestEBISubmission(TestCase):
         }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
-        SampleTemplate.create(metadata, study)
+        with warnings.catch_warnings(record=True):
+            SampleTemplate.create(metadata, study)
         metadata_dict = {
             'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTC',
@@ -422,7 +426,8 @@ class TestEBISubmission(TestCase):
         }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
-        pt = PrepTemplate.create(metadata, study, "16S", 'Metagenomics')
+        with warnings.catch_warnings(record=True):
+            pt = PrepTemplate.create(metadata, study, "16S", 'Metagenomics')
         fna_fp = join(self.temp_dir, 'seqs.fna')
         demux_fp = join(self.temp_dir, 'demux.seqs')
         with open(fna_fp, 'w') as f:
@@ -717,9 +722,24 @@ class TestEBISubmission(TestCase):
                             'run_prefix': '1.SKM4.640180'}}
         metadata = pd.DataFrame.from_dict(
             metadata_dict, orient='index', dtype=str)
-        pt = PrepTemplate.create(metadata, Study(1), "18S",
-                                 investigation_type="Metagenomics")
+        with warnings.catch_warnings(record=True):
+            pt = PrepTemplate.create(metadata, Study(1), "18S",
+                                     investigation_type="Metagenomics")
         artifact = self._generate_per_sample_FASTQs(pt, FASTQ_EXAMPLE)
+
+        # this should fail due to missing columns
+        with self.assertRaises(EBISubmissionError) as err:
+            ebi_submission = EBISubmission(artifact.id, 'ADD')
+        self.assertIn('Missing column in the prep template: barcode, primer',
+                      str(err.exception))
+        metadata_dict = {
+            'SKB2.640194': {'barcode': 'AAA', 'primer': 'CCCC'},
+            'SKM4.640180': {'barcode': 'CCC', 'primer': 'AAAA'}}
+        metadata = pd.DataFrame.from_dict(
+            metadata_dict, orient='index', dtype=str)
+
+        with warnings.catch_warnings(record=True):
+            pt.extend_and_update(metadata)
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
 
