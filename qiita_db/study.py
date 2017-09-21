@@ -440,6 +440,9 @@ class Study(qdb.base.QiitaObject):
             sql = "DELETE FROM qiita.investigation_study WHERE study_id = %s"
             qdb.sql_connection.TRN.add(sql, args)
 
+            sql = "DELETE FROM qiita.per_study_tags WHERE study_id = %s"
+            qdb.sql_connection.TRN.add(sql, args)
+
             sql = "DELETE FROM qiita.study WHERE study_id = %s"
             qdb.sql_connection.TRN.add(sql, args)
 
