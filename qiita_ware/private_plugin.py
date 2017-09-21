@@ -302,6 +302,8 @@ def delete_study(job):
 
         qdb.metadata_template.sample_template.SampleTemplate.delete(study_id)
 
+        # removing tags
+        study.update_tags(job.user, [])
         qdb.study.Study.delete(study_id)
 
         job._set_status('success')
