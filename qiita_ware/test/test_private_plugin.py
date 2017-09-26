@@ -34,11 +34,11 @@ from qiita_ware.private_plugin import private_task
 
 class BaseTestPrivatePlugin(TestCase):
     def _create_job(self, cmd_name, values_dict):
-        user = User('test@foo.bar')
+        self.user = User('test@foo.bar')
         qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
         cmd = qiita_plugin.get_command(cmd_name)
         params = Parameters.load(cmd, values_dict=values_dict)
-        job = ProcessingJob.create(user, params)
+        job = ProcessingJob.create(self.user, params)
         job._set_status('queued')
         return job
 
@@ -389,13 +389,17 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
                       "submitted to EBI", job.log.msg)
 
         # delete everything from the EBI submissions and the processing job so
-        # we can try again: test success
+        # we can try again: test success (with tags)
         with TRN:
             sql = """DELETE FROM qiita.ebi_run_accession"""
             TRN.add(sql)
             sql = """DELETE FROM qiita.artifact_processing_job"""
             TRN.add(sql)
             TRN.execute()
+
+            # adding tags
+            Study(1).update_tags(self.user, ['my new tag!'])
+
             job = self._create_job('delete_study', {'study': 1})
             private_task(job.id)
 
