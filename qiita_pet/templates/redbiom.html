@@ -121,15 +121,15 @@
   $("#submitForm").submit(function(event){
     event.preventDefault();
 
-    show_loading("redbiom-info");
+    show_loading("redbiom-info", true);
 
     var search = $("#search").val();
     var search_on = $("#search_on").val();
+    var redbiom_info = $('#redbiom-info');
 
     $.post("{% raw qiita_config.portal_dir %}/redbiom/", {'search': search, 'search_on': search_on})
       .done(function ( data ){
         var redbiom_table = $('#redbiom-table').DataTable();
-        var redbiom_info = $('#redbiom-info');
         // the next 4 lines reset the column filtering
         var placer = $(".ps");
         redbiom_table.column(3).search("").draw();
@@ -148,7 +148,17 @@
             redbiom_info.html('');
           }
         }
-      });
+      })
+    .fail(function(response, status, error) {
+      var text = 'The query response is larger than is currently allowed, please try another. <a href="https://github.com/biocore/qiita/issues/2312" target="_blank">Track progress on this issue.</a>';
+      if (response.status != 504) {
+        text = 'Status code: "' + response.status + '" - ' + error + '.<br/>Please send a screenshot to <a href="qiita.help@gmail.com">qiita.help@gmail.com</a>.';
+      }
+      redbiom_info.html(
+        `<div class="alert alert-danger alert-dismissible" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <strong>Error!</strong> ` + text + `</div><br/>`)
+    })
     });
   });
 </script>
