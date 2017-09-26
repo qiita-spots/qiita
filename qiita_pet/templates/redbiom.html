@@ -150,7 +150,7 @@
         }
       })
     .fail(function(response, status, error) {
-      var text = 'The query response is larger than is currently allowed, please try another.';
+      var text = 'The query response is larger than is currently allowed, please try another. <a href="https://github.com/biocore/qiita/issues/2312" target="_blank">Track progress on this issue.</a>';
       if (response.status != 504) {
         text = 'Status code: "' + response.status + '" - ' + error + '.<br/>Please send a screenshot to <a href="qiita.help@gmail.com">qiita.help@gmail.com</a>.';
       }
