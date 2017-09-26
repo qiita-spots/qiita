@@ -391,7 +391,7 @@ class TestPrepAPI(TestCase):
                     '\tDemultiplexing disabled.: barcode, primer;',
                     ('\tEBI submission disabled: center_name, '
                      'experiment_design_description, instrument_model, '
-                     'library_construction_protocol, platform, primer.'),
+                     'library_construction_protocol, platform.'),
                     ('See the Templates tutorial for a description of these '
                      'fields.')],
                'file': 'update.txt',

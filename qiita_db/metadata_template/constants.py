@@ -35,8 +35,7 @@ SAMPLE_TEMPLATE_COLUMNS = {
 PREP_TEMPLATE_COLUMNS = {
     # The following columns are required by EBI for submission
     'EBI': Restriction(
-        columns={'primer': str,
-                 'center_name': str,
+        columns={'center_name': str,
                  'platform': str,
                  'instrument_model': str,
                  'library_construction_protocol': str,
