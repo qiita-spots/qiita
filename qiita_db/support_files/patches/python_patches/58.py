@@ -37,11 +37,16 @@ def correct_redis_data(key, cmd, values_dict, user):
         if info['job_id'] is not None:
             if 'is_qiita_job' in info:
                 if info['is_qiita_job']:
-                    job = ProcessingJob(info['job_id'])
-                    payload = {'job_id': info['job_id'],
-                               'alert_type': info['status'],
-                               'alert_msg': info['alert_msg']}
-                    r_client.set(key, dumps(payload))
+                    try:
+                        job = ProcessingJob(info['job_id'])
+                        payload = {'job_id': info['job_id'],
+                                   'alert_type': info['status'],
+                                   'alert_msg': info['alert_msg']}
+                        r_client.set(key, dumps(payload))
+                    except QiitaDBUnknownIDError:
+                        # We shomehow lost the information of this job
+                        # Simply delete the key
+                        r_client.delete(key)
                 else:
                     # These jobs don't contain any information on the live
                     # dump. We can safely delete the key
@@ -73,7 +78,7 @@ def correct_redis_data(key, cmd, values_dict, user):
                 # message. We need to create a new job and mark it as
                 # failed with the given error message
                 params = Parameters.load(cmd, values_dict=values_dict)
-                job = ProcessingJob(user, params)
+                job = ProcessingJob.create(user, params)
                 job._set_error(info['message'])
                 payload = {'job_id': job.id}
                 r_client.set(key, dumps(payload))
