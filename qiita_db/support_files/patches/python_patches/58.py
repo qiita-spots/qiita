@@ -43,7 +43,7 @@ def correct_redis_data(key, cmd, values_dict, user):
                                    'alert_type': info['status'],
                                    'alert_msg': info['alert_msg']}
                         r_client.set(key, dumps(payload))
-                    except QiitaDBUnknownIDError:
+                    except (QiitaDBUnknownIDError, KeyError):
                         # We shomehow lost the information of this job
                         # Simply delete the key
                         r_client.delete(key)
