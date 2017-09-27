@@ -58,18 +58,6 @@ class ConfigurationManager(object):
         The host where the database lives
     port : int
         The port used to connect to the postgres database in the previous host
-    ipyc_demo : str
-        The IPython demo cluster profile
-    ipyc_demo_n : int
-        The size of the demo cluster
-    ipyc_reserved : str
-        The IPython reserved cluster profile
-    ipyc_reserved_n : int
-        The size of the reserved cluster
-    ipyc_general : str
-        The IPython general cluster profile
-    ipyc_general_n : int
-        The size of the general cluster
     smtp_host : str
         The SMTP host from which mail will be sent
     smtp_port : int
@@ -145,7 +133,7 @@ class ConfigurationManager(object):
             config.readfp(conf_file)
 
         _required_sections = {'main', 'redis', 'postgres', 'smtp', 'ebi',
-                              'ipython', 'portal'}
+                              'portal'}
         if not _required_sections.issubset(set(config.sections())):
             missing = _required_sections - set(config.sections())
             raise MissingConfigSection(', '.join(missing))
@@ -155,7 +143,6 @@ class ConfigurationManager(object):
         self._get_postgres(config)
         self._get_redis(config)
         self._get_ebi(config)
-        self._get_ipython(config)
         self._get_vamps(config)
         self._get_portal(config)
 
@@ -282,10 +269,6 @@ class ConfigurationManager(object):
         self.ebi_dropbox_url = sec_get('EBI_DROPBOX_URL')
         self.ebi_center_name = sec_get('EBI_CENTER_NAME')
         self.ebi_organization_prefix = sec_get('EBI_ORGANIZATION_PREFIX')
-
-    def _get_ipython(self, config):
-        self.ipython_contexts = config.get('ipython', 'context').split(',')
-        self.ipython_default = config.get('ipython', 'default')
 
     def _get_vamps(self, config):
         self.vamps_user = config.get('vamps', 'USER')

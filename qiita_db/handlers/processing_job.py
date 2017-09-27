@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from json import loads
-from multiprocessing import Process
 
 from tornado.web import HTTPError
 
@@ -44,26 +43,6 @@ def _get_job(job_id):
         raise HTTPError(500, 'Error instantiating the job: %s' % str(e))
 
     return job
-
-
-def _job_completer(job_id, payload):
-    """Completes a job
-
-    Parameters
-    ----------
-    job_id : str
-        The job to complete
-    payload : str
-        The JSON string with the parameters of the HTTP POST request that is
-        completing the job
-    """
-    import qiita_db as qdb
-
-    success, error = qdb.processing_job.private_job_submitter(
-        "Complete job %s" % job_id, 'complete_job', [job_id, payload])
-    if not success:
-        job = qdb.processing_job.ProcessingJob(job_id)
-        job.complete(False, error=error)
 
 
 class JobHandler(OauthBaseHandler):
@@ -158,10 +137,14 @@ class CompleteHandler(OauthBaseHandler):
                 raise HTTPError(
                     403, "Can't complete job: not in a running state")
 
-            p = Process(target=_job_completer,
-                        args=(job_id, self.request.body))
-            p.start()
-            # safe_submit(job.user.email, _job_completer, job_id, payload)
+            qiita_plugin = qdb.software.Software.from_name_and_version(
+                'Qiita', 'alpha')
+            cmd = qiita_plugin.get_command('complete_job')
+            params = qdb.software.Parameters.load(
+                cmd, values_dict={'job_id': job_id,
+                                  'payload': self.request.body})
+            job = qdb.processing_job.ProcessingJob.create(job.user, params)
+            job.submit()
 
         self.finish()
 

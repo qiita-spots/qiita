@@ -1,5 +1,4 @@
-{% from moi import r_client %}
-{% from qiita_core.qiita_settings import qiita_config %}
+{% from qiita_core.qiita_settings import qiita_config, r_client %}
 {% from qiita_core.util import get_qiita_version, get_release_info %}
 {% from qiita_pet import allowed_min_browser_versions %}
 {% from qiita_pet.portal import portal_styling %}
@@ -61,6 +60,24 @@
       $(window).load(function () {
         $('body').css('padding-top', $('#navigation-bar').height()+10);
       });
+
+      /**
+       *
+       * Function to show the loading gif in a given div
+       *
+       * @param div_name string with the name of the div to populate with the loading gif
+       *
+       * This function replaces the content of the given div with the
+       * gif to show that the section of page is loading
+       *
+       */
+      function show_loading(div_name, show_text = false) {
+        var text = "<img src='{% raw qiita_config.portal_dir %}/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>";
+        if (show_text) {
+          text += '<br/><center><b>This task might take a long time (up to 5 minutes), please do not close this page.</center></b>';
+        }
+        $("#" + div_name).html(text);
+      }
 
       function overlay_check() {
         // from http://stackoverflow.com/q/5916900/379593
@@ -354,13 +371,15 @@
         mounted() {
           let vm = this;
           setInterval(function (){
-            // the div is hidden
-            if ($("#qiita-main").width() != $("#qiita-main").parent().width()) {
+            // if modal is shown, https://stackoverflow.com/a/3282893
+            if (($('#qiita-processing').data('bs.modal') || {}).isShown){
               vm.update_processing_job_data();
             }
           }, 30000);
         }
       });
+
+      $('#qiita-processing').on('shown.bs.modal', processing_jobs_vue.update_processing_job_data);
     });
 
     </script>
@@ -463,7 +482,7 @@
                 </ul>
               </li>
               <li class="dropdown">
-                <a href="#" onClick="show_hide_process_list()" id="dflt-sel-info"><span class="glyphicon glyphicon-tasks"></span></a>
+                <a href="#" data-toggle='modal' data-target='#qiita-processing' id="dflt-sel-info"><span class="glyphicon glyphicon-tasks"></span></a>
               </li>
             </ul>
             <!-- otherwise show the login form -->
@@ -523,6 +542,11 @@
             <ul class="nav navbar-nav">
               <li>
                 <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
+              <li>
+                <a href="{% raw qiita_config.portal_dir %}/redbiom/">Redbiom</a>
               </li>
             </ul>
             <ul class="nav navbar-nav">
@@ -588,15 +612,28 @@
       </div>
     </div>
 
-    <div id="qiita-processing" class="pre-scrollable" style="max-height: 100%">
-      <div id="processing-jobs-table" style="padding: 5px 5px;">
-        <h3>
-            Processing Jobs <br/>
-            <small>(skipping successful jobs)</small>
-        </h3>
-        Search: <input v-model="search">
-        <hr>
-        <data-table-processing-jobs :jobs="filteredJobs"></data-table-processing-jobs>
+    <!-- the jobs list is shown as a modal view -->
+    <div id="qiita-processing" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Active Jobs</h4>
+            <h6 class="modal-title">succesful jobs are not shown</h6>
+          </div>
+
+          <div id='processing-jobs-table' class="modal-body">
+              Search: <input v-model="search">
+              <hr>
+              <data-table-processing-jobs :jobs="filteredJobs"></data-table-processing-jobs>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+
       </div>
     </div>
 

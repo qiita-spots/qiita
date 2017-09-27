@@ -7,14 +7,15 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from tempfile import mkstemp
+from tempfile import mkstemp, NamedTemporaryFile, TemporaryFile
 from os import close, remove, makedirs, mkdir
 from os.path import join, exists, basename
 from shutil import rmtree
 from datetime import datetime
 from functools import partial
 from string import punctuation
-
+import h5py
+from six import StringIO, BytesIO
 import pandas as pd
 
 from qiita_core.util import qiita_test_checker
@@ -621,6 +622,16 @@ class DBUtilTests(TestCase):
                [10, 'mixed', 'combo intervention']]
         self.assertEqual(obs, exp)
 
+    def test_get_filepath_information(self):
+        obs = qdb.util.get_filepath_information(1)
+        # This path is machine specific. Just checking that is not empty
+        self.assertIsNotNone(obs.pop('fullpath'))
+        exp = {'filepath_id': 1L, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
+               'filepath_type': 'raw_forward_seqs', 'checksum': '852952723',
+               'data_type': 'raw_data', 'mountpoint': 'raw_data',
+               'subdirectory': False, 'active': True}
+        self.assertEqual(obs, exp)
+
     def test_filepath_id_to_rel_path(self):
         obs = qdb.util.filepath_id_to_rel_path(1)
         exp = 'raw_data/1_s_G1_L001_sequences.fastq.gz'
@@ -842,6 +853,68 @@ class UtilTests(TestCase):
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
 
+        # resetting to private and deleting the old study
+        qdb.artifact.Artifact(4).visibility = 'private'
+        qdb.study.Study.delete(new_study.id)
+
+    def test_generate_study_list_without_artifacts(self):
+        # creating a new study to make sure that empty studies are also
+        # returned
+        info = {"timeseries_type_id": 1, "metadata_complete": True,
+                "mixs_compliant": True, "number_samples_collected": 25,
+                "number_samples_promised": 28, "study_alias": "TST",
+                "study_description": "Some description of the study goes here",
+                "study_abstract": "Some abstract goes here",
+                "emp_person_id": qdb.study.StudyPerson(1),
+                "principal_investigator_id": qdb.study.StudyPerson(1),
+                "lab_person_id": qdb.study.StudyPerson(1)}
+        new_study = qdb.study.Study.create(
+            qdb.user.User('shared@foo.bar'), 'test_study_1', info=info)
+
+        exp_info = [
+            {'status': 'private', 'study_title': (
+                'Identification of the Microbiomes for Cannabis Soils'),
+             'metadata_complete': True, 'publication_pid': [
+                '123456', '7891011'], 'ebi_submission_status': 'submitted',
+             'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
+             'study_abstract': (
+                'This is a preliminary study to examine the microbiota '
+                'associated with the Cannabis plant. Soils samples from '
+                'the bulk soil, soil associated with the roots, and the '
+                'rhizosphere were extracted and the DNA sequenced. Roots '
+                'from three independent plants of different strains were '
+                'examined. These roots were obtained November 11, 2011 from '
+                'plants that had been harvested in the summer. Future studies '
+                'will attempt to analyze the soils and rhizospheres from the '
+                'same location at different time points in the plant '
+                'lifecycle.'), 'pi': ('PI_dude@foo.bar', 'PIDude'),
+             'publication_doi': ['10.100/123456', '10.100/7891011'],
+             'study_alias': 'Cannabis Soils', 'number_samples_collected': 27},
+            {'status': 'sandbox', 'study_title': 'test_study_1',
+             'metadata_complete': True, 'publication_pid': [],
+             'ebi_submission_status': 'not submitted',
+             'study_id': new_study.id, 'ebi_study_accession': None,
+             'study_abstract': 'Some abstract goes here',
+             'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
+             'study_alias': 'TST', 'number_samples_collected': 0}]
+        obs_info = qdb.util.generate_study_list_without_artifacts(
+            [1, 2, 3, 4], True)
+        self.assertEqual(obs_info, exp_info)
+
+        qdb.artifact.Artifact(4).visibility = 'public'
+        exp_info[0]['status'] = 'public'
+        obs_info = qdb.util.generate_study_list_without_artifacts(
+            [1, 2, 3, 4], True)
+        self.assertEqual(obs_info, exp_info)
+
+        obs_info = qdb.util.generate_study_list_without_artifacts(
+            [1, 2, 3, 4], False)
+        self.assertEqual(obs_info, exp_info)
+
+        # resetting to private and deleting the old study
+        qdb.artifact.Artifact(4).visibility = 'private'
+        qdb.study.Study.delete(new_study.id)
+
     def test_get_artifacts_information(self):
         # we are gonna test that it ignores 1 and 2 cause they are not biom,
         # 4 has all information and 7 and 8 don't
@@ -867,6 +940,78 @@ class UtilTests(TestCase):
              'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
              'prep_samples': 0, 'parameters': {}, 'name': 'noname'}]
         self.assertItemsEqual(obs, exp)
+
+
+class TestFilePathOpening(TestCase):
+    """Tests adapted from scikit-bio's skbio.io.util tests"""
+    def test_is_string_or_bytes(self):
+        self.assertTrue(qdb.util._is_string_or_bytes('foo'))
+        self.assertTrue(qdb.util._is_string_or_bytes(u'foo'))
+        self.assertTrue(qdb.util._is_string_or_bytes(b'foo'))
+        self.assertFalse(qdb.util._is_string_or_bytes(StringIO('bar')))
+        self.assertFalse(qdb.util._is_string_or_bytes([1]))
+
+    def test_file_closed(self):
+        """File gets closed in decorator"""
+        f = NamedTemporaryFile('r')
+        filepath = f.name
+        with qdb.util.open_file(filepath) as fh:
+            pass
+        self.assertTrue(fh.closed)
+
+    def test_file_closed_harder(self):
+        """File gets closed in decorator, even if exceptions happen."""
+        f = NamedTemporaryFile('r')
+        filepath = f.name
+        try:
+            with qdb.util.open_file(filepath) as fh:
+                raise TypeError
+        except TypeError:
+            self.assertTrue(fh.closed)
+        else:
+            # If we're here, no exceptions have been raised inside the
+            # try clause, so the context manager swallowed them. No
+            # good.
+            raise Exception("`open_file` didn't propagate exceptions")
+
+    def test_filehandle(self):
+        """Filehandles slip through untouched"""
+        with TemporaryFile('r') as fh:
+            with qdb.util.open_file(fh) as ffh:
+                self.assertTrue(fh is ffh)
+            # And it doesn't close the file-handle
+            self.assertFalse(fh.closed)
+
+    def test_StringIO(self):
+        """StringIO (useful e.g. for testing) slips through."""
+        f = StringIO("File contents")
+        with qdb.util.open_file(f) as fh:
+            self.assertTrue(fh is f)
+
+    def test_BytesIO(self):
+        """BytesIO (useful e.g. for testing) slips through."""
+        f = BytesIO(b"File contents")
+        with qdb.util.open_file(f) as fh:
+            self.assertTrue(fh is f)
+
+    def test_hdf5IO(self):
+        f = h5py.File('test', driver='core', backing_store=False)
+        with qdb.util.open_file(f) as fh:
+            self.assertTrue(fh is f)
+
+    def test_hdf5IO_open(self):
+        name = None
+        with NamedTemporaryFile(delete=False) as fh:
+            name = fh.name
+            fh.close()
+
+            h5file = h5py.File(name, 'w')
+            h5file.close()
+
+            with qdb.util.open_file(name) as fh_inner:
+                self.assertTrue(isinstance(fh_inner, h5py.File))
+
+        remove(name)
 
 
 if __name__ == '__main__':

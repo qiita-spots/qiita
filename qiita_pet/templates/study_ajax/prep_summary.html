@@ -473,13 +473,14 @@
   <div class="col-md-12">
     There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this preparation.</br>
     {% if is_submitted_to_ebi %}
-      <b>EBI status: </b> Submitted
+      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_ebi_accessions/experiments/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> EBI experiment accessions</a>
     {% end %}
   </div>
 </div>
 
 {% if editable %}
   <!-- Update prep template -->
+  <hr/>
   <div class="row">
     <div class="col-md-12">
       <b>Update information:</b>
@@ -523,6 +524,7 @@
       <button class="btn btn-info btn-sm" onclick="add_new_investigation_type_term_and_update();">Add</button>
     </div>
   </div>
+  <hr/>
 {% end %}
 
 <!-- Files graph or add artifact -->

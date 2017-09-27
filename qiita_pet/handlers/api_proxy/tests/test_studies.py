@@ -51,8 +51,8 @@ class TestStudyAPI(TestCase):
         exp = {
             'status': 'success',
             'study_info': {
-                'mixs_compliant': True, 'metadata_complete': True,
-                'reprocess': False, 'owner': 'test@foo.bar',
+                'mixs_compliant': True, 'metadata_complete': True, 'level': '',
+                'reprocess': False, 'owner': 'test@foo.bar', 'message': '',
                 'emp_person_id': 2, 'number_samples_promised': 27,
                 'funding': None, 'show_biom_download_button': True,
                 'publication_pid': ['123456', '7891011'], 'vamps_id': None,
@@ -341,37 +341,6 @@ class TestStudyAPI(TestCase):
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_study_delete_req(self):
-        info = {
-            "timeseries_type_id": 1,
-            "metadata_complete": True,
-            "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
-            "study_alias": "FCM",
-            "study_description": "DESC",
-            "study_abstract": "ABS",
-            "emp_person_id": qdb.study.StudyPerson(2),
-            "principal_investigator_id": qdb.study.StudyPerson(3),
-            "lab_person_id": qdb.study.StudyPerson(1)
-        }
-
-        new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study to delete", info)
-
-        study_delete_req(new_study.id, 'test@foo.bar')
-
-        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.study.Study(new_study.id)
-
-    def test_study_delete_req_error(self):
-        obs = study_delete_req(1, 'test@foo.bar')
-        exp = {'status': 'error',
-               'message': 'Unable to delete study: Study "Identification of '
-                          'the Microbiomes for Cannabis Soils" cannot be '
-                          'erased because it has a sample template'}
-        self.assertEqual(obs, exp)
-
     def test_study_delete_req_no_access(self):
         obs = study_delete_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
@@ -525,7 +494,7 @@ class TestStudyAPI(TestCase):
         self.assertEqual(obs, exp)
 
         # check error
-        obs = study_get_tags_request('shared@foo.bar', 2)
+        obs = study_get_tags_request('shared@foo.bar', 2000)
         exp = {'message': 'Study does not exist', 'status': 'error'}
         self.assertEqual(obs, exp)
 
@@ -560,7 +529,7 @@ class TestStudyAPI(TestCase):
         self.assertEqual(obs, exp)
 
         obs = study_tags_patch_request(
-            'shared@foo.bar', 2, 'replace', '/tags', ['testA', 'testB'])
+            'shared@foo.bar', 2000, 'replace', '/tags', ['testA', 'testB'])
         exp = {'message': 'Study does not exist', 'status': 'error'}
         self.assertEqual(obs, exp)
 

@@ -16,6 +16,7 @@ from unittest import TestCase, main
 from xml.etree import ElementTree as ET
 from functools import partial
 import pandas as pd
+import warnings
 from datetime import date
 from skbio.util import safe_md5
 from future.utils import viewitems
@@ -302,13 +303,13 @@ class TestEBISubmission(TestCase):
         # creating prep template without required EBI submission columns
         if not valid_metadata:
             metadata_dict = {
-                'SKD6.640190': {'center_name': 'ANL',
+                'SKD6.640190': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project'},
-                'SKM6.640187': {'center_name': 'ANL',
+                'SKM6.640187': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
                                 'instrument_model': 'Not valid'},
-                'SKD9.640182': {'center_name': 'ANL',
+                'SKD9.640182': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
                                 'instrument_model': 'Illumina MiSeq',
@@ -321,7 +322,7 @@ class TestEBISubmission(TestCase):
             investigation_type = None
         else:
             metadata_dict = {
-                'SKD6.640190': {'center_name': 'ANL',
+                'SKD6.640190': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
                                 'instrument_model': 'Illumina MiSeq',
@@ -330,7 +331,7 @@ class TestEBISubmission(TestCase):
                                     'microbiome of soil and rhizosphere',
                                 'library_construction_protocol':
                                     'PMID: 22402401'},
-                'SKM6.640187': {'center_name': 'ANL',
+                'SKM6.640187': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
                                 'instrument_model': 'Illumina MiSeq',
@@ -340,7 +341,7 @@ class TestEBISubmission(TestCase):
                                 'library_construction_protocol':
                                     'PMID: 22402401',
                                 'extra_value': 1.2},
-                'SKD9.640182': {'center_name': 'ANL',
+                'SKD9.640182': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
                                 'instrument_model': 'Illumina MiSeq',
@@ -354,8 +355,10 @@ class TestEBISubmission(TestCase):
             investigation_type = "Metagenomics"
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
-        pt = PrepTemplate.create(metadata, Study(1), "18S",
-                                 investigation_type=investigation_type)
+
+        with warnings.catch_warnings(record=True):
+            pt = PrepTemplate.create(metadata, Study(1), "18S",
+                                     investigation_type=investigation_type)
         artifact = self.write_demux_files(pt)
 
         return artifact
@@ -396,7 +399,8 @@ class TestEBISubmission(TestCase):
         }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
-        SampleTemplate.create(metadata, study)
+        with warnings.catch_warnings(record=True):
+            SampleTemplate.create(metadata, study)
         metadata_dict = {
             'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTC',
@@ -422,7 +426,8 @@ class TestEBISubmission(TestCase):
         }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
-        pt = PrepTemplate.create(metadata, study, "16S", 'Metagenomics')
+        with warnings.catch_warnings(record=True):
+            pt = PrepTemplate.create(metadata, study, "16S", 'Metagenomics')
         fna_fp = join(self.temp_dir, 'seqs.fna')
         demux_fp = join(self.temp_dir, 'demux.seqs')
         with open(fna_fp, 'w') as f:
@@ -656,6 +661,104 @@ class TestEBISubmission(TestCase):
         self.assertItemsEqual(obs_demux_samples,
                               ebi_submission.samples_prep.keys())
 
+    def _generate_per_sample_FASTQs(self, prep_template, sequences):
+        # generating a per_sample_FASTQ artifact, adding should_rename so
+        # we can test that the script uses the correct names during
+        # copy/gz-generation
+        files = []
+        for sn, seqs in viewitems(sequences):
+            fn = join(self.temp_dir, sn + 'should_rename.fastq')
+            with open(fn, 'w') as fh:
+                fh.write(seqs)
+            files.append(fn)
+            self.files_to_remove.append(fn)
+
+        if prep_template.artifact is None:
+            artifact = Artifact.create(
+                [(fp, 1) for fp in files], "per_sample_FASTQ",
+                prep_template=prep_template)
+        else:
+            params = Parameters.from_default_params(
+                DefaultParameters(1),
+                {'input_data': prep_template.artifact.id})
+            artifact = Artifact.create(
+                # 1 is raw_forward_seqs
+                [(fp, 1) for fp in files], "per_sample_FASTQ",
+                parents=[prep_template.artifact],
+                processing_parameters=params)
+
+        return artifact
+
+    def test_generate_demultiplexed_per_sample_fastq(self):
+        # testing failure due to "extra" filepaths
+        artifact = self._generate_per_sample_FASTQs(
+            PrepTemplate(1), FASTQ_EXAMPLE)
+        ebi_submission = EBISubmission(artifact.id, 'ADD')
+        self.files_to_remove.append(ebi_submission.full_ebi_dir)
+
+        with self.assertRaises(EBISubmissionError):
+            ebi_submission.generate_demultiplexed_fastq()
+
+        # testing that we generate the correct samples
+        exp_samples = ['1.SKM4.640180', '1.SKB2.640194']
+        metadata_dict = {
+            'SKB2.640194': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'experiment_design_description':
+                                'microbiome of soil and rhizosphere',
+                            'library_construction_protocol':
+                                'PMID: 22402401',
+                            'run_prefix': '1.SKB2.640194'},
+            'SKM4.640180': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'experiment_design_description':
+                                'microbiome of soil and rhizosphere',
+                            'library_construction_protocol':
+                                'PMID: 22402401',
+                            'run_prefix': '1.SKM4.640180'}}
+        metadata = pd.DataFrame.from_dict(
+            metadata_dict, orient='index', dtype=str)
+        with warnings.catch_warnings(record=True):
+            pt = PrepTemplate.create(metadata, Study(1), "18S",
+                                     investigation_type="Metagenomics")
+        artifact = self._generate_per_sample_FASTQs(pt, FASTQ_EXAMPLE)
+
+        # this should fail due to missing columns
+        with self.assertRaises(EBISubmissionError) as err:
+            ebi_submission = EBISubmission(artifact.id, 'ADD')
+        self.assertIn('Missing column in the prep template: barcode, primer',
+                      str(err.exception))
+        metadata_dict = {
+            'SKB2.640194': {'barcode': 'AAA', 'primer': 'CCCC'},
+            'SKM4.640180': {'barcode': 'CCC', 'primer': 'AAAA'}}
+        metadata = pd.DataFrame.from_dict(
+            metadata_dict, orient='index', dtype=str)
+
+        with warnings.catch_warnings(record=True):
+            pt.extend_and_update(metadata)
+        ebi_submission = EBISubmission(artifact.id, 'ADD')
+        self.files_to_remove.append(ebi_submission.full_ebi_dir)
+
+        obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        self.assertItemsEqual(obs_demux_samples, exp_samples)
+        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+
+        # at this point the full_ebi_dir has been created so we can test that
+        # the ADD actually works without rewriting the files
+        ebi_submission = EBISubmission(artifact.id, 'ADD')
+        obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        self.assertItemsEqual(obs_demux_samples, exp_samples)
+        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+
+        Artifact.delete(artifact.id)
+        PrepTemplate.delete(pt.id)
+
     def test_generate_send_sequences_cmd(self):
         artifact = self.write_demux_files(PrepTemplate(1))
         e = EBISubmission(artifact.id, 'ADD')
@@ -799,6 +902,29 @@ CCACCCAGTAAC
 >1.SKM2.640199_12 X orig_bc=X new_bc=X bc_diffs=0
 CCACCCAGTAAC
 """
+
+FASTQ_EXAMPLE = {
+    '1.SKB2.640194': """@1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
++
+~~~~~~~~~~~~
+@1.SKB2.640194_2 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
++
+~~~~~~~~~~~~
+@1.SKB2.640194_3 X orig_bc=X new_bc=X bc_diffs=0
++
+~~~~~~~~~~~~
+CCACCCAGTAAC""",
+    '1.SKM4.640180': """@1.SKM4.640180_4 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
++
+~~~~~~~~~~~~
+>1.SKM4.640180_5 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
++
+~~~~~~~~~~~~"""
+}
 
 FASTA_EXAMPLE_2 = """>{0}.Sample1_1 X orig_bc=X new_bc=X bc_diffs=0
 CCACCCAGTAAC

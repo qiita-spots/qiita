@@ -1,0 +1,285 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+{% from future.utils import viewitems %}
+{% extends sitebase.html %}
+
+{%block head%}
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    qiita_websocket.init(window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', error, error);
+    qiita_websocket.add_callback('sel', show_alert);
+    $("#redbiom-table").dataTable({
+      "dom": '<"ps">lfr<t><"footer">ip',
+      'footerCallback': function ( row, data, start, end, display ) {
+
+        // adding total features found
+
+        var api = this.api(), data;
+        var artifacts_samples = api
+          .column(0)
+          .data()
+          .reduce( function (a, b) {
+            var artifacts = 0, samples = 0;
+            $.each( b, function( key, value ) {
+              artifacts += 1;
+              samples += value.length;
+            });
+            return [artifacts + a[0], samples + a[1]]}, [0, 0]);
+        var artifacts = artifacts_samples[0];
+        var samples = artifacts_samples[1];
+        $('.footer').addClass("col-md-12 text-right");
+        if (artifacts == 0) {
+          text = '';
+        } else {
+            text = 'Found ' + artifacts + ' artifacts with ' + samples + ' samples.';
+        }
+        $('.footer').html(text)
+      },
+      "columns": [
+        { "orderable": false,       "width": "20%", "data": "artifact_biom_ids"},
+        { "data": "study_title",    "width": "70%" },
+        { "data": "study_abstract", "width": "0%" },
+        { "data": "study_id",       "width": "10%" },
+        { "data": "study_alias",    "width": "0%" }],
+      columnDefs: [
+        // {type:'natural', targets:[2,6,7]},
+        {"targets": [ 2, 4 ], "visible": false},
+        // render zero
+        {"render": function ( data, type, row, meta ) {
+          if (data !== null && data !== undefined){
+            var artifacts = 0, samples = 0;
+            for (var d in data) {
+              if (data.hasOwnProperty(d)) {
+                artifacts++;
+                samples += data[d].length
+              }
+            }
+            if (artifacts != 0) {
+              return '<div class="container" style="max-width: 15em;">'+
+                '<div class="row justify-content-md-center">' +
+                  {% if current_user is not None %}
+                    '<div class="col-md-12 text-center details-control">&nbsp;</div>' +
+                  {% end %}
+                  '<div class="col-md-12 text-center">' +
+                    'Artifacts: ' + artifacts + ' | ' +
+                    'Samples: ' + samples +
+                  '</div>' +
+                '</div>' +
+              '</div>';
+            }
+          }
+          return 'No BIOMs';
+        }, targets: [0]},
+        // render the title cell
+        {"render": function ( data, type, row, meta ) {
+          {% if current_user is not None %}
+            result = "<a target='_blank' href='{% raw qiita_config.portal_dir %}/study/description/" + row.study_id +
+              "' id='study"+ meta.row +"-title'>"+ data +"</a>";
+          {% else %}
+             result = data
+          {% end %}
+            return result
+        }, targets: [1]},
+        ],
+      "language": {
+          "search": "Filter results by column data:",
+          "loadingRecords": "Please wait - loading information ...",
+          "zeroRecords": "  "
+      },
+  });
+
+  // Add event listener for opening and closing details
+  $('#redbiom-table tbody').on('click', 'div.details-control', function () {
+      var table = $('#redbiom-table').DataTable();
+      var tr = $(this).closest('tr');
+      var row = table.row( tr );
+
+      if ( row.child.isShown() ) {
+        // This row is already open - close it
+        row.child.hide();
+        tr.removeClass('shown');
+      } else {
+        // Open this row
+        // modified from: https://jsfiddle.net/8rejaL88/2/
+        tr.addClass('shown');
+        row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
+
+        var artifact_biom_ids = row.data().artifact_biom_ids;
+        var artifact_biom_ids_keys = []
+        $.each(artifact_biom_ids, function(e){ artifact_biom_ids_keys.push(e) });
+        $.get('/artifact/info/', {ids: artifact_biom_ids_keys })
+          .done(function ( data ) {
+            if (data['status']=='success') {
+              $('td', row.child()).html(format_biom_rows(data.data, row.index(), true, samples=artifact_biom_ids)).show();
+            } else {
+              bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+            }
+          });
+      }
+  });
+
+  $("#submitForm").submit(function(event){
+    event.preventDefault();
+
+    show_loading("redbiom-info", true);
+
+    var search = $("#search").val();
+    var search_on = $("#search_on").val();
+    var redbiom_info = $('#redbiom-info');
+
+    $.post("{% raw qiita_config.portal_dir %}/redbiom/", {'search': search, 'search_on': search_on})
+      .done(function ( data ){
+        var redbiom_table = $('#redbiom-table').DataTable();
+        // the next 4 lines reset the column filtering
+        var placer = $(".ps");
+        redbiom_table.column(3).search("").draw();
+        redbiom_table.clear().draw();
+        placer.empty();
+        if(data.status == "error") {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
+        } else {
+          if(data.message != ''){
+            redbiom_info.html(
+              `<div class="alert alert-warning alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <strong>Warning!</strong> ` + data.message + `</div><br/>`)
+          } else if(data.data){
+            redbiom_table.rows.add(data.data).draw();
+            redbiom_info.html('');
+          }
+        }
+      })
+    .fail(function(response, status, error) {
+      var text = 'The query response is larger than is currently allowed, please try another. <a href="https://github.com/biocore/qiita/issues/2312" target="_blank">Track progress on this issue.</a>';
+      if (response.status != 504) {
+        text = 'Status code: "' + response.status + '" - ' + error + '.<br/>Please send a screenshot to <a href="qiita.help@gmail.com">qiita.help@gmail.com</a>.';
+      }
+      redbiom_info.html(
+        `<div class="alert alert-danger alert-dismissible" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <strong>Error!</strong> ` + text + `</div><br/>`)
+    })
+    });
+  });
+</script>
+
+{%end%}
+
+{%block content%}
+  <small>
+    Redbiom only searches on public data and the data is updated nightly. Note that you will only be able to expand and add artifacts to analyses if you are signed into Qiita.
+    <br/><br/>
+    <button class="btn btn-info btn-sm" data-toggle="collapse" data-target="#redbiom-help">Help and examples?</button>
+    <br/>
+  </small>
+  <div id="redbiom-help" class="collapse">
+    <br/>
+    We have 3 search options:
+    <ul>
+      <li>
+        <b>Metadata</b><br/>
+        The search will be on the full metadata.
+        <br/><br/>
+        The metadata search engine uses natural language processing to search for
+        word stems within a samples metadata. A word stem disregards modifiers and
+        plurals, so for instance, a search for "antibiotics" will actually perform
+        a search for "antibiot". Similarly, a search for "crying" will actually
+        search for "cry". The words specified can be combined with set-based
+        operations, so for instance, a search for "antibiotics &amp; crying" will
+        obtain the set of samples in which each sample has "antibiot" in its
+        metadata as well as "cry". N.B., the specific category in which a stem is
+        found is not assured to be the same, "antibiot" could be in one category
+        and "cry" in another. A set intersection can be performed with "&amp;", a
+        union with "|" and a difference with "-".
+        <br/><br/>
+        In addition to the stem-based search, value based searches can also be a
+        applied. These use a Python-like grammar and allow for a rich set of
+        comparisons to be performed based on a metadata category of interest. For
+        example, "where qiita_study_id == 10317" will find all samples which have
+        the qiita_study_id metadata category, and in which the value for that
+        sample is "10317."
+        <br/><br/>
+        Examples:
+        <br/>
+        <ul>
+          <li>
+            Find all samples in which the word infant exists, as well as antibiotics,
+            where the infants are under a certain number of days old:
+            "infant &amp; antibiotics where age_days < 30"
+          </li>
+          <li>
+            Find all samples only beloging to the EMP in which the ph in under 7:
+            "where ph < 7 &amp; emp_release1 == True"
+          </li>
+        </ul>
+      </li>
+      <li>
+        <b>Feature</b>:<br/>
+        The seach will be on all the features, in specific: OTU ids for close reference and exact sequences for deblur.
+        <br/><br/>
+        Examples:
+        <br/>
+        <ul>
+          <li>
+            Find all samples in which the Greengenes feature 4479944 is found: "4479944"
+          </li>
+        </ul>
+      </li>
+      <li><b>Taxon</b>:<br/>
+        The search will be only on closed reference and based on the taxonomies available.
+        Only exact matches are returned. Note that currently only the Greengenes taxonomy is
+        searchable, and that it requires nomenclature of a rank prefix, two underscores, and then the
+        name.
+        <br/><br/>
+        Examples:
+        <br/>
+        <ul>
+          <li>
+            Find all samples in which the genera Escherichia is found: "g__Escherichia"
+          </li>
+          <li>
+            Find all samples in which the order Clostridiales is found: "o__Clostridiales"
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <br/>
+  </div>
+  <br/>
+  <form data-toggle="validator" role="form" id="submitForm">
+    <div class="form-group row">
+      <div class="col-xs-8">
+        <input type="text" class="form-control" name="search" id="search" placeholder="Search" required>
+      </div>
+      <div class="col-xs-2">
+        <select class="selectpicker form-control col-xs-2" name="search_on" id="search_on">
+          <option value="metadata">Metadata</option>
+          <option checked value="feature">Feature</option>
+          <option checked value="taxon">Taxon</option>
+        </select>
+      </div>
+      <div class="col-xs-1">
+        <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search"></span></button>
+      </div>
+    </div>
+  </form>
+  <hr>
+
+  <div class="row">
+    <div class="col-md-12" id="redbiom-info"></div>
+  </div>
+  <div class="row">
+    <table id="redbiom-table" class="table table-bordered gray-msg">
+      <thead>
+        <tr>
+          <th>Expand for analysis</th>
+          <th>Title</th>
+          <th>Abstract</th>
+          <th>Study ID</th>
+          <th>Study Alias</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+
+{% end %}

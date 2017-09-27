@@ -8,14 +8,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from sys import exit
-
 import click
 
 import qiita_db as qdb
-from qiita_core.environment_manager import (
-    start_cluster as _start_cluster, stop_cluster as _stop_cluster,
-    test as _test, TEST_RUNNERS)
+from qiita_core.environment_manager import test as _test, TEST_RUNNERS
 from qiita_core.configuration_manager import ConfigurationManager
 
 _CONFIG = ConfigurationManager()
@@ -24,30 +20,6 @@ _CONFIG = ConfigurationManager()
 @click.group()
 def env():
     pass
-
-
-@env.command()
-@click.argument('clusters', type=click.Choice(_CONFIG.ipython_contexts),
-                nargs=-1)
-def start_cluster(clusters):
-    """Start a compute environment"""
-    if not clusters:
-        clusters = ('qiita-general',)
-    for cluster in clusters:
-        print "Starting cluster", cluster
-        _start_cluster(cluster)
-
-
-@env.command()
-@click.argument('clusters', type=click.Choice(_CONFIG.ipython_contexts),
-                nargs=-1)
-def stop_cluster(clusters):
-    """Stop a compute environment"""
-    if not clusters:
-        clusters = ('qiita-general',)
-    for cluster in clusters:
-        print "Stopping cluster", cluster
-        _stop_cluster(cluster)
 
 
 @env.command()
@@ -115,42 +87,11 @@ def test(runner):
     """Test the environment
 
     Check to make sure that basic services are up and working. These include
-    connectivity to postgres, redis, and the ability to submit jobs through
-    moi.
+    connectivity to postgres, and redis.
 
     Tests are performed both on localhost and ipengines.
     """
     _test(runner)
-
-
-@env.command()
-@click.option('--job', required=True, type=str, help='The job ID')
-def job_details(job):
-    """Pretty print moi job details"""
-    from json import loads
-    from moi import r_client
-    from redis.exceptions import ResponseError
-
-    try:
-        data = r_client.get(job)
-    except ResponseError:
-        click.echo("ID does not appear to be a job")
-        exit(1)
-
-    if data is None:
-        click.echo("Job cannot be found")
-    else:
-        data = loads(data)
-        for k in sorted(data):
-            value = data[k]
-
-            if k == 'result':
-                if isinstance(value, list):
-                    value = ''.join(value)
-                else:
-                    value = str(value)
-
-            click.echo("%s : %s" % (k, value))
 
 
 @env.command(name="create-portal")

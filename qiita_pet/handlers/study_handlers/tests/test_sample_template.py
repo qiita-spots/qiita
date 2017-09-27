@@ -7,10 +7,10 @@
 # -----------------------------------------------------------------------------
 from unittest import main
 from json import loads
-from time import sleep
 
-from moi import r_client
 
+from qiita_core.qiita_settings import r_client
+from qiita_core.testing import wait_for_processing_job
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.study_handlers.sample_template import (
     _build_sample_summary)
@@ -71,11 +71,7 @@ class TestSampleTemplateAJAX(TestHandlerBase):
 
         # Wait until the job has completed
         obs = r_client.get('sample_template_1')
-        self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.5)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        wait_for_processing_job(loads(obs)['job_id'])
 
 
 class TestSampleAJAXReadOnly(TestHandlerBase):

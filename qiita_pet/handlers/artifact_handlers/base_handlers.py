@@ -10,16 +10,13 @@ from os.path import basename, relpath
 from json import dumps
 
 from tornado.web import authenticated, StaticFileHandler
-from moi import r_client
 
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import safe_execution
 from qiita_pet.exceptions import QiitaHTTPError
-from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import delete_artifact
 from qiita_db.artifact import Artifact
-from qiita_db.software import Command, Parameters
+from qiita_db.software import Command, Software, Parameters
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.util import get_visibilities
 
@@ -82,6 +79,7 @@ def artifact_summary_get_request(user, artifact_id):
          'buttons': str,
          'processing_parameters': dict of {str: object},
          'files': list of (int, str),
+         'is_from_analysis': bool,
          'processing_jobs': list of [str, str, str, str, str],
          'summary': str or None,
          'job': [str, str, str],
@@ -89,6 +87,7 @@ def artifact_summary_get_request(user, artifact_id):
     """
     artifact_id = int(artifact_id)
     artifact = Artifact(artifact_id)
+    artifact_type = artifact.artifact_type
 
     check_artifact_access(user, artifact)
 
@@ -116,7 +115,7 @@ def artifact_summary_get_request(user, artifact_id):
         summary = relpath(summary[1], qiita_config.base_data_dir)
     else:
         # Check if the summary is being generated
-        command = Command.get_html_generator(artifact.artifact_type)
+        command = Command.get_html_generator(artifact_type)
         all_jobs = set(artifact.jobs(cmd=command))
         jobs = [j for j in all_jobs if j.status in ['queued', 'running']]
         errored_jobs = [(j.id, j.log.msg)
@@ -195,8 +194,8 @@ def artifact_summary_get_request(user, artifact_id):
     # TODO: https://github.com/biocore/qiita/issues/1724 Remove this hardcoded
     # values to actually get the information from the database once it stores
     # the information
-    if artifact.artifact_type in ['SFF', 'FASTQ', 'FASTA', 'FASTA_Sanger',
-                                  'per_sample_FASTQ']:
+    if artifact_type in ['SFF', 'FASTQ', 'FASTA', 'FASTA_Sanger',
+                         'per_sample_FASTQ']:
         # If the artifact is one of the "raw" types, only the owner of the
         # study and users that has been shared with can see the files
         if not artifact.study.has_access(user, no_public=True):
@@ -208,11 +207,13 @@ def artifact_summary_get_request(user, artifact_id):
 
     return {'name': artifact.name,
             'artifact_id': artifact_id,
+            'artifact_type': artifact_type,
             'visibility': visibility,
             'editable': editable,
             'buttons': ' '.join(buttons),
             'processing_parameters': processing_parameters,
             'files': files,
+            'is_from_analysis': artifact.analysis is not None,
             'processing_jobs': processing_jobs,
             'summary': summary,
             'job': job_info,
@@ -371,8 +372,14 @@ def artifact_post_req(user, artifact_id):
         pt_id = artifact.prep_templates[0].id
         redis_key = PREP_TEMPLATE_KEY_FORMAT % pt_id
 
-    job_id = safe_submit(user.id, delete_artifact, artifact_id)
-    r_client.set(redis_key, dumps({'job_id': job_id, 'is_qiita_job': False}))
+    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+    cmd = qiita_plugin.get_command('delete_artifact')
+    params = Parameters.load(cmd, values_dict={'artifact': artifact_id})
+    job = ProcessingJob.create(user, params)
+
+    r_client.set(redis_key, dumps({'job_id': job.id, 'is_qiita_job': True}))
+
+    job.submit()
 
 
 class ArtifactAJAX(BaseHandler):

@@ -152,12 +152,7 @@
     else if(confirm("Are you sure you want to delete {% raw study_title_msg %}?")) {
       $.post('{% raw qiita_config.portal_dir %}/study/delete/', { study_id: {{study_info['study_id']}} })
         .done(function ( data ) {
-          if(data.status == "error") {
-            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
-            $("#delete-study").modal('hide');
-          } else {
-            window.location.replace('{% raw qiita_config.portal_dir %}/study/list/');
-          }
+          location.reload();
         });
     }
   }
@@ -198,20 +193,6 @@
       });
   }
 
-  /**
-   *
-   * Function to show the loading gif in a given div
-   *
-   * @param div_name string with the name of the div to populate with the loading gif
-   *
-   * This function replaces the content of the given div with the
-   * gif to show that the section of page is loading
-   *
-   */
-  function show_loading(div_name) {
-      $("#" + div_name).html("<img src='{% raw qiita_config.portal_dir %}/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
-  }
-
   $(document).ready(function() {
     // Populate the different sections of the page
     populate_data_type_menu_div();
@@ -225,6 +206,9 @@
       $("#sample-summary-btn").hide();
       $("#add-new-preparation-btn").hide();
     {% end %}
+    {% if study_info['message'] != '' %}
+      bootstrapAlert("{{study_info['message']}}", "{{study_info['level']}}");
+    {% end %}
   });
 </script>
 <style>
@@ -237,24 +221,26 @@
 {% end %}
 {% block content %}
 <div class="row">
-  <div class="col-md-3">
-    <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Study Information</button>
-    <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Sample Information</button>
-    <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })" id="sample-summary-btn"><span class="glyphicon glyphicon-th-list"></span> Sample Summary</button>
-    {% if editable %}
-      <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
-      <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/new_prep_template/', { study_id: {{study_info['study_id']}} })" id="add-new-preparation-btn"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
-    {% end %}
-    {% if study_info['show_biom_download_button'] %}
-      <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/download_study_bioms/{{study_info['study_id']}}"><span class="glyphicon glyphicon-download-alt"></span> All QIIME maps and BIOMs</a>
-    {% end %}
-    {% if study_info['has_access_to_raw_data'] and study_info['show_raw_download_button'] %}
-      <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/download_raw_data/{{study_info['study_id']}}"><span class="glyphicon glyphicon-download-alt"></span> All raw data</a>
-    {% end %}
-    <div style="text-align: center;"><small><a href="{% raw qiita_config.portal_dir %}/static/doc/html/faq.html#how-to-solve-unzip-errors">Issues opening the downloaded zip?</a></small></div>
+  {% if study_info['level'] != 'info' %}
+    <div class="col-md-3">
+      <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Study Information</button>
+      <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Sample Information</button>
+      <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })" id="sample-summary-btn"><span class="glyphicon glyphicon-th-list"></span> Sample Summary</button>
+      {% if editable %}
+        <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
+        <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/new_prep_template/', { study_id: {{study_info['study_id']}} })" id="add-new-preparation-btn"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
+      {% end %}
+      {% if study_info['show_biom_download_button'] %}
+        <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/download_study_bioms/{{study_info['study_id']}}"><span class="glyphicon glyphicon-download-alt"></span> All QIIME maps and BIOMs</a>
+      {% end %}
+      {% if study_info['has_access_to_raw_data'] and study_info['show_raw_download_button'] %}
+        <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/download_raw_data/{{study_info['study_id']}}"><span class="glyphicon glyphicon-download-alt"></span> All raw data</a>
+      {% end %}
+      <div style="text-align: center;"><small><a href="{% raw qiita_config.portal_dir %}/static/doc/html/faq.html#how-to-solve-unzip-errors">Issues opening the downloaded zip?</a></small></div>
 
-    <div id="data-types-menu"></div>
-  </div>
+      <div id="data-types-menu"></div>
+    </div>
+  {% end %}
 
   <div class="col-md-9">
     <!-- Study ID and study alias always on top -->
@@ -278,7 +264,7 @@
         <h3>Deleting:<br/></h3><h4>{% raw study_title %}</h4>
       </div>
       <div class="modal-body">
-        You will only be able to delete a study that has no data associated with it.<br/>
+        You will only be able to delete a sandboxed study. This will delete all data associated with the study, including analyses using this data.<br/>
         To continue you need to write the title of the study:<br/>
         <input type="text" name="study-alias" id="study-alias" onkeyup="validate_delete_study_text();" size="{{ len(study_title) }}">
         <button class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_study();" id="delete-study-button" disabled></button>
