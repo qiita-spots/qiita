@@ -161,12 +161,15 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         exp = (
-            '- 39752 /protected/BIOM/{0}/otu_table.biom '
-            'BIOM/{0}/otu_table.biom\n'
-            '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
-            'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
-            'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
+            '- 1256812 /protected/processed_data/1_study_1001_closed_reference_otu_table.biom processed_data/1_study_1001_closed_reference_otu_table.biom\n'
+            '- 36615 /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt mapping_files/4_mapping_file.txt\n'
+            '- 1256812 /protected/processed_data/1_study_1001_closed_reference_otu_table.biom processed_data/1_study_1001_closed_reference_otu_table.biom\n'
+            '- 36615 /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt mapping_files/5_mapping_file.txt\n'
+            '- 1256812 /protected/processed_data/1_study_1001_closed_reference_otu_table_Silva.biom processed_data/1_study_1001_closed_reference_otu_table_Silva.biom\n'
+            '- 36615 /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt mapping_files/6_mapping_file.txt\n'
+            '- 39752 /protected/BIOM/{0}/otu_table.biom BIOM/{0}/otu_table.biom\n'
+            '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
+            '- 36615 /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
         self.assertRegexpMatches(response.body, exp)
 
 
