@@ -34,14 +34,15 @@ class RedbiomPublicSearch(BaseHandler):
         query = query.lower()
         try:
             samples = redbiom.search.metadata_full(query, False)
-        except TypeError:
-            message = (
-                'Not a valid search: "%s", are you sure this is a '
-                'valid metadata value?' % query)
         except ValueError:
             message = (
                 'Not a valid search: "%s", your query is too small '
                 '(too few letters), try a longer query' % query)
+        except:
+            message = (
+                'The query ("%s") did not work and may be malformed. Please '
+                'check the search help for more information on the queries.'
+                % query)
         if not message:
             study_samples = defaultdict(list)
             for s in samples:
@@ -96,16 +97,16 @@ class RedbiomPublicSearch(BaseHandler):
             if search_on in search_f:
                 message, study_artifacts = search_f[search_on](query, contexts)
                 if not message:
-                    keys = study_artifacts.keys()
-                    if keys:
+                    studies = study_artifacts.keys()
+                    if studies:
                         results = generate_study_list_without_artifacts(
-                            study_artifacts.keys(), True)
+                            studies, True)
                         # inserting the artifact_biom_ids to the results
                         for i in range(len(results)):
                             results[i]['artifact_biom_ids'] = study_artifacts[
                                 str(results[i]['study_id'])]
                     else:
-                        message = "No samples where found! Try again ..."
+                        message = "No samples were found! Try again ..."
             else:
                 message = ('Incorrect search by: you can use metadata, '
                            'features or taxon and you passed: %s' % search_on)

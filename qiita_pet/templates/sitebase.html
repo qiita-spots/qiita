@@ -71,8 +71,12 @@
        * gif to show that the section of page is loading
        *
        */
-      function show_loading(div_name) {
-        $("#" + div_name).html("<img src='{% raw qiita_config.portal_dir %}/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
+      function show_loading(div_name, show_text = false) {
+        var text = "<img src='{% raw qiita_config.portal_dir %}/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>";
+        if (show_text) {
+          text += '<br/><center><b>This task might take a long time (up to 5 minutes), please do not close this page.</center></b>';
+        }
+        $("#" + div_name).html(text);
       }
 
       function overlay_check() {
