@@ -15,7 +15,7 @@ from os import walk
 from datetime import datetime
 
 from .base_handlers import BaseHandler
-from qiita_pet.handlers.api_proxy import study_get_req
+from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
                            get_filepath_information)
@@ -28,8 +28,8 @@ from qiita_core.util import execute_as_transaction, get_release_info
 class BaseHandlerDownload(BaseHandler):
     def _check_permissions(self, sid):
         # Check general access to study
-        study_info = study_get_req(sid, self.current_user.id)
-        if study_info['status'] != 'success':
+        study_info = check_access(sid, self.current_user.id)
+        if study_info:
             raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
                                                  self.current_user.email, sid))
         return Study(sid)
@@ -199,8 +199,21 @@ class DownloadStudyBIOMSHandler(BaseHandlerDownload):
         study = self._check_permissions(study_id)
         # loop over artifacts and retrieve those that we have access to
         to_download = []
-        for a in study.artifacts():
-            if a.artifact_type == 'BIOM':
+        # The user has access to the study, but we don't know if the user
+        # can do whatever he wants to the study or just access the public
+        # data. (1) an admin has access to all the data; (2) if the study
+        # is not public, and the user has access, then it has full access
+        # to the data; (3) if the study is public and the user is not the owner
+        # or the study is shared with him, then the user doesn't have full
+        # access to the study data
+        full_access = (
+            (self.current_user.level == 'admin') |
+            (study.status != 'public') |
+            ((self.current_user == study.owner) |
+             (self.current_user in study.shared_with)))
+
+        for a in study.artifacts(artifact_type='BIOM'):
+            if full_access or a.visibility == 'public':
                 to_download.extend(self._list_artifact_files_nginx(a))
 
         self._write_nginx_file_list(to_download)
