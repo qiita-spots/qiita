@@ -459,8 +459,8 @@
   <div class="col-md-12">
     <h4>
       {{name}} - ID {{prep_id}} ({{data_type}})
-      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
-      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_qiime}}"><span class="glyphicon glyphicon-download-alt"></span> QIIME map</a>
+      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
+      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_qiime_id}}"><span class="glyphicon glyphicon-download-alt"></span> QIIME map</a>
       {% if editable %}
         <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}
@@ -472,9 +472,17 @@
 <div class="row">
   <div class="col-md-12">
     There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this preparation.</br>
+    {% if other_filepaths %}
+      <button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#jobs-description">Show older files</button>
+    {% end %}
     {% if is_submitted_to_ebi %}
       <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_ebi_accessions/experiments/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> EBI experiment accessions</a>
     {% end %}
+    <div id="jobs-description" class="collapse">
+      <small>
+        {% raw '<br/>'.join(other_filepaths) %}
+      </small>
+    </div>
   </div>
 </div>
 
