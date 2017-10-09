@@ -1,10 +1,16 @@
 {% extends sitebase.html %}
 {% block head %}
+<script>
+  if ($('#jumbotron').length != 0) {
+    this.location = this.location.origin;
+  }
+</script>
 {% end %}
 
-{%block content %}
+{% block content %}
+
 <div id="jumbotron" class="jumbotron" style="border-radius: 10px; padding: 30px">
-  <h1>{% raw portal_styling.index_header%}</h1>
+  <h1>{% raw portal_styling.index_header %}</h1>
   {% raw portal_styling.index_text%}
 </div>
 {% end %}
