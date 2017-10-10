@@ -9,6 +9,8 @@
 from tornado.web import authenticated, HTTPError
 from tornado.escape import url_escape
 
+from os.path import basename
+
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import get_files_from_uploads_folders
 from qiita_pet.handlers.api_proxy import (
@@ -79,12 +81,12 @@ class SampleTemplateAJAX(BaseHandler):
         files = [f for _, f in get_files_from_uploads_folders(study_id)
                  if f.endswith(('txt', 'tsv'))]
         data_types = sorted(data_types_get_req()['data_types'])
-        # Get the most recent version for download and build the link
+
+        download_id = None
         download = sample_template_filepaths_get_req(
             study_id, self.current_user.id)
-
-        download_id = (download['filepaths'][0][0]
-                       if download['status'] == 'success' else None)
+        if download['status'] == 'success':
+            download_id = download['filepaths'].pop(0)[0]
 
         stats = sample_template_summary_get_req(study_id, self.current_user.id)
         if stats['status'] != 'success':
@@ -98,6 +100,8 @@ class SampleTemplateAJAX(BaseHandler):
         stats['study_id'] = study_id
         stats['data_types'] = data_types
         stats['row_id'] = row_id
+        stats['other_filepaths'] = [
+            basename(fp) for _, fp in download['filepaths']]
         # URL encode in case message has javascript-breaking characters in it
         stats['alert_message'] = url_escape(stats['alert_message'])
         self.render('study_ajax/sample_summary.html', **stats)

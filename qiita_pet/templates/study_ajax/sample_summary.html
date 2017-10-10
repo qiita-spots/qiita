@@ -115,6 +115,14 @@
     {% if download_id %}
       There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this study.
     {% end %}
+    {% if other_filepaths %}
+      <button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#other-filepaths">Show older files</button>
+    {% end %}
+    <div id="other-filepaths" class="collapse">
+      <small>
+        {% raw '<br/>'.join(other_filepaths) %}
+      </small>
+    </div>
   </div>
 </div>
 
@@ -122,6 +130,7 @@
 {% if editable %}
   <div class="row">
     <div class="col-md-12">
+      <hr/>
       <b>Upload information:</b>
       <select id="file-selector">
         <option value="">Choose file...</option>
@@ -141,7 +150,7 @@
           {% end %}
         </select>
       {% end %}
-      </br>
+      <hr/>
     </div>
   </div>
 {% end %}
