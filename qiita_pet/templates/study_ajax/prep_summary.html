@@ -473,12 +473,12 @@
   <div class="col-md-12">
     There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this preparation.</br>
     {% if other_filepaths %}
-      <button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#jobs-description">Show older files</button>
+      <button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#other-filepaths">Show older files</button>
     {% end %}
     {% if is_submitted_to_ebi %}
       <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_ebi_accessions/experiments/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> EBI experiment accessions</a>
     {% end %}
-    <div id="jobs-description" class="collapse">
+    <div id="other-filepaths" class="collapse">
       <small>
         {% raw '<br/>'.join(other_filepaths) %}
       </small>

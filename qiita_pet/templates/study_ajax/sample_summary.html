@@ -116,9 +116,9 @@
       There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this study.
     {% end %}
     {% if other_filepaths %}
-      <button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#jobs-description">Show older files</button>
+      <button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#other-filepaths">Show older files</button>
     {% end %}
-    <div id="jobs-description" class="collapse">
+    <div id="other-filepaths" class="collapse">
       <small>
         {% raw '<br/>'.join(other_filepaths) %}
       </small>
