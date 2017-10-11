@@ -1,10 +1,19 @@
 {% extends sitebase.html %}
 {% block head %}
+<script>
+  // the jumbotron is part of the main display of the entry page so if it's
+  // displayed we check it's lenght; if != 0 it's being displayed within
+  // another div or frame so reload page
+  if ($('#jumbotron').length != 0) {
+    this.location = this.location.origin;
+  }
+</script>
 {% end %}
 
-{%block content %}
+{% block content %}
+
 <div id="jumbotron" class="jumbotron" style="border-radius: 10px; padding: 30px">
-  <h1>{% raw portal_styling.index_header%}</h1>
+  <h1>{% raw portal_styling.index_header %}</h1>
   {% raw portal_styling.index_text%}
 </div>
 {% end %}
