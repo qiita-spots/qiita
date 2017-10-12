@@ -66,7 +66,7 @@ def submit_EBI(preprocessed_data_id, action, send):
                 if rv != 0:
                     error_msg = ("Error:\nStd output:%s\nStd error:%s" % (
                         stdout, stderr))
-                    raise EBISubmissionError(error_msg)
+                    raise ComputeError(error_msg)
                 open(ebi_submission.ascp_reply, 'a').write(
                     'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
             environ['ASPERA_SCP_PASS'] = old_ascp_pass
@@ -84,7 +84,7 @@ def submit_EBI(preprocessed_data_id, action, send):
         if rv != 0:
             error_msg = ("Error:\nStd output:%s\nStd error:%s" % (
                 xml_content, stderr))
-            raise EBISubmissionError(error_msg)
+            raise ComputeError(error_msg)
         else:
             LogEntry.create('Runtime',
                             ('Submission of sequences of pre_processed_id: '
