@@ -140,7 +140,7 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
             '[0-9]*.txt mapping_files/6_mapping_file.txt\n'
             '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/7_mapping_file.txt\n'
-            '- 39752 /protected/BIOM/{0}/otu_table.biom '
+            '- [0-9]* /protected/BIOM/{0}/otu_table.biom '
             'BIOM/{0}/otu_table.biom\n'
             '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
@@ -161,7 +161,7 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         exp = (
-            '- 39752 /protected/BIOM/{0}/otu_table.biom '
+            '- [0-9]* /protected/BIOM/{0}/otu_table.biom '
             'BIOM/{0}/otu_table.biom\n'
             '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
