@@ -61,26 +61,19 @@ def submit_EBI(preprocessed_data_id, action, send):
             LogEntry.create('Runtime',
                             ("Submitting sequences for pre_processed_id: "
                              "%d" % preprocessed_data_id))
-            try:
-                for cmd in ebi_submission.generate_send_sequences_cmd():
-                    try:
-                        stdout, stderr, _ = system_call(cmd)
-                    except Exception as e:
-                        stdout = ''
-                        stderr = str(e)
-                        le = LogEntry.create(
-                            'Fatal', "Command: %s\nError: %s\n" % (cmd,
-                                                                   str(e)),
-                            info={'ebi_submission': preprocessed_data_id})
-                        ebi_submission.study.ebi_submission_status = (
-                            "failed: ASCP submission, log id: %d" % le.id)
-                        raise ComputeError("EBI Submission failed! Log id: "
-                                           "%d" % le.id)
-                    finally:
-                        open(ebi_submission.ascp_reply, 'a').write(
-                            'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
-            finally:
-                environ['ASPERA_SCP_PASS'] = old_ascp_pass
+            for cmd in ebi_submission.generate_send_sequences_cmd():
+                stdout, stderr, rv = system_call(cmd)
+                if rv != 0:
+                    le = LogEntry.create(
+                        'Fatal', "Command: %s\nError: %s\n" % (cmd, stderr),
+                        info={'ebi_submission': preprocessed_data_id})
+                    ebi_submission.study.ebi_submission_status = (
+                        "failed: ASCP submission, log id: %d" % le.id)
+                    raise ComputeError("EBI Submission failed! Log id: "
+                                       "%d" % le.id)
+                open(ebi_submission.ascp_reply, 'a').write(
+                    'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
+            environ['ASPERA_SCP_PASS'] = old_ascp_pass
             LogEntry.create('Runtime',
                             ('Submission of sequences of pre_processed_id: '
                              '%d completed successfully' %
@@ -91,13 +84,11 @@ def submit_EBI(preprocessed_data_id, action, send):
         LogEntry.create('Runtime',
                         ("Submitting XMLs for pre_processed_id: "
                          "%d" % preprocessed_data_id))
-        try:
-            xml_content, stderr, _ = system_call(xmls_cmds)
-        except Exception as e:
+        xml_content, stderr, rv = system_call(xmls_cmds)
+        if rv != 0:
             xml_content = ''
-            stderr = str(e)
             le = LogEntry.create(
-                'Fatal', "Command: %s\nError: %s\n" % (cmd, str(e)),
+                'Fatal', "Command: %s\nError: %s\n" % (cmd, stderr),
                 info={'ebi_submission': preprocessed_data_id})
             ebi_submission.study.ebi_submission_status = (
                 "failed: XML submission, log id: %d" % le.id)
@@ -107,9 +98,8 @@ def submit_EBI(preprocessed_data_id, action, send):
                             ('Submission of sequences of pre_processed_id: '
                              '%d completed successfully' %
                              preprocessed_data_id))
-        finally:
-            open(ebi_submission.curl_reply, 'w').write(
-                'stdout:\n%s\n\nstderr: %s' % (xml_content, stderr))
+        open(ebi_submission.curl_reply, 'w').write(
+            'stdout:\n%s\n\nstderr: %s' % (xml_content, stderr))
 
         try:
             st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
@@ -198,7 +188,9 @@ def submit_VAMPS(artifact_id):
                                     qiita_config.vamps_pass,
                                     targz_fp,
                                     qiita_config.vamps_url))
-    obs, _, _ = system_call(cmd)
+    obs, stderr, rv = system_call(cmd)
+    if rv != 0:
+        raise ComputeError('Error: \nstderr: %s' % stderr)
 
     exp = ("<html>\n<head>\n<title>Process Uploaded File</title>\n</head>\n"
            "<body>\n</body>\n</html>")
