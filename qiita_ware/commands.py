@@ -64,13 +64,9 @@ def submit_EBI(preprocessed_data_id, action, send):
             for cmd in ebi_submission.generate_send_sequences_cmd():
                 stdout, stderr, rv = system_call(cmd)
                 if rv != 0:
-                    le = LogEntry.create(
-                        'Fatal', "Command: %s\nError: %s\n" % (cmd, stderr),
-                        info={'ebi_submission': preprocessed_data_id})
-                    ebi_submission.study.ebi_submission_status = (
-                        "failed: ASCP submission, log id: %d" % le.id)
-                    raise ComputeError("EBI Submission failed! Log id: "
-                                       "%d" % le.id)
+                    error_msg = ("Error:\nStd output:%s\nStd error:%s" % (
+                        stdout, stderr))
+                    raise EBISubmissionError(error_msg)
                 open(ebi_submission.ascp_reply, 'a').write(
                     'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
             environ['ASPERA_SCP_PASS'] = old_ascp_pass
@@ -86,13 +82,9 @@ def submit_EBI(preprocessed_data_id, action, send):
                          "%d" % preprocessed_data_id))
         xml_content, stderr, rv = system_call(xmls_cmds)
         if rv != 0:
-            xml_content = ''
-            le = LogEntry.create(
-                'Fatal', "Command: %s\nError: %s\n" % (cmd, stderr),
-                info={'ebi_submission': preprocessed_data_id})
-            ebi_submission.study.ebi_submission_status = (
-                "failed: XML submission, log id: %d" % le.id)
-            raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
+            error_msg = ("Error:\nStd output:%s\nStd error:%s" % (
+                xml_content, stderr))
+            raise EBISubmissionError(error_msg)
         else:
             LogEntry.create('Runtime',
                             ('Submission of sequences of pre_processed_id: '
@@ -190,7 +182,8 @@ def submit_VAMPS(artifact_id):
                                     qiita_config.vamps_url))
     obs, stderr, rv = system_call(cmd)
     if rv != 0:
-        raise ComputeError('Error: \nstderr: %s' % stderr)
+        error_msg = ("Error:\nStd output:%s\nStd error:%s" % (obs, stderr))
+        raise ComputeError(error_msg)
 
     exp = ("<html>\n<head>\n<title>Process Uploaded File</title>\n</head>\n"
            "<body>\n</body>\n</html>")
