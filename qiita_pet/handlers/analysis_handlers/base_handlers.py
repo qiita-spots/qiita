@@ -61,9 +61,12 @@ def analysis_description_handler_get_request(analysis_id, user):
                     alert_msg = redis_info['return']['message'].replace(
                         '\n', '</br>')
 
+    mapping_file = analysis.mapping_file
+
     return {'analysis_name': analysis.name,
             'analysis_id': analysis.id,
             'analysis_description': analysis.description,
+            'analysis_mapping_id': mapping_file[0] if mapping_file else None,
             'alert_type': alert_type,
             'alert_msg': alert_msg}
 
