@@ -11,22 +11,17 @@
     $("#redbiom-table").dataTable({
       "dom": '<"ps">lfr<t><"footer">ip',
       'footerCallback': function ( row, data, start, end, display ) {
+        var api = this.api(), artifacts = 0, samples = 0;
 
-        // adding total features found
+        api.column(0).nodes().each(function (cell, i) {
+          var elements = $(cell).children().children().children();
+          var idx = elements.length - 1;
+          var text = $(elements[idx]).text();
+          elements = text.split(" | ");
+          artifacts += parseInt(elements[0].split(": ")[1]);
+          samples += parseInt(elements[1].split(": ")[1]);
+        });
 
-        var api = this.api(), data;
-        var artifacts_samples = api
-          .column(0)
-          .data()
-          .reduce( function (a, b) {
-            var artifacts = 0, samples = 0;
-            $.each( b, function( key, value ) {
-              artifacts += 1;
-              samples += value.length;
-            });
-            return [artifacts + a[0], samples + a[1]]}, [0, 0]);
-        var artifacts = artifacts_samples[0];
-        var samples = artifacts_samples[1];
         $('.footer').addClass("col-md-12 text-right");
         if (artifacts == 0) {
           text = '';
@@ -47,21 +42,22 @@
         // render zero
         {"render": function ( data, type, row, meta ) {
           if (data !== null && data !== undefined){
-            var artifacts = 0, unique_samples = [];
+            var artifacts = 0, unique_samples = {};
             for (var d in data) {
               if (data.hasOwnProperty(d)) {
                 // to get only unique sample names we will create a dict
                 // and then just get the keys; by creating a dict we are
                 // avoiding to check if an element is already in the list
-                var tmp = {};
-                unique_samples = unique_samples.concat(data[d]);
-                for (var i = 0; i < unique_samples.length; i++) {
-                  tmp[unique_samples[i]] = '';
+                var samples = data[d];
+                for (var i = 0; i < samples.length; i++) {
+                  if (! unique_samples[samples[i]] ) {
+                    unique_samples[samples[i]] = true;
+                  }
                 }
-                unique_samples = Object.keys(tmp);
                 artifacts++;
               }
             }
+            unique_samples = Object.keys(unique_samples);
             if (artifacts != 0) {
               return '<div class="container" style="max-width: 15em;">'+
                 '<div class="row justify-content-md-center">' +
