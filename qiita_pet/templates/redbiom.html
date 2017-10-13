@@ -47,11 +47,19 @@
         // render zero
         {"render": function ( data, type, row, meta ) {
           if (data !== null && data !== undefined){
-            var artifacts = 0, samples = 0;
+            var artifacts = 0, unique_samples = [];
             for (var d in data) {
               if (data.hasOwnProperty(d)) {
+                // to get only unique sample names we will create a dict
+                // and then just get the keys; by creating a dict we are
+                // avoiding to check if an element is already in the list
+                var tmp = {};
+                unique_samples = unique_samples.concat(data[d]);
+                for (var i = 0; i < unique_samples.length; i++) {
+                  tmp[unique_samples[i]] = '';
+                }
+                unique_samples = Object.keys(tmp);
                 artifacts++;
-                samples += data[d].length
               }
             }
             if (artifacts != 0) {
@@ -62,7 +70,7 @@
                   {% end %}
                   '<div class="col-md-12 text-center">' +
                     'Artifacts: ' + artifacts + ' | ' +
-                    'Samples: ' + samples +
+                    'Samples: ' + unique_samples.length +
                   '</div>' +
                 '</div>' +
               '</div>';
