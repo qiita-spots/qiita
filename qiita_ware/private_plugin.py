@@ -97,7 +97,7 @@ def submit_to_EBI(job):
         param_vals = job.parameters.values
         artifact_id = int(param_vals['artifact'])
         submission_type = param_vals['submission_type']
-        submit_EBI(artifact_id, submission_type, False)
+        submit_EBI(artifact_id, submission_type, True)
         job._set_status('success')
 
 
