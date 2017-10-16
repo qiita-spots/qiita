@@ -372,7 +372,8 @@ class TestAnalysis(TestCase):
 
         npt.assert_warns(qdb.exceptions.QiitaDBWarning,
                          analysis._build_mapping_file, samples)
-        obs = analysis.mapping_file[1]
+        obs = qdb.util.get_filepath_information(
+            analysis.mapping_file)['fullpath']
 
         exp = self.get_fp("%s_analysis_mapping.txt" % analysis.id)
         self.assertEqual(obs, exp)
@@ -409,7 +410,7 @@ class TestAnalysis(TestCase):
                    3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
         npt.assert_warns(qdb.exceptions.QiitaDBWarning,
                          analysis._build_mapping_file, samples)
-        mapping_fp = qdb.utl.get_filepath_information(
+        mapping_fp = qdb.util.get_filepath_information(
             analysis.mapping_file)['fullpath']
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             mapping_fp, index='#SampleID')
