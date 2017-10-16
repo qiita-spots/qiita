@@ -428,7 +428,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                              "job(s) %s" % (len(validator_ids), jids))
                 sleep(10)
                 qdb.sql_connection.TRN.add(sql, sql_args)
-                validator_ids = qdb.sql_connection.TRN.execute_fetchlast()
+                validator_ids = qdb.sql_connection.TRN.execute_fetchindex()
 
             # Check if any of the validators errored
             sql = """SELECT validator_id
