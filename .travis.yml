@@ -71,6 +71,7 @@ script:
   - qiita pet webserver --no-build-docs start &
   - sleep 5
   - QIITA_PID=$!
+  - python qiita_db/test/test_processing_job.py ProcessingJobTest.test_complete_success
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE
   - kill $QIITA_PID
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi

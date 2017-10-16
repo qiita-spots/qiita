@@ -631,8 +631,10 @@ class ProcessingJob(qdb.base.QiitaObject):
                     ProcessingJob.create(self.user, validate_params))
 
             # Change the current step of the job
-            self.step = "Validating outputs (%d remaining)" % len(
-                validator_jobs)
+            print validator_jobs
+            self.step = "Validating outputs (%d remaining) via job(s) %s" % (
+                len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
+            print self.step
 
             # Link all the validator jobs with the current job
             self._set_validator_jobs(validator_jobs)
