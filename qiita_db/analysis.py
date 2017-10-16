@@ -429,17 +429,17 @@ class Analysis(qdb.base.QiitaObject):
 
         Returns
         -------
-        tuple of (int, str) or None
-            filepath id and full filepath to the mapping file or None
+        int or None
+            The filepath id of the analysis mapping file or None
             if not generated
         """
-        fp = [(fp_id, fp)
-              for fp_id, fp, fp_type in qdb.util.retrieve_filepaths(
+        fp = [fp_id
+              for fp_id, _, fp_type in qdb.util.retrieve_filepaths(
                 "analysis_filepath", "analysis_id", self._id)
               if fp_type == 'plain_text']
 
         if fp:
-            # returning the actual tuple vs. an array
+            # returning the actual filepath id vs. an array
             return fp[0]
         else:
             return None
