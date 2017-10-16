@@ -474,6 +474,7 @@ class ProcessingJobTest(TestCase):
         job._set_status('running')
         alljobs = set(self._get_all_job_ids())
 
+        print "Calling complete"
         job.complete(True, artifacts_data=artifacts_data)
         # When completing the previous job, it creates a new job that needs
         # to validate the BIOM table that is being added as new artifact.
@@ -481,7 +482,9 @@ class ProcessingJobTest(TestCase):
         # is completed. Note that this is tested by making sure that the status
         # of this job is running, and that we have one more job than before
         # (see assertEqual with len of all jobs)
+        print "Asserting equallity"
         self.assertEqual(job.status, 'running')
+        print "Asserting true"
         self.assertTrue(job.step.startswith(
             'Validating outputs (1 remaining) via job(s)'))
 
@@ -489,7 +492,9 @@ class ProcessingJobTest(TestCase):
 
         # The complete call above submits 2 new jobs: the validator job and
         # the release validators job. Hence the +2
+        print "Asserting equallity"
         self.assertEqual(len(obsjobs), len(alljobs) + 2)
+        print "Waiting for the job"
         self._wait_for_job(job)
 
     def test_complete_failure(self):
