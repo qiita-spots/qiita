@@ -101,7 +101,6 @@ class ProcessingJobTest(TestCase):
 
     def _wait_for_job(self, job):
         while job.status not in ('error', 'success'):
-            print "%s\t%s" % (job.status, job.step)
             sleep(0.5)
 
     def test_exists(self):

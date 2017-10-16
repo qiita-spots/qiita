@@ -424,8 +424,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             # Active polling - wait until all validator jobs are completed
             while validator_ids:
                 jids = ', '.join([j[0] for j in validator_ids])
-                self.step = ("Validating outputs (%d remaining) via "
-                             "job(s) %s" % (len(validator_ids), jids))
+                # self.step = ("Validating outputs (%d remaining) via "
+                #              "job(s) %s" % (len(validator_ids), jids))
                 sleep(10)
                 qdb.sql_connection.TRN.add(sql, sql_args)
                 validator_ids = qdb.sql_connection.TRN.execute_fetchlast()
@@ -634,8 +634,8 @@ class ProcessingJob(qdb.base.QiitaObject):
 
             # Change the current step of the job
 
-            self.step = "Validating outputs (%d remaining) via job(s) %s" % (
-                len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
+            # self.step = "Validating outputs (%d remaining) via job(s) %s" % (
+            #     len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
 
             # Link all the validator jobs with the current job
             self._set_validator_jobs(validator_jobs)
