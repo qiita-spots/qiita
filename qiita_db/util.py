@@ -1513,11 +1513,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             """
 
         sql_params = """SELECT default_parameter_set_id, command_id,
-                            parameter_set_name,
-                            array_agg(parameter_set) AS param_set
-                        FROM qiita.default_parameter_set
-                        GROUP BY default_parameter_set_id, command_id,
-                            parameter_set_name"""
+                            parameter_set_name, parameter_set AS param_set
+                        FROM qiita.default_parameter_set"""
 
         sql_ts = """SELECT DISTINCT target_subfragment FROM qiita.prep_%s"""
 
@@ -1530,7 +1527,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             qdb.sql_connection.TRN.add(sql_params)
             params = defaultdict(list)
             for _, cid, n, p in qdb.sql_connection.TRN.execute_fetchindex():
-                params[cid].append((n, list(p[0].iteritems())))
+                params[cid].append((n, list(p.iteritems())))
 
             # now let's get the actual artifacts
             ts = {}
