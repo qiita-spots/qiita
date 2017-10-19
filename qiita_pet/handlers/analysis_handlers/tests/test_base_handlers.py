@@ -32,6 +32,7 @@ class TestBaseHandlersUtils(TestCase):
         exp = {'analysis_name': 'SomeAnalysis',
                'analysis_id': 1,
                'analysis_description': 'A test analysis',
+               'analysis_mapping_id': 16,
                'alert_type': 'info',
                'alert_msg': ''}
         self.assertEqual(obs, exp)
@@ -42,6 +43,7 @@ class TestBaseHandlersUtils(TestCase):
         exp = {'analysis_name': 'SomeAnalysis',
                'analysis_id': 1,
                'analysis_description': 'A test analysis',
+               'analysis_mapping_id': 16,
                'alert_type': 'info',
                'alert_msg': 'An artifact is being deleted from this analysis'}
         self.assertEqual(obs, exp)
@@ -54,6 +56,7 @@ class TestBaseHandlersUtils(TestCase):
         exp = {'analysis_name': 'SomeAnalysis',
                'analysis_id': 1,
                'analysis_description': 'A test analysis',
+               'analysis_mapping_id': 16,
                'alert_type': 'danger',
                'alert_msg': 'Error deleting artifact'}
         self.assertEqual(obs, exp)

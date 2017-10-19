@@ -242,7 +242,10 @@
   <div class="col">
     <h2>
         {{analysis_name}} - ID {{analysis_id}}
-        <a class="btn btn-info glyphicon glyphicon-share" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"></a>
+        <a class="btn btn-info" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"><span class=" glyphicon glyphicon-share"></span></a>
+        {% if analysis_mapping_id is not None %}
+          <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{analysis_mapping_id}}"><span class="glyphicon glyphicon-download-alt"></span> Mapping file</a>
+        {% end %}
     </h2>
     <h3>{{analysis_description}}</h3>
     Shared with: <span id="shared_html_{{analysis_id}}"></span>

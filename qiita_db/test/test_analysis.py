@@ -290,7 +290,9 @@ class TestAnalysis(TestCase):
     def test_retrieve_mapping_file(self):
         exp = join(self.fp, "1_analysis_mapping.txt")
         obs = self.analysis.mapping_file
-        self.assertEqual(obs, exp)
+        self.assertIsNotNone(obs)
+        self.assertEqual(
+            qdb.util.get_filepath_information(obs)['fullpath'], exp)
         self.assertTrue(exists(exp))
 
     def test_retrieve_tgz(self):
@@ -370,7 +372,8 @@ class TestAnalysis(TestCase):
 
         npt.assert_warns(qdb.exceptions.QiitaDBWarning,
                          analysis._build_mapping_file, samples)
-        obs = analysis.mapping_file
+        obs = qdb.util.get_filepath_information(
+            analysis.mapping_file)['fullpath']
 
         exp = self.get_fp("%s_analysis_mapping.txt" % analysis.id)
         self.assertEqual(obs, exp)
@@ -388,8 +391,10 @@ class TestAnalysis(TestCase):
         npt.assert_warns(qdb.exceptions.QiitaDBWarning,
                          analysis._build_mapping_file, samples, True)
 
+        mapping_fp = qdb.util.get_filepath_information(
+            analysis.mapping_file)['fullpath']
         obs = qdb.metadata_template.util.load_template_to_dataframe(
-            analysis.mapping_file, index='#SampleID')
+            mapping_fp, index='#SampleID')
         exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.duplicated_samples_not_merged, index='#SampleID')
 
@@ -405,8 +410,10 @@ class TestAnalysis(TestCase):
                    3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
         npt.assert_warns(qdb.exceptions.QiitaDBWarning,
                          analysis._build_mapping_file, samples)
+        mapping_fp = qdb.util.get_filepath_information(
+            analysis.mapping_file)['fullpath']
         obs = qdb.metadata_template.util.load_template_to_dataframe(
-            analysis.mapping_file, index='#SampleID')
+            mapping_fp, index='#SampleID')
         exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.map_exp_fp, index='#SampleID')
         assert_frame_equal(obs, exp)
@@ -460,8 +467,10 @@ class TestAnalysis(TestCase):
         # testing that the generated files have the same sample ids
         biom_fp = biom_tables[0][1]
         biom_ids = load_table(biom_fp).ids(axis='sample')
+        mapping_fp = qdb.util.get_filepath_information(
+            analysis.mapping_file)['fullpath']
         mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
-            analysis.mapping_file, index='#SampleID').index
+            mapping_fp, index='#SampleID').index
 
         self.assertItemsEqual(biom_ids, mf_ids)
 
@@ -493,8 +502,11 @@ class TestAnalysis(TestCase):
         biom_ids = []
         for _, fp in biom_tables:
             biom_ids.extend(load_table(fp).ids(axis='sample'))
+
+        mapping_fp = qdb.util.get_filepath_information(
+            new.mapping_file)['fullpath']
         mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
-            new.mapping_file, index='#SampleID').index
+            mapping_fp, index='#SampleID').index
 
         self.assertItemsEqual(biom_ids, mf_ids)
 
