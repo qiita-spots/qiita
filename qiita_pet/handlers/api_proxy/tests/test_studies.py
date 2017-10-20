@@ -462,7 +462,7 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success', 'num_prefixes': 2, 'artifacts': [],
                'remaining': ['test_1.R1.fastq.gz', 'test_1.R2.fastq.gz',
                              'test_1.R3.fastq.gz', 'uploaded_file.txt'],
-               'message': '',
+               'message':  "Check these run_prefix:\n'test_1' has 3 matches.",
                'file_types': [('raw_forward_seqs', True,
                                ['test_2.R1.fastq.gz']),
                               ('raw_reverse_seqs', False,
