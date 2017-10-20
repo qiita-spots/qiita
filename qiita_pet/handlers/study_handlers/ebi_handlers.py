@@ -124,8 +124,8 @@ class EBISubmitHandler(BaseHandler):
         study = Artifact(preprocessed_data_id).study
         state = study.ebi_submission_status
         if state == 'submitting':
-            level = 'danger'
             message = "Cannot resubmit! Current state is: %s" % state
+            self.display_template(preprocessed_data_id, message, 'danger')
         else:
             qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
             cmd = qiita_plugin.get_command('submit_to_EBI')
