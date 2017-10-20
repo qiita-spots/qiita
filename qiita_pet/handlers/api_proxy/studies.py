@@ -272,6 +272,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     supp_file_types = supported_filepath_types(artifact_type)
     selected = []
     remaining = []
+    message = []
 
     uploaded = get_files_from_uploads_folders(study_id)
     pt = PrepTemplate(prep_template_id)
@@ -304,6 +305,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
             # the selected group
             if len_files > supp_file_types_len:
                 remaining.extend(v)
+                message.append("'%s' has %d matches." % (k, len_files))
             else:
                 v.sort()
                 selected.append(v)
@@ -329,8 +331,11 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
             artifact_options.append(
                 (a.id, "%s - %s (%d)" % (study_label, a.name, a.id)))
 
+    message = ('' if not message
+               else '\n'.join(['Check these run_prefix:'] + message))
+
     return {'status': 'success',
-            'message': '',
+            'message': message,
             'remaining': sorted(remaining),
             'file_types': file_types,
             'num_prefixes': num_prefixes,
