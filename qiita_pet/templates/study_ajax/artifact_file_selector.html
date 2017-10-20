@@ -206,6 +206,10 @@
         Please make sure that the correct files are in the correct column.<br/>
         Note: the system will try to auto select the files based on run_prefix, if that doesn't work, either the type you selected doesn't support
         the use of run_prefix or the run_prefix is wrong
+        {% if message %}
+          <hr/>
+          {% raw message.replace('\n', '<br/>') %}
+        {% end %}
       </div>
 
   </div>
