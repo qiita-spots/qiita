@@ -22,7 +22,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
 
 
-def _create_job():
+def _create_job(force=True):
     job = qdb.processing_job.ProcessingJob.create(
         qdb.user.User('test@foo.bar'),
         qdb.software.Parameters.load(
@@ -38,7 +38,7 @@ def _create_job():
                          "reverse_primers": "disable",
                          "reverse_primer_mismatches": 0,
                          "truncate_ambi_bases": False, "input_data": 1}),
-        True)
+        force)
     return job
 
 
@@ -256,6 +256,12 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(obs.heartbeat, None)
         self.assertEqual(obs.step, None)
         self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
+
+    def test_create_duplicated(self):
+        job = _create_job()
+        with self.assertRaisesRegexp(ValueError,
+                                     'Cannot create job because these jobs:'):
+            _create_job(False)
 
     def test_set_status(self):
         job = _create_job()
