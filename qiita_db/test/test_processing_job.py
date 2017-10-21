@@ -37,7 +37,8 @@ def _create_job():
                          "qual_score_window": 0, "disable_primers": False,
                          "reverse_primers": "disable",
                          "reverse_primer_mismatches": 0,
-                         "truncate_ambi_bases": False, "input_data": 1}))
+                         "truncate_ambi_bases": False, "input_data": 1}),
+        True)
     return job
 
 
@@ -328,7 +329,7 @@ class ProcessingJobTest(TestCase):
                                 'out1', "command_output", "name"),
                              'name': 'out1'})})
         user = qdb.user.User('test@foo.bar')
-        obs1 = qdb.processing_job.ProcessingJob.create(user, params)
+        obs1 = qdb.processing_job.ProcessingJob.create(user, params, True)
         obs1._set_status('running')
         params = qdb.software.Parameters.load(
             qdb.software.Command(4),
@@ -339,7 +340,7 @@ class ProcessingJobTest(TestCase):
                              'cmd_out_id': qdb.util.convert_to_id(
                                 'out1', "command_output", "name"),
                              'name': 'out1'})})
-        obs2 = qdb.processing_job.ProcessingJob.create(user, params)
+        obs2 = qdb.processing_job.ProcessingJob.create(user, params, True)
         obs2._set_status('running')
         # Make sure that we link the original job with its validator jobs
         job._set_validator_jobs([obs1, obs2])
@@ -416,7 +417,8 @@ class ProcessingJobTest(TestCase):
             qdb.user.User('test@foo.bar'),
             qdb.software.Parameters.load(
                 qdb.software.Command(5),
-                values_dict={"input_data": 1}))
+                values_dict={"input_data": 1}),
+            True)
         job._set_status('running')
         job.complete(False, error='Some Error')
         self.assertEqual(job.status, 'error')
@@ -450,7 +452,7 @@ class ProcessingJobTest(TestCase):
             values_dict={'template': pt.id, 'files': fp,
                          'artifact_type': 'BIOM'})
         obs = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params)
+            qdb.user.User('test@foo.bar'), params, True)
         obs._set_status('running')
         obs.complete(True, artifacts_data=artifacts_data)
         self.assertEqual(obs.status, 'success')
@@ -513,7 +515,7 @@ class ProcessingJobTest(TestCase):
                              'cmd_out_id': 3})}
         )
         obs = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params)
+            qdb.user.User('test@foo.bar'), params, True)
         job._set_validator_jobs([obs])
         obs.complete(False, error="Validation failure")
         self.assertEqual(obs.status, 'error')
@@ -643,7 +645,7 @@ class ProcessingJobTest(TestCase):
                              'name': 'outArtifact'})}
         )
         obs = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params)
+            qdb.user.User('test@foo.bar'), params, True)
         job._set_validator_jobs([obs])
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         obs._complete_artifact_definition(artifact_data)

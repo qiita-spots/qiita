@@ -61,7 +61,7 @@ for aid in all_artifacts:
                         cmd_out, "command_output", "name")
 
             # the owner of the study will create the job
-            job = PJ.create(c.study.owner, c.processing_parameters)
+            job = PJ.create(c.study.owner, c.processing_parameters, True)
             with qdb.sql_connection.TRN:
                 sql = """INSERT INTO
                             qiita.artifact_output_processing_job

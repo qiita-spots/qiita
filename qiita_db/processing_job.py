@@ -12,7 +12,7 @@ from subprocess import Popen, PIPE
 from multiprocessing import Process
 from os.path import join
 from itertools import chain
-from collections import defaultdict
+from collections import defaultdict, Iterable
 from json import dumps, loads
 from time import sleep
 
@@ -119,7 +119,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def create(cls, user, parameters):
+    def create(cls, user, parameters, force=False):
         """Creates a new job in the system
 
         Parameters
@@ -128,14 +128,43 @@ class ProcessingJob(qdb.base.QiitaObject):
             The user executing the job
         parameters : qiita_db.software.Parameters
             The parameters of the job being executed
+        force : bool
+            Force creation on duplicated parameters
 
         Returns
         -------
         qiita_db.processing_job.ProcessingJob
             The newly created job
+
+        Notes
+        -----
+        If force is True the job is gonna be created even if another job
+        exists with the same parameters
         """
         with qdb.sql_connection.TRN:
             command = parameters.command
+
+            # check if a job with the same parameters already exists
+            sql = """SELECT processing_job_id, email, processing_job_status
+                     FROM qiita.processing_job
+                     LEFT JOIN qiita.processing_job_status
+                        USING (processing_job_status_id)
+                     WHERE command_id = %s AND processing_job_status IN (
+                        'success', 'waiting', 'running') """
+            params = " AND ".join(
+                ["command_parameters->>'%s' = '%s'" % (k, v)
+                 for k, v in viewitems(parameters.values)
+                 if isinstance(v, Iterable) and not isinstance(v, str)
+                 for v in v])
+            sql = sql + ' AND ' if params else sql
+            qdb.sql_connection.TRN.add(sql + params, [command.id])
+            existing_jobs = qdb.sql_connection.TRN.execute_fetchindex()
+            if existing_jobs and not force:
+                raise ValueError(
+                    'Cannot create job because these jobs:\n%s' % '\n'.join(
+                        ["%s: %s" % (jid, status)
+                         for jid, _, status in existing_jobs]))
+
             sql = """INSERT INTO qiita.processing_job
                         (email, command_id, command_parameters,
                          processing_job_status_id)
@@ -630,7 +659,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 validate_params = qdb.software.Parameters.load(
                     cmd, values_dict=values_dict)
                 validator_jobs.append(
-                    ProcessingJob.create(self.user, validate_params))
+                    ProcessingJob.create(self.user, validate_params, True))
 
             # Change the current step of the job
 
