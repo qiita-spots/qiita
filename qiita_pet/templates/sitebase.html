@@ -555,7 +555,7 @@
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle">Downloads<b class="caret"></b></a>
                 <ul class="dropdown-menu">
                   <li>
-                    <a href="{% raw qiita_config.portal_dir %}/release/download/public">
+                    <a type="button" data-toggle="modal" data-target=".qiita_pet_dwnld_confirm">
                       Public BIOM and metadata files
                       <small>
                         <br/><b>MD5:</b> {{public_md5}}
@@ -569,6 +569,33 @@
           </div> <!--/.navbar-collapse -->
         </div>
       </div> <!--/.main nav-bar -->
+
+      <div class="modal fade qiita_pet_dwnld_confirm" tabindex="-1" role="dialog" aria-labelledby="Confirm download">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title">File really big.</h4>
+            </div>
+            <div class="modal-body">
+              <p>The file you're trying to download is really big. Would you like to proceed?</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+              <button type="button" class="btn btn-success" id="qiita_dwnld_accept">Yes</button>
+            </div>
+            <!-- href="{% raw qiita_config.portal_dir %}/release/download/public" -->
+          </div>
+        </div>
+      </div>
+
+      <script type="text/javascript">
+        $('#qiita_dwnld_accept').click(function(e){
+          e.preventDefault();
+          $('.qiita_pet_dwnld_confirm').modal('hide');
+          window.location.href = '{% raw qiita_config.portal_dir %}/release/download/public';
+        });
+      </script>
 
 
       {% if message != '' %}
