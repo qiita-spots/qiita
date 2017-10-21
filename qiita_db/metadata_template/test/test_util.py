@@ -40,9 +40,7 @@ class TestUtil(TestCase):
         with warnings.catch_warnings(record=True) as warn:
             qdb.metadata_template.util.prefix_sample_names_with_id(
                 self.metadata_map, 1)
-            self.assertEqual(len(warn), 1)
-            self.assertEqual(str(warn[0].message), 'All samples were already '
-                             'prefixed with the study id.')
+            self.assertEqual(len(warn), 0)
         self.metadata_map.sort_index(inplace=True)
         exp_df.sort_index(inplace=True)
         assert_frame_equal(self.metadata_map, exp_df)

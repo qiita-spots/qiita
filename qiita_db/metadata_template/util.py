@@ -43,10 +43,7 @@ def prefix_sample_names_with_id(md_template, study_id):
     # get the rows that are gonna change
     changes = len(md_template.index[
         md_template['qiita_sample_name_with_id'] != md_template.index])
-    if changes == len(md_template.index):
-        warnings.warn("All samples were already prefixed with the study id.",
-                      qdb.exceptions.QiitaDBWarning)
-    elif changes != 0:
+    if changes != 0 and changes != len(md_template.index):
         warnings.warn(
             "Some of the samples were already prefixed with the study id.",
             qdb.exceptions.QiitaDBWarning)

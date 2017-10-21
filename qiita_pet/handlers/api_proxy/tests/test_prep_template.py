@@ -380,7 +380,6 @@ class TestPrepAPI(TestCase):
                                      '16S')
         exp = {'status': 'warning',
                'message': [
-                    'Sample names were already prefixed with the study id.',
                     ('Some columns required to generate a QIIME-compliant '
                      'mapping file are not present in the template. A '
                      'placeholder value (XXQIITAXX) has been used to populate '
