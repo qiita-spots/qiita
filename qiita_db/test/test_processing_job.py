@@ -258,7 +258,7 @@ class ProcessingJobTest(TestCase):
         self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
 
     def test_create_duplicated(self):
-        job = _create_job()
+        _create_job()
         with self.assertRaisesRegexp(ValueError,
                                      'Cannot create job because these jobs:'):
             _create_job(False)
