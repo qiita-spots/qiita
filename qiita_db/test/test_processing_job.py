@@ -482,6 +482,8 @@ class ProcessingJobTest(TestCase):
         # of this job is running, and that we have one more job than before
         # (see assertEqual with len of all jobs)
         self.assertEqual(job.status, 'running')
+        self.assertTrue(job.step.startswith(
+            'Validating outputs (1 remaining) via job(s)'))
 
         obsjobs = set(self._get_all_job_ids())
 

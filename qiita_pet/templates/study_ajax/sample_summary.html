@@ -66,6 +66,14 @@
       })
   }
 
+  function update_sample_prep(){
+    show_loading('sample-prep-information');
+    $.get('{% raw qiita_config.portal_dir %}/study/description/sample_summary/', { study_id: {{study_id}} })
+      .done(function(data) {
+        $("#sample-prep-information").html(data);
+      });
+  }
+
   $(document).ready(function() {
     $('#file-btn').prop('disabled', true);
     $("#file-selector").change(function (event){
@@ -115,6 +123,14 @@
     {% if download_id %}
       There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this study.
     {% end %}
+    {% if other_filepaths %}
+      <button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#other-filepaths">Show older files</button>
+    {% end %}
+    <div id="other-filepaths" class="collapse">
+      <small>
+        {% raw '<br/>'.join(other_filepaths) %}
+      </small>
+    </div>
   </div>
 </div>
 
@@ -122,6 +138,7 @@
 {% if editable %}
   <div class="row">
     <div class="col-md-12">
+      <hr/>
       <b>Upload information:</b>
       <select id="file-selector">
         <option value="">Choose file...</option>
@@ -141,49 +158,63 @@
           {% end %}
         </select>
       {% end %}
-      </br>
+      <hr/>
     </div>
   </div>
 {% end %}
 
+
 {% if stats %}
-  <div class="panel panel-default" id="summary">
-    <div class="panel-heading">
-      Sample information summary
+
+<div class="container">
+  <ul class="nav nav-pills">
+    <li class="active">
+      <a href="#sample-information" data-toggle="tab">Sample information</a>
+    </li>
+    <li class="nav-item">
+      <a href="#sample-prep-information" data-toggle="tab" onclick="update_sample_prep();">Sample and preparation summary</a>
+    </li>
+  </ul>
+
+  <div class="tab-content clearfix">
+    <div class="tab-pane" id="sample-prep-information">
     </div>
 
-    <table class="table">
-      {% for i, (category, summary) in enumerate(viewitems(stats), -1) %}
-        <tr id="row_{{i}}">
-          <td>
-            {% if editable %}
-              <a class="btn btn-danger" onclick="delete_column('{{category}}', {{i}});"><span class="glyphicon glyphicon-trash"></span></a>
-            {% else %}
-              &nbsp;
-            {% end %}
-          </td>
-          <td colspan="2">
-            {% if len(summary) == 1 %}
-                <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
-            </td>
-            {% elif len(summary) == num_samples %}
-                <b>{{category}}</b>: All the values in this category are different.
-              </td>
-            {% else %}
-                <b>{{category}}<b>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <button type="button" class="btn" data-toggle="collapse" data-target=".{{i}}collapsed">values</button>
-              </td>
-              {% for row in summary %}
-              </tr>
-              <tr class="collapse {{i}}collapsed">
-                <td>&nbsp;</td>
-                <td>{{row[0]}}</td>
-                <td>{{row[1]}}</td>
+    <div class="tab-pane active" id="sample-information">
+      <table class="table">
+        {% for i, (category, summary) in enumerate(viewitems(stats), -1) %}
+          <tr id="row_{{i}}">
+            <td>
+              {% if editable %}
+                <a class="btn btn-danger" onclick="delete_column('{{category}}', {{i}});"><span class="glyphicon glyphicon-trash"></span></a>
+              {% else %}
+                &nbsp;
               {% end %}
-          {% end %}
-        </tr>
-      {% end %}
-    </table>
+            </td>
+            <td colspan="2">
+              {% if len(summary) == 1 %}
+                  <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
+              </td>
+              {% elif len(summary) == num_samples %}
+                  <b>{{category}}</b>: All the values in this category are different.
+                </td>
+              {% else %}
+                  <b>{{category}}<b>
+                  &nbsp;&nbsp;&nbsp;&nbsp;
+                  <button type="button" class="btn" data-toggle="collapse" data-target=".{{i}}collapsed">values</button>
+                </td>
+                {% for row in summary %}
+                </tr>
+                <tr class="collapse {{i}}collapsed">
+                  <td>&nbsp;</td>
+                  <td>{{row[0]}}</td>
+                  <td>{{row[1]}}</td>
+                {% end %}
+            {% end %}
+          </tr>
+        {% end %}
+      </table>
+    </div>
   </div>
+</div>
 {% end %}

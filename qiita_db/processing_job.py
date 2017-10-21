@@ -409,7 +409,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             # Check if all the validators are completed. Validator jobs can be
             # in two states when completed: 'waiting' in case of success
             # or 'error' otherwise
-            sql = """SELECT COUNT(1)
+            sql = """SELECT pjv.validator_id
                      FROM qiita.processing_job_validator pjv
                         JOIN qiita.processing_job pj ON
                             pjv.validator_id = pj.processing_job_id
@@ -419,14 +419,16 @@ class ProcessingJob(qdb.base.QiitaObject):
                         AND processing_job_status NOT IN %s"""
             sql_args = [self.id, ('waiting', 'error')]
             qdb.sql_connection.TRN.add(sql, sql_args)
-            remaining = qdb.sql_connection.TRN.execute_fetchlast()
+            validator_ids = qdb.sql_connection.TRN.execute_fetchindex()
 
             # Active polling - wait until all validator jobs are completed
-            while remaining != 0:
-                self.step = "Validating outputs (%d remaining)" % remaining
+            while validator_ids:
+                jids = ', '.join([j[0] for j in validator_ids])
+                self.step = ("Validating outputs (%d remaining) via "
+                             "job(s) %s" % (len(validator_ids), jids))
                 sleep(10)
                 qdb.sql_connection.TRN.add(sql, sql_args)
-                remaining = qdb.sql_connection.TRN.execute_fetchlast()
+                validator_ids = qdb.sql_connection.TRN.execute_fetchindex()
 
             # Check if any of the validators errored
             sql = """SELECT validator_id
@@ -631,8 +633,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                     ProcessingJob.create(self.user, validate_params))
 
             # Change the current step of the job
-            self.step = "Validating outputs (%d remaining)" % len(
-                validator_jobs)
+
+            self.step = "Validating outputs (%d remaining) via job(s) %s" % (
+                len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
 
             # Link all the validator jobs with the current job
             self._set_validator_jobs(validator_jobs)

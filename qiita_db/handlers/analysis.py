@@ -59,7 +59,8 @@ class APIAnalysisMetadataHandler(OauthBaseHandler):
         """
         with qdb.sql_connection.TRN:
             a = _get_analysis(analysis_id)
-            mf_fp = a.mapping_file
+            mf_fp = qdb.util.get_filepath_information(
+                a.mapping_file)['fullpath']
             response = None
             if mf_fp is not None:
                 df = qdb.metadata_template.util.load_template_to_dataframe(
