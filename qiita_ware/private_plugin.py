@@ -45,7 +45,7 @@ def build_analysis_files(job):
                                                        'data_type': dtype}),
                                   'analysis': analysis_id})
             val_jobs.append(qdb.processing_job.ProcessingJob.create(
-                analysis.owner, validate_params))
+                analysis.owner, validate_params), True)
 
         job._set_validator_jobs(val_jobs)
 
