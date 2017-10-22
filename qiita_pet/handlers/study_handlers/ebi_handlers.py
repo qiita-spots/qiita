@@ -132,7 +132,7 @@ class EBISubmitHandler(BaseHandler):
             params = Parameters.load(
                 cmd, values_dict={'artifact': preprocessed_data_id,
                                   'submission_type': submission_type})
-            job = ProcessingJob.create(user, params)
+            job = ProcessingJob.create(user, params, True)
 
             r_client.set('ebi_submission_%s' % preprocessed_data_id,
                          dumps({'job_id': job.id, 'is_qiita_job': True}))

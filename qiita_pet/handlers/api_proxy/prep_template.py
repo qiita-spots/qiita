@@ -437,7 +437,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             cmd = qiita_plugin.get_command('update_prep_template')
             params = Parameters.load(
                 cmd, values_dict={'prep_template': prep_id, 'template_fp': fp})
-            job = ProcessingJob.create(User(user_id), params)
+            job = ProcessingJob.create(User(user_id), params, True)
 
             r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                          dumps({'job_id': job.id}))
@@ -473,7 +473,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
                               'obj_id': prep_id,
                               'sample_or_col': attribute,
                               'name': attr_id})
-        job = ProcessingJob.create(User(user_id), params)
+        job = ProcessingJob.create(User(user_id), params, True)
         # Store the job id attaching it to the sample template id
         r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                      dumps({'job_id': job.id}))

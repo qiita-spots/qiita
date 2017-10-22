@@ -116,6 +116,6 @@ class VAMPSHandler(BaseHandler):
         else:
             params = Parameters.load(
                 cmd, values_dict={'artifact': preprocessed_data_id})
-            job = ProcessingJob.create(user, params)
+            job = ProcessingJob.create(user, params, True)
             job.submit()
             self.redirect('/study/description/%s' % artifact.study.study_id)
