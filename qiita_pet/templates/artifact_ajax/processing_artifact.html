@@ -163,7 +163,7 @@
           add_job_node_to_graph(data.job);
         }
         else {
-          bootstrapAlert(data.message, "danger");
+          bootstrapAlert(data.message.replace(/\n/g, '<br/>'), "danger");
         }
       });
   }
