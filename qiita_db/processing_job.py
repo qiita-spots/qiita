@@ -1056,7 +1056,8 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
         return cls(w_id)
 
     @classmethod
-    def from_default_workflow(cls, user, dflt_wf, req_params, name=None):
+    def from_default_workflow(cls, user, dflt_wf, req_params, name=None,
+                              force=False):
         """Creates a new processing workflow from a default workflow
 
         Parameters
@@ -1071,6 +1072,8 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             parameter name.
         name : str, optional
             Name of the workflow. Default: generated from user's name
+        force : bool
+            Force creation on duplicated parameters
 
         Returns
         -------
@@ -1114,7 +1117,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 n: ProcessingJob.create(
                     user,
                     qdb.software.Parameters.from_default_params(
-                        p, req_params[c]))
+                        p, req_params[c]), force)
                 for n, (c, p) in viewitems(roots)}
             root_jobs = node_to_job.values()
 
@@ -1155,7 +1158,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 # the current job, so create it
                 new_job = ProcessingJob.create(
                     user, qdb.software.Parameters.from_default_params(
-                        dflt_params, job_req_params))
+                        dflt_params, job_req_params), force)
                 node_to_job[n] = new_job
 
                 # Create the parent-child links in the DB
@@ -1165,7 +1168,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             return cls._common_creation_steps(user, root_jobs, name)
 
     @classmethod
-    def from_scratch(cls, user, parameters, name=None):
+    def from_scratch(cls, user, parameters, name=None, force=False):
         """Creates a new processing workflow from scratch
 
         Parameters
@@ -1176,13 +1179,15 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             The parameters of the first job in the workflow
         name : str, optional
             Name of the workflow. Default: generated from user's name
+        force : bool
+            Force creation on duplicated parameters
 
         Returns
         -------
         qiita_db.processing_job.ProcessingWorkflow
             The newly created workflow
         """
-        job = ProcessingJob.create(user, parameters)
+        job = ProcessingJob.create(user, parameters, force)
         return cls._common_creation_steps(user, [job], name)
 
     @property
@@ -1291,7 +1296,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                     "Workflow not in construction")
 
     def add(self, dflt_params, connections=None, req_params=None,
-            opt_params=None):
+            opt_params=None, force=False):
         """Adds a new job to the workflow
 
         Parameters
@@ -1310,6 +1315,8 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
         opt_params : dict of {str: object}, optional
             The optional parameters to change from the default set, keyed by
             parameter name. Default: None, use the values in `dflt_params`
+        force : bool
+            Force creation on duplicated parameters
 
         Raises
         ------
@@ -1331,7 +1338,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
 
                 new_job = ProcessingJob.create(
                     self.user, qdb.software.Parameters.from_default_params(
-                        dflt_params, req_params, opt_params=opt_params))
+                        dflt_params, req_params, opt_params=opt_params), force)
 
                 # SQL used to create the edges between jobs
                 sql = """INSERT INTO qiita.parent_processing_job
@@ -1345,7 +1352,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 # workflow, so it is a new root job
                 new_job = ProcessingJob.create(
                     self.user, qdb.software.Parameters.from_default_params(
-                        dflt_params, req_params, opt_params=opt_params))
+                        dflt_params, req_params, opt_params=opt_params), force)
                 sql = """INSERT INTO qiita.processing_job_workflow_root
                             (processing_job_workflow_id, processing_job_id)
                          VALUES (%s, %s)"""

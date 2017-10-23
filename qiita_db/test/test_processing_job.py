@@ -247,7 +247,8 @@ class ProcessingJobTest(TestCase):
         exp_params = qdb.software.Parameters.load(exp_command,
                                                   json_str=json_str)
         exp_user = qdb.user.User('test@foo.bar')
-        obs = qdb.processing_job.ProcessingJob.create(exp_user, exp_params)
+        obs = qdb.processing_job.ProcessingJob.create(
+            exp_user, exp_params, True)
         self.assertEqual(obs.user, exp_user)
         self.assertEqual(obs.command, exp_command)
         self.assertEqual(obs.parameters, exp_params)
@@ -612,7 +613,7 @@ class ProcessingJobTest(TestCase):
         name = "Test processing workflow"
 
         tester = qdb.processing_job.ProcessingWorkflow.from_scratch(
-            exp_user, exp_params, name=name)
+            exp_user, exp_params, name=name, force=True)
 
         parent = tester.graph.nodes()[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
@@ -733,7 +734,7 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         obs = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
-            exp_user, dflt_wf, req_params, name=name)
+            exp_user, dflt_wf, req_params, name=name, force=True)
         self.assertEqual(obs.name, name)
         self.assertEqual(obs.user, exp_user)
         obs_graph = obs.graph
@@ -797,7 +798,7 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         obs = qdb.processing_job.ProcessingWorkflow.from_scratch(
-            exp_user, exp_params, name=name)
+            exp_user, exp_params, name=name, force=True)
         self.assertEqual(obs.name, name)
         self.assertEqual(obs.user, exp_user)
         obs_graph = obs.graph
@@ -822,12 +823,12 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         obs = qdb.processing_job.ProcessingWorkflow.from_scratch(
-            exp_user, exp_params, name=name)
+            exp_user, exp_params, name=name, force=True)
 
         parent = obs.graph.nodes()[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
-        obs.add(dflt_params, connections=connections)
+        obs.add(dflt_params, connections=connections, force=True)
 
         obs_graph = obs.graph
         self.assertTrue(isinstance(obs_graph, nx.DiGraph))
@@ -854,7 +855,7 @@ class ProcessingWorkflowTests(TestCase):
         # This also tests that the `graph` property returns the graph correctly
         # when there are root nodes that don't have any children
         dflt_params = qdb.software.DefaultParameters(1)
-        obs.add(dflt_params, req_params={'input_data': 1})
+        obs.add(dflt_params, req_params={'input_data': 1}, force=True)
 
         obs_graph = obs.graph
         self.assertTrue(isinstance(obs_graph, nx.DiGraph))
@@ -898,7 +899,7 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         tester = qdb.processing_job.ProcessingWorkflow.from_scratch(
-            exp_user, exp_params, name=name)
+            exp_user, exp_params, name=name, force=True)
 
         parent = tester.graph.nodes()[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
@@ -921,7 +922,7 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         tester = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
-            exp_user, dflt_wf, req_params, name=name)
+            exp_user, dflt_wf, req_params, name=name, force=True)
 
         tester.remove(tester.graph.edges()[0][0], cascade=True)
 
@@ -940,7 +941,7 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         tester = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
-            exp_user, dflt_wf, req_params, name=name)
+            exp_user, dflt_wf, req_params, name=name, force=True)
 
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
