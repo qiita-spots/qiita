@@ -258,7 +258,8 @@ class ProcessingJobTest(TestCase):
         self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
 
     def test_create_duplicated(self):
-        _create_job()
+        job = _create_job()
+        job._set_status('running')
         with self.assertRaisesRegexp(ValueError, 'Cannot create job because '
                                      'the parameters are the same as jobs '
                                      'that are queued, running or already '

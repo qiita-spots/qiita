@@ -151,11 +151,22 @@ class ProcessingJob(qdb.base.QiitaObject):
                         USING (processing_job_status_id)
                      WHERE command_id = %s AND processing_job_status IN (
                         'success', 'waiting', 'running') """
-            params = " AND ".join(
-                ["command_parameters->>'%s' = '%s'" % (k, v)
-                 for k, v in viewitems(parameters.values)
-                 if isinstance(v, Iterable) and not isinstance(v, str)
-                 for v in v])
+
+            # we need to use ILIKE because of booleans as they can be
+            # false or False
+            _format = "command_parameters->>'%s' ILIKE '%s'"
+            params = []
+            for k, v in viewitems(parameters.values):
+                # this is necessary in case we have an Iterable as a value
+                # but that is not unicode or string
+                if isinstance(v, Iterable) and not (isinstance(v, str) or
+                                                    isinstance(v, unicode)):
+                    for vv in v:
+                        params.append(_format % (k, vv))
+                else:
+                    params.append(_format % (k, v))
+            params = " AND ".join(params)
+
             sql = sql + ' AND ' if params else sql
             qdb.sql_connection.TRN.add(sql + params, [command.id])
             existing_jobs = qdb.sql_connection.TRN.execute_fetchindex()
