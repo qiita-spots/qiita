@@ -413,7 +413,7 @@
         var commands = data.commands;
         commands.sort(function(a, b) {return a.command.localeCompare(b.command, 'en', {'sensitivity': 'base'});} );
         for(var i=0; i<commands.length; i++) {
-          if (commands[i].output.length != 0) {
+          if (commands[i].output.length !== 0) {
             sel.append($("<option>").attr('value', commands[i].id).text(commands[i].command));
           }
         }
