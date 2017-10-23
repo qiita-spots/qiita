@@ -161,7 +161,9 @@ class ProcessingJob(qdb.base.QiitaObject):
             existing_jobs = qdb.sql_connection.TRN.execute_fetchindex()
             if existing_jobs and not force:
                 raise ValueError(
-                    'Cannot create job because these jobs:\n%s' % '\n'.join(
+                    'Cannot create job because the parameters are the same as '
+                    'jobs that are queued, running or already have '
+                    'succeeded:\n%s' % '\n'.join(
                         ["%s: %s" % (jid, status)
                          for jid, _, status in existing_jobs]))
 

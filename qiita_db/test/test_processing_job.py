@@ -259,8 +259,10 @@ class ProcessingJobTest(TestCase):
 
     def test_create_duplicated(self):
         _create_job()
-        with self.assertRaisesRegexp(ValueError,
-                                     'Cannot create job because these jobs:'):
+        with self.assertRaisesRegexp(ValueError, 'Cannot create job because '
+                                     'the parameters are the same as jobs '
+                                     'that are queued, running or already '
+                                     'have succeeded:'):
             _create_job(False)
 
     def test_set_status(self):
