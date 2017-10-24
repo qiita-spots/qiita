@@ -159,8 +159,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             for k, v in viewitems(parameters.values):
                 # this is necessary in case we have an Iterable as a value
                 # but that is not unicode or string
-                if isinstance(v, Iterable) and not (isinstance(v, str) or
-                                                    isinstance(v, unicode)):
+                if isinstance(v, Iterable) and not isinstance(v, (str,
+                                                                  unicode)):
                     for vv in v:
                         params.append(_format % (k, vv))
                 else:
