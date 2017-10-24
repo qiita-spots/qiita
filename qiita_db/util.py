@@ -1556,7 +1556,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     # the name of the parameter set
                     pparams = sorted(
                         [(pn, len([vv for vv in v if vv in pparams]))
-                         for pn, v, _ in params[pcid]], key=lambda x: x[1])[-1]
+                         for pn, v, a in params[pcid]], key=lambda x: x[1])[-1]
                     pparams = 'N/A' if pparams[1] == 0 else pparams[0]
                 else:
                     pparams = 'N/A'
@@ -1566,8 +1566,9 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     aparams = {}
                 else:
                     # we are gonna remove any artifacts from the parameters
-                    # [0] cause there is only one element
-                    _, _, to_ignore = params[cid][0]
+                    # [0] cause there is only one element and [2] cause
+                    # there is where the artifact types are stored
+                    to_ignore = params[cid][0][2]
                     for ti in to_ignore:
                         del aparams[ti]
                 # - ignoring empty filepaths
