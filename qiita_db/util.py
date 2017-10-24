@@ -1513,8 +1513,14 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             """
 
         sql_params = """SELECT default_parameter_set_id, command_id,
-                            parameter_set_name, parameter_set AS param_set
-                        FROM qiita.default_parameter_set"""
+                            parameter_set_name, parameter_set AS param_set,
+                            array_agg(parameter_name)
+                        FROM qiita.default_parameter_set
+                        LEFT JOIN qiita.command_parameter
+                            USING (command_id)
+                        WHERE parameter_type = 'artifact'
+                        GROUP BY default_parameter_set_id, command_id,
+                            parameter_set_name"""
 
         sql_ts = """SELECT DISTINCT target_subfragment FROM qiita.prep_%s"""
 
@@ -1526,8 +1532,9 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             # to have a huge growth in the near future
             qdb.sql_connection.TRN.add(sql_params)
             params = defaultdict(list)
-            for _, cid, n, p in qdb.sql_connection.TRN.execute_fetchindex():
-                params[cid].append((n, list(p.iteritems())))
+            for row in qdb.sql_connection.TRN.execute_fetchindex():
+                _, cid, n, param, aparam = row
+                params[cid].append((n, list(param.iteritems()), aparam))
 
             # now let's get the actual artifacts
             ts = {}
@@ -1549,7 +1556,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     # the name of the parameter set
                     pparams = sorted(
                         [(pn, len([vv for vv in v if vv in pparams]))
-                         for pn, v in params[pcid]], key=lambda x: x[1])[-1]
+                         for pn, v, a in params[pcid]], key=lambda x: x[1])[-1]
                     pparams = 'N/A' if pparams[1] == 0 else pparams[0]
                 else:
                     pparams = 'N/A'
@@ -1557,6 +1564,13 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 aparams = aparams[0]
                 if aparams is None:
                     aparams = {}
+                else:
+                    # we are gonna remove any artifacts from the parameters
+                    # [0] cause there is only one element and [2] cause
+                    # there is where the artifact types are stored
+                    to_ignore = params[cid][0][2]
+                    for ti in to_ignore:
+                        del aparams[ti]
                 # - ignoring empty filepaths
                 if filepaths == [None]:
                     filepaths = []
