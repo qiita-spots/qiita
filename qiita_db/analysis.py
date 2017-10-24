@@ -178,7 +178,7 @@ class Analysis(qdb.base.QiitaObject):
                     'analysis': a_id,
                     'merge_dup_sample_ids': merge_duplicated_sample_ids})
             job = qdb.processing_job.ProcessingJob.create(
-                owner, params)
+                owner, params, True)
             sql = """INSERT INTO qiita.analysis_processing_job
                         (analysis_id, processing_job_id)
                      VALUES (%s, %s)"""

@@ -12,7 +12,7 @@ from subprocess import Popen, PIPE
 from multiprocessing import Process
 from os.path import join
 from itertools import chain
-from collections import defaultdict
+from collections import defaultdict, Iterable
 from json import dumps, loads
 from time import sleep
 
@@ -119,7 +119,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def create(cls, user, parameters):
+    def create(cls, user, parameters, force=False):
         """Creates a new job in the system
 
         Parameters
@@ -128,14 +128,56 @@ class ProcessingJob(qdb.base.QiitaObject):
             The user executing the job
         parameters : qiita_db.software.Parameters
             The parameters of the job being executed
+        force : bool
+            Force creation on duplicated parameters
 
         Returns
         -------
         qiita_db.processing_job.ProcessingJob
             The newly created job
+
+        Notes
+        -----
+        If force is True the job is gonna be created even if another job
+        exists with the same parameters
         """
         with qdb.sql_connection.TRN:
             command = parameters.command
+
+            # check if a job with the same parameters already exists
+            sql = """SELECT processing_job_id, email, processing_job_status
+                     FROM qiita.processing_job
+                     LEFT JOIN qiita.processing_job_status
+                        USING (processing_job_status_id)
+                     WHERE command_id = %s AND processing_job_status IN (
+                        'success', 'waiting', 'running') """
+
+            # we need to use ILIKE because of booleans as they can be
+            # false or False
+            _format = "command_parameters->>'%s' ILIKE '%s'"
+            params = []
+            for k, v in viewitems(parameters.values):
+                # this is necessary in case we have an Iterable as a value
+                # but that is not unicode or string
+                if isinstance(v, Iterable) and not isinstance(v, (str,
+                                                                  unicode)):
+                    for vv in v:
+                        params.append(_format % (k, vv))
+                else:
+                    params.append(_format % (k, v))
+            params = " AND ".join(params)
+
+            sql = sql + ' AND ' if params else sql
+            qdb.sql_connection.TRN.add(sql + params, [command.id])
+            existing_jobs = qdb.sql_connection.TRN.execute_fetchindex()
+            if existing_jobs and not force:
+                raise ValueError(
+                    'Cannot create job because the parameters are the same as '
+                    'jobs that are queued, running or already have '
+                    'succeeded:\n%s' % '\n'.join(
+                        ["%s: %s" % (jid, status)
+                         for jid, _, status in existing_jobs]))
+
             sql = """INSERT INTO qiita.processing_job
                         (email, command_id, command_parameters,
                          processing_job_status_id)
@@ -630,7 +672,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 validate_params = qdb.software.Parameters.load(
                     cmd, values_dict=values_dict)
                 validator_jobs.append(
-                    ProcessingJob.create(self.user, validate_params))
+                    ProcessingJob.create(self.user, validate_params, True))
 
             # Change the current step of the job
 
@@ -1014,7 +1056,8 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
         return cls(w_id)
 
     @classmethod
-    def from_default_workflow(cls, user, dflt_wf, req_params, name=None):
+    def from_default_workflow(cls, user, dflt_wf, req_params, name=None,
+                              force=False):
         """Creates a new processing workflow from a default workflow
 
         Parameters
@@ -1029,6 +1072,8 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             parameter name.
         name : str, optional
             Name of the workflow. Default: generated from user's name
+        force : bool
+            Force creation on duplicated parameters
 
         Returns
         -------
@@ -1072,7 +1117,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 n: ProcessingJob.create(
                     user,
                     qdb.software.Parameters.from_default_params(
-                        p, req_params[c]))
+                        p, req_params[c]), force)
                 for n, (c, p) in viewitems(roots)}
             root_jobs = node_to_job.values()
 
@@ -1113,7 +1158,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 # the current job, so create it
                 new_job = ProcessingJob.create(
                     user, qdb.software.Parameters.from_default_params(
-                        dflt_params, job_req_params))
+                        dflt_params, job_req_params), force)
                 node_to_job[n] = new_job
 
                 # Create the parent-child links in the DB
@@ -1123,7 +1168,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             return cls._common_creation_steps(user, root_jobs, name)
 
     @classmethod
-    def from_scratch(cls, user, parameters, name=None):
+    def from_scratch(cls, user, parameters, name=None, force=False):
         """Creates a new processing workflow from scratch
 
         Parameters
@@ -1134,13 +1179,15 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             The parameters of the first job in the workflow
         name : str, optional
             Name of the workflow. Default: generated from user's name
+        force : bool
+            Force creation on duplicated parameters
 
         Returns
         -------
         qiita_db.processing_job.ProcessingWorkflow
             The newly created workflow
         """
-        job = ProcessingJob.create(user, parameters)
+        job = ProcessingJob.create(user, parameters, force)
         return cls._common_creation_steps(user, [job], name)
 
     @property
@@ -1249,7 +1296,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                     "Workflow not in construction")
 
     def add(self, dflt_params, connections=None, req_params=None,
-            opt_params=None):
+            opt_params=None, force=False):
         """Adds a new job to the workflow
 
         Parameters
@@ -1268,6 +1315,8 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
         opt_params : dict of {str: object}, optional
             The optional parameters to change from the default set, keyed by
             parameter name. Default: None, use the values in `dflt_params`
+        force : bool
+            Force creation on duplicated parameters
 
         Raises
         ------
@@ -1289,7 +1338,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
 
                 new_job = ProcessingJob.create(
                     self.user, qdb.software.Parameters.from_default_params(
-                        dflt_params, req_params, opt_params=opt_params))
+                        dflt_params, req_params, opt_params=opt_params), force)
 
                 # SQL used to create the edges between jobs
                 sql = """INSERT INTO qiita.parent_processing_job
@@ -1303,7 +1352,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 # workflow, so it is a new root job
                 new_job = ProcessingJob.create(
                     self.user, qdb.software.Parameters.from_default_params(
-                        dflt_params, req_params, opt_params=opt_params))
+                        dflt_params, req_params, opt_params=opt_params), force)
                 sql = """INSERT INTO qiita.processing_job_workflow_root
                             (processing_job_workflow_id, processing_job_id)
                          VALUES (%s, %s)"""

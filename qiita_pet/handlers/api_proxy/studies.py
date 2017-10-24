@@ -170,7 +170,7 @@ def study_delete_req(study_id, user_id):
     qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
     cmd = qiita_plugin.get_command('delete_study')
     params = Parameters.load(cmd, values_dict={'study': study_id})
-    job = ProcessingJob.create(User(user_id), params)
+    job = ProcessingJob.create(User(user_id), params, True)
     # Store the job id attaching it to the sample template id
     r_client.set(STUDY_KEY_FORMAT % study_id,
                  dumps({'job_id': job.id}))

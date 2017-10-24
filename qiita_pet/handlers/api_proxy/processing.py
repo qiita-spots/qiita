@@ -94,19 +94,31 @@ def workflow_handler_post_req(user_id, command_id, params):
          'workflow_id': int}
     """
     parameters = Parameters.load(Command(command_id), json_str=params)
-    wf = ProcessingWorkflow.from_scratch(User(user_id), parameters)
-    # this is safe as we are creating the workflow for the first time and there
-    # is only one node. Remember networkx doesn't assure order of nodes
-    job = wf.graph.nodes()[0]
-    inputs = [a.id for a in job.input_artifacts]
-    job_cmd = job.command
-    return {'status': 'success',
-            'message': '',
-            'workflow_id': wf.id,
-            'job': {'id': job.id,
-                    'inputs': inputs,
-                    'label': job_cmd.name,
-                    'outputs': job_cmd.outputs}}
+
+    status = 'success'
+    message = ''
+    try:
+        wf = ProcessingWorkflow.from_scratch(User(user_id), parameters)
+    except Exception as exc:
+        wf = None
+        wf_id = None
+        job_info = None
+        status = 'error'
+        message = str(exc.message)
+
+    if wf is not None:
+        # this is safe as we are creating the workflow for the first time
+        # and there is only one node. Remember networkx doesn't assure order
+        # of nodes
+        job = wf.graph.nodes()[0]
+        inputs = [a.id for a in job.input_artifacts]
+        job_cmd = job.command
+        wf_id = wf.id
+        job_info = {'id': job.id, 'inputs': inputs, 'label': job_cmd.name,
+                    'outputs': job_cmd.outputs}
+
+    return {'status': status, 'message': message, 'workflow_id': wf_id,
+            'job': job_info}
 
 
 def workflow_handler_patch_req(req_op, req_path, req_value=None,
