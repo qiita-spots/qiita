@@ -258,14 +258,19 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(obs.step, None)
         self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
 
-    def test_create_duplicated(self):
-        job = _create_job()
-        job._set_status('running')
-        with self.assertRaisesRegexp(ValueError, 'Cannot create job because '
-                                     'the parameters are the same as jobs '
-                                     'that are queued, running or already '
-                                     'have succeeded:'):
-            _create_job(False)
+        # test with paramters with '
+        exp_command = qdb.software.Command(1)
+        exp_params.values["a tests with '"] = 'this is a tests with "'
+        exp_params.values['a tests with "'] = "this is a tests with '"
+        obs = qdb.processing_job.ProcessingJob.create(
+            exp_user, exp_params)
+        self.assertEqual(obs.user, exp_user)
+        self.assertEqual(obs.command, exp_command)
+        self.assertEqual(obs.status, 'in_construction')
+        self.assertEqual(obs.log, None)
+        self.assertEqual(obs.heartbeat, None)
+        self.assertEqual(obs.step, None)
+        self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
 
     def test_set_status(self):
         job = _create_job()
@@ -946,6 +951,28 @@ class ProcessingWorkflowTests(TestCase):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             tester.remove(tester.graph.edges()[0][0])
+
+
+@qiita_test_checker()
+class ProcessingJobDuplicated(TestCase):
+    def test_create_duplicated(self):
+        job = _create_job()
+        job._set_status('success')
+        with self.assertRaisesRegexp(ValueError, 'Cannot create job because '
+                                     'the parameters are the same as jobs '
+                                     'that are queued, running or already '
+                                     'have succeeded:') as context:
+            _create_job(False)
+
+        # If it failed it's because we have jobs in non finished status so
+        # setting them as error. This is basically testing that the duplicated
+        # job creation allows to create if all jobs are error and if success
+        # that the job doesn't have children
+        for jobs in context.exception.message.split('\n')[1:]:
+            jid, status = jobs.split(': ')
+            if status != 'success':
+                qdb.processing_job.ProcessingJob(jid)._set_status('error')
+        _create_job(False)
 
 
 if __name__ == '__main__':

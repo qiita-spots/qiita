@@ -141,20 +141,25 @@ class ProcessingJob(qdb.base.QiitaObject):
         If force is True the job is gonna be created even if another job
         exists with the same parameters
         """
-        with qdb.sql_connection.TRN:
+        TTRN = qdb.sql_connection.TRN
+        with TTRN:
             command = parameters.command
 
             # check if a job with the same parameters already exists
-            sql = """SELECT processing_job_id, email, processing_job_status
+            sql = """SELECT processing_job_id, email, processing_job_status,
+                        COUNT(aopj.artifact_id)
                      FROM qiita.processing_job
                      LEFT JOIN qiita.processing_job_status
                         USING (processing_job_status_id)
+                     LEFT JOIN qiita.artifact_output_processing_job aopj
+                        USING (processing_job_id)
                      WHERE command_id = %s AND processing_job_status IN (
-                        'success', 'waiting', 'running') """
+                        'success', 'waiting', 'running') {0}
+                     GROUP BY processing_job_id, email,
+                        processing_job_status"""
 
             # we need to use ILIKE because of booleans as they can be
             # false or False
-            _format = "command_parameters->>'%s' ILIKE '%s'"
             params = []
             for k, v in viewitems(parameters.values):
                 # this is necessary in case we have an Iterable as a value
@@ -162,21 +167,33 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if isinstance(v, Iterable) and not isinstance(v, (str,
                                                                   unicode)):
                     for vv in v:
-                        params.append(_format % (k, vv))
+                        params.extend([k, str(vv)])
                 else:
-                    params.append(_format % (k, v))
-            params = " AND ".join(params)
+                    params.extend([k, str(v)])
 
-            sql = sql + ' AND ' if params else sql
-            qdb.sql_connection.TRN.add(sql + params, [command.id])
-            existing_jobs = qdb.sql_connection.TRN.execute_fetchindex()
+            if params:
+                # divided by 2 as we have key-value pairs
+                len_params = len(params)/2
+                sql = sql.format(' AND ' + ' AND '.join(
+                    ["command_parameters->>%s ILIKE %s"] * len_params))
+                params = [command.id] + params
+                TTRN.add(sql, params)
+            else:
+                # the sql variable expects the list of parameters but if there
+                # is no param we need to replace the {0} with an empty string
+                TTRN.add(sql.format(""), [command.id])
+
+            # checking that if the job status is success, it has children
+            # [2] status, [3] children count
+            existing_jobs = [r for r in TTRN.execute_fetchindex()
+                             if r[2] != 'success' or r[3] > 0]
             if existing_jobs and not force:
                 raise ValueError(
                     'Cannot create job because the parameters are the same as '
                     'jobs that are queued, running or already have '
                     'succeeded:\n%s' % '\n'.join(
                         ["%s: %s" % (jid, status)
-                         for jid, _, status in existing_jobs]))
+                         for jid, _, status, _ in existing_jobs]))
 
             sql = """INSERT INTO qiita.processing_job
                         (email, command_id, command_parameters,
@@ -187,8 +204,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                 "in_construction", "processing_job_status")
             sql_args = [user.id, command.id,
                         parameters.dump(), status]
-            qdb.sql_connection.TRN.add(sql, sql_args)
-            job_id = qdb.sql_connection.TRN.execute_fetchlast()
+            TTRN.add(sql, sql_args)
+            job_id = TTRN.execute_fetchlast()
 
             # Link the job with the input artifacts
             sql = """INSERT INTO qiita.artifact_processing_job
@@ -202,17 +219,16 @@ class ProcessingJob(qdb.base.QiitaObject):
                     # still doesn't exists because the current job is part
                     # of a workflow, so we can't link
                     if not isinstance(artifact_info, list):
-                        qdb.sql_connection.TRN.add(
-                            sql, [artifact_info, job_id])
+                        TTRN.add(sql, [artifact_info, job_id])
                     else:
                         pending[artifact_info[0]][pname] = artifact_info[1]
             if pending:
                 sql = """UPDATE qiita.processing_job
                          SET pending = %s
                          WHERE processing_job_id = %s"""
-                qdb.sql_connection.TRN.add(sql, [dumps(pending), job_id])
+                TTRN.add(sql, [dumps(pending), job_id])
 
-            qdb.sql_connection.TRN.execute()
+            TTRN.execute()
 
             return cls(job_id)
 
