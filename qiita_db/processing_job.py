@@ -172,13 +172,15 @@ class ProcessingJob(qdb.base.QiitaObject):
                     params.extend([k, str(v)])
 
             if params:
-                # divided by 2 as it's key-value pairs
+                # divided by 2 as we have key-value pairs
                 len_params = len(params)/2
                 sql = sql.format(' AND ' + ' AND '.join(
                     ["command_parameters->>%s ILIKE %s"] * len_params))
                 params = [command.id] + params
                 TTRN.add(sql, params)
             else:
+                # the sql variable expects the list of parameters but if there
+                # is no param we need to replace the {0} with an empty string
                 TTRN.add(sql.format(""), [command.id])
 
             # checking that if the job status is success, it has children
