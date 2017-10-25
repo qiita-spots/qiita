@@ -258,6 +258,20 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(obs.step, None)
         self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
 
+        # test with paramters with '
+        exp_command = qdb.software.Command(1)
+        exp_params.values["a tests with '"] = 'this is a tests with "'
+        exp_params.values['a tests with "'] = "this is a tests with '"
+        obs = qdb.processing_job.ProcessingJob.create(
+            exp_user, exp_params, True)
+        self.assertEqual(obs.user, exp_user)
+        self.assertEqual(obs.command, exp_command)
+        self.assertEqual(obs.status, 'in_construction')
+        self.assertEqual(obs.log, None)
+        self.assertEqual(obs.heartbeat, None)
+        self.assertEqual(obs.step, None)
+        self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
+
     def test_create_duplicated(self):
         job = _create_job()
         job._set_status('running')

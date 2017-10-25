@@ -157,13 +157,19 @@ class ProcessingJob(qdb.base.QiitaObject):
             _format = "command_parameters->>'%s' ILIKE '%s'"
             params = []
             for k, v in viewitems(parameters.values):
+                # escaping values
+                k = k.replace("'", r"''")
                 # this is necessary in case we have an Iterable as a value
                 # but that is not unicode or string
                 if isinstance(v, Iterable) and not isinstance(v, (str,
                                                                   unicode)):
                     for vv in v:
+                        if isinstance(vv, str):
+                            vv = vv.replace("'", r"''")
                         params.append(_format % (k, vv))
                 else:
+                    if isinstance(v, str):
+                        v = v.replace("'", r"''")
                     params.append(_format % (k, v))
             params = " AND ".join(params)
 
