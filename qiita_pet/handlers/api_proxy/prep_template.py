@@ -634,7 +634,7 @@ def prep_template_graph_get_req(prep_id, user_id):
             name = n[1].command.name
         elif n[0] == 'artifact':
             if full_access or n[1].visibility == 'public':
-                name = '%s - %s' % (n[1].name, n[1].artifact_type)
+                name = '%s\n(%s)' % (n[1].name, n[1].artifact_type)
             else:
                 continue
         node_labels.append((n[0], n[1].id, name))

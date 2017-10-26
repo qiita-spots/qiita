@@ -2,7 +2,7 @@
 
 <script type="text/javascript">
   var processing_network;
-  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}} - ({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
+  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}}\n({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
   var edges = new vis.DataSet();
 
   /*
@@ -87,7 +87,7 @@
       var out_type = this[1];
       var n_id = job_info.id + ":" + out_name;
       edges.add({id: edges.length + 1, from: job_info.id, to: n_id });
-      nodes.add({id: n_id, label: out_name + " - (" + out_type + ")", group: "type", name: out_name, type: out_type});
+      nodes.add({id: n_id, label: out_name + "\n(" + out_type + ")", group: "type", name: out_name, type: out_type});
     });
     processing_network.redraw();
   }
