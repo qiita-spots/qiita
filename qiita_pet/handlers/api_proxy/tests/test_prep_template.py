@@ -299,17 +299,17 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(11, len(obs['node_labels']))
-        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'),
+        self.assertIn(('artifact', 1, 'Raw data 1\n(FASTQ)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'),
+        self.assertIn(('artifact', 2, 'Demultiplexed 1\n(Demultiplexed)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 3, 'Demultiplexed 2 - Demultiplexed'),
+        self.assertIn(('artifact', 3, 'Demultiplexed 2\n(Demultiplexed)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 4, 'BIOM - BIOM'),
+        self.assertIn(('artifact', 4, 'BIOM\n(BIOM)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 5, 'BIOM - BIOM'),
+        self.assertIn(('artifact', 5, 'BIOM\n(BIOM)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 6, 'BIOM - BIOM'),
+        self.assertIn(('artifact', 6, 'BIOM\n(BIOM)'),
                       obs['node_labels'])
         self.assertEqual(3, len([n for dt, _, n in obs['node_labels']
                                  if n == 'Pick closed-reference OTUs' and
@@ -332,11 +332,11 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(11, len(obs['node_labels']))
-        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'),
+        self.assertIn(('artifact', 1, 'Raw data 1\n(FASTQ)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'),
+        self.assertIn(('artifact', 2, 'Demultiplexed 1\n(Demultiplexed)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 4, 'BIOM - BIOM'), obs['node_labels'])
+        self.assertIn(('artifact', 4, 'BIOM\n(BIOM)'), obs['node_labels'])
         self.assertEqual(3, len([n for dt, _, n in obs['node_labels']
                                  if n == 'Pick closed-reference OTUs' and
                                  dt == 'job']))
