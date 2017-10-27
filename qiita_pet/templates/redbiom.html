@@ -208,18 +208,31 @@
         <ul>
           <li>
             Find all samples in which the word infant exists, as well as antibiotics,
-            where the infants are under a certain number of days old:
-            "infant &amp; antibiotics where age_days < 30"
+            where the infants are under a year old:
+            "infant &amp; antibiotics where age_years <= 1"
           </li>
           <li>
-            Find all samples only beloging to the EMP in which the ph in under 7:
-            "where ph < 7 &amp; emp_release1 == True"
+            Find all samples only belonging to the EMP in which the ph is under 7 for a variety of sample types:
+            soil: "soil where ph > 7
+            non-ocean water: "water - ocean where ph > 7"
+            ocean water: "water &amp; ocean where ph > 7"
+            
+            Or instead of ph you could search for a different metadata category:
+            "water &amp; ocean where salinity > 20"
           </li>
+          <li>
+            Some other interesting examples:           
+            "feces & canine"
+            (beer | cider | wine | alcohol)
+            where sample_type == 'stool'
+            usa where sample_type == 'stool' and host_taxid == 9606
+          </li>
+         </li>
         </ul>
       </li>
       <li>
         <b>Feature</b>:<br/>
-        The seach will be on all the features, in specific: OTU ids for close reference and exact sequences for deblur.
+        The search will be on all the features, in specific: OTU ids for close reference and exact sequences for deblur.
         <br/><br/>
         Examples:
         <br/>
