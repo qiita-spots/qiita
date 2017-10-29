@@ -1,7 +1,5 @@
--- With the QIIMEq2 release, the parameters for the command "Pick closed-reference
--- OTUs" changed. The parameter "reference" has ben substituted for 2 parameters
--- "reference-tax" and "reference-seq" which contains the path to the actual
--- reference taxonomy file and the reference sequence file
+-- moving deblur v1.0.2 artifacts to v1.0.3
+-- the parameters don't need to be changed as they are exactly the same
 
 DO $do$
 DECLARE
@@ -30,11 +28,11 @@ BEGIN
             WHERE artifact_id = a_info.artifact_id;
 
         UPDATE qiita.processing_job
-            SET command_parameters = parameters, command_id = new_deblur_id
+            SET command_id = new_deblur_id
             WHERE processing_job_id = pj_id;
 
         UPDATE qiita.artifact
-            SET command_parameters = parameters, command_id = new_deblur_id
+            SET command_id = new_deblur_id
             WHERE artifact_id = a_info.artifact_id;
 
     END LOOP;
