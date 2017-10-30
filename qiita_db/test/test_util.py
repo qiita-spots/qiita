@@ -930,9 +930,9 @@ class UtilTests(TestCase):
                 'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults'),
              'data_type': '18S', 'prep_samples': 27,
              'parameters': {
-                'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
-                'sortmerna_max_pos': 10000, 'threads': 1,
-                'sortmerna_coverage': 0.97}, 'name': 'BIOM'},
+                'reference': '1', 'similarity': '0.97',
+                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+                'threads': '1', 'sortmerna_coverage': '0.97'}, 'name': 'BIOM'},
             {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
              'artifact_id': 7, 'data_type': '16S', 'prep_samples': 27,
              'parameters': {}, 'name': 'BIOM'},

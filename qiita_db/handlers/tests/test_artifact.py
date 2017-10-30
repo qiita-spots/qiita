@@ -103,8 +103,8 @@ class ArtifactHandlerTests(OauthTestingBase):
             'prep_information': [],
             'study': None,
             'analysis': 1,
-            'processing_parameters': {'biom_table': 8, 'depth': 9000,
-                                      'subsample_multinomial': False},
+            'processing_parameters': {'biom_table': '8', 'depth': '9000',
+                                      'subsample_multinomial': 'False'},
             'files': exp_fps}
         obs = loads(obs.body)
         # The timestamp is genreated at patch time, so we can't check for it
