@@ -169,9 +169,9 @@ class ArtifactGetInfoTest(TestHandlerBase):
              'prep_samples': 27,
              'algorithm': 'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults',
              'parameters': {
-                'reference': 2, 'similarity': 0.97, 'sortmerna_e_value': 1,
-                'sortmerna_max_pos': 10000, 'threads': 1,
-                'sortmerna_coverage': 0.97}, 'name': 'BIOM'},
+                'reference': '2', 'similarity': '0.97',
+                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+                'threads': '1', 'sortmerna_coverage': '0.97'}, 'name': 'BIOM'},
             {'files': [], 'target_subfragment': ['V4'], 'artifact_id': 7,
              'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
              'prep_samples': 27, 'algorithm': '', 'parameters': {},
