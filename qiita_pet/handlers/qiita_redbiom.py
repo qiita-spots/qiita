@@ -31,7 +31,6 @@ class RedbiomPublicSearch(BaseHandler):
     def _redbiom_metadata_search(self, query, contexts):
         study_artifacts = defaultdict(list)
         message = ''
-        query = query.lower()
         try:
             samples = redbiom.search.metadata_full(query, False)
         except ValueError:
