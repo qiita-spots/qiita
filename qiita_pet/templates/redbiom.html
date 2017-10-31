@@ -11,22 +11,17 @@
     $("#redbiom-table").dataTable({
       "dom": '<"ps">lfr<t><"footer">ip',
       'footerCallback': function ( row, data, start, end, display ) {
+        var api = this.api(), artifacts = 0, samples = 0;
 
-        // adding total features found
+        api.column(0).nodes().each(function (cell, i) {
+          var elements = $(cell).children().children().children();
+          var idx = elements.length - 1;
+          var text = $(elements[idx]).text();
+          elements = text.split(" | ");
+          artifacts += parseInt(elements[0].split(": ")[1]);
+          samples += parseInt(elements[1].split(": ")[1]);
+        });
 
-        var api = this.api(), data;
-        var artifacts_samples = api
-          .column(0)
-          .data()
-          .reduce( function (a, b) {
-            var artifacts = 0, samples = 0;
-            $.each( b, function( key, value ) {
-              artifacts += 1;
-              samples += value.length;
-            });
-            return [artifacts + a[0], samples + a[1]]}, [0, 0]);
-        var artifacts = artifacts_samples[0];
-        var samples = artifacts_samples[1];
         $('.footer').addClass("col-md-12 text-right");
         if (artifacts == 0) {
           text = '';
@@ -47,13 +42,22 @@
         // render zero
         {"render": function ( data, type, row, meta ) {
           if (data !== null && data !== undefined){
-            var artifacts = 0, samples = 0;
+            var artifacts = 0, unique_samples = {};
             for (var d in data) {
               if (data.hasOwnProperty(d)) {
+                // to get only unique sample names we will create a dict
+                // and then just get the keys; by creating a dict we are
+                // avoiding to check if an element is already in the list
+                var samples = data[d];
+                for (var i = 0; i < samples.length; i++) {
+                  if (! unique_samples[samples[i]] ) {
+                    unique_samples[samples[i]] = true;
+                  }
+                }
                 artifacts++;
-                samples += data[d].length
               }
             }
+            unique_samples = Object.keys(unique_samples);
             if (artifacts != 0) {
               return '<div class="container" style="max-width: 15em;">'+
                 '<div class="row justify-content-md-center">' +
@@ -62,7 +66,7 @@
                   {% end %}
                   '<div class="col-md-12 text-center">' +
                     'Artifacts: ' + artifacts + ' | ' +
-                    'Samples: ' + samples +
+                    'Samples: ' + unique_samples.length +
                   '</div>' +
                 '</div>' +
               '</div>';
@@ -204,18 +208,40 @@
         <ul>
           <li>
             Find all samples in which the word infant exists, as well as antibiotics,
-            where the infants are under a certain number of days old:
-            "infant &amp; antibiotics where age_days < 30"
+            where the infants are under a year old:
+            <ul>
+              <li>
+                <i>infant &amp; antibiotics where age_years <= 1</i>
+              </li>
+            </ul>
           </li>
           <li>
-            Find all samples only beloging to the EMP in which the ph in under 7:
-            "where ph < 7 &amp; emp_release1 == True"
+            Find all samples only belonging to the EMP in which the ph is under 7 for a variety of sample types:
+            <ul>
+              <li>soil: <i>soil where ph < 7 and emp_release1 == 'True'</i></li>
+              <li>ocean water: <i>water &amp; ocean where ph > 7 and emp_release1 == 'True'</i></li>
+              <li>non-ocean water: <i>water - ocean where ph > 7 and emp_release1 == 'True'</i></li>
+            </ul>
+          <li>Or instead of ph you could search for a different metadata category:</li>
+            <ul>
+              <li><i>water &amp; ocean where salinity > 20</i></li>
+            </ul>
           </li>
+          <li>Some other interesting examples:
+              <ul>
+                <li><i>feces &amp; canine</i></li>
+                <li><i>(beer | cider | wine | alcohol)</i></li>
+                <li><i>where sample_type == 'stool'</i></li>
+                <li><i>usa where sample_type == 'stool' and host_taxid == 9606</i></li>
+              </ul>
+            </li>
+          </li>
+         </li>
         </ul>
       </li>
       <li>
         <b>Feature</b>:<br/>
-        The seach will be on all the features, in specific: OTU ids for close reference and exact sequences for deblur.
+        The search will be on all the features, in specific: OTU ids for close reference and exact sequences for deblur.
         <br/><br/>
         Examples:
         <br/>

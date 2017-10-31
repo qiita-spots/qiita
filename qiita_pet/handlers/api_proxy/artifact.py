@@ -180,7 +180,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         cmd = qiita_plugin.get_command('copy_artifact')
         params = Parameters.load(cmd, values_dict={'artifact': artifact_id,
                                                    'prep_template': prep.id})
-        job = ProcessingJob.create(user, params)
+        job = ProcessingJob.create(user, params, True)
     else:
         uploads_path = get_mountpoint('uploads')[0][1]
         path_builder = partial(join, uploads_path, str(study_id))
@@ -219,7 +219,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
                 'files': dumps(cleaned_filepaths),
                 'artifact_type': artifact_type,
                 'name': name
-                }))
+                }), True)
 
     # Submit the job
     job.submit()

@@ -107,18 +107,11 @@ class TestProcessingAPI(TestCase):
                   '"rev_comp_mapping_barcodes": false, '
                   '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
         obs = workflow_handler_post_req("test@foo.bar", 1, params)
-        wf_id = obs['workflow_id']
-        wf = ProcessingWorkflow(wf_id)
-        nodes = wf.graph.nodes()
-        self.assertEqual(len(nodes), 1)
-        job = nodes[0]
-        exp = {'status': 'success',
-               'message': '',
-               'workflow_id': wf_id,
-               'job': {'id': job.id,
-                       'inputs': [1],
-                       'label': "Split libraries FASTQ",
-                       'outputs': [['demultiplexed', 'Demultiplexed']]}}
+        self.assertRegexpMatches(
+            obs.pop('message'), 'Cannot create job because the parameters are '
+            'the same as jobs that are queued, running or already have '
+            'succeeded:\n')
+        exp = {'status': 'error', 'workflow_id': None, 'job': None}
         self.assertEqual(obs, exp)
 
     def test_workflow_handler_patch_req(self):
@@ -134,7 +127,9 @@ class TestProcessingAPI(TestCase):
         exp_user = User('test@foo.bar')
         name = "Test processing workflow"
 
-        wf = ProcessingWorkflow.from_scratch(exp_user, exp_params, name=name)
+        # tests success
+        wf = ProcessingWorkflow.from_scratch(
+            exp_user, exp_params, name=name, force=True)
 
         graph = wf.graph
         nodes = graph.nodes()

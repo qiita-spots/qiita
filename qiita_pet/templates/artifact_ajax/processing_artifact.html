@@ -2,7 +2,7 @@
 
 <script type="text/javascript">
   var processing_network;
-  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}} - ({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
+  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}}\n({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
   var edges = new vis.DataSet();
 
   /*
@@ -87,7 +87,7 @@
       var out_type = this[1];
       var n_id = job_info.id + ":" + out_name;
       edges.add({id: edges.length + 1, from: job_info.id, to: n_id });
-      nodes.add({id: n_id, label: out_name + " - (" + out_type + ")", group: "type", name: out_name, type: out_type});
+      nodes.add({id: n_id, label: out_name + "\n(" + out_type + ")", group: "type", name: out_name, type: out_type});
     });
     processing_network.redraw();
   }
@@ -163,7 +163,7 @@
           add_job_node_to_graph(data.job);
         }
         else {
-          bootstrapAlert(data.message, "danger");
+          bootstrapAlert(data.message.replace(/\n/g, '<br/>'), "danger");
         }
       });
   }
@@ -258,6 +258,7 @@
         }
       }
 
+      options.sort(function(a, b){return a[0].localeCompare(b[0], 'en', {'sensitivity': 'base'});});
       $.each(options, function(idx, val) {
         $inp.append($("<option>").attr('value', val[0]).text(val[1]));
       });
@@ -325,7 +326,9 @@
       .done(function(data){
           // Put first the required parameters
           $("#cmd-opts-div").append($('<h4>').text('Required parameters:'));
-          for(var key in data.req_options) {
+          var keys = Object.keys(data.req_options).sort(function(a, b){return a.localeCompare(b, 'en', {'sensitivity': 'base'});});
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
             load_parameter_gui(key, data.req_options[key], sel_artifacts_info, $("#cmd-opts-div"));
           }
 
@@ -336,8 +339,10 @@
           var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
           var sel = $('<select>').appendTo($colDiv).attr('id', 'params-sel').attr('name', 'params-sel').addClass('form-control').attr('placeholder', 'Choose parameter set...');
           sel.append($("<option>").attr('value', "").text("Choose parameter set...").prop('disabled', true).prop('selected', true));
-          for(var i=0; i<data.options.length; i++) {
-            sel.append($("<option>").attr('value', data.options[i].id).attr('data-vals', JSON.stringify(data.options[i].values)).text(data.options[i].name));
+          var options = data.options;
+          options.sort(function(a, b) {return a.name.localeCompare(b.name, 'en', {'sensitivity': 'base'});} );
+          for(var i=0; i<options.length; i++) {
+            sel.append($("<option>").attr('value', options[i].id).attr('data-vals', JSON.stringify(options[i].values)).text(options[i].name));
           }
           $("<div>").appendTo("#cmd-opts-div").attr('id', 'opt-vals-div').attr('name', 'opt-vals-div');
 
@@ -350,7 +355,9 @@
               }
               // Get the parameter set values that the user selected
               var opt_vals = JSON.parse($("#params-sel option[value='" + v + "']").attr("data-vals"));
-              for(var key in data.opt_options) {
+              var keys = Object.keys(data.opt_options).sort(function(a, b){return a.localeCompare(b, 'en', {'sensitivity': 'base'});});
+              for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
                 load_parameter_gui(key, data.opt_options[key], sel_artifacts_info, $("#opt-vals-div"), opt_vals[key], is_analysis_pipeline);
               }
               $("#add-cmd-btn-div").show();
@@ -403,9 +410,11 @@
         var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
         var sel = $('<select>').appendTo($colDiv).attr('id', 'command-sel').attr('name', 'command').addClass('form-control').attr('placeholder', 'Choose command...');
         sel.append($("<option>").attr('value', "").text("Choose command...").prop('disabled', true).prop('selected', true));
-        for(var i=0; i<data.commands.length; i++) {
-          if (data.commands[i].output.length != 0) {
-            sel.append($("<option>").attr('value', data.commands[i].id).text(data.commands[i].command));
+        var commands = data.commands;
+        commands.sort(function(a, b) {return a.command.localeCompare(b.command, 'en', {'sensitivity': 'base'});} );
+        for(var i=0; i<commands.length; i++) {
+          if (commands[i].output.length !== 0) {
+            sel.append($("<option>").attr('value', commands[i].id).text(commands[i].command));
           }
         }
         sel.change(function(event) {
@@ -495,6 +504,10 @@
         }
       }
     });
+
+    // Automatically select the first artifact
+    processing_network.selectNodes([{{artifact_id}}]);
+    load_artifact_type([{{artifact_id}}], {% raw str(allow_change_optionals).lower() %});
   });
 </script>
 

@@ -337,7 +337,7 @@ def sample_template_post_req(study_id, user_id, data_type,
     params = Parameters.load(cmd, values_dict={
         'fp': fp_rsp, 'study_id': study_id, 'is_mapping_file': is_mapping_file,
         'data_type': data_type})
-    job = ProcessingJob.create(User(user_id), params)
+    job = ProcessingJob.create(User(user_id), params, True)
 
     r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
                  dumps({'job_id': job.id}))
@@ -393,7 +393,7 @@ def sample_template_put_req(study_id, user_id, sample_template):
     cmd = qiita_plugin.get_command('update_sample_template')
     params = Parameters.load(cmd, values_dict={'study': int(study_id),
                                                'template_fp': fp_rsp})
-    job = ProcessingJob.create(User(user_id), params)
+    job = ProcessingJob.create(User(user_id), params, True)
 
     # Store the job id attaching it to the sample template id
     r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
@@ -437,7 +437,7 @@ def sample_template_delete_req(study_id, user_id):
     qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
     cmd = qiita_plugin.get_command('delete_sample_template')
     params = Parameters.load(cmd, values_dict={'study': int(study_id)})
-    job = ProcessingJob.create(User(user_id), params)
+    job = ProcessingJob.create(User(user_id), params, True)
 
     # Store the job id attaching it to the sample template id
     r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
@@ -541,7 +541,7 @@ def sample_template_patch_request(user_id, req_op, req_path, req_value=None,
             cmd, values_dict={'obj_class': 'SampleTemplate',
                               'obj_id': int(st_id), 'sample_or_col': attribute,
                               'name': attr_id})
-        job = ProcessingJob.create(User(user_id), params)
+        job = ProcessingJob.create(User(user_id), params, True)
 
         # Store the job id attaching it to the sample template id
         r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % st_id,

@@ -42,7 +42,6 @@ Methods
 
 from __future__ import division
 from future.builtins import zip
-from future.utils import viewitems
 from random import SystemRandom
 from string import ascii_letters, digits, punctuation
 from binascii import crc32
@@ -56,6 +55,7 @@ from datetime import datetime
 from itertools import chain
 from contextlib import contextmanager
 from future.builtins import bytes, str
+from collections import defaultdict
 import h5py
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -1466,9 +1466,10 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
         sql = """
             WITH main_query AS (
-                SELECT a.artifact_id, a.name, a.command_id,
+                SELECT a.artifact_id, a.name, a.command_id as cid,
                        a.generated_timestamp, array_agg(a.command_parameters),
                        dt.data_type, parent_id,
+                       parent_info.command_id,
                        array_agg(parent_info.command_parameters),
                        array_agg(filepaths.filepath),
                        qiita.find_artifact_roots(a.artifact_id) AS root_id
@@ -1483,7 +1484,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     a.artifact_id = pa.artifact_id)
                 LEFT JOIN qiita.data_type dt USING (data_type_id)
                 LEFT OUTER JOIN LATERAL (
-                    SELECT command_parameters FROM qiita.artifact ap
+                    SELECT command_id, command_parameters
+                    FROM qiita.artifact ap
                     WHERE ap.artifact_id = pa.parent_id) parent_info ON true
                 LEFT OUTER JOIN LATERAL (
                     SELECT filepath
@@ -1492,8 +1494,9 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     WHERE af.artifact_id = a.artifact_id) filepaths ON true
                 WHERE a.artifact_id IN %s
                 GROUP BY a.artifact_id, a.name, a.command_id,
-                         a.generated_timestamp, dt.data_type, parent_id
-                ORDER BY command_id, artifact_id),
+                         a.generated_timestamp, dt.data_type, parent_id,
+                         parent_info.command_id
+                ORDER BY a.command_id, artifact_id),
               has_target_subfragment AS (
                 SELECT main_query.*, CASE WHEN (
                         SELECT true FROM information_schema.columns
@@ -1506,13 +1509,18 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     main_query.root_id = pt.artifact_id)
             )
             SELECT * FROM has_target_subfragment
-            ORDER BY command_id, data_type, artifact_id
+            ORDER BY cid, data_type, artifact_id
             """
 
-        sql_params = """
-            SELECT parameter_set_name, array_agg(parameter_set) AS param_set
-            FROM qiita.default_parameter_set
-            GROUP BY parameter_set_name"""
+        sql_params = """SELECT default_parameter_set_id, command_id,
+                            parameter_set_name, parameter_set AS param_set,
+                            array_agg(parameter_name)
+                        FROM qiita.default_parameter_set
+                        LEFT JOIN qiita.command_parameter
+                            USING (command_id)
+                        WHERE parameter_type = 'artifact'
+                        GROUP BY default_parameter_set_id, command_id,
+                            parameter_set_name"""
 
         sql_ts = """SELECT DISTINCT target_subfragment FROM qiita.prep_%s"""
 
@@ -1523,8 +1531,10 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             # they are not that many (~40) and we don't expect
             # to have a huge growth in the near future
             qdb.sql_connection.TRN.add(sql_params)
-            params = {name: set(params[0].iteritems()) for name, params in
-                      qdb.sql_connection.TRN.execute_fetchindex()}
+            params = defaultdict(list)
+            for row in qdb.sql_connection.TRN.execute_fetchindex():
+                _, cid, n, param, aparam = row
+                params[cid].append((n, list(param.iteritems()), aparam))
 
             # now let's get the actual artifacts
             ts = {}
@@ -1532,27 +1542,35 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             PT = qdb.metadata_template.prep_template.PrepTemplate
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
-                aid, name, cid, gt, aparams, dt, pid, pparams, filepaths, _, \
-                    target, prep_template_id = row
+                aid, name, cid, gt, aparams, dt, pid, pcid, pparams, \
+                    filepaths, _, target, prep_template_id = row
 
                 # cleaning fields:
                 # - [0] due to the array_agg
                 pparams = pparams[0]
                 if pparams is not None:
+                    pparams = list(pparams.iteritems())
                     # [-1] taking the last cause it's sorted by
                     #      the number of overlapping parameters
                     # [0] then taking the first element that is
                     # the name of the parameter set
-                    pparams = sorted([
-                        [k, len(v & set(pparams.iteritems()))]
-                        for k, v in viewitems(params)],
-                        key=lambda x: x[1])[-1][0]
+                    pparams = sorted(
+                        [(pn, len([vv for vv in v if vv in pparams]))
+                         for pn, v, a in params[pcid]], key=lambda x: x[1])[-1]
+                    pparams = 'N/A' if pparams[1] == 0 else pparams[0]
                 else:
                     pparams = 'N/A'
                 # - [0] due to the array_agg
                 aparams = aparams[0]
                 if aparams is None:
                     aparams = {}
+                else:
+                    # we are gonna remove any artifacts from the parameters
+                    # [0] cause there is only one element and [2] cause
+                    # there is where the artifact types are stored
+                    to_ignore = params[cid][0][2]
+                    for ti in to_ignore:
+                        del aparams[ti]
                 # - ignoring empty filepaths
                 if filepaths == [None]:
                     filepaths = []

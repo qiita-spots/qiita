@@ -139,17 +139,19 @@ def prep_template_ajax_get_req(user_id, prep_id):
     num_columns = len(pt.categories())
     investigation_type = pt.investigation_type
 
-    # Retrieve the information to download the prep template and QIIME
-    # mapping file. See issue https://github.com/biocore/qiita/issues/1675
-    download_prep = []
-    download_qiime = []
+    download_prep_id = None
+    download_qiime_id = None
+    other_filepaths = []
     for fp_id, fp in pt.get_filepaths():
-        if 'qiime' in basename(fp):
-            download_qiime.append(fp_id)
+        fp = basename(fp)
+        if 'qiime' in fp:
+            if download_qiime_id is None:
+                download_qiime_id = fp_id
         else:
-            download_prep.append(fp_id)
-    download_prep = download_prep[0]
-    download_qiime = download_qiime[0]
+            if download_prep_id is None:
+                download_prep_id = fp_id
+            else:
+                other_filepaths.append(fp)
 
     ontology = _get_ENA_ontology()
 
@@ -159,8 +161,9 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'message': '',
             'name': name,
             'files': files,
-            'download_prep': download_prep,
-            'download_qiime': download_qiime,
+            'download_prep_id': download_prep_id,
+            'download_qiime_id': download_qiime_id,
+            'other_filepaths': other_filepaths,
             'num_samples': num_samples,
             'num_columns': num_columns,
             'investigation_type': investigation_type,
@@ -434,7 +437,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             cmd = qiita_plugin.get_command('update_prep_template')
             params = Parameters.load(
                 cmd, values_dict={'prep_template': prep_id, 'template_fp': fp})
-            job = ProcessingJob.create(User(user_id), params)
+            job = ProcessingJob.create(User(user_id), params, True)
 
             r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                          dumps({'job_id': job.id}))
@@ -470,7 +473,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
                               'obj_id': prep_id,
                               'sample_or_col': attribute,
                               'name': attr_id})
-        job = ProcessingJob.create(User(user_id), params)
+        job = ProcessingJob.create(User(user_id), params, True)
         # Store the job id attaching it to the sample template id
         r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                      dumps({'job_id': job.id}))
@@ -631,7 +634,7 @@ def prep_template_graph_get_req(prep_id, user_id):
             name = n[1].command.name
         elif n[0] == 'artifact':
             if full_access or n[1].visibility == 'public':
-                name = '%s - %s' % (n[1].name, n[1].artifact_type)
+                name = '%s\n(%s)' % (n[1].name, n[1].artifact_type)
             else:
                 continue
         node_labels.append((n[0], n[1].id, name))

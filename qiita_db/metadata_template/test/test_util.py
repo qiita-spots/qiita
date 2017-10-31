@@ -8,6 +8,7 @@
 
 from six import StringIO
 from unittest import TestCase, main
+import warnings
 
 import numpy.testing as npt
 import pandas as pd
@@ -36,11 +37,30 @@ class TestUtil(TestCase):
         }
         exp_df = pd.DataFrame.from_dict(exp_metadata_dict, orient='index',
                                         dtype=str)
-        qdb.metadata_template.util.prefix_sample_names_with_id(
-            self.metadata_map, 1)
+        with warnings.catch_warnings(record=True) as warn:
+            qdb.metadata_template.util.prefix_sample_names_with_id(
+                self.metadata_map, 1)
+            self.assertEqual(len(warn), 0)
         self.metadata_map.sort_index(inplace=True)
         exp_df.sort_index(inplace=True)
         assert_frame_equal(self.metadata_map, exp_df)
+
+        # test that it only prefixes the samples that are needed
+        metadata_dict = {
+            'Sample1': {'int_col': 1, 'float_col': 2.1, 'str_col': 'str1'},
+            '1.Sample2': {'int_col': 2, 'float_col': 3.1, 'str_col': '200'},
+            'Sample3': {'int_col': 3, 'float_col': 3, 'str_col': 'string30'},
+        }
+        metadata_map = pd.DataFrame.from_dict(
+            metadata_dict, orient='index', dtype=str)
+        with warnings.catch_warnings(record=True) as warn:
+            qdb.metadata_template.util.prefix_sample_names_with_id(
+                metadata_map, 1)
+            self.assertEqual(len(warn), 1)
+            self.assertEqual(str(warn[0].message), 'Some of the samples were '
+                             'already prefixed with the study id.')
+        metadata_map.sort_index(inplace=True)
+        assert_frame_equal(metadata_map, exp_df)
 
     def test_load_template_to_dataframe(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(

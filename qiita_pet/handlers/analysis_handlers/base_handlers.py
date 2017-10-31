@@ -64,6 +64,7 @@ def analysis_description_handler_get_request(analysis_id, user):
     return {'analysis_name': analysis.name,
             'analysis_id': analysis.id,
             'analysis_description': analysis.description,
+            'analysis_mapping_id': analysis.mapping_file,
             'alert_type': alert_type,
             'alert_msg': alert_msg}
 
@@ -121,7 +122,7 @@ def analyisis_graph_handler_get_request(analysis_id, user):
                 # graph
                 continue
             else:
-                name = '%s - %s' % (obj.name, obj.artifact_type)
+                name = '%s\n(%s)' % (obj.name, obj.artifact_type)
             nodes.add((obj_type, obj.id, name))
 
         edges.update({(s[1].id, t[1].id) for s, t in g.edges()})
