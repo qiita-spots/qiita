@@ -211,26 +211,28 @@
             where the infants are under a year old:
             <ul>
               <li>
-                "infant &amp; antibiotics where age_years <= 1"
+                <i>infant &amp; antibiotics where age_years <= 1</i>
               </li>
             </ul>
           </li>
           <li>
             Find all samples only belonging to the EMP in which the ph is under 7 for a variety of sample types:
             <ul>
-              <li>soil: "soil where ph > 7 &amp; emp_release1 == True""</li>
-              <li>ocean water: "water &amp; ocean where ph > 7 &amp; emp_release1 == True""</li>
-              <li>non-ocean water: "water - ocean where ph > 7 &amp; emp_release1 == True""</li>
+              <li>soil: <i>soil where ph < 7 and emp_release1 == 'True'</i></li>
+              <li>ocean water: <i>water &amp; ocean where ph > 7 and emp_release1 == 'True'</i></li>
+              <li>non-ocean water: <i>water - ocean where ph > 7 and emp_release1 == 'True'</i></li>
             </ul>
           <li>Or instead of ph you could search for a different metadata category:</li>
-          <ul><li>"water &amp; ocean where salinity > 20"</li><ul>
+            <ul>
+              <li><i>water &amp; ocean where salinity > 20</i></li>
+            </ul>
           </li>
           <li>Some other interesting examples:
               <ul>
-                <li>"feces &amp; canine"</li>
-                <li>"(beer | cider | wine | alcohol)"</li>
-                <li>"where sample_type == 'stool'"</li>
-                <li>"usa where sample_type == 'stool' and host_taxid == 9606"</li>
+                <li><i>feces &amp; canine</i></li>
+                <li><i>(beer | cider | wine | alcohol)</i></li>
+                <li><i>where sample_type == 'stool'</i></li>
+                <li><i>usa where sample_type == 'stool' and host_taxid == 9606</i></li>
               </ul>
             </li>
           </li>
