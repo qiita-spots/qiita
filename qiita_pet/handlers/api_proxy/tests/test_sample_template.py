@@ -147,7 +147,7 @@ class TestSampleAPI(TestCase):
         params = qdb.software.Parameters.load(
             cmd, values_dict={'study': 1, 'template_fp': 'ignored'})
         job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params)
+            qdb.user.User('test@foo.bar'), params, True)
         job._set_status('running')
         r_client.set(key, dumps({'job_id': job.id}))
         obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
@@ -167,7 +167,7 @@ class TestSampleAPI(TestCase):
 
         # With job and not success
         job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params)
+            qdb.user.User('test@foo.bar'), params, True)
         job._set_status('running')
         job._set_error('Some\nerror')
         r_client.set(key, dumps({'job_id': job.id}))

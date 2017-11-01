@@ -61,11 +61,11 @@ def webserver(build_docs):
         sphinx_fp = join(base, 'support_files/doc/')
         cmd = 'make -C %s html' % sphinx_fp
         print('Building documentation ...')
-        try:
-            qdb.processing_job._system_call(cmd)
-        except Exception as e:
-            raise click.ClickException('Could not build documentation: %s' %
-                                       str(e))
+        stdout, stderr, rv = qdb.processing_job._system_call(cmd)
+        if rv != 0:
+            raise click.ClickException(
+                'Could not build documentation:\n'
+                'Std output:%s\nStd error:%s' % (stdout, stderr))
         else:
             print('Documentation successfully built')
 

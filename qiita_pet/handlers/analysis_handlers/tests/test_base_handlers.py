@@ -32,6 +32,7 @@ class TestBaseHandlersUtils(TestCase):
         exp = {'analysis_name': 'SomeAnalysis',
                'analysis_id': 1,
                'analysis_description': 'A test analysis',
+               'analysis_mapping_id': 16,
                'alert_type': 'info',
                'alert_msg': ''}
         self.assertEqual(obs, exp)
@@ -42,6 +43,7 @@ class TestBaseHandlersUtils(TestCase):
         exp = {'analysis_name': 'SomeAnalysis',
                'analysis_id': 1,
                'analysis_description': 'A test analysis',
+               'analysis_mapping_id': 16,
                'alert_type': 'info',
                'alert_msg': 'An artifact is being deleted from this analysis'}
         self.assertEqual(obs, exp)
@@ -54,6 +56,7 @@ class TestBaseHandlersUtils(TestCase):
         exp = {'analysis_name': 'SomeAnalysis',
                'analysis_id': 1,
                'analysis_description': 'A test analysis',
+               'analysis_mapping_id': 16,
                'alert_type': 'danger',
                'alert_msg': 'Error deleting artifact'}
         self.assertEqual(obs, exp)
@@ -65,8 +68,8 @@ class TestBaseHandlersUtils(TestCase):
         job_id = Analysis(1).artifacts[0].jobs()[0].id
         exp = {'edges': [(8, job_id), (job_id, 9)],
                'nodes': [('job', job_id, 'Single Rarefaction'),
-                         ('artifact', 9, 'noname - BIOM'),
-                         ('artifact', 8, 'noname - BIOM')]}
+                         ('artifact', 9, 'noname\n(BIOM)'),
+                         ('artifact', 8, 'noname\n(BIOM)')]}
         self.assertItemsEqual(obs, exp)
         self.assertItemsEqual(obs['edges'], exp['edges'])
         self.assertItemsEqual(obs['nodes'], exp['nodes'])
@@ -123,8 +126,8 @@ class TestBaseHandlers(TestHandlerBase):
         obs = loads(response.body)
         exp = {'edges': [[8, job_id], [job_id, 9]],
                'nodes': [['job', job_id, 'Single Rarefaction'],
-                         ['artifact', 9, 'noname - BIOM'],
-                         ['artifact', 8, 'noname - BIOM']]}
+                         ['artifact', 9, 'noname\n(BIOM)'],
+                         ['artifact', 8, 'noname\n(BIOM)']]}
         self.assertItemsEqual(obs, exp)
         self.assertItemsEqual(obs['edges'], exp['edges'])
         self.assertItemsEqual(obs['nodes'], exp['nodes'])

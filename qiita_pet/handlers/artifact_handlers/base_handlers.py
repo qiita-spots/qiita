@@ -258,7 +258,7 @@ def artifact_summary_post_request(user, artifact_id):
         # Create a new job to generate the HTML summary and return the newly
         # created job information
         job = ProcessingJob.create(user, Parameters.load(
-            command, values_dict={'input_data': artifact_id}))
+            command, values_dict={'input_data': artifact_id}), True)
         job.submit()
 
     return {'job': [job.id, job.status, job.step]}
@@ -375,7 +375,7 @@ def artifact_post_req(user, artifact_id):
     qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
     cmd = qiita_plugin.get_command('delete_artifact')
     params = Parameters.load(cmd, values_dict={'artifact': artifact_id})
-    job = ProcessingJob.create(user, params)
+    job = ProcessingJob.create(user, params, True)
 
     r_client.set(redis_key, dumps({'job_id': job.id, 'is_qiita_job': True}))
 

@@ -1,5 +1,16 @@
 {% from qiita_core.qiita_settings import qiita_config %}
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/chosen.css" type="text/css">
+<style>
+  .tooltip {
+    background-color: #000;
+  }
+  .tooltip .tooltip-inner {
+    background-color: #000;
+    color: #FFF;
+    max-width: none;
+  }
+</style>
+
 <script type="text/javascript>">
   /**
    *
@@ -125,6 +136,13 @@
   }
 
   $(document).ready(function () {
+    // tooltip configuration
+    $(".filenames-tooltip").tooltip({
+      html: "true",
+      placement: "auto",
+      delay: {"show": 0, "hide": 100}
+    });
+
     //make the files draggable
     $(".connectedSortable").sortable({
       connectWith: ".connectedSortable"
@@ -206,6 +224,10 @@
         Please make sure that the correct files are in the correct column.<br/>
         Note: the system will try to auto select the files based on run_prefix, if that doesn't work, either the type you selected doesn't support
         the use of run_prefix or the run_prefix is wrong
+        {% if message %}
+          <hr/>
+          {% raw message.replace('\n', '<br/>') %}
+        {% end %}
       </div>
 
   </div>
@@ -214,7 +236,9 @@
     <ul id="remaining-list" class="connectedSortable">
       {% for fp in remaining %}
         <li id="{{fp}}" style="text-overflow:ellipsis;" title="{{fp}}">
-          <a class="tooltip-list" href="#" data-toggle="tooltip" data-placement="top" title="{{fp}}">{{fp}}</a>
+          <div class="filenames-tooltip" title="{{fp}}" container="body">
+            <a class="tooltip-list" href="#" data-toggle="tooltip">{{fp}}</a>
+          </div>
         </li>
       {% end %}
     </ul>
@@ -226,7 +250,9 @@
       <ul id="{{ft}}-list" data-file-required="{{req}}" data-file-count="{{num_prefixes}}" data-correct="true" class="connectedSortable checkable">
         {% for fp in files %}
           <li id="{{fp}}">
-            <a class="tooltip-list" href="#" data-toggle="tooltip" data-placement="top" title="{{fp}}">{{fp}}</a>
+            <div class="filenames-tooltip" title="{{fp}}" container="body">
+              <a class="tooltip-list" href="#" data-toggle="tooltip">{{fp}}</a>
+            </div>
           </li>
         {% end %}
       </ul>

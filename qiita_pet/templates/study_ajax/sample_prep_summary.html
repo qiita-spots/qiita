@@ -81,7 +81,7 @@
   $(document).ready(function() {
 
     {% if alert_type != 'success' and alert_message != '' %}
-      bootstrapAlert("{% raw alert_message %}", "{{alert_type}}");
+      bootstrapAlert("{% raw alert_message.replace('"','\\"') %}", "{{alert_type}}");
     {% else %}
       $('#alert-message').alert('close');
     {% end %}

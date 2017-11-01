@@ -45,7 +45,7 @@ def build_analysis_files(job):
                                                        'data_type': dtype}),
                                   'analysis': analysis_id})
             val_jobs.append(qdb.processing_job.ProcessingJob.create(
-                analysis.owner, validate_params))
+                analysis.owner, validate_params, True))
 
         job._set_validator_jobs(val_jobs)
 
@@ -97,7 +97,7 @@ def submit_to_EBI(job):
         param_vals = job.parameters.values
         artifact_id = int(param_vals['artifact'])
         submission_type = param_vals['submission_type']
-        submit_EBI(artifact_id, submission_type, False)
+        submit_EBI(artifact_id, submission_type, True)
         job._set_status('success')
 
 
@@ -281,6 +281,7 @@ def delete_study(job):
     job : qiita_db.processing_job.ProcessingJob
         The processing job performing the task
     """
+    MT = qdb.metadata_template
     with qdb.sql_connection.TRN:
         study_id = job.parameters.values['study']
         study = qdb.study.Study(study_id)
@@ -298,9 +299,10 @@ def delete_study(job):
             qdb.artifact.Artifact.delete(a.id)
 
         for pt in study.prep_templates():
-            qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
+            MT.prep_template.PrepTemplate.delete(pt.id)
 
-        qdb.metadata_template.sample_template.SampleTemplate.delete(study_id)
+        if MT.sample_template.SampleTemplate.exists(study_id):
+            MT.sample_template.SampleTemplate.delete(study_id)
 
         qdb.study.Study.delete(study_id)
 

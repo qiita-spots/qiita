@@ -1084,9 +1084,7 @@ class TestSampleTemplate(TestCase):
 
     def test_create_already_prefixed_samples(self):
         """Creates a new SampleTemplate with the samples already prefixed"""
-        st = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.sample_template.SampleTemplate.create,
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata_prefixed, self.new_study)
         new_id = self.new_study.id
         # The returned object has the correct id

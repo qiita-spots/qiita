@@ -70,8 +70,10 @@ class TestPrepAPIReadOnly(TestCase):
                'message': '',
                'name': "Prep information 1",
                'files': ["uploaded_file.txt"],
-               'download_prep': 23,
-               'download_qiime': 24,
+               'download_prep_id': 23,
+               'download_qiime_id': 24,
+               'other_filepaths': ['1_prep_1_19700101-000000.txt',
+                                   '1_prep_1_19700101-000000.txt'],
                'num_samples': 27,
                'num_columns': 22,
                'investigation_type': 'Metagenomics',
@@ -297,17 +299,17 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(11, len(obs['node_labels']))
-        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'),
+        self.assertIn(('artifact', 1, 'Raw data 1\n(FASTQ)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'),
+        self.assertIn(('artifact', 2, 'Demultiplexed 1\n(Demultiplexed)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 3, 'Demultiplexed 2 - Demultiplexed'),
+        self.assertIn(('artifact', 3, 'Demultiplexed 2\n(Demultiplexed)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 4, 'BIOM - BIOM'),
+        self.assertIn(('artifact', 4, 'BIOM\n(BIOM)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 5, 'BIOM - BIOM'),
+        self.assertIn(('artifact', 5, 'BIOM\n(BIOM)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 6, 'BIOM - BIOM'),
+        self.assertIn(('artifact', 6, 'BIOM\n(BIOM)'),
                       obs['node_labels'])
         self.assertEqual(3, len([n for dt, _, n in obs['node_labels']
                                  if n == 'Pick closed-reference OTUs' and
@@ -330,11 +332,11 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(11, len(obs['node_labels']))
-        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'),
+        self.assertIn(('artifact', 1, 'Raw data 1\n(FASTQ)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'),
+        self.assertIn(('artifact', 2, 'Demultiplexed 1\n(Demultiplexed)'),
                       obs['node_labels'])
-        self.assertIn(('artifact', 4, 'BIOM - BIOM'), obs['node_labels'])
+        self.assertIn(('artifact', 4, 'BIOM\n(BIOM)'), obs['node_labels'])
         self.assertEqual(3, len([n for dt, _, n in obs['node_labels']
                                  if n == 'Pick closed-reference OTUs' and
                                  dt == 'job']))
@@ -378,7 +380,6 @@ class TestPrepAPI(TestCase):
                                      '16S')
         exp = {'status': 'warning',
                'message': [
-                    'Sample names were already prefixed with the study id.',
                     ('Some columns required to generate a QIIME-compliant '
                      'mapping file are not present in the template. A '
                      'placeholder value (XXQIITAXX) has been used to populate '

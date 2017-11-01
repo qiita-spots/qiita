@@ -887,9 +887,7 @@ class TestPrepTemplate(TestCase):
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
         fp_count = qdb.util.get_count('qiita.filepath')
-        pt = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.prep_template.PrepTemplate.create,
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata_prefixed, self.test_study, self.data_type)
         self._common_creation_checks(pt, fp_count)
 

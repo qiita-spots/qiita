@@ -163,7 +163,7 @@ class ProcessingJobAPItestHandler(OauthBaseHandler):
         params = qdb.software.Parameters.load(cmd, json_str=params_dict)
 
         job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User(user), params)
+            qdb.user.User(user), params, True)
 
         if status:
             job._set_status(status)

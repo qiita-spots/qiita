@@ -22,7 +22,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
 
 
-def _create_job():
+def _create_job(force=True):
     job = qdb.processing_job.ProcessingJob.create(
         qdb.user.User('test@foo.bar'),
         qdb.software.Parameters.load(
@@ -37,7 +37,8 @@ def _create_job():
                          "qual_score_window": 0, "disable_primers": False,
                          "reverse_primers": "disable",
                          "reverse_primer_mismatches": 0,
-                         "truncate_ambi_bases": False, "input_data": 1}))
+                         "truncate_ambi_bases": False, "input_data": 1}),
+        force)
     return job
 
 
@@ -246,10 +247,25 @@ class ProcessingJobTest(TestCase):
         exp_params = qdb.software.Parameters.load(exp_command,
                                                   json_str=json_str)
         exp_user = qdb.user.User('test@foo.bar')
-        obs = qdb.processing_job.ProcessingJob.create(exp_user, exp_params)
+        obs = qdb.processing_job.ProcessingJob.create(
+            exp_user, exp_params, True)
         self.assertEqual(obs.user, exp_user)
         self.assertEqual(obs.command, exp_command)
         self.assertEqual(obs.parameters, exp_params)
+        self.assertEqual(obs.status, 'in_construction')
+        self.assertEqual(obs.log, None)
+        self.assertEqual(obs.heartbeat, None)
+        self.assertEqual(obs.step, None)
+        self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
+
+        # test with paramters with '
+        exp_command = qdb.software.Command(1)
+        exp_params.values["a tests with '"] = 'this is a tests with "'
+        exp_params.values['a tests with "'] = "this is a tests with '"
+        obs = qdb.processing_job.ProcessingJob.create(
+            exp_user, exp_params)
+        self.assertEqual(obs.user, exp_user)
+        self.assertEqual(obs.command, exp_command)
         self.assertEqual(obs.status, 'in_construction')
         self.assertEqual(obs.log, None)
         self.assertEqual(obs.heartbeat, None)
@@ -328,7 +344,7 @@ class ProcessingJobTest(TestCase):
                                 'out1', "command_output", "name"),
                              'name': 'out1'})})
         user = qdb.user.User('test@foo.bar')
-        obs1 = qdb.processing_job.ProcessingJob.create(user, params)
+        obs1 = qdb.processing_job.ProcessingJob.create(user, params, True)
         obs1._set_status('running')
         params = qdb.software.Parameters.load(
             qdb.software.Command(4),
@@ -339,7 +355,7 @@ class ProcessingJobTest(TestCase):
                              'cmd_out_id': qdb.util.convert_to_id(
                                 'out1', "command_output", "name"),
                              'name': 'out1'})})
-        obs2 = qdb.processing_job.ProcessingJob.create(user, params)
+        obs2 = qdb.processing_job.ProcessingJob.create(user, params, True)
         obs2._set_status('running')
         # Make sure that we link the original job with its validator jobs
         job._set_validator_jobs([obs1, obs2])
@@ -416,7 +432,8 @@ class ProcessingJobTest(TestCase):
             qdb.user.User('test@foo.bar'),
             qdb.software.Parameters.load(
                 qdb.software.Command(5),
-                values_dict={"input_data": 1}))
+                values_dict={"input_data": 1}),
+            True)
         job._set_status('running')
         job.complete(False, error='Some Error')
         self.assertEqual(job.status, 'error')
@@ -450,7 +467,7 @@ class ProcessingJobTest(TestCase):
             values_dict={'template': pt.id, 'files': fp,
                          'artifact_type': 'BIOM'})
         obs = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params)
+            qdb.user.User('test@foo.bar'), params, True)
         obs._set_status('running')
         obs.complete(True, artifacts_data=artifacts_data)
         self.assertEqual(obs.status, 'success')
@@ -482,6 +499,8 @@ class ProcessingJobTest(TestCase):
         # of this job is running, and that we have one more job than before
         # (see assertEqual with len of all jobs)
         self.assertEqual(job.status, 'running')
+        self.assertTrue(job.step.startswith(
+            'Validating outputs (1 remaining) via job(s)'))
 
         obsjobs = set(self._get_all_job_ids())
 
@@ -511,7 +530,7 @@ class ProcessingJobTest(TestCase):
                              'cmd_out_id': 3})}
         )
         obs = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params)
+            qdb.user.User('test@foo.bar'), params, True)
         job._set_validator_jobs([obs])
         obs.complete(False, error="Validation failure")
         self.assertEqual(obs.status, 'error')
@@ -599,7 +618,7 @@ class ProcessingJobTest(TestCase):
         name = "Test processing workflow"
 
         tester = qdb.processing_job.ProcessingWorkflow.from_scratch(
-            exp_user, exp_params, name=name)
+            exp_user, exp_params, name=name, force=True)
 
         parent = tester.graph.nodes()[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
@@ -641,7 +660,7 @@ class ProcessingJobTest(TestCase):
                              'name': 'outArtifact'})}
         )
         obs = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params)
+            qdb.user.User('test@foo.bar'), params, True)
         job._set_validator_jobs([obs])
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         obs._complete_artifact_definition(artifact_data)
@@ -720,7 +739,7 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         obs = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
-            exp_user, dflt_wf, req_params, name=name)
+            exp_user, dflt_wf, req_params, name=name, force=True)
         self.assertEqual(obs.name, name)
         self.assertEqual(obs.user, exp_user)
         obs_graph = obs.graph
@@ -784,7 +803,7 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         obs = qdb.processing_job.ProcessingWorkflow.from_scratch(
-            exp_user, exp_params, name=name)
+            exp_user, exp_params, name=name, force=True)
         self.assertEqual(obs.name, name)
         self.assertEqual(obs.user, exp_user)
         obs_graph = obs.graph
@@ -809,12 +828,12 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         obs = qdb.processing_job.ProcessingWorkflow.from_scratch(
-            exp_user, exp_params, name=name)
+            exp_user, exp_params, name=name, force=True)
 
         parent = obs.graph.nodes()[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
-        obs.add(dflt_params, connections=connections)
+        obs.add(dflt_params, connections=connections, force=True)
 
         obs_graph = obs.graph
         self.assertTrue(isinstance(obs_graph, nx.DiGraph))
@@ -841,7 +860,7 @@ class ProcessingWorkflowTests(TestCase):
         # This also tests that the `graph` property returns the graph correctly
         # when there are root nodes that don't have any children
         dflt_params = qdb.software.DefaultParameters(1)
-        obs.add(dflt_params, req_params={'input_data': 1})
+        obs.add(dflt_params, req_params={'input_data': 1}, force=True)
 
         obs_graph = obs.graph
         self.assertTrue(isinstance(obs_graph, nx.DiGraph))
@@ -885,7 +904,7 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         tester = qdb.processing_job.ProcessingWorkflow.from_scratch(
-            exp_user, exp_params, name=name)
+            exp_user, exp_params, name=name, force=True)
 
         parent = tester.graph.nodes()[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
@@ -908,7 +927,7 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         tester = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
-            exp_user, dflt_wf, req_params, name=name)
+            exp_user, dflt_wf, req_params, name=name, force=True)
 
         tester.remove(tester.graph.edges()[0][0], cascade=True)
 
@@ -927,11 +946,33 @@ class ProcessingWorkflowTests(TestCase):
         name = "Test processing workflow"
 
         tester = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
-            exp_user, dflt_wf, req_params, name=name)
+            exp_user, dflt_wf, req_params, name=name, force=True)
 
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             tester.remove(tester.graph.edges()[0][0])
+
+
+@qiita_test_checker()
+class ProcessingJobDuplicated(TestCase):
+    def test_create_duplicated(self):
+        job = _create_job()
+        job._set_status('success')
+        with self.assertRaisesRegexp(ValueError, 'Cannot create job because '
+                                     'the parameters are the same as jobs '
+                                     'that are queued, running or already '
+                                     'have succeeded:') as context:
+            _create_job(False)
+
+        # If it failed it's because we have jobs in non finished status so
+        # setting them as error. This is basically testing that the duplicated
+        # job creation allows to create if all jobs are error and if success
+        # that the job doesn't have children
+        for jobs in context.exception.message.split('\n')[1:]:
+            jid, status = jobs.split(': ')
+            if status != 'success':
+                qdb.processing_job.ProcessingJob(jid)._set_status('error')
+        _create_job(False)
 
 
 if __name__ == '__main__':

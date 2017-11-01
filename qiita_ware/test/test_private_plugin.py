@@ -14,6 +14,7 @@ from json import loads, dumps
 
 import pandas as pd
 import numpy.testing as npt
+from time import time
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import r_client
@@ -38,7 +39,7 @@ class BaseTestPrivatePlugin(TestCase):
         qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
         cmd = qiita_plugin.get_command(cmd_name)
         params = Parameters.load(cmd, values_dict=values_dict)
-        job = ProcessingJob.create(self.user, params)
+        job = ProcessingJob.create(self.user, params, True)
         job._set_status('queued')
         return job
 
@@ -321,7 +322,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
                 Command.get_validator('BIOM'),
                 values_dict={'template': pt.id,
                              'files': dumps({'BIOM': ['file']}),
-                             'artifact_type': 'BIOM'}))
+                             'artifact_type': 'BIOM'}), True)
         c_job._set_status('running')
         fd, fp = mkstemp(suffix='_table.biom')
         close(fd)
@@ -363,7 +364,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
                 Command.get_validator('BIOM'),
                 values_dict={'template': pt.id,
                              'files': dumps({'BIOM': ['file']}),
-                             'artifact_type': 'BIOM'}))
+                             'artifact_type': 'BIOM'}), True)
         c_job._set_status('running')
         fp = '/surprised/if/this/path/exists.biom'
         payload = dumps(
@@ -406,6 +407,31 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
             self.assertEqual(job.status, 'success')
             with self.assertRaises(QiitaDBUnknownIDError):
                 Study(1)
+
+    def test_delete_study_empty_study(self):
+        info = {
+            "timeseries_type_id": '1',
+            "metadata_complete": 'true',
+            "mixs_compliant": 'true',
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)}
+        new_study = Study.create(User('test@foo.bar'),
+                                 "Fried Chicken Microbiome %s" % time(), info)
+        job = self._create_job('delete_study', {'study': new_study.id})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+
+        # making sure the study doesn't exist
+        with self.assertRaises(QiitaDBUnknownIDError):
+            Study(new_study.id)
 
 
 if __name__ == '__main__':

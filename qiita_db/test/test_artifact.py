@@ -96,24 +96,24 @@ class ArtifactTestsReadOnly(TestCase):
         obs = qdb.artifact.Artifact(2).processing_parameters
         exp = qdb.software.Parameters.load(
             qdb.software.Command(1),
-            values_dict={'max_barcode_errors': 1.5, 'sequence_max_n': 0,
-                         'max_bad_run_length': 3, 'rev_comp': False,
-                         'phred_quality_threshold': 3, 'input_data': 1,
-                         'rev_comp_barcode': False,
-                         'rev_comp_mapping_barcodes': False,
-                         'min_per_read_length_fraction': 0.75,
+            values_dict={'max_barcode_errors': '1.5', 'sequence_max_n': '0',
+                         'max_bad_run_length': '3', 'rev_comp': 'False',
+                         'phred_quality_threshold': '3', 'input_data': '1',
+                         'rev_comp_barcode': 'False',
+                         'rev_comp_mapping_barcodes': 'False',
+                         'min_per_read_length_fraction': '0.75',
                          'barcode_type': 'golay_12',
                          'phred_offset': 'auto'})
         self.assertEqual(obs, exp)
         obs = qdb.artifact.Artifact(3).processing_parameters
         exp = qdb.software.Parameters.load(
             qdb.software.Command(1),
-            values_dict={'max_barcode_errors': 1.5, 'sequence_max_n': 0,
-                         'max_bad_run_length': 3, 'rev_comp': False,
-                         'phred_quality_threshold': 3, 'input_data': 1,
-                         'rev_comp_barcode': False,
-                         'rev_comp_mapping_barcodes': True,
-                         'min_per_read_length_fraction': 0.75,
+            values_dict={'max_barcode_errors': '1.5', 'sequence_max_n': '0',
+                         'max_bad_run_length': '3', 'rev_comp': 'False',
+                         'phred_quality_threshold': '3', 'input_data': '1',
+                         'rev_comp_barcode': 'False',
+                         'rev_comp_mapping_barcodes': 'True',
+                         'min_per_read_length_fraction': '0.75',
                          'barcode_type': 'golay_12',
                          'phred_offset': 'auto'})
         self.assertEqual(obs, exp)
