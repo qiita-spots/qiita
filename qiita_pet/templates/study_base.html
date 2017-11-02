@@ -225,15 +225,8 @@
     <div class="col-md-3">
       <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Study Information</button>
       <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Sample Information</button>
-      {% if editable %}
-        <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
-        <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/new_prep_template/', { study_id: {{study_info['study_id']}} })" id="add-new-preparation-btn"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
-      {% end %}
       {% if study_info['show_biom_download_button'] %}
         <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/download_study_bioms/{{study_info['study_id']}}"><span class="glyphicon glyphicon-download-alt"></span> All QIIME maps and BIOMs</a>
-      {% end %}
-      {% if study_info['has_access_to_raw_data'] and study_info['show_raw_download_button'] %}
-        <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/download_raw_data/{{study_info['study_id']}}"><span class="glyphicon glyphicon-download-alt"></span> All raw data</a>
       {% end %}
       <div style="text-align: center;"><small><a href="{% raw qiita_config.portal_dir %}/static/doc/html/faq.html#how-to-solve-unzip-errors">Issues opening the downloaded zip?</a></small></div>
 

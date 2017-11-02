@@ -428,7 +428,6 @@
               <li class="dropdown">
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle">Study<b class="caret"></b></a>
                 <ul class="dropdown-menu">
-                  <li><a href="{% raw qiita_config.portal_dir %}/study/create/">Create Study</a></li>
                   <li><a href="{% raw qiita_config.portal_dir %}/study/list/">View Studies</a></li>
                 </ul>
               </li>
@@ -545,33 +544,6 @@
                 </ul>
               </li>
             </ul>
-            <ul class="nav navbar-nav">
-              <li>
-                <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
-              </li>
-            </ul>
-            <ul class="nav navbar-nav">
-              <li>
-                <a href="{% raw qiita_config.portal_dir %}/redbiom/">Redbiom</a>
-              </li>
-            </ul>
-            <ul class="nav navbar-nav">
-              <!-- downloads -->
-              <li class="dropdown">
-                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Downloads<b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                  <li>
-                    <a type="button" data-toggle="modal" data-target=".qiita_pet_download_confirm">
-                      Public BIOM and metadata files
-                      <small>
-                        <br/><b>MD5:</b> {{public_md5}}
-                        <br/><b>Last update:</b> {{public_timestamp}}
-                      </small>
-                    </a>
-                  </li>
-                </ul>
-              </li>
-            </ul>
           </div> <!--/.navbar-collapse -->
         </div>
       </div> <!--/.main nav-bar -->
@@ -614,11 +586,11 @@
     </div> <!--/.main nav-bar -->
 
       <div id="footer" style="font-size: 12px; text-align: center; z-index: 1000;">
-        Thank you for using Qiita. For citations point to <a href="http://qiita.microbio.me">http://qiita.microbio.me</a>.
+        Thank you for using Qiita.
         <br/>
-        Questions? <a href="mailto:qiita.help@gmail.com">qiita.help@gmail.com</a>
+        For citations point to <a href="http://qiita.microbio.me">http://qiita.microbio.me</a>.
         <br/>
-        Read our <a href="{% raw qiita_config.portal_dir %}/static/qiita_data_terms_of_use.html">terms and conditions</a>.
+        <a href="https://ibdmdb.org/support">Questions?</a>
       </div>
       <div id="overlay" class="navbar-brand" style="visibility: hidden; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; font-size: 13px; text-align: center; z-index: 1000; background-color: #333333; color: #FFFFFF;">
           <img src="{% raw qiita_config.portal_dir %}{{portal_styling.logo}}" alt="Qiita logo" id="small-logo"/>
