@@ -293,10 +293,12 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
         # group files by prefix
         sfiles = defaultdict(list)
         for p in prep_prefixes:
+            to_remove = []
             for fid, f in uploaded:
                 if f.startswith(p):
                     sfiles[p].append(f)
-                    uploaded.remove((fid, f))
+                    to_remove.append((fid, f))
+            uploaded = [x for x in uploaded if x not in to_remove]
         inuse = [y for x in sfiles.values() for y in x]
         remaining.extend([f for _, f in uploaded if f not in inuse])
         supp_file_types_len = len(supp_file_types)
