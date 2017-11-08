@@ -806,7 +806,8 @@ def _rm_exists(fp, obj, _id, delete_files):
     except:
         _id = str(_id)
         if delete_files:
-            _rm_files(qdb.sql_connection.TRN, fp)
+            with qdb.sql_connection.TRN:
+                _rm_files(qdb.sql_connection.TRN, fp)
         else:
             print "Remove %s" % fp
 
@@ -859,8 +860,8 @@ def purge_files_from_filesystem(delete_files=True):
         'job': (qdb.analysis.Analysis, True)
     }
     for dt, (obj, isfolder) in data_types.items():
-        if isdir(pt):
-            for _, pt in get_mountpoint(dt, True):
+        for _, pt in get_mountpoint(dt, True):
+            if isdir(pt):
                 for ppt in listdir(pt):
                     _rm_exists(join(pt, ppt), qdb.artifact.Artifact,
                                ppt.split('_')[0], delete_files)
