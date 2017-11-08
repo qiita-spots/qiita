@@ -370,8 +370,8 @@ class DBUtilTests(TestCase):
     def test_purge_filepaths(self):
         self._common_purge_filepaths_test()
 
-    def purge_files_from_filesyste(self):
-        qdb.purge_files_from_filesystem(False)
+    def test_purge_files_from_filesyste(self):
+        qdb.util.purge_files_from_filesystem(False)
 
     def test_empty_trash_upload_folder(self):
         # creating file to delete so we know it actually works

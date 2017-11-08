@@ -9,7 +9,7 @@
 # -----------------------------------------------------------------------------
 
 from qiita_db.util import (
-    purge_filepaths, empty_trash_upload_folder)
+    purge_filepaths, empty_trash_upload_folder, purge_files_from_filesystem)
 from qiita_db.meta_util import (
     update_redis_stats, generate_biom_and_metadata_release)
 
@@ -28,6 +28,7 @@ from qiita_db.meta_util import (
 
 def main():
     purge_filepaths(True)
+    purge_files_from_filesystem(True)
     empty_trash_upload_folder(True)
     update_redis_stats()
     generate_biom_and_metadata_release('public')
