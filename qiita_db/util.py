@@ -799,13 +799,16 @@ def purge_filepaths(delete_files=True):
             qdb.sql_connection.TRN.execute()
 
 
-def _test_exist(pt, obj, _id, isfolder=True):
+def _rm_exists(fp, obj, _id, delete_files):
     try:
         _id = int(_id)
         obj(_id)
     except:
         _id = str(_id)
-        print "We should remove %s" % join(pt, _id if isfolder else _id + '*')
+        if delete_files:
+            _rm_files(qdb.sql_connection.TRN, fp)
+        else:
+            print "Remove %s" % fp
 
 
 def purge_files_from_filesystem(delete_files=True):
@@ -841,8 +844,10 @@ def purge_files_from_filesystem(delete_files=True):
     paths = {fp for mt in mount_types
              for x, fp, sp in get_mountpoint(mt, True, True) if sp}
     for pt in paths:
-        for aid in listdir(pt):
-            _test_exist(pt, qdb.artifact.Artifact, aid)
+        if isdir(pt):
+            for aid in listdir(pt):
+                _rm_exists(
+                    join(pt, aid), qdb.artifact.Artifact, aid, delete_files)
 
     # -> False, in this we need to do a case by case test
     data_types = {
@@ -854,9 +859,11 @@ def purge_files_from_filesystem(delete_files=True):
         'job': (qdb.analysis.Analysis, True)
     }
     for dt, (obj, isfolder) in data_types.items():
-        for _, pt in get_mountpoint(dt, True):
-            for aid in {ppt.split('_')[0] for ppt in listdir(pt)}:
-                _test_exist(pt, obj, aid, isfolder)
+        if isdir(pt):
+            for _, pt in get_mountpoint(dt, True):
+                for ppt in listdir(pt):
+                    _rm_exists(join(pt, ppt), qdb.artifact.Artifact,
+                               ppt.split('_')[0], delete_files)
 
 
 def empty_trash_upload_folder(delete_files=True):
