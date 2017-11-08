@@ -746,7 +746,7 @@ def _rm_files(TRN, fp):
 
 
 def purge_filepaths(delete_files=True):
-    r"""Goes over the filepath table and remove all the filepaths that are not
+    r"""Goes over the filepath table and removes all the filepaths that are not
     used in any place
 
     Parameters
@@ -797,6 +797,66 @@ def purge_filepaths(delete_files=True):
 
         if delete_files:
             qdb.sql_connection.TRN.execute()
+
+
+def _test_exist(pt, obj, _id, isfolder=True):
+    try:
+        _id = int(_id)
+        obj(_id)
+    except:
+        _id = str(_id)
+        print "We should remove %s" % join(pt, _id if isfolder else _id + '*')
+
+
+def purge_files_from_filesystem(delete_files=True):
+    r"""Goes over the filesystem and removes all the filepaths that are not
+    used in any place
+
+    Parameters
+    ----------
+    delete_files : bool
+        if True it will actually delete the files, if False print
+    """
+    # Step 1, check which mounts actually exists
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add(
+            "SELECT DISTINCT data_type FROM qiita.data_directory")
+        mount_types = qdb.sql_connection.TRN.execute_fetchflatten()
+
+    fbd = qdb.util.get_db_files_base_dir()
+    actual_paths = {join(fbd, x) for x in listdir(fbd)}
+    db_paths = {fp for mt in mount_types
+                for x, fp in qdb.util.get_mountpoint(mt, retrieve_all=True)}
+
+    missing_db = actual_paths - db_paths
+    if missing_db:
+        print 'paths without db entries: %s' % ', '.join(missing_db)
+    missing_paths = [x for x in db_paths - actual_paths if not isdir(x)]
+    if missing_paths:
+        print 'paths without actual mounts: %s' % ', '.join(missing_paths)
+
+    # Step 2, clean based on the 2 main group: True/False subdirectory
+
+    # -> True, subdirectoris store the files per artifact id
+    paths = {fp for mt in mount_types
+             for x, fp, sp in get_mountpoint(mt, True, True) if sp}
+    for pt in paths:
+        for aid in listdir(pt):
+            _test_exist(pt, qdb.artifact.Artifact, aid)
+
+    # -> False, in this we need to do a case by case test
+    data_types = {
+        'analysis': (qdb.analysis.Analysis, False),
+        'preprocessed_data': (qdb.artifact.Artifact, False),
+        'processed_data': (qdb.artifact.Artifact, False),
+        'raw_data': (qdb.artifact.Artifact, False),
+        'templates': (qdb.study.Study, False),
+        'job': (qdb.analysis.Analysis, True)
+    }
+    for dt, (obj, isfolder) in data_types.items():
+        for _, pt in get_mountpoint(dt, True):
+            for aid in {ppt.split('_')[0] for ppt in listdir(pt)}:
+                _test_exist(pt, obj, aid, isfolder)
 
 
 def empty_trash_upload_folder(delete_files=True):

@@ -300,7 +300,7 @@ class DBUtilTests(TestCase):
             qdb.util.retrieve_filepaths('artifact_filepath', 'artifact_id', 1,
                                         sort='Unknown')
 
-    def _common_purge_filpeaths_test(self):
+    def _common_purge_filepaths_test(self):
         # Get all the filepaths so we can test if they've been removed or not
         sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
         fps = [join(qdb.util.get_mountpoint_path_by_id(dd_id), fp)
@@ -368,7 +368,10 @@ class DBUtilTests(TestCase):
             self.assertTrue(exists(fp))
 
     def test_purge_filepaths(self):
-        self._common_purge_filpeaths_test()
+        self._common_purge_filepaths_test()
+
+    def purge_files_from_filesyste(self):
+        qdb.purge_files_from_filesystem(False)
 
     def test_empty_trash_upload_folder(self):
         # creating file to delete so we know it actually works
@@ -395,7 +398,7 @@ class DBUtilTests(TestCase):
         ref = qdb.reference.Reference.create("null_db", "13_2", seqs_fp)
         self.files_to_remove.append(ref.sequence_fp)
 
-        self._common_purge_filpeaths_test()
+        self._common_purge_filepaths_test()
 
     def test_move_filepaths_to_upload_folder(self):
         # setting up test, done here as this is the only test that uses these
