@@ -26,89 +26,6 @@
       populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
   };
 
-  function load_process_artifact_ui(artifact_id) {
-      populate_main_div('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/process/');
-  };
-
-  /*
-   * Function to draw a vis.Network
-   *
-   * @param nodes list of nodes
-   * @param edges list of edges
-   * @param target div name to draw the netword
-   * @param on_select_f callback function for the 'select' event in the network nodes
-   *
-   * This function creates a new instance of vis.Network and draws the graph
-   * in the target div
-   *
-   */
-  function draw_graph(nodes, edges, target) {
-    var container = document.getElementById(target);
-    container.innerHTML = "";
-
-    var nodes = new vis.DataSet(nodes);
-    var edges = new vis.DataSet(edges);
-    var data = {
-      nodes: nodes,
-      edges: edges
-    };
-    var options = {
-      clickToUse: true,
-      nodes: {
-        shape: 'dot',
-        font: {
-            size: 16,
-            color: '#000000'
-        },
-        size: 13,
-        borderWidth: 2,
-      },
-      edges: {
-        color: 'grey'
-      },
-      layout: {
-        hierarchical: {
-          direction: "LR",
-          sortMethod: "directed",
-          levelSeparation: 260
-        }
-      },
-      interaction: {
-        dragNodes: false,
-        dragView: true,
-        zoomView: true,
-        selectConnectedEdges: true,
-        navigationButtons: true,
-        keyboard: false
-      },
-      groups: {
-        jobs: {
-          color: '#FF9152'
-        },
-        artifact: {
-          color: '#FFFFFF'
-        }
-      }
-    };
-
-    var network = new vis.Network(container, data, options);
-    network.on("click", function (properties) {
-      var ids = properties.nodes;
-      if (ids.length == 0) {
-        return
-      }
-      // [0] cause only users can only select 1 node
-      var clickedNode = nodes.get(ids)[0];
-
-      if (clickedNode.group == 'artifact') {
-        var artifact_id = +ids[0];
-        populateContentArtifact(artifact_id);
-      } else {
-        $("#prep-artifact-summary-div").html("");
-      }
-    });
-  }
-
   /*
    * Function to update the prep information contents
    *
@@ -277,7 +194,8 @@
           "</div>" +
           "<div class='row'><div class='col-md-12 graph' style='width:90%' id='graph-network-div'>" +
           "</div>");
-        draw_graph(nodes, edges, "graph-network-div");
+
+        draw_processing_graph(nodes, edges, "graph-network-div", "prep-artifact-summary-div", populateContentArtifact, populateContentJob);
       });
   }
 
@@ -310,24 +228,6 @@
       .done(function ( data ) {
         $("#prep-artifact-summary-div").html(data);
       });
-  }
-
-  /*
-   * Load the artifact summary page
-   *
-   * @param artifact_id integer with the artifact id to load
-   *
-   * This function executes an AJAX call to populate the prep-artifact-summary-div
-   *
-   */
-  function populateContentArtifact(artifact_id) {
-    show_loading("prep-artifact-summary-div");
-    $.get('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/summary/', function(data) {
-      $("#prep-artifact-summary-div").html(data);
-    })
-     .fail(function(object, status, error_msg) {
-       $("#prep-artifact-summary-div").html("Error loading artifact information " + object.statusText);
-     });
   }
 
   /*

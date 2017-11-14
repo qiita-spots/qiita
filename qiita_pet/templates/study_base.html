@@ -58,7 +58,8 @@
           nodes.push({id: data.node_labels[i][0], label: data.node_labels[i][1], shape: 'box'});
         }
         $("#study-prep-graph-row").show();
-        draw_graph(nodes, edges, "study-prep-graph");
+
+        draw_processing_graph(nodes, edges, "study-prep-graph", "", populateContentArtifact, populateContentJob);
         // add event listeners
         network.on('select', function(params) {
           //render the information for the selected artifact ID
@@ -71,55 +72,6 @@
       .done(function( data ) {
         $("#study-main").html(data);
     });
-  }
-
-  function draw_graph(nodes, edges, target) {
-    var container = document.getElementById(target);
-    container.innerHTML = "";
-    var nodes = new vis.DataSet(nodes);
-    var edges = new vis.DataSet(edges);
-    var data = {
-      nodes: nodes,
-      edges: edges
-    };
-    var options = {
-      clickToUse: true,
-      nodes: {
-        shape: 'dot',
-        font: {
-            size: 16,
-            color: '#000000'
-        },
-        size: 13,
-        borderWidth: 2,
-      },
-      edges: {
-        color: 'grey'
-      },
-      layout: {
-        hierarchical: {
-          direction: "LR",
-          sortMethod: "directed",
-          levelSeparation: 260
-        }
-      },
-      interaction: {
-        dragNodes: false,
-        dragView: true,
-        zoomView: true,
-        selectConnectedEdges: false,
-        navigationButtons: true,
-        keyboard: true
-      },
-      groups: {
-        jobs: {
-          color: '#FF9152'
-        },
-        artifact: {
-          color: '#FFFFFF'
-        }
-      }
-    };
   }
 
   function fill_sample(sid) {

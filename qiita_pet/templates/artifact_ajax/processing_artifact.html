@@ -1,10 +1,7 @@
 {% from qiita_core.qiita_settings import qiita_config %}
 
 <script type="text/javascript">
-  var processing_network;
-  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}}\n({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
-  var edges = new vis.DataSet();
-
+  var processing_network, nodes, edges;
   /*
    * Submit the current workflow for execution
    *
@@ -437,52 +434,11 @@
   }
 
   $(document).ready(function() {
-    // Create the network object
-    // 'get(0)' is used to return the actual DOM element, which is what
-    // vis.Network needs.
-    var container = $('#graph-network-div').get(0);
-    var data = {nodes: nodes, edges: edges};
+    var result = draw_processing_graph([{id: {{artifact_id}}, label: "{{name}}\n({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}], [], 'graph-network-div', 'processing-info-div', populateContentArtifact, populateContentJob);
+    processing_network = result[0];
+    nodes = result[1];
+    edges = result[2];
 
-    var options = {
-      clickToUse: true,
-      nodes: {
-        shape: 'dot',
-        font: {
-            size: 16,
-            color: '#000000'
-        },
-        size: 13,
-        borderWidth: 2,
-      },
-      edges: {
-        color: 'grey'
-      },
-      layout: {
-        hierarchical: {
-          direction: "LR",
-          sortMethod: "directed",
-          levelSeparation: 260
-        }
-      },
-      interaction: {
-        dragNodes: false,
-        dragView: true,
-        zoomView: true,
-        selectConnectedEdges: false,
-        navigationButtons: true,
-        keyboard: false
-      },
-      groups: {
-        jobs: {
-          color: '#FF9152'
-        },
-        type: {
-          color: '#FFFFFF'
-        }
-      }
-    };
-
-    processing_network = new vis.Network(container, data, options);
     processing_network.on('select', function(params) {
       // Update the GUI with the information for the selected node type
       if(params.nodes.length !== 0) {
