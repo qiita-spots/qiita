@@ -45,13 +45,13 @@ table {
 }
 
 .bordered th {
-    background-color: #d7d7ea;
-    background-image: -webkit-gradient(linear, left top, left bottom, from(#f4f4fb), to(#d7d7ea));
-    background-image: -webkit-linear-gradient(top, #f4f4fb, #d7d7ea);
-    background-image:    -moz-linear-gradient(top, #f4f4fb, #d7d7ea);
-    background-image:     -ms-linear-gradient(top, #f4f4fb, #d7d7ea);
-    background-image:      -o-linear-gradient(top, #f4f4fb, #d7d7ea);
-    background-image:         linear-gradient(top, #f4f4fb, #d7d7ea);
+    background-color: #dce9f9;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#ebf3fc), to(#dce9f9));
+    background-image: -webkit-linear-gradient(top, #ebf3fc, #dce9f9);
+    background-image:    -moz-linear-gradient(top, #ebf3fc, #dce9f9);
+    background-image:     -ms-linear-gradient(top, #ebf3fc, #dce9f9);
+    background-image:      -o-linear-gradient(top, #ebf3fc, #dce9f9);
+    background-image:         linear-gradient(top, #ebf3fc, #dce9f9);
     -webkit-box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
     -moz-box-shadow:0 1px 0 rgba(255,255,255,.8) inset;
     box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
@@ -99,25 +99,24 @@ table {
 <body>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'   width='2865' height='2150' viewbox='0 0 2865 2150' >
 <style type='text/css'>
-  text                { fill:#000000; font-family: 'trebuchet MS', 'Lucida sans', Dialog, Dialog, Arial; font-size:11px; stroke:#000000; stroke-width:0.1; }
+  text                { fill:#000000; font-family: Dialog, Dialog, Arial; font-size:11px; stroke:#000000; stroke-width:0.1; }
   text:hover          { fill:#a00000; font-size:12px;}
   text.colType        { fill:#a9bdc6; }
   text.tableTitle     { fill:#000000; }
-  path                { stroke:#5e554d; stroke-width:1.1; fill:none; }
-  rect.table          { fill:#ffffff; stroke:#222; stroke-width:0.2; filter:url(#shadow); }
-  line.table          { stroke:#222; stroke-width:0.2; }
+  path                { stroke:#5c5750; stroke-width:1.2; fill:none; }
+  rect.table          { fill:#ffffff; stroke:#4e4c4c; stroke-width:0.3; filter:url(#shadow); }
+  line.table          { stroke:#9ea1a4; stroke-width:0.3; }
   rect.callout        { fill:url(#calloutGradient); stroke:#bebdbd; stroke-width:0.5; }
   rect.grp            { opacity:0.5; stroke:#b1b1b1; stroke-width:1.7; }
 </style>
 <defs>
-  <pattern patternUnits='userSpaceOnUse' id='layoutBgA' width='10' height='20' x='0' y='0' viewBox='0 0 5 10'>  
-     <line x1='-2' y1='1' x2='7' y2='10' stroke='#f0f0f0' stroke-width='.5'/>  
-     <line x1='-2' y1='6' x2='7' y2='15' stroke='#f0f0f0' stroke-width='.5'/>  
-     <line x1='-2' y1='-4' x2='7' y2='5' stroke='#f0f0f0' stroke-width='.5'/>  
-  </pattern>  
-  <radialGradient id='layoutBgB' gradientUnits='userSpaceOnUse' cx='50%' cy='50%' r='75%' fx='46%' fy='22%'>
-     <stop offset='0%' stop-opacity='.2' stop-color='#f5f5f5' />  
-     <stop offset='100%' stop-color='#f0f0f0' />  
+  <pattern id='layoutGradient' patternUnits='userSpaceOnUse' x='0' y='0' width='7' height='7' viewBox='0 0 7 7'>
+    <rect x='0' y='0' width='7' height='7' style='fill:#f1efe8;' />
+    <line x1='5' y1='7' x2='5' y2='0' style='stroke:#b7b7b7;stroke-width:0.5;stroke-dasharray:1,9;'  />
+  </pattern>
+  <radialGradient id='layoutGradientOld' cx='20%' cy='20%' r='25%' fx='10%' fy='0%'>
+	   <stop offset='0%' stop-color='#ffffff' />
+    <stop offset='100%' stop-color='#efefef' />
   </radialGradient>
   <linearGradient id='tableHeaderGradient2' x1='0%' y1='0%' x2='0%' y2='90%' >
           <stop offset='0%' stop-color='#b2cdf7'/> 
@@ -150,22 +149,25 @@ table {
    </linearGradient>
   <radialGradient id='calloutGradient' cx='20%' cy='20%' r='100%' fx='10%' fy='10%'>
 	   <stop offset='0%' stop-color='#ffffff' />
-    <stop offset='100%' stop-color='#f8f6d1' />
+    <stop offset='100%' stop-color='#e8e8e7' />
   </radialGradient>
-  <filter id='shadow' width='120%' height='120%'> 
-      <feOffset result='offOut' in='SourceGraphic' dx='2' dy='2' /> 
-      <feColorMatrix result='matrixOut' in='offOut' type='matrix' 
-      values='0.1 0 0 0 0 0 0.1 0 0 0 0 0 0.1 0 0 0 0 0 0.5 0' /> 
-      <feGaussianBlur result='blurOut' in='matrixOut' stdDeviation='2' /> 
-      <feBlend in='SourceGraphic' in2='blurOut' mode='normal' /> 
-    </filter> 
-  <filter id='formerShadow' height='130%'> 
+  <filter id='shadow' height='130%'> 
     <feGaussianBlur in='SourceAlpha' stdDeviation='1.5'/> <!-- stdDeviation is how much to blur -->
-    <feOffset dx='1.2' dy='1.2' result='offsetblur'/> <!-- how much to offset -->
+    <feOffset dx='1.3' dy='1.3' result='offsetblur'/> <!-- how much to offset -->
     <feMerge>
     <feMergeNode/> <!-- this contains the offset blurred image -->
     <feMergeNode in='SourceGraphic'/> <!-- this contains the element that the filter is applied to -->
     </feMerge>
+  </filter>
+  <filter id='shadowOld' width='150%' height='150%'> 
+    <feGaussianBlur in='SourceAlpha' stdDeviation='2' result='image1' /> 
+    <feOffset in='image1' result='image2' dx='2' dy='2' />
+    <feColorMatrix type='matrix' in='image2' result='image3' 
+       values='1 1 1 0 0 
+               1 1 1 0 0 
+               1 1 1 0 0 
+               0 0 0 .5 0'/>
+    <feComposite in='SourceGraphic' in2='image3' operator='over' /> 
   </filter>
   <filter id='legendShadow' filterUnits='userSpaceOnUse' x='0' y='0' width='400' height='120'> 
      <feGaussianBlur in='SourceAlpha' stdDeviation='3' result='blur'/> 
@@ -181,16 +183,14 @@ table {
      </feMerge> 
   </filter> 
   <radialGradient id='legendGradient' fx='5%' fy='5%' r='75%' spreadMethod='pad'>
-          <stop offset='0%' stop-color='#eaeef6' stop-opacity='1'/> 
-          <stop offset='100%' stop-color='#cad2e3' stop-opacity='1' /> 
+          <stop offset='0%' stop-color='#cfd7f6' stop-opacity='1'/> 
+          <stop offset='100%' stop-color='#919dd0' stop-opacity='1' /> 
    </radialGradient>
   <symbol id='calloutArrowDown' overflow='visible' >
-      <path d='M 0,0 L 7,11 L 15,0 z' style='fill:#f8f6d1;stroke:none;' />
-      <path d='M 0,0 L 7,11 L 15,0' style='stroke:#bebdbd; stroke-width:0.5;' />
+      <path d='M 0,0 L 7,11 L 15,0 z' style='fill:#e8e8e7; stroke:#bebdbd; stroke-width:0.5;' />
   </symbol>
   <symbol id='calloutArrowUp' overflow='visible' >
-      <path d='M 0,15 L 7,3 L 15,15 z' style='fill:#ffffff; stroke:none;' />
-      <path d='M 0,15 L 7,3 L 15,15' style='stroke:#bebdbd; stroke-width:0.5;' />
+      <path d='M 0,15 L 7,3 L 15,15 z' style='fill:#e8e8e7; stroke:#bebdbd; stroke-width:0.5;' />
   </symbol>
   <symbol id='pk' overflow='visible' >
     <g transform='scale(0.99)'>
@@ -242,22 +242,23 @@ table {
           d='M 0,0 3,3 M 0,3 3,0 z'/>
   </symbol>
   <marker id='arrow' viewBox='0 0 7 7' refX='0' refY='3' markerUnits='strokeWidth' markerWidth='7' markerHeight='7' orient='auto'>
-    <path d='M 0,0 L 7, 3 L 0,7 z' style='fill:#584739; stroke-width:0px;' />
+    <path d='M 0,0 L 7, 3 L 0,7 z' style='fill:#5c5750; stroke-width:0px;' />
   </marker>
   <marker id='foot' viewBox='0 0 7 7' refX='7' refY='3' markerUnits='strokeWidth' markerWidth='7' markerHeight='7' orient='auto'>
-    <path d='M 0,3 L 15, 3 z' style='stroke:#584739;' />
+    <path d='M 0,3 L 15, 3 z' style='stroke:#5c5750;' />
   </marker>
 </defs>
 
 <!-- ============= Desktop ============= -->
-<rect x='1' y='1' width='2863' height='2148' rx='7' ry='7' style='fill:url(#layoutBgA); stroke:#333333; stroke-width:0.5;' />
-<rect width='120%' x='-10%' y='-10%' height='120%' fill='url(#layoutBgB)'/>
+<rect x='1' y='1' width='2863' height='2148' rx='7' ry='7' style='fill:url(#layoutGradient); stroke:#333333; stroke-width:0.5;' />
+
 <!-- ============= Legend ============= -->
 <g transform='translate(10,10)'>
-  <rect x='10' y='10' width='300' height='64' rx='6' ry='6' style='fill:url(#legendGradient);filter:url(#legendShadow);'/> 
-  <text x='20' y='30'><tspan>Project</tspan> qiita @ <a xlink:href='http://www.dbschema.com'>DbSchema</a></text> 
+  <rect x='10' y='10' width='320' height='76' rx='6' ry='6' style='fill:url(#legendGradient);filter:url(#legendShadow);'/> 
+  <text x='20' y='30'><tspan>Project</tspan> qiita</text> 
   <text x='20' y='44'><tspan>Layout</tspan> qiita</text> 
-  <text x='20' y='58' style='fill:#777'><tspan>Hint: Schema comments available as mouse-over tooltips.</tspan></text> 
+  <text x='20' y='58' style='fill:#777'><tspan>Hint: Read the column comments as mouse-over tooltips.</tspan></text> 
+  <text x='180' y='74'><tspan>Generated using <a xlink:href='http://www.dbschema.com'>DbSchema</a></tspan></text> 
 </g>
 
 <g transform='translate(0,110)'>
@@ -636,12 +637,7 @@ table {
 	study_artifact references artifact ( artifact_id )</title>
 </path>
 <text x='1633' y='765' transform='rotate(90 1633,765)' title='Foreign Key fk_study_artifact_artifact
-	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2190 1170 L 2190,1200' >
-	<title>Foreign Key fk_command_parameter
-	command_parameter references software_command ( command_id )</title>
-</path>
-<text x='2203' y='1170' transform='rotate(90 2203,1170)' title='Foreign Key fk_command_parameter
-	command_parameter references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2085 1065 L 2100,1065' >
+	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2085 1065 L 2100,1065' >
 	<title>Foreign Key fk_parameter_artifact_type
 	parameter_artifact_type references command_parameter ( command_parameter_id )</title>
 </path>
@@ -651,17 +647,7 @@ table {
 	parameter_artifact_type references artifact_type ( artifact_type_id )</title>
 </path>
 <text x='1824' y='1045' transform='rotate(0 1824,1045)' title='Foreign Key fk_parameter_artifact_type_0
-	parameter_artifact_type references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2085 1215 L 2160,1215' >
-	<title>Foreign Key fk_command_output
-	command_output references software_command ( command_id )</title>
-</path>
-<text x='2092' y='1210' transform='rotate(0 2092,1210)' title='Foreign Key fk_command_output
-	command_output references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1920 1155 L 1582,1155 Q 1575,1155 1575,1147 L 1575,960' >
-	<title>Foreign Key fk_command_output_0
-	command_output references artifact_type ( artifact_type_id )</title>
-</path>
-<text x='1839' y='1150' transform='rotate(0 1839,1150)' title='Foreign Key fk_command_output_0
-	command_output references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2385 1230 L 2295,1230' >
+	parameter_artifact_type references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2385 1230 L 2295,1230' >
 	<title>Foreign Key fk_default_parameter_set
 	default_parameter_set references software_command ( command_id )</title>
 </path>
@@ -716,7 +702,7 @@ table {
 	artifact_output_processing_job references processing_job ( processing_job_id )</title>
 </path>
 <text x='1942' y='1390' transform='rotate(0 1942,1390)' title='Foreign Key fk_artifact_output_processing_job_0
-	artifact_output_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1935 1410 L 1942,1410 Q 1950,1410 1950,1402 L 1950,1260' >
+	artifact_output_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1935 1410 L 1942,1410 Q 1950,1410 1950,1402 L 1950,1275' >
 	<title>Foreign Key fk_artifact_output_processing_job_1
 	artifact_output_processing_job references command_output ( command_output_id )</title>
 </path>
@@ -806,16 +792,11 @@ table {
 	processing_job references logging ( logging_id )</title>
 </path>
 <text x='2023' y='1515' transform='rotate(90 2023,1515)' title='Foreign Key fk_processing_job_logging
-	processing_job references logging ( logging_id )' style='fill:#a1a0a0;'>logging_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2355 1440 L 2355,1192 Q 2355,1185 2347,1185 L 2085,1185' >
-	<title>Foreign Key fk_default_workflow_edge_connections
-	default_workflow_edge_connections references command_output ( parent_output_id -> command_output_id )</title>
-</path>
-<text x='2357' y='1435' transform='rotate(270 2357,1435)' title='Foreign Key fk_default_workflow_edge_connections
-	default_workflow_edge_connections references command_output ( parent_output_id -> command_output_id )' style='fill:#a1a0a0;'>parent_output_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2370 1440 L 2370,1162 Q 2370,1155 2362,1155 L 2280,1155' >
+	processing_job references logging ( logging_id )' style='fill:#a1a0a0;'>logging_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2355 1440 L 2355,1192 Q 2355,1185 2347,1185 L 2280,1185' >
 	<title>Foreign Key fk_default_workflow_edge_connections_0
 	default_workflow_edge_connections references command_parameter ( child_input_id -> command_parameter_id )</title>
 </path>
-<text x='2372' y='1435' transform='rotate(270 2372,1435)' title='Foreign Key fk_default_workflow_edge_connections_0
+<text x='2357' y='1435' transform='rotate(270 2357,1435)' title='Foreign Key fk_default_workflow_edge_connections_0
 	default_workflow_edge_connections references command_parameter ( child_input_id -> command_parameter_id )' style='fill:#a1a0a0;'>child_input_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2550 1470 L 2647,1470 Q 2655,1470 2655,1462 L 2655,1410' >
 	<title>Foreign Key fk_default_workflow_edge_connections_1
 	default_workflow_edge_connections references default_workflow_edge ( default_workflow_edge_id )</title>
@@ -836,7 +817,7 @@ table {
 	study_publication references study ( study_id )</title>
 </path>
 <text x='1997' y='685' transform='rotate(270 1997,685)' title='Foreign Key fk_study_publication_study
-	study_publication references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2295 1245 L 2332,1245 Q 2340,1245 2340,1237 L 2340,1072 Q 2340,1065 2347,1065 L 2385,1065' >
+	study_publication references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2295 1245 L 2362,1245 Q 2370,1245 2370,1237 L 2370,1072 Q 2370,1065 2377,1065 L 2385,1065' >
 	<title>Foreign Key fk_soft_command_software
 	software_command references software ( software_id )</title>
 </path>
@@ -881,7 +862,22 @@ table {
 	investigation references study_person ( contact_person_id -> study_person_id )</title>
 </path>
 <text x='2287' y='310' transform='rotate(0 2287,310)' title='Foreign Key fk_investigation_study_person
-	investigation references study_person ( contact_person_id -> study_person_id )' style='fill:#a1a0a0;'>contact_person_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	investigation references study_person ( contact_person_id -> study_person_id )' style='fill:#a1a0a0;'>contact_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2085 1215 L 2160,1215' >
+	<title>Foreign Key fk_command_output
+	command_output references software_command ( command_id )</title>
+</path>
+<text x='2092' y='1210' transform='rotate(0 2092,1210)' title='Foreign Key fk_command_output
+	command_output references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1920 1155 L 1582,1155 Q 1575,1155 1575,1147 L 1575,960' >
+	<title>Foreign Key fk_command_output_0
+	command_output references artifact_type ( artifact_type_id )</title>
+</path>
+<text x='1839' y='1150' transform='rotate(0 1839,1150)' title='Foreign Key fk_command_output_0
+	command_output references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2145 1200 L 2145,1222 Q 2145,1230 2152,1230 L 2160,1230' >
+	<title>Foreign Key fk_command_parameter
+	command_parameter references software_command ( command_id )</title>
+</path>
+<text x='2158' y='1200' transform='rotate(90 2158,1200)' title='Foreign Key fk_command_parameter
+	command_parameter references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1688' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1714.50 L 45.50 1695.50 Q 45.50 1688.50 52.50 1688.50 L 187.50 1688.50 Q 194.50 1688.50 194.50 1695.50 L 194.50 1714.50 L45.50 1714.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1702' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1586,23 +1582,6 @@ Referred by filepath ( filepath_type_id ) </title></a>
 <a xlink:href='#study_artifact.artifact_id'><text x='1623' y='742'>artifact_id</text><title>artifact_id bigint not null</title></a>
 <a xlink:href='#study_artifact.artifact_id'><use id='fk' x='1683' y='731' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
 
-<!-- ============= Table 'command_parameter' ============= -->
-<rect class='table' x='2115' y='1028' width='165' height='135' rx='7' ry='7' />
-<path d='M 2115.50 1054.50 L 2115.50 1035.50 Q 2115.50 1028.50 2122.50 1028.50 L 2272.50 1028.50 Q 2279.50 1028.50 2279.50 1035.50 L 2279.50 1054.50 L2115.50 1054.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#command_parameter'><text x='2140' y='1042' class='tableTitle'>command_parameter</text><title>Table qiita.command_parameter</title></a>
-  <use id='nn' x='2117' y='1062' xlink:href='#nn'/><a xlink:href='#command_parameter.command_parameter_id'><use id='pk' x='2117' y='1061' xlink:href='#pk'/><title>Primary Key  ( command_parameter_id ) </title></a>
-<a xlink:href='#command_parameter.command_parameter_id'><text x='2133' y='1072'>command_parameter_id</text><title>command_parameter_id bigserial not null</title></a>
-<a xlink:href='#command_parameter.command_parameter_id'><use id='ref' x='2268' y='1061' xlink:href='#ref'/><title>Referred by default_workflow_edge_connections ( child_input_id -> command_parameter_id ) 
-Referred by parameter_artifact_type ( command_parameter_id ) </title></a>
-  <use id='nn' x='2117' y='1077' xlink:href='#nn'/><a xlink:href='#command_parameter.command_id'><use id='unq' x='2117' y='1076' xlink:href='#unq'/><title>Index  ( command_id ) Unique Index  ( command_id, parameter_name ) </title></a>
-<a xlink:href='#command_parameter.command_id'><text x='2133' y='1087'>command_id</text><title>command_id bigint not null</title></a>
-<a xlink:href='#command_parameter.command_id'><use id='fk' x='2268' y='1076' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
-  <use id='nn' x='2117' y='1092' xlink:href='#nn'/><a xlink:href='#command_parameter.parameter_name'><use id='unq' x='2117' y='1091' xlink:href='#unq'/><title>Unique Index  ( command_id, parameter_name ) </title></a>
-<a xlink:href='#command_parameter.parameter_name'><text x='2133' y='1102'>parameter_name</text><title>parameter_name varchar not null</title></a>
-  <use id='nn' x='2117' y='1107' xlink:href='#nn'/><a xlink:href='#command_parameter.parameter_type'><text x='2133' y='1117'>parameter_type</text><title>parameter_type varchar not null</title></a>
-  <use id='nn' x='2117' y='1122' xlink:href='#nn'/><a xlink:href='#command_parameter.required'><text x='2133' y='1132'>required</text><title>required bool not null</title></a>
-  <a xlink:href='#command_parameter.default_value'><text x='2133' y='1147'>default_value</text><title>default_value varchar</title></a>
-
 <!-- ============= Table 'parameter_artifact_type' ============= -->
 <rect class='table' x='1920' y='1043' width='165' height='75' rx='7' ry='7' />
 <path d='M 1920.50 1069.50 L 1920.50 1050.50 Q 1920.50 1043.50 1927.50 1043.50 L 2077.50 1043.50 Q 2084.50 1043.50 2084.50 1050.50 L 2084.50 1069.50 L1920.50 1069.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -1613,23 +1592,6 @@ Referred by parameter_artifact_type ( command_parameter_id ) </title></a>
   <use id='nn' x='1922' y='1092' xlink:href='#nn'/><a xlink:href='#parameter_artifact_type.artifact_type_id'><use id='pk' x='1922' y='1091' xlink:href='#pk'/><title>Primary Key  ( command_parameter_id, artifact_type_id ) Index  ( artifact_type_id ) </title></a>
 <a xlink:href='#parameter_artifact_type.artifact_type_id'><text x='1938' y='1102'>artifact_type_id</text><title>artifact_type_id bigint not null</title></a>
 <a xlink:href='#parameter_artifact_type.artifact_type_id'><use id='fk' x='2073' y='1091' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
-
-<!-- ============= Table 'command_output' ============= -->
-<rect class='table' x='1935' y='1148' width='150' height='105' rx='7' ry='7' />
-<path d='M 1935.50 1174.50 L 1935.50 1155.50 Q 1935.50 1148.50 1942.50 1148.50 L 2077.50 1148.50 Q 2084.50 1148.50 2084.50 1155.50 L 2084.50 1174.50 L1935.50 1174.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#command_output'><text x='1962' y='1162' class='tableTitle'>command_output</text><title>Table qiita.command_output</title></a>
-  <use id='nn' x='1937' y='1182' xlink:href='#nn'/><a xlink:href='#command_output.command_output_id'><use id='pk' x='1937' y='1181' xlink:href='#pk'/><title>Primary Key  ( command_output_id ) </title></a>
-<a xlink:href='#command_output.command_output_id'><text x='1953' y='1192'>command_output_id</text><title>command_output_id bigserial not null</title></a>
-<a xlink:href='#command_output.command_output_id'><use id='ref' x='2073' y='1181' xlink:href='#ref'/><title>Referred by artifact_output_processing_job ( command_output_id ) 
-Referred by default_workflow_edge_connections ( parent_output_id -> command_output_id ) </title></a>
-  <use id='nn' x='1937' y='1197' xlink:href='#nn'/><a xlink:href='#command_output.name'><use id='unq' x='1937' y='1196' xlink:href='#unq'/><title>Unique Index  ( name, command_id ) </title></a>
-<a xlink:href='#command_output.name'><text x='1953' y='1207'>name</text><title>name varchar not null</title></a>
-  <use id='nn' x='1937' y='1212' xlink:href='#nn'/><a xlink:href='#command_output.command_id'><use id='unq' x='1937' y='1211' xlink:href='#unq'/><title>Unique Index  ( name, command_id ) Index  ( command_id ) </title></a>
-<a xlink:href='#command_output.command_id'><text x='1953' y='1222'>command_id</text><title>command_id bigint not null</title></a>
-<a xlink:href='#command_output.command_id'><use id='fk' x='2073' y='1211' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
-  <use id='nn' x='1937' y='1227' xlink:href='#nn'/><a xlink:href='#command_output.artifact_type_id'><use id='idx' x='1937' y='1226' xlink:href='#idx'/><title>Index  ( artifact_type_id ) </title></a>
-<a xlink:href='#command_output.artifact_type_id'><text x='1953' y='1237'>artifact_type_id</text><title>artifact_type_id bigint not null</title></a>
-<a xlink:href='#command_output.artifact_type_id'><use id='fk' x='2073' y='1226' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
 
 <!-- ============= Table 'default_parameter_set' ============= -->
 <rect class='table' x='2400' y='1148' width='165' height='105' rx='7' ry='7' />
@@ -2030,56 +1992,88 @@ Describes the overarching goal of the investigation</title></a>
 <a xlink:href='#investigation.contact_person_id'><text x='2418' y='397'>contact_person_id</text><title>contact_person_id bigint</title></a>
 <a xlink:href='#investigation.contact_person_id'><use id='fk' x='2553' y='386' xlink:href='#fk'/><title>References study_person ( contact_person_id -> study_person_id ) </title></a>
 
+<!-- ============= Table 'command_output' ============= -->
+<rect class='table' x='1935' y='1148' width='150' height='120' rx='7' ry='7' />
+<path d='M 1935.50 1174.50 L 1935.50 1155.50 Q 1935.50 1148.50 1942.50 1148.50 L 2077.50 1148.50 Q 2084.50 1148.50 2084.50 1155.50 L 2084.50 1174.50 L1935.50 1174.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#command_output'><text x='1962' y='1162' class='tableTitle'>command_output</text><title>Table qiita.command_output</title></a>
+  <use id='nn' x='1937' y='1182' xlink:href='#nn'/><a xlink:href='#command_output.command_output_id'><use id='pk' x='1937' y='1181' xlink:href='#pk'/><title>Primary Key  ( command_output_id ) </title></a>
+<a xlink:href='#command_output.command_output_id'><text x='1953' y='1192'>command_output_id</text><title>command_output_id bigserial not null</title></a>
+<a xlink:href='#command_output.command_output_id'><use id='ref' x='2073' y='1181' xlink:href='#ref'/><title>Referred by artifact_output_processing_job ( command_output_id ) 
+Referred by default_workflow_edge_connections ( parent_output_id -> command_output_id ) </title></a>
+  <use id='nn' x='1937' y='1197' xlink:href='#nn'/><a xlink:href='#command_output.name'><use id='unq' x='1937' y='1196' xlink:href='#unq'/><title>Unique Index  ( name, command_id ) </title></a>
+<a xlink:href='#command_output.name'><text x='1953' y='1207'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='1937' y='1212' xlink:href='#nn'/><a xlink:href='#command_output.command_id'><use id='unq' x='1937' y='1211' xlink:href='#unq'/><title>Unique Index  ( name, command_id ) Index  ( command_id ) </title></a>
+<a xlink:href='#command_output.command_id'><text x='1953' y='1222'>command_id</text><title>command_id bigint not null</title></a>
+<a xlink:href='#command_output.command_id'><use id='fk' x='2073' y='1211' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <use id='nn' x='1937' y='1227' xlink:href='#nn'/><a xlink:href='#command_output.artifact_type_id'><use id='idx' x='1937' y='1226' xlink:href='#idx'/><title>Index  ( artifact_type_id ) </title></a>
+<a xlink:href='#command_output.artifact_type_id'><text x='1953' y='1237'>artifact_type_id</text><title>artifact_type_id bigint not null</title></a>
+<a xlink:href='#command_output.artifact_type_id'><use id='fk' x='2073' y='1226' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
+  <use id='nn' x='1937' y='1242' xlink:href='#nn'/><a xlink:href='#command_output.check_biom_merge'><text x='1953' y='1252'>check_biom_merge</text><title>check_biom_merge bool not null default &#039;False&#039;</title></a>
+
+<!-- ============= Table 'command_parameter' ============= -->
+<rect class='table' x='2115' y='1028' width='165' height='165' rx='7' ry='7' />
+<path d='M 2115.50 1054.50 L 2115.50 1035.50 Q 2115.50 1028.50 2122.50 1028.50 L 2272.50 1028.50 Q 2279.50 1028.50 2279.50 1035.50 L 2279.50 1054.50 L2115.50 1054.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#command_parameter'><text x='2140' y='1042' class='tableTitle'>command_parameter</text><title>Table qiita.command_parameter</title></a>
+  <use id='nn' x='2117' y='1062' xlink:href='#nn'/><a xlink:href='#command_parameter.command_parameter_id'><use id='pk' x='2117' y='1061' xlink:href='#pk'/><title>Primary Key  ( command_parameter_id ) </title></a>
+<a xlink:href='#command_parameter.command_parameter_id'><text x='2133' y='1072'>command_parameter_id</text><title>command_parameter_id bigserial not null</title></a>
+<a xlink:href='#command_parameter.command_parameter_id'><use id='ref' x='2268' y='1061' xlink:href='#ref'/><title>Referred by default_workflow_edge_connections ( child_input_id -> command_parameter_id ) 
+Referred by parameter_artifact_type ( command_parameter_id ) </title></a>
+  <use id='nn' x='2117' y='1077' xlink:href='#nn'/><a xlink:href='#command_parameter.command_id'><use id='unq' x='2117' y='1076' xlink:href='#unq'/><title>Index  ( command_id ) Unique Index  ( command_id, parameter_name ) </title></a>
+<a xlink:href='#command_parameter.command_id'><text x='2133' y='1087'>command_id</text><title>command_id bigint not null</title></a>
+<a xlink:href='#command_parameter.command_id'><use id='fk' x='2268' y='1076' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <use id='nn' x='2117' y='1092' xlink:href='#nn'/><a xlink:href='#command_parameter.parameter_name'><use id='unq' x='2117' y='1091' xlink:href='#unq'/><title>Unique Index  ( command_id, parameter_name ) </title></a>
+<a xlink:href='#command_parameter.parameter_name'><text x='2133' y='1102'>parameter_name</text><title>parameter_name varchar not null</title></a>
+  <use id='nn' x='2117' y='1107' xlink:href='#nn'/><a xlink:href='#command_parameter.parameter_type'><text x='2133' y='1117'>parameter_type</text><title>parameter_type varchar not null</title></a>
+  <use id='nn' x='2117' y='1122' xlink:href='#nn'/><a xlink:href='#command_parameter.required'><text x='2133' y='1132'>required</text><title>required bool not null</title></a>
+  <a xlink:href='#command_parameter.default_value'><text x='2133' y='1147'>default_value</text><title>default_value varchar</title></a>
+  <a xlink:href='#command_parameter.name_order'><text x='2133' y='1162'>name_order</text><title>name_order integer</title></a>
+  <use id='nn' x='2117' y='1167' xlink:href='#nn'/><a xlink:href='#command_parameter.check_biom_merge'><text x='2133' y='1177'>check_biom_merge</text><title>check_biom_merge bool not null default &#039;False&#039;</title></a>
+
 </g></svg>
 
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='controlled_vocab_values'>Table controlled_vocab_values</a></th></tr>
+<tr><th colspan='3'><a name='controlled_vocab_values'>Table controlled_vocab_values</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab_values.vocab_value_id'>vocab&#095;value&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab_values.controlled_vocab_id'>controlled&#095;vocab&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab_values.term'>term</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab_values.order_by'>order&#095;by</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='controlled_vocab_values.default_item'>default&#095;item</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;controlled&#095;vocab&#095;values</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;controlled&#095;vocab&#095;values primary key</td>
 		<td> ON vocab&#095;value&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;controlled&#095;vocab&#095;values</td>
+	<tr>		<td>idx&#095;controlled&#095;vocab&#095;values </td>
 		<td> ON controlled&#095;vocab&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_controlled_vocab_values</td>
+		<td>fk_controlled_vocab_values</td>
 		<td > ( controlled&#095;vocab&#095;id ) ref <a href='#controlled&#095;vocab'>controlled&#095;vocab</a> (controlled&#095;vocab&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2089,43 +2083,41 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='column_controlled_vocabularies'>Table column_controlled_vocabularies</a></th></tr>
+<tr><th colspan='3'><a name='column_controlled_vocabularies'>Table column_controlled_vocabularies</a></th></tr>
 <tr><td colspan='3'>Table relates a column with a controlled vocabulary&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='column_controlled_vocabularies.controlled_vocab_id'>controlled&#095;vocab&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='column_controlled_vocabularies.column_name'>column&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;column&#095;controlled&#095;vocabularies</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;column&#095;controlled&#095;vocabularies primary key</td>
 		<td> ON controlled&#095;vocab&#095;id&#044; column&#095;name</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;column&#095;controlled&#095;vocabularies&#095;0</td>
+	<tr>		<td>idx&#095;column&#095;controlled&#095;vocabularies&#095;0 </td>
 		<td> ON column&#095;name</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;column&#095;controlled&#095;vocabularies&#095;1</td>
+	<tr>		<td>idx&#095;column&#095;controlled&#095;vocabularies&#095;1 </td>
 		<td> ON controlled&#095;vocab&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_column_controlled_vocabularies</td>
+		<td>fk_column_controlled_vocabularies</td>
 		<td > ( column&#095;name ) ref <a href='#mixs&#095;field&#095;description'>mixs&#095;field&#095;description</a> (column&#095;name) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_column_controlled_vocab2</td>
+		<td>fk_column_controlled_vocab2</td>
 		<td > ( controlled&#095;vocab&#095;id ) ref <a href='#controlled&#095;vocab'>controlled&#095;vocab</a> (controlled&#095;vocab&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2135,47 +2127,41 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='mixs_field_description'>Table mixs_field_description</a></th></tr>
+<tr><th colspan='3'><a name='mixs_field_description'>Table mixs_field_description</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='mixs_field_description.column_name'>column&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='mixs_field_description.data_type'>data&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='mixs_field_description.desc_or_value'>desc&#095;or&#095;value</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='mixs_field_description.definition'>definition</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='mixs_field_description.min_length'>min&#095;length</a></td>
 		<td> integer   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='mixs_field_description.active'>active</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;mixs&#095;field&#095;description</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;mixs&#095;field&#095;description primary key</td>
 		<td> ON column&#095;name</td>
 		<td>  </td>
 	</tr>
@@ -2185,43 +2171,41 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_users'>Table analysis_users</a></th></tr>
+<tr><th colspan='3'><a name='analysis_users'>Table analysis_users</a></th></tr>
 <tr><td colspan='3'>Links analyses to the users they are shared with </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_users.analysis_id'>analysis&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_users.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;analysis&#095;users</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;users primary key</td>
 		<td> ON analysis&#095;id&#044; email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;users&#095;analysis</td>
+	<tr>		<td>idx&#095;analysis&#095;users&#095;analysis </td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;users&#095;email</td>
+	<tr>		<td>idx&#095;analysis&#095;users&#095;email </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_users_analysis</td>
+		<td>fk_analysis_users_analysis</td>
 		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_users_user</td>
+		<td>fk_analysis_users_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
@@ -2231,51 +2215,46 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='logging'>Table logging</a></th></tr>
+<tr><th colspan='3'><a name='logging'>Table logging</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='logging.logging_id'>logging&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='logging.time'>time</a></td>
-		<td> timestamp   </td>
+		<td> timestamp  NOT NULL  </td>
 		<td> Time the error was thrown </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='logging.severity_id'>severity&#095;id</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='logging.msg'>msg</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Error message thrown </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='logging.information'>information</a></td>
 		<td> varchar   </td>
 		<td> Other applicable information &#040;depending on error&#041; </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;logging&#095;0</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;logging&#095;0 </td>
 		<td> ON severity&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>pk&#095;logging</td>
+	<tr>		<td>pk&#095;logging primary key</td>
 		<td> ON logging&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_logging_severity</td>
+		<td>fk_logging_severity</td>
 		<td > ( severity&#095;id ) ref <a href='#severity'>severity</a> (severity&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2285,58 +2264,55 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_filepath'>Table analysis_filepath</a></th></tr>
+<tr><th colspan='3'><a name='analysis_filepath'>Table analysis_filepath</a></th></tr>
 <tr><td colspan='3'>Stores link between analysis and the data file used for the analysis&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_filepath.analysis_id'>analysis&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='analysis_filepath.data_type_id'>data&#095;type&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;filepath </td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;filepath&#095;0</td>
+	<tr>		<td>idx&#095;analysis&#095;filepath&#095;0 </td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;analysis&#095;filepath&#095;1</td>
+	<tr>		<td>idx&#095;analysis&#095;filepath&#095;1 primary key</td>
 		<td> ON analysis&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;filepath&#095;2</td>
+	<tr>		<td>idx&#095;analysis&#095;filepath&#095;2 </td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_filepath</td>
+		<td>fk_analysis_filepath</td>
 		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_filepath_0</td>
+		<td>fk_analysis_filepath_0</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_filepath_1</td>
+		<td>fk_analysis_filepath_1</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2346,46 +2322,42 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='column_ontology'>Table column_ontology</a></th></tr>
+<tr><th colspan='3'><a name='column_ontology'>Table column_ontology</a></th></tr>
 <tr><td colspan='3'>This table relates a column with an ontology&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='column_ontology.column_name'>column&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='column_ontology.ontology_short_name'>ontology&#095;short&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='column_ontology.bioportal_id'>bioportal&#095;id</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='column_ontology.ontology_branch_id'>ontology&#095;branch&#095;id</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;column&#095;ontology</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;column&#095;ontology primary key</td>
 		<td> ON column&#095;name&#044; ontology&#095;short&#095;name</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;column&#095;ontology&#095;0</td>
+	<tr>		<td>idx&#095;column&#095;ontology&#095;0 </td>
 		<td> ON column&#095;name</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_column_ontology</td>
+		<td>fk_column_ontology</td>
 		<td > ( column&#095;name ) ref <a href='#mixs&#095;field&#095;description'>mixs&#095;field&#095;description</a> (column&#095;name) </td>
 		<td>  </td>
 	</tr>
@@ -2395,23 +2367,21 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='controlled_vocab'>Table controlled_vocab</a></th></tr>
+<tr><th colspan='3'><a name='controlled_vocab'>Table controlled_vocab</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab.controlled_vocab_id'>controlled&#095;vocab&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab.controlled_vocab'>controlled&#095;vocab</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;controlled&#095;vocabularies</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;controlled&#095;vocabularies primary key</td>
 		<td> ON controlled&#095;vocab&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -2421,63 +2391,55 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='ontology'>Table ontology</a></th></tr>
+<tr><th colspan='3'><a name='ontology'>Table ontology</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='ontology.ontology_id'>ontology&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='ontology.ontology'>ontology</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='ontology.fully_loaded'>fully&#095;loaded</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='ontology.fullname'>fullname</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='ontology.query_url'>query&#095;url</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='ontology.source_url'>source&#095;url</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='ontology.definition'>definition</a></td>
 		<td> text   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='ontology.load_date'>load&#095;date</a></td>
-		<td> date   </td>
+		<td> date  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;ontology</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;ontology primary key</td>
 		<td> ON ontology&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;ontology</td>
+	<tr>		<td>idx&#095;ontology unique</td>
 		<td> ON ontology</td>
 		<td>  </td>
 	</tr>
@@ -2487,82 +2449,72 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='qiita_user'>Table qiita_user</a></th></tr>
+<tr><th colspan='3'><a name='qiita_user'>Table qiita_user</a></th></tr>
 <tr><td colspan='3'>Holds all user information </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='qiita_user.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='qiita_user.user_level_id'>user&#095;level&#095;id</a></td>
-		<td> integer   DEFO 5 </td>
+		<td> integer  NOT NULL  DEFO 5 </td>
 		<td> user level </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='qiita_user.password'>password</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.name'>name</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.affiliation'>affiliation</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.address'>address</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.phone'>phone</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.user_verify_code'>user&#095;verify&#095;code</a></td>
 		<td> varchar   </td>
 		<td> Code for initial user email verification </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.pass_reset_code'>pass&#095;reset&#095;code</a></td>
 		<td> varchar   </td>
 		<td> Randomly generated code for password reset </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.pass_reset_timestamp'>pass&#095;reset&#095;timestamp</a></td>
 		<td> timestamp   </td>
 		<td> Time the reset code was generated </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;user</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;user primary key</td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;user</td>
+	<tr>		<td>idx&#095;user </td>
 		<td> ON user&#095;level&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_user_user_level</td>
+		<td>fk_user_user_level</td>
 		<td > ( user&#095;level&#095;id ) ref <a href='#user&#095;level'>user&#095;level</a> (user&#095;level&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2572,24 +2524,22 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='prep_y'>Table prep_y</a></th></tr>
+<tr><th colspan='3'><a name='prep_y'>Table prep_y</a></th></tr>
 <tr><td colspan='3'>Information on how raw data y was prepared &#040;prep template&#041;Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_y.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='prep_y.data'>data</a></td>
 		<td> bigint   </td>
 		<td> STUFFFFF </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;prep&#095;y</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;prep&#095;y primary key</td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -2599,27 +2549,25 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='checksum_algorithm'>Table checksum_algorithm</a></th></tr>
+<tr><th colspan='3'><a name='checksum_algorithm'>Table checksum_algorithm</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='checksum_algorithm.checksum_algorithm_id'>checksum&#095;algorithm&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='checksum_algorithm.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;checksum&#095;algorithm</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;checksum&#095;algorithm primary key</td>
 		<td> ON checksum&#095;algorithm&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;checksum&#095;algorithm</td>
+	<tr>		<td>idx&#095;checksum&#095;algorithm unique</td>
 		<td> ON name</td>
 		<td>  </td>
 	</tr>
@@ -2629,34 +2577,31 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='user_level'>Table user_level</a></th></tr>
+<tr><th colspan='3'><a name='user_level'>Table user_level</a></th></tr>
 <tr><td colspan='3'>Holds available user levels </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='user_level.user_level_id'>user&#095;level&#095;id</a></td>
-		<td> serial   </td>
+		<td> serial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='user_level.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041; </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='user_level.description'>description</a></td>
-		<td> text   </td>
+		<td> text  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;user&#095;level</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;user&#095;level primary key</td>
 		<td> ON user&#095;level&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;user&#095;level</td>
+	<tr>		<td>idx&#095;user&#095;level unique</td>
 		<td> ON name</td>
 		<td>  </td>
 	</tr>
@@ -2666,27 +2611,25 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='severity'>Table severity</a></th></tr>
+<tr><th colspan='3'><a name='severity'>Table severity</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='severity.severity_id'>severity&#095;id</a></td>
-		<td> serial   </td>
+		<td> serial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='severity.severity'>severity</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;severity</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;severity primary key</td>
 		<td> ON severity&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;severity</td>
+	<tr>		<td>idx&#095;severity unique</td>
 		<td> ON severity</td>
 		<td>  </td>
 	</tr>
@@ -2696,71 +2639,65 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='filepath'>Table filepath</a></th></tr>
+<tr><th colspan='3'><a name='filepath'>Table filepath</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath.filepath'>filepath</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath.filepath_type_id'>filepath&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath.checksum'>checksum</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath.checksum_algorithm_id'>checksum&#095;algorithm&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='filepath.data_directory_id'>data&#095;directory&#095;id</a></td>
 		<td> bigserial   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;filepath primary key</td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;filepath</td>
+	<tr>		<td>idx&#095;filepath </td>
 		<td> ON filepath&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;filepath&#095;0</td>
+	<tr>		<td>idx&#095;filepath&#095;0 </td>
 		<td> ON data&#095;directory&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_filepath</td>
+		<td>fk_filepath</td>
 		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_filepath_0</td>
+		<td>fk_filepath_0</td>
 		<td > ( checksum&#095;algorithm&#095;id ) ref <a href='#checksum&#095;algorithm'>checksum&#095;algorithm</a> (checksum&#095;algorithm&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_filepath_data_directory</td>
+		<td>fk_filepath_data_directory</td>
 		<td > ( data&#095;directory&#095;id ) ref <a href='#data&#095;directory'>data&#095;directory</a> (data&#095;directory&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2770,87 +2707,76 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='term'>Table term</a></th></tr>
+<tr><th colspan='3'><a name='term'>Table term</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='term.term_id'>term&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='term.ontology_id'>ontology&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.old_term_id'>old&#095;term&#095;id</a></td>
 		<td> bigint   DEFO NULL </td>
 		<td> Identifier used in the old system&#044; we are keeping this for consistency </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='term.term'>term</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.identifier'>identifier</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.definition'>definition</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.namespace'>namespace</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.is_obsolete'>is&#095;obsolete</a></td>
 		<td> bool   DEFO 'false' </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.is_root_term'>is&#095;root&#095;term</a></td>
 		<td> bool   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.is_leaf'>is&#095;leaf</a></td>
 		<td> bool   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='term.user_defined'>user&#095;defined</a></td>
-		<td> bool   DEFO False </td>
+		<td> bool  NOT NULL  DEFO False </td>
 		<td> Whether or not this term was defined by a user </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;term</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;term primary key</td>
 		<td> ON term&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term</td>
+	<tr>		<td>idx&#095;term </td>
 		<td> ON ontology&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_term_ontology</td>
+		<td>fk_term_ontology</td>
 		<td > ( ontology&#095;id ) ref <a href='#ontology'>ontology</a> (ontology&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2860,43 +2786,41 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_prep_template'>Table study_prep_template</a></th></tr>
+<tr><th colspan='3'><a name='study_prep_template'>Table study_prep_template</a></th></tr>
 <tr><td colspan='3'>links study to its prep templates </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_prep_template.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_prep_template.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;study&#095;raw&#095;data</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;raw&#095;data primary key</td>
 		<td> ON study&#095;id&#044; prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;raw&#095;data&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;raw&#095;data&#095;0 </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;raw&#095;data&#095;1</td>
+	<tr>		<td>idx&#095;study&#095;raw&#095;data&#095;1 </td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_prep_template_study</td>
+		<td>fk_study_prep_template_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_prep_template_pt</td>
+		<td>fk_study_prep_template_pt</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2906,47 +2830,44 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='prep_template_sample'>Table prep_template_sample</a></th></tr>
+<tr><th colspan='3'><a name='prep_template_sample'>Table prep_template_sample</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template_sample.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> The prep template identifier </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template_sample.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='prep_template_sample.ebi_experiment_accession'>ebi&#095;experiment&#095;accession</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;0</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;common&#095;prep&#095;info&#095;0 </td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;0</td>
+	<tr>		<td>idx&#095;common&#095;prep&#095;info&#095;0 </td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;common&#095;prep&#095;info</td>
+	<tr>		<td>idx&#095;common&#095;prep&#095;info primary key</td>
 		<td> ON prep&#095;template&#095;id&#044; sample&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;1</td>
+	<tr>		<td>idx&#095;common&#095;prep&#095;info&#095;1 </td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template</td>
+		<td>fk_prep_template</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2956,30 +2877,27 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='portal_type'>Table portal_type</a></th></tr>
+<tr><th colspan='3'><a name='portal_type'>Table portal_type</a></th></tr>
 <tr><td colspan='3'>What portals are available to show a study in </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='portal_type.portal_type_id'>portal&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='portal_type.portal'>portal</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='portal_type.portal_description'>portal&#095;description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;portal&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;portal&#095;type primary key</td>
 		<td> ON portal&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -2989,39 +2907,37 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_portal'>Table analysis_portal</a></th></tr>
+<tr><th colspan='3'><a name='analysis_portal'>Table analysis_portal</a></th></tr>
 <tr><td colspan='3'>Controls what analyses are visible on what portals </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_portal.analysis_id'>analysis&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_portal.portal_type_id'>portal&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;portal</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;portal </td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;portal&#095;0</td>
+	<tr>		<td>idx&#095;analysis&#095;portal&#095;0 </td>
 		<td> ON portal&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_portal</td>
+		<td>fk_analysis_portal</td>
 		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_portal_0</td>
+		<td>fk_analysis_portal_0</td>
 		<td > ( portal&#095;type&#095;id ) ref <a href='#portal&#095;type'>portal&#095;type</a> (portal&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3031,48 +2947,45 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='message_user'>Table message_user</a></th></tr>
+<tr><th colspan='3'><a name='message_user'>Table message_user</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='message_user.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='message_user.message_id'>message&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='message_user.read'>read</a></td>
-		<td> bool   DEFO 'false' </td>
+		<td> bool  NOT NULL  DEFO 'false' </td>
 		<td> Whether the message has been read or not&#046; </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;message&#095;user</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;message&#095;user primary key</td>
 		<td> ON email&#044; message&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;message&#095;user&#095;0</td>
+	<tr>		<td>idx&#095;message&#095;user&#095;0 </td>
 		<td> ON message&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;message&#095;user&#095;1</td>
+	<tr>		<td>idx&#095;message&#095;user&#095;1 </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_message_user</td>
+		<td>fk_message_user</td>
 		<td > ( message&#095;id ) ref <a href='#message'>message</a> (message&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_message_user_0</td>
+		<td>fk_message_user_0</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
@@ -3082,35 +2995,31 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='message'>Table message</a></th></tr>
+<tr><th colspan='3'><a name='message'>Table message</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='message.message_id'>message&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='message.message'>message</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='message.message_time'>message&#095;time</a></td>
-		<td> timestamp   DEFO current_timestamp </td>
+		<td> timestamp  NOT NULL  DEFO current_timestamp </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='message.expiration'>expiration</a></td>
 		<td> timestamp   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;message</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;message primary key</td>
 		<td> ON message&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -3120,30 +3029,27 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='sample_x'>Table sample_x</a></th></tr>
+<tr><th colspan='3'><a name='sample_x'>Table sample_x</a></th></tr>
 <tr><td colspan='3'>data for samples in study x &#040;sample template&#041;x is the study&#095;id from study tableMAKE SURE sample&#095;id IS FK TO sample&#095;id IN required&#095;sample&#095;info TABLE </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='sample_x.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='sample_x.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='sample_x.other_mapping_columns'>other&#095;mapping&#095;columns</a></td>
 		<td> varchar   </td>
 		<td> Represents whatever other columns go with this study </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study&#095;x&#095;y</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study&#095;x&#095;y primary key</td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -3153,42 +3059,40 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='prep_template_filepath'>Table prep_template_filepath</a></th></tr>
+<tr><th colspan='3'><a name='prep_template_filepath'>Table prep_template_filepath</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template_filepath.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;prep&#095;template&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;filepath primary key</td>
 		<td> ON prep&#095;template&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;filepath</td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;filepath </td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;filepath</td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;filepath </td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_filepath_id</td>
+		<td>fk_filepath_id</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template_id</td>
+		<td>fk_prep_template_id</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3198,42 +3102,40 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='sample_template_filepath'>Table sample_template_filepath</a></th></tr>
+<tr><th colspan='3'><a name='sample_template_filepath'>Table sample_template_filepath</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='sample_template_filepath.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='sample_template_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;sample&#095;template&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;sample&#095;template&#095;filepath primary key</td>
 		<td> ON study&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;sample&#095;template&#095;filepath&#095;0</td>
+	<tr>		<td>idx&#095;sample&#095;template&#095;filepath&#095;0 </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;sample&#095;template&#095;filepath&#095;1</td>
+	<tr>		<td>idx&#095;sample&#095;template&#095;filepath&#095;1 </td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_id</td>
+		<td>fk_study_id</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_filepath_id</td>
+		<td>fk_filepath_id</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3243,60 +3145,55 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='prep_template'>Table prep_template</a></th></tr>
+<tr><th colspan='3'><a name='prep_template'>Table prep_template</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template.preprocessing_status'>preprocessing&#095;status</a></td>
-		<td> varchar   DEFO 'not_preprocessed' </td>
+		<td> varchar  NOT NULL  DEFO 'not_preprocessed' </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='prep_template.investigation_type'>investigation&#095;type</a></td>
 		<td> varchar   </td>
 		<td> The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#039;s set of known types&#041; </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='prep_template.artifact_id'>artifact&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;prep&#095;template</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;prep&#095;template primary key</td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template</td>
+	<tr>		<td>idx&#095;prep&#095;template </td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;0</td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;0 </td>
 		<td> ON artifact&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template_data_type</td>
+		<td>fk_prep_template_data_type</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template_artifact</td>
+		<td>fk_prep_template_artifact</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3306,57 +3203,54 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_sample'>Table analysis_sample</a></th></tr>
+<tr><th colspan='3'><a name='analysis_sample'>Table analysis_sample</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_sample.analysis_id'>analysis&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_sample.artifact_id'>artifact&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_sample.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;sample</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;sample </td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;sample&#095;0</td>
+	<tr>		<td>idx&#095;analysis&#095;sample&#095;0 </td>
 		<td> ON artifact&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;sample&#095;1</td>
+	<tr>		<td>idx&#095;analysis&#095;sample&#095;1 </td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>pk&#095;analysis&#095;sample</td>
+	<tr>		<td>pk&#095;analysis&#095;sample primary key</td>
 		<td> ON analysis&#095;id&#044; artifact&#095;id&#044; sample&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_sample_analysis</td>
+		<td>fk_analysis_sample_analysis</td>
 		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_sample</td>
+		<td>fk_analysis_sample</td>
 		<td > ( sample&#095;id ) ref <a href='#study&#095;sample'>study&#095;sample</a> (sample&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_sample_artifact</td>
+		<td>fk_analysis_sample_artifact</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3366,42 +3260,40 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='parent_artifact'>Table parent_artifact</a></th></tr>
+<tr><th colspan='3'><a name='parent_artifact'>Table parent_artifact</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='parent_artifact.artifact_id'>artifact&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='parent_artifact.parent_id'>parent&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;parent&#095;artifact</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;parent&#095;artifact primary key</td>
 		<td> ON artifact&#095;id&#044; parent&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;parent&#095;artifact</td>
+	<tr>		<td>idx&#095;parent&#095;artifact </td>
 		<td> ON artifact&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;parent&#095;artifact</td>
+	<tr>		<td>idx&#095;parent&#095;artifact </td>
 		<td> ON parent&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_parent_artifact_artifact</td>
+		<td>fk_parent_artifact_artifact</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_parent_artifact_parent</td>
+		<td>fk_parent_artifact_parent</td>
 		<td > ( parent&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3411,42 +3303,40 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='artifact_filepath'>Table artifact_filepath</a></th></tr>
+<tr><th colspan='3'><a name='artifact_filepath'>Table artifact_filepath</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_filepath.artifact_id'>artifact&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;artifact&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;artifact&#095;filepath primary key</td>
 		<td> ON artifact&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;filepath</td>
+	<tr>		<td>idx&#095;artifact&#095;filepath </td>
 		<td> ON artifact&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;filepath</td>
+	<tr>		<td>idx&#095;artifact&#095;filepath </td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_filepath_artifact</td>
+		<td>fk_artifact_filepath_artifact</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_filepath_filepath</td>
+		<td>fk_artifact_filepath_filepath</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3456,43 +3346,41 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_users'>Table study_users</a></th></tr>
+<tr><th colspan='3'><a name='study_users'>Table study_users</a></th></tr>
 <tr><td colspan='3'>Links shared studies to users they are shared with </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_users.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_users.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;study&#095;users</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;users primary key</td>
 		<td> ON study&#095;id&#044; email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;users&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;users&#095;0 </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;users&#095;1</td>
+	<tr>		<td>idx&#095;study&#095;users&#095;1 </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_users_study</td>
+		<td>fk_study_users_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_users_user</td>
+		<td>fk_study_users_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
@@ -3502,194 +3390,172 @@ Describes the overarching goal of the investigation</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study'>Table study</a></th></tr>
+<tr><th colspan='3'><a name='study'>Table study</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_id'>study&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td> Unique name for study </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Email of study owner </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.emp_person_id'>emp&#095;person&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.first_contact'>first&#095;contact</a></td>
-		<td> timestamp   DEFO current_timestamp </td>
+		<td> timestamp  NOT NULL  DEFO current_timestamp </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.funding'>funding</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> What type of timeseries this study is &#040;or is not&#041;
 Controlled Vocabulary </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.lab_person_id'>lab&#095;person&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.metadata_complete'>metadata&#095;complete</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.mixs_compliant'>mixs&#095;compliant</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.most_recent_contact'>most&#095;recent&#095;contact</a></td>
 		<td> timestamp   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.number_samples_collected'>number&#095;samples&#095;collected</a></td>
 		<td> integer   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.number_samples_promised'>number&#095;samples&#095;promised</a></td>
 		<td> integer   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.principal_investigator_id'>principal&#095;investigator&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.reprocess'>reprocess</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.spatial_series'>spatial&#095;series</a></td>
 		<td> bool   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_title'>study&#095;title</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_alias'>study&#095;alias</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_description'>study&#095;description</a></td>
-		<td> text   </td>
+		<td> text  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_abstract'>study&#095;abstract</a></td>
-		<td> text   </td>
+		<td> text  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.vamps_id'>vamps&#095;id</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.ebi_study_accession'>ebi&#095;study&#095;accession</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.ebi_submission_status'>ebi&#095;submission&#095;status</a></td>
-		<td> varchar   DEFO 'not_submitted' </td>
+		<td> varchar  NOT NULL  DEFO 'not_submitted' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study primary key</td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study</td>
+	<tr>		<td>idx&#095;study </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;1</td>
+	<tr>		<td>idx&#095;study&#095;1 </td>
 		<td> ON emp&#095;person&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;2</td>
+	<tr>		<td>idx&#095;study&#095;2 </td>
 		<td> ON lab&#095;person&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;3</td>
+	<tr>		<td>idx&#095;study&#095;3 </td>
 		<td> ON principal&#095;investigator&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;4</td>
+	<tr>		<td>idx&#095;study&#095;4 </td>
 		<td> ON timeseries&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>unique&#095;study&#095;title</td>
+	<tr>		<td>unique&#095;study&#095;title unique</td>
 		<td> ON study&#095;title</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_user</td>
+		<td>fk_study_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_study_emp_person</td>
+		<td>fk_study_study_emp_person</td>
 		<td > ( emp&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_study_lab_person</td>
+		<td>fk_study_study_lab_person</td>
 		<td > ( lab&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_study_pi_person</td>
+		<td>fk_study_study_pi_person</td>
 		<td > ( principal&#095;investigator&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_timeseries_type</td>
+		<td>fk_study_timeseries_type</td>
 		<td > ( timeseries&#095;type&#095;id ) ref <a href='#timeseries&#095;type'>timeseries&#095;type</a> (timeseries&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3699,43 +3565,41 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_portal'>Table study_portal</a></th></tr>
+<tr><th colspan='3'><a name='study_portal'>Table study_portal</a></th></tr>
 <tr><td colspan='3'>Controls what studies are visible on what portals </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_portal.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_portal.portal_type_id'>portal&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study&#095;portal</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study&#095;portal primary key</td>
 		<td> ON study&#095;id&#044; portal&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;portal</td>
+	<tr>		<td>idx&#095;study&#095;portal </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;portal&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;portal&#095;0 </td>
 		<td> ON portal&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_portal</td>
+		<td>fk_study_portal</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_portal_0</td>
+		<td>fk_study_portal_0</td>
 		<td > ( portal&#095;type&#095;id ) ref <a href='#portal&#095;type'>portal&#095;type</a> (portal&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3745,27 +3609,25 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='data_type'>Table data_type</a></th></tr>
+<tr><th colspan='3'><a name='data_type'>Table data_type</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='data_type.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='data_type.data_type'>data&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;data&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;data&#095;type primary key</td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;data&#095;type</td>
+	<tr>		<td>idx&#095;data&#095;type unique</td>
 		<td> ON data&#095;type</td>
 		<td>  </td>
 	</tr>
@@ -3775,42 +3637,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='software_publication'>Table software_publication</a></th></tr>
+<tr><th colspan='3'><a name='software_publication'>Table software_publication</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='software_publication.software_id'>software&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software_publication.publication_doi'>publication&#095;doi</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;software&#095;publication</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;software&#095;publication </td>
 		<td> ON software&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;software&#095;publication</td>
+	<tr>		<td>idx&#095;software&#095;publication </td>
 		<td> ON publication&#095;doi</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;software&#095;publication&#095;0</td>
+	<tr>		<td>idx&#095;software&#095;publication&#095;0 primary key</td>
 		<td> ON software&#095;id&#044; publication&#095;doi</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_software_publication</td>
+		<td>fk_software_publication</td>
 		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_software_publication_0</td>
+		<td>fk_software_publication_0</td>
 		<td > ( publication&#095;doi ) ref <a href='#publication'>publication</a> (doi) </td>
 		<td>  </td>
 	</tr>
@@ -3820,33 +3680,30 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='visibility'>Table visibility</a></th></tr>
+<tr><th colspan='3'><a name='visibility'>Table visibility</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='visibility.visibility_id'>visibility&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='visibility.visibility'>visibility</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='visibility.visibility_description'>visibility&#095;description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;visibility</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;visibility primary key</td>
 		<td> ON visibility&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;visibility</td>
+	<tr>		<td>idx&#095;visibility unique</td>
 		<td> ON visibility</td>
 		<td>  </td>
 	</tr>
@@ -3856,46 +3713,42 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_sample'>Table study_sample</a></th></tr>
+<tr><th colspan='3'><a name='study_sample'>Table study_sample</a></th></tr>
 <tr><td colspan='3'>Required info for each sample&#046; One row is one sample&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_sample.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_sample.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study_sample.ebi_sample_accession'>ebi&#095;sample&#095;accession</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study_sample.biosample_accession'>biosample&#095;accession</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;sample&#095;info</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;required&#095;sample&#095;info&#095;1</td>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;1 primary key</td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_required_sample_info_study</td>
+		<td>fk_required_sample_info_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3905,23 +3758,21 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='publication'>Table publication</a></th></tr>
+<tr><th colspan='3'><a name='publication'>Table publication</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='publication.doi'>doi</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='publication.pubmed_id'>pubmed&#095;id</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;publication</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;publication primary key</td>
 		<td> ON doi</td>
 		<td>  </td>
 	</tr>
@@ -3931,23 +3782,21 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='oauth_identifiers'>Table oauth_identifiers</a></th></tr>
+<tr><th colspan='3'><a name='oauth_identifiers'>Table oauth_identifiers</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='oauth_identifiers.client_id'>client&#095;id</a></td>
-		<td> varchar&#040; 50 &#041;   </td>
+		<td> varchar&#040; 50 &#041;  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='oauth_identifiers.client_secret'>client&#095;secret</a></td>
 		<td> varchar&#040; 255 &#041;   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;oauth&#095;identifiers</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;oauth&#095;identifiers primary key</td>
 		<td> ON client&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -3957,42 +3806,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='oauth_software'>Table oauth_software</a></th></tr>
+<tr><th colspan='3'><a name='oauth_software'>Table oauth_software</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='oauth_software.software_id'>software&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='oauth_software.client_id'>client&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;oauth&#095;software</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;oauth&#095;software primary key</td>
 		<td> ON software&#095;id&#044; client&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;oauth&#095;software</td>
+	<tr>		<td>idx&#095;oauth&#095;software </td>
 		<td> ON software&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;oauth&#095;software</td>
+	<tr>		<td>idx&#095;oauth&#095;software </td>
 		<td> ON client&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_oauth_software_software</td>
+		<td>fk_oauth_software_software</td>
 		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_oauth_software</td>
+		<td>fk_oauth_software</td>
 		<td > ( client&#095;id ) ref <a href='#oauth&#095;identifiers'>oauth&#095;identifiers</a> (client&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4002,94 +3849,85 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis'>Table analysis</a></th></tr>
+<tr><th colspan='3'><a name='analysis'>Table analysis</a></th></tr>
 <tr><td colspan='3'>Holds analysis information </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.analysis_id'>analysis&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td> Unique identifier for analysis </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Email for user who owns the analysis </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Name of the analysis </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='analysis.pmid'>pmid</a></td>
 		<td> varchar   </td>
 		<td> PMID of paper from the analysis </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='analysis.timestamp'>timestamp</a></td>
 		<td> timestamptz   DEFO current_timestamp </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.dflt'>dflt</a></td>
-		<td> bool   DEFO false </td>
+		<td> bool  NOT NULL  DEFO false </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.portal_type_id'>portal&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='analysis.logging_id'>logging&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;analysis</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;analysis primary key</td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;email</td>
+	<tr>		<td>idx&#095;analysis&#095;email </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis</td>
+	<tr>		<td>idx&#095;analysis </td>
 		<td> ON portal&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;0</td>
+	<tr>		<td>idx&#095;analysis&#095;0 </td>
 		<td> ON logging&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_user</td>
+		<td>fk_analysis_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis</td>
+		<td>fk_analysis</td>
 		<td > ( portal&#095;type&#095;id ) ref <a href='#portal&#095;type'>portal&#095;type</a> (portal&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_logging</td>
+		<td>fk_analysis_logging</td>
 		<td > ( logging&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4099,48 +3937,45 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='ebi_run_accession'>Table ebi_run_accession</a></th></tr>
+<tr><th colspan='3'><a name='ebi_run_accession'>Table ebi_run_accession</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='ebi_run_accession.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='ebi_run_accession.artifact_id'>artifact&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='ebi_run_accession.ebi_run_accession'>ebi&#095;run&#095;accession</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;ebi&#095;run&#095;accession</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;ebi&#095;run&#095;accession primary key</td>
 		<td> ON sample&#095;id&#044; artifact&#095;id&#044; ebi&#095;run&#095;accession</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;ebi&#095;run&#095;accession</td>
+	<tr>		<td>idx&#095;ebi&#095;run&#095;accession </td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;ebi&#095;run&#095;accession</td>
+	<tr>		<td>idx&#095;ebi&#095;run&#095;accession </td>
 		<td> ON artifact&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_ebi_run_accession</td>
+		<td>fk_ebi_run_accession</td>
 		<td > ( sample&#095;id ) ref <a href='#study&#095;sample'>study&#095;sample</a> (sample&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_ebi_run_accession_artifact</td>
+		<td>fk_ebi_run_accession_artifact</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4150,103 +3985,94 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='artifact'>Table artifact</a></th></tr>
+<tr><th colspan='3'><a name='artifact'>Table artifact</a></th></tr>
 <tr><td colspan='3'>Represents data in the system </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact.artifact_id'>artifact&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact.name'>name</a></td>
-		<td> varchar&#040; 35 &#041;   </td>
+		<td> varchar&#040; 35 &#041;  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact.generated_timestamp'>generated&#095;timestamp</a></td>
-		<td> timestamp   </td>
+		<td> timestamp  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='artifact.command_id'>command&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='artifact.command_parameters'>command&#095;parameters</a></td>
 		<td> varchar   </td>
 		<td> Varchar in dbschema but is JSON in the postgresDB </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact.visibility_id'>visibility&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='artifact.artifact_type_id'>artifact&#095;type&#095;id</a></td>
 		<td> integer   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact.submitted_to_vamps'>submitted&#095;to&#095;vamps</a></td>
-		<td> bool   DEFO 'FALSE' </td>
+		<td> bool  NOT NULL  DEFO 'FALSE' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;artifact</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;artifact primary key</td>
 		<td> ON artifact&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;0</td>
+	<tr>		<td>idx&#095;artifact&#095;0 </td>
 		<td> ON visibility&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;1</td>
+	<tr>		<td>idx&#095;artifact&#095;1 </td>
 		<td> ON artifact&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact</td>
+	<tr>		<td>idx&#095;artifact </td>
 		<td> ON command&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;2</td>
+	<tr>		<td>idx&#095;artifact&#095;2 </td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_visibility</td>
+		<td>fk_artifact_visibility</td>
 		<td > ( visibility&#095;id ) ref <a href='#visibility'>visibility</a> (visibility&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_filetype</td>
+		<td>fk_artifact_filetype</td>
 		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_soft_command</td>
+		<td>fk_artifact_soft_command</td>
 		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_data_type</td>
+		<td>fk_artifact_data_type</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4256,46 +4082,41 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='artifact_type'>Table artifact_type</a></th></tr>
+<tr><th colspan='3'><a name='artifact_type'>Table artifact_type</a></th></tr>
 <tr><td colspan='3'>Type of artifact </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_type.artifact_type'>artifact&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_type.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_type.can_be_submitted_to_ebi'>can&#095;be&#095;submitted&#095;to&#095;ebi</a></td>
-		<td> bool   DEFO 'FALSE' </td>
+		<td> bool  NOT NULL  DEFO 'FALSE' </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_type.can_be_submitted_to_vamps'>can&#095;be&#095;submitted&#095;to&#095;vamps</a></td>
-		<td> bool   DEFO 'FALSE' </td>
+		<td> bool  NOT NULL  DEFO 'FALSE' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;filetype</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;filetype primary key</td>
 		<td> ON artifact&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;filetype</td>
+	<tr>		<td>idx&#095;filetype unique</td>
 		<td> ON artifact&#095;type</td>
 		<td>  </td>
 	</tr>
@@ -4305,27 +4126,25 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='filepath_type'>Table filepath_type</a></th></tr>
+<tr><th colspan='3'><a name='filepath_type'>Table filepath_type</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath_type.filepath_type_id'>filepath&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='filepath_type.filepath_type'>filepath&#095;type</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;filepath&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;filepath&#095;type primary key</td>
 		<td> ON filepath&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;filepath&#095;type</td>
+	<tr>		<td>idx&#095;filepath&#095;type unique</td>
 		<td> ON filepath&#095;type</td>
 		<td>  </td>
 	</tr>
@@ -4335,41 +4154,36 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='data_directory'>Table data_directory</a></th></tr>
+<tr><th colspan='3'><a name='data_directory'>Table data_directory</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='data_directory.data_directory_id'>data&#095;directory&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='data_directory.data_type'>data&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='data_directory.mountpoint'>mountpoint</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='data_directory.subdirectory'>subdirectory</a></td>
-		<td> bool   DEFO FALSE </td>
+		<td> bool  NOT NULL  DEFO FALSE </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='data_directory.active'>active</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;data&#095;directory</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;data&#095;directory primary key</td>
 		<td> ON data&#095;directory&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -4379,48 +4193,45 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='artifact_type_filepath_type'>Table artifact_type_filepath_type</a></th></tr>
+<tr><th colspan='3'><a name='artifact_type_filepath_type'>Table artifact_type_filepath_type</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_type_filepath_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_type_filepath_type.filepath_type_id'>filepath&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_type_filepath_type.required'>required</a></td>
-		<td> bool   DEFO 'TRUE' </td>
+		<td> bool  NOT NULL  DEFO 'TRUE' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;artifact&#095;type&#095;filepath&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;artifact&#095;type&#095;filepath&#095;type primary key</td>
 		<td> ON artifact&#095;type&#095;id&#044; filepath&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;type&#095;filepath&#095;type</td>
+	<tr>		<td>idx&#095;artifact&#095;type&#095;filepath&#095;type </td>
 		<td> ON artifact&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;type&#095;filepath&#095;type</td>
+	<tr>		<td>idx&#095;artifact&#095;type&#095;filepath&#095;type </td>
 		<td> ON filepath&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_type_filepath_type</td>
+		<td>fk_artifact_type_filepath_type</td>
 		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_type_filepath_type_0</td>
+		<td>fk_artifact_type_filepath_type_0</td>
 		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4430,42 +4241,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_artifact'>Table study_artifact</a></th></tr>
+<tr><th colspan='3'><a name='study_artifact'>Table study_artifact</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_artifact.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_artifact.artifact_id'>artifact&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;study&#095;artifact</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;artifact primary key</td>
 		<td> ON study&#095;id&#044; artifact&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;artifact</td>
+	<tr>		<td>idx&#095;study&#095;artifact </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;artifact</td>
+	<tr>		<td>idx&#095;study&#095;artifact </td>
 		<td> ON artifact&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_artifact_study</td>
+		<td>fk_study_artifact_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_artifact_artifact</td>
+		<td>fk_study_artifact_artifact</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4475,106 +4284,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='command_parameter'>Table command_parameter</a></th></tr>
+<tr><th colspan='3'><a name='parameter_artifact_type'>Table parameter_artifact_type</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
-		<td><a name='command_parameter.command_parameter_id'>command&#095;parameter&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='command_parameter.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='command_parameter.parameter_name'>parameter&#095;name</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='command_parameter.parameter_type'>parameter&#095;type</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='command_parameter.required'>required</a></td>
-		<td> bool   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='command_parameter.default_value'>default&#095;value</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;command&#095;parameter</td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>Pk</td><td>pk&#095;command&#095;parameter</td>
-		<td> ON command&#095;parameter&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>U</td><td>idx&#095;command&#095;parameter&#095;0</td>
-		<td> ON command&#095;id&#044; parameter&#095;name</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_command_parameter</td>
-		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='parameter_artifact_type'>Table parameter_artifact_type</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
 		<td><a name='parameter_artifact_type.command_parameter_id'>command&#095;parameter&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='parameter_artifact_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;parameter&#095;artifact&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;parameter&#095;artifact&#095;type primary key</td>
 		<td> ON command&#095;parameter&#095;id&#044; artifact&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;parameter&#095;artifact&#095;type</td>
+	<tr>		<td>idx&#095;parameter&#095;artifact&#095;type </td>
 		<td> ON command&#095;parameter&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;parameter&#095;artifact&#095;type</td>
+	<tr>		<td>idx&#095;parameter&#095;artifact&#095;type </td>
 		<td> ON artifact&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_parameter_artifact_type</td>
+		<td>fk_parameter_artifact_type</td>
 		<td > ( command&#095;parameter&#095;id ) ref <a href='#command&#095;parameter'>command&#095;parameter</a> (command&#095;parameter&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_parameter_artifact_type_0</td>
+		<td>fk_parameter_artifact_type_0</td>
 		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4584,110 +4327,45 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='command_output'>Table command_output</a></th></tr>
+<tr><th colspan='3'><a name='default_parameter_set'>Table default_parameter_set</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
-		<td><a name='command_output.command_output_id'>command&#095;output&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='command_output.name'>name</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='command_output.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='command_output.artifact_type_id'>artifact&#095;type&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;command&#095;output</td>
-		<td> ON command&#095;output&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>U</td><td>idx&#095;command&#095;output</td>
-		<td> ON name&#044; command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;command&#095;output</td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;command&#095;output</td>
-		<td> ON artifact&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_command_output</td>
-		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_command_output_0</td>
-		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='default_parameter_set'>Table default_parameter_set</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
 		<td><a name='default_parameter_set.default_parameter_set_id'>default&#095;parameter&#095;set&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_parameter_set.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_parameter_set.parameter_set_name'>parameter&#095;set&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_parameter_set.parameter_set'>parameter&#095;set</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> This is a varchar here &#045; but is of type JSON in postgresql&#046; </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;default&#095;parameter&#095;set</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;default&#095;parameter&#095;set primary key</td>
 		<td> ON default&#095;parameter&#095;set&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;parameter&#095;set</td>
+	<tr>		<td>idx&#095;default&#095;parameter&#095;set </td>
 		<td> ON command&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;default&#095;parameter&#095;set&#095;0</td>
+	<tr>		<td>idx&#095;default&#095;parameter&#095;set&#095;0 unique</td>
 		<td> ON command&#095;id&#044; parameter&#095;set&#095;name</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_default_parameter_set</td>
+		<td>fk_default_parameter_set</td>
 		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4697,43 +4375,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='default_workflow'>Table default_workflow</a></th></tr>
+<tr><th colspan='3'><a name='default_workflow'>Table default_workflow</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow.default_workflow_id'>default&#095;workflow&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow.software_id'>software&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;default&#095;workflow</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;default&#095;workflow primary key</td>
 		<td> ON default&#095;workflow&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;default&#095;workflow</td>
+	<tr>		<td>idx&#095;default&#095;workflow unique</td>
 		<td> ON software&#095;id&#044; name</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow</td>
+	<tr>		<td>idx&#095;default&#095;workflow </td>
 		<td> ON software&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_default_workflow_software</td>
+		<td>fk_default_workflow_software</td>
 		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4743,63 +4418,59 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='default_workflow_node'>Table default_workflow_node</a></th></tr>
+<tr><th colspan='3'><a name='default_workflow_node'>Table default_workflow_node</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow_node.default_workflow_node_id'>default&#095;workflow&#095;node&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow_node.default_workflow_id'>default&#095;workflow&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow_node.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow_node.default_parameter_set_id'>default&#095;parameter&#095;set&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;command</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;default&#095;workflow&#095;command </td>
 		<td> ON command&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;command</td>
+	<tr>		<td>idx&#095;default&#095;workflow&#095;command </td>
 		<td> ON default&#095;parameter&#095;set&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;command&#095;0</td>
+	<tr>		<td>idx&#095;default&#095;workflow&#095;command&#095;0 </td>
 		<td> ON default&#095;workflow&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>pk&#095;default&#095;workflow&#095;command</td>
+	<tr>		<td>pk&#095;default&#095;workflow&#095;command primary key</td>
 		<td> ON default&#095;workflow&#095;node&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_default_workflow_command</td>
+		<td>fk_default_workflow_command</td>
 		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_default_workflow_command_0</td>
+		<td>fk_default_workflow_command_0</td>
 		<td > ( default&#095;parameter&#095;set&#095;id ) ref <a href='#default&#095;parameter&#095;set'>default&#095;parameter&#095;set</a> (default&#095;parameter&#095;set&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_default_workflow_command_1</td>
+		<td>fk_default_workflow_command_1</td>
 		<td > ( default&#095;workflow&#095;id ) ref <a href='#default&#095;workflow'>default&#095;workflow</a> (default&#095;workflow&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4809,48 +4480,45 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='default_workflow_edge'>Table default_workflow_edge</a></th></tr>
+<tr><th colspan='3'><a name='default_workflow_edge'>Table default_workflow_edge</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow_edge.default_workflow_edge_id'>default&#095;workflow&#095;edge&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow_edge.parent_id'>parent&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow_edge.child_id'>child&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;default&#095;workflow&#095;edge</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;default&#095;workflow&#095;edge primary key</td>
 		<td> ON default&#095;workflow&#095;edge&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;edge</td>
+	<tr>		<td>idx&#095;default&#095;workflow&#095;edge </td>
 		<td> ON parent&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;edge</td>
+	<tr>		<td>idx&#095;default&#095;workflow&#095;edge </td>
 		<td> ON child&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_default_workflow_edge</td>
+		<td>fk_default_workflow_edge</td>
 		<td > ( parent&#095;id ) ref <a href='#default&#095;workflow&#095;node'>default&#095;workflow&#095;node</a> (default&#095;workflow&#095;node&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_default_workflow_edge_0</td>
+		<td>fk_default_workflow_edge_0</td>
 		<td > ( child&#095;id ) ref <a href='#default&#095;workflow&#095;node'>default&#095;workflow&#095;node</a> (default&#095;workflow&#095;node&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4860,42 +4528,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='artifact_processing_job'>Table artifact_processing_job</a></th></tr>
+<tr><th colspan='3'><a name='artifact_processing_job'>Table artifact_processing_job</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_processing_job.artifact_id'>artifact&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;artifact&#095;processing&#095;job</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;artifact&#095;processing&#095;job primary key</td>
 		<td> ON artifact&#095;id&#044; processing&#095;job&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;processing&#095;job</td>
+	<tr>		<td>idx&#095;artifact&#095;processing&#095;job </td>
 		<td> ON artifact&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;processing&#095;job</td>
+	<tr>		<td>idx&#095;artifact&#095;processing&#095;job </td>
 		<td> ON processing&#095;job&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_processing_job</td>
+		<td>fk_artifact_processing_job</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_processing_job_0</td>
+		<td>fk_artifact_processing_job_0</td>
 		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4905,53 +4571,50 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='artifact_output_processing_job'>Table artifact_output_processing_job</a></th></tr>
+<tr><th colspan='3'><a name='artifact_output_processing_job'>Table artifact_output_processing_job</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_output_processing_job.artifact_id'>artifact&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_output_processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='artifact_output_processing_job.command_output_id'>command&#095;output&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;output&#095;processing&#095;job</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;artifact&#095;output&#095;processing&#095;job </td>
 		<td> ON artifact&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;output&#095;processing&#095;job</td>
+	<tr>		<td>idx&#095;artifact&#095;output&#095;processing&#095;job </td>
 		<td> ON processing&#095;job&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;output&#095;processing&#095;job</td>
+	<tr>		<td>idx&#095;artifact&#095;output&#095;processing&#095;job </td>
 		<td> ON command&#095;output&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_output_processing_job</td>
+		<td>fk_artifact_output_processing_job</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_output_processing_job_0</td>
+		<td>fk_artifact_output_processing_job_0</td>
 		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_artifact_output_processing_job_1</td>
+		<td>fk_artifact_output_processing_job_1</td>
 		<td > ( command&#095;output&#095;id ) ref <a href='#command&#095;output'>command&#095;output</a> (command&#095;output&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4961,75 +4624,69 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='reference'>Table reference</a></th></tr>
+<tr><th colspan='3'><a name='reference'>Table reference</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='reference.reference_id'>reference&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='reference.reference_name'>reference&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='reference.reference_version'>reference&#095;version</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='reference.sequence_filepath'>sequence&#095;filepath</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='reference.taxonomy_filepath'>taxonomy&#095;filepath</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='reference.tree_filepath'>tree&#095;filepath</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;reference</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;reference primary key</td>
 		<td> ON reference&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;reference</td>
+	<tr>		<td>idx&#095;reference </td>
 		<td> ON sequence&#095;filepath</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;reference&#095;0</td>
+	<tr>		<td>idx&#095;reference&#095;0 </td>
 		<td> ON taxonomy&#095;filepath</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;reference&#095;1</td>
+	<tr>		<td>idx&#095;reference&#095;1 </td>
 		<td> ON tree&#095;filepath</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_reference_sequence_filepath</td>
+		<td>fk_reference_sequence_filepath</td>
 		<td > ( sequence&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_reference_taxonomy_filepath</td>
+		<td>fk_reference_taxonomy_filepath</td>
 		<td > ( taxonomy&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_reference_tree_filepath</td>
+		<td>fk_reference_tree_filepath</td>
 		<td > ( tree&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5039,29 +4696,26 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='processing_job_status'>Table processing_job_status</a></th></tr>
+<tr><th colspan='3'><a name='processing_job_status'>Table processing_job_status</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job_status.processing_job_status_id'>processing&#095;job&#095;status&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job_status.processing_job_status'>processing&#095;job&#095;status</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job_status.processing_job_status_description'>processing&#095;job&#095;status&#095;description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;processing&#095;job&#095;status</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processing&#095;job&#095;status primary key</td>
 		<td> ON processing&#095;job&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -5071,42 +4725,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='parent_processing_job'>Table parent_processing_job</a></th></tr>
+<tr><th colspan='3'><a name='parent_processing_job'>Table parent_processing_job</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='parent_processing_job.parent_id'>parent&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='parent_processing_job.child_id'>child&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;parent&#095;processing&#095;job</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;parent&#095;processing&#095;job primary key</td>
 		<td> ON parent&#095;id&#044; child&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;parent&#095;processing&#095;job</td>
+	<tr>		<td>idx&#095;parent&#095;processing&#095;job </td>
 		<td> ON parent&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;parent&#095;processing&#095;job</td>
+	<tr>		<td>idx&#095;parent&#095;processing&#095;job </td>
 		<td> ON child&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_parent_processing_job</td>
+		<td>fk_parent_processing_job</td>
 		<td > ( parent&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_parent_processing_job_0</td>
+		<td>fk_parent_processing_job_0</td>
 		<td > ( child&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5116,39 +4768,36 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='processing_job_workflow'>Table processing_job_workflow</a></th></tr>
+<tr><th colspan='3'><a name='processing_job_workflow'>Table processing_job_workflow</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job_workflow.processing_job_workflow_id'>processing&#095;job&#095;workflow&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job_workflow.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='processing_job_workflow.name'>name</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;processing&#095;job&#095;workflow</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processing&#095;job&#095;workflow primary key</td>
 		<td> ON processing&#095;job&#095;workflow&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;workflow</td>
+	<tr>		<td>idx&#095;processing&#095;job&#095;workflow </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_workflow</td>
+		<td>fk_processing_job_workflow</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
@@ -5158,42 +4807,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='processing_job_workflow_root'>Table processing_job_workflow_root</a></th></tr>
+<tr><th colspan='3'><a name='processing_job_workflow_root'>Table processing_job_workflow_root</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job_workflow_root.processing_job_workflow_id'>processing&#095;job&#095;workflow&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job_workflow_root.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;workflow&#095;roots</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;processing&#095;job&#095;workflow&#095;roots </td>
 		<td> ON processing&#095;job&#095;workflow&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;workflow&#095;roots</td>
+	<tr>		<td>idx&#095;processing&#095;job&#095;workflow&#095;roots </td>
 		<td> ON processing&#095;job&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;processing&#095;job&#095;workflow&#095;roots&#095;0</td>
+	<tr>		<td>idx&#095;processing&#095;job&#095;workflow&#095;roots&#095;0 primary key</td>
 		<td> ON processing&#095;job&#095;workflow&#095;id&#044; processing&#095;job&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_workflow_roots_0</td>
+		<td>fk_processing_job_workflow_roots_0</td>
 		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_workflow_roots</td>
+		<td>fk_processing_job_workflow_roots</td>
 		<td > ( processing&#095;job&#095;workflow&#095;id ) ref <a href='#processing&#095;job&#095;workflow'>processing&#095;job&#095;workflow</a> (processing&#095;job&#095;workflow&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5203,42 +4850,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='prep_template_processing_job'>Table prep_template_processing_job</a></th></tr>
+<tr><th colspan='3'><a name='prep_template_processing_job'>Table prep_template_processing_job</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template_processing_job.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template_processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;prep&#095;template&#095;processing&#095;job</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;processing&#095;job primary key</td>
 		<td> ON prep&#095;template&#095;id&#044; processing&#095;job&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;processing&#095;job</td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;processing&#095;job </td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;processing&#095;job</td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;processing&#095;job </td>
 		<td> ON processing&#095;job&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template_processing_job</td>
+		<td>fk_prep_template_processing_job</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template_processing_job_0</td>
+		<td>fk_prep_template_processing_job_0</td>
 		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5248,43 +4893,41 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='software_artifact_type'>Table software_artifact_type</a></th></tr>
+<tr><th colspan='3'><a name='software_artifact_type'>Table software_artifact_type</a></th></tr>
 <tr><td colspan='3'>In case that the software is of type &quot;type plugin&quot;&#044; it holds the artifact types that such software can validate and generate the summary&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='software_artifact_type.software_id'>software&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software_artifact_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;software&#095;artifact&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;software&#095;artifact&#095;type primary key</td>
 		<td> ON software&#095;id&#044; artifact&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;software&#095;artifact&#095;type</td>
+	<tr>		<td>idx&#095;software&#095;artifact&#095;type </td>
 		<td> ON artifact&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;software&#095;artifact&#095;type</td>
+	<tr>		<td>idx&#095;software&#095;artifact&#095;type </td>
 		<td> ON software&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_software_artifact_type</td>
+		<td>fk_software_artifact_type</td>
 		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_software_artifact_type_sw</td>
+		<td>fk_software_artifact_type_sw</td>
 		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5294,29 +4937,26 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='software_type'>Table software_type</a></th></tr>
+<tr><th colspan='3'><a name='software_type'>Table software_type</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='software_type.software_type_id'>software&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software_type.software_type'>software&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software_type.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;software&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;software&#095;type primary key</td>
 		<td> ON software&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -5326,69 +4966,61 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='software'>Table software</a></th></tr>
+<tr><th colspan='3'><a name='software'>Table software</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='software.software_id'>software&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software.version'>version</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software.environment_script'>environment&#095;script</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software.start_script'>start&#095;script</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software.software_type_id'>software&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software.active'>active</a></td>
-		<td> bool   DEFO 'True' </td>
+		<td> bool  NOT NULL  DEFO 'True' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;software</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;software primary key</td>
 		<td> ON software&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;software</td>
+	<tr>		<td>idx&#095;software </td>
 		<td> ON software&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_software_software_type</td>
+		<td>fk_software_software_type</td>
 		<td > ( software&#095;type&#095;id ) ref <a href='#software&#095;type'>software&#095;type</a> (software&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5398,102 +5030,93 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='processing_job'>Table processing_job</a></th></tr>
+<tr><th colspan='3'><a name='processing_job'>Table processing_job</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td> Using bigserial in DBSchema &#045; however in the postgres DB this column is of type UUID&#046; </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> The user that launched the job </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> The command launched </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job.command_parameters'>command&#095;parameters</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> The parameters used in the command in JSON format </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job.processing_job_status_id'>processing&#095;job&#095;status&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='processing_job.logging_id'>logging&#095;id</a></td>
 		<td> bigint   </td>
 		<td> In case of failure&#044; point to the log entry that holds more information about the error </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='processing_job.heartbeat'>heartbeat</a></td>
 		<td> timestamp   </td>
 		<td> The last heartbeat received by this job </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='processing_job.step'>step</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='processing_job.pending'>pending</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;processing&#095;job</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processing&#095;job primary key</td>
 		<td> ON processing&#095;job&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job</td>
+	<tr>		<td>idx&#095;processing&#095;job </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job</td>
+	<tr>		<td>idx&#095;processing&#095;job </td>
 		<td> ON command&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;0</td>
+	<tr>		<td>idx&#095;processing&#095;job&#095;0 </td>
 		<td> ON processing&#095;job&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;1</td>
+	<tr>		<td>idx&#095;processing&#095;job&#095;1 </td>
 		<td> ON logging&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_qiita_user</td>
+		<td>fk_processing_job_qiita_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processing_job</td>
+		<td>fk_processing_job</td>
 		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_status</td>
+		<td>fk_processing_job_status</td>
 		<td > ( processing&#095;job&#095;status&#095;id ) ref <a href='#processing&#095;job&#095;status'>processing&#095;job&#095;status</a> (processing&#095;job&#095;status&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_logging</td>
+		<td>fk_processing_job_logging</td>
 		<td > ( logging&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5503,57 +5126,54 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='default_workflow_edge_connections'>Table default_workflow_edge_connections</a></th></tr>
+<tr><th colspan='3'><a name='default_workflow_edge_connections'>Table default_workflow_edge_connections</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow_edge_connections.default_workflow_edge_id'>default&#095;workflow&#095;edge&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow_edge_connections.parent_output_id'>parent&#095;output&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='default_workflow_edge_connections.child_input_id'>child&#095;input&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;default&#095;workflow&#095;edge&#095;connections</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;default&#095;workflow&#095;edge&#095;connections primary key</td>
 		<td> ON default&#095;workflow&#095;edge&#095;id&#044; parent&#095;output&#095;id&#044; child&#095;input&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;edge&#095;connections</td>
+	<tr>		<td>idx&#095;default&#095;workflow&#095;edge&#095;connections </td>
 		<td> ON parent&#095;output&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;edge&#095;connections</td>
+	<tr>		<td>idx&#095;default&#095;workflow&#095;edge&#095;connections </td>
 		<td> ON child&#095;input&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;edge&#095;connections&#095;0</td>
+	<tr>		<td>idx&#095;default&#095;workflow&#095;edge&#095;connections&#095;0 </td>
 		<td> ON default&#095;workflow&#095;edge&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_default_workflow_edge_connections</td>
+		<td>fk_default_workflow_edge_connections</td>
 		<td > ( parent&#095;output&#095;id ) ref <a href='#command&#095;output'>command&#095;output</a> (command&#095;output&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_default_workflow_edge_connections_0</td>
+		<td>fk_default_workflow_edge_connections_0</td>
 		<td > ( child&#095;input&#095;id ) ref <a href='#command&#095;parameter'>command&#095;parameter</a> (command&#095;parameter&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_default_workflow_edge_connections_1</td>
+		<td>fk_default_workflow_edge_connections_1</td>
 		<td > ( default&#095;workflow&#095;edge&#095;id ) ref <a href='#default&#095;workflow&#095;edge'>default&#095;workflow&#095;edge</a> (default&#095;workflow&#095;edge&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5563,48 +5183,45 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='processing_job_validator'>Table processing_job_validator</a></th></tr>
+<tr><th colspan='3'><a name='processing_job_validator'>Table processing_job_validator</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job_validator.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processing_job_validator.validator_id'>validator&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='processing_job_validator.artifact_info'>artifact&#095;info</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;validator</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;processing&#095;job&#095;validator </td>
 		<td> ON processing&#095;job&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;validator</td>
+	<tr>		<td>idx&#095;processing&#095;job&#095;validator </td>
 		<td> ON validator&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;processing&#095;job&#095;validator&#095;0</td>
+	<tr>		<td>idx&#095;processing&#095;job&#095;validator&#095;0 primary key</td>
 		<td> ON processing&#095;job&#095;id&#044; validator&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_validator</td>
+		<td>fk_processing_job_validator</td>
 		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_validator_0</td>
+		<td>fk_processing_job_validator_0</td>
 		<td > ( validator&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5614,30 +5231,27 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_publication'>Table study_publication</a></th></tr>
+<tr><th colspan='3'><a name='study_publication'>Table study_publication</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_publication.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_publication.publication'>publication</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study_publication.is_doi'>is&#095;doi</a></td>
 		<td> bool   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_publication_study</td>
+		<td>fk_study_publication_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5647,57 +5261,51 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='software_command'>Table software_command</a></th></tr>
+<tr><th colspan='3'><a name='software_command'>Table software_command</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='software_command.command_id'>command&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software_command.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software_command.software_id'>software&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software_command.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software_command.active'>active</a></td>
-		<td> bool   DEFO 'True' </td>
+		<td> bool  NOT NULL  DEFO 'True' </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='software_command.is_analysis'>is&#095;analysis</a></td>
-		<td> bool   DEFO 'False' </td>
+		<td> bool  NOT NULL  DEFO 'False' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;soft&#095;command</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;soft&#095;command primary key</td>
 		<td> ON command&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;soft&#095;command</td>
+	<tr>		<td>idx&#095;soft&#095;command </td>
 		<td> ON software&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_soft_command_software</td>
+		<td>fk_soft_command_software</td>
 		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5707,43 +5315,41 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_environmental_package'>Table study_environmental_package</a></th></tr>
+<tr><th colspan='3'><a name='study_environmental_package'>Table study_environmental_package</a></th></tr>
 <tr><td colspan='3'>Holds the 1 to many relationship between the study and the environmental&#095;package </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_environmental_package.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_environmental_package.environmental_package_name'>environmental&#095;package&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study&#095;environmental&#095;package</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study&#095;environmental&#095;package primary key</td>
 		<td> ON study&#095;id&#044; environmental&#095;package&#095;name</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;environmental&#095;package</td>
+	<tr>		<td>idx&#095;study&#095;environmental&#095;package </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;environmental&#095;package&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;environmental&#095;package&#095;0 </td>
 		<td> ON environmental&#095;package&#095;name</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_environmental_package</td>
+		<td>fk_study_environmental_package</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_environmental_package_0</td>
+		<td>fk_study_environmental_package_0</td>
 		<td > ( environmental&#095;package&#095;name ) ref <a href='#environmental&#095;package'>environmental&#095;package</a> (environmental&#095;package&#095;name) </td>
 		<td>  </td>
 	</tr>
@@ -5753,33 +5359,30 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='timeseries_type'>Table timeseries_type</a></th></tr>
+<tr><th colspan='3'><a name='timeseries_type'>Table timeseries_type</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='timeseries_type.timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='timeseries_type.timeseries_type'>timeseries&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='timeseries_type.intervention_type'>intervention&#095;type</a></td>
-		<td> varchar   DEFO 'None' </td>
+		<td> varchar  NOT NULL  DEFO 'None' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;timeseries&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;timeseries&#095;type primary key</td>
 		<td> ON timeseries&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;timeseries&#095;type</td>
+	<tr>		<td>idx&#095;timeseries&#095;type unique</td>
 		<td> ON timeseries&#095;type&#044; intervention&#095;type</td>
 		<td>  </td>
 	</tr>
@@ -5789,43 +5392,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_tags'>Table study_tags</a></th></tr>
+<tr><th colspan='3'><a name='study_tags'>Table study_tags</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_tags.study_tag_id'>study&#095;tag&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_tags.study_tag'>study&#095;tag</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_tags.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study&#095;tags</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study&#095;tags primary key</td>
 		<td> ON study&#095;tag&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;study&#095;tags</td>
+	<tr>		<td>idx&#095;study&#095;tags unique</td>
 		<td> ON study&#095;tag</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;tags</td>
+	<tr>		<td>idx&#095;study&#095;tags </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_tags_qiita_user</td>
+		<td>fk_study_tags_qiita_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
@@ -5835,42 +5435,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='per_study_tags'>Table per_study_tags</a></th></tr>
+<tr><th colspan='3'><a name='per_study_tags'>Table per_study_tags</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='per_study_tags.study_tag_id'>study&#095;tag&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='per_study_tags.study_id'>study&#095;id</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;per&#095;study&#095;tags</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;per&#095;study&#095;tags primary key</td>
 		<td> ON study&#095;tag&#095;id&#044; study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;per&#095;study&#095;tags</td>
+	<tr>		<td>idx&#095;per&#095;study&#095;tags </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;per&#095;study&#095;tags</td>
+	<tr>		<td>idx&#095;per&#095;study&#095;tags </td>
 		<td> ON study&#095;tag&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_per_study_tags_study</td>
+		<td>fk_per_study_tags_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_per_study_tags_study_tags</td>
+		<td>fk_per_study_tags_study_tags</td>
 		<td > ( study&#095;tag&#095;id ) ref <a href='#study&#095;tags'>study&#095;tags</a> (study&#095;tag&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5880,52 +5478,46 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_person'>Table study_person</a></th></tr>
+<tr><th colspan='3'><a name='study_person'>Table study_person</a></th></tr>
 <tr><td colspan='3'>Contact information for the various people involved in a study </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_person.study_person_id'>study&#095;person&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_person.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_person.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_person.affiliation'>affiliation</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> The institution with which this person is affiliated </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study_person.address'>address</a></td>
 		<td> varchar&#040; 100 &#041;   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study_person.phone'>phone</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study&#095;person</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study&#095;person primary key</td>
 		<td> ON study&#095;person&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;study&#095;person</td>
+	<tr>		<td>idx&#095;study&#095;person unique</td>
 		<td> ON name&#044; affiliation</td>
 		<td>  </td>
 	</tr>
@@ -5935,23 +5527,21 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='environmental_package'>Table environmental_package</a></th></tr>
+<tr><th colspan='3'><a name='environmental_package'>Table environmental_package</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='environmental_package.environmental_package_name'>environmental&#095;package&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> The name of the environmental package </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='environmental_package.metadata_table'>metadata&#095;table</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Contains the name of the table that contains the pre&#045;defined metadata columns for the environmental package </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;environmental&#095;package</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;environmental&#095;package primary key</td>
 		<td> ON environmental&#095;package&#095;name</td>
 		<td>  </td>
 	</tr>
@@ -5961,42 +5551,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='investigation_study'>Table investigation_study</a></th></tr>
+<tr><th colspan='3'><a name='investigation_study'>Table investigation_study</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='investigation_study.investigation_id'>investigation&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='investigation_study.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;investigation&#095;study</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;investigation&#095;study primary key</td>
 		<td> ON investigation&#095;id&#044; study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;investigation&#095;study&#095;investigation</td>
+	<tr>		<td>idx&#095;investigation&#095;study&#095;investigation </td>
 		<td> ON investigation&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;investigation&#095;study&#095;study</td>
+	<tr>		<td>idx&#095;investigation&#095;study&#095;study </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_investigation_study</td>
+		<td>fk_investigation_study</td>
 		<td > ( investigation&#095;id ) ref <a href='#investigation'>investigation</a> (investigation&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_investigation_study_study</td>
+		<td>fk_investigation_study_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -6006,47 +5594,173 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='investigation'>Table investigation</a></th></tr>
+<tr><th colspan='3'><a name='investigation'>Table investigation</a></th></tr>
 <tr><td colspan='3'>Overarching investigation information&#046;An investigation comprises one or more individual studies&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='investigation.investigation_id'>investigation&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='investigation.investigation_name'>investigation&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='investigation.investigation_description'>investigation&#095;description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Describes the overarching goal of the investigation </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='investigation.contact_person_id'>contact&#095;person&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;investigation</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;investigation primary key</td>
 		<td> ON investigation&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;investigation</td>
+	<tr>		<td>idx&#095;investigation </td>
 		<td> ON contact&#095;person&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_investigation_study_person</td>
+		<td>fk_investigation_study_person</td>
 		<td > ( contact&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='command_output'>Table command_output</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='command_output.command_output_id'>command&#095;output&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_output.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_output.command_id'>command&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_output.artifact_type_id'>artifact&#095;type&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_output.check_biom_merge'>check&#095;biom&#095;merge</a></td>
+		<td> bool  NOT NULL  DEFO 'False' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;command&#095;output primary key</td>
+		<td> ON command&#095;output&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;command&#095;output unique</td>
+		<td> ON name&#044; command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;command&#095;output </td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;command&#095;output </td>
+		<td> ON artifact&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_command_output</td>
+		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_command_output_0</td>
+		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='command_parameter'>Table command_parameter</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='command_parameter.command_parameter_id'>command&#095;parameter&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.command_id'>command&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.parameter_name'>parameter&#095;name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.parameter_type'>parameter&#095;type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.required'>required</a></td>
+		<td> bool  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.default_value'>default&#095;value</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.name_order'>name&#095;order</a></td>
+		<td> integer   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.check_biom_merge'>check&#095;biom&#095;merge</a></td>
+		<td> bool  NOT NULL  DEFO 'False' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;command&#095;parameter </td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>pk&#095;command&#095;parameter primary key</td>
+		<td> ON command&#095;parameter&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;command&#095;parameter&#095;0 unique</td>
+		<td> ON command&#095;id&#044; parameter&#095;name</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_command_parameter</td>
+		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
