@@ -1,7 +1,5 @@
 {% from qiita_core.qiita_settings import qiita_config %}
 <script type="text/javascript">
-  var network;
-
   /**
    *
    * This function is needed by the artifact subsection of the page. Since the
@@ -23,7 +21,7 @@
    *
    */
   function reload_UI_post_artifact_delete() {
-      populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
+    populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
   };
 
   /*
@@ -173,17 +171,18 @@
     show_loading("graph-or-new-artifact-div");
     $.get("{% raw qiita_config.portal_dir %}/prep/graph/", {"prep_id": {{prep_id}} })
       .done(function(data) {
-        var edges = [];
-        var nodes = [];
-
+        nodes = [];
+        edges = [];
         for(var i=0; i<data.edge_list.length; i++) {
           edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1], arrows:'to'});
         }
         // format more depth data
         for(var i=0; i<data.node_labels.length; i++) {
-          nodes.push({id: data.node_labels[i][1], label: data.node_labels[i][2], group: data.node_labels[i][0]});
+          nodes.push({id: data.node_labels[i][2],
+                      label: data.node_labels[i][3],
+                      group: data.node_labels[i][0],
+                      type: data.node_labels[i][1]});
         }
-
         $("#graph-or-new-artifact-div").html(
           "<div class='row'>" +
             "<div class='col-md-12'>" +
@@ -195,7 +194,10 @@
           "<div class='row'><div class='col-md-12 graph' style='width:90%' id='graph-network-div'>" +
           "</div>");
 
-        draw_processing_graph(nodes, edges, "graph-network-div", "prep-artifact-summary-div", populateContentArtifact, populateContentJob);
+        result = draw_processing_graph(nodes, edges, "graph-network-div", "prep-artifact-summary-div", populateContentArtifact, populateContentJob);
+        network = result[0];
+        nodes_ds = result[1];
+        edges_ds = result[2];
       });
   }
 

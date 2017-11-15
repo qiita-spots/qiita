@@ -55,7 +55,7 @@
       data: {'op': 'replace', 'path': '/visibility/', 'value': visibility},
       success: function(data) {
         // Reload the artifact summary page so we can update the buttons
-        populateContentArtifact(aid);
+        populateContentArtifact(aid, "prep-artifact-summary-div");
       },
       error: function(object, status, error_msg) {
         // Something went wrong, show the message

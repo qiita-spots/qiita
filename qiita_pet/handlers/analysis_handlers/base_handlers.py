@@ -115,6 +115,7 @@ def analyisis_graph_handler_get_request(analysis_id, user):
             # Get the actual object
             obj = n[1]
             if obj_type == 'job':
+                otype = 'job'
                 name = obj.command.name
             elif not full_access and not obj.visibility == 'public':
                 # The object is an artifact, it is not public and the user
@@ -122,8 +123,9 @@ def analyisis_graph_handler_get_request(analysis_id, user):
                 # graph
                 continue
             else:
-                name = '%s\n(%s)' % (obj.name, obj.artifact_type)
-            nodes.add((obj_type, obj.id, name))
+                otype = obj.artifact_type
+                name = '%s\n(%s)' % (obj.name, otype)
+            nodes.add((obj_type, otype, obj.id, name))
 
         edges.update({(s[1].id, t[1].id) for s, t in g.edges()})
 

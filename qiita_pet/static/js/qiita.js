@@ -185,11 +185,11 @@ function draw_processing_graph(nodes, edges, target, target_details, artifactFun
   var container = document.getElementById(target);
   container.innerHTML = "";
 
-  var nodes = new vis.DataSet(nodes);
-  var edges = new vis.DataSet(edges);
+  var nodes_ds = new vis.DataSet(nodes);
+  var edges_ds = new vis.DataSet(edges);
   var data = {
-    nodes: nodes,
-    edges: edges
+    nodes: nodes_ds,
+    edges: edges_ds
   };
   var options = {
     clickToUse: true,
@@ -237,7 +237,7 @@ function draw_processing_graph(nodes, edges, target, target_details, artifactFun
       return
     }
     // [0] cause only users can only select 1 node
-    var clickedNode = nodes.get(ids)[0];
+    var clickedNode = nodes_ds.get(ids)[0];
     var element_id = ids[0];
     if (clickedNode.group == 'artifact') {
       artifactFunc(element_id, target_details);
@@ -246,7 +246,52 @@ function draw_processing_graph(nodes, edges, target, target_details, artifactFun
     }
   });
 
-  return [network, nodes, edges];
+  return [network, nodes_ds, edges_ds];
+}
+
+/*
+ * Adds a new job to the workflow
+ *
+ * This function retrieves the information to add a new job to the workflow.
+ * If the workflow still doesn't exist, it calls 'create_workflow'. Otherwise
+ * it calls "create_job".
+ *
+ */
+function add_job() {
+  var command_id = $("#command-sel").val();
+  var params_id = $("#params-sel").val();
+  var params = {};
+  // Collect the required parameters
+  var req_params = {};
+  $(".required-parameter").each( function () {
+    params[this.id] = this.value;
+    req_params[this.id] = this.value;
+  });
+  // Collect the optional parameters
+  var opt_params = {};
+  $(".optional-parameter").each( function () {
+    var value = this.value;
+    if ( $(this).attr('type') === 'checkbox' ) {
+      value = this.checked;
+    }
+    params[this.id] = value;
+    opt_params[this.id] = value;
+  });
+
+  var workflow_id = $("#graph-network-div").attr("data-wf-id");
+
+  if (workflow_id == -1) {
+    // This is the first command to be run, so the workflow still doesn't
+    // exist in the system.
+    create_workflow(command_id, params);
+  }
+  else {
+    create_job(command_id, params_id, req_params, opt_params, workflow_id);
+  }
+
+  $("#processing-info-div").empty();
+  $('#run-btn').prop('disabled', false);
+  $("#graph-network-div").attr("data-wf-job-count", +$("#graph-network-div").attr("data-wf-job-count") + 1);
 }
 
 /**
