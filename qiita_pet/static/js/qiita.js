@@ -171,6 +171,8 @@ function send_samples_to_analysis(button, aids, samples = null) {
  *  The connectivity information in the graph. from and to are the nodes of
  *  origin and destination of the edge, respectivelly.
  * @param target: str. The id of the target div to draw the graph
+ * @param target_details: str. The id of the target div to display the
+ *  job/artifact details
  * @param artifactFunc: function. The function to execute when the user
  *  clicks on a node of group 'artifact'. It should accept only 1 parameter
  *  which is the artifact (node) id
@@ -179,7 +181,7 @@ function send_samples_to_analysis(button, aids, samples = null) {
  *  job (node) id
  *
  */
-function draw_processing_graph(nodes, edges, target, artifactFunc, jobFunc) {
+function draw_processing_graph(nodes, edges, target, target_details, artifactFunc, jobFunc) {
   var container = document.getElementById(target);
   container.innerHTML = "";
 
@@ -238,13 +240,14 @@ function draw_processing_graph(nodes, edges, target, artifactFunc, jobFunc) {
     var clickedNode = nodes.get(ids)[0];
     var element_id = ids[0];
     if (clickedNode.group == 'artifact') {
-      artifactFunc(element_id);
+      artifactFunc(element_id, target_details);
     } else {
-      jobFunc(element_id);
+      jobFunc(element_id, target_details);
     }
   });
-};
 
+  return [network, nodes, edges];
+}
 
 /**
  *

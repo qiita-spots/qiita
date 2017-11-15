@@ -207,6 +207,85 @@
         processing_network.redraw();
       }
 
+      /**
+       * Populates the target div with the artifact information
+       *
+       * @param artifactId: int. The artifact id
+       *
+       */
+      function populateContentArtifact(artifactId, target) {
+        // Put the loading gif in the div
+        show_loading(target);
+        $.get('{% raw qiita_config.portal_dir %}/artifact/' + artifactId + '/summary/', function(data){
+          $("#"+target).html(data);
+        })
+          .fail(function(object, status, error_msg) {
+            // $("#analysis-results").html(object.responseText);
+            $("#"+target).html("Error loading artifact information: " + status + " " + object.statusText);
+          }
+        );
+      };
+
+      /**
+       * Populates the target div with the job information
+       *
+       * @param jobId: str. The job id
+       *
+       */
+      function populateContentJob(jobId, target) {
+        // Put the loading gif in the div
+        show_loading(target);
+        $.get('{% raw qiita_config.portal_dir %}/study/process/job/', {job_id: jobId}, function(data){
+          createJobHTML(data, target);
+        })
+          .fail(function(object, status, error_msg) {
+            $("#"+target).html("Error loading artifact information: " + status + " " + error_msg);
+          }
+        );
+      };
+
+      /**
+       * Creates the HTML with the job information and adds it to `target`
+       *
+       * @param data: dict. The job information
+       * @param target: str. The nam of the target div to add the html
+       *
+       */
+      function createJobHTML(data, target) {
+        target = "#" + target;
+        $(target).empty();
+        var keys = ['job_id', 'job_status'];
+        var d = $("<div>").appendTo(target);
+        for(var i in keys) {
+          if (data[keys[i]]) {
+            d.append("<b>" + keys[i].replace('_', ' ') + ": </b> " + data[keys[i]] + "</br>");
+          }
+        }
+        d.append("<b> job parameters: </b></br>");
+        for(var key in data.job_parameters) {
+          d.append("<i>" + key + ":</i> " + data.job_parameters[key] + "</br>");
+        }
+      }
+
+      function load_process_artifact_ui(artifact_id, is_analysis) {
+        if (is_analysis == 'True') {
+          $("#analysis-content-div").hide()
+          $("#processing-content-div").show()
+          show_loading('processing-content-div');
+          $.get('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/process/', function(data){
+            $("#processing-content-div").html(data);
+          })
+            .fail(function(object, status, error_msg) {
+              bootstrapAlert("Error loading processing page: " + status + " " + object.statusText, "danger");
+              $("#analysis-content-div").show()
+              $("#processing-content-div").hide()
+            }
+          )
+        } else {
+          populate_main_div('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/process/');
+        }
+      };
+
       $(document).ready(function() {
         $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
             if(parseInt(result.studies) > 0) {
