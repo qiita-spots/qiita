@@ -298,7 +298,7 @@
           if(types.indexOf(node.type) === -1) {
             types.push(node.type);
           }
-          sel_artifacts_info[node.id] = {'type': node.type, 'name': node.name}
+          sel_artifacts_info[node.id] = {'type': node.type, 'name': node.label}
         }
         $.get('{% raw qiita_config.portal_dir %}/study/process/commands/', {artifact_types: types, include_analysis: is_analysis_pipeline})
           .done(function (data) {
