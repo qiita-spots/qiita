@@ -405,6 +405,48 @@
       }
 
       /*
+       * Submit the current workflow for execution
+       *
+       * This function executes an AJAX call to submit the current workflow
+       * for execution
+       *
+       */
+      function run_workflow() {
+        var w_id = $("#graph-network-div").attr("data-wf-id");
+        $.post("{% raw qiita_config.portal_dir %}/study/process/workflow/run/", {workflow_id: w_id}, function(data){
+          bootstrapAlert("Workflow " + w_id + " submitted", "success");
+          // reload_UI_post_workflow_submission(artifact_id);
+        })
+          .fail(function(object, status, error_msg) {
+            bootstrapAlert("Error submitting workflow: " + object.statusText, "danger");
+          });
+      }
+
+      /*
+       * Create a new workflow
+       *
+       * @param cmd_id int the command to execute on the first job of the workflow
+       * @param params object the parameters of the first job of the workflow
+       *
+       * This function executes an AJAX call to create a new workflow by providing
+       * the first job in the workflow. It then stores the workflow id in the
+       * "data-wf-id" attribute of the "graph-network-div" div.
+       *
+       */
+      function create_workflow(cmd_id, params) {
+        $.post('{% raw qiita_config.portal_dir %}/study/process/workflow/', {command_id: cmd_id, params: JSON.stringify(params) })
+          .done(function(data) {
+            if (data.status == 'success') {
+              $("#graph-network-div").attr("data-wf-id", data.workflow_id);
+              add_job_node_to_graph(data.job);
+            }
+            else {
+              bootstrapAlert(data.message.replace(/\n/g, '<br/>'), "danger");
+            }
+          });
+      }
+
+      /*
        * Load the GUI for a given command parameter
        *
        * @param p_name str the name of the parameter
@@ -1004,6 +1046,10 @@
         </div>
 
       </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12 graph" id="graph-network-div" data-wf-id="-1" data-wf-job-count="0"></div>
     </div>
 
   </body>
