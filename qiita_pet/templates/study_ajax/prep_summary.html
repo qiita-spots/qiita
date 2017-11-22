@@ -191,11 +191,12 @@
               "<br/>Check our data <a target='_blank' href='{% raw qiita_config.portal_dir %}/static/doc/html/processing-recommendations.html' onclick='return !window.open(this.href, \"Qiita processing recommendations\", \"width=800,height=500\")'>processing recommendations</a>." +
             "</div>" +
           "</div>" +
-          "<div class='row'><div class='col-md-12 graph' style='width:90%' id='graph-network-div'>" +
+          "<div class='row'>" +
+            "<div class='col-md-12 graph' style='width:90%' data-wf-id='-1' data-wf-job-count='0' id='graph-network-div'>" +
           "</div>");
 
         result = draw_processing_graph(nodes, edges, "graph-network-div", "prep-artifact-summary-div", populateContentArtifact, populateContentJob);
-        network = result[0];
+        processing_network = result[0];
         nodes_ds = result[1];
         edges_ds = result[2];
       });

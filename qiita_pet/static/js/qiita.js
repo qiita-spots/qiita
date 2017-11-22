@@ -242,7 +242,12 @@ function draw_processing_graph(nodes, edges, target, target_details, artifactFun
     if (clickedNode.group == 'artifact') {
       artifactFunc(element_id, target_details);
     } else {
-      jobFunc(element_id, target_details);
+      var ei = element_id.split(':');
+      if (ei.length == 2) {
+        console.log('NEEDS TO BE IMPLEMENTED')
+      } else {
+        jobFunc(element_id, target_details);
+      }
     }
   });
 
@@ -292,6 +297,33 @@ function add_job() {
   $("#processing-info-div").empty();
   $('#run-btn').prop('disabled', false);
   $("#graph-network-div").attr("data-wf-job-count", +$("#graph-network-div").attr("data-wf-job-count") + 1);
+}
+
+/*
+ * Add a job node to the network visualization
+ *
+ * @param job_info object The information of the new job to be added
+ *
+ * This function adds a new job node to the network visualization, as well as
+ * adding the needed children and edges between its inputs and outputs (children)
+ *
+ */
+function add_job_node_to_graph(job_info) {
+  // Fun fact - although it seems counterintuitive, in vis.Network we
+  // first need to add the edge and then we can add the node. It doesn't
+  // make sense, but it is how it works
+  $(job_info.inputs).each(function(){
+    edges_ds.add({id: edges_ds.length + 1, from: this, to: job_info.id});
+  });
+  nodes_ds.add({id: job_info.id, group: "job", label: job_info.label});
+  $(job_info.outputs).each(function(){
+    var out_name = this[0];
+    var out_type = this[1];
+    var n_id = job_info.id + ":" + out_name;
+    edges_ds.add({id: edges_ds.length + 1, from: job_info.id, to: n_id });
+    nodes_ds.add({id: n_id, label: out_name + "\n(" + out_type + ")", group: "type", name: out_name, type: out_type});
+  });
+  processing_network.redraw();
 }
 
 /**

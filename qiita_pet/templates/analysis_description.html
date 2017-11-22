@@ -89,7 +89,7 @@
                 vm.nodes.push({id: data.nodes[i][2], label: data.nodes[i][3], type: data.nodes[i][1], group: data.nodes[i][0]});
               }
               result = draw_processing_graph(vm.nodes, vm.edges, 'analysis-network-div', 'analysis-results', populateContentArtifact, populateContentJob);
-              network = result[0];
+              processing_network = result[0];
               nodes_ds = result[1];
               edges_ds = result[2];
 
