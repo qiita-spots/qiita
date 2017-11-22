@@ -28,13 +28,6 @@
       location.reload();
   }
 
-  function reload_UI_post_workflow_submission(artifact_id) {
-      $("#processing-content-div").hide();
-      $("#processing-content-div").html("");
-      $("#analysis-content-div").show();
-      populateContentArtifact(artifact_id, 'analysis-results');
-  }
-
   /*
    * Toggle the graph view
    *
@@ -75,7 +68,6 @@
               vm.update_jobs();
             }
             else {
-              console.log(data)
               vm.nodes = [];
               vm.edges = [];
               // The initial set of artifacts has been created! Format the graph

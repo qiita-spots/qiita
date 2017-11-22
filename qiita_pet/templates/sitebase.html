@@ -415,7 +415,6 @@
         var w_id = $("#graph-network-div").attr("data-wf-id");
         $.post("{% raw qiita_config.portal_dir %}/study/process/workflow/run/", {workflow_id: w_id}, function(data){
           bootstrapAlert("Workflow " + w_id + " submitted", "success");
-          // reload_UI_post_workflow_submission(artifact_id);
         })
           .fail(function(object, status, error_msg) {
             bootstrapAlert("Error submitting workflow: " + object.statusText, "danger");
