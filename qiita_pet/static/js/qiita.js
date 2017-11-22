@@ -244,7 +244,7 @@ function draw_processing_graph(nodes, edges, target, target_details, artifactFun
     } else {
       var ei = element_id.split(':');
       if (ei.length == 2) {
-        console.log('NEEDS TO BE IMPLEMENTED')
+        load_artifact_type([element_id], false, target_details);
       } else {
         jobFunc(element_id, target_details);
       }
