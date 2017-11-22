@@ -19,7 +19,7 @@ class ForRecursion(object):
         for a in artifact.children:
             try:
                 a.visibility = status
-            except:
+            except Exception:
                 # print so we know which changes failed and we can deal by hand
                 print "failed aid: %d, status %s" % (artifact.id, status)
                 return
