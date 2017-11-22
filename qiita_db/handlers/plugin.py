@@ -101,9 +101,11 @@ class CommandListHandler(OauthBaseHandler):
             req_params = loads(self.get_argument('required_parameters'))
             opt_params = loads(self.get_argument('optional_parameters'))
 
-            for p_name, (p_type, dflt) in opt_params.items():
-                if p_type.startswith('mchoice'):
-                    opt_params[p_name] = [p_type, loads(dflt)]
+            for p_name, vals in opt_params.items():
+                if vals[0].startswith('mchoice'):
+                    opt_params[p_name] = [vals[0], loads(vals[1])]
+                    if len(vals) == 4:
+                        opt_params[p_name].extend(vals[2:])
 
             outputs = self.get_argument('outputs', None)
             if outputs:
