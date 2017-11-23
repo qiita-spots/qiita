@@ -329,7 +329,7 @@ def complete_job(job):
         c_job = qdb.processing_job.ProcessingJob(param_vals['job_id'])
         try:
             c_job.complete(payload['success'], artifacts, error)
-        except:
+        except Exception:
             c_job._set_error(traceback.format_exception(*exc_info()))
 
         job._set_status('success')

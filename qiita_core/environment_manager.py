@@ -18,7 +18,7 @@ def _test_wrapper_local(func):
     """Execute a function locally"""
     try:
         return ('SUCCESS', func())
-    except:
+    except Exception:
         return ('FAIL', traceback.format_exception(*exc_info()))
 
 

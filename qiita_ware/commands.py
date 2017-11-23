@@ -40,7 +40,7 @@ def submit_EBI(preprocessed_data_id, action, send):
     ebi_submission.study.ebi_submission_status = 'submitting'
     try:
         ebi_submission.generate_demultiplexed_fastq()
-    except:
+    except Exception:
         error_msg = format_exc()
         if isdir(ebi_submission.full_ebi_dir):
             rmtree(ebi_submission.full_ebi_dir)

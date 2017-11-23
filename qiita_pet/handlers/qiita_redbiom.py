@@ -37,7 +37,7 @@ class RedbiomPublicSearch(BaseHandler):
             message = (
                 'Not a valid search: "%s", your query is too small '
                 '(too few letters), try a longer query' % query)
-        except:
+        except Exception:
             message = (
                 'The query ("%s") did not work and may be malformed. Please '
                 'check the search help for more information on the queries.'
