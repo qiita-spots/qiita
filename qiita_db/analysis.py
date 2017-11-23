@@ -796,21 +796,21 @@ class Analysis(qdb.base.QiitaObject):
                 algorithm = ainfo['algorithm'].split('|')[0].strip()
                 files = ainfo['files']
 
-                l = "%s || %s" % (data_type, algorithm)
+                label = "%s || %s" % (data_type, algorithm)
                 # deblur special case, we need to account for file name
                 if 'deblur-workflow' in algorithm:
                     # [0] there is always just one biom
-                    l += " || %s" % [f for f in files
-                                     if f.endswith('.biom')][0]
+                    label += " || %s" % [f for f in files
+                                         if f.endswith('.biom')][0]
                 elif 'Pick closed-reference OTUs, QIIME' in algorithm:
-                    l = ("%s || Pick closed-reference OTUs, QIIME ||" % (
-                         data_type))
+                    label = ("%s || Pick closed-reference OTUs, QIIME ||" % (
+                             data_type))
                 else:
-                    l += " ||"
+                    label += " ||"
 
-                if l not in grouped_samples:
-                    grouped_samples[l] = []
-                grouped_samples[l].append((aid, asamples))
+                if label not in grouped_samples:
+                    grouped_samples[label] = []
+                grouped_samples[label].append((aid, asamples))
             # 2. if rename_dup_samples is still False, make sure that we don't
             #    need to rename samples by checking that there are not
             #    duplicated samples per group

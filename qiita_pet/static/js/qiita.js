@@ -185,11 +185,11 @@ function draw_processing_graph(nodes, edges, target, target_details, artifactFun
   var container = document.getElementById(target);
   container.innerHTML = "";
 
-  var nodes = new vis.DataSet(nodes);
-  var edges = new vis.DataSet(edges);
+  var nodes_ds = new vis.DataSet(nodes);
+  var edges_ds = new vis.DataSet(edges);
   var data = {
-    nodes: nodes,
-    edges: edges
+    nodes: nodes_ds,
+    edges: edges_ds
   };
   var options = {
     clickToUse: true,
@@ -237,16 +237,93 @@ function draw_processing_graph(nodes, edges, target, target_details, artifactFun
       return
     }
     // [0] cause only users can only select 1 node
-    var clickedNode = nodes.get(ids)[0];
+    var clickedNode = nodes_ds.get(ids)[0];
     var element_id = ids[0];
     if (clickedNode.group == 'artifact') {
       artifactFunc(element_id, target_details);
     } else {
-      jobFunc(element_id, target_details);
+      var ei = element_id.split(':');
+      if (ei.length == 2) {
+        load_artifact_type([element_id], false, target_details);
+      } else {
+        jobFunc(element_id, target_details);
+      }
     }
   });
 
-  return [network, nodes, edges];
+  return [network, nodes_ds, edges_ds];
+}
+
+/*
+ * Adds a new job to the workflow
+ *
+ * This function retrieves the information to add a new job to the workflow.
+ * If the workflow still doesn't exist, it calls 'create_workflow'. Otherwise
+ * it calls "create_job".
+ *
+ */
+function add_job() {
+  var command_id = $("#command-sel").val();
+  var params_id = $("#params-sel").val();
+  var params = {};
+  // Collect the required parameters
+  var req_params = {};
+  $(".required-parameter").each( function () {
+    params[this.id] = this.value;
+    req_params[this.id] = this.value;
+  });
+  // Collect the optional parameters
+  var opt_params = {};
+  $(".optional-parameter").each( function () {
+    var value = this.value;
+    if ( $(this).attr('type') === 'checkbox' ) {
+      value = this.checked;
+    }
+    params[this.id] = value;
+    opt_params[this.id] = value;
+  });
+
+  var workflow_id = $("#graph-network-div").attr("data-wf-id");
+
+  if (workflow_id == -1) {
+    // This is the first command to be run, so the workflow still doesn't
+    // exist in the system.
+    create_workflow(command_id, params);
+  }
+  else {
+    create_job(command_id, params_id, req_params, opt_params, workflow_id);
+  }
+
+  $("#processing-info-div").empty();
+  $('#run-btn').prop('disabled', false);
+  $("#graph-network-div").attr("data-wf-job-count", +$("#graph-network-div").attr("data-wf-job-count") + 1);
+}
+
+/*
+ * Add a job node to the network visualization
+ *
+ * @param job_info object The information of the new job to be added
+ *
+ * This function adds a new job node to the network visualization, as well as
+ * adding the needed children and edges between its inputs and outputs (children)
+ *
+ */
+function add_job_node_to_graph(job_info) {
+  // Fun fact - although it seems counterintuitive, in vis.Network we
+  // first need to add the edge and then we can add the node. It doesn't
+  // make sense, but it is how it works
+  $(job_info.inputs).each(function(){
+    edges_ds.add({id: edges_ds.length + 1, from: this, to: job_info.id});
+  });
+  nodes_ds.add({id: job_info.id, group: "job", label: job_info.label});
+  $(job_info.outputs).each(function(){
+    var out_name = this[0];
+    var out_type = this[1];
+    var n_id = job_info.id + ":" + out_name;
+    edges_ds.add({id: edges_ds.length + 1, from: job_info.id, to: n_id });
+    nodes_ds.add({id: n_id, label: out_name + "\n(" + out_type + ")", group: "type", name: out_name, type: out_type});
+  });
+  processing_network.redraw();
 }
 
 /**

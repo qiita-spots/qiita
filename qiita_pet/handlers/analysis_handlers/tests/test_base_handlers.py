@@ -67,9 +67,9 @@ class TestBaseHandlersUtils(TestCase):
         # it here. There is only 1 job in the first artifact of the analysis
         job_id = Analysis(1).artifacts[0].jobs()[0].id
         exp = {'edges': [(8, job_id), (job_id, 9)],
-               'nodes': [('job', job_id, 'Single Rarefaction'),
-                         ('artifact', 9, 'noname\n(BIOM)'),
-                         ('artifact', 8, 'noname\n(BIOM)')]}
+               'nodes': [('job', 'job', job_id, 'Single Rarefaction'),
+                         ('artifact', 'BIOM', 9, 'noname\n(BIOM)'),
+                         ('artifact', 'BIOM',   8, 'noname\n(BIOM)')]}
         self.assertItemsEqual(obs, exp)
         self.assertItemsEqual(obs['edges'], exp['edges'])
         self.assertItemsEqual(obs['nodes'], exp['nodes'])
@@ -125,9 +125,9 @@ class TestBaseHandlers(TestHandlerBase):
         job_id = Analysis(1).artifacts[0].jobs()[0].id
         obs = loads(response.body)
         exp = {'edges': [[8, job_id], [job_id, 9]],
-               'nodes': [['job', job_id, 'Single Rarefaction'],
-                         ['artifact', 9, 'noname\n(BIOM)'],
-                         ['artifact', 8, 'noname\n(BIOM)']]}
+               'nodes': [['job', 'job', job_id, 'Single Rarefaction'],
+                         ['artifact', 'BIOM', 9, 'noname\n(BIOM)'],
+                         ['artifact', 'BIOM', 8, 'noname\n(BIOM)']]}
         self.assertItemsEqual(obs, exp)
         self.assertItemsEqual(obs['edges'], exp['edges'])
         self.assertItemsEqual(obs['nodes'], exp['nodes'])

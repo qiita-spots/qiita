@@ -53,6 +53,8 @@
     <link rel="shortcut icon" href="{% raw qiita_config.portal_dir %}/static/img/favicon.ico">
 
     <script>
+      var edges = [], nodes = [], nodes_ds, edges_ds;
+
       $(window).resize(function () {
         $('body').css('padding-top', $('#navigation-bar').height()+10);
       });
@@ -149,7 +151,7 @@
               else {
                 if (update_graph) {
                   remove_job_node_from_graph(job_id);
-                  var job_count = nodes.get({filter: function(item) {
+                  var job_count = nodes_ds.get({filter: function(item) {
                     return item.group == "job";
                   }}).length;
                   $("#graph-network-div").attr("data-wf-job-count", job_count);
@@ -192,7 +194,7 @@
               edges.remove(edge.id);
             }
           }
-          nodes.remove(current);
+          nodes_ds.remove(current);
         }
         var edges_to_remove = edges.get(
           {filter: function(item) {
@@ -220,7 +222,6 @@
           $("#"+target).html(data);
         })
           .fail(function(object, status, error_msg) {
-            // $("#analysis-results").html(object.responseText);
             $("#"+target).html("Error loading artifact information: " + status + " " + object.statusText);
           }
         );
@@ -267,24 +268,330 @@
         }
       }
 
+
       function load_process_artifact_ui(artifact_id, is_analysis) {
-        if (is_analysis == 'True') {
-          $("#analysis-content-div").hide()
-          $("#processing-content-div").show()
-          show_loading('processing-content-div');
-          $.get('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/process/', function(data){
-            $("#processing-content-div").html(data);
-          })
-            .fail(function(object, status, error_msg) {
-              bootstrapAlert("Error loading processing page: " + status + " " + object.statusText, "danger");
-              $("#analysis-content-div").show()
-              $("#processing-content-div").hide()
-            }
-          )
-        } else {
-          populate_main_div('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/process/');
-        }
+        var is_analysis = is_analysis == 'True';
+        var target = is_analysis ? 'analysis-results' : 'prep-artifact-summary-div';
+
+        load_artifact_type([artifact_id], is_analysis, target);
       };
+
+      /*
+       * Generates the GUI for selecting the commands to apply to the given artifacts
+       *
+       * @param p_nodes list The ids of the selected artifacts
+       * @param is_analysis_pipeline bool whether we are in the analysis pipeline or not
+       *
+       * This function executes an AJAX call to retrieve all the commands that can
+       * process the selected artifacts. It generates the interface so the user
+       * can select which command should be added to the workflow
+       *
+       */
+      function load_artifact_type(p_nodes, is_analysis_pipeline, target) {
+        var types = [];
+        var sel_artifacts_info = {};
+        var node;
+        var target = $("#"+target);
+
+        for(var i=0; i < p_nodes.length; i++) {
+          node = nodes_ds.get(p_nodes[i]);
+          if(types.indexOf(node.type) === -1) {
+            types.push(node.type);
+          }
+          sel_artifacts_info[node.id] = {'type': node.type, 'name': node.label}
+        }
+        $.get('{% raw qiita_config.portal_dir %}/study/process/commands/', {artifact_types: types, include_analysis: is_analysis_pipeline})
+          .done(function (data) {
+            target.empty();
+
+            // Create the command select dropdown
+            var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
+            $('<label>').addClass('col-sm-2').addClass('col-form-label').text('Choose command:').appendTo($rowDiv).attr('for', 'command-sel');
+            var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
+            var sel = $('<select>').appendTo($colDiv).attr('id', 'command-sel').attr('name', 'command').addClass('form-control').attr('placeholder', 'Choose command...');
+            sel.append($("<option>").attr('value', "").text("Choose command...").prop('disabled', true).prop('selected', true));
+            var commands = data.commands;
+            commands.sort(function(a, b) {return a.command.localeCompare(b.command, 'en', {'sensitivity': 'base'});} );
+            for(var i=0; i<commands.length; i++) {
+              if (commands[i].output.length !== 0) {
+                sel.append($("<option>").attr('value', commands[i].id).text(commands[i].command));
+              }
+            }
+            sel.change(function(event) {
+              $("#cmd-opts-div").empty();
+              $("#add-cmd-btn-div").hide();
+              var v = $("#command-sel").val();
+              if (v !== "") {
+                load_command_options(v, sel_artifacts_info, is_analysis_pipeline);
+              }
+            });
+
+            // Create the div in which the command options will be shown
+            $('<div>').appendTo(target).attr('id', 'cmd-opts-div').attr('name', 'cmd-opts-div');
+
+            // Create the add command button - but not show it yet
+            var $rowDiv = $('<div hidden>').addClass('row').addClass('form-group').appendTo(target).attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
+            var $colDiv = $('<div>').addClass('col-sm-2').appendTo($rowDiv);
+            $('<button>').appendTo($colDiv).addClass('btn btn-info').text('Add Command').click(add_job);
+          });
+      }
+
+      /*
+       * Load the GUI for the options of a command
+       *
+       * @param cmd_id int the command to load the options from
+       * @param sel_artifacts_info object with the information of the currently selected artifacts
+       * @param is_analysis_pipeline bool whether we are in the analysis pipeline or not
+       *
+       * This function executes an AJAX call to retrieve the information about the
+       * options of the given command and generates the GUI to present those options
+       * to the user
+       *
+       */
+      function load_command_options(cmd_id, sel_artifacts_info, is_analysis_pipeline) {
+        $.get('{% raw qiita_config.portal_dir %}/study/process/commands/options/', {command_id: cmd_id})
+          .done(function(data){
+              // Put first the required parameters
+              $("#cmd-opts-div").append($('<h4>').text('Required parameters:'));
+              var keys = Object.keys(data.req_options).sort(function(a, b){return a.localeCompare(b, 'en', {'sensitivity': 'base'});});
+              for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                load_parameter_gui(key, data.req_options[key], sel_artifacts_info, $("#cmd-opts-div"));
+              }
+
+              // Put a dropdown menu to choose the default parameter set
+              $("#cmd-opts-div").append($('<h4>').text('Optional parameters:'));
+              var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#cmd-opts-div");
+              $('<label>').addClass('col-sm-2').addClass('col-form-label').text('Parameter set:').appendTo($rowDiv).attr('for', 'params-sel');
+              var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
+              var sel = $('<select>').appendTo($colDiv).attr('id', 'params-sel').attr('name', 'params-sel').addClass('form-control').attr('placeholder', 'Choose parameter set...');
+              sel.append($("<option>").attr('value', "").text("Choose parameter set...").prop('disabled', true).prop('selected', true));
+              var options = data.options;
+              options.sort(function(a, b) {return a.name.localeCompare(b.name, 'en', {'sensitivity': 'base'});} );
+              for(var i=0; i<options.length; i++) {
+                sel.append($("<option>").attr('value', options[i].id).attr('data-vals', JSON.stringify(options[i].values)).text(options[i].name));
+              }
+              $("<div>").appendTo("#cmd-opts-div").attr('id', 'opt-vals-div').attr('name', 'opt-vals-div');
+
+              sel.change(function(){
+                var v = $("#params-sel").val();
+                $("#opt-vals-div").empty();
+                if (v !== "") {
+                  if (!is_analysis_pipeline) {
+                    $("#opt-vals-div").append($('<label>').text('Note: changing default parameter values not allowed'));
+                  }
+                  // Get the parameter set values that the user selected
+                  var opt_vals = JSON.parse($("#params-sel option[value='" + v + "']").attr("data-vals"));
+                  var keys = Object.keys(data.opt_options).sort(function(a, b){return a.localeCompare(b, 'en', {'sensitivity': 'base'});});
+                  for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    load_parameter_gui(key, data.opt_options[key], sel_artifacts_info, $("#opt-vals-div"), opt_vals[key], is_analysis_pipeline);
+                  }
+                  $("#add-cmd-btn-div").show();
+                }
+                else {
+                  $("#add-cmd-btn-div").hide();
+                }
+              });
+
+              sel.show(function(){
+                // select first option if only 2 options ("Choose parameter set", "unique value")
+                if ($("#params-sel option").length == 2) {
+                  $("#params-sel")[0].selectedIndex = 1;
+                  $("#params-sel").trigger("change");
+                }
+              });
+          });
+      }
+
+      /*
+       * Submit the current workflow for execution
+       *
+       * This function executes an AJAX call to submit the current workflow
+       * for execution
+       *
+       */
+      function run_workflow() {
+        var w_id = $("#graph-network-div").attr("data-wf-id");
+        $.post("{% raw qiita_config.portal_dir %}/study/process/workflow/run/", {workflow_id: w_id}, function(data){
+          bootstrapAlert("Workflow " + w_id + " submitted", "success");
+        })
+          .fail(function(object, status, error_msg) {
+            bootstrapAlert("Error submitting workflow: " + object.statusText, "danger");
+          });
+      }
+
+      /*
+       * Create a new workflow
+       *
+       * @param cmd_id int the command to execute on the first job of the workflow
+       * @param params object the parameters of the first job of the workflow
+       *
+       * This function executes an AJAX call to create a new workflow by providing
+       * the first job in the workflow. It then stores the workflow id in the
+       * "data-wf-id" attribute of the "graph-network-div" div.
+       *
+       */
+      function create_workflow(cmd_id, params) {
+        $.post('{% raw qiita_config.portal_dir %}/study/process/workflow/', {command_id: cmd_id, params: JSON.stringify(params) })
+          .done(function(data) {
+            if (data.status == 'success') {
+              $("#graph-network-div").attr("data-wf-id", data.workflow_id);
+              add_job_node_to_graph(data.job);
+            }
+            else {
+              bootstrapAlert(data.message.replace(/\n/g, '<br/>'), "danger");
+            }
+          });
+      }
+
+      /*
+       * Load the GUI for a given command parameter
+       *
+       * @param p_name str the name of the parameter
+       * @param param_info object the information of the parameter
+       * @param sel_artifacts_info object with the information of the currently selected artifacts
+       * @param target DOM div to add the parameter gui
+       * @param dflt_val object with the default value to use for the given parameter
+       * @param allow_change_optionals bool whether to allow changing the default optional parameters or not
+       *
+       * This function generates the needed GUI specific to the given parameter type
+       *
+       */
+      function load_parameter_gui(p_name, param_info, sel_artifacts_info, target, dflt_val, allow_change_optionals) {
+        // Create the parameter interface
+        var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
+        // Replace the '_' by ' ' in the parameter name for readability
+        $('<label>').addClass('col-sm-2').addClass('col-form-label').text(p_name.replace('_', ' ') + ': ').appendTo($rowDiv).attr('for', p_name);
+        var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
+
+        var p_type = param_info[0];
+        var allowed_types = param_info[1];
+        var $inp;
+
+        if (p_type == 'artifact' || p_type.startsWith('choice') || p_type.startsWith('mchoice')) {
+          // The parameter type is an artifact or choice, the input type is a dropdown
+          $inp = $('<select>');
+          // show a dropdown menu with the
+          var options = [];
+          if (p_type.startsWith('choice') || p_type.startsWith('mchoice')) {
+            $.each(JSON.parse(p_type.split(':')[1]), function (idx, val) { options.push([val, val]); });
+
+            if (p_type.startsWith('mchoice')) {
+              $inp.attr('multiple', true);
+            }
+          }
+          else {
+            // available artifacts of the given type
+            for(var key in sel_artifacts_info) {
+               if(allowed_types.indexOf(sel_artifacts_info[key].type) !== -1) {
+                 options.push([key, sel_artifacts_info[key].name]);
+               }
+            }
+          }
+
+          options.sort(function(a, b){return a[0].localeCompare(b[0], 'en', {'sensitivity': 'base'});});
+          $.each(options, function(idx, val) {
+            $inp.append($("<option>").attr('value', val[0]).text(val[1]));
+          });
+        }
+        else {
+          // The rest of parameter types are represented with an input
+          $inp = $('<input>');
+          // It just changes the type of input
+          if (p_type == 'integer') {
+            // For the integer type, show an input of type number
+            $inp.attr('type', 'number');
+          }
+          else if (p_type == 'float') {
+            // For the float type, show an input of type number, with a step of 0.001
+            $inp.attr('type', 'number').attr('step', 0.001);
+          }
+          else if (p_type == 'string') {
+            // For the float type, show an input of type text
+            $inp.attr('type', 'text');
+          }
+          else if (p_type == 'boolean') {
+            // For the boolean type, show an input of type checkbox
+            $inp.attr('type', 'checkbox');
+          }
+          else {
+            bootstrapAlert("Error: Parameter type (" + p_type + ") not recognized. Please, take a screenshot and <a href='mailto:qiita.help@gmail.com'>contact us</a>", "danger");
+          }
+        }
+
+        if (dflt_val !== undefined) {
+          if (p_type == 'boolean') {
+            // The boolean type works differently than the others, so we needed
+            // to special case it here.
+            $inp.prop('checked', dflt_val);
+          }
+          else {
+            $inp.val(dflt_val);
+          }
+          if (!allow_change_optionals) {
+            $inp.prop('disabled', true);
+          }
+          $inp.addClass('optional-parameter');
+        }
+        else {
+          $inp.addClass('required-parameter');
+        }
+
+        $inp.appendTo($colDiv).attr('id', p_name).attr('name', p_name).addClass('form-control');
+      }
+
+      /*
+       * Adds a new job to the current workflow
+       *
+       * @param command_id int the command to execute on the new job
+       * @param params_id int the id of the default parameter set to be used in the new job
+       * @param req_params object the required parameters of the new job
+       * @param opt_params obect the optional parameters of the new job
+       * @param workflow_id int the current workflow id
+       *
+       * This function formats the data correctly and executes an AJAX call to
+       * create and add a new job to the current workflow
+       *
+       */
+      function create_job(command_id, params_id, req_params, opt_params, workflow_id) {
+        var value = {'dflt_params': params_id};
+        var connections = {}
+        var r_params = {}
+        for (var param in req_params) {
+          var vs = req_params[param].split(':');
+          if (vs.length == 2) {
+            if(!connections.hasOwnProperty(vs[0])){
+              connections[vs[0]] = {};
+            }
+            connections[vs[0]][vs[1]] = param;
+          }
+          else {
+            r_params[param] = req_params[param];
+          }
+        }
+        value['connections'] = connections;
+        value['req_params'] = r_params;
+        value['opt_params'] = opt_params;
+        $.ajax({
+          url: '{% raw qiita_config.portal_dir %}/study/process/workflow/',
+          type: 'PATCH',
+          data: {'op': 'add', 'path': workflow_id, 'value': JSON.stringify(value)},
+          success: function(data) {
+            if(data.status == 'error') {
+              bootstrapAlert(data.message, "danger");
+            }
+            else {
+              var inputs = [];
+              for(var k in req_params) {
+                inputs.push(req_params[k]);
+              }
+              data.job.inputs = inputs;
+              add_job_node_to_graph(data.job);
+            }
+          }
+        });
+      }
 
       $(document).ready(function() {
         $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
