@@ -1020,6 +1020,9 @@
 			</column>
 			<column name="step" type="varchar" jt="12" />
 			<column name="pending" type="varchar" jt="12" />
+			<column name="hidden" type="bool" jt="-7" mandatory="y" >
+				<defo>&#039;False&#039;</defo>
+			</column>
 			<index name="pk_processing_job" unique="PRIMARY_KEY" >
 				<column name="processing_job_id" />
 			</index>
@@ -1679,7 +1682,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="software_artifact_type" color="b2cdf7" x="2040" y="945" />
 		<entity schema="qiita" name="software_type" color="b2cdf7" x="2625" y="930" />
 		<entity schema="qiita" name="software" color="b2cdf7" x="2400" y="930" />
-		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1980" y="1335" />
 		<entity schema="qiita" name="default_workflow_edge_connections" color="b2cdf7" x="2340" y="1455" />
 		<entity schema="qiita" name="processing_job_validator" color="b2cdf7" x="2190" y="1380" />
 		<entity schema="qiita" name="study_publication" color="b2cdf7" x="1980" y="705" />
@@ -1694,6 +1696,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="investigation" color="c0d4f3" x="2400" y="315" />
 		<entity schema="qiita" name="command_output" color="b2cdf7" x="1935" y="1155" />
 		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="2115" y="1035" />
+		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1980" y="1335" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
