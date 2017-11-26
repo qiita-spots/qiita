@@ -225,7 +225,7 @@ class TestArtifactAPI(TestCase):
             {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
              'target_subfragment': ['V4'],
              'algorithm': (
-                'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults'),
+                'Pick closed-reference OTUs | Split libraries FASTQ'),
              'artifact_id': 6, 'data_type': '16S',
              'timestamp': '2012-10-02 17:30:00', 'prep_samples': 27,
              'parameters': {
@@ -235,7 +235,7 @@ class TestArtifactAPI(TestCase):
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
              'target_subfragment': ['V4'],
              'algorithm': (
-                'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults'),
+                'Pick closed-reference OTUs | Split libraries FASTQ'),
              'artifact_id': 5, 'data_type': '18S',
              'timestamp': '2012-10-02 17:30:00', 'prep_samples': 27,
              'parameters': {

@@ -927,7 +927,7 @@ class UtilTests(TestCase):
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
              'target_subfragment': ['V4'], 'artifact_id': 4,
              'algorithm': (
-                'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults'),
+                'Pick closed-reference OTUs | Split libraries FASTQ'),
              'data_type': '18S', 'prep_samples': 27,
              'parameters': {
                 'reference': '1', 'similarity': '0.97',
@@ -940,6 +940,34 @@ class UtilTests(TestCase):
              'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
              'prep_samples': 0, 'parameters': {}, 'name': 'noname'}]
         self.assertItemsEqual(obs, exp)
+
+        # now let's test that the order given by the commands actually give the
+        # correct results
+        with qdb.sql_connection.TRN:
+            # setting up database changes
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.command_output SET check_biom_merge = True")
+            qdb.sql_connection.TRN.add(
+                """UPDATE qiita.command_parameter SET check_biom_merge = True
+                   WHERE parameter_name = 'reference'""")
+            qdb.sql_connection.TRN.execute()
+
+            # testing that it works as expected
+            obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
+            # not testing timestamp
+            for i in range(len(obs)):
+                del obs[i]['timestamp']
+            exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1) '
+                                   '| Split libraries FASTQ')
+            self.assertItemsEqual(obs, exp)
+
+            # returning database as it was
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.command_output SET check_biom_merge = False")
+            qdb.sql_connection.TRN.add(
+                """UPDATE qiita.command_parameter SET check_biom_merge = False
+                   WHERE parameter_name = 'reference'""")
+            qdb.sql_connection.TRN.execute()
 
 
 class TestFilePathOpening(TestCase):
