@@ -628,6 +628,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         validator_jobs = []
         with qdb.sql_connection.TRN:
+            cmd = self.command
             for out_name, a_data in viewitems(artifacts_data):
                 # Correct the format of the filepaths parameter so we can
                 # create a validate job
@@ -671,11 +672,23 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # current job and how this artifact has been generated. This
                 # does not affect the plugins since they can ignore this
                 # parameter
-                cmd_out_id = qdb.util.convert_to_id(
-                    out_name, "command_output", "name")
+                sql = """SELECT command_output_id
+                         FROM qiita.command_output
+                         WHERE name = %s AND command_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [out_name, cmd.id])
+                cmd_out_id = qdb.sql_connection.TRN.execute_fetchlast()
+                naming_params = self.command.naming_order
+                if naming_params:
+                    params = self.parameters.values
+                    art_name = "%s %s" % (
+                        out_name, ' '.join([str(params[p])
+                                            for p in naming_params]))
+                else:
+                    art_name = out_name
+
                 provenance = {'job': self.id,
                               'cmd_out_id': cmd_out_id,
-                              'name': out_name}
+                              'name': art_name}
 
                 # Get the validator command for the current artifact type and
                 # create a new job
