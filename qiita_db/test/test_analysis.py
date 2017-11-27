@@ -421,11 +421,11 @@ class TestAnalysis(TestCase):
     def test_build_biom_tables(self):
         analysis = self._create_analyses_with_samples()
         grouped_samples = {
-            '18S || algorithm || files': [
+            '18S || algorithm': [
                 (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples)
         biom_fp = self.get_fp(
-            "%s_analysis_18S_algorithm_files.biom" % analysis.id)
+            "%s_analysis_18S_algorithm.biom" % analysis.id)
         obs = [(a, basename(b)) for a, b in obs_bioms]
         self.assertEqual(obs, [('18S', basename(biom_fp))])
 
@@ -434,16 +434,49 @@ class TestAnalysis(TestCase):
         exp = {'1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'}
         self.assertEqual(obs, exp)
 
+    def test_build_biom_tables_with_references(self):
+        analysis = self._create_analyses_with_samples()
+        analysis_id = analysis.id
+        grouped_samples = {
+            ('18S || Pick closed-reference OTUs (reference: 1) | '
+             'Split libraries FASTQ'): [
+                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
+                (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])],
+            ('18S || Pick closed-reference OTUs (reference: 1) | '
+             'Trim (lenght: 150)'): [
+                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
+                (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])],
+            ('16S || Pick closed-reference OTUs (reference: 2) | '
+             'Trim (lenght: 100)'): [
+                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
+                (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+        obs_bioms = analysis._build_biom_tables(grouped_samples)
+        obs = [(a, basename(b)) for a, b in obs_bioms]
+        exp = [
+            ('16S', '%s_analysis_16S_PickclosedreferenceOTUsreference2'
+             'Trimlenght100.biom' % analysis_id),
+            ('18S', '%s_analysis_18S_PickclosedreferenceOTUsreference1'
+             'SplitlibrariesFASTQ.biom' % analysis_id),
+            ('18S', '%s_analysis_18S_PickclosedreferenceOTUsreference1'
+             'Trimlenght150.biom' % analysis_id)]
+        self.assertEqual(obs, exp)
+
+        exp = {'1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'}
+        for dt, fp in obs_bioms:
+            table = load_table(fp)
+            obs = set(table.ids(axis='sample'))
+            self.assertEqual(obs, exp)
+
     def test_build_biom_tables_duplicated_samples_not_merge(self):
         analysis = self._create_analyses_with_samples()
         grouped_samples = {
-            '18S || algorithm || files': [
+            '18S || algorithm': [
                 (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
                 (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples, True)
         obs = [(a, basename(b)) for a, b in obs_bioms]
         biom_fp = (
-            "%s_analysis_18S_algorithm_files.biom" % analysis.id)
+            "%s_analysis_18S_algorithm.biom" % analysis.id)
         self.assertEqual(obs, [('18S', biom_fp)])
 
         table = load_table(obs_bioms[0][1])
@@ -454,7 +487,7 @@ class TestAnalysis(TestCase):
 
     def test_build_biom_tables_raise_error_due_to_sample_selection(self):
         grouped_samples = {
-            '18S || algorithm || files': [
+            '18S || algorithm': [
                 (4, ['sample_name_1', 'sample_name_2', 'sample_name_3'])]}
         with self.assertRaises(RuntimeError):
             self.analysis._build_biom_tables(grouped_samples)
