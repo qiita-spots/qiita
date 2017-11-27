@@ -11,7 +11,6 @@ import numpy.testing as npt
 from qiita_core.util import qiita_test_checker
 from qiita_core.testing import wait_for_processing_job
 from qiita_core.qiita_settings import qiita_config
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 
 # -----------------------------------------------------------------------------

@@ -578,7 +578,7 @@ class Analysis(qdb.base.QiitaObject):
             if not can_be_publicized:
                 raise ValueError('Not all artifacts that generated this '
                                  'analysis are public: %s' % ', '.join(
-                                 map(str, non_public)))
+                                     map(str, non_public)))
 
             # getting all root artifacts / command_id IS NULL
             sql = """SELECT artifact_id

@@ -1728,8 +1728,6 @@ def generate_analysis_list(analysis_ids, public_only=False):
             if artifacts == [None]:
                 artifacts = []
 
-            # mapping_files = [eval(mf) for mf in eval(mapping_files)]
-
             results.append({
                 'analysis_id': aid, 'name': name, 'description': description,
                 'timestamp': ts.strftime("%m/%d/%y %H:%M:%S"),
