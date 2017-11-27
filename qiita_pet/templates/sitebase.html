@@ -332,7 +332,7 @@
             // Create the add command button - but not show it yet
             var $rowDiv = $('<div hidden>').addClass('row').addClass('form-group').appendTo(target).attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
             var $colDiv = $('<div>').addClass('col-sm-2').appendTo($rowDiv);
-            $('<button>').appendTo($colDiv).addClass('btn btn-info').text('Add Command').click(add_job);
+            $('<button>').appendTo($colDiv).addClass('btn btn-info').text('Add Command').click(function() {add_job(target);});
           });
       }
 
@@ -580,6 +580,7 @@
           success: function(data) {
             if(data.status == 'error') {
               bootstrapAlert(data.message, "danger");
+              window.scrollTo(0, 0);
             }
             else {
               var inputs = [];

@@ -257,12 +257,14 @@ function draw_processing_graph(nodes, edges, target, target_details, artifactFun
 /*
  * Adds a new job to the workflow
  *
+ * @param target Object The target div to clean up
+ *
  * This function retrieves the information to add a new job to the workflow.
  * If the workflow still doesn't exist, it calls 'create_workflow'. Otherwise
  * it calls "create_job".
  *
  */
-function add_job() {
+function add_job(target) {
   var command_id = $("#command-sel").val();
   var params_id = $("#params-sel").val();
   var params = {};
@@ -294,7 +296,7 @@ function add_job() {
     create_job(command_id, params_id, req_params, opt_params, workflow_id);
   }
 
-  $("#processing-info-div").empty();
+  target.empty();
   $('#run-btn').prop('disabled', false);
   $("#graph-network-div").attr("data-wf-job-count", +$("#graph-network-div").attr("data-wf-job-count") + 1);
 }
