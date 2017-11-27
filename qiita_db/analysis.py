@@ -791,23 +791,8 @@ class Analysis(qdb.base.QiitaObject):
                          if bi['artifact_id'] == aid][0]
 
                 data_type = ainfo['data_type']
-                # algorithm is: processing_method | parent_processing, just
-                # keeping processing_method
-                algorithm = ainfo['algorithm'].split('|')[0].strip()
-                files = ainfo['files']
 
-                label = "%s || %s" % (data_type, algorithm)
-                # deblur special case, we need to account for file name
-                if 'deblur-workflow' in algorithm:
-                    # [0] there is always just one biom
-                    label += " || %s" % [f for f in files
-                                         if f.endswith('.biom')][0]
-                elif 'Pick closed-reference OTUs, QIIME' in algorithm:
-                    label = ("%s || Pick closed-reference OTUs, QIIME ||" % (
-                             data_type))
-                else:
-                    label += " ||"
-
+                label = "%s || %s" % (data_type, ainfo['algorithm'])
                 if label not in grouped_samples:
                     grouped_samples[label] = []
                 grouped_samples[label].append((aid, asamples))
@@ -843,7 +828,7 @@ class Analysis(qdb.base.QiitaObject):
 
             biom_files = []
             for label, tables in viewitems(grouped_samples):
-                data_type, algorithm, files = [
+                data_type, algorithm = [
                     l.strip() for l in label.split('||')]
 
                 new_table = None
@@ -895,8 +880,7 @@ class Analysis(qdb.base.QiitaObject):
                 # write out the file
                 data_type = sub('[^0-9a-zA-Z]+', '', data_type)
                 algorithm = sub('[^0-9a-zA-Z]+', '', algorithm)
-                files = sub('[^0-9a-zA-Z]+', '', files)
-                info = "%s_%s_%s" % (data_type, algorithm, files)
+                info = "%s_%s" % (data_type, algorithm)
                 fn = "%d_analysis_%s.biom" % (self._id, info)
                 biom_fp = join(base_fp, fn)
                 with biom_open(biom_fp, 'w') as f:

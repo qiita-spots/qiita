@@ -480,7 +480,6 @@ function format_biom_rows(data, row, for_study_list = true, samples = null) {
   if (for_study_list) {
     proc_data_table += '<th>Data type</th>';
   }
-  proc_data_table += '<th>Parameters</th>';
   proc_data_table += '</tr>';
 
   // grouping by processing_method, data_type and parameters
@@ -493,80 +492,68 @@ function format_biom_rows(data, row, for_study_list = true, samples = null) {
 
       var data_type = info.data_type + ' (' + info.target_subfragment.join(', ') + ')';
       if (!(data_type in processing_method[algorithm])) {
-        processing_method[algorithm][data_type] = {};
+        processing_method[algorithm][data_type] = [];
       }
-
-      var params = '';
-      for (var key in info.parameters) {
-        params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
-      }
-      if (!(params in processing_method[algorithm][data_type])) {
-        processing_method[algorithm][data_type][params] = [];
-      }
-
-      processing_method[algorithm][data_type][params].push(info);
+      processing_method[algorithm][data_type].push(info);
     }
   });
 
   // creating rows
   $.each(processing_method, function (pm, data_types) {
-    $.each(data_types, function (dt, parameters) {
-      $.each(parameters, function (params, artifacts) {
-        proc_data_table += '<tr>';
+    $.each(data_types, function (dt, artifacts) {
+      proc_data_table += '<tr>';
 
-        if (for_study_list) {
-          var artifact_to_send = [];
-          $.each(artifacts, function (idx, a) {
+      if (for_study_list) {
+        var artifact_to_send = [];
+        $.each(artifacts, function (idx, a) {
+          var aid = a.artifact_id;
+          artifact_to_send.push(aid);
+        });
+        var artifact_to_send_name = artifact_to_send.join('');
+        proc_data_table += '<td>';
+        proc_data_table += '<input type="button" class="btn btn-sm" value="Add all" onclick="send_children_buttons(this, [' + artifact_to_send + '])"></td>';
+        proc_data_table += '<td>' +
+          '<button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#aids-' + artifact_to_send_name + '">' +
+            'Per Artifact (' + artifacts.length + ')' +
+          '</button>' + '</td>';
+      }
+      proc_data_table += '<td>' + pm + '</td>';
+      if (for_study_list) {
+        proc_data_table += '<td>' + dt + '</td>';
+      }
+
+      proc_data_table += '</tr>';
+      if (for_study_list) {
+        proc_data_table += '<tr id="aids-' + artifact_to_send_name + '" class="collapse">' +
+          '<td></td>' +
+          '<td colspan="4">' +
+            '<table class="table table-striped table-bordered">' +
+              '<thead class="thead-default">' +
+                '<tr>' +
+                  '<th></th>' +
+                  '<th>Name</th>' +
+                  '<th>Samples in Prep Info</th>' +
+                  '<th>Files</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>';
+          $.each(artifacts, function(idx, a){
             var aid = a.artifact_id;
-            artifact_to_send.push(aid);
+            proc_data_table += '<tr>';
+            proc_data_table += '<td><input type="button" id="send-button-' + aid + '" class="btn btn-sm" value="Add" onclick="send_samples_to_analysis(this, [' + aid + ']';
+            if (samples === null) {
+              proc_data_table += ')"></td>';
+            } else {
+              proc_data_table += ", '" + samples[aid].join(',') + "'" + ')"></td>';
+            }
+            proc_data_table += '<td>' + a.name + ' (' + aid + ' - ' + a.timestamp.split('.')[0] + ')</td>';
+            proc_data_table += '<td>' + a.prep_samples + '</td>';
+            proc_data_table += '<td><small>' + a.files.join('<br/>')  + '</small></td>';
+            proc_data_table += '</tr>';
           });
-          var artifact_to_send_name = artifact_to_send.join('');
-          proc_data_table += '<td>';
-          proc_data_table += '<input type="button" class="btn btn-sm" value="Add all" onclick="send_children_buttons(this, [' + artifact_to_send + '])"></td>';
-          proc_data_table += '<td>' +
-            '<button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#aids-' + artifact_to_send_name + '">' +
-              'Per Artifact (' + artifacts.length + ')' +
-            '</button>' + '</td>';
-        }
-        proc_data_table += '<td>' + pm + '</td>';
-        if (for_study_list) {
-          proc_data_table += '<td>' + dt + '</td>';
-        }
-        proc_data_table += '<td>' + params + '</td>';
-
-        proc_data_table += '</tr>';
-        if (for_study_list) {
-          proc_data_table += '<tr id="aids-' + artifact_to_send_name + '" class="collapse">' +
-            '<td></td>' +
-            '<td colspan="4">' +
-              '<table class="table table-striped table-bordered">' +
-                '<thead class="thead-default">' +
-                  '<tr>' +
-                    '<th></th>' +
-                    '<th>Name</th>' +
-                    '<th>Samples in Prep Info</th>' +
-                    '<th>Files</th>' +
-                  '</tr>' +
-                '</thead>' +
-                '<tbody>';
-            $.each(artifacts, function(idx, a){
-              var aid = a.artifact_id;
-              proc_data_table += '<tr>';
-              proc_data_table += '<td><input type="button" id="send-button-' + aid + '" class="btn btn-sm" value="Add" onclick="send_samples_to_analysis(this, [' + aid + ']';
-              if (samples === null) {
-                proc_data_table += ')"></td>';
-              } else {
-                proc_data_table += ", '" + samples[aid].join(',') + "'" + ')"></td>';
-              }
-              proc_data_table += '<td>' + a.name + ' (' + aid + ' - ' + a.timestamp.split('.')[0] + ')</td>';
-              proc_data_table += '<td>' + a.prep_samples + '</td>';
-              proc_data_table += '<td><small>' + a.files.join('<br/>')  + '</small></td>';
-              proc_data_table += '</tr>';
-            });
-          proc_data_table += '</tbody>' + '</table>';
-          proc_data_table += '</td>' + '</tr>';
-        }
-      });
+        proc_data_table += '</tbody>' + '</table>';
+        proc_data_table += '</td>' + '</tr>';
+      }
     });
   });
 
