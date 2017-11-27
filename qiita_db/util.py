@@ -1518,31 +1518,19 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                         WHERE parameter_type = 'artifact'
                         GROUP BY command_id"""
 
-        sql_cbm = """SELECT command_id,
-                        array_agg(parameter_name ORDER BY parameter_name)
-                     FROM qiita.command_parameter qcp
-                     LEFT JOIN qiita.command_output qco USING (command_id)
-                     WHERE qcp.check_biom_merge = True AND
-                        qco.check_biom_merge = True
-                    GROUP BY command_id"""
-
         sql_ts = """SELECT DISTINCT target_subfragment FROM qiita.prep_%s"""
 
         with qdb.sql_connection.TRN:
             results = []
-
-            # getting all check_biom_merge commands, and their parameters
-            ccbm = {}
-            qdb.sql_connection.TRN.add(sql_cbm)
-            for cid, params in qdb.sql_connection.TRN.execute_fetchindex():
-                ccbm[cid] = params
 
             # getting all commands and their artifact parameters so we can
             # delete from the results below
             commands = {}
             qdb.sql_connection.TRN.add(sql_params)
             for cid, params in qdb.sql_connection.TRN.execute_fetchindex():
-                commands[cid] = params
+                commands[cid] = {
+                    'params': params,
+                    'merging_scheme': qdb.software.Command(cid).merging_scheme}
 
             # now let's get the actual artifacts
             ts = {}
@@ -1560,31 +1548,38 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     aparams = {}
                 else:
                     # we are gonna remove any artifacts from the parameters
-                    for ti in commands[cid]:
+                    for ti in commands[cid]['params']:
                         del aparams[ti]
-
-                # generating algorithm, by default is ''
-                algorithm = ''
-                if cid:
-                    if cid in ccbm:
-                        params = ','.join(
-                            ['%s: %s' % (k, aparams[k]) for k in ccbm[cid]])
-                        cname = "%s (%s)" % (cname, params)
-
-                    palgorithm = pname if pcid else 'N/A'
-                    if pcid in ccbm:
-                        params = ','.join(
-                            ['%s: %s' % (k, aparams[k]) for k in ccbm[pcid]])
-                        palgorithm = "%s (%s)" % (palgorithm, params)
-
-                    algorithm = '%s | %s' % (cname, palgorithm)
 
                 # - ignoring empty filepaths
                 if filepaths == [None]:
                     filepaths = []
+
                 # - ignoring empty target
                 if target == [None]:
                     target = []
+
+                # generating algorithm, by default is ''
+                algorithm = ''
+                if cid:
+                    ms = commands[cid]['merging_scheme']
+                    outputs = ''
+                    if ms['outputs'] and filepaths:
+                        # if this is not null, we ween to check the biom files
+                        outputs = ' | Output: %s' % ', '.join(filepaths)
+                    if ms['parameters']:
+                        params = ','.join(['%s: %s' % (k, aparams[k])
+                                           for k in ms['parameters']])
+                        cname = "%s (%s%s)" % (cname, params, outputs)
+
+                    palgorithm = pname if pcid else 'N/A'
+                    ms = commands[pcid]['merging_scheme']
+                    if ms['parameters']:
+                        params = ','.join(['%s: %s' % (k, aparams[k])
+                                           for k in ms['parameters']])
+                        palgorithm = "%s (%s)" % (palgorithm, params)
+
+                    algorithm = '%s | %s' % (cname, palgorithm)
 
                 if target is None:
                     target = []

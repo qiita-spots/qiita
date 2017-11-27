@@ -944,9 +944,7 @@ class UtilTests(TestCase):
         # now let's test that the order given by the commands actually give the
         # correct results
         with qdb.sql_connection.TRN:
-            # setting up database changes
-            qdb.sql_connection.TRN.add(
-                "UPDATE qiita.command_output SET check_biom_merge = True")
+            # setting up database changes for just checking commands
             qdb.sql_connection.TRN.add(
                 """UPDATE qiita.command_parameter SET check_biom_merge = True
                    WHERE parameter_name = 'reference'""")
@@ -960,6 +958,18 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1) '
                                    '| Split libraries FASTQ')
             self.assertItemsEqual(obs, exp)
+
+            # setting up database changes for also command output
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.command_output SET check_biom_merge = True")
+            qdb.sql_connection.TRN.execute()
+            obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
+            # not testing timestamp
+            for i in range(len(obs)):
+                del obs[i]['timestamp']
+            exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1 '
+                                   '| Output: 1_study_1001_closed_reference_'
+                                   'otu_table.biom) | Split libraries FASTQ')
 
             # returning database as it was
             qdb.sql_connection.TRN.add(
