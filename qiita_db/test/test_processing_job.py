@@ -478,6 +478,27 @@ class ProcessingJobTest(TestCase):
              qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
     def test_complete_success(self):
+        # This first part of the test is just to test that by default the
+        # naming of the output artifact will be the name of the output
+        fd, fp = mkstemp(suffix='_table.biom')
+        self._clean_up_files.append(fp)
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+        artifacts_data = {'demultiplexed': {'filepaths': [(fp, 'biom')],
+                                            'artifact_type': 'BIOM'}}
+        job = _create_job()
+        job._set_status('running')
+        job.complete(True, artifacts_data=artifacts_data)
+        self._wait_for_job(job)
+        # Retrieve the job that is performing the validation:
+        val_job = qdb.processing_job.ProcessingJob(job.step.rsplit(" ", 1)[-1])
+        # Test the the output artifact is going to be named based on the
+        # input parameters
+        self.assertEqual(
+            loads(val_job.parameters.values['provenance'])['name'],
+            "demultiplexed")
+
         # To test that the naming of the output artifact is based on the
         # parameters that the command is indicating, we need to update the
         # parameter information of the command - since the ones existing
