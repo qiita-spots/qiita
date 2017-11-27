@@ -893,11 +893,10 @@ class TestPrepTemplate(TestCase):
 
     def test_empty_prep(self):
         """Creates a new PrepTemplate"""
-        fp_count = qdb.util.get_count('qiita.filepath')
         metadata = pd.DataFrame.from_dict(
             {'SKB8.640193': {}, 'SKD8.640184': {}}, orient='index', dtype=str)
         with self.assertRaises(ValueError):
-            pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            qdb.metadata_template.prep_template.PrepTemplate.create(
                 metadata, self.test_study, self.data_type)
 
     def test_generate_files(self):
