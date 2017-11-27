@@ -1674,3 +1674,65 @@ def open_file(filepath_or, *args, **kwargs):
     finally:
         if own_fh:
             fh.close()
+
+
+def generate_analysis_list(analysis_ids, public_only=False):
+    """Get general analysis information
+
+    Parameters
+    ----------
+    analysis_ids : list of ints
+        The analysis ids to look for. Non-existing ids will be ignored
+    public_only : bool, optional
+        If true, return only public anaysis. Default: false.
+
+    Returns
+    -------
+    list of dict
+        The list of studies and their information
+
+    Notes
+    -----
+    """
+    if not analysis_ids:
+        return []
+
+    sql = """
+        SELECT analysis_id, a.name, a.description, a.timestamp,
+            array_agg(DISTINCT artifact_id), array_agg(DISTINCT visibility),
+            array_agg(DISTINCT filepath_id)
+        FROM qiita.analysis a
+        LEFT JOIN qiita.analysis_artifact USING (analysis_id)
+        LEFT JOIN qiita.artifact USING (artifact_id)
+        LEFT JOIN qiita.visibility USING (visibility_id)
+        LEFT JOIN qiita.analysis_filepath USING (analysis_id)
+        LEFT JOIN qiita.filepath USING (filepath_id)
+        LEFT JOIN qiita.data_directory USING (data_directory_id)
+        LEFT JOIN qiita.filepath_type USING (filepath_type_id)
+        WHERE dflt = false AND analysis_id IN %s
+        GROUP BY analysis_id
+        ORDER BY analysis_id"""
+
+    with qdb.sql_connection.TRN:
+        results = []
+
+        qdb.sql_connection.TRN.add(sql, [tuple(analysis_ids)])
+        for row in qdb.sql_connection.TRN.execute_fetchindex():
+            aid, name, description, ts, artifacts, av, mapping_files = row
+
+            if set(av) != {'public'} and public_only:
+                continue
+
+            if mapping_files == [None]:
+                mapping_files = []
+            if artifacts == [None]:
+                artifacts = []
+
+            # mapping_files = [eval(mf) for mf in eval(mapping_files)]
+
+            results.append({
+                'analysis_id': aid, 'name': name, 'description': description,
+                'timestamp': ts.strftime("%m/%d/%y %H:%M:%S"),
+                'artifacts': artifacts, 'mapping_files': mapping_files})
+
+    return results

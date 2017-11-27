@@ -11,6 +11,7 @@ import numpy.testing as npt
 from qiita_core.util import qiita_test_checker
 from qiita_core.testing import wait_for_processing_job
 from qiita_core.qiita_settings import qiita_config
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 
 # -----------------------------------------------------------------------------
@@ -129,14 +130,14 @@ class TestAnalysis(TestCase):
 
     def test_can_be_publicized(self):
         analysis = qdb.analysis.Analysis(1)
-        self.assertFalse(analysis.can_be_publicized)
+        self.assertEqual(analysis.can_be_publicized, (False, [4, 5, 6]))
         a4 = qdb.artifact.Artifact(4)
 
         a4.visibility = 'public'
-        self.assertTrue(analysis.can_be_publicized)
+        self.assertEqual(analysis.can_be_publicized, (True, []))
 
         a4.visibility = 'private'
-        self.assertFalse(analysis.can_be_publicized)
+        self.assertEqual(analysis.can_be_publicized, (False, [4, 5, 6]))
 
     def test_add_artifact(self):
         obs = self._create_analyses_with_samples()
@@ -555,6 +556,21 @@ class TestAnalysis(TestCase):
     def test_add_file(self):
         # Tested indirectly through build_files
         pass
+
+    def test_is_public_make_public(self):
+        analysis = self._create_analyses_with_samples()
+        self.assertFalse(analysis.is_public)
+
+        # testing errors
+        with self.assertRaises(ValueError):
+            analysis.make_public()
+
+        # testing successfully makeing public
+        # 4 is the only artifact being used in _create_analyses_with_samples
+        qdb.artifact.Artifact(4).visibility = 'public'
+        analysis.make_public()
+
+        self.assertTrue(analysis.is_public)
 
 
 if __name__ == "__main__":
