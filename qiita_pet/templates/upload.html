@@ -11,7 +11,7 @@
         <li>fastq or fastq.gz (gzipped fastq) for sequences. Note that '.zip' files can not be processed.</li>
         <li>tab separated text files for sample and prep templates, the extension should be txt.</li>
       </ul>
-      <a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">Go to study description</a>
+      <a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">&lt;&lt; Go to study description</a>
     </td>
   </tr>
 
@@ -50,6 +50,8 @@
       </div>
 
       <hr>
+      <h3><u>Uploaded files</u></h3>
+      <br/>
       <form method="post" id="delete-files-form">
         <div class="uploader-list" style="display:none;">
         </div>
@@ -69,7 +71,7 @@
   </tr>
 </table>
 <div style='width:inherit;text-align:center;padding-top:30px'>
-  <small><a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">Go to study description</a></small>
+  <small><a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">&lt;&lt; Go to study description</a></small>
 </div>
 
 <!-- Upload required files and JS code -->
@@ -87,7 +89,8 @@
                                     $('.resumable-drop-metadata'), $('.progress-metadata'),
                                     $('.uploader-list'), $('.file-edit-container'),
                                     maxFileSize, "{{study_id}}", "{{extensions}}",
-                                    "{% raw qiita_config.portal_dir %}"));
+                                    "{% raw qiita_config.portal_dir %}", '{{is_admin}}'=='True',
+                                    '{% raw qiita_config.portal_dir %}/download_upload/{{study_id}}/'));
     })(jQuery);
 
   {% for dirid, filename in files %}
