@@ -1,4 +1,3 @@
-
 from unittest import TestCase, main
 from os import remove
 from os.path import exists, join, basename

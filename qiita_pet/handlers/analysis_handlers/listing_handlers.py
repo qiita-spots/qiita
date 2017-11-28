@@ -45,10 +45,11 @@ class ListAnalysesHandler(BaseHandler):
         user_analyses = generate_analysis_list(user_analysis_ids)
         public_analyses = generate_analysis_list(public_analysis_ids, True)
 
+        dlop = partial(download_link_or_path, is_local_request)
+
         self.render("list_analyses.html", user_analyses=user_analyses,
                     public_analyses=public_analyses, message=message,
-                    level=level, is_local_request=is_local_request,
-                    dlop=partial(download_link_or_path, is_local_request))
+                    level=level, dlop=dlop)
 
     @authenticated
     @execute_as_transaction
