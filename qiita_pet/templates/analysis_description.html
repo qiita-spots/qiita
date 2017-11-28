@@ -162,22 +162,24 @@
 
 <div class="row">
   <div class="col">
+    <form action="{% raw qiita_config.portal_dir %}/analysis/description/{{analysis_id}}/" method="post" id="make-public"><input name="analysis_id" value="{{analysis_id}}" type="hidden"></form>
     <h2>
-        {{analysis_name}} - ID {{analysis_id}}
-        {% if analysis_is_public %}
-          <small><b>(Analysis is public)</b></small>
-        {% end %}
-        <a class="btn btn-info" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"><span class=" glyphicon glyphicon-share"></span></a>
-        {% if analysis_mapping_id is not None %}
-          <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{analysis_mapping_id}}"><span class="glyphicon glyphicon-download-alt"></span> Mapping file</a>
-        {% end %}
+      {{analysis_name}} - ID {{analysis_id}}
+      {% if analysis_is_public %}
+        <small><b>(Public)</b></small>
+      {% else %}
+        <small><b>(Private)</b></small>
+      {% end %}
+      <a class="btn btn-info" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"><span class=" glyphicon glyphicon-share"></span></a>
+      {% if analysis_mapping_id is not None %}
+        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{analysis_mapping_id}}"><span class="glyphicon glyphicon-download-alt"></span> Mapping file</a>
+      {% end %}
+      {% if not analysis_is_public %}
+        <a class="btn btn-default" onclick="if (confirm('Are you sure you want to make this analysis public?')) { $('#make-public').submit(); }"><span class="glyphicon glyphicon-globe"></span> Make analysis public</a>
+      {% end %}
     </h2>
     <h3>{{analysis_description}}</h3>
     Shared with: <span id="shared_html_{{analysis_id}}"></span>
-    {% if not analysis_is_public %}
-      <form action="{% raw qiita_config.portal_dir %}/analysis/description/{{analysis_id}}/" method="post" id="make-public"><input name="analysis_id" value="{{analysis_id}}" type="hidden"></form>
-      <a class="btn btn-default" onclick="$('#make-public').submit()"><span class="glyphicon glyphicon-globe"></span> Make analysis public</a>
-    {% end %}
   </div>
 </div>
 <div class="row" id='analysis-content-div'>
