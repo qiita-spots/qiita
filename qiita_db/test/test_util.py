@@ -744,8 +744,10 @@ class DBUtilTests(TestCase):
         self.assertEqual(qdb.util.generate_analysis_list([]), [])
 
         obs = qdb.util.generate_analysis_list([1, 2, 3, 5])
-        exp = [{'mapping_files': [16], 'description': 'A test analysis',
-                'artifacts': [8, 9], 'name': 'SomeAnalysis', 'analysis_id': 1},
+        exp = [{'mapping_files': [
+                (16, qdb.util.get_filepath_information(16)['fullpath'])],
+                'description': 'A test analysis', 'artifacts': [9], 'name':
+                'SomeAnalysis', 'analysis_id': 1},
                {'mapping_files': [], 'description': 'Another test analysis',
                 'artifacts': [], 'name': 'SomeSecondAnalysis',
                 'analysis_id': 2}]
