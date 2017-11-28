@@ -501,6 +501,9 @@ Vue.component('processing-graph', {
           },
           artifact: {
             color: '#FFFFFF'
+          },
+          type: {
+            color: '#BBBBBB'
           }
         }
       };
@@ -653,6 +656,9 @@ Vue.component('processing-graph', {
 
     /**
      *
+     * This function retrieves the entire graph from Qiita and re-draws the
+     * the entire graph.
+     *
      **/
     updateGraph: function () {
       let vm = this;
@@ -661,7 +667,7 @@ Vue.component('processing-graph', {
         // for the jobs to generate the initial set of artifacts. Update
         // the job list
         if (data.nodes.length == 0) {
-          vm.updateJobs();
+          vm.checkInitialJobs();
         }
         else {
           vm.nodes = [];
@@ -695,8 +701,11 @@ Vue.component('processing-graph', {
 
     /**
      *
+     * This function check the status of the jobs that generates the initial
+     * set of files.
+     *
      **/
-    updateJobs: function () {
+    checkInitialJobs: function () {
       let vm = this;
       $.get(vm.portal + vm.jobsEndpoint, function(data) {
         $("#processing-job-div").html("");
