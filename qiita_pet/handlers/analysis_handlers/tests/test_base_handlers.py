@@ -114,6 +114,10 @@ class TestBaseHandlers(TestHandlerBase):
             wait_for_processing_job(j.id)
 
     def test_get_analysis_description_handler(self):
+        response = self.post('/analysis/description/1/')
+        self.assertEqual(response.code, 200)
+
+    def test_post_analysis_description_handler(self):
         response = self.get('/analysis/description/1/')
         self.assertEqual(response.code, 200)
 
