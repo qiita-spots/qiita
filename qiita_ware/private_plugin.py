@@ -335,6 +335,29 @@ def complete_job(job):
         job._set_status('success')
 
 
+def delete_analysis(job):
+    """Deletes a full analysis
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        analysis_id = job.parameters.values['analysis_id']
+        analysis = qdb.analysis.Analysis(analysis_id)
+
+        artifacts = sorted(
+            analysis.artifacts, key=lambda a: a.id, reverse=True)
+
+        for artifact in artifacts:
+            qdb.artifact.Artifact.delete(artifact.id)
+
+        qdb.analysis.Analysis.delete(analysis.id)
+
+        job._set_status('success')
+
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
              'submit_to_VAMPS': submit_to_VAMPS,
@@ -347,7 +370,8 @@ TASK_DICT = {'build_analysis_files': build_analysis_files,
              'update_prep_template': update_prep_template,
              'delete_sample_or_column': delete_sample_or_column,
              'delete_study': delete_study,
-             'complete_job': complete_job}
+             'complete_job': complete_job,
+             'delete_analysis': delete_analysis}
 
 
 def private_task(job_id):

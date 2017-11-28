@@ -15,3 +15,6 @@ WHERE processing_job_id IN (
     FROM qiita.processing_job
     LEFT JOIN qiita.processing_job_status USING (processing_job_status_id)
     WHERE processing_job_status != 'success');
+
+-- Nov 28, 2017 (only in py file)
+-- Adding a new command into Qiita/Alpha: delete_analysis
