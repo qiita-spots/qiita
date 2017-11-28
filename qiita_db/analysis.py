@@ -526,18 +526,70 @@ class Analysis(qdb.base.QiitaObject):
         Returns
         -------
         bool
-            Whether the analysis can be publicized or not
+            Whether the analysis can be publicized
+        list
+            A list of not public (private) artifacts
         """
         # The analysis can be made public if all the artifacts used
         # to get the samples from are public
         with qdb.sql_connection.TRN:
+            non_public = []
             sql = """SELECT DISTINCT artifact_id
                      FROM qiita.analysis_sample
-                     WHERE analysis_id = %s"""
+                     WHERE analysis_id = %s
+                     ORDER BY artifact_id"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            return all(
-                [qdb.artifact.Artifact(aid).visibility == 'public'
-                 for aid in qdb.sql_connection.TRN.execute_fetchflatten()])
+            for aid in qdb.sql_connection.TRN.execute_fetchflatten():
+                if qdb.artifact.Artifact(aid).visibility != 'public':
+                    non_public.append(aid)
+
+            return (non_public == [], non_public)
+
+    @property
+    def is_public(self):
+        """Returns if the analysis is public
+
+        Returns
+        -------
+        bool
+            If the analysis is public
+        """
+        with qdb.sql_connection.TRN:
+            # getting all root artifacts / command_id IS NULL
+            sql = """SELECT DISTINCT visibility
+                     FROM qiita.analysis_artifact
+                     LEFT JOIN qiita.artifact USING (artifact_id)
+                     LEFT JOIN qiita.visibility USING (visibility_id)
+                     WHERE analysis_id = %s AND command_id IS NULL"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            visibilities = set(qdb.sql_connection.TRN.execute_fetchflatten())
+
+            return visibilities == {'public'}
+
+    def make_public(self):
+        """Makes an analysis public
+
+        Raises
+        ------
+        ValueError
+            If can_be_publicized is not true
+        """
+        with qdb.sql_connection.TRN:
+            can_be_publicized, non_public = self.can_be_publicized
+            if not can_be_publicized:
+                raise ValueError('Not all artifacts that generated this '
+                                 'analysis are public: %s' % ', '.join(
+                                     map(str, non_public)))
+
+            # getting all root artifacts / command_id IS NULL
+            sql = """SELECT artifact_id
+                     FROM qiita.analysis_artifact
+                     LEFT JOIN qiita.artifact USING (artifact_id)
+                     WHERE analysis_id = %s AND command_id IS NULL"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            aids = qdb.sql_connection.TRN.execute_fetchflatten()
+            for aid in aids:
+                qdb.artifact.Artifact(aid).visibility = 'public'
 
     def add_artifact(self, artifact):
         """Adds an artifact to the analysis

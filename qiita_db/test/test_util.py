@@ -740,6 +740,23 @@ class DBUtilTests(TestCase):
         exp = [["biom", True], ["directory", False], ["log", False]]
         self.assertItemsEqual(obs, exp)
 
+    def test_generate_analysis_list(self):
+        self.assertEqual(qdb.util.generate_analysis_list([]), [])
+
+        obs = qdb.util.generate_analysis_list([1, 2, 3, 5])
+        exp = [{'mapping_files': [16], 'description': 'A test analysis',
+                'artifacts': [8, 9], 'name': 'SomeAnalysis', 'analysis_id': 1},
+               {'mapping_files': [], 'description': 'Another test analysis',
+                'artifacts': [], 'name': 'SomeSecondAnalysis',
+                'analysis_id': 2}]
+        # removing timestamp for testing
+        for i in range(len(obs)):
+            del obs[i]['timestamp']
+        self.assertEqual(obs, exp)
+
+        self.assertEqual(
+            qdb.util.generate_analysis_list([1, 2, 3, 5], True), [])
+
 
 @qiita_test_checker()
 class UtilTests(TestCase):
