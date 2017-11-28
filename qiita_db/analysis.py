@@ -525,9 +525,10 @@ class Analysis(qdb.base.QiitaObject):
 
         Returns
         -------
-        bool, list
-            Whether the analysis can be publicized or not and the list of not
-            public artifacts
+        bool
+            Whether the analysis can be publicized
+        list
+            A list of not public (private) artifacts
         """
         # The analysis can be made public if all the artifacts used
         # to get the samples from are public
@@ -555,7 +556,7 @@ class Analysis(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # getting all root artifacts / command_id IS NULL
-            sql = """SELECT visibility
+            sql = """SELECT DISTINCT visibility
                      FROM qiita.analysis_artifact
                      LEFT JOIN qiita.artifact USING (artifact_id)
                      LEFT JOIN qiita.visibility USING (visibility_id)
