@@ -3,19 +3,9 @@
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/networkVue.js"></script>
 
 <script type="text/javascript">
-  /**
-   *
-   * This function is needed by the artifact subsection of the page. Since the
-   * artifact can be either embedded in the analysis pipeline or in the study
-   * pipeline, we take advantage of the templating system to abstract the way
-   * the graph should be updated. In the analysis pipeline (current) the graph
-   * is reloaded by calling the update_graph function of the Vue component.
-   */
-  function reload_graph() {
-    $("#analysis-network-div").data('data-graph-vue').update_graph();
-  }
 
   /**
    *
@@ -28,119 +18,11 @@
       location.reload();
   }
 
-  /*
-   * Toggle the graph view
-   *
-   * Show/hide the graph div and update GUI accordingly
-   *
-   */
-  function toggle_network_graph() {
-    if($("#analysis-network-div").css('display') == 'none' ) {
-      $("#analysis-network-div").show();
-      $("#show-hide-network-btn").text("-");
-    } else {
-      $("#analysis-network-div").hide();
-      $("#show-hide-network-btn").text("+");
-    }
-  };
-
   $(document).ready(function(){
-    // Create the new VUE component that is going to hold the artifact + job graph
-    Vue.component('analysis-graph', {
-      template: '<div class="col-md-12 graph" style="width:90%" id="analysis-network-div">',
-      props: ['nodes', 'edges']
-    });
+    // Create the processing network view object
+    processingNetwork = new Vue({el: "#analysis-graph-vue"});
 
-    var vueGraph = new Vue({
-      el: "#analysis-graph-vue",
-      data: {
-        nodes: [],
-        edges: []
-      },
-      methods: {
-        update_graph: function () {
-          let vm = this;
-          $.get("{% raw qiita_config.portal_dir %}/analysis/description/" + {{analysis_id}} + "/graph/", function(data) {
-            // If there are no nodes in the graph, it means that we are waiting
-            // for the jobs to generate the initial set of artifacts. Update
-            // the job list
-            if (data.nodes.length == 0) {
-              vm.update_jobs();
-            }
-            else {
-              vm.nodes = [];
-              vm.edges = [];
-              // The initial set of artifacts has been created! Format the graph
-              // data in a way that Vis.Network likes it
-              // Format edge list data
-              for(var i = 0; i < data.edges.length; i++) {
-                vm.edges.push({from: data.edges[i][0], to: data.edges[i][1], arrows:'to'});
-              }
-              // Format node list data
-              for(var i = 0; i < data.nodes.length; i++) {
-                vm.nodes.push({id: data.nodes[i][2], label: data.nodes[i][3], type: data.nodes[i][1], group: data.nodes[i][0]});
-              }
-              result = draw_processing_graph(vm.nodes, vm.edges, 'analysis-network-div', 'analysis-results', populateContentArtifact, populateContentJob);
-              processing_network = result[0];
-              nodes_ds = result[1];
-              edges_ds = result[2];
-
-              // At this point we can show the graph and hide the job list
-              $("#analysis-network-div").show();
-              $("#analysis-job-div").hide();
-            }
-          })
-            .fail(function(object, status, error_msg) {
-              // Show an error message if something wrong happen, rather than
-              // leaving the spinning wheel of death in there.
-              $("#analysis-network-div").html("Error loading graph: " + status + " " + error_msg);
-              $("#analysis-network-div").show();
-              $("#analysis-job-div").hide();
-            }
-          );
-        },
-        update_jobs: function () {
-          let vm = this;
-          $.get("{% raw qiita_config.portal_dir %}/analysis/description/" + {{analysis_id}} +  "/jobs/", function(data) {
-            $("#analysis-job-div").html("");
-            $("#analysis-job-div").append("<p>Hang tight, we are generating the initial set of files for your analysis: </p>");
-            for(var jobid in data){
-              var contents = "<b> Job: " + jobid + "</b> Status: " + data[jobid]['status'];
-              // Only show step if error if they actually have a useful message
-              if (data[jobid]['step']) {
-                contents = contents + " Step: " + data[jobid]['step'] + "</br>";
-              }
-              if (data[jobid]['error']) {
-                contents = contents + " Error: " + data[jobid]['error'] + "</br>";
-              }
-              $("#analysis-job-div").append(contents);
-            }
-          })
-            .fail(function(object, status, error_msg) {
-              $("#analysis-job-div").html("Error loading job information: " + status + " " + error_msg);
-            }
-          );
-        }
-      },
-      mounted() {
-        let vm = this;
-        show_loading('analysis-network-div');
-        $("#analysis-network-div").hide();
-        // This call to udpate graph will take care of updating the jobs
-        // if the graph is not available
-        vm.update_graph();
-        setInterval(function() {
-          // Only update if the graph has not been generated yet
-          if (vm.nodes.length == 0) {
-            vm.update_graph();
-          }
-        }, 5000);
-      }
-    });
-
-    // Add the vue object to the div, so we avoid to have global variables
-    $("#analysis-network-div").data('data-graph-vue', vueGraph);
-    $("processing-content-div").hide();
+    // Show the alert message, if any
     {% if alert_msg %}
       bootstrapAlert("{{alert_msg}}", "{{alert_type}}");
     {% end %}
@@ -173,28 +55,8 @@
     Shared with: <span id="shared_html_{{analysis_id}}"></span>
   </div>
 </div>
-<div class="row" id='analysis-content-div'>
-  <div class="row">
-    <div class="col">
-      <h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggle_network_graph();">-</a><i> Processing network</i></h4>
-      <b>(Click nodes for more information, blue are jobs)</b>
-    </div>
-  </div>
-  <div class='row' id="analysis-graph-vue">
-    <div class='col-md-1'>
-    </div>
-    <div class='col-md-11'>
-      <analysis-graph></analysis-graph>
-    </div>
-  </div>
-  <div class='row'>
-    <div class='col-md-12' style='width:90%' id='analysis-job-div'>
-    </div>
-  </div>
-  <div class='row'>
-    <div class='col-md-12' style='width:90%' id='analysis-results'>
-    </div>
-  </div>
+<div id='analysis-graph-vue'>
+  <processing-graph ref="procGraph" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/analysis/description/{{analysis_id}}/graph/" jobs-endpoint="/analysis/description/{{analysis_id}}/jobs/"></processing-graph>
 </div>
 <div class="row" id='processing-content-div'></div>
 
