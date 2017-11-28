@@ -12,7 +12,7 @@
 
 (function(window, document, $, undefined)
  {
-   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id, valid_extensions, target_prefix) {
+   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id, valid_extensions, target_prefix, is_admin, url) {
      var $this = this;
      // Bootstrap parameters and clear HTML
      this.originalDocumentTitle = document.title;
@@ -138,9 +138,16 @@
        }
 
        var listNode = $(document.createElement('div'));
-       listNode.html('<div class="row" class="checkbox"><label>' + fileName +
-                     ' &nbsp; <input type="checkbox" value="' + dirId + '-' +
-                     fileName + '" name="files_to_erase"></label></div>');
+       if (is_admin) {
+         listNode.html('<div class="row" class="checkbox"><label>' + fileName +
+                       '&nbsp; <input type="checkbox" value="' + dirId + '-' +
+                       fileName  + '" name="files_to_erase"></label>' +
+                       '&nbsp;<a href="' + url + fileName + '">download</a></div>');
+       } else {
+         listNode.html('<div class="row" class="checkbox"><label>' + fileName +
+                       '&nbsp; <input type="checkbox" value="' + dirId + '-' +
+                       fileName  + '" name="files_to_erase"></label></div>');
+       }
        this.uploaderList.append(listNode);
 
        var editNode = $(document.createElement('div'));
