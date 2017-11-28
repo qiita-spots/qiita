@@ -1687,15 +1687,12 @@ def generate_analysis_list(analysis_ids, public_only=False):
     analysis_ids : list of ints
         The analysis ids to look for. Non-existing ids will be ignored
     public_only : bool, optional
-        If true, return only public anaysis. Default: false.
+        If true, return only public analyses. Default: false.
 
     Returns
     -------
     list of dict
         The list of studies and their information
-
-    Notes
-    -----
     """
     if not analysis_ids:
         return []

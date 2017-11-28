@@ -1,3 +1,4 @@
+
 from unittest import TestCase, main
 from os import remove
 from os.path import exists, join, basename
@@ -564,7 +565,7 @@ class TestAnalysis(TestCase):
         with self.assertRaises(ValueError):
             analysis.make_public()
 
-        # testing successfully makeing public
+        # testing successfully making public
         # 4 is the only artifact being used in _create_analyses_with_samples
         qdb.artifact.Artifact(4).visibility = 'public'
         analysis.make_public()
