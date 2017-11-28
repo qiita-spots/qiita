@@ -31,6 +31,7 @@ Methods
     move_upload_files_to_trash
     add_message
     get_pubmed_ids_from_dois
+    generate_analysis_list
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -1561,7 +1562,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
                 # generating algorithm, by default is ''
                 algorithm = ''
-                if cid:
+                if cid is not None:
                     ms = commands[cid]['merging_scheme']
                     outputs = ''
                     if ms['outputs'] and filepaths:
@@ -1572,12 +1573,14 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                                            for k in ms['parameters']])
                         cname = "%s (%s%s)" % (cname, params, outputs)
 
-                    palgorithm = pname if pcid else 'N/A'
-                    ms = commands[pcid]['merging_scheme']
-                    if ms['parameters']:
-                        params = ','.join(['%s: %s' % (k, aparams[k])
-                                           for k in ms['parameters']])
-                        palgorithm = "%s (%s)" % (palgorithm, params)
+                    palgorithm = 'N/A'
+                    if pcid is not None:
+                        palgorithm = pname
+                        ms = commands[pcid]['merging_scheme']
+                        if ms['parameters']:
+                            params = ','.join(['%s: %s' % (k, aparams[k])
+                                               for k in ms['parameters']])
+                            palgorithm = "%s (%s)" % (palgorithm, params)
 
                     algorithm = '%s | %s' % (cname, palgorithm)
 
@@ -1696,8 +1699,9 @@ def generate_analysis_list(analysis_ids, public_only=False):
 
     sql = """
         SELECT analysis_id, a.name, a.description, a.timestamp,
-            array_agg(DISTINCT artifact_id), array_agg(DISTINCT visibility),
-            array_agg(DISTINCT filepath_id)
+            array_agg(DISTINCT CASE WHEN command_id IS NOT NULL
+                      THEN artifact_id ELSE NULL END),
+            array_agg(DISTINCT visibility), array_agg(DISTINCT filepath_id)
         FROM qiita.analysis a
         LEFT JOIN qiita.analysis_artifact USING (analysis_id)
         LEFT JOIN qiita.artifact USING (artifact_id)
@@ -1722,8 +1726,15 @@ def generate_analysis_list(analysis_ids, public_only=False):
 
             if mapping_files == [None]:
                 mapping_files = []
+            else:
+                mapping_files = [
+                    (mid, get_filepath_information(mid)['fullpath'])
+                    for mid in mapping_files]
             if artifacts == [None]:
                 artifacts = []
+            else:
+                # making sure they are int so they don't break the GUI
+                artifacts = [int(a) for a in artifacts if a is not None]
 
             results.append({
                 'analysis_id': aid, 'name': name, 'description': description,

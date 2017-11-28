@@ -2,13 +2,9 @@
 
 {% block head %}
 <script type="text/javascript">
-
-
   $(document).ready(function(){
-    {% if analyses %}
-      $('#no-analyses').hide()
-      $('#analyses-table').dataTable({
-        "order": [[ 2, "desc" ]],
+    $('#user-analyses-table').dataTable({
+        "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
         columnDefs: [
           {"render": function ( data, type, row, meta ) {
             data = JSON.parse(data);
@@ -22,83 +18,181 @@
             } else {
               return 'No artifacts';
             }
-          }, targets: [0]}]
-      });
+          }, targets: [0]}],
+        "language": {
+            "search": "Filter results by analysis name or description",
+            "loadingRecords": "Please wait - loading information ...",
+            "zeroRecords": "No analyses found"
+        },
+    });
 
-      $('#analyses-table tbody').on('click', 'div.details-control', function () {
-          var table = $('#analyses-table').DataTable();
-          var tr = $(this).closest('tr');
-          var row = table.row( tr );
+    $('#public-analyses-table').dataTable({
+        "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
+        "sDom": '<"top">rti<"bottom"p><"clear">',
+        "bLengthChange": false,
+        columnDefs: [
+          {"render": function ( data, type, row, meta ) {
+            data = JSON.parse(data);
+            if (data !== null && data !== undefined && data.length != 0){
+              return '<div class="container" style="max-width: 5em;">'+
+                       '<div class="row justify-content-md-center">' +
+                         '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
+                         '<div class="col-md-1 text-center">' + data.length + '</div>' +
+                       '</div>' +
+                     '</div>';
+            } else {
+              return 'No artifacts';
+            }
+          }, targets: [0]}],
+        "language": {
+            "search": "Filter results by analysis name or description",
+            "loadingRecords": "Please wait - loading information ...",
+            "zeroRecords": "No analyses found"
+        }
+    });
 
-          if ( row.child.isShown() ) {
-            // This row is already open - close it
-            row.child.hide();
-            tr.removeClass('shown');
-          } else {
-            // Open this row
-            // modified from: https://jsfiddle.net/8rejaL88/2/
-            tr.addClass('shown');
-            row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
-            $.get('/artifact/info/', {ids: JSON.parse(row.data()[0]), only_biom: 'False' })
-              .done(function ( data ) {
-                if (data['status']=='success') {
-                  $('td', row.child()).html(format_biom_rows(data.data, row.index(), for_study_list=false)).show();
-                } else {
-                  bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
-                }
-              });
-          }
-      });
-    {% end %}
+    $('#user-analyses-table tbody').on('click', 'div.details-control', function () {
+        var table = $('#user-analyses-table').DataTable();
+        var tr = $(this).closest('tr');
+        var row = table.row( tr );
+
+        if ( row.child.isShown() ) {
+          // This row is already open - close it
+          row.child.hide();
+          tr.removeClass('shown');
+        } else {
+          // Open this row
+          // modified from: https://jsfiddle.net/8rejaL88/2/
+          tr.addClass('shown');
+          row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
+          $.get('/artifact/info/', {ids: JSON.parse(row.data()[0]), only_biom: 'False' })
+            .done(function ( data ) {
+              if (data['status']=='success') {
+                $('td', row.child()).html(format_biom_rows(data.data, row.index(), for_study_list=false)).show();
+              } else {
+                bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+              }
+            });
+        }
+    });
+
+    $('#public-analyses-table tbody').on('click', 'div.details-control', function () {
+        var table = $('#public-analyses-table').DataTable();
+        var tr = $(this).closest('tr');
+        var row = table.row( tr );
+
+        if ( row.child.isShown() ) {
+          // This row is already open - close it
+          row.child.hide();
+          tr.removeClass('shown');
+        } else {
+          // Open this row
+          // modified from: https://jsfiddle.net/8rejaL88/2/
+          tr.addClass('shown');
+          row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
+          $.get('/artifact/info/', {ids: JSON.parse(row.data()[0]), only_biom: 'False' })
+            .done(function ( data ) {
+              if (data['status']=='success') {
+                $('td', row.child()).html(format_biom_rows(data.data, row.index(), for_study_list=false)).show();
+              } else {
+                bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+              }
+            });
+        }
+    });
+
+    // connecting searches
+    $('#user-analyses-table').on('search.dt', function () {
+      var search_text = $('.dataTables_filter input').val();
+      $('#public-analyses-table').DataTable().search(search_text).draw();
+    });
+
+    // connecting paging size
+    $('#user-analyses-table').on('length.dt', function (e, settings, len) {
+      $('#public-analyses-table').DataTable().page.len(len).draw();
+    });
   });
 </script>
 {% end %}
 
 {%block content %}
 
-<div id='no-analyses' class='jumbotron'>
-  <h1>No Analyses available</h1>
-  <h3><a href="{% raw qiita_config.portal_dir %}/study/list/">Create an analysis</a></h3>
-</div>
-
-{% if analyses %}
-  <table id="analyses-table" class="table table-bordered gray-msg">
-    <thead>
-      <tr>
-        <th>Artifacts</th>
-        <th>Analysis Name</th>
-        <th>Timestamp</th>
-        <th>Mapping File</th>
-        <th>Delete?</th>
-      </tr>
+<div class="row">
+  <div class="col-sm-12" id="user-studies-div">
+    <h3 class="gray-msg">Your Analyses</h3>
+    <table id="user-analyses-table" class="table table-bordered gray-msg">
+      <thead>
+        <tr>
+          <th>Artifacts</th>
+          <th>Analysis Name</th>
+          <th>Creation Timestamp</th>
+          <th>Mapping File</th>
+          <th>Delete?</th>
+        </tr>
+      </thead>
       <tbody>
-      {% for analysis in analyses %}
-        {% set _id = analysis.id %}
+      {% for analysis in user_analyses %}
         <tr>
           <td>
-            {{[ar.id for ar in analysis.artifacts]}}
+            {{analysis['artifacts']}}
           </td>
           <td>
-            <a href="{% raw qiita_config.portal_dir %}/analysis/description/{{_id}}/">{{analysis.name}}</a>
-            {% if analysis.description %}
-              ({{analysis.description}})
+            <a href="{% raw qiita_config.portal_dir %}/analysis/description/{{analysis['analysis_id']}}/">{{analysis['name']}}</a>
+            {% if analysis['description'] %}
+              ({{analysis['description']}})
             {% end %}
           </td>
           <td>
-           {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
+           {{analysis['timestamp']}}
           </td>
           <td>
-            {% raw mappings[_id] %}
+            {% if analysis['mapping_files'] %}
+              {% for _map in analysis['mapping_files'] %}
+                {% raw dlop(_map[1], _map[0], 'mapping file') %}
+              {% end %}
+            {% else %}
+              No mapping files available
+            {% end %}
           </td>
           <td>
-           <a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis('{{analysis.name}}', {{_id}});"></a>
+           <a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis('{{analysis['name']}}', {{analysis['analysis_id']}});"></a>
           </td>
         </tr>
       {% end %}
       </tbody>
-    </thead>
-  </table>
+    </table>
 
-{% end %}
+    <h3 class="gray-msg">Public Analyses</h3>
+    <table id="public-analyses-table" class="table table-bordered gray-msg">
+      <thead>
+        <tr>
+          <th>Artifacts</th>
+          <th>Analysis Name</th>
+          <th>Creation Timestamp</th>
+          <th>Mapping File</th>
+        </tr>
+      </thead>
+      {% for analysis in public_analyses %}
+        <tr>
+          <td>
+            {{analysis['artifacts']}}
+          </td>
+          <td>
+            <a href="{% raw qiita_config.portal_dir %}/analysis/description/{{analysis['analysis_id']}}/">{{analysis['name']}}</a>
+            {% if analysis['description'] %}
+              ({{analysis['description']}})
+            {% end %}
+          </td>
+          <td>
+           {{analysis['timestamp']}}
+          </td>
+          <td>
+            {% for _map in analysis['mapping_files'] %}
+              {% raw dlop(_map[1], _map[0], 'mapping file') %}
+            {% end %}
+          </td>
+        </tr>
+      {% end %}
+    </table>
 
 {% end %}

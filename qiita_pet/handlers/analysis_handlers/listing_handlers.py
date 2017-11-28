@@ -19,7 +19,7 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import download_link_or_path
 from qiita_pet.handlers.analysis_handlers import check_analysis_access
 from qiita_pet.util import is_localhost
-from qiita_db.util import retrieve_filepaths
+from qiita_db.util import generate_analysis_list
 from qiita_db.analysis import Analysis
 from qiita_db.logger import LogEntry
 from qiita_db.reference import Reference
@@ -33,29 +33,23 @@ class ListAnalysesHandler(BaseHandler):
         message = self.get_argument('message', '')
         level = self.get_argument('level', '')
         user = self.current_user
-
-        analyses = user.shared_analyses | user.private_analyses
-
         is_local_request = is_localhost(self.request.headers['host'])
-        dlop = partial(download_link_or_path, is_local_request)
-        mappings = {}
-        bioms = {}
-        tgzs = {}
-        for analysis in analyses:
-            _id = analysis.id
-            mappings[_id], bioms[_id], tgzs[_id] = '', '', ''
-            for fid, fp, fpt in retrieve_filepaths('analysis_filepath',
-                                                   'analysis_id', _id):
-                if fpt == 'plain_text':
-                    mappings[_id] = dlop(fp, fid, 'mapping file')
-                if fpt == 'biom':
-                    bioms[_id] = dlop(fp, fid, 'biom file')
-                if fpt == 'tgz':
-                    tgzs[_id] = dlop(fp, fid, 'tgz file')
 
-        self.render("list_analyses.html", analyses=analyses, message=message,
-                    level=level, is_local_request=is_local_request,
-                    mappings=mappings, bioms=bioms, tgzs=tgzs)
+        uanalyses = user.shared_analyses | user.private_analyses
+        user_analysis_ids = set([a.id for a in uanalyses])
+
+        panalyses = Analysis.get_by_status('public')
+        public_analysis_ids = set([a.id for a in panalyses])
+        public_analysis_ids = public_analysis_ids - user_analysis_ids
+
+        user_analyses = generate_analysis_list(user_analysis_ids)
+        public_analyses = generate_analysis_list(public_analysis_ids, True)
+
+        dlop = partial(download_link_or_path, is_local_request)
+
+        self.render("list_analyses.html", user_analyses=user_analyses,
+                    public_analyses=public_analyses, message=message,
+                    level=level, dlop=dlop)
 
     @authenticated
     @execute_as_transaction
