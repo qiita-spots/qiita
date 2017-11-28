@@ -113,18 +113,19 @@
     });
 
     var analyses_all_messages = $("#analyses-all-messages");
+    var data = {% raw messages %};
     analyses_all_messages.empty();
-    {% for level, msgs in messages.items() %}
-      {% if msgs %}
-        var message = $('<div>', { 'class': 'alert fade in alert-{{level}}', 'role': 'alert', 'id': 'analysis-message-{{level}}'});
-        message.append(' '+'{% raw msgs.replace("'","\\'") %}');
+    for (level in data) {
+      if (data[level].length != 0) {
+        var message = $('<div>', { 'class': 'alert fade in alert-'+level, 'role': 'alert', 'id': 'analysis-message-'+level});
+        message.append(' '+data[level]);
         // prepend the "Need help" message
-        if ('{{level}}' == 'warning' || '{{level}}' == 'danger'){
+        if (level == 'warning' || level == 'danger'){
           message.append('<p style="text-align:center">Need help? Send us an <a href="mailto:qiita.help@gmail.com">email</a>.</p>');
         }
         analyses_all_messages.prepend(message);
-      {% end %}
-    {% end %}
+      }
+    }
   });
 
 </script>
