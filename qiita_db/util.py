@@ -1733,7 +1733,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
             if artifacts == [None]:
                 artifacts = []
             else:
-                # making sure they int so they don't brake the GUI
+                # making sure they are int so they don't break the GUI
                 artifacts = [int(a) for a in artifacts if a is not None]
 
             results.append({

@@ -125,7 +125,7 @@
         <tr>
           <th>Artifacts</th>
           <th>Analysis Name</th>
-          <th>Timestamp</th>
+          <th>Creation Timestamp</th>
           <th>Mapping File</th>
           <th>Delete?</th>
         </tr>
@@ -146,8 +146,12 @@
            {{analysis['timestamp']}}
           </td>
           <td>
-            {% for _map in analysis['mapping_files'] %}
-              {% raw dlop(_map[1], _map[0], 'mapping file') %}
+            {% if analysis['mapping_files'] %}
+              {% for _map in analysis['mapping_files'] %}
+                {% raw dlop(_map[1], _map[0], 'mapping file') %}
+              {% end %}
+            {% else %}
+              No mapping files available
             {% end %}
           </td>
           <td>
@@ -164,7 +168,7 @@
         <tr>
           <th>Artifacts</th>
           <th>Analysis Name</th>
-          <th>Timestamp</th>
+          <th>Creation Timestamp</th>
           <th>Mapping File</th>
         </tr>
       </thead>
