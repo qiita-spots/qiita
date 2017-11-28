@@ -353,7 +353,9 @@ def delete_analysis(job):
         for artifact in artifacts:
             qdb.artifact.Artifact.delete(artifact.id)
 
-        qdb.analysis.Analysis.delete(analysis.id)
+        qdb.analysis.Analysis.delete(analysis_id)
+
+        r_client.delete('analysis_delete_%d' % analysis_id)
 
         job._set_status('success')
 

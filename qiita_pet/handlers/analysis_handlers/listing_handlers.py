@@ -59,7 +59,7 @@ class ListAnalysesHandler(BaseHandler):
                 processing = job_status not in ('success', 'error')
                 if processing:
                     messages['info'] += (
-                        'Analysis %s in being deleted<br/>' % analysis_id)
+                        'Analysis %s is being deleted<br/>' % analysis_id)
                 elif job_status == 'error':
                     messages['danger'] += (
                         job.log.msg.replace('\n', '<br/>') + '<br/>')
