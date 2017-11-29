@@ -1734,7 +1734,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
             else:
                 mapping_files = [
                     (mid, get_filepath_information(mid)['fullpath'])
-                    for mid in mapping_files]
+                    for mid in mapping_files if mid is not None]
             if artifacts == [None]:
                 artifacts = []
             else:
