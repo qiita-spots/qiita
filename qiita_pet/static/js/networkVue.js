@@ -22,7 +22,7 @@ function toggle_network_graph() {
 Vue.component('processing-graph', {
   template: '<div class="row" id="testId">' +
               '<div class="row">' +
-                '<div class="col">' +
+                '<div class="col-md-12">' +
                   '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggle_network_graph();">-</a><i> Processing network </i></h4>' +
                   '<div id="run-btn-div"><a class="btn btn-success" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run workflow</a><small class="blinking-message"> Don\'t forget to hit "Run" once you are done with your workflow!</small></div>' +
                   '<b>(Click nodes for more information, blue are jobs)</b>' +
