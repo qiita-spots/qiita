@@ -23,7 +23,8 @@ Vue.component('processing-graph', {
   template: '<div class="row" id="testId">' +
               '<div class="row">' +
                 '<div class="col">' +
-                  '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggle_network_graph();">-</a><i> Processing network</i></h4>' +
+                  '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggle_network_graph();">-</a><i> Processing network </i></h4>' +
+                  '<div id="run-btn-div"><a class="btn btn-success" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run workflow</a><small class="blinking-message"> Don\'t forget to hit "Run" once you are done with your workflow!</small></div>' +
                   '<b>(Click nodes for more information, blue are jobs)</b>' +
                 '</div>' +
               '</div>' +
@@ -110,7 +111,7 @@ Vue.component('processing-graph', {
               vm.removeJobNodeFromGraph(job_id);
               vm.inConstructionJobs -= 1;
               if (vm.inConstructionJobs == 0) {
-                $('#run-btn').prop('disabled', true);
+                $('#run-btn-div').hide();
               }
               $("#processing-info-div").empty();
             }
@@ -434,7 +435,7 @@ Vue.component('processing-graph', {
       $(job_info.inputs).each(function(){
         vm.edges_ds.add({id: vm.edges_ds.length + 1, from: this, to: job_info.id});
       });
-      vm.nodes_ds.add({id: job_info.id, group: "job", label: job_info.label});
+      vm.nodes_ds.add({id: job_info.id, group: "job", label: job_info.label, color: {background: vm.colorScheme.in_construction}});
       $(job_info.outputs).each(function(){
         var out_name = this[0];
         var out_type = this[1];
@@ -651,6 +652,9 @@ Vue.component('processing-graph', {
 
       $('#processing-results').empty();
       $('#run-btn').prop('disabled', false);
+      if (vm.inConstructionJobs === 0) {
+        $('#run-btn-div').show();
+      }
       vm.inConstructionJobs += 1;
     },
 
@@ -742,8 +746,16 @@ Vue.component('processing-graph', {
     vm.runningJobs = [];
     vm.inConstructionJobs = 0;
     vm.workflowId = null;
+    vm.colorScheme = {
+      'success': '#00cc00',
+      'running': '#cccc00',
+      'error': '#ff3333',
+      'in_construction': '#BBBBBB'};
     show_loading('processing-network-div');
     $("#processing-network-div").hide();
+
+    $('#run-btn').on('click', function() { vm.runWorkflow(); });
+    $('#run-btn-div').hide();
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available
     vm.updateGraph();
