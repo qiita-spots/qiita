@@ -1555,6 +1555,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 # - ignoring empty filepaths
                 if filepaths == [None]:
                     filepaths = []
+                else:
+                    filepaths = [fp for fp in filepaths if fp.endswith('biom')]
 
                 # - ignoring empty target
                 if target == [None]:
@@ -1564,21 +1566,22 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 algorithm = ''
                 if cid is not None:
                     ms = commands[cid]['merging_scheme']
-                    outputs = ''
-                    if ms['outputs'] and filepaths:
-                        # if this is not null, we ween to check the biom files
-                        outputs = ' | Output: %s' % ', '.join(filepaths)
+                    eparams = []
                     if ms['parameters']:
-                        params = ','.join(['%s: %s' % (k, aparams[k])
-                                           for k in ms['parameters']])
-                        cname = "%s (%s%s)" % (cname, params, outputs)
+                        eparams.append(','.join(['%s: %s' % (k, aparams[k])
+                                                 for k in ms['parameters']]))
+                    if ms['outputs'] and filepaths:
+                        eparams.append('BIOM: %s' % ', '.join(filepaths))
+                    if eparams:
+                        cname = "%s (%s)" % (cname, ', '.join(eparams))
 
                     palgorithm = 'N/A'
                     if pcid is not None:
                         palgorithm = pname
                         ms = commands[pcid]['merging_scheme']
                         if ms['parameters']:
-                            params = ','.join(['%s: %s' % (k, aparams[k])
+                            pparams = pparams[0]
+                            params = ','.join(['%s: %s' % (k, pparams[k])
                                                for k in ms['parameters']])
                             palgorithm = "%s (%s)" % (palgorithm, params)
 
@@ -1700,15 +1703,16 @@ def generate_analysis_list(analysis_ids, public_only=False):
     sql = """
         SELECT analysis_id, a.name, a.description, a.timestamp,
             array_agg(DISTINCT CASE WHEN command_id IS NOT NULL
-                      THEN artifact_id ELSE NULL END),
-            array_agg(DISTINCT visibility), array_agg(DISTINCT filepath_id)
+                      THEN artifact_id END),
+            array_agg(DISTINCT visibility),
+            array_agg(DISTINCT CASE WHEN filepath_type = 'plain_text'
+                      THEN filepath_id END)
         FROM qiita.analysis a
         LEFT JOIN qiita.analysis_artifact USING (analysis_id)
         LEFT JOIN qiita.artifact USING (artifact_id)
         LEFT JOIN qiita.visibility USING (visibility_id)
         LEFT JOIN qiita.analysis_filepath USING (analysis_id)
         LEFT JOIN qiita.filepath USING (filepath_id)
-        LEFT JOIN qiita.data_directory USING (data_directory_id)
         LEFT JOIN qiita.filepath_type USING (filepath_type_id)
         WHERE dflt = false AND analysis_id IN %s
         GROUP BY analysis_id
@@ -1721,7 +1725,8 @@ def generate_analysis_list(analysis_ids, public_only=False):
         for row in qdb.sql_connection.TRN.execute_fetchindex():
             aid, name, description, ts, artifacts, av, mapping_files = row
 
-            if set(av) != {'public'} and public_only:
+            av = 'public' if set(av) == {'public'} else 'private'
+            if av != 'public' and public_only:
                 continue
 
             if mapping_files == [None]:
@@ -1739,6 +1744,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
             results.append({
                 'analysis_id': aid, 'name': name, 'description': description,
                 'timestamp': ts.strftime("%m/%d/%y %H:%M:%S"),
-                'artifacts': artifacts, 'mapping_files': mapping_files})
+                'visibility': av, 'artifacts': artifacts,
+                'mapping_files': mapping_files})
 
     return results
