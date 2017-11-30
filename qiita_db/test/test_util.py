@@ -747,10 +747,10 @@ class DBUtilTests(TestCase):
         exp = [{'mapping_files': [
                 (16, qdb.util.get_filepath_information(16)['fullpath'])],
                 'description': 'A test analysis', 'artifacts': [9], 'name':
-                'SomeAnalysis', 'analysis_id': 1},
+                'SomeAnalysis', 'analysis_id': 1, 'visibility': 'private'},
                {'mapping_files': [], 'description': 'Another test analysis',
                 'artifacts': [], 'name': 'SomeSecondAnalysis',
-                'analysis_id': 2}]
+                'analysis_id': 2, 'visibility': 'private'}]
         # removing timestamp for testing
         for i in range(len(obs)):
             del obs[i]['timestamp']
@@ -986,9 +986,10 @@ class UtilTests(TestCase):
             # not testing timestamp
             for i in range(len(obs)):
                 del obs[i]['timestamp']
-            exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1 '
-                                   '| Output: 1_study_1001_closed_reference_'
+            exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
+                                   'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom) | Split libraries FASTQ')
+            self.assertItemsEqual(obs, exp)
 
             # returning database as it was
             qdb.sql_connection.TRN.add(

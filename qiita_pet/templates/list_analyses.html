@@ -143,6 +143,7 @@
         <tr>
           <th>Artifacts</th>
           <th>Analysis Name</th>
+          <th>Visibility</th>
           <th>Creation Timestamp</th>
           <th>Mapping File</th>
           <th>Delete?</th>
@@ -161,7 +162,10 @@
             {% end %}
           </td>
           <td>
-           {{analysis['timestamp']}}
+            {{analysis['visibility']}}
+          </td>
+          <td>
+            {{analysis['timestamp']}}
           </td>
           <td>
             {% if analysis['mapping_files'] %}
