@@ -25,6 +25,7 @@ def _submit_jobs(jids_to_recover, recover_type):
         job.submit()
         sleep(SLEEP_TIME)
 
+
 def _retrieve_queue_jobs():
     qiita_jobs = [line.split()[0] for line in check_output("qstat").split("\n")
                   # just retriving 'qiita' and ignoring [] (ipython workers)
@@ -62,7 +63,7 @@ def qiita_recover_jobs():
         recover_type = 'queued'
         TRN.add(sql, [recover_type])
         jids = set(TRN.execute_fetchflatten())
-        jids_to_recover = jids - _retrieve_queue_jobs
+        jids_to_recover = jids - _retrieve_queue_jobs()
 
         _submit_jobs(jids_to_recover, recover_type)
 
@@ -73,7 +74,8 @@ def qiita_recover_jobs():
         recover_type = 'running'
         TRN.add(sql, [recover_type])
         jids = set(TRN.execute_fetchflatten())
-        jids_to_recover = jids - _retrieve_queue_jobs
+        qiita_jids = _retrieve_queue_jobs()
+        jids_to_recover = jids - qiita_jids
 
         # 3.1, and 3.2: checking which jobs have validators, and recover them
 
