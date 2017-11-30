@@ -499,7 +499,8 @@ function format_biom_rows(data, row, for_study_list = true, samples = null) {
   });
 
   // creating rows
-  $.each(processing_method, function (pm, data_types) {
+  $.each(Object.keys(processing_method).sort(), function (idx, pm) {
+    var data_types = processing_method[pm];
     $.each(data_types, function (dt, artifacts) {
       proc_data_table += '<tr>';
 
