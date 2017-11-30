@@ -641,9 +641,6 @@ class Artifact(qdb.base.QiitaObject):
         ValueError
             If `value` contains more than 35 chars
         """
-        if len(value) > 35:
-            raise ValueError("The name of an artifact cannot exceed 35 chars. "
-                             "Current length: %d" % len(value))
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.artifact
                      SET name = %s

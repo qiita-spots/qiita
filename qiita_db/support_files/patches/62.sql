@@ -18,3 +18,8 @@ WHERE processing_job_id IN (
 
 -- Nov 28, 2017 (only in py file)
 -- Adding a new command into Qiita/Alpha: delete_analysis
+
+-- Nov 30, 2017 (only in py file)
+-- Expand artifact name size
+
+ALTER TABLE qiita.artifact ALTER COLUMN name TYPE VARCHAR;

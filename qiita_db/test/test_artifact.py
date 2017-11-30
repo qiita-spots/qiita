@@ -1029,10 +1029,6 @@ class ArtifactTests(TestCase):
         a.name = "new name"
         self.assertEqual(a.name, "new name")
 
-        with self.assertRaises(ValueError):
-            qdb.artifact.Artifact(1).name = (
-                "Some very large name to force the error to be raised")
-
     def test_visibility_setter(self):
         a = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
