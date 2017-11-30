@@ -624,7 +624,13 @@ def prep_template_graph_get_req(prep_id, user_id):
     # doesn't have full access to the study
     full_access = Study(prep.study_id).can_edit(User(user_id))
 
-    G = prep.artifact.descendants_with_jobs
+    artifact = prep.artifact
+
+    if artifact is None:
+        return {'edges': [], 'nodes': [],
+                'status': 'success', 'message': ''}
+
+    G = artifact.descendants_with_jobs
 
     # n[0] is the data type: job/artifact
     # n[1] is the object
@@ -644,17 +650,37 @@ def prep_template_graph_get_req(prep_id, user_id):
             raise ValueError('not valid node type: %s' % n[0])
         node_labels.append((n[0], atype, n[1].id, name))
 
-    return {'edge_list': [(n[1].id, m[1].id) for n, m in G.edges()],
-            'node_labels': node_labels,
+    return {'edges': [(n[1].id, m[1].id) for n, m in G.edges()],
+            'nodes': node_labels,
             'status': 'success',
             'message': ''}
 
-    G = prep.artifact.descendants
-    node_ids = [id_ for id_, label in node_labels]
-    edge_list = [(n.id, m.id) for n, m in G.edges()
-                 if n.id in node_ids and m.id in node_ids]
 
-    return {'status': 'success',
-            'message': '',
-            'edge_list': edge_list,
-            'node_labels': node_labels}
+def prep_template_jobs_get_req(prep_id, user_id):
+    """Returns graph of all artifacts created from the prep base artifact
+
+    Parameters
+    ----------
+    prep_id : int
+        Prep template ID to get graph for
+    user_id : str
+        User making the request
+
+    Returns
+    -------
+    dict with the jobs information
+
+    Notes
+    -----
+    Nodes are identified by the corresponding Artifact ID.
+    """
+    job_info = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
+    result = {}
+    if job_info:
+        job_info = defaultdict(lambda: '', loads(job_info))
+        job_id = job_info['job_id']
+        job = ProcessingJob(job_id)
+        result[job.id] = {'status': job.status, 'step': job.step,
+                          'error': job.log.msg if job.log else ""}
+
+    return result

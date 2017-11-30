@@ -20,11 +20,11 @@ function toggle_network_graph() {
 };
 
 Vue.component('processing-graph', {
-  template: '<div class="row" id="testId">' +
-              '<div class="row">' +
+  template: '<div class="row">' +
+              '<div class="row" id="network-header-div">' +
                 '<div class="col-md-12">' +
                   '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggle_network_graph();">-</a><i> Processing network </i></h4>' +
-                  '<div id="run-btn-div"><a class="btn btn-success" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run workflow</a><small class="blinking-message"> Don\'t forget to hit "Run" once you are done with your workflow!</small></div>' +
+                  '<div id="run-btn-div"><a class="btn btn-success" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run workflow</a><span class="blinking-message">  Don\'t forget to hit "Run" once you are done with your workflow!</span></div>' +
                   '<b>(Click nodes for more information, blue are jobs)</b>' +
                 '</div>' +
               '</div>' +
@@ -42,7 +42,7 @@ Vue.component('processing-graph', {
                 '</div>' +
               '</div>' +
             '</div>',
-  props: ['portal', 'graph-endpoint', 'jobs-endpoint'],
+  props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback'],
   methods: {
     /**
      *
@@ -713,9 +713,13 @@ Vue.component('processing-graph', {
       let vm = this;
       $.get(vm.portal + vm.jobsEndpoint, function(data) {
         $("#processing-job-div").html("");
-        $("#processing-job-div").append("<p>Hang tight, we are generating the initial set of files: </p>");
+        $("#processing-job-div").append("<p>Hang tight, we are processing your request: </p>");
+        var nonCompletedJobs = 0;
+        var totalJobs = 0;
+        var contents = "";
         for(var jobid in data){
-          var contents = "<b> Job: " + jobid + "</b> Status: " + data[jobid]['status'];
+          totalJobs += 1;
+          contents = contents + "<b> Job: " + jobid + "</b> Status: " + data[jobid]['status'];
           // Only show step if error if they actually have a useful message
           if (data[jobid]['step']) {
             contents = contents + " Step: " + data[jobid]['step'] + "</br>";
@@ -723,6 +727,29 @@ Vue.component('processing-graph', {
           if (data[jobid]['error']) {
             contents = contents + " Error: " + data[jobid]['error'] + "</br>";
           }
+          // Count the number of jobs that are not completed
+          if ((data[jobid]['status'] !== 'error') || (data[jobid]['status'] !== 'success')) {
+            nonCompletedJobs += 1;
+          }
+        }
+        // If no jobs are in a non completed state, use the callback
+        if (totalJobs === 0 || nonCompletedJobs === 0) {
+          vm.poll = false;
+          // There are no jobs being run
+          // To avoid a possible race condition, check if a graph is now available
+          $.get(vm.portal + vm.graphEndpoint, function(data) {
+            if (data.nodes.length == 0) {
+              // No graph is available - execute the callback
+              $('#network-header-div').hide();
+              vm.noInitJobsCallback('processing-job-div');
+            } else {
+              // A graph is available, update de current graph
+              vm.updateGraph();
+            }
+          });
+        }
+        else {
+          vm.poll = true;
           $("#processing-job-div").append(contents);
         }
       })
@@ -741,6 +768,7 @@ Vue.component('processing-graph', {
    **/
   mounted() {
     let vm = this;
+    vm.poll = false;
     vm.nodes = [];
     vm.edges = [];
     vm.runningJobs = [];
@@ -761,7 +789,7 @@ Vue.component('processing-graph', {
     vm.updateGraph();
     setInterval(function() {
       // Only update if the graph has not been generated yet
-      if (vm.nodes.length == 0) {
+      if (vm.poll) {
         vm.updateGraph();
       }
     }, 5000);

@@ -1,4 +1,5 @@
 {% from qiita_core.qiita_settings import qiita_config %}
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/networkVue.js"></script>
 <script type="text/javascript">
   /**
    *
@@ -159,62 +160,22 @@
     }
   }
 
-  /*
-   *
-   * Load the interface with the artifact graph
-   *
-   * This function executes an AJAX call to populate the graph-or-new-artifact-div
-   * with the interface showing the artifact graph attached to this prep information
-   *
-   */
-  function load_template_graph() {
-    show_loading("graph-or-new-artifact-div");
-    $.get("{% raw qiita_config.portal_dir %}/prep/graph/", {"prep_id": {{prep_id}} })
-      .done(function(data) {
-        nodes = [];
-        edges = [];
-        for(var i=0; i<data.edge_list.length; i++) {
-          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1], arrows:'to'});
-        }
-        // format more depth data
-        for(var i=0; i<data.node_labels.length; i++) {
-          nodes.push({id: data.node_labels[i][2],
-                      label: data.node_labels[i][3],
-                      group: data.node_labels[i][0],
-                      type: data.node_labels[i][1]});
-        }
-        $("#graph-or-new-artifact-div").html(
-          "<div class='row'>" +
-            "<div class='col-md-12'>" +
-              "<h4><a class='btn btn-info' id='show-hide-btn' onclick='toggle_graphs();'>-</a><i> Files network</i></h4>" +
-              "<b>(Click nodes for more information, blue are jobs)</b>" +
-              "<br/>Check our data <a target='_blank' href='{% raw qiita_config.portal_dir %}/static/doc/html/processing-recommendations.html' onclick='return !window.open(this.href, \"Qiita processing recommendations\", \"width=800,height=500\")'>processing recommendations</a>." +
-            "</div>" +
-          "</div>" +
-          "<div class='row'>" +
-            "<div class='col-md-12 graph' style='width:90%' data-wf-id='-1' data-wf-job-count='0' id='graph-network-div'>" +
-          "</div>");
-
-        result = draw_processing_graph(nodes, edges, "graph-network-div", "prep-artifact-summary-div", populateContentArtifact, populateContentJob);
-        processing_network = result[0];
-        nodes_ds = result[1];
-        edges_ds = result[2];
-      });
-  }
-
-  /*
+  /**
    *
    * Load the interface to add an artifact to the prep information
    *
-   * This function executes an AJAX call to populate the graph-or-new-artifact-div
+   * This function executes an AJAX call to populate the given target div
    * with the interface needed to add a new artifact to the prep information
    *
-   */
-  function load_new_artifact() {
-    show_loading("graph-or-new-artifact-div");
+   * @param target string The name of the target div
+   *
+   **/
+  function load_new_artifact(target) {
+    show_loading(target);
+    // If it can be edited, show the page to upload a new artifact
     $.get("{% raw qiita_config.portal_dir %}/study/new_artifact/", {"study_id": {{study_id}}, "prep_template_id": {{prep_id}} })
       .done(function(data) {
-        $("#graph-or-new-artifact-div").html(data);
+        $("#" + target).html(data);
       });
   }
 
@@ -302,14 +263,8 @@
     load_information_summary();
     // If the template already have an artifact attached, load the
     // artifact graph, otherwise load the page to add a new artifact
-    if ("{{artifact_attached}}" == "True") {
-      load_template_graph();
-    }
-    {% if editable %}
-    else {
-      load_new_artifact();
-    }
-    {% end %}
+    processingNetwork = new Vue({el: "#processing-graph-vue"});
+
     // If the file-selector select changes, check if we need to show the update button
     $("#file-selector").change(function ( event ) {
       if ( $("#file-selector").val() === "" ) {
@@ -364,6 +319,9 @@
       {{name}} - ID {{prep_id}} ({{data_type}})
       <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
       <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_qiime_id}}"><span class="glyphicon glyphicon-download-alt"></span> QIIME map</a>
+      {% if is_submitted_to_ebi %}
+        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_ebi_accessions/experiments/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> EBI experiment accessions</a>
+      {% end %}
       {% if editable %}
         <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}
@@ -371,81 +329,77 @@
   </div>
 </div>
 
-<!-- #samples and #columns -->
 <div class="row">
   <div class="col-md-12">
-    There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this preparation.</br>
-    {% if other_filepaths %}
-      <button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#other-filepaths">Show older files</button>
-    {% end %}
-    {% if is_submitted_to_ebi %}
-      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_ebi_accessions/experiments/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> EBI experiment accessions</a>
-    {% end %}
-    <div id="other-filepaths" class="collapse">
-      <small>
-        {% raw '<br/>'.join(other_filepaths) %}
-      </small>
-    </div>
-  </div>
-</div>
+    <ul class="nav nav-pills">
+      <li class="active"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
+      <li><a data-toggle="tab" href="#processing-graph-vue">Processing</a></li>
+    </ul>
 
-{% if editable %}
-  <!-- Update prep template -->
-  <hr/>
-  <div class="row">
-    <div class="col-md-12">
-      <b>Update information:</b>
-      <select id="file-selector">
-        <option value="">Choose file...</option>
-        {% for fp in files %}
-          <option value="{{fp}}">{{fp}}</option>
+    <div class="tab-content">
+      <div id="summary-tab-div" class="tab-pane fade in active">
+        <b>Number of samples: </b>{{num_samples}}</br>
+        <b>Number of columns: </b>{{num_columns}}</br>
+        {% if editable %}
+          <!-- Update prep template -->
+          <div class="row">
+            <div class="col-md-12">
+              <b>Update information:</b>
+              <select id="file-selector">
+                <option value="">Choose file...</option>
+                {% for fp in files %}
+                  <option value="{{fp}}">{{fp}}</option>
+                {% end %}
+              </select>
+              <div id="update-button-div" hidden>
+                <button class="btn btn-info btn-sm" onclick="update_prep_information();" hidden>Update</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Investigation type info -->
+          <div class="row">
+            <!-- Ena ontology selector -->
+            <div class="col-md-4">
+              <b>Select Investigation Type:</b>
+              <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
+                <option value=""></option>
+                {% for o in ontology['ENA'] %}
+                  <option value="{{o}}">{{o}}</option>
+                {% end %}
+              </select>
+            </div>
+            <!-- user-defined selector -->
+            <div class="col-md-4" id="user-ena-info" hidden> User defined investigation type:
+              <select id="user-ontology" name="user-ontology" value="user-ontology">
+                <option value=""></option>
+                {% for o in ontology['User'] %}
+                  <option value="{{o}}">{{o}}</option>
+                {% end %}
+                <option value="New Type">New Type</option>
+              </select>
+            </div>
+            <!-- new user-defined input -->
+            <div class="col-md-4" id="new-ena-info" hidden> New user defined term:
+              <input type="textbox" id="new-ontology" name="new-ontology">
+              <button class="btn btn-info btn-sm" onclick="add_new_investigation_type_term_and_update();">Add</button>
+            </div>
+          </div>
         {% end %}
-      </select>
-      <div id="update-button-div" hidden>
-        <button class="btn btn-info btn-sm" onclick="update_prep_information();" hidden>Update</button>
+        {% if other_filepaths %}
+          <button class="btn btn-secondary" data-toggle="collapse" data-target="#other-filepaths"><b>Show older files</b></button>
+        {% end %}
+        <div id="other-filepaths" class="collapse">
+          <small>
+            {% raw '<br/>'.join(other_filepaths) %}
+          </small>
+        </div>
+        <div id="prep-artifact-summary-div" class="tab-pane fade in active">
+        </div>
+      </div>
+      <div id="processing-graph-vue" class="tab-pane fade">
+        <processing-graph ref="procGraph" v-bind:no-init-jobs-callback="load_new_artifact" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/prep_template/{{prep_id}}/graph/" jobs-endpoint="/prep_template/{{prep_id}}/jobs/"></processing-graph>
       </div>
     </div>
-  </div>
-
-  <!-- Investigation type info -->
-  <div class="row">
-    <!-- Ena ontology selector -->
-    <div class="col-md-4">
-      <b>Select Investigation Type:</b>
-      <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
-        <option value=""></option>
-        {% for o in ontology['ENA'] %}
-          <option value="{{o}}">{{o}}</option>
-        {% end %}
-      </select>
-    </div>
-    <!-- user-defined selector -->
-    <div class="col-md-4" id="user-ena-info" hidden> User defined investigation type:
-      <select id="user-ontology" name="user-ontology" value="user-ontology">
-        <option value=""></option>
-        {% for o in ontology['User'] %}
-          <option value="{{o}}">{{o}}</option>
-        {% end %}
-        <option value="New Type">New Type</option>
-      </select>
-    </div>
-    <!-- new user-defined input -->
-    <div class="col-md-4" id="new-ena-info" hidden> New user defined term:
-      <input type="textbox" id="new-ontology" name="new-ontology">
-      <button class="btn btn-info btn-sm" onclick="add_new_investigation_type_term_and_update();">Add</button>
-    </div>
-  </div>
-  <hr/>
-{% end %}
-
-<!-- Files graph or add artifact -->
-<div class="row">
-  <div class="col-md-12" style="width:90%;" id="graph-or-new-artifact-div">
-  </div>
-</div>
-
-<!-- Prep information summary -->
-<div class="row">
-  <div class="col-md-10" id="prep-artifact-summary-div">
   </div>
 </div>
