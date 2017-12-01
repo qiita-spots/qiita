@@ -47,8 +47,8 @@ for aid in all_artifacts:
             qdb.sql_connection.TRN.add(sql, [nodes[parent].id])
             job_ids = qdb.sql_connection.TRN.execute_fetchflatten()
 
-        for job_id in job_ids:
-            job = qdb.processing_job.ProcessingJob(job_id)
+        for j_id in job_ids:
+            job = qdb.processing_job.ProcessingJob(j_id)
             if job.status == 'success' and job.outputs:
                 for _, a in viewitems(job.outputs):
                     if a.id == child:
