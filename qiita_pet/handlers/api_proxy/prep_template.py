@@ -17,6 +17,7 @@ from natsort import natsorted
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
+from qiita_pet.util import get_network_nodes_edges
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
@@ -632,26 +633,10 @@ def prep_template_graph_get_req(prep_id, user_id):
 
     G = artifact.descendants_with_jobs
 
-    # n[0] is the data type: job/artifact
-    # n[1] is the object
-    node_labels = []
-    for n in G.nodes():
-        if n[0] == 'job':
-            atype = 'job'
-            name = n[1].command.name
-        elif n[0] == 'artifact':
-            atype = n[1].artifact_type
-            if full_access or n[1].visibility == 'public':
-                name = '%s\n(%s)' % (n[1].name, n[1].artifact_type)
-            else:
-                continue
-        else:
-            # this should never happen but let's add it just in case
-            raise ValueError('not valid node type: %s' % n[0])
-        node_labels.append((n[0], atype, n[1].id, name))
+    nodes, edges = get_network_nodes_edges(G, full_access)
 
-    return {'edges': [(n[1].id, m[1].id) for n, m in G.edges()],
-            'nodes': node_labels,
+    return {'edges': edges,
+            'nodes': nodes,
             'status': 'success',
             'message': ''}
 
