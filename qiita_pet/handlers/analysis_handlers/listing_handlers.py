@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from functools import partial
-from json import dumps
+from json import dumps, loads
 from collections import defaultdict
 from future.utils import viewitems
 
@@ -15,72 +15,82 @@ from tornado.web import authenticated
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import download_link_or_path
 from qiita_pet.handlers.analysis_handlers import check_analysis_access
 from qiita_pet.util import is_localhost
-from qiita_db.util import retrieve_filepaths
+from qiita_db.util import generate_analysis_list
 from qiita_db.analysis import Analysis
-from qiita_db.logger import LogEntry
+from qiita_db.processing_job import ProcessingJob
+from qiita_db.software import Parameters
 from qiita_db.reference import Reference
 from qiita_db.artifact import Artifact
+from qiita_db.software import Software
 
 
 class ListAnalysesHandler(BaseHandler):
     @authenticated
     @execute_as_transaction
     def get(self):
-        message = self.get_argument('message', '')
-        level = self.get_argument('level', '')
         user = self.current_user
-
-        analyses = user.shared_analyses | user.private_analyses
-
         is_local_request = is_localhost(self.request.headers['host'])
-        dlop = partial(download_link_or_path, is_local_request)
-        mappings = {}
-        bioms = {}
-        tgzs = {}
-        for analysis in analyses:
-            _id = analysis.id
-            mappings[_id], bioms[_id], tgzs[_id] = '', '', ''
-            for fid, fp, fpt in retrieve_filepaths('analysis_filepath',
-                                                   'analysis_id', _id):
-                if fpt == 'plain_text':
-                    mappings[_id] = dlop(fp, fid, 'mapping file')
-                if fpt == 'biom':
-                    bioms[_id] = dlop(fp, fid, 'biom file')
-                if fpt == 'tgz':
-                    tgzs[_id] = dlop(fp, fid, 'tgz file')
 
-        self.render("list_analyses.html", analyses=analyses, message=message,
-                    level=level, is_local_request=is_local_request,
-                    mappings=mappings, bioms=bioms, tgzs=tgzs)
+        uanalyses = user.shared_analyses | user.private_analyses
+        user_analysis_ids = set([a.id for a in uanalyses])
+
+        panalyses = Analysis.get_by_status('public')
+        public_analysis_ids = set([a.id for a in panalyses])
+        public_analysis_ids = public_analysis_ids - user_analysis_ids
+
+        user_analyses = generate_analysis_list(user_analysis_ids)
+        public_analyses = generate_analysis_list(public_analysis_ids, True)
+
+        dlop = partial(download_link_or_path, is_local_request)
+
+        messages = {'info': '', 'danger': ''}
+        for analysis_id in user_analysis_ids:
+            job_info = r_client.get('analysis_delete_%d' % analysis_id)
+            if job_info:
+                job_info = defaultdict(lambda: '', loads(job_info))
+                job_id = job_info['job_id']
+                job = ProcessingJob(job_id)
+                job_status = job.status
+                processing = job_status not in ('success', 'error')
+                if processing:
+                    messages['info'] += (
+                        'Analysis %s is being deleted<br/>' % analysis_id)
+                elif job_status == 'error':
+                    messages['danger'] += (
+                        job.log.msg.replace('\n', '<br/>') + '<br/>')
+                else:
+                    if job_info['alert_type'] not in messages:
+                        messages[job_info['alert_type']] = []
+                    messages[job_info['alert_type']] += (
+                        job.log.msg.replace('\n', '<br/>') + '<br/>')
+
+        self.render("list_analyses.html", user_analyses=user_analyses,
+                    public_analyses=public_analyses, messages=messages,
+                    dlop=dlop)
 
     @authenticated
     @execute_as_transaction
     def post(self):
         analysis_id = int(self.get_argument('analysis_id'))
-        analysis = Analysis(analysis_id)
-        analysis_name = analysis.name.decode('utf-8')
 
-        check_analysis_access(self.current_user, analysis)
+        user = self.current_user
+        check_analysis_access(user, Analysis(analysis_id))
 
-        try:
-            Analysis.delete(analysis_id)
-            msg = ("Analysis <b><i>%s</i></b> has been deleted." % (
-                analysis_name))
-            level = "success"
-        except Exception as e:
-            e = str(e)
-            msg = ("Couldn't remove <b><i>%s</i></b> analysis: %s" % (
-                analysis_name, e))
-            level = "danger"
-            LogEntry.create('Runtime', "Couldn't remove analysis ID %d: %s" %
-                            (analysis_id, e))
+        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+        cmd = qiita_plugin.get_command('delete_analysis')
+        params = Parameters.load(cmd, values_dict={'analysis_id': analysis_id})
+        job = ProcessingJob.create(user, params, True)
+        # Store the job id attaching it to the sample template id
+        r_client.set('analysis_delete_%d' % analysis_id,
+                     dumps({'job_id': job.id}))
+        job.submit()
 
-        self.redirect(u"%s/analysis/list/?level=%s&message=%s"
-                      % (qiita_config.portal_dir, level, msg))
+        self.redirect("%s/analysis/list/" % (qiita_config.portal_dir))
 
 
 class AnalysisSummaryAJAX(BaseHandler):

@@ -306,5 +306,24 @@ class TestDownloadEBIPrepAccessions(TestHandlerBase):
         self.assertEqual(response.code, 405)
 
 
+class TestDownloadUpload(TestHandlerBase):
+
+    def setUp(self):
+        super(TestDownloadUpload, self).setUp()
+
+    def tearDown(self):
+        super(TestDownloadUpload, self).tearDown()
+
+    def test_download(self):
+        # check failure
+        response = self.get('/download_upload/1/uploaded_file.txt')
+        self.assertEqual(response.code, 403)
+
+        # check success
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
+        response = self.get('/download_upload/1/uploaded_file.txt')
+        self.assertEqual(response.code, 200)
+
+
 if __name__ == '__main__':
     main()

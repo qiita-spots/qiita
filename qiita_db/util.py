@@ -31,6 +31,7 @@ Methods
     move_upload_files_to_trash
     add_message
     get_pubmed_ids_from_dois
+    generate_analysis_list
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -1554,6 +1555,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 # - ignoring empty filepaths
                 if filepaths == [None]:
                     filepaths = []
+                else:
+                    filepaths = [fp for fp in filepaths if fp.endswith('biom')]
 
                 # - ignoring empty target
                 if target == [None]:
@@ -1561,23 +1564,26 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
                 # generating algorithm, by default is ''
                 algorithm = ''
-                if cid:
+                if cid is not None:
                     ms = commands[cid]['merging_scheme']
-                    outputs = ''
+                    eparams = []
+                    if ms['parameters']:
+                        eparams.append(','.join(['%s: %s' % (k, aparams[k])
+                                                 for k in ms['parameters']]))
                     if ms['outputs'] and filepaths:
-                        # if this is not null, we ween to check the biom files
-                        outputs = ' | Output: %s' % ', '.join(filepaths)
-                    if ms['parameters']:
-                        params = ','.join(['%s: %s' % (k, aparams[k])
-                                           for k in ms['parameters']])
-                        cname = "%s (%s%s)" % (cname, params, outputs)
+                        eparams.append('BIOM: %s' % ', '.join(filepaths))
+                    if eparams:
+                        cname = "%s (%s)" % (cname, ', '.join(eparams))
 
-                    palgorithm = pname if pcid else 'N/A'
-                    ms = commands[pcid]['merging_scheme']
-                    if ms['parameters']:
-                        params = ','.join(['%s: %s' % (k, aparams[k])
-                                           for k in ms['parameters']])
-                        palgorithm = "%s (%s)" % (palgorithm, params)
+                    palgorithm = 'N/A'
+                    if pcid is not None:
+                        palgorithm = pname
+                        ms = commands[pcid]['merging_scheme']
+                        if ms['parameters']:
+                            pparams = pparams[0]
+                            params = ','.join(['%s: %s' % (k, pparams[k])
+                                               for k in ms['parameters']])
+                            palgorithm = "%s (%s)" % (palgorithm, params)
 
                     algorithm = '%s | %s' % (cname, palgorithm)
 
@@ -1674,3 +1680,71 @@ def open_file(filepath_or, *args, **kwargs):
     finally:
         if own_fh:
             fh.close()
+
+
+def generate_analysis_list(analysis_ids, public_only=False):
+    """Get general analysis information
+
+    Parameters
+    ----------
+    analysis_ids : list of ints
+        The analysis ids to look for. Non-existing ids will be ignored
+    public_only : bool, optional
+        If true, return only public analyses. Default: false.
+
+    Returns
+    -------
+    list of dict
+        The list of studies and their information
+    """
+    if not analysis_ids:
+        return []
+
+    sql = """
+        SELECT analysis_id, a.name, a.description, a.timestamp,
+            array_agg(DISTINCT CASE WHEN command_id IS NOT NULL
+                      THEN artifact_id END),
+            array_agg(DISTINCT visibility),
+            array_agg(DISTINCT CASE WHEN filepath_type = 'plain_text'
+                      THEN filepath_id END)
+        FROM qiita.analysis a
+        LEFT JOIN qiita.analysis_artifact USING (analysis_id)
+        LEFT JOIN qiita.artifact USING (artifact_id)
+        LEFT JOIN qiita.visibility USING (visibility_id)
+        LEFT JOIN qiita.analysis_filepath USING (analysis_id)
+        LEFT JOIN qiita.filepath USING (filepath_id)
+        LEFT JOIN qiita.filepath_type USING (filepath_type_id)
+        WHERE dflt = false AND analysis_id IN %s
+        GROUP BY analysis_id
+        ORDER BY analysis_id"""
+
+    with qdb.sql_connection.TRN:
+        results = []
+
+        qdb.sql_connection.TRN.add(sql, [tuple(analysis_ids)])
+        for row in qdb.sql_connection.TRN.execute_fetchindex():
+            aid, name, description, ts, artifacts, av, mapping_files = row
+
+            av = 'public' if set(av) == {'public'} else 'private'
+            if av != 'public' and public_only:
+                continue
+
+            if mapping_files == [None]:
+                mapping_files = []
+            else:
+                mapping_files = [
+                    (mid, get_filepath_information(mid)['fullpath'])
+                    for mid in mapping_files if mid is not None]
+            if artifacts == [None]:
+                artifacts = []
+            else:
+                # making sure they are int so they don't break the GUI
+                artifacts = [int(a) for a in artifacts if a is not None]
+
+            results.append({
+                'analysis_id': aid, 'name': name, 'description': description,
+                'timestamp': ts.strftime("%m/%d/%y %H:%M:%S"),
+                'visibility': av, 'artifacts': artifacts,
+                'mapping_files': mapping_files})
+
+    return results

@@ -64,6 +64,7 @@ def analysis_description_handler_get_request(analysis_id, user):
 
     return {'analysis_name': analysis.name,
             'analysis_id': analysis.id,
+            'analysis_is_public': analysis.is_public,
             'analysis_description': analysis.description,
             'analysis_mapping_id': analysis.mapping_file,
             'alert_type': alert_type,
@@ -76,6 +77,27 @@ class AnalysisDescriptionHandler(BaseHandler):
     def get(self, analysis_id):
         res = analysis_description_handler_get_request(analysis_id,
                                                        self.current_user)
+
+        self.render("analysis_description.html", **res)
+
+    @authenticated
+    @execute_as_transaction
+    def post(self, analysis_id):
+        analysis = Analysis(analysis_id)
+        check_analysis_access(self.current_user, analysis)
+
+        message = ''
+        try:
+            Analysis(analysis_id).make_public()
+        except Exception as e:
+            message = str(e)
+
+        res = analysis_description_handler_get_request(
+            analysis_id, self.current_user)
+        if message:
+            # this will display the error message in the main banner
+            res['level'] = 'danger'
+            res['message'] = message
 
         self.render("analysis_description.html", **res)
 
