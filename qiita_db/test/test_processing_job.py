@@ -805,6 +805,8 @@ class ProcessingWorkflowTests(TestCase):
             'sortmerna_max_pos': 10000,
             'threads': 1}
         self.assertEqual(obs_params, exp_params)
+        exp_pending = {obs_src.id: {'input_data': 'demultiplexed'}}
+        self.assertEqual(obs_dst.pending, exp_pending)
 
     def test_from_default_workflow_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError) as err:

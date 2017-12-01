@@ -1040,6 +1040,22 @@ class ProcessingJob(qdb.base.QiitaObject):
             return (qdb.processing_job.ProcessingWorkflow(r[0][0]) if r
                     else None)
 
+    @property
+    def pending(self):
+        """A dictionary with the information about the predecessor jobs
+
+        Returns
+        -------
+        dict
+            A dict with {job_id: {parameter_name: output_name}}"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT pending
+                     FROM qiita.processing_job
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            res = qdb.sql_connection.TRN.execute_fetchlast()
+            return res if res is not None else {}
+
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
     """Models a workflow defined by the user
