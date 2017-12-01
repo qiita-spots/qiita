@@ -37,7 +37,18 @@ for aid in all_artifacts:
             nodes[child] = qdb.artifact.Artifact(child)
 
         job_id = None
-        for job in nodes[parent].jobs():
+        with qdb.sql_connection.TRN:
+            sql = """SELECT processing_job_id
+                     FROM qiita.artifact_processing_job
+                        JOIN qiita.processing_job USING (processing_job_id)
+                        JOIN qiita.processing_job_status USING
+                            (processing_job_status_id)
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [nodes[parent].id])
+            job_ids = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        for job_id in job_ids:
+            job = qdb.processing_job.ProcessingJob(job_id)
             if job.status == 'success' and job.outputs:
                 for _, a in viewitems(job.outputs):
                     if a.id == child:
