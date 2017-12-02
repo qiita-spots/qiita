@@ -158,3 +158,32 @@ def get_artifact_processing_status(artifact):
             '<br/>'.join(preprocessing_status_msg))
 
     return preprocessing_status, preprocessing_status_msg
+
+
+def get_network_nodes_edges(graph, full_access, nodes=None, edges=None):
+    nodes = nodes if nodes is not None else []
+    edges = edges if edges is not None else []
+
+    # n[0] is the data type: job/artifact/type
+    # n[1] is the object
+    for n in graph.nodes():
+        if n[0] == 'job':
+            atype = 'job'
+            name = n[1].command.name
+        elif n[0] == 'artifact':
+            atype = n[1].artifact_type
+            if full_access or n[1].visibility == 'public':
+                name = '%s\n(%s)' % (n[1].name, n[1].artifact_type)
+            else:
+                continue
+        elif n[0] == 'type':
+            atype = 'type'
+            name = '%s\n(%s)' % (n[1].name, n[1].type)
+        else:
+            # this should never happen but let's add it just in case
+            raise ValueError('not valid node type: %s' % n[0])
+        nodes.append((n[0], atype, n[1].id, name))
+
+    edges = [(n[1].id, m[1].id) for n, m in graph.edges()]
+
+    return nodes, edges

@@ -9,8 +9,9 @@
 from unittest import TestCase, main
 
 from qiita_pet.util import (clean_str, generate_param_str, is_localhost,
-                            convert_text_html)
+                            convert_text_html, get_network_nodes_edges)
 from qiita_db.software import DefaultParameters
+from qiita_db.artifact import Artifact
 
 
 class TestUtil(TestCase):
@@ -44,6 +45,15 @@ class TestUtil(TestCase):
                'This is a link: <a href="http://test.com">http://test.com</a>')
         obs = convert_text_html(test)
         self.assertEqual(obs, exp)
+
+    def test_get_network_nodes_edges(self):
+        graph = Artifact(1).descendants_with_jobs
+        obs_nodes, obs_edges = get_network_nodes_edges(graph, True)
+        self.assertEqual(len(obs_nodes), 15)
+        self.assertEqual(len([x for x in obs_nodes if x[0] == 'job']), 7)
+        self.assertEqual(len([x for x in obs_nodes if x[0] == 'artifact']), 6)
+        self.assertEqual(len([x for x in obs_nodes if x[0] == 'type']), 2)
+        self.assertEqual(len(obs_edges), 14)
 
 
 if __name__ == "__main__":
