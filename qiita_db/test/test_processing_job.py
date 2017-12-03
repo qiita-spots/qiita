@@ -715,16 +715,22 @@ class ProcessingJobTest(TestCase):
         self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
         self.assertEqual(artifact.name, 'outArtifact')
 
-    def test_processing_job_worflow(self):
+    def test_processing_job_workflow(self):
         # testing None
         job = qdb.processing_job.ProcessingJob(
             "063e553b-327c-4818-ab4a-adfe58e49860")
-        self.assertIsNone(job.processing_job_worflow)
+        self.assertIsNone(job.processing_job_workflow)
 
         # testing actual workflow
         job = qdb.processing_job.ProcessingJob(
             "b72369f9-a886-4193-8d3d-f7b504168e75")
-        self.assertEqual(job.processing_job_worflow,
+        self.assertEqual(job.processing_job_workflow,
+                         qdb.processing_job.ProcessingWorkflow(1))
+
+        # testing child job from workflow
+        job = qdb.processing_job.ProcessingJob(
+            'd19f76ee-274e-4c1b-b3a2-a12d73507c55')
+        self.assertEqual(job.processing_job_workflow,
                          qdb.processing_job.ProcessingWorkflow(1))
 
 

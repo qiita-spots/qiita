@@ -633,10 +633,11 @@ def prep_template_graph_get_req(prep_id, user_id):
 
     G = artifact.descendants_with_jobs
 
-    nodes, edges = get_network_nodes_edges(G, full_access)
+    nodes, edges, wf_id = get_network_nodes_edges(G, full_access)
 
     return {'edges': edges,
             'nodes': nodes,
+            'workflow': wf_id,
             'status': 'success',
             'message': ''}
 

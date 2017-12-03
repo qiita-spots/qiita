@@ -128,14 +128,15 @@ def analyisis_graph_handler_get_request(analysis_id, user):
 
     nodes = []
     edges = []
+    wf_id = None
     # Loop through all the initial artifacts of the analysis
     for a in analysis.artifacts:
         if a.processing_parameters is None:
             g = a.descendants_with_jobs
-            nodes, edges = get_network_nodes_edges(g, full_access, nodes=nodes,
-                                                   edges=edges)
+            nodes, edges, wf_id = get_network_nodes_edges(
+                g, full_access, nodes=nodes, edges=edges)
 
-    return {'edges': edges, 'nodes': nodes}
+    return {'edges': edges, 'nodes': nodes, 'workflow': wf_id}
 
 
 class AnalysisGraphHandler(BaseHandler):

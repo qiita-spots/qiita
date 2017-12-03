@@ -132,6 +132,7 @@ Vue.component('processing-graph', {
       let vm = this;
       $.post(vm.portal + "/study/process/workflow/run/", {workflow_id: vm.workflowId}, function(data){
         bootstrapAlert("Workflow " + vm.workflowId + " submitted", "success");
+        vm.updateGraph();
       })
         .fail(function(object, status, error_msg) {
           bootstrapAlert("Error submitting workflow: " + object.statusText, "danger");
@@ -666,6 +667,13 @@ Vue.component('processing-graph', {
      **/
     updateGraph: function () {
       let vm = this;
+
+      vm.nodes = [];
+      vm.edges = [];
+      vm.runningJobs = [];
+      vm.inConstructionJobs = 0;
+      vm.workflowId = null;
+
       $.get(vm.portal + vm.graphEndpoint, function(data) {
         // If there are no nodes in the graph, it means that we are waiting
         // for the jobs to generate the initial set of artifacts. Update
@@ -676,6 +684,7 @@ Vue.component('processing-graph', {
         else {
           vm.nodes = [];
           vm.edges = [];
+          vm.workflowId = data.workflow;
           // The initial set of artifacts has been created! Format the graph
           // data in a way that Vis.Network likes it
           // Format edge list data
@@ -685,8 +694,19 @@ Vue.component('processing-graph', {
           // Format node list data
           for(var i = 0; i < data.nodes.length; i++) {
             vm.nodes.push({id: data.nodes[i][2], label: data.nodes[i][3], type: data.nodes[i][1], group: data.nodes[i][0], color: vm.colorScheme[data.nodes[i][4]]});
+            if (data.nodes[i][1] === 'job') {
+              job_status = data.nodes[i][4];
+              if (job_status === 'in_construction') {
+                vm.inConstructionJobs += 1;
+              } else if (job_status === 'running' || job_status === 'queued' || job_status === 'waiting') {
+                vm.runningJobs.push(data.nodes[i][2]);
+              }
+            }
           }
           vm.drawProcessingGraph('processing-results');
+          if (vm.inConstructionJobs > 0) {
+            $('#run-btn-div').show();
+          }
 
           // At this point we can show the graph and hide the job list
           $("#processing-network-div").show();
@@ -769,11 +789,6 @@ Vue.component('processing-graph', {
   mounted() {
     let vm = this;
     vm.poll = false;
-    vm.nodes = [];
-    vm.edges = [];
-    vm.runningJobs = [];
-    vm.inConstructionJobs = 0;
-    vm.workflowId = null;
     vm.colorScheme = {
       'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}},
       'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}},

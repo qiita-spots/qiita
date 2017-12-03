@@ -1022,7 +1022,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 for aid, name in qdb.sql_connection.TRN.execute_fetchindex()}
 
     @property
-    def processing_job_worflow(self):
+    def processing_job_workflow(self):
         """The processing job worflow
 
         Returns
@@ -1031,14 +1031,20 @@ class ProcessingJob(qdb.base.QiitaObject):
             The processing job workflow the job
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT processing_job_workflow_id
-                     FROM qiita.processing_job_workflow_root
-                     WHERE processing_job_id = %s"""
+            # Retrieve the workflow root jobs
+            sql = "SELECT * FROM qiita.get_processing_workflow_roots(%s)"
             qdb.sql_connection.TRN.add(sql, [self.id])
-            r = qdb.sql_connection.TRN.execute_fetchindex()
-
-            return (qdb.processing_job.ProcessingWorkflow(r[0][0]) if r
-                    else None)
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+            if res:
+                sql = """SELECT processing_job_workflow_id
+                         FROM qiita.processing_job_workflow_root
+                         WHERE processing_job_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [res[0][0]])
+                r = qdb.sql_connection.TRN.execute_fetchindex()
+                return (qdb.processing_job.ProcessingWorkflow(r[0][0]) if r
+                        else None)
+            else:
+                return None
 
     @property
     def pending(self):
@@ -1083,7 +1089,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             The name of the workflow. Default: generated from user's name
         """
         with qdb.sql_connection.TRN:
-            # Insert the workflow in the processing_job_worflow table
+            # Insert the workflow in the processing_job_workflow table
             name = name if name else "%s's workflow" % user.info['name']
             sql = """INSERT INTO qiita.processing_job_workflow (email, name)
                      VALUES (%s, %s)
