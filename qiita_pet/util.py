@@ -170,8 +170,10 @@ def get_network_nodes_edges(graph, full_access, nodes=None, edges=None):
         if n[0] == 'job':
             atype = 'job'
             name = n[1].command.name
+            status = n[1].status
         elif n[0] == 'artifact':
             atype = n[1].artifact_type
+            status = 'artifact'
             if full_access or n[1].visibility == 'public':
                 name = '%s\n(%s)' % (n[1].name, n[1].artifact_type)
             else:
@@ -179,10 +181,11 @@ def get_network_nodes_edges(graph, full_access, nodes=None, edges=None):
         elif n[0] == 'type':
             atype = 'type'
             name = '%s\n(%s)' % (n[1].name, n[1].type)
+            status = 'type'
         else:
             # this should never happen but let's add it just in case
             raise ValueError('not valid node type: %s' % n[0])
-        nodes.append((n[0], atype, n[1].id, name))
+        nodes.append((n[0], atype, n[1].id, name, status))
 
     edges = [(n[1].id, m[1].id) for n, m in graph.edges()]
 

@@ -435,7 +435,7 @@ Vue.component('processing-graph', {
       $(job_info.inputs).each(function(){
         vm.edges_ds.add({id: vm.edges_ds.length + 1, from: this, to: job_info.id});
       });
-      vm.nodes_ds.add({id: job_info.id, group: "job", label: job_info.label, color: {background: vm.colorScheme.in_construction}});
+      vm.nodes_ds.add({id: job_info.id, group: "job", label: job_info.label, color: vm.colorScheme.in_construction});
       $(job_info.outputs).each(function(){
         var out_name = this[0];
         var out_type = this[1];
@@ -684,7 +684,7 @@ Vue.component('processing-graph', {
           }
           // Format node list data
           for(var i = 0; i < data.nodes.length; i++) {
-            vm.nodes.push({id: data.nodes[i][2], label: data.nodes[i][3], type: data.nodes[i][1], group: data.nodes[i][0]});
+            vm.nodes.push({id: data.nodes[i][2], label: data.nodes[i][3], type: data.nodes[i][1], group: data.nodes[i][0], color: vm.colorScheme[data.nodes[i][4]]});
           }
           vm.drawProcessingGraph('processing-results');
 
@@ -775,10 +775,14 @@ Vue.component('processing-graph', {
     vm.inConstructionJobs = 0;
     vm.workflowId = null;
     vm.colorScheme = {
-      'success': '#00cc00',
-      'running': '#cccc00',
-      'error': '#ff3333',
-      'in_construction': '#BBBBBB'};
+      'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}},
+      'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}},
+      'error': {border: '#ff3333', background: '#ff5b5b', highlight: {border: '#ff3333', background: '#ff8484'}},
+      'in_construction': {border: '#634a00', background: '#e59400', highlight: {border: '#634a00', background: '#efbe66'}},
+      'queued': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}},
+      'waiting': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}},
+      'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}},
+      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}}};
     show_loading('processing-network-div');
     $("#processing-network-div").hide();
 
