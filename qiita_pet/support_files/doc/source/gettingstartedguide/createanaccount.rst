@@ -23,12 +23,12 @@ Create a Study
  * **Event-Based Data** (optional): If your experiment contained interventions you can include that here
 * **Study Information Page**
  * **Edit**: Brings you to the Edit Study Page if you wanted to update your study
-   * Study tags (optional): Keywords that will help you, and others, find your study in Qiita
-      *   For example, if you’re studying soil you can add that as a tag
-      *   Must Save tags to keep them otherwise they dissapear
-   * Sample Information: A link to your metadata summary 
-   * Upload Files: A link to a screen to upload your files to
-   * Sample Summary: A link to a screen to view each sample separately with their respective metadata
+ * **Study tags** (optional): Keywords that will help you, and others, find your study in Qiita
+  * For example, if you’re studying soil you can add that as a tag
+  * Must **Save tags** to keep them otherwise they dissapear
+ * **Sample Information**: A link to your metadata summary 
+ * **Upload Files**: A link to a screen to upload your files to
+ * **Sample Summary**: A link to a screen to view each sample separately with their respective metadata
 Editing a Study
 ----------------
 *  Go to the “Study Information Page”
