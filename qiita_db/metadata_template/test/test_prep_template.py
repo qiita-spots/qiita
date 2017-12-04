@@ -1169,7 +1169,7 @@ class TestPrepTemplate(TestCase):
             [qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS['EBI'],
              qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS_TARGET_GENE[
                 'demultiplex']])
-        self.assertEqual(obs, {'primer'})
+        self.assertEqual(obs, set())
 
     def test_artifact(self):
         """Returns the artifact associated with the prep template"""

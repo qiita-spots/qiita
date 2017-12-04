@@ -442,7 +442,7 @@ class TestPrepAPI(TestCase):
                      'columns:'),
                     ('\tDemultiplexing with multiple input files disabled.: '
                      'barcode, primer, run_prefix;'),
-                    '\tDemultiplexing disabled.: barcode, primer;',
+                    '\tDemultiplexing disabled.: barcode;',
                     ('\tEBI submission disabled: center_name, '
                      'experiment_design_description, instrument_model, '
                      'library_construction_protocol, platform.'),
