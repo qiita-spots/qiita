@@ -660,6 +660,11 @@ def prep_template_jobs_get_req(prep_id, user_id):
     -----
     Nodes are identified by the corresponding Artifact ID.
     """
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
+
     job_info = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
     result = {}
     if job_info:

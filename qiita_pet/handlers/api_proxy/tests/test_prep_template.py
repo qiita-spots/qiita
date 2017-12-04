@@ -405,6 +405,11 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs.values(),
                          [{'error': '', 'status': 'success', 'step': None}])
 
+        obs = prep_template_jobs_get_req(pt.id, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
     def test_process_investigation_type(self):
         obs = _process_investigation_type('Metagenomics', '', '')
         self.assertEqual(obs, 'Metagenomics')

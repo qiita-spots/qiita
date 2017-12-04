@@ -1032,7 +1032,8 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # Retrieve the workflow root jobs
-            sql = "SELECT * FROM qiita.get_processing_workflow_roots(%s)"
+            sql = """SELECT get_processing_workflow_roots
+                     FROM qiita.get_processing_workflow_roots(%s)"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()
             if res:

@@ -1115,8 +1115,14 @@ class Artifact(qdb.base.QiitaObject):
         networkx.DiGraph
             The descendants of the artifact
         """
+        def _add_edge(edges, src, dest):
+            """Aux function to add the edge (src, dest) to edges"""
+            edge = (src, dest)
+            if edge not in edges:
+                edges.add(edge)
+
         with qdb.sql_connection.TRN:
-            sql = """SELECT *
+            sql = """SELECT processing_job_id, input_id, output_id
                      FROM qiita.artifact_descendants_with_jobs(%s)"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             sql_edges = qdb.sql_connection.TRN.execute_fetchindex()
@@ -1167,18 +1173,16 @@ class Artifact(qdb.base.QiitaObject):
                             # need to check both the input_artifacts and the
                             # pending properties
                             for in_art in n_obj.input_artifacts:
-                                edge = (nodes[in_art.id], nodes[n_obj.id])
-                                if edge not in edges:
-                                    edges.add(edge)
+                                _add_edge(edges, nodes[in_art.id],
+                                          nodes[n_obj.id])
 
                             pending = n_obj.pending
                             for pred_id in pending:
                                 for pname in pending[pred_id]:
                                     in_node_id = '%s:%s' % (
                                         pred_id, pending[pred_id][pname])
-                                    edge = (nodes[in_node_id], nodes[n_obj.id])
-                                    if edge not in edges:
-                                        edges.add(edge)
+                                    _add_edge(edges, nodes[in_node_id],
+                                              nodes[n_obj.id])
 
                             if jstatus != 'error':
                                 # If the job is not errored, we can add the
@@ -1203,9 +1207,9 @@ class Artifact(qdb.base.QiitaObject):
                     elif n_type == 'type':
                         # Connect this 'future artifact' with the job that will
                         # generate it
-                        edge = (nodes[n_obj.job_id], nodes[current])
-                        if edge not in edges:
-                            edges.add(edge)
+                        _add_edge(edges, nodes[n_obj.job_id], nodes[current])
+                    else:
+                        raise ValueError('Unrecognized type: %s' % n_type)
 
         # Add all edges to the lineage graph - adding the edges creates the
         # nodes in networkx
