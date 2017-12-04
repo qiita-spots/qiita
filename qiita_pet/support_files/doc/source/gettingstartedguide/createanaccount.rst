@@ -1,6 +1,6 @@
 Creating an Account
 ===================
-*  _sign up_: brings you to window to create an account
+*  **sign up**: brings you to window to create an account
 Home Screen
 -----------
 *  Icons (located on top right corner)
