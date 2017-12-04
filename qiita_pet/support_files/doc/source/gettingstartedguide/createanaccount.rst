@@ -3,10 +3,10 @@ Creating an Account
 *  **sign up**: brings you to window to create an account
 Home Screen
 -----------
-*  Icons (located on top right corner)
-   *  Envelope Icon (3rd from the right): Your system messages
-   *  Clipboard Icon (2nd from the right): Your selected samples
-   *  Server Icon (rightmost): Your active jobs and their statuses
+* **Icons** (located on top right corner)
+  * **Envelope Icon** (3rd from the right): Your system messages
+  * **Clipboard Icon** (2nd from the right): Your selected samples
+  * **Server Icon** (rightmost): Your active jobs and their statuses
 Create a Study
 ==============
 *  Creating a New Study/Edit Study Page
