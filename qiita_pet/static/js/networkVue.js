@@ -42,7 +42,7 @@ Vue.component('processing-graph', {
                 '</div>' +
               '</div>' +
             '</div>',
-  props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback'],
+  props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback', 'is-analysis-pipeline'],
   methods: {
     /**
      *
@@ -292,14 +292,13 @@ Vue.component('processing-graph', {
      *
      * @param cmd_id int the command to load the options from
      * @param sel_artifacts_info object with the information of the currently selected artifacts
-     * @param is_analysis_pipeline bool whether we are in the analysis pipeline or not
      *
      * This function executes an AJAX call to retrieve the information about the
      * options of the given command and generates the GUI to present those options
      * to the user
      *
      */
-    loadCommandOptions: function(cmd_id, sel_artifacts_info, is_analysis_pipeline) {
+    loadCommandOptions: function(cmd_id, sel_artifacts_info) {
       let vm = this;
       $.get(vm.portal + '/study/process/commands/options/', {command_id: cmd_id})
         .done(function(data){
@@ -329,7 +328,7 @@ Vue.component('processing-graph', {
               var v = $("#params-sel").val();
               $("#opt-vals-div").empty();
               if (v !== "") {
-                if (!is_analysis_pipeline) {
+                if (!vm.isAnalysisPipeline) {
                   $("#opt-vals-div").append($('<label>').text('Note: changing default parameter values not allowed'));
                 }
                 // Get the parameter set values that the user selected
@@ -337,7 +336,7 @@ Vue.component('processing-graph', {
                 var keys = Object.keys(data.opt_options).sort(function(a, b){return a.localeCompare(b, 'en', {'sensitivity': 'base'});});
                 for (var i = 0; i < keys.length; i++) {
                   var key = keys[i];
-                  vm.loadParameterGUI(key, data.opt_options[key], sel_artifacts_info, $("#opt-vals-div"), opt_vals[key], is_analysis_pipeline);
+                  vm.loadParameterGUI(key, data.opt_options[key], sel_artifacts_info, $("#opt-vals-div"), opt_vals[key]);
                 }
                 $("#add-cmd-btn-div").show();
               }
@@ -361,14 +360,13 @@ Vue.component('processing-graph', {
      * Generates the GUI for selecting the commands to apply to the given artifacts
      *
      * @param p_nodes list The ids of the selected artifacts
-     * @param is_analysis_pipeline bool whether we are in the analysis pipeline or not
      *
      * This function executes an AJAX call to retrieve all the commands that can
      * process the selected artifacts. It generates the interface so the user
      * can select which command should be added to the workflow
      *
      **/
-    loadArtifactType: function(p_nodes, is_analysis_pipeline) {
+    loadArtifactType: function(p_nodes) {
       let vm = this;
       var types = [];
       var sel_artifacts_info = {};
@@ -382,7 +380,7 @@ Vue.component('processing-graph', {
         }
         sel_artifacts_info[node.id] = {'type': node.type, 'name': node.label}
       }
-      $.get(vm.portal + '/study/process/commands/', {artifact_types: types, include_analysis: is_analysis_pipeline})
+      $.get(vm.portal + '/study/process/commands/', {artifact_types: types, include_analysis: vm.isAnalysisPipeline})
         .done(function (data) {
           target.empty();
 
@@ -404,7 +402,7 @@ Vue.component('processing-graph', {
             $("#add-cmd-btn-div").hide();
             var v = $("#command-sel").val();
             if (v !== "") {
-              vm.loadCommandOptions(v, sel_artifacts_info, is_analysis_pipeline);
+              vm.loadCommandOptions(v, sel_artifacts_info);
             }
           });
 

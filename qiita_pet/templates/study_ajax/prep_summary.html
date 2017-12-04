@@ -398,7 +398,7 @@
         </div>
       </div>
       <div id="processing-graph-vue" class="tab-pane fade">
-        <processing-graph ref="procGraph" v-bind:no-init-jobs-callback="load_new_artifact" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/prep_template/{{prep_id}}/graph/" jobs-endpoint="/prep_template/{{prep_id}}/jobs/"></processing-graph>
+        <processing-graph ref="procGraph" v-bind:is-analysis-pipeline='false' v-bind:no-init-jobs-callback="load_new_artifact" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/prep_template/{{prep_id}}/graph/" jobs-endpoint="/prep_template/{{prep_id}}/jobs/"></processing-graph>
       </div>
     </div>
   </div>

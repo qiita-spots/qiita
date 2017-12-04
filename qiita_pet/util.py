@@ -201,7 +201,7 @@ def get_network_nodes_edges(graph, full_access, nodes=None, edges=None):
             else:
                 continue
         elif n[0] == 'type':
-            atype = 'type'
+            atype = n[1].type
             name = '%s\n(%s)' % (n[1].name, n[1].type)
             status = 'type'
         else:
