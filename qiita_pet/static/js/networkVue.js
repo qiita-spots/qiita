@@ -55,7 +55,8 @@ Vue.component('processing-graph', {
           requests.push($.get(vm.portal + '/study/process/job/', {job_id: value}));
         });
 
-        // Reset the runningJobs list, since we are going to be reseting it here
+        // Reset the runningJobs list, since we are going to be adding
+        // the running jobs below
         vm.runningJobs = [];
 
         $.when.apply($, requests).then(function() {
@@ -77,7 +78,7 @@ Vue.component('processing-graph', {
             }
 
             if (jobNode['status'] !== jobStatus) {
-              // The status of the job changed. 
+              // The status of the job changed.
               // we decide what to do based on the new status.
               if (jobStatus === 'success' || jobStatus === 'error') {
                 // If the job succeeded or failed, we need to reset the entire graph
