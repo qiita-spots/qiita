@@ -78,7 +78,7 @@
     // Reset the value in the modal to an empty string
     $('#new-artifact-name').val("");
     // Reload the artifact/jobs graph so the new name is shown in it
-    reload_graph();
+    processingNetwork.$refs.procGraph.updateGraph();
   }
 
   /**
@@ -97,6 +97,10 @@
       $('#new-artifact-name').focus();
     });
 
+    $('#process-btn').on('click', function(){
+      processingNetwork.$refs.procGraph.loadArtifactType([{{artifact_id}}]);
+    });
+
     qiita_websocket.init(window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', error, error);
     qiita_websocket.add_callback('sel', show_alert);
   });
@@ -110,7 +114,7 @@
         {% if artifact_type == 'BIOM' and not is_from_analysis %}
           <input type="button" class="btn btn-default btn-sm" value="Add to Analysis" onclick="send_samples_to_analysis(this, [{{artifact_id}}]);">
         {% else %}
-          <a class="btn btn-default btn-sm" onclick="load_process_artifact_ui({{artifact_id}}, '{{is_from_analysis}}');"><span class="glyphicon glyphicon-play"></span> Process</a>
+          <a class="btn btn-default btn-sm" id="process-btn"><span class="glyphicon glyphicon-play"></span> Process</a>
         {% end %}
         <a class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete artifact {{artifact_id}}?')){ delete_artifact({{artifact_id}}) };"><span class="glyphicon glyphicon-trash"></span> Delete</a>
         {% raw buttons %}

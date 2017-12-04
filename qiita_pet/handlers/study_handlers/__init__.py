@@ -15,7 +15,7 @@ from .vamps_handlers import VAMPSHandler
 from .base import (StudyIndexHandler, StudyBaseInfoAJAX, StudyDeleteAjax,
                    DataTypesMenuAJAX, StudyFilesAJAX, StudyGetTags, StudyTags)
 from .prep_template import (
-    PrepTemplateGraphAJAX, PrepTemplateAJAX, PrepFilesHandler,
+    PrepTemplateAJAX, PrepFilesHandler,
     NewPrepTemplateAjax, PrepTemplateSummaryAJAX)
 from .processing import (ListCommandsHandler, ListOptionsHandler,
                          WorkflowHandler, WorkflowRunHandler, JobAJAX)
@@ -25,7 +25,7 @@ from .sample_template import SampleTemplateAJAX, SampleAJAX
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'StudyEditHandler', 'CreateStudyAJAX', 'EBISubmitHandler',
-           'VAMPSHandler', 'SearchStudiesAJAX', 'PrepTemplateGraphAJAX',
+           'VAMPSHandler', 'SearchStudiesAJAX',
            'ArtifactGraphAJAX', 'ArtifactAdminAJAX', 'StudyIndexHandler',
            'StudyBaseInfoAJAX', 'SampleTemplateAJAX', 'PrepTemplateAJAX',
            'NewArtifactHandler', 'PrepFilesHandler',

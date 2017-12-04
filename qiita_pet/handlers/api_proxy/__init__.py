@@ -23,7 +23,7 @@ from .prep_template import (
     prep_template_graph_get_req, prep_template_filepaths_get_req,
     prep_template_samples_get_req,
     new_prep_template_get_req, prep_template_ajax_get_req,
-    prep_template_patch_req)
+    prep_template_patch_req, prep_template_jobs_get_req)
 from .studies import (
     data_types_get_req, study_get_req, study_prep_get_req, study_delete_req,
     study_files_get_req, study_tags_patch_request, study_get_tags_request,
@@ -48,6 +48,7 @@ __all__ = ['prep_template_summary_get_req', 'sample_template_post_req',
            'prep_template_summary_get_req', 'prep_template_post_req',
            'prep_template_delete_req', 'artifact_get_prep_req',
            'prep_template_graph_get_req', 'prep_template_filepaths_get_req',
+           'prep_template_jobs_get_req',
            'artifact_get_req', 'artifact_status_put_req',
            'prep_template_get_req', 'study_delete_req',
            'study_prep_get_req', 'sample_template_get_req',

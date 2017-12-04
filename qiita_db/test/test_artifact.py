@@ -366,6 +366,34 @@ class ArtifactTestsReadOnly(TestCase):
         obs_edges = obs.edges()
         self.assertItemsEqual(obs_edges, [])
 
+        # Create a workflow starting in the artifact 1, so we can test that
+        # "in construction" jobs also show up correctly
+        json_str = (
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
+            '"barcode_type": "8", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
+            '"phred_offset": "auto"}')
+        params = qdb.software.Parameters.load(qdb.software.Command(1),
+                                              json_str=json_str)
+        user = qdb.user.User('test@foo.bar')
+        wf = qdb.processing_job.ProcessingWorkflow.from_scratch(
+            user, params, name='Test WF')
+        parent = wf.graph.nodes()[0]
+        wf.add(qdb.software.DefaultParameters(10),
+               connections={parent: {'demultiplexed': 'input_data'}})
+        obs = A(1).descendants_with_jobs
+        obs_edges = obs.edges()
+        # We have 4 more edges than before. From artifact 1 to parent job,
+        # from parent job to output, from output to child job, and from child
+        # job to child output
+        self.assertEqual(len(obs_edges), 14)
+        # We will check that the edges related with the "type" nodes (i.e.
+        # the outputs of the jobs in construction) are present
+        self.assertEqual(1, len([y for x, y in obs_edges if x[0] == 'type']))
+        self.assertEqual(2, len([y for x, y in obs_edges if y[0] == 'type']))
+
     def test_children(self):
         exp = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)]
         self.assertEqual(qdb.artifact.Artifact(1).children, exp)
@@ -407,7 +435,8 @@ class ArtifactTestsReadOnly(TestCase):
         self.assertIsNone(qdb.artifact.Artifact(1).analysis)
 
     def test_jobs(self):
-        obs = qdb.artifact.Artifact(1).jobs()
+        # Returning all jobs
+        obs = qdb.artifact.Artifact(1).jobs(show_hidden=True)
         exp = [
             qdb.processing_job.ProcessingJob(
                 '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
@@ -424,9 +453,22 @@ class ArtifactTestsReadOnly(TestCase):
         for e in exp:
             self.assertIn(e, obs)
 
+        # Returning only jobs visible by the user
+        obs = qdb.artifact.Artifact(1).jobs()
+        exp = [
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+            qdb.processing_job.ProcessingJob(
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75')]
+
+        for e in exp:
+            self.assertIn(e, obs)
+
     def test_jobs_cmd(self):
         cmd = qdb.software.Command(1)
-        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd)
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, show_hidden=True)
         exp = [
             qdb.processing_job.ProcessingJob(
                 '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
@@ -441,11 +483,24 @@ class ArtifactTestsReadOnly(TestCase):
         for e in exp:
             self.assertIn(e, obs)
 
-        cmd = qdb.software.Command(2)
         obs = qdb.artifact.Artifact(1).jobs(cmd=cmd)
+        exp = [
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+            qdb.processing_job.ProcessingJob(
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75')
+            ]
+
+        cmd = qdb.software.Command(2)
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, show_hidden=True)
         exp = [qdb.processing_job.ProcessingJob(
             'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')]
         self.assertEqual(obs, exp)
+
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd)
+        self.assertEqual(obs, [])
 
     def test_jobs_status(self):
         obs = qdb.artifact.Artifact(1).jobs(status='success')
@@ -461,15 +516,21 @@ class ArtifactTestsReadOnly(TestCase):
         for e in exp:
             self.assertIn(e, obs)
 
-        obs = qdb.artifact.Artifact(1).jobs(status='running')
+        obs = qdb.artifact.Artifact(1).jobs(status='running', show_hidden=True)
         exp = [qdb.processing_job.ProcessingJob(
             'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')]
         self.assertEqual(obs, exp)
 
-        obs = qdb.artifact.Artifact(1).jobs(status='queued')
+        obs = qdb.artifact.Artifact(1).jobs(status='running')
+        self.assertEqual(obs, [])
+
+        obs = qdb.artifact.Artifact(1).jobs(status='queued', show_hidden=True)
         exp = [qdb.processing_job.ProcessingJob(
             '063e553b-327c-4818-ab4a-adfe58e49860')]
         self.assertEqual(obs, exp)
+
+        obs = qdb.artifact.Artifact(1).jobs(status='queued')
+        self.assertEqual(obs, [])
 
     def test_jobs_cmd_and_status(self):
         cmd = qdb.software.Command(1)
@@ -486,10 +547,14 @@ class ArtifactTestsReadOnly(TestCase):
         for e in exp:
             self.assertIn(e, obs)
 
-        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued')
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued',
+                                            show_hidden=True)
         exp = [qdb.processing_job.ProcessingJob(
             '063e553b-327c-4818-ab4a-adfe58e49860')]
         self.assertEqual(obs, exp)
+
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued')
+        self.assertEqual(obs, [])
 
         cmd = qdb.software.Command(2)
         obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued')

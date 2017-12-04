@@ -17,6 +17,7 @@ from natsort import natsorted
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
+from qiita_pet.util import get_network_nodes_edges
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
@@ -624,37 +625,53 @@ def prep_template_graph_get_req(prep_id, user_id):
     # doesn't have full access to the study
     full_access = Study(prep.study_id).can_edit(User(user_id))
 
-    G = prep.artifact.descendants_with_jobs
+    artifact = prep.artifact
 
-    # n[0] is the data type: job/artifact
-    # n[1] is the object
-    node_labels = []
-    for n in G.nodes():
-        if n[0] == 'job':
-            atype = 'job'
-            name = n[1].command.name
-        elif n[0] == 'artifact':
-            atype = n[1].artifact_type
-            if full_access or n[1].visibility == 'public':
-                name = '%s\n(%s)' % (n[1].name, n[1].artifact_type)
-            else:
-                continue
-        else:
-            # this should never happen but let's add it just in case
-            raise ValueError('not valid node type: %s' % n[0])
-        node_labels.append((n[0], atype, n[1].id, name))
+    if artifact is None:
+        return {'edges': [], 'nodes': [],
+                'status': 'success', 'message': ''}
 
-    return {'edge_list': [(n[1].id, m[1].id) for n, m in G.edges()],
-            'node_labels': node_labels,
+    G = artifact.descendants_with_jobs
+
+    nodes, edges, wf_id = get_network_nodes_edges(G, full_access)
+
+    return {'edges': edges,
+            'nodes': nodes,
+            'workflow': wf_id,
             'status': 'success',
             'message': ''}
 
-    G = prep.artifact.descendants
-    node_ids = [id_ for id_, label in node_labels]
-    edge_list = [(n.id, m.id) for n, m in G.edges()
-                 if n.id in node_ids and m.id in node_ids]
 
-    return {'status': 'success',
-            'message': '',
-            'edge_list': edge_list,
-            'node_labels': node_labels}
+def prep_template_jobs_get_req(prep_id, user_id):
+    """Returns graph of all artifacts created from the prep base artifact
+
+    Parameters
+    ----------
+    prep_id : int
+        Prep template ID to get graph for
+    user_id : str
+        User making the request
+
+    Returns
+    -------
+    dict with the jobs information
+
+    Notes
+    -----
+    Nodes are identified by the corresponding Artifact ID.
+    """
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
+
+    job_info = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
+    result = {}
+    if job_info:
+        job_info = defaultdict(lambda: '', loads(job_info))
+        job_id = job_info['job_id']
+        job = ProcessingJob(job_id)
+        result[job.id] = {'status': job.status, 'step': job.step,
+                          'error': job.log.msg if job.log else ""}
+
+    return result

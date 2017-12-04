@@ -47,7 +47,7 @@ class TestSUserAPI(TestCase):
                     'sortmerna_coverage': 0.97},
                  'name': 'Pick closed-reference OTUs',
                  'step': 'generating demux file',
-                 'processing_job_workflow_id': ''}]}
+                 'processing_job_workflow_id': 1}]}
         self.assertEqual(obs, exp)
 
 
