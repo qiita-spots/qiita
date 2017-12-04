@@ -154,7 +154,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                      LEFT JOIN qiita.artifact_output_processing_job aopj
                         USING (processing_job_id)
                      WHERE command_id = %s AND processing_job_status IN (
-                        'success', 'waiting', 'running') {0}
+                        'success', 'waiting', 'running', 'in_construction') {0}
                      GROUP BY processing_job_id, email,
                         processing_job_status"""
 

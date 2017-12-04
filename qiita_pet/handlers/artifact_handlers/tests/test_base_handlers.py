@@ -81,11 +81,6 @@ class TestBaseHandlersUtils(TestCase):
         user = User('test@foo.bar')
         # Artifact w/o summary
         obs = artifact_summary_get_request(user, 1)
-        exp_p_jobs = [
-            ['063e553b-327c-4818-ab4a-adfe58e49860', 'Split libraries FASTQ',
-             'queued', None, None],
-            ['bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'Split libraries',
-             'running', 'demultiplexing', None]]
         exp_files = [
             (1L, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)'),
             (2L, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)')]
@@ -109,7 +104,7 @@ class TestBaseHandlersUtils(TestCase):
                'is_from_analysis': False,
                'summary': None,
                'job': None,
-               'processing_jobs': exp_p_jobs,
+               'processing_jobs': [],
                'errored_jobs': []}
         self.assertEqual(obs, exp)
 
@@ -140,7 +135,7 @@ class TestBaseHandlersUtils(TestCase):
                'is_from_analysis': False,
                'summary': None,
                'job': [job.id, 'queued', None],
-               'processing_jobs': exp_p_jobs,
+               'processing_jobs': [],
                'errored_jobs': []}
         self.assertEqual(obs, exp)
 
@@ -178,7 +173,7 @@ class TestBaseHandlersUtils(TestCase):
                'is_from_analysis': False,
                'summary': exp_summary_path,
                'job': None,
-               'processing_jobs': exp_p_jobs,
+               'processing_jobs': [],
                'errored_jobs': []}
         self.assertEqual(obs, exp)
 
@@ -202,7 +197,7 @@ class TestBaseHandlersUtils(TestCase):
                'is_from_analysis': False,
                'summary': exp_summary_path,
                'job': None,
-               'processing_jobs': exp_p_jobs,
+               'processing_jobs': [],
                'errored_jobs': []}
         self.assertEqual(obs, exp)
 
@@ -211,10 +206,6 @@ class TestBaseHandlersUtils(TestCase):
 
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
-        exp_p_jobs = [
-            ['d19f76ee-274e-4c1b-b3a2-a12d73507c55',
-             'Pick closed-reference OTUs', 'error', 'generating demux file',
-             'Error message']]
         exp_files = [
             (3L, '1_seqs.fna (preprocessed fasta)'),
             (4L, '1_seqs.qual (preprocessed fastq)'),
@@ -251,7 +242,7 @@ class TestBaseHandlersUtils(TestCase):
                'is_from_analysis': False,
                'summary': None,
                'job': None,
-               'processing_jobs': exp_p_jobs,
+               'processing_jobs': [],
                'errored_jobs': []}
         self.assertEqual(obs, exp)
 

@@ -48,12 +48,13 @@ class TestUtil(TestCase):
 
     def test_get_network_nodes_edges(self):
         graph = Artifact(1).descendants_with_jobs
-        obs_nodes, obs_edges = get_network_nodes_edges(graph, True)
-        self.assertEqual(len(obs_nodes), 15)
-        self.assertEqual(len([x for x in obs_nodes if x[0] == 'job']), 7)
+        obs_nodes, obs_edges, obs_wf = get_network_nodes_edges(graph, True)
+        self.assertEqual(len(obs_nodes), 11)
+        self.assertEqual(len([x for x in obs_nodes if x[0] == 'job']), 5)
         self.assertEqual(len([x for x in obs_nodes if x[0] == 'artifact']), 6)
-        self.assertEqual(len([x for x in obs_nodes if x[0] == 'type']), 2)
-        self.assertEqual(len(obs_edges), 14)
+        self.assertEqual(len([x for x in obs_nodes if x[0] == 'type']), 0)
+        self.assertEqual(len(obs_edges), 10)
+        self.assertIsNone(obs_wf)
 
 
 if __name__ == "__main__":
