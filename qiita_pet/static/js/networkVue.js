@@ -25,7 +25,7 @@ Vue.component('processing-graph', {
                 '<div class="col-md-12">' +
                   '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggle_network_graph();">-</a><i> Processing network </i></h4>' +
                   '<div id="run-btn-div"><a class="btn btn-success" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run workflow</a><span class="blinking-message">  Don\'t forget to hit "Run" once you are done with your workflow!</span></div>' +
-                  '<b>(Click nodes for more information, blue are jobs)</b>' +
+                  '<b>Click circles for more information - This graph will refresh in <span id="countdown-span"></span> seconds</b>' +
                 '</div>' +
               '</div>' +
               '<div class="row">' +
@@ -44,6 +44,63 @@ Vue.component('processing-graph', {
             '</div>',
   props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback', 'is-analysis-pipeline'],
   methods: {
+    update_job_status: function() {
+      let vm = this;
+      var requests = [];
+      var jobId, jobStatus, jobNode;
+      var needsUpdate = false;
+
+      if (vm.runningJobs.length > 0) {
+        $.each(vm.runningJobs, function(index, value) {
+          requests.push($.get(vm.portal + '/study/process/job/', {job_id: value}));
+        });
+
+        // Reset the runningJobs list, since we are going to be adding
+        // the running jobs below
+        vm.runningJobs = [];
+
+        $.when.apply($, requests).then(function() {
+          // The nature of arguments change based on the number of requests
+          // performed. If only one request was performed, then arguments only
+          // contains the output of that request. Otherwise, arguments contains
+          // is a list of results
+          var arg = (requests.length === 1) ? [arguments] : arguments;
+          $.each(arg, function(index, value) {
+            // The actual result of the call is stored in the first element of
+            // the list, hence accessing with 0
+            jobId = value[0]['job_id'];
+            jobStatus = value[0]['job_status'];
+            jobNode = vm.nodes_ds.get(jobId);
+
+            // If the job is in one of the "running" states, we add it to the runningJobs list
+            if (jobStatus === 'running' || jobStatus === 'queued' || jobStatus === 'waiting') {
+              vm.runningJobs.push(jobId);
+            }
+
+            if (jobNode['status'] !== jobStatus) {
+              // The status of the job changed.
+              // we decide what to do based on the new status.
+              if (jobStatus === 'success' || jobStatus === 'error') {
+                // If the job succeeded or failed, we need to reset the entire graph
+                // because the changes on the nodes are substantial
+                needsUpdate = true;
+              } else {
+                // In this case the job changed to either 'running', 'queued' or 'waiting'. In
+                // this case, we just need to update the internal values of the nodes and the colors
+                jobNode.color = vm.colorScheme[jobStatus];
+                jobNode.status = jobStatus;
+                vm.nodes_ds.update(jobNode);
+              }
+            }
+          });
+
+          if (needsUpdate) {
+            // Update the entire graph if the status of the jobs require so
+            vm.updateGraph();
+          }
+        });
+      }
+    },
     /**
      *
      * Remove a job node from the network visualization
@@ -132,6 +189,7 @@ Vue.component('processing-graph', {
       let vm = this;
       $.post(vm.portal + "/study/process/workflow/run/", {workflow_id: vm.workflowId}, function(data){
         bootstrapAlert("Workflow " + vm.workflowId + " submitted", "success");
+        $('#run-btn-div').hide();
         vm.updateGraph();
       })
         .fail(function(object, status, error_msg) {
@@ -434,7 +492,7 @@ Vue.component('processing-graph', {
       $(job_info.inputs).each(function(){
         vm.edges_ds.add({id: vm.edges_ds.length + 1, from: this, to: job_info.id});
       });
-      vm.nodes_ds.add({id: job_info.id, group: "job", label: job_info.label, color: vm.colorScheme.in_construction});
+      vm.nodes_ds.add({id: job_info.id, group: "job", label: job_info.label, color: vm.colorScheme.in_construction, status: 'in_construction'});
       $(job_info.outputs).each(function(){
         var out_name = this[0];
         var out_type = this[1];
@@ -650,7 +708,6 @@ Vue.component('processing-graph', {
       }
 
       $('#processing-results').empty();
-      $('#run-btn').prop('disabled', false);
       if (vm.inConstructionJobs === 0) {
         $('#run-btn-div').show();
       }
@@ -691,7 +748,7 @@ Vue.component('processing-graph', {
           }
           // Format node list data
           for(var i = 0; i < data.nodes.length; i++) {
-            vm.nodes.push({id: data.nodes[i][2], label: data.nodes[i][3], type: data.nodes[i][1], group: data.nodes[i][0], color: vm.colorScheme[data.nodes[i][4]]});
+            vm.nodes.push({id: data.nodes[i][2], label: data.nodes[i][3], type: data.nodes[i][1], group: data.nodes[i][0], color: vm.colorScheme[data.nodes[i][4]], status: data.nodes[i][4]});
             if (data.nodes[i][1] === 'job') {
               job_status = data.nodes[i][4];
               if (job_status === 'in_construction') {
@@ -752,7 +809,7 @@ Vue.component('processing-graph', {
         }
         // If no jobs are in a non completed state, use the callback
         if (totalJobs === 0 || nonCompletedJobs === 0) {
-          vm.poll = false;
+          vm.initialPoll = false;
           // There are no jobs being run
           // To avoid a possible race condition, check if a graph is now available
           $.get(vm.portal + vm.graphEndpoint, function(data) {
@@ -767,7 +824,7 @@ Vue.component('processing-graph', {
           });
         }
         else {
-          vm.poll = true;
+          vm.initialPoll = true;
           $("#processing-job-div").append(contents);
         }
       })
@@ -786,7 +843,12 @@ Vue.component('processing-graph', {
    **/
   mounted() {
     let vm = this;
-    vm.poll = false;
+    // This initialPoll is used ONLY if the graph doesn't exist yet
+    vm.initialPoll = false;
+    // This variable is used to show the update countdown on the interface
+    // the current wait time is 15 sec
+    vm.countdownPoll = 15;
+    $('#countdown-span').html(vm.countdownPoll);
     vm.colorScheme = {
       'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}},
       'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}},
@@ -805,10 +867,20 @@ Vue.component('processing-graph', {
     // if the graph is not available
     vm.updateGraph();
     setInterval(function() {
-      // Only update if the graph has not been generated yet
-      if (vm.poll) {
-        vm.updateGraph();
+      vm.countdownPoll -= 1;
+      $('#countdown-span').html(vm.countdownPoll);
+      if (vm.countdownPoll === 0) {
+        // Reset the counter for every 15 seconds
+        vm.countdownPoll = 15;
+
+        // Check for the initial poll - it only happens if a graph doesn't exist yet
+        if (vm.initialPoll) {
+          vm.updateGraph();
+        }
+
+        // Update the status of the jobs
+        vm.update_job_status();
       }
-    }, 5000);
+    }, 1000);
   }
 });
