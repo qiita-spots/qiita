@@ -419,7 +419,9 @@ def start(port, master):
 
     # Create/repopulate the usernames key so we can do autocomplete for sharing
     r_client.delete('qiita-usernames')
-    r_client.zadd('qiita-usernames', **{u: 0 for u in qdb.user.User.iter()})
+    users = list(qdb.user.User.iter())
+    if users:
+        r_client.zadd('qiita-usernames', **{u: 0 for u in users})
 
     if qiita_config.log_dir:
         options.log_file_prefix = join(qiita_config.log_dir,
