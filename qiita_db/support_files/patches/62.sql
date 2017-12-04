@@ -20,7 +20,7 @@ WHERE processing_job_id IN (
 -- Adding a new command into Qiita/Alpha: delete_analysis
 
 -- Dec 3, 2017
--- Adding a function to retrieve the workflow id of any job
+-- Adding a function to retrieve the workflow roots of any job
 CREATE OR REPLACE FUNCTION qiita.get_processing_workflow_roots(job_id UUID) RETURNS SETOF UUID AS $$
 BEGIN
     IF EXISTS(SELECT * FROM qiita.processing_job_workflow_root WHERE processing_job_id = job_id) THEN

@@ -366,8 +366,8 @@ class ArtifactTestsReadOnly(TestCase):
         obs_edges = obs.edges()
         self.assertItemsEqual(obs_edges, [])
 
-        # Create a workflow starting, so we can test that "in construction"
-        # jobs also show up correctly
+        # Create a workflow starting in the artifact 1, so we can test that
+        # "in construction" jobs also show up correctly
         json_str = (
             '{"input_data": 1, "max_barcode_errors": 1.5, '
             '"barcode_type": "8", "max_bad_run_length": 3, '

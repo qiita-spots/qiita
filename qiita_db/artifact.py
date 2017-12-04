@@ -1214,15 +1214,6 @@ class Artifact(qdb.base.QiitaObject):
 
         return lineage
 
-#  processing_job_status
-# -----------------------
-#  queued
-#  running
-#  in_construction
-#  waiting
-
-        # return lineage
-
     @property
     def children(self):
         """Returns the list of children of the artifact
