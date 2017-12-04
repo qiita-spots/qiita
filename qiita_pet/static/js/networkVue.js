@@ -77,15 +77,7 @@ Vue.component('processing-graph', {
             }
 
             if (jobNode['status'] !== jobStatus) {
-              // The status of the job changed. If it was in construction we
-              // need to update the internal counter
-              if (jobNode['status'] === 'in_construction') {
-                vm.inConstructionJobs -= 1;
-                if (vm.inConstructionJobs == 0) {
-                  $('#run-btn-div').hide();
-                }
-              }
-              // If the job changed form any of the other status ('running', 'queued' or 'waiting')
+              // The status of the job changed. 
               // we decide what to do based on the new status.
               if (jobStatus === 'success' || jobStatus === 'error') {
                 // If the job succeeded or failed, we need to reset the entire graph
