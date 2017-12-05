@@ -1,16 +1,13 @@
 Adding and Working With Sample information
 ==========================================
-
 Creating the Sample Information File
 ------------------------------------
-
 Sample information file
 -----------------------
 The *sample information file* will define the biological context of each
 sample, with categories like ``sample_type``, ``treatment``,
 etc. The ``sample_name`` defined in this file is used to relate each
 sample in the preparation file with the biological sample.
-
 Required fields for Qiita
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
