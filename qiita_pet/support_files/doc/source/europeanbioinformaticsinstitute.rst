@@ -1,9 +1,3 @@
-.. _ebi-submission:
-
-.. index:: ebi-submission
-
-.. role:: red
-
 EBI submission via Qiita
 ========================
 
