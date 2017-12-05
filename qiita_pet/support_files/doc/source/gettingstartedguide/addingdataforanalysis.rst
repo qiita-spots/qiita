@@ -46,24 +46,24 @@ For the latest definitions and explanation visit the `EBI/ENA Missing value repo
 Attaching Prep Information
 --------------------------
 * **Upload Files Page**
-  * Drag your prep info file into the box to upload your files
-  * If you want to delete the file, press the box that appears next to that file then click delete selected files
-  * **Go to study description**: Link to the study description page
+ * Drag your prep info file into the box to upload your files
+ * If you want to delete the file, press the box that appears next to that file then click delete selected files
+ * **Go to study description**: Link to the study description page
 * **Study Description Page**
-  * Select “Add New Preparation”
+ * Select “Add New Preparation”
 Attach data
 -----------
 * **Upload Files Page**
-  * Drag your data files into the box to upload your files
-  * If you want to delete the file, press the box that appears next to that file then click delete selected files
-  * **Go to study description**: Link to the study description page
+ * Drag your data files into the box to upload your files
+ * If you want to delete the file, press the box that appears next to that file then click delete selected files
+ * **Go to study description**: Link to the study description page
 * **Study Description Page**
-  * Select “Add new preparation page”
+ * Select “Add new preparation page”
 * **Add New Preparation Page**
-  * **Select File** (required): Select the preparatory information file you uploaded  
-  * **Select Data Type** (required): Choose for what kind of data you studied
-  * **Select Investigation Type** (optional): Not required, chooses the investigation you performed
-  * **Create New Preparation**: Creates a new preparation based on the data inputted above
+ * **Select File** (required): Select the preparatory information file you uploaded  
+ * **Select Data Type** (required): Choose for what kind of data you studied
+ * **Select Investigation Type** (optional): Not required, chooses the investigation you performed
+ * **Create New Preparation**: Creates a new preparation based on the data inputted above
 Associate data with prep
 ------------------------
 * **Data Type**
