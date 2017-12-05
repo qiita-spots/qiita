@@ -1,24 +1,50 @@
 Adding Data for Analysis
 ========================
-Prep information file
----------------------
+.. _prepare-information-files:
 
-The *preparation information file* will describe the wet lab technology used
-to generate this data type, including sequencing, proteomics, metabolomics,
-etc. A shared ``sample_name`` linkes a prepared sample to a biological
-sample in the *sample information file.*
+.. index:: prepare-information-files
 
-Required fields for Qiita
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Prepare information files
+=========================
 
-This is the minimum set of columns for a prep information file to be added the
-system:
+The set of required fields for the *sample information* and *preparation
+information files* varies based on the functionality that you want to
+use from the system.
 
-+-------------------+-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Field name        | Format                        | Description                                                                                                                                                                                                                                                   |
-+===================+===============================+===============================================================================================================================================================================================================================================================+
-| ``sample_name``   | free text with restrictions   | Identifies a sample. It is the primary key, must be unique and should match the ones in the sample information file. Allowed characters are alphabetic ``[A-Za-z]``, numeric ``[0-9]``, and periods ``.``. Must match the sample_name in the sample template. |
-+-------------------+-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+As described in :doc:`../qiita-philosophy/index`, a Qiita study can have
+many biological samples, each with many preparations for different kinds of
+multi-omic analysis. Thus, the study will have a single *sample information
+file* that will define the biological context of each sample. Each multi-omic
+data type prepared will have a separate *preparation information file* that
+will describe the sequencing technology or analytical chemistry used to
+generate that data set.
+
+Please note that while *sample information* and *preparation information files*
+are similar to a `QIIME metadata file
+<http://qiime.org/documentation/file_formats.html#metadata-mapping-files>`__,
+they are conceptually different. A QIIME metadata file includes information
+about the biological context, like ``sample_type``, and about the wet lab
+processing, like ``BarcodeSequence``. Qiita intentionally separates this
+information into two separate files; it would be conceptually incorrect
+to include ``BarcodeSequence`` with the *sample information*, as this
+information pertains to the wet lab preparation and should be placed in the
+*preparation information file*.
+
+Example files
+-------------
+
+You can download an example sample information file and prep information file from
+`here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__
+
+EBI-ENA NULL values vocabulary
+------------------------------
+
+We support the following values: *Not applicable*, *Missing: Not collected*, *Missing: Not provided*, *Missing: Restricted access*.
+
+For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
+
+.. warning::
+   Column names in your information files cannot be named as a Postgres reserved word. For example, a column cannot be named `CONDITION`, but could instead be named `DISEASE_CONDITION`. For a full list of these reserved words, see this `link <https://www.postgresql.org/docs/9.3/static/sql-keywords-appendix.html>`__.
 
 Attaching Prep Information
 --------------------------
