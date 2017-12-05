@@ -41,5 +41,21 @@ Attach data
   * **Select Data Type** (required): Choose for what kind of data you studied
   * **Select Investigation Type** (optional): Not required, chooses the investigation you performed
   * **Create New Preparation**: Creates a new preparation based on the data inputted above
+Associate data with prep
+------------------------
+* **Data Type**
+ * Includes preparation info files of that data type that’s associated with your study
+ * **16S, or the data type you studied** (required): Preparation page
+ * **Select Type** (required): Select the file type you uploaded, causing Qiita to associate your files with this preparation
+ * **Add a name for this file** (required): Give the file a name
+ * **Add Files**: Shows up after Select Type has been chosen, adds files to the preparation
+ * **Files Network**: Contains artifacts that represent your data
+Update prep info
+----------------
+* **Data Type 16S Page**
+ * Select “Update Information” and choose your updated file
+ * *Barcodes and sample names cannot be updated*
+  * must create new preparation to update these
+
 
 
