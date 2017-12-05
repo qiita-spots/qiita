@@ -1,7 +1,7 @@
 Create New Analysis Page
 ========================
 * **See Previous Analysis**
-  * Shows past analysis done on your account, or shared with you.
+ * Shows past analysis done on your account, or shared with you.
 * **Filter results by column data (Title, Abstract, PI, etc.)**: Searches for studies with the title/abstract/PI/etc. that you inputted
 * **Filter study by Study Tags**: Searches for studies with the tag you searched for
 * **Title**: Brings you to Study Information Page of that experiment
