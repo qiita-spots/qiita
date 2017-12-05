@@ -211,8 +211,17 @@ Processing Workflow Page: Commands
    * **Yule index**: Measures Yule index
     * Measures biodiversity
     * Determined by the number of species and the proportions between the numbers of those species.
-    * **Citation**: * Fisher, R.A., Corbert, A.S., Williams, C.B. (1943). “The Relationship Between the Number of Species and the Number of Individuals in a Random Sample of an Animal Population”. J. Animal Ecol. (12): 42-58.*
+    * **Citation**: *Fisher, R.A., Corbert, A.S., Williams, C.B. (1943). “The Relationship Between the Number of Species and the Number of Individuals in a Random Sample of an Animal Population”. J. Animal Ecol. (12): 42-58.*
   * **Number of jobs**: number of jobs running???
   * **Phylogenetic tree** (required for some beta diversities, ie. UniFrac): The phylogenetic tree to be used with beta analyses (only include when necessary ie. UniFrac)
    * currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
   * **Citation**: *Whittaker, R. H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.*
+* **Commands from Alpha Diversity Data**
+ * **Alpha Correlation**: Determines if the numeric sample metadata category is correlated with alpha diversity
+  * **Correlation Method** (required): The correction test being applied
+   * **Spearman**: Measures if there is a linear relationship between 2 variables
+    * **Citation**: *Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.*
+   * **Pearson**: Measures how strong the linear relationship is between 2 variables
+    * **Citation**: *Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.*
+  * **Alpha Vectors** (required): vector of alpha diversity values by sample
+  * **Alpha Correlation Citation**: *Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.*
