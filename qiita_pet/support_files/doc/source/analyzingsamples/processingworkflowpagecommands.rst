@@ -225,3 +225,5 @@ Processing Workflow Page: Commands
     * **Citation**: *Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.*
   * **Alpha Vectors** (required): vector of alpha diversity values by sample
   * **Alpha Correlation Citation**: *Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.*
+* **Commands from Beta Diversity Data**
+
