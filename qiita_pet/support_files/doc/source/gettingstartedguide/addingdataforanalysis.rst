@@ -1,11 +1,8 @@
 Adding Data for Analysis
 ========================
-.. _prepare-information-files:
-
-.. index:: prepare-information-files
 
 Prepare information files
-=========================
+-------------------------
 
 The set of required fields for the *sample information* and *preparation
 information files* varies based on the functionality that you want to
