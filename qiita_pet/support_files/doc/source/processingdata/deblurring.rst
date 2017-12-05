@@ -1,15 +1,15 @@
 Deblurring 
 ----------
 * **Trimming**: Removes base pairs from the sequences
-  * **Input Data** (required): data being trimmed
-  * **Parameter Set** (required): How many bases to trim off
-    * **90 base pairs**- Removes first 90 base pairs from the sequences
-    * **100 base pairs**- Removes first 100 base pairs from the sequences
-    * **125 base pairs**- Removes first 125 base pairs from the sequences
-    * **150 base pairs**- Removes first 150 base pairs from the sequences
-    * **200 base pairs**- Removes first 200 base pairs from the sequences
-    * **250 base pairs**- Removes first 250 base pairs from the sequences
-    * **300 base pairs**- Removes first 300 base pairs from the sequences
+ * **Input Data** (required): data being trimmed
+ * **Parameter Set** (required): How many bases to trim off
+  * **90 base pairs**- Removes first 90 base pairs from the sequences
+  * **100 base pairs**- Removes first 100 base pairs from the sequences
+  * **125 base pairs**- Removes first 125 base pairs from the sequences
+  * **150 base pairs**- Removes first 150 base pairs from the sequences
+  * **200 base pairs**- Removes first 200 base pairs from the sequences
+  * **250 base pairs**- Removes first 250 base pairs from the sequences
+  * **300 base pairs**- Removes first 300 base pairs from the sequences
 * **Command from Trimmed Artifact**:
  * **Deblur Workflow**: Removes sequences due to error, does not take into account if sequences are found in a database
   * **Default Parameters** 
