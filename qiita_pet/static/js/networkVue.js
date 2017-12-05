@@ -44,6 +44,22 @@ Vue.component('processing-graph', {
             '</div>',
   props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback', 'is-analysis-pipeline'],
   methods: {
+    /**
+     *
+     * Cleans up the current object
+     *
+     **/
+    destroy: function() {
+      let vm = this;
+      clearInterval(vm.interval);
+      vm.network.destroy();
+    },
+
+    /**
+     *
+     * Updates the status of those jobs in a non-terminal state
+     *
+     **/
     update_job_status: function() {
       let vm = this;
       var requests = [];
@@ -866,7 +882,7 @@ Vue.component('processing-graph', {
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available
     vm.updateGraph();
-    setInterval(function() {
+    vm.interval = setInterval(function() {
       vm.countdownPoll -= 1;
       $('#countdown-span').html(vm.countdownPoll);
       if (vm.countdownPoll === 0) {
@@ -884,3 +900,17 @@ Vue.component('processing-graph', {
     }, 1000);
   }
 });
+
+
+/**
+ *
+ * Creates a new Vue object for the Processing Network in a safe way
+ *
+ *
+ **/
+function newProcessingNetworkVue(target) {
+  if (processingNetwork !== null) {
+    processingNetwork.$refs.procGraph.destroy();
+  }
+  processingNetwork = new Vue({el: target});
+}

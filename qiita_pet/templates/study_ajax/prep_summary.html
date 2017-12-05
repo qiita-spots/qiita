@@ -1,5 +1,4 @@
 {% from qiita_core.qiita_settings import qiita_config %}
-<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/networkVue.js"></script>
 <script type="text/javascript">
   /**
    *
@@ -263,7 +262,8 @@
     load_information_summary();
     // If the template already have an artifact attached, load the
     // artifact graph, otherwise load the page to add a new artifact
-    processingNetwork = new Vue({el: "#processing-graph-vue"});
+    // processingNetwork = new Vue({el: "#processing-graph-vue"});
+    newProcessingNetworkVue("#processing-graph-vue");
 
     // If the file-selector select changes, check if we need to show the update button
     $("#file-selector").change(function ( event ) {

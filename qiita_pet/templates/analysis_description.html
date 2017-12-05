@@ -3,7 +3,6 @@
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
-<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/networkVue.js"></script>
 
 <script type="text/javascript">
 
@@ -20,7 +19,8 @@
 
   $(document).ready(function(){
     // Create the processing network view object
-    processingNetwork = new Vue({el: "#analysis-graph-vue"});
+    // processingNetwork = new Vue({el: "#analysis-graph-vue"});
+    newProcessingNetworkVue("#analysis-graph-vue");
 
     // Show the alert message, if any
     {% if alert_msg %}
