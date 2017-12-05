@@ -1,3 +1,6 @@
+NEED TO DO: WHAT IS: Adjust variance, alpha value, bypass tips, number of jobs
+
+
 Processing Workflow Page: Commands
 ===================================
 * **Commands for Deblurred or Closed-Reference Data**:
@@ -120,3 +123,96 @@ Processing Workflow Page: Commands
    * **Phylogenetic tree** (required for certain alpha diversities, ie. Faith PD): The phylogenetic tree to be used with alpha analyses (only include when necessary ie. Faith PD)
     * currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
    * **Alpha Diversity Citation**: Whittaker, R. H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338. 
+  * **Calculate beta diversity**: measured the diversity between samples
+   * **BIOM table** (required): the feature table containing the samples for which beta diversity should be computed
+   * **Adjust variance** (phylogenetic only): WHAT IS THIS
+   * **Alpha value** (Generalized UniFrac only): WHAT IS THIS
+   * **Bypass tips** (phylogenetic only): WHAT IS THIS
+   * **Diversity metric** (required): The beta diversity metric to be run
+    * **Bray-Curtis dissimilarity**:  Calculates Bray–Curtis dissimilarity
+     * Fraction of overabundant counts
+     * **Citation**: *Sorenson, T. (1948) "A method of establishing groups of equal amplitude in plant sociology based on similarity of species content." Kongelige Danske Videnskabernes Selskab 5.1-34: 4-7.*
+    * **Canberra distance**: Calculates Canberra distance
+     * Overabundance on a feature by feature basis
+     * **Citation**: *Lance, Godfrey L.N. and Williams, W.T. (1967). "A general theory of classificatory sorting strategies II. Clustering systems." The computer journal 10 (3):271-277.*
+    * **Chebyshev distance**: Calculates Chebyshev distance
+     * Maximum distance between two groups
+     * **Citation**: *Cyrus. D. Cantrell (2000). “Modern Mathematical Methods for Physicists and Engineers”. Cambridge University Press.*
+    * **City-block distance**:  Calculates City-block distance
+     * Similar to the Euclidean distance but the effect of a large difference in a single dimension is dampened
+     * **Citation**: *Paul, E.B. (2006). “Manhattan distance". Dictionary of Algorithms and Data Structures*
+    * **Correlation coefficient**: Measures Correlation coefficient
+     * Measure of strength and direction of linear relationship between variables
+     * **Citation**: *Galton, F. (1877). "Typical laws of heredity". Nature. 15 (388): 492–495.*
+    * **Cosine Similarity**: Measures Cosine similarity
+     * Ratio of the amount of common species in a group to the mean of the two groups
+     * **Citation**: *Ochiai, A. (1957). “Zoogeographical Studies on the Soleoid Fishes Found in Japan and its Neighhouring Regions-II”. Nippon Suisan Gakkaishi. 22(9): 526-530.*
+    * **Dice measures**: Calculates Dice measure
+     * Statistic used for comparing the similarity of two samples
+     * Only counts true positives once
+     * **Citation**: *Dice, Lee R. (1945). "Measures of the Amount of Ecologic Association Between Species". Ecology. 26 (3): 297–302.*
+    * Euclidean distance**: Measures Euclidean distance
+     * Species-by-species distance matrix
+     * **Citation**: *Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.*
+    * **Generalized Unifrac**: Measures Generalized UniFrac
+     * Detects a wider range of biological changes compared to unweighted and weighted UniFrac
+     * **Citation**: *Chen, F., Bittinger, K., Charlson, E. S., Hoffmann, C., Lewis, J., Wu, G. D., Collman, R. G., Bushman, R. D., Li,H. (2012). “Associating microbiome composition with environmental covariates using generalized UniFrac distances.” Bioinformatics. 28 (16): 2106-2113.*
+    * **Hamming distance**: Measures Hamming distance
+     * Minimum number of substitutions required to change one group to the other
+     * **Citation**: *Hamming, R.W. (1950) “Error Detecting and Error Connecting Codes”. The Bell System Technical Journal. (29): 147-160.*
+    * **Jaccard similarity index**: Calculates Jaccard similarity index
+     * Fraction of unique features, regardless of abundance
+     * **Citation**: *Jaccard, P. (1908). “Nouvellesrecherches sur la distribution florale.” Bull. Soc. V and. Sci. Nat., (44):223-270.*
+    * **Kulczynski dissimilarity index**: Measures Kulczynski dissimilarity index
+     * Detects underlying ecological gradients
+     * Describing the dissimilarity between two communities.
+     * **Citation**: *Kulcynski, S. (1927). “Die Pflanzenassoziationen der Pieninen. Bulletin International de l’Academie Polonaise des Sciences et des Lettres”. Classe des Sciences Mathematiques et Naturelles. 57-203.*
+    * **Mahalanobis distance**: Calculates Mahalanobis distance
+     * How many standard deviations one point is away from the mean
+     * Unitless and scale-invariant
+     * Takes into account the correlations of the data set
+     * **Citation**: *Mahalanobis, Chandra, P. (1936). "On the generalised distance in statistics". Proceedings of the National Institute of Sciences of India. 2 (1): 49–55.*
+    * **Matching components**: Measures Matching components
+     * Compares indices under all possible situations
+     * **Citation**: *Janson, S., and Vegelius, J. (1981). “Measures of ecological association”. Oecologia. (49): 371–376.*
+    * **Rogers-tanimoto distance**: Measures Rogers-Tanimoto distance
+     * Allows the possibility of two species, which are quite different from each other, to both be similar to a third
+     * **Citation**: *Tanimoto, T. (1958). "An Elementary Mathematical theory of Classification and Prediction". New York: Internal IBM Technical Report.*
+    * **Russel-Rao coefficient**: Calculates Russell-Rao coefficients
+     * Equal weight is given to matches and non-matches
+     * **Citation**: *Russell, P.F. and Rao, T.R. (1940). “On habitat and association of species of anopheline larvae in south-eastern Madras”. J. Malaria Inst. India. (3): 153-178.*
+    * **Sokal-Michener coefficient**: Measures Sokal-Michener coefficient
+     * Proportion of matches between groups
+     * **Citation**: *Sokal, R.R. and Michener, C.D. (1958). “A statistical method for evaluating systematic relationships”. Univ. Kans. Sci. Bull. (38) 1409-1438.*
+    * **Sokal-Sneath Index**: Calculates Sokal-Sneath index
+     * Measure of species turnover
+     * **Citation**: *Sokal, R.R. and Sneath, P.H.A. (1963). “Principles of Numerical Taxonomy”. W. H. Freeman, San Francisco, California.*
+    * **Species-by-species Euclidean**: Measures Species-by-species Euclidean
+     * Standardized Euclidean distance between two groups
+     * Each coordinate difference between observations is scaled by dividing by the corresponding element of the standard deviation
+     * **Citation**: *Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.*
+    * **Squared Euclidean**: Measures squared Euclidean distance
+     * Place progressively greater weight on objects that are farther apart
+     * **Citation**: *Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.*
+    * **Unweighted unifrac**: Measures unweighted UniFrac
+     * Measures the fraction of unique branch length
+     * **Citation**: *Lozupone, C. and Knight, R. (2005). "UniFrac: a new phylogenetic method for comparing microbial communities." Applied and environmental microbiology 71 (12): 8228-8235.*
+    * **Weighted Minkowski metric**: Measures Weighted Minkowski metric
+     * Allows the use of the k-means-type paradigm to efficiently cluster large data sets
+     * **Citation**: *Chan, Y., Ching, W.K., Ng, M.K., Huang, J.Z. (2004). “An optimization algorithm for clustering using weighted dissimilarity measures”. Pattern Recognition. 37(5): 943-952.*
+    * **Weighted normalized UniFrac**: measures Weighted normalized UniFrac
+     * Takes into account abundance
+     * Normalization adjusts for varying root-to-tip distances.
+    * **Citation**: *Lozupone, C. A., Hamady, M; Kelley, S. T., Knight, R. (2007). "Quantitative and qualitative beta diversity measures lead to different insights into factors that structure microbial communities". Applied and Environmental Microbiology. 73(5): 1576–85.*
+   * **Weighted unnormalized UniFrac**: measures Weighted unnormalized UniFrac
+    * Takes into account abundance
+    * *Doesn't correct for unequal sampling effort or different evolutionary rates between taxa*
+    * **Citation**: *Lozupone, C. A., Hamady, M., Kelley, S. T., Knight, R. (2007). "Quantitative and qualitative beta diversity measures lead to different insights into factors that structure microbial communities". Applied and Environmental Microbiology. 73(5): 1576–85.*
+   * **Yule index**: Measures Yule index
+    * Measures biodiversity
+    * Determined by the number of species and the proportions between the numbers of those species.
+    * **Citation**: * Fisher, R.A., Corbert, A.S., Williams, C.B. (1943). “The Relationship Between the Number of Species and the Number of Individuals in a Random Sample of an Animal Population”. J. Animal Ecol. (12): 42-58.*
+  * **Number of jobs**: number of jobs running???
+  * **Phylogenetic tree** (required for some beta diversities, ie. UniFrac): The phylogenetic tree to be used with beta analyses (only include when necessary ie. UniFrac)
+   * currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
+  * **Citation**: *Whittaker, R. H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.*
