@@ -9,5 +9,5 @@ Create New Analysis Page
  * **Add**: Adds data to be analyzed 
   * More than 1 can be done at once to do large meta-data analysis
 * **Create New Analysis**: Creates the analysis using the data that has been added
-  * **Analysis Name** (required): Name for the analysis that will be done
-  * **Description** (optional): Description for the analysis that will be done
+ * **Analysis Name** (required): Name for the analysis that will be done
+ * **Description** (optional): Description for the analysis that will be done
