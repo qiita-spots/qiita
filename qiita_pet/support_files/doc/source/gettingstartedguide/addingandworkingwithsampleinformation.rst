@@ -119,5 +119,5 @@ Update Sample info
 * **Study Description Page**
   * Go to the sample information page by clicking the “Sample Information” 
   * Select “Upload information” and choose the new sample info file
-      * **This will not update on your analysis**
+      * *This will not update on your analysis*
       * But this will not affect your processing data since the metadata isn’t applied until analysis
