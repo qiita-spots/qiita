@@ -96,27 +96,27 @@ Upload Sample Information
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Upload Files Page**
-  * Drag your sample info file into the box to upload your files
-  * **Delete selected files**: delete a file with the selected boxes
-  * **Go to study description**: Link to the study description page
+ * Drag your sample info file into the box to upload your files
+ * **Delete selected files**: delete a file with the selected boxes
+ * **Go to study description**: Link to the study description page
 
 Viewing Sample Information
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Sample Information Page**
-  * **Sample Info**: Downloads the metadata onto your computer
-  * See different metadata values
+ * **Sample Info**: Downloads the metadata onto your computer
+ * See different metadata values
 * **Sample Summary Page**
-    * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
+ * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
 
 Update Sample info
 ^^^^^^^^^^^^^^^^^^
 
 * **Upload Files Page**
-  * Drag new sample info file into the box to upload the new file
-  * Go to study description by clicking the “Go to study description” 
+ * Drag new sample info file into the box to upload the new file
+ * Go to study description by clicking the “Go to study description” 
 * **Study Description Page**
-  * Go to the sample information page by clicking the “Sample Information” 
-  * Select “Upload information” and choose the new sample info file
-      * *This will not update on your analysis*
-      * But this will not affect your processing data since the metadata isn’t applied until analysis
+ * Go to the sample information page by clicking the “Sample Information” 
+ * Select “Upload information” and choose the new sample info file
+  * *This will not update on your analysis*
+  * But this will not affect your processing data since the metadata isn’t applied until analysis
