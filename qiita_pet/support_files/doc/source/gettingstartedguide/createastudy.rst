@@ -1,4 +1,4 @@
-Create a Study
+Creating a Study
 ==============
 * **Creating a New Study/Edit Study Page**
  * **Study Title** (required): Name of the experiment
