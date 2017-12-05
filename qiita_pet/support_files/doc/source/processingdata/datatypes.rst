@@ -36,11 +36,11 @@ FASTQ/FAST.gz
       * **Per-sample FASTQ defaults** (auto detect): error detection for the FASTQ from 1 sample
       * **Per-sample FASTQs; Phred offset: 33**: error detection for the FASTQ from 1 sample, uses Phred offset: 33 for measuring quality
       * **Per-sample FASTQs; Phred offset: 64**: error detection for the FASTQ from 1 sample, uses Phred offset: 64 for measuring quality
-      * *Citation for Golay Coding*: Golay, Marcel J. E. (1949). "Notes on Digital Coding". Proc. IRE. (37): 657. 
-      * *Citation for Golay 16S*: Caporaso, J., Lauber, C.L., Walter, W.A. Berg0Lyons, D., Huntley, J., Fierer, N., Owens, S.M., Betley, J., Fraser, L., Mauer, M., Gormley, N., Gilbert, J.A., Smith, G., Knight, R., (2012) “Ultra-high-throughput microbial community analysis on the Illumina HiSeq and MiSeq platforms”. ISME J.
-      * *Phred Citation*: Ewing, B., Hillier, L., Wendi, M.C., Green, P. (1998). (1998). "Base-calling of automated sequencer traces using phred. I. Accuracy assessment". Genome Research. 8 (3): 175–185. 
+      * **Citation for Golay Coding**: *Golay, Marcel J. E. (1949). "Notes on Digital Coding". Proc. IRE. (37): 657.*
+      * **Citation for Golay 16S**: *Caporaso, J., Lauber, C.L., Walter, W.A. Berg0Lyons, D., Huntley, J., Fierer, N., Owens, S.M., Betley, J., Fraser, L., Mauer, M., Gormley, N., Gilbert, J.A., Smith, G., Knight, R., (2012) “Ultra-high-throughput microbial community analysis on the Illumina HiSeq and MiSeq platforms”. ISME J.*
+      * **Phred Citation**: *Ewing, B., Hillier, L., Wendi, M.C., Green, P. (1998). (1998). "Base-calling of automated sequencer traces using phred. I. Accuracy assessment". Genome Research. 8 (3): 175–185.*
         * *https://en.wikipedia.org/wiki/FASTQ_format*
-      * *Demultiplexing*: https://en.wikipedia.org/wiki/Multiplexing
+      * **Demultiplexing**: **https://en.wikipedia.org/wiki/Multiplexing*
     * **Default Parameters Set**
       * **barcode type** (required): The type of barcode used
       * **max bad_run_length** (required): Max number of consecutive low quality base calls allowed before truncating a read
