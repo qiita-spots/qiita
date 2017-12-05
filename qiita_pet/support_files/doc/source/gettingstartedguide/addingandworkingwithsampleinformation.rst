@@ -1,7 +1,9 @@
 Adding and Working With Sample information
 ==========================================
+
 Creating the Sample Information File
 ------------------------------------
+
 Sample information file
 -----------------------
 The *sample information file* will define the biological context of each
