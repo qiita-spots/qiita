@@ -7,7 +7,7 @@ Create New Analysis Page
 * **Title**: Brings you to Study Information Page of that experiment
 * **Green Expand for Analysis Button**: Reveals the studies done on this data that can be used for further analysis
   * **Add**: Adds data to be analyzed 
-    * More than 1 can be done at once to do large meta-data analysis
+   * More than 1 can be done at once to do large meta-data analysis
 * **Create New Analysis**: Creates the analysis using the data that has been added
   * **Analysis Name** (required): Name for the analysis that will be done
   * **Description** (optional): Description for the analysis that will be done
