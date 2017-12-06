@@ -169,8 +169,11 @@
    * @param target string The name of the target div
    *
    **/
-  function load_new_artifact(target) {
+  function load_new_artifact(target, errors) {
     show_loading(target);
+    if (errors !== undefined && errors !== "") {
+      bootstrapAlert(errors.split('\n').join('<br/>'), "danger");
+    }
     // If it can be edited, show the page to upload a new artifact
     $.get("{% raw qiita_config.portal_dir %}/study/new_artifact/", {"study_id": {{study_id}}, "prep_template_id": {{prep_id}} })
       .done(function(data) {

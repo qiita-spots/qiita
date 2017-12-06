@@ -52,7 +52,9 @@ Vue.component('processing-graph', {
     destroy: function() {
       let vm = this;
       clearInterval(vm.interval);
-      vm.network.destroy();
+      if (vm.network !== undefined) {
+        vm.network.destroy();
+      }
     },
 
     /**
@@ -806,8 +808,10 @@ Vue.component('processing-graph', {
         $("#processing-job-div").html("");
         $("#processing-job-div").append("<p>Hang tight, we are processing your request: </p>");
         var nonCompletedJobs = 0;
+        var successJobs = 0;
         var totalJobs = 0;
         var contents = "";
+        var jobErrors = "";
         for(var jobid in data){
           totalJobs += 1;
           contents = contents + "<b> Job: " + jobid + "</b> Status: " + data[jobid]['status'];
@@ -817,14 +821,18 @@ Vue.component('processing-graph', {
           }
           if (data[jobid]['error']) {
             contents = contents + " Error: " + data[jobid]['error'] + "</br>";
+            jobErrors = jobErrors + data[jobid]['error'] + "</br>";
           }
           // Count the number of jobs that are not completed
-          if ((data[jobid]['status'] !== 'error') || (data[jobid]['status'] !== 'success')) {
+          if ((data[jobid]['status'] !== 'error') && (data[jobid]['status'] !== 'success')) {
             nonCompletedJobs += 1;
+          } else if (data[jobid]['status'] === 'success') {
+            successJobs += 1;
           }
         }
+
         // If no jobs are in a non completed state, use the callback
-        if (totalJobs === 0 || nonCompletedJobs === 0) {
+        if (totalJobs === 0 || nonCompletedJobs === 0 || totalJobs === successJobs) {
           vm.initialPoll = false;
           // There are no jobs being run
           // To avoid a possible race condition, check if a graph is now available
@@ -832,7 +840,7 @@ Vue.component('processing-graph', {
             if (data.nodes.length == 0) {
               // No graph is available - execute the callback
               $('#network-header-div').hide();
-              vm.noInitJobsCallback('processing-job-div');
+              vm.noInitJobsCallback('processing-job-div', jobErrors);
             } else {
               // A graph is available, update de current graph
               vm.updateGraph();
