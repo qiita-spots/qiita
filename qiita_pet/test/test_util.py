@@ -56,6 +56,18 @@ class TestUtil(TestCase):
         self.assertEqual(len(obs_edges), 10)
         self.assertIsNone(obs_wf)
 
+        # This graph only contains one node - check added to make sure that
+        # the graph gets extended accordingly
+        graph = Artifact(6).descendants_with_jobs
+        obs_nodes, obs_edges, obs_wf = get_network_nodes_edges(
+            graph, True, nodes=obs_nodes, edges=obs_edges)
+        self.assertEqual(len(obs_nodes), 12)
+        self.assertEqual(len([x for x in obs_nodes if x[0] == 'job']), 5)
+        self.assertEqual(len([x for x in obs_nodes if x[0] == 'artifact']), 7)
+        self.assertEqual(len([x for x in obs_nodes if x[0] == 'type']), 0)
+        self.assertEqual(len(obs_edges), 10)
+        self.assertIsNone(obs_wf)
+
 
 if __name__ == "__main__":
     main()

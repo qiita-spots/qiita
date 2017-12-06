@@ -9,13 +9,13 @@ var processingNetwork = null;
  * Show/hide the graph div and update GUI accordingly
  *
  **/
-function toggle_network_graph() {
+function toggleNetworkGraph() {
   if($("#processing-network-div").css('display') == 'none' ) {
     $("#processing-network-div").show();
-    $("#show-hide-network-btn").text("-");
+    $("#show-hide-network-btn").text("Hide");
   } else {
     $("#processing-network-div").hide();
-    $("#show-hide-network-btn").text("+");
+    $("#show-hide-network-btn").text("Show");
   }
 };
 
@@ -23,7 +23,8 @@ Vue.component('processing-graph', {
   template: '<div class="row">' +
               '<div class="row" id="network-header-div">' +
                 '<div class="col-md-12">' +
-                  '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggle_network_graph();">-</a><i> Processing network </i></h4>' +
+                  '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggleNetworkGraph();">Hide</a><i> Processing network </i></h4>' +
+                  'Graph interaction: <a class="btn btn-danger" id="interaction-btn">Disabled</a></br>' +
                   '<div id="run-btn-div"><a class="btn btn-success" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run workflow</a><span class="blinking-message">  Don\'t forget to hit "Run" once you are done with your workflow!</span></div>' +
                   '<b>Click circles for more information - This graph will refresh in <span id="countdown-span"></span> seconds</b>' +
                 '</div>' +
@@ -44,6 +45,60 @@ Vue.component('processing-graph', {
             '</div>',
   props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback', 'is-analysis-pipeline'],
   methods: {
+    /**
+     *
+     **/
+    resetZoom: function () {
+      let vm = this;
+      if (vm.network !== undefined && vm.network !== null) {
+        vm.network.fit();
+      }
+    },
+    /**
+     *
+     * Enables/Disables the interaction with the graph
+     **/
+    toggleGraphInteraction: function () {
+      let vm = this;
+      var options;
+      if ($('#interaction-btn').hasClass('btn-danger')) {
+        $('#interaction-btn').removeClass('btn-danger').addClass('btn-success').html('Enabled');
+        options = {interaction: { dragNodes: false,
+                                      dragView: true,
+                                      zoomView: true,
+                                      selectConnectedEdges: true,
+                                      navigationButtons: true,
+                                      keyboard: false}};
+      } else {
+        $('#interaction-btn').removeClass('btn-success').addClass('btn-danger').html('Disabled');
+        options = {interaction: { dragNodes: false,
+                                  dragView: false,
+                                  zoomView: false,
+                                  selectConnectedEdges: false,
+                                  navigationButtons: false,
+                                  keyboard: false}};
+      }
+      vm.network.setOptions(options);
+    },
+
+    /**
+     *
+     * Cleans up the current object
+     *
+     **/
+    destroy: function() {
+      let vm = this;
+      clearInterval(vm.interval);
+      if (vm.network !== undefined) {
+        vm.network.destroy();
+      }
+    },
+
+    /**
+     *
+     * Updates the status of those jobs in a non-terminal state
+     *
+     **/
     update_job_status: function() {
       let vm = this;
       var requests = [];
@@ -256,12 +311,12 @@ Vue.component('processing-graph', {
      * @param sel_artifacts_info object with the information of the currently selected artifacts
      * @param target DOM div to add the parameter gui
      * @param dflt_val object with the default value to use for the given parameter
-     * @param allow_change_optionals bool whether to allow changing the default optional parameters or not
      *
      * This function generates the needed GUI specific to the given parameter type
      *
      **/
-    loadParameterGUI: function(p_name, param_info, sel_artifacts_info, target, dflt_val, allow_change_optionals) {
+    loadParameterGUI: function(p_name, param_info, sel_artifacts_info, target, dflt_val) {
+      let vm = this;
       // Create the parameter interface
       var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
       // Replace the '_' by ' ' in the parameter name for readability
@@ -332,7 +387,7 @@ Vue.component('processing-graph', {
         else {
           $inp.val(dflt_val);
         }
-        if (!allow_change_optionals) {
+        if (!vm.isAnalysisPipeline) {
           $inp.prop('disabled', true);
         }
         $inp.addClass('optional-parameter');
@@ -547,10 +602,10 @@ Vue.component('processing-graph', {
         },
         interaction: {
           dragNodes: false,
-          dragView: true,
-          zoomView: true,
-          selectConnectedEdges: true,
-          navigationButtons: true,
+          dragView: false,
+          zoomView: false,
+          selectConnectedEdges: false,
+          navigationButtons: false,
           keyboard: false
         },
         groups: {
@@ -790,8 +845,10 @@ Vue.component('processing-graph', {
         $("#processing-job-div").html("");
         $("#processing-job-div").append("<p>Hang tight, we are processing your request: </p>");
         var nonCompletedJobs = 0;
+        var successJobs = 0;
         var totalJobs = 0;
         var contents = "";
+        var jobErrors = "";
         for(var jobid in data){
           totalJobs += 1;
           contents = contents + "<b> Job: " + jobid + "</b> Status: " + data[jobid]['status'];
@@ -801,14 +858,18 @@ Vue.component('processing-graph', {
           }
           if (data[jobid]['error']) {
             contents = contents + " Error: " + data[jobid]['error'] + "</br>";
+            jobErrors = jobErrors + data[jobid]['error'] + "</br>";
           }
           // Count the number of jobs that are not completed
-          if ((data[jobid]['status'] !== 'error') || (data[jobid]['status'] !== 'success')) {
+          if ((data[jobid]['status'] !== 'error') && (data[jobid]['status'] !== 'success')) {
             nonCompletedJobs += 1;
+          } else if (data[jobid]['status'] === 'success') {
+            successJobs += 1;
           }
         }
+
         // If no jobs are in a non completed state, use the callback
-        if (totalJobs === 0 || nonCompletedJobs === 0) {
+        if (totalJobs === 0 || nonCompletedJobs === 0 || totalJobs === successJobs) {
           vm.initialPoll = false;
           // There are no jobs being run
           // To avoid a possible race condition, check if a graph is now available
@@ -816,7 +877,7 @@ Vue.component('processing-graph', {
             if (data.nodes.length == 0) {
               // No graph is available - execute the callback
               $('#network-header-div').hide();
-              vm.noInitJobsCallback('processing-job-div');
+              vm.noInitJobsCallback('processing-job-div', jobErrors);
             } else {
               // A graph is available, update de current graph
               vm.updateGraph();
@@ -863,10 +924,12 @@ Vue.component('processing-graph', {
 
     $('#run-btn').on('click', function() { vm.runWorkflow(); });
     $('#run-btn-div').hide();
+
+    $('#interaction-btn').on('click', vm.toggleGraphInteraction);
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available
     vm.updateGraph();
-    setInterval(function() {
+    vm.interval = setInterval(function() {
       vm.countdownPoll -= 1;
       $('#countdown-span').html(vm.countdownPoll);
       if (vm.countdownPoll === 0) {
@@ -884,3 +947,17 @@ Vue.component('processing-graph', {
     }, 1000);
   }
 });
+
+
+/**
+ *
+ * Creates a new Vue object for the Processing Network in a safe way
+ *
+ *
+ **/
+function newProcessingNetworkVue(target) {
+  if (processingNetwork !== null) {
+    processingNetwork.$refs.procGraph.destroy();
+  }
+  processingNetwork = new Vue({el: target});
+}

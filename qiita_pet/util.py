@@ -209,6 +209,6 @@ def get_network_nodes_edges(graph, full_access, nodes=None, edges=None):
             raise ValueError('not valid node type: %s' % n[0])
         nodes.append((n[0], atype, n[1].id, name, status))
 
-    edges = [(n[1].id, m[1].id) for n, m in graph.edges()]
+    edges.extend([(n[1].id, m[1].id) for n, m in graph.edges()])
 
     return nodes, edges, workflow_id

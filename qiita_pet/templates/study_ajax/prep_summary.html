@@ -1,5 +1,4 @@
 {% from qiita_core.qiita_settings import qiita_config %}
-<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/networkVue.js"></script>
 <script type="text/javascript">
   /**
    *
@@ -170,8 +169,11 @@
    * @param target string The name of the target div
    *
    **/
-  function load_new_artifact(target) {
+  function load_new_artifact(target, errors) {
     show_loading(target);
+    if (errors !== undefined && errors !== "") {
+      bootstrapAlert(errors.split('\n').join('<br/>'), "danger");
+    }
     // If it can be edited, show the page to upload a new artifact
     $.get("{% raw qiita_config.portal_dir %}/study/new_artifact/", {"study_id": {{study_id}}, "prep_template_id": {{prep_id}} })
       .done(function(data) {
@@ -261,9 +263,11 @@
     }
 
     load_information_summary();
-    // If the template already have an artifact attached, load the
-    // artifact graph, otherwise load the page to add a new artifact
-    processingNetwork = new Vue({el: "#processing-graph-vue"});
+
+    // Initialize the graph object. If the template already have an artifact
+    // attached, it will load the artifact graph, otherwise it will load the
+    // page to add a new artifact
+    newProcessingNetworkVue("#processing-graph-vue");
 
     // If the file-selector select changes, check if we need to show the update button
     $("#file-selector").change(function ( event ) {
@@ -302,6 +306,10 @@
         }
     });
 
+    $('#processing-tab-btn').on('shown.bs.tab', function (e) {
+      processingNetwork.$refs.procGraph.resetZoom();
+    });
+
     {% if alert_type != 'success' and alert_message != '' %}
       bootstrapAlert(decodeURIComponent("{% raw alert_message %}").replace(/\+/g,' '), "{{alert_type}}");
     {% else %}
@@ -333,7 +341,7 @@
   <div class="col-md-12">
     <ul class="nav nav-pills">
       <li class="active"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
-      <li><a data-toggle="tab" href="#processing-graph-vue">Processing</a></li>
+      <li><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn">Processing</a></li>
     </ul>
 
     <div class="tab-content">
