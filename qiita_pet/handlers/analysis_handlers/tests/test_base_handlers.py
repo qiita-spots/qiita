@@ -131,6 +131,25 @@ class TestBaseHandlers(TestHandlerBase):
         response = self.post('/analysis/description/1/', {})
         self.assertEqual(response.code, 200)
 
+    def test_get_analysis_jobs_handler(self):
+        user = User('test@foo.bar')
+        dflt_analysis = user.default_analysis
+        dflt_analysis.add_samples(
+            {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                 '1.SKM9.640192', '1.SKM4.640180']})
+        new = Analysis.create(user, "newAnalysis", "A New Analysis",
+                              from_default=True)
+        response = self.get('/analysis/description/%s/jobs/' % new.id)
+        self.assertEqual(response.code, 200)
+
+        # There is only one job
+        job_id = new.jobs[0].id
+        obs = loads(response.body)
+        exp = {job_id: {'status': 'queued', 'step': None, 'error': ""}}
+        self.assertEqual(obs, exp)
+
+
+class TestAnalysisGraphHandler(TestHandlerBase):
     def test_get_analysis_graph_handler(self):
         response = self.get('/analysis/description/1/graph/')
         self.assertEqual(response.code, 200)
@@ -251,23 +270,6 @@ class TestBaseHandlers(TestHandlerBase):
         wf = ProcessingWorkflow.from_scratch(user, params)
         response = self.get('/analysis/description/%s/graph/' % new_id)
         self.assertEqual(response.code, 500)
-
-    def test_get_analysis_jobs_handler(self):
-        user = User('test@foo.bar')
-        dflt_analysis = user.default_analysis
-        dflt_analysis.add_samples(
-            {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                 '1.SKM9.640192', '1.SKM4.640180']})
-        new = Analysis.create(user, "newAnalysis", "A New Analysis",
-                              from_default=True)
-        response = self.get('/analysis/description/%s/jobs/' % new.id)
-        self.assertEqual(response.code, 200)
-
-        # There is only one job
-        job_id = new.jobs[0].id
-        obs = loads(response.body)
-        exp = {job_id: {'status': 'queued', 'step': None, 'error': ""}}
-        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':
