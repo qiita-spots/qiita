@@ -9,13 +9,13 @@ var processingNetwork = null;
  * Show/hide the graph div and update GUI accordingly
  *
  **/
-function toggle_network_graph() {
+function toggleNetworkGraph() {
   if($("#processing-network-div").css('display') == 'none' ) {
     $("#processing-network-div").show();
-    $("#show-hide-network-btn").text("-");
+    $("#show-hide-network-btn").text("Hide");
   } else {
     $("#processing-network-div").hide();
-    $("#show-hide-network-btn").text("+");
+    $("#show-hide-network-btn").text("Show");
   }
 };
 
@@ -23,7 +23,8 @@ Vue.component('processing-graph', {
   template: '<div class="row">' +
               '<div class="row" id="network-header-div">' +
                 '<div class="col-md-12">' +
-                  '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggle_network_graph();">-</a><i> Processing network </i></h4>' +
+                  '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggleNetworkGraph();">Hide</a><i> Processing network </i></h4>' +
+                  'Graph interaction: <a class="btn btn-danger" id="interaction-btn">Disabled</a></br>' +
                   '<div id="run-btn-div"><a class="btn btn-success" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run workflow</a><span class="blinking-message">  Don\'t forget to hit "Run" once you are done with your workflow!</span></div>' +
                   '<b>Click circles for more information - This graph will refresh in <span id="countdown-span"></span> seconds</b>' +
                 '</div>' +
@@ -44,6 +45,33 @@ Vue.component('processing-graph', {
             '</div>',
   props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback', 'is-analysis-pipeline'],
   methods: {
+    /**
+     *
+     * Enables/Disables the interaction with the graph
+     **/
+    toggleGraphInteraction: function () {
+      let vm = this;
+      var options;
+      if ($('#interaction-btn').hasClass('btn-danger')) {
+        $('#interaction-btn').removeClass('btn-danger').addClass('btn-success').html('Enabled');
+        options = {interaction: { dragNodes: false,
+                                      dragView: true,
+                                      zoomView: true,
+                                      selectConnectedEdges: true,
+                                      navigationButtons: true,
+                                      keyboard: false}};
+      } else {
+        $('#interaction-btn').removeClass('btn-success').addClass('btn-danger').html('Disabled');
+        options = {interaction: { dragNodes: false,
+                                  dragView: false,
+                                  zoomView: false,
+                                  selectConnectedEdges: false,
+                                  navigationButtons: false,
+                                  keyboard: false}};
+      }
+      vm.network.setOptions(options);
+    },
+
     /**
      *
      * Cleans up the current object
@@ -565,10 +593,10 @@ Vue.component('processing-graph', {
         },
         interaction: {
           dragNodes: false,
-          dragView: true,
-          zoomView: true,
-          selectConnectedEdges: true,
-          navigationButtons: true,
+          dragView: false,
+          zoomView: false,
+          selectConnectedEdges: false,
+          navigationButtons: false,
           keyboard: false
         },
         groups: {
@@ -887,6 +915,8 @@ Vue.component('processing-graph', {
 
     $('#run-btn').on('click', function() { vm.runWorkflow(); });
     $('#run-btn-div').hide();
+
+    $('#interaction-btn').on('click', vm.toggleGraphInteraction);
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available
     vm.updateGraph();
