@@ -263,9 +263,10 @@
     }
 
     load_information_summary();
-    // If the template already have an artifact attached, load the
-    // artifact graph, otherwise load the page to add a new artifact
-    // processingNetwork = new Vue({el: "#processing-graph-vue"});
+
+    // Initialize the graph object. If the template already have an artifact
+    // attached, it will load the artifact graph, otherwise it will load the
+    // page to add a new artifact
     newProcessingNetworkVue("#processing-graph-vue");
 
     // If the file-selector select changes, check if we need to show the update button
