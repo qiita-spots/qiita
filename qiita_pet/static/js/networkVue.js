@@ -311,12 +311,12 @@ Vue.component('processing-graph', {
      * @param sel_artifacts_info object with the information of the currently selected artifacts
      * @param target DOM div to add the parameter gui
      * @param dflt_val object with the default value to use for the given parameter
-     * @param allow_change_optionals bool whether to allow changing the default optional parameters or not
      *
      * This function generates the needed GUI specific to the given parameter type
      *
      **/
-    loadParameterGUI: function(p_name, param_info, sel_artifacts_info, target, dflt_val, allow_change_optionals) {
+    loadParameterGUI: function(p_name, param_info, sel_artifacts_info, target, dflt_val) {
+      let vm = this;
       // Create the parameter interface
       var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
       // Replace the '_' by ' ' in the parameter name for readability
@@ -387,7 +387,7 @@ Vue.component('processing-graph', {
         else {
           $inp.val(dflt_val);
         }
-        if (!allow_change_optionals) {
+        if (!vm.isAnalysisPipeline) {
           $inp.prop('disabled', true);
         }
         $inp.addClass('optional-parameter');
