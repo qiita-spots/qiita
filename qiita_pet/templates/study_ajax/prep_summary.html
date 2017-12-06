@@ -305,11 +305,8 @@
         }
     });
 
-    $("#processing-tab-btn").on('click', function () {
-      // For some reason the graph is not centering on the view. If I call
-      // resetZoom directly (without a timeout) it doesn't center it due to
-      // a delay on the drawing.
-      setTimeout(processingNetwork.$refs.procGraph.resetZoom, 500);
+    $('#processing-tab-btn').on('shown.bs.tab', function (e) {
+      processingNetwork.$refs.procGraph.resetZoom();
     });
 
     {% if alert_type != 'success' and alert_message != '' %}
