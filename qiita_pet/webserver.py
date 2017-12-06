@@ -29,24 +29,28 @@ from qiita_pet.handlers.analysis_handlers import (
     AnalysisJobsHandler, ShareAnalysisAJAX)
 from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateAJAX,
-    StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
-    CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
-    VAMPSHandler, StudyTags, StudyGetTags,
+    # StudyEditHandler,
+    ListStudiesHandler, SearchStudiesAJAX,  # EBISubmitHandler,
+    CreateStudyAJAX, ShareStudyAJAX,  # StudyApprovalList,
+    ArtifactGraphAJAX, VAMPSHandler, StudyTags, StudyGetTags,
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX, StudyDeleteAjax,
-    ArtifactAdminAJAX, NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
+    # ArtifactAdminAJAX, NewPrepTemplateAjax,
+    DataTypesMenuAJAX, StudyFilesAJAX,
     ArtifactGetSamples, ArtifactGetInfo, WorkflowHandler,
     WorkflowRunHandler, JobAJAX, AutocompleteHandler)
 from qiita_pet.handlers.artifact_handlers import (
     ArtifactSummaryAJAX, ArtifactAJAX, ArtifactSummaryHandler)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
-from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
-from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
+# from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
+# from qiita_pet.handlers.upload import UploadFileHandler,
+# StudyUploadFileHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import (
     DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease,
-    DownloadRawData, DownloadEBISampleAccessions, DownloadEBIPrepAccessions,
+    # DownloadRawData,
+    DownloadEBISampleAccessions, DownloadEBIPrepAccessions,
     DownloadUpload)
 from qiita_pet.handlers.prep_template import (
     PrepTemplateHandler, PrepTemplateGraphHandler, PrepTemplateJobHandler)
