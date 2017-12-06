@@ -305,6 +305,13 @@
         }
     });
 
+    $("#processing-tab-btn").on('click', function () {
+      // For some reason the graph is not centering on the view. If I call
+      // resetZoom directly (without a timeout) it doesn't center it due to
+      // a delay on the drawing.
+      setTimeout(processingNetwork.$refs.procGraph.resetZoom, 500);
+    });
+
     {% if alert_type != 'success' and alert_message != '' %}
       bootstrapAlert(decodeURIComponent("{% raw alert_message %}").replace(/\+/g,' '), "{{alert_type}}");
     {% else %}
@@ -336,7 +343,7 @@
   <div class="col-md-12">
     <ul class="nav nav-pills">
       <li class="active"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
-      <li><a data-toggle="tab" href="#processing-graph-vue">Processing</a></li>
+      <li><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn">Processing</a></li>
     </ul>
 
     <div class="tab-content">

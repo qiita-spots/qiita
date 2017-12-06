@@ -47,6 +47,15 @@ Vue.component('processing-graph', {
   methods: {
     /**
      *
+     **/
+    resetZoom: function () {
+      let vm = this;
+      if (vm.network !== undefined && vm.network !== null) {
+        vm.network.fit();
+      }
+    },
+    /**
+     *
      * Enables/Disables the interaction with the graph
      **/
     toggleGraphInteraction: function () {
