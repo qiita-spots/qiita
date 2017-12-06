@@ -11,7 +11,7 @@ from datetime import datetime
 from os.path import join
 from os import close
 from tempfile import mkstemp
-from json import dumps
+from json import dumps, loads
 from time import sleep
 
 import networkx as nx
@@ -478,14 +478,48 @@ class ProcessingJobTest(TestCase):
              qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
     def test_complete_success(self):
+        # This first part of the test is just to test that by default the
+        # naming of the output artifact will be the name of the output
+        fd, fp = mkstemp(suffix='_table.biom')
+        self._clean_up_files.append(fp)
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+        artifacts_data = {'demultiplexed': {'filepaths': [(fp, 'biom')],
+                                            'artifact_type': 'BIOM'}}
+        job = _create_job()
+        job._set_status('running')
+        job.complete(True, artifacts_data=artifacts_data)
+        self._wait_for_job(job)
+        # Retrieve the job that is performing the validation:
+        val_job = qdb.processing_job.ProcessingJob(job.step.rsplit(" ", 1)[-1])
+        # Test the the output artifact is going to be named based on the
+        # input parameters
+        self.assertEqual(
+            loads(val_job.parameters.values['provenance'])['name'],
+            "demultiplexed")
+
+        # To test that the naming of the output artifact is based on the
+        # parameters that the command is indicating, we need to update the
+        # parameter information of the command - since the ones existing
+        # in the database currently do not require using any input parameter
+        # to name the output artifact
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.command_parameter
+                     SET name_order = %s
+                     WHERE command_parameter_id = %s"""
+            # Hard-coded values; 19 -> barcode_type, 20 -> max_barcode_errors
+            qdb.sql_connection.TRN.add(sql, [[1, 19], [2, 20]], many=True)
+            qdb.sql_connection.TRN.execute()
+
         fd, fp = mkstemp(suffix='_table.biom')
         self._clean_up_files.append(fp)
         close(fd)
         with open(fp, 'w') as f:
             f.write('\n')
 
-        artifacts_data = {'OTU table': {'filepaths': [(fp, 'biom')],
-                                        'artifact_type': 'BIOM'}}
+        artifacts_data = {'demultiplexed': {'filepaths': [(fp, 'biom')],
+                                            'artifact_type': 'BIOM'}}
 
         job = _create_job()
         job._set_status('running')
@@ -508,6 +542,14 @@ class ProcessingJobTest(TestCase):
         # the release validators job. Hence the +2
         self.assertEqual(len(obsjobs), len(alljobs) + 2)
         self._wait_for_job(job)
+
+        # Retrieve the job that is performing the validation:
+        val_job = qdb.processing_job.ProcessingJob(job.step.rsplit(" ", 1)[-1])
+        # Test the the output artifact is going to be named based on the
+        # input parameters
+        self.assertEqual(
+            loads(val_job.parameters.values['provenance'])['name'],
+            "demultiplexed golay_12 1.5")
 
     def test_complete_failure(self):
         job = _create_job()
@@ -673,16 +715,22 @@ class ProcessingJobTest(TestCase):
         self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
         self.assertEqual(artifact.name, 'outArtifact')
 
-    def test_processing_job_worflow(self):
+    def test_processing_job_workflow(self):
         # testing None
         job = qdb.processing_job.ProcessingJob(
             "063e553b-327c-4818-ab4a-adfe58e49860")
-        self.assertIsNone(job.processing_job_worflow)
+        self.assertIsNone(job.processing_job_workflow)
 
         # testing actual workflow
         job = qdb.processing_job.ProcessingJob(
             "b72369f9-a886-4193-8d3d-f7b504168e75")
-        self.assertEqual(job.processing_job_worflow,
+        self.assertEqual(job.processing_job_workflow,
+                         qdb.processing_job.ProcessingWorkflow(1))
+
+        # testing child job from workflow
+        job = qdb.processing_job.ProcessingJob(
+            'd19f76ee-274e-4c1b-b3a2-a12d73507c55')
+        self.assertEqual(job.processing_job_workflow,
                          qdb.processing_job.ProcessingWorkflow(1))
 
 
@@ -763,6 +811,8 @@ class ProcessingWorkflowTests(TestCase):
             'sortmerna_max_pos': 10000,
             'threads': 1}
         self.assertEqual(obs_params, exp_params)
+        exp_pending = {obs_src.id: {'input_data': 'demultiplexed'}}
+        self.assertEqual(obs_dst.pending, exp_pending)
 
     def test_from_default_workflow_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError) as err:

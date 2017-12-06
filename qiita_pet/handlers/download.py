@@ -18,7 +18,7 @@ from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
-                           get_filepath_information)
+                           get_filepath_information, get_mountpoint)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -300,3 +300,27 @@ class DownloadEBIPrepAccessions(BaseHandlerDownload):
         self._generate_files(
             'experiment_accession', pt.ebi_experiment_accessions,
             'ebi_experiment_accessions_study_%s_prep_%s.tsv' % (sid, pid))
+
+
+class DownloadUpload(BaseHandlerDownload):
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def get(self, path):
+        user = self.current_user
+        if user.level != 'admin':
+            raise HTTPError(403, "%s doesn't have access to download uploaded "
+                            "files" % user.email)
+
+        # [0] because it returns a list
+        # [1] we only need the filepath
+        filepath = get_mountpoint("uploads")[0][1][
+            len(get_db_files_base_dir()):]
+        relpath = join(filepath, path)
+
+        self._write_nginx_placeholder_file(relpath)
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Transfer-Encoding', 'binary')
+        self.set_header('X-Accel-Redirect', '/protected/' + relpath)
+        self._set_nginx_headers(basename(relpath))
+        self.finish()

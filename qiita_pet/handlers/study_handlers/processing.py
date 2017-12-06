@@ -57,8 +57,13 @@ class WorkflowHandler(BaseHandler):
         req_value = self.get_argument('value', None)
         req_from = self.get_argument('from', None)
 
-        self.write(workflow_handler_patch_req(
-            req_op, req_path, req_value, req_from))
+        try:
+            res = workflow_handler_patch_req(
+                req_op, req_path, req_value, req_from)
+            self.write(res)
+        except Exception as e:
+            self.write({'status': 'error',
+                        'message': str(e)})
 
 
 class JobAJAX(BaseHandler):

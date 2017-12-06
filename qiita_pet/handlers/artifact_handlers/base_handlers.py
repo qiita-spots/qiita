@@ -138,14 +138,7 @@ def artifact_summary_get_request(user, artifact_id):
         'artifact id: {0}?\')) {{ set_artifact_visibility(\'%s\', {0}) }}" '
         'class="btn btn-primary btn-sm">%s</button>').format(artifact_id)
 
-    if analysis:
-        # If the artifact is part of an analysis, we don't require admin
-        # approval, and the artifact can be made public only if all the
-        # artifacts used to create the initial artifact set are public
-        if analysis.can_be_publicized and visibility != 'public':
-            buttons.append(btn_base % ('make public', 'public', 'Make public'))
-
-    else:
+    if not analysis:
         # If the artifact is part of a study, the buttons shown depend in
         # multiple factors (see each if statement for an explanation of those)
         if qiita_config.require_approval:

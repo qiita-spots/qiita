@@ -14,12 +14,16 @@ from os import remove, makedirs
 from os.path import isfile, exists, relpath
 from shutil import rmtree
 from functools import partial
+from collections import namedtuple
 
 import networkx as nx
 
 import qiita_db as qdb
 
 from qiita_core.qiita_settings import qiita_config
+
+
+TypeNode = namedtuple('TypeNode', ['id', 'job_id', 'name', 'type'])
 
 
 class Artifact(qdb.base.QiitaObject):
@@ -641,9 +645,6 @@ class Artifact(qdb.base.QiitaObject):
         ValueError
             If `value` contains more than 35 chars
         """
-        if len(value) > 35:
-            raise ValueError("The name of an artifact cannot exceed 35 chars. "
-                             "Current length: %d" % len(value))
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.artifact
                      SET name = %s
@@ -1111,27 +1112,106 @@ class Artifact(qdb.base.QiitaObject):
         networkx.DiGraph
             The descendants of the artifact
         """
+        def _add_edge(edges, src, dest):
+            """Aux function to add the edge (src, dest) to edges"""
+            edge = (src, dest)
+            if edge not in edges:
+                edges.add(edge)
+
         with qdb.sql_connection.TRN:
-            sql = """SELECT *
+            sql = """SELECT processing_job_id, input_id, output_id
                      FROM qiita.artifact_descendants_with_jobs(%s)"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            edges = qdb.sql_connection.TRN.execute_fetchindex()
+            sql_edges = qdb.sql_connection.TRN.execute_fetchindex()
 
-        lineage = nx.DiGraph()
-        if edges:
+            lineage = nx.DiGraph()
+            edges = set()
             nodes = {}
-            for jid, pid, cid in edges:
-                if jid not in nodes:
-                    nodes[jid] = ('job', qdb.processing_job.ProcessingJob(jid))
-                if pid not in nodes:
-                    nodes[pid] = ('artifact', qdb.artifact.Artifact(pid))
-                if cid not in nodes:
-                    nodes[cid] = ('artifact', qdb.artifact.Artifact(cid))
+            if sql_edges:
+                for jid, pid, cid in sql_edges:
+                    if jid not in nodes:
+                        nodes[jid] = ('job',
+                                      qdb.processing_job.ProcessingJob(jid))
+                    if pid not in nodes:
+                        nodes[pid] = ('artifact', qdb.artifact.Artifact(pid))
+                    if cid not in nodes:
+                        nodes[cid] = ('artifact', qdb.artifact.Artifact(cid))
+                    edges.add((nodes[pid], nodes[jid]))
+                    edges.add((nodes[jid], nodes[cid]))
+            else:
+                nodes[self.id] = ('artifact', self)
+                lineage.add_node(nodes[self.id])
 
-                lineage.add_edge(nodes[pid], nodes[jid])
-                lineage.add_edge(nodes[jid], nodes[cid])
-        else:
-            lineage.add_node(('artifact', self))
+            # The code above returns all the jobs that have been successfully
+            # executed. We need to add all the jobs that are in all the other
+            # status. Approach: Loop over all the artifacts and add all the
+            # jobs that have been attached to them.
+            visited = set()
+            queue = nodes.keys()
+            while queue:
+                current = queue.pop(0)
+                if current not in visited:
+                    visited.add(current)
+                    n_type, n_obj = nodes[current]
+                    if n_type == 'artifact':
+                        # Add all the jobs to the queue
+                        for job in n_obj.jobs():
+                            queue.append(job.id)
+                            if job.id not in nodes:
+                                nodes[job.id] = ('job', job)
+
+                    elif n_type == 'job':
+                        jstatus = n_obj.status
+                        # If the job is in success we don't need to do anything
+                        # else since it would've been added by the code above
+                        if jstatus != 'success':
+                            # Connect the job with his input artifacts, the
+                            # input artifacts may or may not exist yet, so we
+                            # need to check both the input_artifacts and the
+                            # pending properties
+                            for in_art in n_obj.input_artifacts:
+                                _add_edge(edges, nodes[in_art.id],
+                                          nodes[n_obj.id])
+
+                            pending = n_obj.pending
+                            for pred_id in pending:
+                                for pname in pending[pred_id]:
+                                    in_node_id = '%s:%s' % (
+                                        pred_id, pending[pred_id][pname])
+                                    _add_edge(edges, nodes[in_node_id],
+                                              nodes[n_obj.id])
+
+                            if jstatus != 'error':
+                                # If the job is not errored, we can add the
+                                # future outputs and the children jobs to
+                                # the graph.
+
+                                # Add all the job outputs as new nodes
+                                for o_name, o_type in n_obj.command.outputs:
+                                    node_id = '%s:%s' % (n_obj.id, o_name)
+                                    node = TypeNode(
+                                        id=node_id, job_id=n_obj.id,
+                                        name=o_name, type=o_type)
+                                    queue.append(node_id)
+                                    if node_id not in nodes:
+                                        nodes[node_id] = ('type', node)
+
+                                # Add all his children jobs to the queue
+                                for cjob in n_obj.children:
+                                    queue.append(cjob.id)
+                                    if cjob.id not in nodes:
+                                        nodes[cjob.id] = ('job', cjob)
+                    elif n_type == 'type':
+                        # Connect this 'future artifact' with the job that will
+                        # generate it
+                        _add_edge(edges, nodes[n_obj.job_id], nodes[current])
+                    else:
+                        raise ValueError('Unrecognized type: %s' % n_type)
+
+        # Add all edges to the lineage graph - adding the edges creates the
+        # nodes in networkx
+        for source, dest in edges:
+            lineage.add_edge(source, dest)
 
         return lineage
 
@@ -1229,7 +1309,7 @@ class Artifact(qdb.base.QiitaObject):
             res = qdb.sql_connection.TRN.execute_fetchindex()
             return qdb.analysis.Analysis(res[0][0]) if res else None
 
-    def jobs(self, cmd=None, status=None):
+    def jobs(self, cmd=None, status=None, show_hidden=False):
         """Jobs that used this artifact as input
 
         Parameters
@@ -1238,6 +1318,8 @@ class Artifact(qdb.base.QiitaObject):
             If provided, only jobs that executed this command will be returned
         status : str, optional
             If provided, only jobs in this status will be returned
+        show_hidden : bool, optional
+            If true, return also the "hidden" jobs
 
         Returns
         -------
@@ -1260,6 +1342,10 @@ class Artifact(qdb.base.QiitaObject):
             if status:
                 sql = "{} AND processing_job_status = %s".format(sql)
                 sql_args.append(status)
+
+            if not show_hidden:
+                sql = "{} AND hidden = %s".format(sql)
+                sql_args.append(False)
 
             qdb.sql_connection.TRN.add(sql, sql_args)
             return [qdb.processing_job.ProcessingJob(jid)

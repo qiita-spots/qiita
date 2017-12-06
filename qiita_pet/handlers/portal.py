@@ -66,7 +66,7 @@ class StudyPortalHandler(PortalEditBase):
 
         try:
             portal = Portal(portal)
-        except:
+        except Exception:
             raise HTTPError(400, "Not valid portal: %s" % portal)
         try:
             with warnings.catch_warnings(record=True) as warns:

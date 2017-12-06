@@ -26,19 +26,24 @@ with TRN:
                 GROUP BY table_name"""
     # note that we are looking for those columns with duplicated names in
     # the headers
-    TRN.add(sql, [tuple(
-        set(PrepTemplate.metadata_headers()) &
-        set(SampleTemplate.metadata_headers()))])
-    overlapping = dict(TRN.execute_fetchindex())
+    headers = set(PrepTemplate.metadata_headers()) & \
+        set(SampleTemplate.metadata_headers())
 
-# finding actual duplicates
-for table_name, cols in viewitems(overlapping):
-    # leaving print so when we patch in the main system we know that
-    # nothing was renamed or deal with that
-    print table_name
-    with TRN:
-        for c in cols:
-            sql = 'ALTER TABLE qiita.%s RENAME COLUMN %s TO %s_renamed' % (
-                table_name, c, c)
-            TRN.add(sql)
-        TRN.execute()
+    if headers:
+        TRN.add(sql, [tuple(headers)])
+        overlapping = dict(TRN.execute_fetchindex())
+    else:
+        overlapping = None
+
+if overlapping is not None:
+    # finding actual duplicates
+    for table_name, cols in viewitems(overlapping):
+        # leaving print so when we patch in the main system we know that
+        # nothing was renamed or deal with that
+        print table_name
+        with TRN:
+            for c in cols:
+                sql = 'ALTER TABLE qiita.%s RENAME COLUMN %s TO %s_renamed' % (
+                    table_name, c, c)
+                TRN.add(sql)
+            TRN.execute()

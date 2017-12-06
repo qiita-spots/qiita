@@ -274,14 +274,13 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     remaining = []
     message = []
 
-    uploaded = get_files_from_uploads_folders(study_id)
     pt = PrepTemplate(prep_template_id)
-
     if pt.study_id != study_id:
         raise IncompetentQiitaDeveloperError(
             "The requested prep id (%d) doesn't belong to the study "
             "(%d)" % (pt.study_id, study_id))
 
+    uploaded = get_files_from_uploads_folders(study_id)
     pt = pt.to_dataframe()
     ftypes_if = (ft.startswith('raw_') for ft, _ in supp_file_types
                  if ft != 'raw_sff')
@@ -292,8 +291,14 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
         # 10003
         prep_prefixes = sorted(prep_prefixes, key=len, reverse=True)
         # group files by prefix
-        sfiles = {p: [f for _, f in uploaded if f.startswith(p)]
-                  for p in prep_prefixes}
+        sfiles = defaultdict(list)
+        for p in prep_prefixes:
+            to_remove = []
+            for fid, f in uploaded:
+                if f.startswith(p):
+                    sfiles[p].append(f)
+                    to_remove.append((fid, f))
+            uploaded = [x for x in uploaded if x not in to_remove]
         inuse = [y for x in sfiles.values() for y in x]
         remaining.extend([f for _, f in uploaded if f not in inuse])
         supp_file_types_len = len(supp_file_types)

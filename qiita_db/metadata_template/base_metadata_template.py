@@ -546,6 +546,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # Get some useful information from the metadata template
             sample_ids = md_template.index.tolist()
             headers = sorted(md_template.keys().tolist())
+            if not headers:
+                raise ValueError("Your info file only has sample_name")
 
             # Insert values on template_sample table
             values = [[obj_id, s_id] for s_id in sample_ids]

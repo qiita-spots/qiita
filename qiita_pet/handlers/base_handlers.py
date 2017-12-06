@@ -40,7 +40,7 @@ class BaseHandler(RequestHandler):
         if user:
             try:
                 is_admin = user.level == 'admin'
-            except:
+            except Exception:
                 # Any issue with this check leaves default as not admin
                 pass
 

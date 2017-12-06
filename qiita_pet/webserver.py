@@ -31,15 +31,14 @@ from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateAJAX,
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
-    VAMPSHandler, PrepTemplateGraphAJAX, StudyTags, StudyGetTags,
+    VAMPSHandler, StudyTags, StudyGetTags,
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX, StudyDeleteAjax,
     ArtifactAdminAJAX, NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
     ArtifactGetSamples, ArtifactGetInfo, WorkflowHandler,
     WorkflowRunHandler, JobAJAX, AutocompleteHandler)
 from qiita_pet.handlers.artifact_handlers import (
-    ArtifactSummaryAJAX, ArtifactAJAX, ArtifactSummaryHandler,
-    ProcessArtifactHandler)
+    ArtifactSummaryAJAX, ArtifactAJAX, ArtifactSummaryHandler)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
@@ -47,8 +46,10 @@ from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import (
     DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease,
-    DownloadRawData, DownloadEBISampleAccessions, DownloadEBIPrepAccessions)
-from qiita_pet.handlers.prep_template import PrepTemplateHandler
+    DownloadRawData, DownloadEBISampleAccessions, DownloadEBIPrepAccessions,
+    DownloadUpload)
+from qiita_pet.handlers.prep_template import (
+    PrepTemplateHandler, PrepTemplateGraphHandler, PrepTemplateJobHandler)
 from qiita_pet.handlers.ontology import OntologyHandler
 from qiita_db.handlers.processing_job import (
     JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
@@ -136,15 +137,15 @@ class Application(tornado.web.Application):
             # (r"/study/new_prep_template/", NewPrepTemplateAjax),
             (r"/study/tags/(.*)", StudyTags),
             (r"/study/get_tags/", StudyGetTags),
-            (r"/prep/graph/", PrepTemplateGraphAJAX),
             # Artifact handlers
             (r"/artifact/graph/", ArtifactGraphAJAX),
             (r"/artifact/(.*)/summary/", ArtifactSummaryAJAX),
             (r"/artifact/html_summary/(.*)", ArtifactSummaryHandler,
              {"path": qiita_config.base_data_dir}),
-            (r"/artifact/(.*)/process/", ProcessArtifactHandler),
             (r"/artifact/(.*)/", ArtifactAJAX),
             (r"/prep_template/", PrepTemplateHandler),
+            (r"/prep_template/(.*)/graph/", PrepTemplateGraphHandler),
+            (r"/prep_template/(.*)/jobs/", PrepTemplateJobHandler),
             (r"/ontology/", OntologyHandler),
             # ORDER FOR /study/description/ SUBPAGES HERE MATTERS.
             # Same reasoning as below. /study/description/(.*) should be last.
@@ -167,6 +168,7 @@ class Application(tornado.web.Application):
                 DownloadEBISampleAccessions),
             (r"/download_ebi_accessions/experiments/(.*)",
                 DownloadEBIPrepAccessions),
+            (r"/download_upload/(.*)", DownloadUpload),
             (r"/release/download/(.*)", DownloadRelease),
             (r"/vamps/(.*)", VAMPSHandler),
             (r"/redbiom/(.*)", RedbiomPublicSearch),

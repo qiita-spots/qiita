@@ -8,7 +8,5 @@
 
 from .base_handlers import (ArtifactSummaryAJAX, ArtifactAJAX,
                             ArtifactSummaryHandler)
-from .process_handlers import ProcessArtifactHandler
 
-__all__ = ['ArtifactSummaryAJAX', 'ArtifactAJAX', 'ArtifactSummaryHandler',
-           'ProcessArtifactHandler']
+__all__ = ['ArtifactSummaryAJAX', 'ArtifactAJAX', 'ArtifactSummaryHandler']

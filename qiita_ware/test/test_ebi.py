@@ -730,7 +730,7 @@ class TestEBISubmission(TestCase):
         # this should fail due to missing columns
         with self.assertRaises(EBISubmissionError) as err:
             ebi_submission = EBISubmission(artifact.id, 'ADD')
-        self.assertIn('Missing column in the prep template: barcode, primer',
+        self.assertIn('Missing column in the prep template: barcode',
                       str(err.exception))
         metadata_dict = {
             'SKB2.640194': {'barcode': 'AAA', 'primer': 'CCCC'},

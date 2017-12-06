@@ -96,7 +96,7 @@ def _add_ontology_data():
         url = 'ftp://ftp.microbio.me/pub/qiita/qiita_ontoandvocab.sql.gz'
         try:
             urlretrieve(url, fp)
-        except:
+        except Exception:
             raise IOError("Error: Could not fetch ontologies file from %s" %
                           url)
 
@@ -141,7 +141,7 @@ def _download_reference_files():
         else:
             try:
                 urlretrieve(url, local_fp)
-            except:
+            except Exception:
                 raise IOError("Error: Could not fetch %s file from %s" %
                               (file_type, url))
     with qdb.sql_connection.TRN:

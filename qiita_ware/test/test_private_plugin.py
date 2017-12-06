@@ -30,6 +30,7 @@ from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.util import get_count
 from qiita_db.logger import LogEntry
 from qiita_db.sql_connection import TRN
+from qiita_db.analysis import Analysis
 from qiita_ware.private_plugin import private_task
 
 
@@ -432,6 +433,17 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
         # making sure the study doesn't exist
         with self.assertRaises(QiitaDBUnknownIDError):
             Study(new_study.id)
+
+
+@qiita_test_checker()
+class TestPrivatePluginDeleteAnalysis(BaseTestPrivatePlugin):
+    def test_delete_analysis(self):
+        # as samples have been submitted to EBI, this will fail
+        job = self._create_job('delete_analysis', {'analysis_id': 1})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        with self.assertRaises(QiitaDBUnknownIDError):
+            Analysis(1)
 
 
 if __name__ == '__main__':
