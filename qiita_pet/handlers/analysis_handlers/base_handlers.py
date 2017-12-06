@@ -115,6 +115,11 @@ def analyisis_graph_handler_get_request(analysis_id, user):
     Returns
     -------
     dict with the graph information
+
+    Raises
+    ------
+    ValueError
+        If there is more than one workflow in a single analysis
     """
     analysis = Analysis(analysis_id)
     # Check if the user actually has access to the analysis
@@ -133,8 +138,14 @@ def analyisis_graph_handler_get_request(analysis_id, user):
     for a in analysis.artifacts:
         if a.processing_parameters is None:
             g = a.descendants_with_jobs
-            nodes, edges, wf_id = get_network_nodes_edges(
+            nodes, edges, a_wf_id = get_network_nodes_edges(
                 g, full_access, nodes=nodes, edges=edges)
+
+            if wf_id is None:
+                wf_id = a_wf_id
+            elif a_wf_id is not None and wf_id != a_wf_id:
+                # This should never happen, but worth having a useful message
+                raise ValueError('More than one workflow in a single analysis')
 
     return {'edges': edges, 'nodes': nodes, 'workflow': wf_id}
 
