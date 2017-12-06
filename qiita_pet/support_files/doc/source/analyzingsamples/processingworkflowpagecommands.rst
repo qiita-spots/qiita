@@ -8,7 +8,7 @@ Processing Workflow Page: Commands
   *  **BIOM table** (required): the feature table containing the samples for which features should be rarefied
   *  **Parameter set**: the parameters at which the rarefication is run
   *  **Sampling depth** (required): total frequency that each sample should be rarefied to, samples where sum of frequencies is less than sampling depth will not be included in resulting table
-  *  **Citation**: *Heck, K.L., Van Belle, G., Simberloff, D. (1975). “Explicit Calculatino of the Rarefaction Diversity Measurement and the Determination of Sufficient Sample Size”. Ecology. 56(6): 1459-1461*
+  *  **Citation**: *Heck, K.L., Van Belle, G., Simberloff, D. (1975). “Explicit Calculation of the Rarefaction Diversity Measurement and the Determination of Sufficient Sample Size”. Ecology. 56(6): 1459-1461*
 * **Commands from Rarefied Data**:
  * **Filter samples by metadata**: Filters samples from an OTU table on the basis of the number of observations in that sample, or on the basis of sample metadata
   * **BIOM table** (required): the feature table containing the samples for which features should be filtered
