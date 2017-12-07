@@ -24,16 +24,15 @@ Processing Workflow Page: Commands
   * **BIOM table** (required): the feature table containing the samples for which alpha diversity should be computed
    * **Diversity metric** (required): The alpha diversity metric to be run
     * **Abundance-based Coverage Estimator (ACE) metric**: Calculates the ACE metric
-     * Inflates the number of rare taxa and inflates again the number of taxa with abundance 1.
-     * Estimates species richness
+     * Estimates species richness using a correction factor
      * **Citation**: *Chao, A. and Lee, S.M.. (1992). “Estimating the number of classes via sample coverage”. Journal of the American Statistical Association. (87): 210-217.*
     * **Berger-Parker Dominance Index**: Calculates Berger-Parker dominance index
-     * Measure of the numerical importance of the most abundant species
+     * The relative richness of the abundant species 
      * **Citation**: *Berger, W.H. and F.L. Parker (1970). “Diversity of planktonic Foraminifera in deep sea sediments”. Science. (168): 1345-1347.*
     * **Brillouin’s index**: Calculates Brillouin’s index 
      * Measures the diversity of the species present
      * Use when randomness can’t be guaranteed
-     * **Citation**: *Pielou E. C. (1969). “An introduction to mathematical ecology”. New York: Wiley.*
+     * **Citation**: *Pielou, E. C. (1975). Ecological Diversity. New York, Wiley InterScience.*
     * **Chao1 confidence interval**: Calculates chao1 confidence interval
      * Confidence interval for richness estimator, chao1
      * **Citation**: *Colwell, R. K., Mao, C. X., Chang, J. (2004). “Interpolating, extrapolating, and comparing incidence-based species accumulation curves.” Ecology. (85), 2717-2727.*
@@ -125,9 +124,11 @@ Processing Workflow Page: Commands
    * **Alpha Diversity Citation**: Whittaker, R. H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338. 
   * **Calculate beta diversity**: measured the diversity between samples
    * **BIOM table** (required): the feature table containing the samples for which beta diversity should be computed
-   * **Adjust variance** (phylogenetic only): WHAT IS THIS
-   * **Alpha value** (Generalized UniFrac only): WHAT IS THIS
-   * **Bypass tips** (phylogenetic only): WHAT IS THIS
+   * **Adjust variance** (phylogenetic only): performs variance adjustment
+    * Weights distances based on the proportion of the relative abundance represented between the samples at a given node under evaluation
+    * **Citatoin**: *Chang, Q., Luan, Y., & Sun, F. (2011). “Variance adjusted weighted UniFrac: a powerful beta diversity measure for comparing communities based on phylogeny”. BMC Bioinformatics.12(1): 118.*
+   * **Alpha value** (Generalized UniFrac only): The value of alpha controls importance of sample proportions. 1.0 is weighted normalized UniFrac. 0.0 is close to unweighted UniFrac, but only if the sample  are dichotomized.
+   * **Bypass tips** (phylogenetic only): In a bifurcating tree, the tips make up about 50% of the nodes in a tree. By ignoring them, specificity can be traded for reduced compute time. This has the effect of collapsing the phylogeny, and is analogous (in concept) to moving from 99% to 97% OTUs
    * **Diversity metric** (required): The beta diversity metric to be run
     * **Bray-Curtis dissimilarity**:  Calculates Bray–Curtis dissimilarity
      * Fraction of overabundant counts
@@ -226,4 +227,62 @@ Processing Workflow Page: Commands
   * **Alpha Vectors** (required): vector of alpha diversity values by sample
   * **Alpha Correlation Citation**: *Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.*
 * **Commands from Beta Diversity Data**
-
+ * **Perform Principal Coordinate Analysis** (PCoA): Visualizes the similarities and differences between samples using Emperor Plots
+  * **Distance matrix**(required): the distance matrix on which the PCoA should be computed
+  * **PCoA Plot Citation**: *Pearson, K. (1901). "On Lines and Planes of Closest Fit to Systems of Points in Space" Philosophical Magazine. 2 (11): 559–572.*
+  * **Emperor Plot Citation**: *Vazquez-Baeza Y, Pirrung M, Gonzalez A, Knight R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.*
+ * **Beta Group Significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
+  * **Distance matrix** (required): matrix of distances between pairs of samples
+  * **Comparison Type** (required): perform or not perform pairwise tests between all pairs of groups in addition to the test across all groups
+  * **Metadata category** (required): Category from metadata file or artifact viewable as metadata
+  * **Method** (required): Correlation test being applied
+   * **Anosim**:  Describes the strength and significance that a category has in determining the distances between points and can accept either categorical or continuous variables in the metadata mapping file
+    * **Citation**: *Clarke, K. R. (1993). "Non-parametric multivariate analyses of changes in community structure". Austral Ecology. 18 (1): 117–143.*
+   * **Permanova**: Describes the strength and significance that a category has in determining the distances between points and can accept categorical variables
+    * **Citation**: *Anderson, M.J. (2001). "A new method for non-parametric multivariate analysis of variance". Austral Ecology. 26 (1): 32–46*
+  * **Number of permutations** (required): The number of permutations to be run when computing p-values 
+ * **Beta Correlation**: Identifies a correlation between the distance matrix and a numeric sample metadata category
+  * **Distance-matrix** (required): matrix of distances between pairs of samples
+  * **Correlation method** (required): Correlation test being applied
+   * **Spearman**: Measures if there is a linear relationship between 2 variables
+    * **Citation**: *Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.*
+   * **Pearson**: Measures how strong the linear relationship is between 2 variables
+    * **Citation**: *Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.*
+  * **Metadata-category** (required): category from metadata file or artifact viewable as metadata
+  * **Number of permutations** (required): the number of permutations to be run when computing p-values
+Files Network Page: Results
+=================================
+* **Taxa Bar Plot**
+ * **Taxonomic Level**: How specific the taxa will be displayed 
+  * 1- Kingdom, 2- Phylum, 3- Class, 4- Order, 5- Genus, 6- Species, 7- Subspecies
+ * **Color Palette**: Changes the coloring of your taxa bar plot
+  * **Discrete**: Each taxon is a different color
+ * **Continuous**: Each taxon is a different shade of one color
+ * **Sort Sample By**: Sorts data by sample metadata or taxonomic abundance and either by ascending or descending order
+* **Alpha Diversity Results** 
+ * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
+ * **Category**: Choose the metadata category you would like to analyze
+ * **Kruskal-Wallis**: Result of Kruskal-Wallis tests
+  * Says if differences are statistically significant
+  * **Citation**: *Kruskal; Wallis (1952). "Use of ranks in one-criterion variance analysis". Journal of the American Statistical Association. 47 (260): 583–621.*
+* **Alpha Correlation**:
+ * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
+ * Gives the Spearman or Pearson result (rho and p-value)
+* **Beta Diversity Result**:
+ * **Distance Matrix**: Dissimilarity value for each pairwise comparison
+* **PCoA Result**:
+ * **Emperor Plot**: Visualization of similarities/dissimilarities between samples
+  * **Color Category**: Groups each sample by the given category chosen by a given color
+  * **Colors**: Choose colors for each group
+  * **Visibility** Allows for making certain samples invisible
+   * *Does not remove them from the analysis*
+    * Must perform filtering to do that
+  * **Shape**: Groups each sample by the given category chosen by a given shape  
+  * **Axis**: Change the position of the axis as well as the color of the graph
+  * **Scale**: Change the size of a given category 
+* **Beta Group Significance**:
+ * **Boxplot**: Shows how different measures of beta diversity correlate with different metadata categories
+ * Gives the Permanova or Anosim result (psuedo-F and p-value)
+* **Beta Correlation**:
+ * Gives the Spearman or Pearson result (rho and p-value)
+ * Gives scatterplot of the distance matrix on the y and the variable being tested on the x-axis
