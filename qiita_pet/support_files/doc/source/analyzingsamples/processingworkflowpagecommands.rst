@@ -89,7 +89,7 @@ Processing Workflow Page: Commands
      * **Citation**: *Heip, C. (1974). “A new index measuring evenness”. J. Mar. Biol. Ass. UK. (54) 555-557.*
     * **Menhinick’s richness index**: Calculates Menhinick’s richness index
      *Species richness
-     **Citation**: *Magurran, A. E. (2004). “Measuring biological diversity”. Blackwell. 76-77.*
+     * **Citation**: *Magurran, A. E. (2004). “Measuring biological diversity”. Blackwell. 76-77.*
     * **Michaelis-Menten fit to rarefaction curve of observed OTUs**: Calculates Michaelis-Menten fit to rarefaction curve of observed OTUs.
      * Estimated richness of species pools
      * **Citation**: *Raaijmakers, J. G. W. (1987). “Statistical analysis of the Michaelis-Menten equation”. Biometrics. (43): 793-803.*
