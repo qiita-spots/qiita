@@ -46,8 +46,8 @@ FASTQ/FAST.gz
    * **max bad_run_length** (required): Max number of consecutive low quality base calls allowed before truncating a read
    * **max barcode_errors** (required): Maximum number of errors in barcode
    * **min per_read_length_fraction** (required): Min number of consecutive high quality base calls to include a read
-   * **phred offset** (required): The ascii (character that corresponds to a Phred score) offset to use when decoding phred scores
-   * **phred quality threshold** (required): The minimum acceptable Phred quality score
+   * **phred offset** (required): Ascii (character that corresponds to a Phred score) offset to use when decoding phred scores
+   * **phred quality threshold** (required): Minimum acceptable Phred quality score
    * **rev comp** (required): Reverse complement sequence before writing to output file
    * **rev comp_barcode** (required): Reverse complement barcode reads before lookup
    * **rev comp_mapping_barcodes** (required): Reverse complement barcode in mapping before lookup
