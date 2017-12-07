@@ -2,23 +2,23 @@ Processing Workflow Page: Commands
 ===================================
 * **Commands for Deblurred or Closed-Reference Data**:
  * **Rarefy features**: Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth
-  *  **BIOM table** (required): the feature table containing the samples for which features should be rarefied
-  *  **Parameter set**: the parameters at which the rarefication is run
-  *  **Sampling depth** (required): total frequency that each sample should be rarefied to, samples where sum of frequencies is less than sampling depth will not be included in resulting table
+  *  **BIOM table** (required): The feature table containing the samples for which features should be rarefied
+  *  **Parameter set**: The parameters at which the rarefication is run
+  *  **Sampling depth** (required): Total frequency that each sample should be rarefied to, samples where sum of frequencies is less than sampling depth will not be included in resulting table
   *  **Citation**: *Heck, K.L., Van Belle, G., Simberloff, D. (1975). “Explicit Calculation of the Rarefaction Diversity Measurement and the Determination of Sufficient Sample Size”. Ecology. 56(6): 1459-1461*
 * **Commands from Rarefied Data**:
  * **Filter samples by metadata**: Filters samples from an OTU table on the basis of the number of observations in that sample, or on the basis of sample metadata
-  * **BIOM table** (required): the feature table containing the samples for which features should be filtered
-  * **Maximum feature frequency across samples** (optional): the maximum total frequency that a feature can have to be retained
-  * **Maximum features per sample** (optional): the maximum number of features that a sample can have to be retained
-  * **Minimum feature frequency across samples** (optional): the minimum total frequency that a feature must have to be retained
-  * **Minimum features per sample** (optional): the minimum number of features that a sample can have to be retained
+  * **BIOM table** (required): The feature table containing the samples for which features should be filtered
+  * **Maximum feature frequency across samples** (optional): The maximum total frequency that a feature can have to be retained
+  * **Maximum features per sample** (optional): The maximum number of features that a sample can have to be retained
+  * **Minimum feature frequency across samples** (optional): The minimum total frequency that a feature must have to be retained
+  * **Minimum features per sample** (optional): The minimum number of features that a sample can have to be retained
   * **SQLite WHERE-clause** (optional): The metadata group that is being filtered out
  * **Summarize Taxa**: Creates a bar plot of the taxa within the analysis
   * *Can only be performed with closed-reference data*
-  * **BIOM table** (required): the feature table containing the samples to visualize at various taxonomic levels
+  * **BIOM table** (required): The feature table containing the samples to visualize at various taxonomic levels
  * **Calculate alpha diversity**: Measures the diversity within a sample
-  * **BIOM table** (required): the feature table containing the samples for which alpha diversity should be computed
+  * **BIOM table** (required): The feature table containing the samples for which alpha diversity should be computed
    * **Diversity metric** (required): The alpha diversity metric to be run
     * **Abundance-based Coverage Estimator (ACE) metric**: Calculates the ACE metric
      * Estimates species richness using a correction factor
@@ -36,12 +36,12 @@ Processing Workflow Page: Commands
     * **Chao1 index**: Calculates chao1 index
      * Estimates diversity from abundant data
      * Assumes that the number of observations for taxa has a Poisson distribution
-      * corrects for variance
+      * Corrects for variance
      * **Citation**: *Chao, A. (1984). “Non-parametric estimation of the number of classes in a population”. Scandinavian Journal of Statistics (11): 265-270.*
     * **Dominance measure**: Calculates dominance measure
      * How equally the taxa are presented
     * **Effective Number of Species (ENS)/Probability of intra-or interspecific encounter (PIE) metric**: Calculates Effective Number of Species (ENS)/Probability of intra-or interspecific encounter (PIE) metric
-     * shows how absolute amount of species, relative abundances of species, and their intraspecific aggregations affect differences in biodiversity among communities
+     * Shows how absolute amount of species, relative abundances of species, and their intraspecific aggregations affect differences in biodiversity among communities
      * **Citation**: *Chase, J.M., and Knight, R. (2013). “Scale-dependent effect sizes of ecological drivers on biodiversity: why standardised sampling is not enough”. Ecology Letters (16): 17-26.*
     * **Etsy confidence interval**: Calculates Esty’s confidence interval
      * Confidence interval for how many singletons in total individuals
@@ -85,7 +85,7 @@ Processing Workflow Page: Commands
      *How even taxa are in numbers
      * **Citation**: *Heip, C. (1974). “A new index measuring evenness”. J. Mar. Biol. Ass. UK. (54) 555-557.*
     * **Menhinick’s richness index**: Calculates Menhinick’s richness index
-     *Species richness
+     * Species richness
      * **Citation**: *Magurran, A. E. (2004). “Measuring biological diversity”. Blackwell. 76-77.*
     * **Michaelis-Menten fit to rarefaction curve of observed OTUs**: Calculates Michaelis-Menten fit to rarefaction curve of observed OTUs.
      * Estimated richness of species pools
@@ -117,17 +117,17 @@ Processing Workflow Page: Commands
      * Assesses species abundance unevenness or dominance concentration 
      * **Citation**: *Strong, W. L., (2002). “Assessing species abundance uneveness within and between plant communities”. Community Ecology (3): 237-246.*
    * **Phylogenetic tree** (required for certain alpha diversities, ie. Faith PD): The phylogenetic tree to be used with alpha analyses (only include when necessary ie. Faith PD)
-    * currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
+    * Currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
    * **Alpha Diversity Citation**: Whittaker, R. H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338. 
-  * **Calculate beta diversity**: measured the diversity between samples
-   * **BIOM table** (required): the feature table containing the samples for which beta diversity should be computed
-   * **Adjust variance** (phylogenetic only): performs variance adjustment
-    * Weights distances based on the proportion of the relative abundance represented between the samples at a given node under evaluation
+  * **Calculate beta diversity**: Measured the diversity between samples
+   * **BIOM table** (required): The feature table containing the samples for which beta diversity should be computed
+   * **Adjust variance** (phylogenetic only): Performs variance adjustment
+    * Weighs distances based on the proportion of the relative abundance represented between the samples at a given node under evaluation
     * **Citatoin**: *Chang, Q., Luan, Y., & Sun, F. (2011). “Variance adjusted weighted UniFrac: a powerful beta diversity measure for comparing communities based on phylogeny”. BMC Bioinformatics.12(1): 118.*
    * **Alpha value** (Generalized UniFrac only): The value of alpha controls importance of sample proportions. 1.0 is weighted normalized UniFrac. 0.0 is close to unweighted UniFrac, but only if the sample  are dichotomized.
    * **Bypass tips** (phylogenetic only): In a bifurcating tree, the tips make up about 50% of the nodes in a tree. By ignoring them, specificity can be traded for reduced compute time. This has the effect of collapsing the phylogeny, and is analogous (in concept) to moving from 99% to 97% OTUs
    * **Diversity metric** (required): The beta diversity metric to be run
-    * **Bray-Curtis dissimilarity**:  Calculates Bray–Curtis dissimilarity
+    * **Bray-Curtis dissimilarity**: Calculates Bray–Curtis dissimilarity
      * Fraction of overabundant counts
      * **Citation**: *Sorenson, T. (1948) "A method of establishing groups of equal amplitude in plant sociology based on similarity of species content." Kongelige Danske Videnskabernes Selskab 5.1-34: 4-7.*
     * **Canberra distance**: Calculates Canberra distance
@@ -210,9 +210,9 @@ Processing Workflow Page: Commands
     * Measures biodiversity
     * Determined by the number of species and the proportions between the numbers of those species.
     * **Citation**: *Fisher, R.A., Corbert, A.S., Williams, C.B. (1943). “The Relationship Between the Number of Species and the Number of Individuals in a Random Sample of an Animal Population”. J. Animal Ecol. (12): 42-58.*
-  * **Number of jobs**: number of jobs running???
+  * **Number of jobs**: Number of workers to use
   * **Phylogenetic tree** (required for some beta diversities, ie. UniFrac): The phylogenetic tree to be used with beta analyses (only include when necessary ie. UniFrac)
-   * currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
+   * Currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
   * **Citation**: *Whittaker, R. H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.*
 * **Commands from Alpha Diversity Data**
  * **Alpha Correlation**: Determines if the numeric sample metadata category is correlated with alpha diversity
@@ -221,16 +221,16 @@ Processing Workflow Page: Commands
     * **Citation**: *Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.*
    * **Pearson**: Measures how strong the linear relationship is between 2 variables
     * **Citation**: *Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.*
-  * **Alpha Vectors** (required): vector of alpha diversity values by sample
+  * **Alpha Vectors** (required): Vector of alpha diversity values by sample
   * **Alpha Correlation Citation**: *Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.*
 * **Commands from Beta Diversity Data**
  * **Perform Principal Coordinate Analysis** (PCoA): Visualizes the similarities and differences between samples using Emperor Plots
-  * **Distance matrix**(required): the distance matrix on which the PCoA should be computed
+  * **Distance matrix**(required): The distance matrix on which the PCoA should be computed
   * **PCoA Plot Citation**: *Pearson, K. (1901). "On Lines and Planes of Closest Fit to Systems of Points in Space" Philosophical Magazine. 2 (11): 559–572.*
   * **Emperor Plot Citation**: *Vazquez-Baeza Y, Pirrung M, Gonzalez A, Knight R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.*
  * **Beta Group Significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
-  * **Distance matrix** (required): matrix of distances between pairs of samples
-  * **Comparison Type** (required): perform or not perform pairwise tests between all pairs of groups in addition to the test across all groups
+  * **Distance matrix** (required): Matrix of distances between pairs of samples
+  * **Comparison Type** (required): Perform or not perform pairwise tests between all pairs of groups in addition to the test across all groups
   * **Metadata category** (required): Category from metadata file or artifact viewable as metadata
   * **Method** (required): Correlation test being applied
    * **Anosim**:  Describes the strength and significance that a category has in determining the distances between points and can accept either categorical or continuous variables in the metadata mapping file
@@ -239,14 +239,14 @@ Processing Workflow Page: Commands
     * **Citation**: *Anderson, M.J. (2001). "A new method for non-parametric multivariate analysis of variance". Austral Ecology. 26 (1): 32–46*
   * **Number of permutations** (required): The number of permutations to be run when computing p-values 
  * **Beta Correlation**: Identifies a correlation between the distance matrix and a numeric sample metadata category
-  * **Distance-matrix** (required): matrix of distances between pairs of samples
+  * **Distance-matrix** (required): Matrix of distances between pairs of samples
   * **Correlation method** (required): Correlation test being applied
    * **Spearman**: Measures if there is a linear relationship between 2 variables
     * **Citation**: *Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.*
    * **Pearson**: Measures how strong the linear relationship is between 2 variables
     * **Citation**: *Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.*
-  * **Metadata-category** (required): category from metadata file or artifact viewable as metadata
-  * **Number of permutations** (required): the number of permutations to be run when computing p-values
+  * **Metadata-category** (required): Category from metadata file or artifact viewable as metadata
+  * **Number of permutations** (required): The number of permutations to be run when computing p-values
 Files Network Page: Results
 =================================
 * **Taxa Bar Plot**
