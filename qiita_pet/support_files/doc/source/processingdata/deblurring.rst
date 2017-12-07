@@ -26,7 +26,7 @@ Deblurring
    * **Positive filtering database** (required): Positive reference filtering database, Keep all sequences permissively aligning to any sequence
    * **Sequence trim length (-1 for no trimming)** (required): Sequence trim length
    * **Threads per sample** (required): Number of threads to use per sample
- * **Deblur Citation**: *Amir, A., McDonald, D., Navas-Molina, J.A., Kopylova, E., Morton, J., Xu, Z.Z., Kightley, E.P.,  Thompson, L.R., Hyde, E.R., Gonzalez, A., Knight, R. (2017) “Deblur rapidly resolves single-nucleotide community sequence patterns.” mSystems. 2 (2) e00191-16.*
  * **Deblur 16S Only Table**: only contains 16S deblurred sequences 
  * **Deblur Final Table**: contains all the sequences.
+* **Deblur Citation**: *Amir, A., McDonald, D., Navas-Molina, J.A., Kopylova, E., Morton, J., Xu, Z.Z., Kightley, E.P.,  Thompson, L.R., Hyde, E.R., Gonzalez, A., Knight, R. (2017) “Deblur rapidly resolves single-nucleotide community sequence patterns.” mSystems. 2 (2) e00191-16.*
 
