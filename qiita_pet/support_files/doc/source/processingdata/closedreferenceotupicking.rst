@@ -8,11 +8,11 @@ Closed-Reference OTU Picking
     * **Greengenes Citation**: *McDonald, D., Price, M. N., Goodrich, J., Nawrocki, E. P., DeSantis, T. Z., Probst, A., Anderson, G. L., Knight, R.,  Hugenholtz, P. (2012). “An improved Greengenes taxonomy with explicit ranks for ecological and evolutionary analyses of bacteria and archaea.” The ISME Journal. 6(3): 610–618.*
    * **Defaults-parallel**: Compares to GreenGenes 16S database but performs it with multi-threading
     * **Greengenes Citation**:  *McDonald, D., Price, M. N., Goodrich, J., Nawrocki, E. P., DeSantis, T. Z., Probst, A., Anderson, G. L., Knight, R.,  Hugenholtz, P. (2012). “An improved Greengenes taxonomy with explicit ranks for ecological and evolutionary analyses of bacteria and archaea.” The ISME Journal. 6(3): 610–618.*
+  * **18S OTU Picking**:
    * **Silva 119**: Compares to Silva 119 Database
-    * **18S OTU picking**
     * **Silve 119 Citation**: *Quast, C., Pruesse, E., Yilmaz, P., Gerken, J., Schweer, T., Yarza, P., Peplies, J., Glöckner, F. O. (2013). “The SILVA ribosomal RNA gene database project: improved data processing and web-based tools”. Nucl. Acids Res. 41 (D1): D590-D596.*
+  * **ITS OTU Picking**:
    * **UNITE 7**: Compares to UNITE Database
-    * **ITS OTU Picking**
     * **UNITE Citation**: *Abarenkov, K., Nilsson, R. H., Larsson, K., Alexander, I. J., Eberhardt, U., Erland, S., Høiland, K., Kjøller, R., Larsson, E., Pennanen, R., Sen, R., Taylor, A. F. S., Tedersoo, L., Ursing, B. M., Vrålstad, T., Liimatainen, K., Peintner, U., Kõljalg, U. (2010). “The UNITE database for molecular identification of fungi - recent updates and future perspectives”. New Phytologist. 186(2): 281-285.*
  * **Default Parameters** (required)
   * **Reference-seq** (required): Path to blast database (Greengenes, Silva 119, UNITE 7) as a fasta file
