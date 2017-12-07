@@ -42,7 +42,7 @@ FASTQ/FAST.gz
     * *https://en.wikipedia.org/wiki/FASTQ_format*
    * **Demultiplexing**: **https://en.wikipedia.org/wiki/Multiplexing*
   * **Default Parameters Set**
-   * **barcode type** (required): The type of barcode used
+   * **barcode type** (required): Type of barcode used
    * **max bad_run_length** (required): Max number of consecutive low quality base calls allowed before truncating a read
    * **max barcode_errors** (required): Maximum number of errors in barcode
    * **min per_read_length_fraction** (required): Min number of consecutive high quality base calls to include a read
