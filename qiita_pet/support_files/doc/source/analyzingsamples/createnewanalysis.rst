@@ -11,7 +11,7 @@ Create New Analysis Page
 * **Create New Analysis**: Creates the analysis using the data that has been added
  * **Analysis Name** (required): Name for the analysis that will be done
  * **Description** (optional): Description for the analysis that will be done
-Single- vs. Meta-data Analysis
+Single vs. Meta Analysis
 ------------------------------
 * **Single analysis**: One study chosen to analyze 
 * **Meta-analysis**: multiple studies chosen to analyze
