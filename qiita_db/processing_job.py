@@ -1063,6 +1063,42 @@ class ProcessingJob(qdb.base.QiitaObject):
             res = qdb.sql_connection.TRN.execute_fetchlast()
             return res if res is not None else {}
 
+    @property
+    def hidden(self):
+        """Whether the job is hidden or not
+
+        Returns
+        -------
+        bool
+            Whether the jobs is hidden or not
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT hidden
+                     FROM qiita.processing_job
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    def hide(self):
+        """Hides the job from the user
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the job is not in the error status
+        """
+        with qdb.sql_connection.TRN:
+            status = self.status
+            if status != 'error':
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    'Only jobs in error status can be hidden. Current status: '
+                    '%s' % status)
+            sql = """UPDATE qiita.processing_job
+                     SET hidden = %s
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [True, self.id])
+            qdb.sql_connection.TRN.execute()
+
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
     """Models a workflow defined by the user

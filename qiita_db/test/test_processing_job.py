@@ -733,6 +733,32 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(job.processing_job_workflow,
                          qdb.processing_job.ProcessingWorkflow(1))
 
+    def test_hidden(self):
+        self.assertTrue(self.tester1.hidden)
+        self.assertTrue(self.tester2.hidden)
+        self.assertFalse(self.tester3.hidden)
+        self.assertTrue(self.tester4.hidden)
+
+    def test_hide(self):
+        QE = qdb.exceptions
+        # It's in a queued state
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
+            self.tester1.hide()
+
+        # It's in a running state
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
+            self.tester2.hide()
+
+        # It's in a success state
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
+            self.tester3.hide()
+
+        job = _create_job()
+        job._set_error('Setting to error for testing')
+        self.assertFalse(job.hidden)
+        job.hide()
+        self.assertTrue(job.hidden)
+
 
 @qiita_test_checker()
 class ProcessingWorkflowTests(TestCase):
