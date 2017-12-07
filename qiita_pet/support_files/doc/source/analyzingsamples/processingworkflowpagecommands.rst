@@ -198,11 +198,11 @@ Processing Workflow Page: Commands
     * **Weighted Minkowski metric**: Measures Weighted Minkowski metric
      * Allows the use of the k-means-type paradigm to efficiently cluster large data sets
      * **Citation**: *Chan, Y., Ching, W.K., Ng, M.K., Huang, J.Z. (2004). “An optimization algorithm for clustering using weighted dissimilarity measures”. Pattern Recognition. 37(5): 943-952.*
-    * **Weighted normalized UniFrac**: measures Weighted normalized UniFrac
+    * **Weighted normalized UniFrac**: Measures Weighted normalized UniFrac
      * Takes into account abundance
      * Normalization adjusts for varying root-to-tip distances.
     * **Citation**: *Lozupone, C. A., Hamady, M; Kelley, S. T., Knight, R. (2007). "Quantitative and qualitative beta diversity measures lead to different insights into factors that structure microbial communities". Applied and Environmental Microbiology. 73(5): 1576–85.*
-   * **Weighted unnormalized UniFrac**: measures Weighted unnormalized UniFrac
+   * **Weighted unnormalized UniFrac**: Measures Weighted unnormalized UniFrac
     * Takes into account abundance
     * *Doesn't correct for unequal sampling effort or different evolutionary rates between taxa*
     * **Citation**: *Lozupone, C. A., Hamady, M., Kelley, S. T., Knight, R. (2007). "Quantitative and qualitative beta diversity measures lead to different insights into factors that structure microbial communities". Applied and Environmental Microbiology. 73(5): 1576–85.*
@@ -211,12 +211,12 @@ Processing Workflow Page: Commands
     * Determined by the number of species and the proportions between the numbers of those species.
     * **Citation**: *Fisher, R.A., Corbert, A.S., Williams, C.B. (1943). “The Relationship Between the Number of Species and the Number of Individuals in a Random Sample of an Animal Population”. J. Animal Ecol. (12): 42-58.*
   * **Number of jobs**: Number of workers to use
-  * **Phylogenetic tree** (required for some beta diversities, ie. UniFrac): The phylogenetic tree to be used with beta analyses (only include when necessary ie. UniFrac)
+  * **Phylogenetic tree** (required for some beta diversities, ie. UniFrac): Phylogenetic tree to be used with beta analyses (only include when necessary ie. UniFrac)
    * Currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
   * **Citation**: *Whittaker, R. H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.*
 * **Commands from Alpha Diversity Data**
  * **Alpha Correlation**: Determines if the numeric sample metadata category is correlated with alpha diversity
-  * **Correlation Method** (required): The correction test being applied
+  * **Correlation Method** (required): Correction test being applied
    * **Spearman**: Measures if there is a linear relationship between 2 variables
     * **Citation**: *Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.*
    * **Pearson**: Measures how strong the linear relationship is between 2 variables
