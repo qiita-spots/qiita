@@ -1,6 +1,3 @@
-NEED TO DO: WHAT IS: Adjust variance, alpha value, bypass tips, number of jobs
-
-
 Processing Workflow Page: Commands
 ===================================
 * **Commands for Deblurred or Closed-Reference Data**:
