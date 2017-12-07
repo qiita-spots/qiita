@@ -26,7 +26,7 @@ Vue.component('processing-graph', {
                   '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggleNetworkGraph();">Hide</a><i> Processing network </i></h4>' +
                   'Graph interaction: <a class="btn btn-danger" id="interaction-btn">Disabled</a></br>' +
                   '<div id="run-btn-div"><a class="btn btn-success" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run workflow</a><span class="blinking-message">  Don\'t forget to hit "Run" once you are done with your workflow!</span></div>' +
-                  '<b>Click circles for more information - This graph will refresh in <span id="countdown-span"></span> seconds</b>' +
+                  '<b>Click circles for more information - This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a></b>' +
                 '</div>' +
               '</div>' +
               '<div class="row">' +
@@ -160,20 +160,24 @@ Vue.component('processing-graph', {
      *
      * Remove a job node from the network visualization
      *
-     * @param job_id str The id of the job
+     * @param jobId str The id of the job
      *
      * This function removes the given job and its children from the
      * network visualization
      *
      **/
-    removeJobNodeFromGraph: function(job_id) {
+    removeJobNodeFromGraph: function(jobId) {
       let vm = this;
-      var queue = [job_id];
+      var queue = [jobId];
       var edge_list = vm.edges_ds.get();
       var current;
       var edge;
+      var currentNode;
       while(queue.length !== 0) {
         current = queue.pop();
+
+        // Add all children nodes to the queue, and remove the edges
+        // connecting the current node to its children
         for(var i in edge_list) {
           edge = edge_list[i];
           if(edge.from == current) {
@@ -183,11 +187,18 @@ Vue.component('processing-graph', {
             vm.edges_ds.remove(edge.id);
           }
         }
+
+        currentNode = vm.nodes_ds.get(current);
+        if(currentNode.group === 'job') {
+          if(currentNode.status === 'in_construction') {
+            vm.inConstructionJobs -= 1;
+          }
+        }
         vm.nodes_ds.remove(current);
       }
       var edges_to_remove = vm.edges_ds.get(
         {filter: function(item) {
-          return item.to == job_id;
+          return item.to == jobId;
         }});
       var edge_ids = [];
       $(edges_to_remove).each(function(i){
@@ -196,39 +207,54 @@ Vue.component('processing-graph', {
 
       vm.edges_ds.remove(edge_ids);
       vm.network.redraw();
+
+      if (vm.inConstructionJobs === 0) {
+        $('#run-btn-div').hide();
+      }
     },
 
     /**
      *
      * Remove a job from the workflow
      *
-     * @param job_id str The id of the job to be removed
+     * @param jobId str The id of the job to be removed
+     * @param jobStatus str The status of the job to be removed
      *
      * This function executes an AJAX call to remove the given job from the
      * current workflow and updates the graph accordingly
      *
      **/
-    removeJob: function(job_id) {
+    removeJob: function(jobId, jobStatus) {
       let vm = this;
-      if(confirm("Are you sure you want to delete the job " + job_id + "?")) {
-        $.ajax({
-          url: vm.portal + '/study/process/workflow/',
-          type: 'PATCH',
-          data: {'op': 'remove', 'path': '/' + vm.workflowId + '/' + job_id},
-          success: function(data) {
-            if(data.status == 'error') {
-              bootstrapAlert(data.message, "danger");
-            }
-            else {
-              vm.removeJobNodeFromGraph(job_id);
-              vm.inConstructionJobs -= 1;
-              if (vm.inConstructionJobs == 0) {
-                $('#run-btn-div').hide();
-              }
-              $("#processing-info-div").empty();
-            }
+      var url, path;
+      if(confirm("Are you sure you want to delete the job " + jobId + "?")) {
+        if (jobStatus === 'error' || jobStatus === 'in_construction') {
+          if (jobStatus === 'error') {
+            url = '/study/process/job/';
+            path = jobId;
+          } else if (jobStatus === 'in_construction') {
+            url = '/study/process/workflow/';
+            path = '/' + vm.workflowId + '/' + jobId;
           }
-        });
+          $.ajax({
+            url: vm.portal + url,
+            type: 'PATCH',
+            data: {'op': 'remove', 'path': path},
+            success: function(data) {
+              if(data.status == 'error') {
+                bootstrapAlert(data.message, "danger");
+              }
+              else {
+                vm.removeJobNodeFromGraph(jobId);
+                $("#processing-results").empty();
+              }
+            }
+          });
+        } else {
+          // With the current code we should never get to this else, but better
+          // to throw an error just in case
+          throw "Job " + jobId + " can't be deleted. Current status: " + jobStatus;
+        }
       }
     },
 
@@ -245,6 +271,7 @@ Vue.component('processing-graph', {
       $.post(vm.portal + "/study/process/workflow/run/", {workflow_id: vm.workflowId}, function(data){
         bootstrapAlert("Workflow " + vm.workflowId + " submitted", "success");
         $('#run-btn-div').hide();
+        $("#processing-results").empty();
         vm.updateGraph();
       })
         .fail(function(object, status, error_msg) {
@@ -261,20 +288,52 @@ Vue.component('processing-graph', {
      **/
     populateContentJob: function(jobId) {
       let vm = this;
+      var $rowDiv, $colDiv;
       // Put the loading gif in the div
       show_loading("processing-results");
       $.get(vm.portal + '/study/process/job/', {job_id: jobId}, function(data){
         $("#processing-results").empty();
-        var keys = ['job_id', 'job_status'];
-        var d = $("<div>").appendTo("#processing-results");
-        for(var i in keys) {
-          if (data[keys[i]]) {
-            d.append("<b>" + keys[i].replace('_', ' ') + ": </b> " + data[keys[i]] + "</br>");
-          }
+
+        // Create the header of the page
+        var h = $("<h3>").text('Job ' + data['job_id'] + ' ').appendTo("#processing-results");
+
+        // Only add the delete job button if the job is "in_construction"
+        // or "error"
+        if (data['job_status'] === 'in_construction' || data['job_status'] === 'error') {
+          var deleteBtn = $("<a>").addClass("btn btn-danger btn-sm").appendTo(h);
+          $('<span class="glyphicon glyphicon-trash"></span>').appendTo(deleteBtn);
+          deleteBtn.append(' Delete');
+          var jId = data['job_id'];
+          var jStatus = data['job_status'];
+          deleteBtn.on('click', function() {vm.removeJob(jId, jStatus);});
         }
-        d.append("<b> job parameters: </b></br>");
-        for(var key in data.job_parameters) {
-          d.append("<i>" + key + ":</i> " + data.job_parameters[key] + "</br>");
+
+        // Create a list that contains the contents of each row. This way we
+        // reduce code duplication when creation the row HTML elements
+        var rowsContent = [];
+        // Add the Command information
+        rowsContent.push(['Command:', data['command'] + ' (' + data['software'] + ' ' + data['software_version'] + ')<br/>' + data['command_description']]);
+        // Add the status
+        rowsContent.push(['Status:', data['job_status'].replace('_', ' ')]);
+
+        // Add the job step
+        if (data['job_step'] !== null) {
+          rowsContent.push(['Current step:', data['job_step']]);
+        }
+
+        // Create the DOM elements to add the rows content
+        for (var row of rowsContent) {
+          $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#processing-results");
+          $('<label>').addClass('col-sm-1 col-form-label').text(row[0]).appendTo($rowDiv);
+          $colDiv = $('<div>').addClass('col-sm-5').appendTo($rowDiv).html(row[1]);
+        }
+
+        $("#processing-results").append($("<h4>").text('Job parameters:'));
+
+        for(var key in data.job_parameters){
+          $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#processing-results");
+          $('<label>').addClass('col-sm-2 col-form-label').text(key + ':').appendTo($rowDiv);
+          $colDiv = $('<div>').addClass('col-sm-5').appendTo($rowDiv).html(data.job_parameters[key]);
         }
       })
         .fail(function(object, status, error_msg) {
@@ -926,6 +985,12 @@ Vue.component('processing-graph', {
     $('#run-btn-div').hide();
 
     $('#interaction-btn').on('click', vm.toggleGraphInteraction);
+
+    $('#refresh-now-link').on('click', function () {
+      vm.countdownPoll = 15;
+      vm.update_job_status();
+    });
+
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available
     vm.updateGraph();

@@ -36,7 +36,7 @@ from .ontology import ontology_patch_handler
 from .processing import (
     list_commands_handler_get_req, list_options_handler_get_req,
     workflow_handler_post_req, workflow_handler_patch_req,
-    workflow_run_post_req, job_ajax_get_req)
+    workflow_run_post_req, job_ajax_get_req, job_ajax_patch_req)
 from .user import (user_jobs_get_req)
 
 __version__ = "0.2.0-dev"
@@ -66,4 +66,5 @@ __all__ = ['prep_template_summary_get_req', 'sample_template_post_req',
            'workflow_handler_patch_req', 'workflow_run_post_req',
            'job_ajax_get_req', 'artifact_patch_request',
            'sample_template_patch_request',
-           'get_sample_template_processing_status', 'user_jobs_get_req']
+           'get_sample_template_processing_status', 'user_jobs_get_req',
+           'job_ajax_patch_req']

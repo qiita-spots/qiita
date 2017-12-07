@@ -14,7 +14,7 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
     list_commands_handler_get_req, list_options_handler_get_req,
     workflow_handler_post_req, workflow_handler_patch_req, job_ajax_get_req,
-    workflow_run_post_req)
+    workflow_run_post_req, job_ajax_patch_req)
 
 
 class ListCommandsHandler(BaseHandler):
@@ -71,3 +71,16 @@ class JobAJAX(BaseHandler):
     def get(self):
         job_id = self.get_argument('job_id')
         self.write(job_ajax_get_req(job_id))
+
+    @authenticated
+    def patch(self):
+        req_op = self.get_argument('op')
+        req_path = self.get_argument('path')
+        req_value = self.get_argument('value', None)
+        req_from = self.get_argument('from', None)
+
+        try:
+            res = job_ajax_patch_req(req_op, req_path, req_value, req_from)
+            self.write(res)
+        except Exception as e:
+            self.write({'status': 'error', 'message': str(e)})
