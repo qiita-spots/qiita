@@ -82,7 +82,7 @@ Processing Workflow Page: Commands
      * Affected mostly by variation in dominant taxa and less affected by the variation in less abundant or rare taxa
      * **Citation**: *McIntosh, R. P. (1967). “An index of diversity and the relation of certain concepts to diversity”. Ecology (48): 392-404.*
     * **Mcintosh evenness index E**: Calculates McIntosh’s evenness measure E
-     *How even taxa are in numbers
+     * How even taxa are in numbers
      * **Citation**: *Heip, C. (1974). “A new index measuring evenness”. J. Mar. Biol. Ass. UK. (54) 555-557.*
     * **Menhinick’s richness index**: Calculates Menhinick’s richness index
      * Species richness
