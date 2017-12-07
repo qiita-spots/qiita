@@ -94,6 +94,7 @@
     // Set the focus on the text input when the modal to change the artifact
     // name is shown
     $('#update-artifact-name').on('shown.bs.modal', function() {
+      $('#new-artifact-name').val($("#summary-title").text());
       $('#new-artifact-name').focus();
     });
 
@@ -110,7 +111,7 @@
     <h4>
       <i id='summary-title'>{{name}}</i><i> (ID: {{artifact_id}}) Visibility: {{visibility}}</i>
       {% if editable %}
-        <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit</a>
+        <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit name</a>
         {% if artifact_type == 'BIOM' and not is_from_analysis %}
           <input type="button" class="btn btn-default btn-sm" value="Add to Analysis" onclick="send_samples_to_analysis(this, [{{artifact_id}}]);">
         {% else %}
