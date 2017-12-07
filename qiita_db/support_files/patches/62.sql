@@ -46,3 +46,7 @@ BEGIN
     END IF;
 END
 $$ LANGUAGE plpgsql;
+
+-- Dec 7, 2017
+-- Adding new data types to qiita
+INSERT INTO qiita.data_type (data_type) VALUES ('Metatranscriptomics', 'Viromics', 'Genomics', 'Transcriptomics');
