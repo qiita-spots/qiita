@@ -97,7 +97,7 @@ Upload Sample Information
 
 * **Upload Files Page**
  * Drag your sample info file into the box to upload your files
- * **Delete selected files**: delete a file with the selected boxes
+ * **Delete selected files**: Delete a file with the selected boxes
  * **Go to study description**: Link to the study description page
 
 Viewing Sample Information
