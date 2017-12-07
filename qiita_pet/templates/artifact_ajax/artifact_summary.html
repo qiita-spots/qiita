@@ -112,11 +112,15 @@
       <i id='summary-title'>{{name}}</i><i> (ID: {{artifact_id}}) Visibility: {{visibility}}</i>
       {% if editable %}
         <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit name</a>
-        {% if artifact_type == 'BIOM' and not is_from_analysis %}
-          <input type="button" class="btn btn-default btn-sm" value="Add to Analysis" onclick="send_samples_to_analysis(this, [{{artifact_id}}]);">
-        {% else %}
-          <a class="btn btn-default btn-sm" id="process-btn"><span class="glyphicon glyphicon-play"></span> Process</a>
-        {% end %}
+      {% end %}
+
+      {% if artifact_type == 'BIOM' and not is_from_analysis %}
+        <input type="button" class="btn btn-default btn-sm" value="Add to Analysis" onclick="send_samples_to_analysis(this, [{{artifact_id}}]);">
+      {% elif editable %}
+        <a class="btn btn-default btn-sm" id="process-btn"><span class="glyphicon glyphicon-play"></span> Process</a>
+      {% end %}
+
+      {% if editable %}
         <a class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete artifact {{artifact_id}}?')){ delete_artifact({{artifact_id}}) };"><span class="glyphicon glyphicon-trash"></span> Delete</a>
         {% raw buttons %}
       {% end %}
