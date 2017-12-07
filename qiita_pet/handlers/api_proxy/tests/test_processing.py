@@ -9,12 +9,13 @@ from unittest import TestCase, main
 from json import dumps
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.processing_job import ProcessingWorkflow
+from qiita_db.processing_job import ProcessingWorkflow, ProcessingJob
 from qiita_db.software import Command, Parameters
 from qiita_db.user import User
 from qiita_pet.handlers.api_proxy.processing import (
     list_commands_handler_get_req, list_options_handler_get_req,
-    workflow_handler_post_req, workflow_handler_patch_req, job_ajax_get_req)
+    workflow_handler_post_req, workflow_handler_patch_req, job_ajax_get_req,
+    job_ajax_patch_req)
 
 
 class TestProcessingAPIReadOnly(TestCase):
@@ -93,7 +94,12 @@ class TestProcessingAPIReadOnly(TestCase):
                                   'rev_comp_barcode': False,
                                   'rev_comp_mapping_barcodes': False,
                                   'sequence_max_n': 0,
-                                  'phred_offset': 'auto'}}
+                                  'phred_offset': 'auto'},
+               'command': 'Split libraries FASTQ',
+               'command_description': 'Demultiplexes and applies quality '
+                                      'control to FASTQ data',
+               'software': 'QIIME',
+               'software_version': '1.9.1'}
         self.assertEqual(obs, exp)
 
 
@@ -179,6 +185,86 @@ class TestProcessingAPI(TestCase):
         obs = workflow_handler_patch_req('remove', '/1/')
         exp = {'status': 'error',
                'message': 'Incorrect path parameter'}
+        self.assertEqual(obs, exp)
+
+    def test_job_ajax_patch_req(self):
+        # Create a new job - through a workflow since that is the only way
+        # of creating jobs in the interface
+        exp_command = Command(1)
+        json_str = (
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
+            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        exp_params = Parameters.load(exp_command, json_str=json_str)
+        exp_user = User('test@foo.bar')
+        name = "Test processing workflow"
+
+        # tests success
+        wf = ProcessingWorkflow.from_scratch(
+            exp_user, exp_params, name=name, force=True)
+
+        graph = wf.graph
+        nodes = graph.nodes()
+        job_id = nodes[0].id
+
+        # Incorrect path parameter
+        obs = job_ajax_patch_req('remove', '/%s/somethingelse' % job_id)
+        exp = {'status': 'error',
+               'message': 'Incorrect path parameter: missing job id'}
+        self.assertEqual(obs, exp)
+
+        obs = job_ajax_patch_req('remove', '/')
+        exp = {'status': 'error',
+               'message': 'Incorrect path parameter: missing job id'}
+        self.assertEqual(obs, exp)
+
+        # Job id is not like a job id
+        obs = job_ajax_patch_req('remove', '/notAJobId')
+        exp = {'status': 'error',
+               'message': 'Incorrect path parameter: '
+                          'notAJobId is not a recognized job id'}
+        self.assertEqual(obs, exp)
+
+        # Job doesn't exist
+        obs = job_ajax_patch_req('remove',
+                                 '/6d368e16-2242-4cf8-87b4-a5dc40bc890b')
+        exp = {'status': 'error',
+               'message': 'Incorrect path parameter: '
+                          '6d368e16-2242-4cf8-87b4-a5dc40bc890b is not a '
+                          'recognized job id'}
+        self.assertEqual(obs, exp)
+
+        # in_construction job
+        obs = job_ajax_patch_req('remove', '/%s' % job_id)
+        exp = {'status': 'error',
+               'message': "Can't delete job %s. It is 'in_construction' "
+                          "status. Please use /study/process/workflow/"
+                          % job_id}
+        self.assertEqual(obs, exp)
+
+        # job status != 'error'
+        job = ProcessingJob(job_id)
+        job._set_status('queued')
+        obs = job_ajax_patch_req('remove', '/%s' % job_id)
+        exp = {'status': 'error',
+               'message': 'Only jobs in "error" status can be deleted.'}
+        self.assertEqual(obs, exp)
+
+        # Operation not supported
+        job._set_status('queued')
+        obs = job_ajax_patch_req('add', '/%s' % job_id)
+        exp = {'status': 'error',
+               'message': 'Operation "add" not supported. Current supported '
+                          'operations: remove'}
+        self.assertEqual(obs, exp)
+
+        # Test success
+        job._set_error('Killed for testing')
+        obs = job_ajax_patch_req('remove', '/%s' % job_id)
+        exp = {'status': 'success',
+               'message': ''}
         self.assertEqual(obs, exp)
 
 
