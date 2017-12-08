@@ -76,7 +76,7 @@
 
            // Apply a thumbnail
            if(file.chunks.length>0 && file.chunks[0].status()=='success' && file.chunks[file.chunks.length-1].status()=='success'){
-             $('#uploader_status').html('~~ Upload Finished ~~')
+             $('#uploader_status').append('~~ Upload Finished: <i>' + file.fileName + '</i> ~~<br/>');
              $this.setFileThumbnail(file.uniqueIdentifier, target_prefix + '/api/photo/frame?time=10&study_id='+encodeURIComponent(this.study_id)+'&resumableIdentifier='+encodeURIComponent(file.uniqueIdentifier));
            }
          });
