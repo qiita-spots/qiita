@@ -62,6 +62,19 @@
         $('body').css('padding-top', $('#navigation-bar').height()+10);
       });
 
+      function updateSelectedSamplesMenu (callback) {
+        $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
+          $("#dflt-study-count").text(result.studies);
+          $("#dflt-pd-count").text(result.processed_data);
+          $("#dflt-samp-count").text(result.samples);
+
+          if (callback !== undefined) {
+            callback();
+          }
+        });
+      }
+
+
       /**
        *
        * Function to show the loading gif in a given div
@@ -131,11 +144,7 @@
         });
         // Load default analysis summary data when displayed in menu
         $("#dflt-sel-info").mouseover(function() {
-          $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
-            $("#dflt-study-count").text(result.studies);
-            $("#dflt-pd-count").text(result.processed_data);
-            $("#dflt-samp-count").text(result.samples);
-          });
+          updateSelectedSamplesMenu();
         });
 
         $("#analysis-drop-down").mouseover(function() {
@@ -386,6 +395,8 @@
                 {% set unread =  len(current_user.unread_messages) %}
                 <a href="{% raw qiita_config.portal_dir %}/user/messages/"><span class="glyphicon glyphicon-envelope"></span> {% if unread > 0 %}<span style="color:red">({{unread}})</span>{% end %}</a>
                 <ul class="dropdown-menu info-menu" style="padding: 5px">
+                  <li class="dropdown-header"><b>INBOX</b></li>
+                  <li role="separator" class="divider"></li>
                 {% if user_messages %}
                   {% for _, um, ts, read, _ in user_messages %}
                     <li class="truncated" {% if read %}style="color:gray;"{% end %}>{%raw um %}<br /><span style="font-size:60%;{% if read %}color:gray;{% end %}">{{ts}}</span></li>
@@ -397,14 +408,19 @@
               </li>
               <li class="dropdown">
                 <a href="{% raw qiita_config.portal_dir %}/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span></a>
-                <ul class="dropdown-menu" style="padding: 5px">
-                  <li> <span id="dflt-study-count"></span> Studies</li>
+                <ul class="dropdown-menu" style="padding: 5px" id='selected-samples-dropdown-menu'>
+                  <li class="dropdown-header"><b>SELECTED SAMPLES</b></li>
+                  <li role="separator" class="divider"></li>
+                  <li><span id="dflt-study-count"></span> Studies</li>
                   <li><span id="dflt-pd-count"></span> Processed Data</li>
                   <li><span id="dflt-samp-count"></span> Samples</li>
                 </ul>
               </li>
               <li class="dropdown">
                 <a href="#" data-toggle='modal' data-target='#qiita-processing' id="dflt-sel-info"><span class="glyphicon glyphicon-tasks"></span></a>
+                <ul class="dropdown-menu" style="padding: 5px">
+                  <li class="dropdown-header"><b>JOBS</b></li>
+                </ul>
               </li>
             </ul>
             <!-- otherwise show the login form -->
