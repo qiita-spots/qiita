@@ -24,10 +24,11 @@ class PrepTemplateHandler(BaseHandler):
         user_ontology = self.get_argument('user-ontology', None)
         new_ontology = self.get_argument('new-ontology', None)
         prep_fp = self.get_argument('prep-file')
+        name = self.get_argument('name', None)
 
         response = prep_template_post_req(
             study_id, self.get_current_user().id, prep_fp, data_type,
-            ena_ontology, user_ontology, new_ontology)
+            ena_ontology, user_ontology, new_ontology, name=name)
 
         self.write(response)
 

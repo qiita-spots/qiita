@@ -312,7 +312,7 @@ def prep_template_summary_get_req(prep_id, user_id):
 def prep_template_post_req(study_id, user_id, prep_template, data_type,
                            investigation_type=None,
                            user_defined_investigation_type=None,
-                           new_investigation_type=None):
+                           new_investigation_type=None, name=None):
     """Adds a prep template to the system
 
     Parameters
@@ -331,6 +331,8 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
         Existing user added investigation type to attach to the prep template
     new_investigation_type: str, optional
         Investigation type to add to the system
+    name : str, optional
+        The name of the new prep template
 
     Returns
     -------
@@ -357,12 +359,14 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     msg = ''
     status = 'success'
     prep = None
+    if name:
+        name = name if name.strip() else None
     try:
         with warnings.catch_warnings(record=True) as warns:
             # deleting previous uploads and inserting new one
             prep = PrepTemplate.create(
                 load_template_to_dataframe(fp_rpt), Study(study_id), data_type,
-                investigation_type=investigation_type)
+                investigation_type=investigation_type, name=name)
             remove(fp_rpt)
 
             # join all the warning messages into one. Note that this info

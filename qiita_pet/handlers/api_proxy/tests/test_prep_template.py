@@ -430,7 +430,7 @@ class TestPrepAPI(TestCase):
 
     def test_prep_template_post_req(self):
         obs = prep_template_post_req(1, 'test@foo.bar', 'update.txt',
-                                     '16S')
+                                     '16S', name="  ")
         exp = {'status': 'warning',
                'message': [
                     ('Some columns required to generate a QIIME-compliant '
@@ -462,6 +462,7 @@ class TestPrepAPI(TestCase):
         self.assertEqual([x for x in prep.keys()], ['1.SKD6.640190'])
         self.assertEqual([x._to_dict() for x in prep.values()],
                          [{'new_col': 'new_value'}])
+        self.assertEqual(prep.name, "Prep information %s" % prep.id)
 
     def test_prep_template_post_req_errors(self):
         # User doesn't have access
