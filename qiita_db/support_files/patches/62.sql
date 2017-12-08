@@ -46,3 +46,10 @@ BEGIN
     END IF;
 END
 $$ LANGUAGE plpgsql;
+
+-- Dev 7, 2017
+-- Adding the name column to the prep template
+ALTER TABLE qiita.prep_template ADD name varchar DEFAULT 'Default Name' NOT NULL;
+
+-- Set the default name to be the previous name that was shown
+UPDATE qiita.prep_template SET name = 'Prep information ' || prep_template_id::varchar;
