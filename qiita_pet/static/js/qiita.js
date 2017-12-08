@@ -277,7 +277,13 @@ function error(evt) {
 
 function show_alert(data) {
   bootstrapAlert(data + ' samples selected.', "success", 10000);
-   $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
+  $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
+  updateSelectedSamplesMenu(function(){
+    // Show the dropdown menu
+    $('#selected-samples-dropdown-menu').addClass('custom-dropdown-menu');
+    // Hide it after 3 seconds
+    setTimeout(function() { $('#selected-samples-dropdown-menu').removeClass('custom-dropdown-menu'); }, 3000)
+  });
 }
 
 function send_children_buttons(button, aids) {
