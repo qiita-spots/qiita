@@ -107,9 +107,13 @@ def artifact_summary_get_request(user, artifact_id):
         # Check if the summary is being generated
         command = Command.get_html_generator(artifact_type)
         all_jobs = set(artifact.jobs(cmd=command))
-        jobs = [j for j in all_jobs if j.status in ['queued', 'running']]
-        errored_summary_jobs = [
-            (j.id, j.log.msg) for j in all_jobs if j.status in ['error']]
+        jobs = []
+        errored_summary_jobs = []
+        for j in all_jobs:
+            if j.status in ['queued', 'running']:
+                jobs.append(j)
+            elif j.status in ['error']:
+                errored_summary_jobs.append(j)
         if jobs:
             # There is already a job generating the HTML. Also, there should be
             # at most one job, because we are not allowing here to start more
