@@ -105,9 +105,8 @@ def prep_template_ajax_get_req(user_id, prep_id):
         attached
         - study_id: int, the study id of the template
     """
-    # Currently there is no name attribute, but it will be soon
-    name = "Prep information %d" % prep_id
     pt = PrepTemplate(prep_id)
+    name = pt.name
 
     # Initialize variables here
     processing = False
