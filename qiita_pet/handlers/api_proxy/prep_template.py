@@ -446,6 +446,8 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                          dumps({'job_id': job.id}))
             job.submit()
+        elif attribute == 'name':
+            prep.name = req_value.strip()
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',

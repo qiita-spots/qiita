@@ -526,6 +526,13 @@ class TestPrepAPI(TestCase):
         self._wait_for_parallel_job('prep_template_%s' % pt.id)
         self.assertNotIn('target_subfragment', pt.categories())
 
+        # Change the name of the prep template
+        obs = prep_template_patch_req(
+            'test@foo.bar', 'replace', '/%s/name' % pt.id, ' My New Name ')
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(obs, exp)
+        self.assertEqual(pt.name, 'My New Name')
+
         # Test all the errors
         # Operation not supported
         obs = prep_template_patch_req(

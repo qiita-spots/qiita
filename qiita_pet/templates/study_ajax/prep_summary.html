@@ -242,6 +242,38 @@
     }
   }
 
+  /**
+   **/
+  function validate_new_prep_name() {
+    $("#update-prep-name-btn").prop('disabled', $("#new-prep-name").val().replace(/ /g,'') === "");
+  };
+
+  /**
+   *
+   * Function to update the name of a prep information
+   */
+  function change_prep_name() {
+    $.ajax({
+      url: '{% raw qiita_config.portal_dir %}/prep_template/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': '/{{prep_id}}/name', 'value': $('#new-prep-name').val()},
+      success: function(data) {
+        if(data.status == 'error') {
+          bootstrapAlert(data.message, "danger");
+        } else {
+          // Hide the modal to change the prep name
+          $("#update-prep-name").modal('hide');
+          // Update the name of the artifact in the GUI
+          $("#prep-name-span").text($('#new-prep-name').val());
+          // Reset the value in the modal to an empty string
+          $('#new-prep-name').val("");
+          // Update the data type menu so it shows the new name
+          populate_data_type_menu_div();
+        }
+      }
+    });
+  }
+
   $(document).ready(function () {
     if("{{investigation_type}}" !== "None") {
       // The prep information already has an investigation type
@@ -316,6 +348,12 @@
       $('#alert-message').alert('close');
     {% end %}
 
+    // Set the focus on the text input when the modal to change the artifact
+    // name is shown
+    $('#update-prep-name').on('shown.bs.modal', function() {
+      $('#new-prep-name').val($("#prep-name-span").text());
+      $('#new-prep-name').focus();
+    });
 
   });
 </script>
@@ -324,7 +362,8 @@
 <div class="row">
   <div class="col-md-12">
     <h4>
-      {{name}} - ID {{prep_id}} ({{data_type}})
+      <span id="prep-name-span">{{name}}</span> - ID {{prep_id}} ({{data_type}})
+      <a class="btn btn-default" data-toggle="modal" data-target="#update-prep-name"><span class="glyphicon glyphicon-pencil"></span> Edit name</a>
       <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
       <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_qiime_id}}"><span class="glyphicon glyphicon-download-alt"></span> QIIME map</a>
       {% if is_submitted_to_ebi %}
@@ -407,6 +446,26 @@
       </div>
       <div id="processing-graph-vue" class="tab-pane fade">
         <processing-graph ref="procGraph" v-bind:is-analysis-pipeline='false' v-bind:no-init-jobs-callback="load_new_artifact" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/prep_template/{{prep_id}}/graph/" jobs-endpoint="/prep_template/{{prep_id}}/jobs/"></processing-graph>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal to update the prep name -->
+<div class="modal fade update-artifact-name" tabindex="-1" role="dialog" id="update-prep-name">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Updating prep information {{prep_id}} name</h3>
+      </div>
+      <div class="modal-body">
+        Introduce the new name:<br/>
+        <input type="text" name="new-prep-name" id="new-prep-name" onkeyup="validate_new_prep_name();">
+        <button id="update-prep-name-btn" class="btn btn-default" onclick="change_prep_name();" disabled>Update</button>
+      </div>
+      <div class="modal-footer">
       </div>
     </div>
   </div>
