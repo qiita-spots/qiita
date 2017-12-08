@@ -209,7 +209,7 @@ def study_prep_get_req(study_id, user_id):
                 continue
             start_artifact = prep.artifact
             info = {
-                'name': 'PREP %d NAME' % prep.id,
+                'name': prep.name,
                 'id': prep.id,
                 'status': prep.status,
             }

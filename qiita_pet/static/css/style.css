@@ -42,9 +42,15 @@ tr.shown div.details-control{
   padding-bottom: 6px;
 }
 
-.dropdown:hover .dropdown-menu {
+.dropdown:hover .dropdown-menu{
     display: block;
  }
+
+/* hover is a pseudoclass and can't be controlled - use the class below to trigger
+the same behavior as the hover pseudoclass */
+.custom-dropdown-menu {
+    display: block;
+}
 
  .info-menu {
     word-wrap: break-word;

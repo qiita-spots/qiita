@@ -52,8 +52,9 @@ class TestPrepAPIReadOnly(TestCase):
         exp = {
             'status': 'success',
             'prep_files': ['uploaded_file.txt'],
-            'data_types': ['16S', '18S', 'ITS', 'Metabolomic', 'Metagenomic',
-                           'Multiomic', 'Proteomic'],
+            'data_types': ['16S', '18S', 'Genomics', 'ITS', 'Metabolomic',
+                           'Metagenomic', 'Metatranscriptomics', 'Multiomic',
+                           'Proteomic', 'Transcriptomics', 'Viromics'],
             'ontology': {
                 'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
                         'Forensic or Paleo-genomics', 'Gene Regulation Study',
@@ -430,7 +431,7 @@ class TestPrepAPI(TestCase):
 
     def test_prep_template_post_req(self):
         obs = prep_template_post_req(1, 'test@foo.bar', 'update.txt',
-                                     '16S')
+                                     '16S', name="  ")
         exp = {'status': 'warning',
                'message': [
                     ('Some columns required to generate a QIIME-compliant '
@@ -462,6 +463,7 @@ class TestPrepAPI(TestCase):
         self.assertEqual([x for x in prep.keys()], ['1.SKD6.640190'])
         self.assertEqual([x._to_dict() for x in prep.values()],
                          [{'new_col': 'new_value'}])
+        self.assertEqual(prep.name, "Prep information %s" % prep.id)
 
     def test_prep_template_post_req_errors(self):
         # User doesn't have access
@@ -524,6 +526,13 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs, exp)
         self._wait_for_parallel_job('prep_template_%s' % pt.id)
         self.assertNotIn('target_subfragment', pt.categories())
+
+        # Change the name of the prep template
+        obs = prep_template_patch_req(
+            'test@foo.bar', 'replace', '/%s/name' % pt.id, ' My New Name ')
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(obs, exp)
+        self.assertEqual(pt.name, 'My New Name')
 
         # Test all the errors
         # Operation not supported
