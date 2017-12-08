@@ -99,13 +99,12 @@ class TestBaseHandlersUtils(TestCase):
                            '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
                            '}" class="btn btn-primary btn-sm">Revert to '
                            'sandbox</button>'),
-               'processing_parameters': {},
+               'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
                'summary': None,
                'job': None,
-               'processing_jobs': [],
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
         # Artifact with summary being generated
@@ -130,13 +129,12 @@ class TestBaseHandlersUtils(TestCase):
                            '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
                            '}" class="btn btn-primary btn-sm">Revert to '
                            'sandbox</button>'),
-               'processing_parameters': {},
+               'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
                'summary': None,
                'job': [job.id, 'queued', None],
-               'processing_jobs': [],
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
         # Artifact with summary
@@ -168,13 +166,12 @@ class TestBaseHandlersUtils(TestCase):
                            '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
                            '}" class="btn btn-primary btn-sm">Revert to '
                            'sandbox</button>'),
-               'processing_parameters': {},
+               'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
                'summary': exp_summary_path,
                'job': None,
-               'processing_jobs': [],
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
         # No access
@@ -192,13 +189,12 @@ class TestBaseHandlersUtils(TestCase):
                'visibility': 'public',
                'editable': False,
                'buttons': '',
-               'processing_parameters': {},
+               'processing_info': {},
                'files': [],
                'is_from_analysis': False,
                'summary': exp_summary_path,
                'job': None,
-               'processing_jobs': [],
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
         # returnig to private
@@ -230,20 +226,23 @@ class TestBaseHandlersUtils(TestCase):
                            'Submit to EBI</a> <a class="btn btn-primary '
                            'btn-sm" href="/vamps/2"><span class="glyphicon '
                            'glyphicon-export"></span> Submit to VAMPS</a>'),
-               'processing_parameters': {
-                   'max_barcode_errors': '1.5', 'sequence_max_n': '0',
-                   'max_bad_run_length': '3', 'phred_offset': u'auto',
-                   'rev_comp': 'False', 'phred_quality_threshold': '3',
-                   'input_data': '1', 'rev_comp_barcode': 'False',
-                   'rev_comp_mapping_barcodes': 'False',
-                   'min_per_read_length_fraction': '0.75',
-                   'barcode_type': u'golay_12'},
+               'processing_info': {
+                    'command': 'Split libraries FASTQ',
+                    'software': 'QIIME',
+                    'software_version': '1.9.1',
+                    'processing_parameters': {
+                        'max_barcode_errors': '1.5', 'sequence_max_n': '0',
+                        'max_bad_run_length': '3', 'phred_offset': u'auto',
+                        'rev_comp': 'False', 'phred_quality_threshold': '3',
+                        'input_data': '1', 'rev_comp_barcode': 'False',
+                        'rev_comp_mapping_barcodes': 'False',
+                        'min_per_read_length_fraction': '0.75',
+                        'barcode_type': u'golay_12'}},
                'files': exp_files,
                'is_from_analysis': False,
                'summary': None,
                'job': None,
-               'processing_jobs': [],
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
         # analysis artifact
@@ -256,13 +255,12 @@ class TestBaseHandlersUtils(TestCase):
                'visibility': 'sandbox',
                'editable': True,
                'buttons': '',
-               'processing_parameters': {},
+               'processing_info': {},
                'files': [(27, 'biom_table.biom (biom)')],
                'is_from_analysis': True,
                'summary': None,
                'job': None,
-               'processing_jobs': [],
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
     def test_artifact_summary_post_request(self):

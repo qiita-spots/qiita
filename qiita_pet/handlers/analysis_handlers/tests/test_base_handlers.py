@@ -223,7 +223,7 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         # Check the edges
         self.assertEqual(obs['workflow'], exp['workflow'])
 
-        # Add a job to the second BIOM to make sure that the edes and nodes
+        # Add a job to the second BIOM to make sure that the edges and nodes
         # are respected. Magic number 12 -> Single Rarefaction
         job2 = wf.add(
             DefaultParameters(16), req_params={'depth': '100',
@@ -263,6 +263,7 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         # Add a second Workflow to the second artifact to force the raise of
         # the error. This situation should never happen when using
         # the interface
+        wf.remove(job2)
         params = Parameters.load(
             Command(9), values_dict={'metadata_category': 'None',
                                      'sort': 'False',

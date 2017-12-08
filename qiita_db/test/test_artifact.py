@@ -332,6 +332,15 @@ class ArtifactTestsReadOnly(TestCase):
         obs = A(1).descendants_with_jobs
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
+
+        # Add an HTML summary job in one artifact in a non-success statuts, to
+        # make sure that it doesn't get returned in the graph
+        html_job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(
+                qdb.software.Command.get_html_generator(A(6).artifact_type),
+                values_dict={'input_data': 6}))
+        html_job._set_status('running')
         # as jobs are created at random we will only check that the artifacts
         # are there and that the number of jobs matches
         exp_nodes = [('artifact', A(1)), ('artifact', A(2)),
