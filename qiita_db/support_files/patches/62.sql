@@ -47,6 +47,10 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
+-- Dec 7, 2017
+-- Adding new data types to qiita
+INSERT INTO qiita.data_type (data_type) VALUES ('Metatranscriptomics'), ('Viromics'), ('Genomics'), ('Transcriptomics');
+
 -- Dev 7, 2017
 -- Adding the name column to the prep template
 ALTER TABLE qiita.prep_template ADD name varchar DEFAULT 'Default Name' NOT NULL;

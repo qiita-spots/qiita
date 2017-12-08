@@ -52,8 +52,9 @@ class TestPrepAPIReadOnly(TestCase):
         exp = {
             'status': 'success',
             'prep_files': ['uploaded_file.txt'],
-            'data_types': ['16S', '18S', 'ITS', 'Metabolomic', 'Metagenomic',
-                           'Multiomic', 'Proteomic'],
+            'data_types': ['16S', '18S', 'Genomics', 'ITS', 'Metabolomic',
+                           'Metagenomic', 'Metatranscriptomics', 'Multiomic',
+                           'Proteomic', 'Transcriptomics', 'Viromics'],
             'ontology': {
                 'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
                         'Forensic or Paleo-genomics', 'Gene Regulation Study',
