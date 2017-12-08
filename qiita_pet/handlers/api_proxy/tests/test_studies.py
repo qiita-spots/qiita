@@ -165,14 +165,14 @@ class TestStudyAPI(TestCase):
                    '18S': [{
                        'id': 1,
                        'status': 'private',
-                       'name': 'PREP 1 NAME',
+                       'name': 'Prep information 1',
                        'start_artifact_id': 1,
                        'start_artifact': 'FASTQ',
                        'youngest_artifact': 'BIOM - BIOM',
                        'ebi_experiment': 27}, {
                        'id': 2,
                        'status': 'private',
-                       'name': 'PREP 2 NAME',
+                       'name': 'Prep information 2',
                        'start_artifact': 'BIOM',
                        'youngest_artifact': 'BIOM - BIOM',
                        'ebi_experiment': 27,
@@ -191,21 +191,21 @@ class TestStudyAPI(TestCase):
                'info': {
                    '18S': [{'id': 1,
                             'status': 'private',
-                            'name': 'PREP 1 NAME',
+                            'name': 'Prep information 1',
                             'start_artifact_id': 1,
                             'start_artifact': 'FASTQ',
                             'youngest_artifact': 'BIOM - BIOM',
                             'ebi_experiment': 27},
                            {'id': 2,
                             'status': 'private',
-                            'name': 'PREP 2 NAME',
+                            'name': 'Prep information 2',
                             'start_artifact_id': 7,
                             'start_artifact': 'BIOM',
                             'youngest_artifact': 'BIOM - BIOM',
                             'ebi_experiment': 27}],
                    '16S': [{'id': pt.id,
                             'status': 'sandbox',
-                            'name': 'PREP %d NAME' % pt.id,
+                            'name': 'Prep information %d' % pt.id,
                             'start_artifact_id': None,
                             'start_artifact': None,
                             'youngest_artifact': None,
@@ -222,7 +222,7 @@ class TestStudyAPI(TestCase):
                'info': {
                    '18S': [{'id': 1,
                             'status': 'public',
-                            'name': 'PREP 1 NAME',
+                            'name': 'Prep information 1',
                             'start_artifact_id': 1,
                             'start_artifact': 'FASTQ',
                             'youngest_artifact': 'BIOM - BIOM',
@@ -324,7 +324,8 @@ class TestStudyAPI(TestCase):
         exp = {
             'info': {
                 '16S': [
-                    {'status': 'sandbox', 'name': 'PREP %d NAME' % pt.id,
+                    {'status': 'sandbox',
+                     'name': 'Prep information %d' % pt.id,
                      'start_artifact': None, 'youngest_artifact': None,
                      'ebi_experiment': False, 'id': pt.id,
                      'start_artifact_id': None}]

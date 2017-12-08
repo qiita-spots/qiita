@@ -23,9 +23,9 @@ class TestHelpers(TestHandlerBase):
         cols_exp = [{'field': 'sample', 'width': 240, 'sortable': False,
                      'id': 'sample', 'name': 'Sample'},
                     {'field': 'prep1', 'width': 240, 'sortable': False,
-                     'id': 'prep1', 'name': 'PREP 1 NAME - 1'},
+                     'id': 'prep1', 'name': 'Prep information 1 - 1'},
                     {'field': 'prep2', 'width': 240, 'sortable': False,
-                     'id': 'prep2', 'name': 'PREP 2 NAME - 2'}]
+                     'id': 'prep2', 'name': 'Prep information 2 - 2'}]
         self.assertEqual(cols, cols_exp)
         table_exp = [{'sample': '1.SKB2.640194', 'prep2': 'X', 'prep1': 'X'},
                      {'sample': '1.SKM4.640180', 'prep2': 'X', 'prep1': 'X'},

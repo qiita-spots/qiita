@@ -105,9 +105,8 @@ def prep_template_ajax_get_req(user_id, prep_id):
         attached
         - study_id: int, the study id of the template
     """
-    # Currently there is no name attribute, but it will be soon
-    name = "Prep information %d" % prep_id
     pt = PrepTemplate(prep_id)
+    name = pt.name
 
     # Initialize variables here
     processing = False
@@ -313,7 +312,7 @@ def prep_template_summary_get_req(prep_id, user_id):
 def prep_template_post_req(study_id, user_id, prep_template, data_type,
                            investigation_type=None,
                            user_defined_investigation_type=None,
-                           new_investigation_type=None):
+                           new_investigation_type=None, name=None):
     """Adds a prep template to the system
 
     Parameters
@@ -332,6 +331,8 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
         Existing user added investigation type to attach to the prep template
     new_investigation_type: str, optional
         Investigation type to add to the system
+    name : str, optional
+        The name of the new prep template
 
     Returns
     -------
@@ -358,12 +359,14 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     msg = ''
     status = 'success'
     prep = None
+    if name:
+        name = name if name.strip() else None
     try:
         with warnings.catch_warnings(record=True) as warns:
             # deleting previous uploads and inserting new one
             prep = PrepTemplate.create(
                 load_template_to_dataframe(fp_rpt), Study(study_id), data_type,
-                investigation_type=investigation_type)
+                investigation_type=investigation_type, name=name)
             remove(fp_rpt)
 
             # join all the warning messages into one. Note that this info
@@ -443,6 +446,8 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                          dumps({'job_id': job.id}))
             job.submit()
+        elif attribute == 'name':
+            prep.name = req_value.strip()
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',

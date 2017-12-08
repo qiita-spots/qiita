@@ -167,6 +167,8 @@ Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.ba
   source activate qiita
 ```
 
+Update paths in the newly copied configuration file to match your settings, e.g. replace /home/travis/ with your user home directory.
+
 Next, make a test environment:
 
 ```bash
