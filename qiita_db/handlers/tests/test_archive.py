@@ -6,11 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import join, exists, isfile
-from os import close, remove
+from os.path import exists, isfile
+from os import remove
 from shutil import rmtree
 
-from unittest import main, TestCase
+from unittest import main
 from json import loads
 
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
