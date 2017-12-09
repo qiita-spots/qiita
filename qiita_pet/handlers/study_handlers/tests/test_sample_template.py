@@ -7,16 +7,137 @@
 # -----------------------------------------------------------------------------
 from unittest import main
 from json import loads
+from os import remove, close
+from os.path import exists, join
+from tempfile import mkstemp
 
+from tornado.web import HTTPError
 
 from qiita_core.qiita_settings import r_client
 from qiita_core.testing import wait_for_processing_job
+from qiita_db.user import User
+from qiita_db.study import Study, StudyPerson
+from qiita_db.util import get_mountpoint
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.study_handlers.sample_template import (
-    _build_sample_summary)
+    _build_sample_summary, _check_study_access,
+    sample_template_handler_post_request,
+    sample_template_overview_handler_get_request)
 
 
 class TestHelpers(TestHandlerBase):
+    def setUp(self):
+        self._clean_up_files = []
+
+    def tearDown(self):
+        # Clear up the redis cache
+        r_client.flushdb()
+        # Remove any files that need to be remove
+        for fp in self._clean_up_files:
+            if exists(fp):
+                remove(fp)
+
+    def test_check_study_access(self):
+        user = User('test@foo.bar')
+
+        # If the user has access, this should not raise anything, so it will
+        # keep the execution
+        _check_study_access(1, user)
+
+        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+            _check_study_access(1000000, user)
+
+        with self.assertRaisesRegexp(HTTPError,
+                                     'User does not have access to study'):
+            _check_study_access(1, User('demo@microbio.me'))
+
+    def test_sample_template_handler_post_request(self):
+        # Test user doesn't have access
+        with self.assertRaisesRegexp(HTTPError,
+                                     'User does not have access to study'):
+            sample_template_handler_post_request(
+                1, User('demo@microbio.me'), 'ignored')
+
+        # Test study doesn't exist
+        user = User('test@foo.bar')
+        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+            sample_template_handler_post_request(1000000, user, 'ignored')
+
+        # Test file doesn't exist
+        with self.assertRaisesRegexp(HTTPError, 'Filepath not found'):
+            sample_template_handler_post_request(1, user, 'DoesNotExist.txt')
+
+        # Test looks like mapping file and no data_type provided
+        uploads_dir = join(get_mountpoint('uploads')[0][1], '1')
+        fd, fp = mkstemp(suffix='.txt', dir=uploads_dir)
+        self._clean_up_files.append(fp)
+        close(fd)
+
+        with open(fp, 'w') as f:
+            f.write('#SampleID\tCol1\nSample1\tVal1')
+
+        with self.assertRaisesRegexp(
+                HTTPError, 'Please, choose a data type if uploading a QIIME '
+                           'mapping file'):
+            sample_template_handler_post_request(1, user, fp)
+
+        # Test success
+        obs = sample_template_handler_post_request(
+            1, user, 'uploaded_file.txt')
+        self.assertEqual(obs.keys(), ['job'])
+        job_info = r_client.get('sample_template_1')
+        self.assertIsNotNone(job_info)
+
+        # Wait until the job is done
+        wait_for_processing_job(loads(job_info)['job_id'])
+
+    def test_sample_template_overview_handler_get_request(self):
+        # Test user doesn't have access
+        with self.assertRaisesRegexp(HTTPError,
+                                     'User does not have access to study'):
+            sample_template_overview_handler_get_request(
+                1, User('demo@microbio.me'))
+
+        # Test study doesn't exist
+        user = User('test@foo.bar')
+        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+            sample_template_overview_handler_get_request(1000000, user)
+
+        # Test sample template exist
+        obs = sample_template_overview_handler_get_request(1, user)
+        exp = {'exists': True,
+               'uploaded_files': ['uploaded_file.txt'],
+               'data_types': [],
+               'user_can_edit': True,
+               'job': None}
+        self.assertEqual(obs, exp)
+
+        # Test sample template doesn't exist
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "study_alias": "ALIAS",
+            "study_description": "DESC",
+            "study_abstract": "ABS",
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        new_study = Study.create(User('test@foo.bar'), 'Some New Study',
+                                 info)
+        obs = sample_template_overview_handler_get_request(new_study.id, user)
+        exp = {'exists': False,
+               'uploaded_files': [],
+               'data_types': ['16S', '18S', 'Genomics', 'ITS', 'Metabolomic',
+                              'Metagenomic', 'Metatranscriptomics',
+                              'Multiomic', 'Proteomic', 'Transcriptomics',
+                              'Viromics'],
+               'user_can_edit': True,
+               'job': None}
+        self.assertEqual(obs, exp)
+
     def test_build_sample_summary(self):
         cols, table = _build_sample_summary(1, 'test@foo.bar')
         # Make sure header filled properly

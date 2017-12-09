@@ -6,13 +6,22 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from os.path import basename
+from json import loads, dumps
+
 from tornado.web import authenticated, HTTPError
 from tornado.escape import url_escape
 
-from os.path import basename
-
+from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import get_files_from_uploads_folders
+from qiita_db.study import Study
+from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template.util import looks_like_qiime_mapping_file
+from qiita_db.software import Software, Parameters
+from qiita_db.processing_job import ProcessingJob
+from qiita_db.exceptions import QiitaDBUnknownIDError
+
 from qiita_pet.handlers.api_proxy import (
     sample_template_summary_get_req,
     sample_template_post_req, sample_template_put_req,
@@ -20,7 +29,153 @@ from qiita_pet.handlers.api_proxy import (
     data_types_get_req, sample_template_samples_get_req,
     prep_template_samples_get_req, study_prep_get_req,
     sample_template_meta_cats_get_req, sample_template_category_get_req,
-    sample_template_patch_request, get_sample_template_processing_status)
+    sample_template_patch_request, get_sample_template_processing_status,
+    check_fp)
+
+
+SAMPLE_TEMPLATE_KEY_FORMAT = 'sample_template_%s'
+
+
+def _check_study_access(study_id, user):
+    """Raises an error if the given user doesn't have access to the study
+
+    Parameters
+    ----------
+    study_id : int
+        The study id
+    user : qiita_db.user.User
+        The user trying to access the study
+
+    Raises
+    ------
+    HTTPError
+        404 if the study does not exist
+        403 if the user does not have access to the study
+    """
+    try:
+        study = Study(int(study_id))
+    except QiitaDBUnknownIDError:
+        raise HTTPError(404, 'Study does not exist')
+    if not study.has_access(user):
+        raise HTTPError(403, 'User does not have access to study')
+
+
+def sample_template_handler_post_request(study_id, user, filepath,
+                                         data_type=None):
+    """Creates a new sample template
+
+    Parameters
+    ----------
+    study_id: int
+        The study to add the sample information
+    user: qiita_db.user import User
+        The user performing the request
+    filepath: str
+        The path to the sample template file
+    data_type: str, optional
+        If filepath is a QIIME mapping file, the data type of the prep
+        information file
+
+    Returns
+    -------
+    dict of {'job': str}
+        job: the id of the job adding the sample information to the study
+
+    Raises
+    ------
+    HTTPError
+        404 if the filepath doesn't exist
+    """
+    # Check if the current user has access to the study
+    _check_study_access(study_id, user)
+
+    # Check if the file exists
+    fp_rsp = check_fp(study_id, filepath)
+    if fp_rsp['status'] != 'success':
+        raise HTTPError(404, 'Filepath not found')
+    filepath = fp_rsp['file']
+
+    is_mapping_file = looks_like_qiime_mapping_file(filepath)
+    if is_mapping_file and not data_type:
+        raise HTTPError(400, 'Please, choose a data type if uploading a '
+                             'QIIME mapping file')
+
+    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+    cmd = qiita_plugin.get_command('create_sample_template')
+    params = Parameters.load(
+        cmd, values_dict={'fp': filepath, 'study_id': study_id,
+                          'is_mapping_file': is_mapping_file,
+                          'data_type': data_type})
+    job = ProcessingJob.create(user, params, True)
+    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
+                 dumps({'job_id': job.id}))
+    job.submit()
+    return {'job': job.id}
+
+
+class SampleTemplateHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        study_id = self.get_argument('study_id')
+
+        # Check if the current user has access to the sample template
+        _check_study_access(study_id, self.current_user)
+
+        self.render('study_ajax/sample_summary.html', study_id=study_id)
+
+    @authenticated
+    def post(self):
+        study_id = int(self.get_argument('study_id'))
+        filepath = self.get_argument('filepath')
+        data_type = self.get_argument('data_type')
+
+        self.write(sample_template_handler_post_request(
+            study_id, self.current_user, filepath, data_type=data_type))
+
+
+def sample_template_overview_handler_get_request(study_id, user):
+    # Check if the current user has access to the sample template
+    _check_study_access(study_id, user)
+
+    # Check if the sample template exists
+    exists = SampleTemplate.exists(study_id)
+
+    # The following information should always be provided:
+    # The files that have been uploaded to the system and can be a
+    # sample template file
+    files = [f for _, f in get_files_from_uploads_folders(study_id)
+             if f.endswith(('txt', 'tsv'))]
+    # If there is a job associated with the sample information, the job id
+    job = None
+    job_info = r_client.get(SAMPLE_TEMPLATE_KEY_FORMAT % study_id)
+    if job_info:
+        job = loads(job_info)['job_id']
+
+    # Specific information if it exists or not:
+    data_types = []
+    if exists:
+        # If it exists, provide some information about it
+        pass
+    else:
+        # It doesn't exist, besides the uploaded_files, we also need to
+        # provide the data_types in case the user upload a QIIME mapping
+        # file
+        data_types = sorted(data_types_get_req()['data_types'])
+
+    return {'exists': exists,
+            'uploaded_files': files,
+            'data_types': data_types,
+            'user_can_edit': Study(study_id).can_edit(user),
+            'job': job}
+
+
+class SampleTemplateOverviewHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        study_id = int(self.get_argument('study_id'))
+        self.write(
+            sample_template_overview_handler_get_request(
+                study_id, self.current_user))
 
 
 def _build_sample_summary(study_id, user_id):
