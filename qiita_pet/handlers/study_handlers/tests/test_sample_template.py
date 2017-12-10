@@ -24,7 +24,8 @@ from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.study_handlers.sample_template import (
     _build_sample_summary, _check_study_access,
     sample_template_handler_post_request,
-    sample_template_overview_handler_get_request)
+    sample_template_overview_handler_get_request,
+    sample_template_handler_delete_request)
 
 
 class TestHelpers(TestHandlerBase):
@@ -38,6 +39,33 @@ class TestHelpers(TestHandlerBase):
         for fp in self._clean_up_files:
             if exists(fp):
                 remove(fp)
+
+    def _create_study(self, study_title):
+        """Creates a new study
+
+        Parameters
+        ----------
+        study_title: str
+            The title of the new study
+
+        Returns
+        -------
+        qiita_db.study.Study
+            The newly created study
+        """
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "study_alias": "ALIAS",
+            "study_description": "DESC",
+            "study_abstract": "ABS",
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        return Study.create(User('test@foo.bar'), study_title, info)
 
     def test_check_study_access(self):
         user = User('test@foo.bar')
@@ -119,20 +147,7 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
         # Test sample template doesn't exist
-        info = {
-            "timeseries_type_id": 1,
-            "metadata_complete": True,
-            "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
-            "study_alias": "ALIAS",
-            "study_description": "DESC",
-            "study_abstract": "ABS",
-            "principal_investigator_id": StudyPerson(3),
-            "lab_person_id": StudyPerson(1)
-        }
-        new_study = Study.create(User('test@foo.bar'), 'Some New Study',
-                                 info)
+        new_study = self._create_study('Some New Study')
         obs = sample_template_overview_handler_get_request(new_study.id, user)
         exp = {'exists': False,
                'uploaded_files': [],
@@ -147,6 +162,34 @@ class TestHelpers(TestHandlerBase):
                'num_samples': 0,
                'num_columns': 0}
         self.assertEqual(obs, exp)
+
+    def test_sample_template_handler_delete_request(self):
+        # Test user doesn't have access
+        with self.assertRaisesRegexp(HTTPError,
+                                     'User does not have access to study'):
+            sample_template_handler_delete_request(
+                1, User('demo@microbio.me'))
+
+        # Test study doesn't exist
+        user = User('test@foo.bar')
+        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+            sample_template_handler_delete_request(1000000, user)
+
+        # Test sample information doesn't exist
+        new_study = self._create_study('Study for deleting test')
+        with self.assertRaisesRegexp(HTTPError, "Study %s doesn't have sample "
+                                                "information" % new_study.id):
+            sample_template_handler_delete_request(new_study.id, user)
+
+        # Test success
+        user = User('test@foo.bar')
+        obs = sample_template_handler_delete_request(1, user)
+        self.assertEqual(obs.keys(), ['job'])
+        job_info = r_client.get('sample_template_1')
+        self.assertIsNotNone(job_info)
+
+        # Wait until the job is done
+        wait_for_processing_job(loads(job_info)['job_id'])
 
     def test_build_sample_summary(self):
         cols, table = _build_sample_summary(1, 'test@foo.bar')
@@ -212,6 +255,16 @@ class TestSampleTemplateHandler(TestHandlerBase):
                              {'study_id': 1,
                               'filepath': 'uploaded_file.txt',
                               'data_type': ''})
+        self.assertEqual(response.code, 200)
+        self.assertIsNotNone(response.body)
+        obs = loads(response.body)
+        self.assertEqual(obs.keys(), ['job'])
+        # Wait until the job is done
+        wait_for_processing_job(obs['job'])
+
+    def test_delete(self):
+        response = self.delete('/study/description/sample_template/',
+                               {'study_id': 1})
         self.assertEqual(response.code, 200)
         self.assertIsNotNone(response.body)
         obs = loads(response.body)

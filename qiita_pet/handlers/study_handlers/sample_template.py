@@ -113,6 +113,47 @@ def sample_template_handler_post_request(study_id, user, filepath,
     return {'job': job.id}
 
 
+def sample_template_handler_delete_request(study_id, user):
+    """Deletes the sample template
+
+    Parameters
+    ----------
+    study_id: int
+        The study to delete the sample information
+    user: qiita_db.user import User
+        The user performing the request
+
+    Returns
+    -------
+    dict of {'job': str}
+        job: the id of the job deleting the sample information to the study
+
+    Raises
+    ------
+    HTTPError
+        404 If the sample template doesn't exist
+    """
+    # Check if the current user has access to the study
+    _check_study_access(study_id, user)
+
+    if not SampleTemplate.exists(study_id):
+        raise HTTPError(
+            404, "Study %s doesn't have sample information" % study_id)
+
+    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+    cmd = qiita_plugin.get_command('delete_sample_template')
+    params = Parameters.load(cmd, values_dict={'study': int(study_id)})
+    job = ProcessingJob.create(user, params, True)
+
+    # Store the job if deleteing the sample template
+    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
+                 dumps({'job_id': job.id}))
+
+    job.submit()
+
+    return {'job': job.id}
+
+
 class SampleTemplateHandler(BaseHandler):
     @authenticated
     def get(self):
@@ -131,6 +172,12 @@ class SampleTemplateHandler(BaseHandler):
 
         self.write(sample_template_handler_post_request(
             study_id, self.current_user, filepath, data_type=data_type))
+
+    @authenticated
+    def delete(self):
+        study_id = int(self.get_argument('study_id'))
+        self.write(sample_template_handler_delete_request(
+            study_id, self.current_user))
 
 
 def sample_template_overview_handler_get_request(study_id, user):
