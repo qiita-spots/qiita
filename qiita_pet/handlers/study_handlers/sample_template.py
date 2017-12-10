@@ -153,20 +153,41 @@ def sample_template_overview_handler_get_request(study_id, user):
 
     # Specific information if it exists or not:
     data_types = []
+    st_fp_id = None
+    old_files = []
+    num_samples = 0
+    num_cols = 0
     if exists:
-        # If it exists, provide some information about it
-        pass
+        # If it exists we need to provide:
+        # The id of the sample template file so the user can download it and
+        # the list of old filepaths
+        st = SampleTemplate(study_id)
+        all_st_files = st.get_filepaths()
+        # The current sample template file is the first one in the list
+        # (pop(0)) and we are interested only in the id ([0])
+        st_fp_id = all_st_files.pop(0)[0]
+        # For the old filepaths we are only interested in their basename
+        old_files = [basename(fp) for _, fp in all_st_files]
+        # The number of samples - this is a space efficient way of counting
+        # the number of samples. Doing len(list(st.keys())) creates a list
+        # that we are not using
+        num_samples = sum(1 for _ in st.keys())
+        # The number of columns
+        num_cols = len(st.categories())
     else:
-        # It doesn't exist, besides the uploaded_files, we also need to
-        # provide the data_types in case the user upload a QIIME mapping
-        # file
+        # It doesn't exist, we also need to provide the data_types in case
+        # the user uploads a QIIME mapping file
         data_types = sorted(data_types_get_req()['data_types'])
 
     return {'exists': exists,
             'uploaded_files': files,
             'data_types': data_types,
             'user_can_edit': Study(study_id).can_edit(user),
-            'job': job}
+            'job': job,
+            'download_id': st_fp_id,
+            'old_files': old_files,
+            'num_samples': num_samples,
+            'num_columns': num_cols}
 
 
 class SampleTemplateOverviewHandler(BaseHandler):
@@ -176,6 +197,12 @@ class SampleTemplateOverviewHandler(BaseHandler):
         self.write(
             sample_template_overview_handler_get_request(
                 study_id, self.current_user))
+
+
+
+
+
+
 
 
 def _build_sample_summary(study_id, user_id):

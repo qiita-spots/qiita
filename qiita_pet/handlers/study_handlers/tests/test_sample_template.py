@@ -12,7 +12,9 @@ from os.path import exists, join
 from tempfile import mkstemp
 
 from tornado.web import HTTPError
+from mock import Mock
 
+from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.qiita_settings import r_client
 from qiita_core.testing import wait_for_processing_job
 from qiita_db.user import User
@@ -109,7 +111,11 @@ class TestHelpers(TestHandlerBase):
                'uploaded_files': ['uploaded_file.txt'],
                'data_types': [],
                'user_can_edit': True,
-               'job': None}
+               'job': None,
+               'download_id': 22,
+               'old_files': ['1_19700101-000000.txt'],
+               'num_samples': 27,
+               'num_columns': 30}
         self.assertEqual(obs, exp)
 
         # Test sample template doesn't exist
@@ -135,7 +141,11 @@ class TestHelpers(TestHandlerBase):
                               'Multiomic', 'Proteomic', 'Transcriptomics',
                               'Viromics'],
                'user_can_edit': True,
-               'job': None}
+               'job': None,
+               'download_id': None,
+               'old_files': [],
+               'num_samples': 0,
+               'num_columns': 0}
         self.assertEqual(obs, exp)
 
     def test_build_sample_summary(self):
@@ -176,6 +186,57 @@ class TestHelpers(TestHandlerBase):
                      {'sample': '1.SKM7.640188', 'prep2': 'X', 'prep1': 'X'},
                      {'sample': '1.SKD7.640191', 'prep2': 'X', 'prep1': 'X'}]
         self.assertEqual(table, table_exp)
+
+
+class TestSampleTemplateHandler(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/study/description/sample_template/',
+                            {'study_id': 1})
+        self.assertEqual(response.code, 200)
+        self.assertNotEqual(response.body, "")
+
+        # Study doesn't exist
+        response = self.get('/study/description/sample_template/',
+                            {'study_id': 10000})
+        self.assertEqual(response.code, 404)
+
+        # User doesn't have access
+        BaseHandler.get_current_user = Mock(
+            return_value=User('demo@microbio.me'))
+        response = self.get('/study/description/sample_template/',
+                            {'study_id': 1})
+        self.assertEqual(response.code, 403)
+
+    def test_post(self):
+        response = self.post('/study/description/sample_template/',
+                             {'study_id': 1,
+                              'filepath': 'uploaded_file.txt',
+                              'data_type': ''})
+        self.assertEqual(response.code, 200)
+        self.assertIsNotNone(response.body)
+        obs = loads(response.body)
+        self.assertEqual(obs.keys(), ['job'])
+        # Wait until the job is done
+        wait_for_processing_job(obs['job'])
+
+
+class TestSampleTemplateOverviewHandler(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/study/description/sample_template/overview/',
+                            {'study_id': 1})
+        self.assertEqual(response.code, 200)
+        self.assertIsNotNone(response.body)
+        obs = loads(response.body)
+        exp = {'exists': True,
+               'uploaded_files': ['uploaded_file.txt'],
+               'data_types': [],
+               'user_can_edit': True,
+               'job': None,
+               'download_id': 22,
+               'old_files': ['1_19700101-000000.txt'],
+               'num_samples': 27,
+               'num_columns': 30}
+        self.assertEqual(obs, exp)
 
 
 class TestSampleTemplateAJAX(TestHandlerBase):
