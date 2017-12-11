@@ -201,7 +201,7 @@ Processing Workflow Page: Commands
     * **Weighted normalized UniFrac**: Measures Weighted normalized UniFrac
      * Takes into account abundance
      * Normalization adjusts for varying root-to-tip distances.
-    * **Citation**: *Lozupone, C. A., Hamady, M; Kelley, S. T., Knight, R. (2007). "Quantitative and qualitative beta diversity measures lead to different insights into factors that structure microbial communities". Applied and Environmental Microbiology. 73(5): 1576–85.*
+    * **Citation**: *Lozupone, C. A., Hamady, M., Kelley, S. T., Knight, R. (2007). "Quantitative and qualitative beta diversity measures lead to different insights into factors that structure microbial communities". Applied and Environmental Microbiology. 73(5): 1576–85.*
    * **Weighted unnormalized UniFrac**: Measures Weighted unnormalized UniFrac
     * Takes into account abundance
     * *Doesn't correct for unequal sampling effort or different evolutionary rates between taxa*
@@ -261,7 +261,7 @@ Files Network Page: Results
  * **Category**: Choose the metadata category you would like to analyze
  * **Kruskal-Wallis**: Result of Kruskal-Wallis tests
   * Says if differences are statistically significant
-  * **Citation**: *Kruskal; Wallis (1952). "Use of ranks in one-criterion variance analysis". Journal of the American Statistical Association. 47 (260): 583–621.*
+  * **Citation**: *Kruskal, W.H. and Wallis, W.A. (1952). "Use of ranks in one-criterion variance analysis". Journal of the American Statistical Association. 47 (260): 583–621.*
 * **Alpha Correlation**:
  * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
  * Gives the Spearman or Pearson result (rho and p-value)
