@@ -30,8 +30,8 @@ def start(env_script, start_script, url, job_id, job_dir):
     stdout, stderr = proc.communicate()
     if proc.returncode and proc.returncode != 0:
         raise ValueError(
-            "Error launching the plugin:\n\tStdout: %s\n\tStderr: %s"
-            % (stdout, stderr))
+            "Error launching the plugin:\n%s\n\tStdout: %s\n\tStderr: %s"
+            % (cmd, stdout, stderr))
 
 
 if __name__ == '__main__':
