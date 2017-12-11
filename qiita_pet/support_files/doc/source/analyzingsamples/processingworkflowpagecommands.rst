@@ -282,8 +282,8 @@ Files Network Page: Results
  * Gives the Permanova or Anosim result (psuedo-F and p-value)
 * **Beta Correlation**:
  * Gives the Spearman or Pearson result (rho and p-value)
-  * Spearman: Measures if there is a linear relationship between 2 variables
-   * Citation: Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.
-  * Pearson: Measures how strong the linear relationship is between 2 variables
-   * Citation: Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.
+  * **Spearman**: Measures if there is a linear relationship between 2 variables
+   * **Citation**: *Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.*
+  * **Pearson**: Measures how strong the linear relationship is between 2 variables
+   * **Citation**: *Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.*
  * Gives scatterplot of the distance matrix on the y and the variable being tested on the x-axis
