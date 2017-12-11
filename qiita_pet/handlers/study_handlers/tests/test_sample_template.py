@@ -13,6 +13,7 @@ from tempfile import mkstemp
 
 from tornado.web import HTTPError
 from mock import Mock
+import pandas as pd
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.qiita_settings import r_client
@@ -20,12 +21,14 @@ from qiita_core.testing import wait_for_processing_job
 from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
 from qiita_db.util import get_mountpoint
+from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.study_handlers.sample_template import (
     _build_sample_summary, _check_study_access,
     sample_template_handler_post_request,
     sample_template_overview_handler_get_request,
-    sample_template_handler_delete_request)
+    sample_template_handler_delete_request,
+    sample_template_handler_patch_request)
 
 
 class TestHelpers(TestHandlerBase):
@@ -121,6 +124,87 @@ class TestHelpers(TestHandlerBase):
         # Wait until the job is done
         wait_for_processing_job(loads(job_info)['job_id'])
 
+    def test_sample_template_handler_patch_request(self):
+        user = User('test@foo.bar')
+        # Test wrong operation value
+        with self.assertRaisesRegexp(
+                HTTPError, 'Operation add not supported. Current supported '
+                           'operations: remove.'):
+            sample_template_handler_patch_request(
+                user, 'add', '/1/19/columns/season_environment')
+
+        # Test wrong path parameter
+        with self.assertRaisesRegexp(HTTPError, 'Incorrect path parameter'):
+            sample_template_handler_patch_request(
+                user, 'remove', '10/columns/season_environment/')
+
+        # Test user doesn't have access
+        with self.assertRaisesRegexp(HTTPError,
+                                     'User does not have access to study'):
+            sample_template_handler_patch_request(
+                User('demo@microbio.me'), "remove",
+                "/1/10/columns/season_environment/")
+
+        # Test study doesn't exist
+        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+            sample_template_handler_patch_request(
+                user, "remove", "/10000/10/columns/season_environment/")
+
+        # Test sample template doesn't exist
+        new_study = self._create_study('Patching test')
+        with self.assertRaisesRegexp(HTTPError, ''):
+            sample_template_handler_patch_request(
+                user, "remove", "/%s/10/columns/season_environment/"
+                                % new_study.id)
+
+        # Add sample information to the new study so we can delete one column
+        # without affecting the other tests
+        md = pd.DataFrame.from_dict(
+            {'Sample1': {'col1': 'val1', 'col2': 'val2'}},
+            orient='index', dtype=str)
+        st = SampleTemplate.create(md, new_study)
+
+        # Test success
+        obs = sample_template_handler_patch_request(
+            user, "remove", "/%s/2/columns/col2/"
+                            % new_study.id)
+        self.assertEqual(obs.keys(), ['job', 'row_id'])
+        self.assertEqual(obs['row_id'], '2')
+        job_info = r_client.get('sample_template_%s' % new_study.id)
+        self.assertIsNotNone(job_info)
+
+        # Wait until the job is done
+        wait_for_processing_job(loads(job_info)['job_id'])
+        self.assertNotIn('col2', st.categories())
+
+    def test_sample_template_handler_delete_request(self):
+        # Test user doesn't have access
+        with self.assertRaisesRegexp(HTTPError,
+                                     'User does not have access to study'):
+            sample_template_handler_delete_request(
+                1, User('demo@microbio.me'))
+
+        # Test study doesn't exist
+        user = User('test@foo.bar')
+        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+            sample_template_handler_delete_request(1000000, user)
+
+        # Test sample information doesn't exist
+        new_study = self._create_study('Study for deleting test')
+        with self.assertRaisesRegexp(HTTPError, "Study %s doesn't have sample "
+                                                "information" % new_study.id):
+            sample_template_handler_delete_request(new_study.id, user)
+
+        # Test success
+        user = User('test@foo.bar')
+        obs = sample_template_handler_delete_request(1, user)
+        self.assertEqual(obs.keys(), ['job'])
+        job_info = r_client.get('sample_template_1')
+        self.assertIsNotNone(job_info)
+
+        # Wait until the job is done
+        wait_for_processing_job(loads(job_info)['job_id'])
+
     def test_sample_template_overview_handler_get_request(self):
         # Test user doesn't have access
         with self.assertRaisesRegexp(HTTPError,
@@ -162,34 +246,6 @@ class TestHelpers(TestHandlerBase):
                'num_samples': 0,
                'num_columns': 0}
         self.assertEqual(obs, exp)
-
-    def test_sample_template_handler_delete_request(self):
-        # Test user doesn't have access
-        with self.assertRaisesRegexp(HTTPError,
-                                     'User does not have access to study'):
-            sample_template_handler_delete_request(
-                1, User('demo@microbio.me'))
-
-        # Test study doesn't exist
-        user = User('test@foo.bar')
-        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
-            sample_template_handler_delete_request(1000000, user)
-
-        # Test sample information doesn't exist
-        new_study = self._create_study('Study for deleting test')
-        with self.assertRaisesRegexp(HTTPError, "Study %s doesn't have sample "
-                                                "information" % new_study.id):
-            sample_template_handler_delete_request(new_study.id, user)
-
-        # Test success
-        user = User('test@foo.bar')
-        obs = sample_template_handler_delete_request(1, user)
-        self.assertEqual(obs.keys(), ['job'])
-        job_info = r_client.get('sample_template_1')
-        self.assertIsNotNone(job_info)
-
-        # Wait until the job is done
-        wait_for_processing_job(loads(job_info)['job_id'])
 
     def test_build_sample_summary(self):
         cols, table = _build_sample_summary(1, 'test@foo.bar')

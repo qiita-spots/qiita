@@ -23,13 +23,12 @@ from qiita_db.processing_job import ProcessingJob
 from qiita_db.exceptions import QiitaDBUnknownIDError
 
 from qiita_pet.handlers.api_proxy import (
-    sample_template_summary_get_req,
-    sample_template_post_req, sample_template_put_req,
-    sample_template_delete_req, sample_template_filepaths_get_req,
+    sample_template_summary_get_req, sample_template_put_req,
+    sample_template_filepaths_get_req,
     data_types_get_req, sample_template_samples_get_req,
     prep_template_samples_get_req, study_prep_get_req,
     sample_template_meta_cats_get_req, sample_template_category_get_req,
-    sample_template_patch_request, get_sample_template_processing_status,
+    get_sample_template_processing_status,
     check_fp)
 
 
@@ -113,6 +112,71 @@ def sample_template_handler_post_request(study_id, user, filepath,
     return {'job': job.id}
 
 
+def sample_template_handler_patch_request(user, req_op, req_path,
+                                          req_value=None, req_from=None):
+    """Patches the sample template
+
+    Parameters
+    ----------
+    user: qiita_db.user.User
+        The user performing the request
+    req_op : str
+        The operation to perform on the sample template
+    req_path : str
+        The path to the attribute to patch
+    req_value : str, optional
+        The new value
+    req_from : str, optional
+        The original path of the element
+
+    Returns
+    -------
+
+    Raises
+    ------
+    HTTPError
+        400 If the path parameter doens't follow the expected format
+        400 If the given operation is not supported
+    """
+    if req_op == 'remove':
+        req_path = [v for v in req_path.split('/') if v]
+        # format
+        # column: study_id/row_id/columns/column_name
+        # sample: study_id/row_id/samples/sample_id
+        if len(req_path) != 4:
+            raise HTTPError(400, 'Incorrect path parameter')
+
+        study_id = int(req_path[0])
+        row_id = req_path[1]
+        attribute = req_path[2]
+        attr_id = req_path[3]
+
+        # Check if the current user has access to the study
+        _check_study_access(study_id, user)
+
+        # Check if the sample template exists
+        if not SampleTemplate.exists(study_id):
+            raise HTTPError(
+                404, "Study %s doesn't have sample information" % study_id)
+
+        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+        cmd = qiita_plugin.get_command('delete_sample_or_column')
+        params = Parameters.load(
+            cmd, values_dict={'obj_class': 'SampleTemplate',
+                              'obj_id': study_id,
+                              'sample_or_col': attribute,
+                              'name': attr_id})
+        job = ProcessingJob.create(user, params, True)
+        # Store the job id attaching it to the sample template id
+        r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
+                     dumps({'job_id': job.id}))
+        job.submit()
+        return {'job': job.id, 'row_id': row_id}
+    else:
+        raise HTTPError(400, 'Operation %s not supported. Current supported '
+                             'operations: remove' % req_op)
+
+
 def sample_template_handler_delete_request(study_id, user):
     """Deletes the sample template
 
@@ -120,7 +184,7 @@ def sample_template_handler_delete_request(study_id, user):
     ----------
     study_id: int
         The study to delete the sample information
-    user: qiita_db.user import User
+    user: qiita_db.user
         The user performing the request
 
     Returns
@@ -172,6 +236,16 @@ class SampleTemplateHandler(BaseHandler):
 
         self.write(sample_template_handler_post_request(
             study_id, self.current_user, filepath, data_type=data_type))
+
+    @authenticated
+    def patch(self):
+        req_op = self.get_argument('op')
+        req_path = self.get_argument('path')
+        req_value = self.get_argument('value', None)
+        req_from = self.get_argument('from', None)
+
+        self.write(sample_template_handler_patch_request(
+            self.current_user, req_op, req_path, req_value, req_from))
 
     @authenticated
     def delete(self):
@@ -343,38 +417,14 @@ class SampleTemplateAJAX(BaseHandler):
         """Edit/delete/create sample template"""
         action = self.get_argument('action')
         study_id = self.get_argument('study_id')
-        if action == 'create':
-            filepath = self.get_argument('filepath')
-            data_type = self.get_argument('data_type')
-            result = sample_template_post_req(study_id, self.current_user.id,
-                                              data_type, filepath)
-        elif action == 'update':
+        if action == 'update':
             filepath = self.get_argument('filepath')
             result = sample_template_put_req(study_id, self.current_user.id,
                                              filepath)
-        elif action == 'delete':
-            result = sample_template_delete_req(study_id, self.current_user.id)
         else:
             raise HTTPError(400, 'Unknown sample information action: %s'
                             % action)
         self.write(result)
-
-    @authenticated
-    def patch(self):
-        """Patches a sample template in the system
-
-        Follows the JSON PATCH specification:
-        https://tools.ietf.org/html/rfc6902
-        """
-        req_op = self.get_argument('op')
-        req_path = self.get_argument('path')
-        req_value = self.get_argument('value', None)
-        req_from = self.get_argument('from', None)
-
-        response = sample_template_patch_request(
-            self.current_user.id, req_op, req_path, req_value, req_from)
-
-        self.write(response)
 
 
 class SampleAJAX(BaseHandler):
