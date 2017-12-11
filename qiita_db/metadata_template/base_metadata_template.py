@@ -512,6 +512,13 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
+
+        # Droping/Ignoring internal generated colums
+        if 'qiita_study_id' in md_template.columns:
+            del md_template['qiita_study_id']
+        if 'qiita_prep_id' in md_template.columns:
+            del md_template['qiita_prep_id']
+
         # validating pgsql reserved words not to be column headers
         current_headers = set(md_template.columns.values)
 
