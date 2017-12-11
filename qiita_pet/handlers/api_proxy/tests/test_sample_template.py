@@ -308,5 +308,6 @@ class TestSampleAPI(TestCase):
                                'message': 'Sample template %d does not '
                                'exist' % self.new_study.id})
 
+
 if __name__ == '__main__':
     main()
