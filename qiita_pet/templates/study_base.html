@@ -20,19 +20,9 @@
   }
 
   function fill_artifact(aid) {
-    $("#study-main").html("<p><button onclick='process_from(" + aid + ")' class='btn btn-sm'>Process from here</button></p>ARTIFACT " + aid + " HTML STUFF");
   $.get("{% raw qiita_config.portal_dir %}/admin/artifact/", {artifact_id: +aid })
       .done(function ( data ) {
         $("#study-admin").html(data);
-      });
-  }
-
-  function process_from(aid) {
-    $.get("{% raw qiita_config.portal_dir %}/study/process/", { artifact_id: aid })
-      .done(function ( data ){
-        $("#study-prep-graph-row").hide();
-        $("#graph-toggle-link").text("Show files");
-        $("#study-main").html(data);
       });
   }
 
