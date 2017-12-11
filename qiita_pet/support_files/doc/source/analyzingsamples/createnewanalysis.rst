@@ -15,4 +15,4 @@ Single vs. Meta Analysis
 ------------------------------
 * **Single analysis**: One study chosen to analyze 
 * **Meta-analysis**: Multiple studies chosen to analyze
- * *you can only merge like data*
+ * *You can only merge like data*
