@@ -28,7 +28,7 @@ install:
   -
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
-  - travis_retry conda create --yes -n qiita python=$PYTHON_VERSION pip nose flake8
+  - travis_retry conda create -q --yes -n qiita python=$PYTHON_VERSION pip nose flake8
     pyzmq 'networkx<2.0' pyparsing natsort mock future libgfortran seaborn nltk
     'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate qiita
@@ -43,7 +43,7 @@ install:
   - travis_retry pip install . --process-dependency-links
   # Install the biom plugin so we can run the analysis tests
   - source deactivate
-  - travis_retry conda create --yes -n qtp-biom --file https://data.qiime2.org/distro/core/qiime2-2017.11-conda-linux-64.txt
+  - travis_retry conda create -q --yes -n qtp-biom --file https://data.qiime2.org/distro/core/qiime2-2017.11-conda-linux-64.txt
   - source activate qtp-biom
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
