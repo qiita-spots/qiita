@@ -33,7 +33,7 @@ Processing Workflow Page: Commands
     * **Chao1 confidence interval**: Calculates chao1 confidence interval
      * Confidence interval for richness estimator, Chao1
      * **Citation**: *Colwell, R.K., Mao, C.X., Chang, J. (2004). “Interpolating, extrapolating, and comparing incidence-based species accumulation curves.” Ecology. (85), 2717-2727.*
-    * **Chao1 index**: Calculates chao1 index
+    * **Chao1 index**: Calculates Chao1 index
      * Estimates diversity from abundant data
      * Estimates number of rare taxa missed from undersampling 
      * **Citation**: *Chao, A. (1984). “Non-parametric estimation of the number of classes in a population”. Scandinavian Journal of Statistics (11): 265-270.*
