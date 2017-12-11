@@ -31,7 +31,7 @@ Processing Workflow Page: Commands
      * Use when randomness can’t be guaranteed
      * **Citation**: *Pielou, E. C. (1975). Ecological Diversity. New York, Wiley InterScience.*
     * **Chao1 confidence interval**: Calculates chao1 confidence interval
-     * Confidence interval for richness estimator, chao1
+     * Confidence interval for richness estimator, Chao1
      * **Citation**: *Colwell, R.K., Mao, C.X., Chang, J. (2004). “Interpolating, extrapolating, and comparing incidence-based species accumulation curves.” Ecology. (85), 2717-2727.*
     * **Chao1 index**: Calculates chao1 index
      * Estimates diversity from abundant data
