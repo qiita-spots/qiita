@@ -149,7 +149,7 @@ Processing Workflow Page: Commands
      * Statistic used for comparing the similarity of two samples
      * Only counts true positives once
      * **Citation**: *Dice, Lee R. (1945). "Measures of the Amount of Ecologic Association Between Species". Ecology. 26 (3): 297–302.*
-    * Euclidean distance**: Measures Euclidean distance
+    * **Euclidean distance**: Measures Euclidean distance
      * Species-by-species distance matrix
      * **Citation**: *Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.*
     * **Generalized Unifrac**: Measures Generalized UniFrac
