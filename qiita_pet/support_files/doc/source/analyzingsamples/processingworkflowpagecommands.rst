@@ -25,14 +25,14 @@ Processing Workflow Page: Commands
      * **Citation**: *Chao, A. and Lee, S.M.. (1992). “Estimating the number of classes via sample coverage”. Journal of the American Statistical Association. (87): 210-217.*
     * **Berger-Parker Dominance Index**: Calculates Berger-Parker dominance index
      * Relative richness of the abundant species 
-     * **Citation**: *Berger, W.H. and F.L. Parker (1970). “Diversity of planktonic Foraminifera in deep sea sediments”. Science. (168): 1345-1347.*
+     * **Citation**: *Berger, W.H. and Parker, F.L. (1970). “Diversity of planktonic Foraminifera in deep sea sediments”. Science. (168): 1345-1347.*
     * **Brillouin’s index**: Calculates Brillouin’s index 
      * Measures the diversity of the species present
      * Use when randomness can’t be guaranteed
      * **Citation**: *Pielou, E. C. (1975). Ecological Diversity. New York, Wiley InterScience.*
     * **Chao1 confidence interval**: Calculates chao1 confidence interval
      * Confidence interval for richness estimator, chao1
-     * **Citation**: *Colwell, R. K., Mao, C. X., Chang, J. (2004). “Interpolating, extrapolating, and comparing incidence-based species accumulation curves.” Ecology. (85), 2717-2727.*
+     * **Citation**: *Colwell, R.K., Mao, C.X., Chang, J. (2004). “Interpolating, extrapolating, and comparing incidence-based species accumulation curves.” Ecology. (85), 2717-2727.*
     * **Chao1 index**: Calculates chao1 index
      * Estimates diversity from abundant data
      * Assumes that the number of observations for taxa has a Poisson distribution
@@ -52,7 +52,7 @@ Processing Workflow Page: Commands
      * **Citation**: *Faith. D.P. (1992). “Conservation evaluation and phylogenetic diversity”. Biological Conservation. (61) 1-10.*
     * **Fisher’s index**: Calculates Fisher’s index
      * Relationship between the number of species and the number of individuals in those species.
-     * **Citation**: *Fisher, R. A., Corbet, A. S. and Williams, C. B. (1943). “The relation between the number of species and the number of individuals in a random sample of an animal population”. Journal of Animal Ecology. (12): 42-58.*
+     * **Citation**: *Fisher, R.A., Corbet, A.S. and Williams, C.B. (1943). “The relation between the number of species and the number of individuals in a random sample of an animal population”. Journal of Animal Ecology. (12): 42-58.*
     * **Gini index**: Calculates Gini index
      * Assumes that the sampling is accurate and that more features of data would fall on linear gradients between the values of this data.
      * Measures species abundance
@@ -66,10 +66,10 @@ Processing Workflow Page: Commands
     * **Kempton-Taylor Q index**: Calculates Kempton-Taylor Q index
      * Measured diversity based off the distributions of species 
      * Makes abundance curve based off all species and IQR of this curve is used to measure diversity
-     * **Citation**: *Kempton, R. A. and Taylor, L. R. (1976). “Models and statistics for species diversity”. Nature (262): 818-820.*
+     * **Citation**: *Kempton, R.A. and Taylor, L.R. (1976). “Models and statistics for species diversity”. Nature (262): 818-820.*
     * **Lladser’s confidence interval**: Calculates Lladser’s confidence interval
      * Single confidence interval of the conditional uncovered probability
-     * **Citation**: *Lladser, M. E., Gouet, R., Reeder, R. (2011). “Extrapolation of Urn Models via Poissonization: Accurate Measurements of the Microbial Unknown”. PLoS.*
+     * **Citation**: *Lladser, M.E., Gouet, R., Reeder, R. (2011). “Extrapolation of Urn Models via Poissonization: Accurate Measurements of the Microbial Unknown”. PLoS.*
     * **Lladser’s point estimate**: Calculates Lladser’ point estimate
      * Single point estimate of conditional uncovered probability
      * Estimate how much of the environment belongs to the unsampled taxa
@@ -77,25 +77,25 @@ Processing Workflow Page: Commands
      * **Citation**: *Lladser, M.E., Gouet, R., Reeder, J. (2011). “Extrapolation of Urn Models via Poissonization: Accurate Measurements of the Microbial Unknown”. PLoS.*
     * **Margalef’s richness index**: Calculates Margalef’s richness index
      * Measures species richness
-     * **Citation**: *Magurran, A. E. (2004). “Measuring biological diversity”. Blackwell. 76-77.*
+     * **Citation**: *Magurran, A.E. (2004). “Measuring biological diversity”. Blackwell. 76-77.*
     * **Mcintosh dominance index D**: Calculates McIntosh dominance index D
      * Affected mostly by variation in dominant taxa and less affected by the variation in less abundant or rare taxa
-     * **Citation**: *McIntosh, R. P. (1967). “An index of diversity and the relation of certain concepts to diversity”. Ecology (48): 392-404.*
+     * **Citation**: *McIntosh, R.P. (1967). “An index of diversity and the relation of certain concepts to diversity”. Ecology (48): 392-404.*
     * **Mcintosh evenness index E**: Calculates McIntosh’s evenness measure E
      * How even taxa are in numbers
      * **Citation**: *Heip, C. (1974). “A new index measuring evenness”. J. Mar. Biol. Ass. UK. (54) 555-557.*
     * **Menhinick’s richness index**: Calculates Menhinick’s richness index
      * Species richness
-     * **Citation**: *Magurran, A. E. (2004). “Measuring biological diversity”. Blackwell. 76-77.*
+     * **Citation**: *Magurran, A.E. (2004). “Measuring biological diversity”. Blackwell. 76-77.*
     * **Michaelis-Menten fit to rarefaction curve of observed OTUs**: Calculates Michaelis-Menten fit to rarefaction curve of observed OTUs.
      * Estimated richness of species pools
-     * **Citation**: *Raaijmakers, J. G. W. (1987). “Statistical analysis of the Michaelis-Menten equation”. Biometrics. (43): 793-803.*
+     * **Citation**: *Raaijmakers, J.G.W. (1987). “Statistical analysis of the Michaelis-Menten equation”. Biometrics. (43): 793-803.*
     * **Number of distinct features**: Calculates number of distinct OTUs
-     * **Citation**: *DeSantis, T. Z., Hugenholtz, P., Larsen, N., Rojas, M., Brodie, E. L., Keller, K. Huber, T., Davis, D., Hu, P., Andersen, G. L. (2006). “Greengenes, a Chimera-Checked 16S rRNA Gene Database and Workbench Compatible with ARB”. Applied and Environmental Microbiology (72): 5069–5072.*
+     * **Citation**: *DeSantis, T.Z., Hugenholtz, P., Larsen, N., Rojas, M., Brodie, E.L., Keller, K. Huber, T., Davis, D., Hu, P., Andersen, G.L. (2006). “Greengenes, a Chimera-Checked 16S rRNA Gene Database and Workbench Compatible with ARB”. Applied and Environmental Microbiology (72): 5069–5072.*
     * **Number of double occurrences**: Calculates number of double occurrence OTUs (doubletons)
      * OTUs that only occur twice
      * Number of observed features, including singles and doubles: Calculates number of observed OTUs, singles, and doubles.
-     * **Citation**: *DeSantis, T. Z., Hugenholtz, P., Larsen, N., Rojas, M., Brodie, E. L., Keller, K. Huber, T., Davis, D., Hu, P., Andersen, G. L. (2006). “Greengenes, a Chimera-Checked 16S rRNA Gene Database and Workbench Compatible with ARB”. Applied and Environmental Microbiology. 72 (7): 5069–5072.*
+     * **Citation**: *DeSantis, T.Z., Hugenholtz, P., Larsen, N., Rojas, M., Brodie, E.L., Keller, K. Huber, T., Davis, D., Hu, P., Andersen, G.L. (2006). “Greengenes, a Chimera-Checked 16S rRNA Gene Database and Workbench Compatible with ARB”. Applied and Environmental Microbiology. 72 (7): 5069–5072.*
     * **Singles**: Calculates number of single occurrence OTUs (singletons)
      * OTUs that appear only once in a given sample
     * **Pielou’s evenness**: Calculates Pielou’s eveness
@@ -103,22 +103,22 @@ Processing Workflow Page: Commands
      * **Citation**: *Pielou, E. (1966). “The measurement of diversity in different types of biological collections”. J. Theor. Biol. (13): 131-144.*
     * **Robbins’ estimator**: Calculates Robbins’ estimator
      * Probability of unobserved outcomes.
-     * **Citation**: *Robbins, H. E., (1968). “Estimating the Total Probability of the unobserved outcomes of an experiment”. Ann Math. Statist. 39(1): 256-257.*
+     * **Citation**: *Robbins, H.E. (1968). “Estimating the Total Probability of the unobserved outcomes of an experiment”. Ann Math. Statist. 39(1): 256-257.*
     * **Shannon’s index**: Calculates Shannon’s index
      * Accounts for both abundance and evenness of the species present
-     * **Citation**: *Shannon, C. E. and Weaver, W. (1949). “The mathematical theory of communication”. University of Illonois Press, Champaign, Illonois.*
+     * **Citation**: *Shannon, C.E. and Weaver, W. (1949). “The mathematical theory of communication”. University of Illonois Press, Champaign, Illonois.*
     * **Simpson evenness measure E**: Calculates Simpson’s evenness measure E.
      * Measures the relative abundance of the different species making up the sample richness
      * **Citation**: *Simpson, E.H. (1949). “Measurement of Diversity”. Nature. (163): 688*
     * **Simpson’s index**: Calculates Simpson’s index
      * Diversity that account for the number of species present and the relative abundance of each species
-     * **Citation**: *Simpson, E. H. (1949). “Measurement of diversity". Nature. (163): 688.*
+     * **Citation**: *Simpson, E.H. (1949). “Measurement of diversity". Nature. (163): 688.*
     * **Strong’s dominance index (Dw)**: Calculates Strong’s dominance index 
      * Assesses species abundance unevenness or dominance concentration 
-     * **Citation**: *Strong, W. L., (2002). “Assessing species abundance uneveness within and between plant communities”. Community Ecology (3): 237-246.*
+     * **Citation**: *Strong, W.L. (2002). “Assessing species abundance uneveness within and between plant communities”. Community Ecology (3): 237-246.*
    * **Phylogenetic tree** (required for certain alpha diversities, ie. Faith PD): Phylogenetic tree to be used with alpha analyses (only include when necessary ie. Faith PD)
     * Currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
-   * **Alpha Diversity Citation**: Whittaker, R. H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338. 
+   * **Alpha Diversity Citation**: Whittaker, R.H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338. 
   * **Calculate beta diversity**: Measured the diversity between samples
    * **BIOM table** (required): Feature table containing the samples for which beta diversity should be computed
    * **Adjust variance** (phylogenetic only): Performs variance adjustment
@@ -154,7 +154,7 @@ Processing Workflow Page: Commands
      * **Citation**: *Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.*
     * **Generalized Unifrac**: Measures Generalized UniFrac
      * Detects a wider range of biological changes compared to unweighted and weighted UniFrac
-     * **Citation**: *Chen, F., Bittinger, K., Charlson, E. S., Hoffmann, C., Lewis, J., Wu, G. D., Collman, R. G., Bushman, R. D., Li,H. (2012). “Associating microbiome composition with environmental covariates using generalized UniFrac distances.” Bioinformatics. 28 (16): 2106-2113.*
+     * **Citation**: *Chen, F., Bittinger, K., Charlson, E.S., Hoffmann, C., Lewis, J., Wu, G. D., Collman, R.G., Bushman, R.D., Li,H. (2012). “Associating microbiome composition with environmental covariates using generalized UniFrac distances.” Bioinformatics. 28 (16): 2106-2113.*
     * **Hamming distance**: Measures Hamming distance
      * Minimum number of substitutions required to change one group to the other
      * **Citation**: *Hamming, R.W. (1950) “Error Detecting and Error Connecting Codes”. The Bell System Technical Journal. (29): 147-160.*
@@ -213,7 +213,7 @@ Processing Workflow Page: Commands
   * **Number of jobs**: Number of workers to use
   * **Phylogenetic tree** (required for some beta diversities, ie. UniFrac): Phylogenetic tree to be used with beta analyses (only include when necessary ie. UniFrac)
    * Currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
-  * **Citation**: *Whittaker, R. H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.*
+  * **Citation**: *Whittaker, R.H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.*
 * **Commands from Alpha Diversity Data**
  * **Alpha Correlation**: Determines if the numeric sample metadata category is correlated with alpha diversity
   * **Correlation Method** (required): Correction test being applied
@@ -227,14 +227,14 @@ Processing Workflow Page: Commands
  * **Perform Principal Coordinate Analysis** (PCoA): Visualizes the similarities and differences between samples using Emperor Plots
   * **Distance matrix** (required): Distance matrix on which the PCoA should be computed
   * **PCoA Plot Citation**: *Pearson, K. (1901). "On Lines and Planes of Closest Fit to Systems of Points in Space" Philosophical Magazine. 2 (11): 559–572.*
-  * **Emperor Plot Citation**: *Vazquez-Baeza Y, Pirrung M, Gonzalez A, Knight R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.*
+  * **Emperor Plot Citation**: *Vazquez-Baeza, Y., Pirrung, M., Gonzalez, A., Knight, R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.*
  * **Beta Group Significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
   * **Distance matrix** (required): Matrix of distances between pairs of samples
   * **Comparison Type** (required): Perform or not perform pairwise tests between all pairs of groups in addition to the test across all groups
   * **Metadata category** (required): Category from metadata file or artifact viewable as metadata
   * **Method** (required): Correlation test being applied
    * **Anosim**:  Describes the strength and significance that a category has in determining the distances between points and can accept either categorical or continuous variables in the metadata mapping file
-    * **Citation**: *Clarke, K. R. (1993). "Non-parametric multivariate analyses of changes in community structure". Austral Ecology. 18 (1): 117–143.*
+    * **Citation**: *Clarke, K.R. (1993). "Non-parametric multivariate analyses of changes in community structure". Austral Ecology. 18 (1): 117–143.*
    * **Permanova**: Describes the strength and significance that a category has in determining the distances between points and can accept categorical variables
     * **Citation**: *Anderson, M.J. (2001). "A new method for non-parametric multivariate analysis of variance". Austral Ecology. 26 (1): 32–46*
   * **Number of permutations** (required): Number of permutations to be run when computing p-values 
