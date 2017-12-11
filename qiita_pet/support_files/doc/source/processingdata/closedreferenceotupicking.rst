@@ -21,7 +21,7 @@ Closed-Reference OTU Picking
   * **Sortmerna coverage** (required): Minimum percent query coverage (of an alignment) to consider a hit, expressed as a fraction between 0 and 1 
   * **Sortmerna e_value** (required): Maximum e-value when clustering (local sequence alignment tool for filtering, mapping, and OTU picking) can expect to see by chance when searching a database
   * **Sortmerna max-pos** (required): Maximum number of positions per seed to store in the indexed database
-  * **Threads** (required): number of threads to use per job
+  * **Threads** (required): Number of threads to use per job
   * **SortMeRNA Citation**: *Kopylova, E., Noe, L., Touzet, H. (2012). “SortMeRNA: fast and accurate filtering of ribosomal RNAs in metatranscriptomic data”. Bioinformatics. 28 (24) 3211-7.*
  * **QIIME Citation**: *Nacas-Molina, J.A., Peralta-Sánchez, J.M., González, A., McMurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., Knight, R. (2013). “Advancing Our Understanding of the Human Microbiome Using QIIME”. Methods in Enzymology. (531): 371-444*
  * **Closed Reference Citation**: *Chou, H.H., Holmes, M.H. (2001). “DNA sequence quality trimming and vector removal”. Bioinformatics. 17 (12):1093–1104.*
