@@ -156,14 +156,13 @@ def sample_template_handler_patch_request(user, req_op, req_path,
 
     if req_op == 'remove':
         # Path format
-        # column: study_id/row_id/columns/column_name
-        # sample: study_id/row_id/samples/sample_id
-        if len(req_path) != 4:
+        # column: study_id/columns/column_name
+        # sample: study_id/samples/sample_id
+        if len(req_path) != 3:
             raise HTTPError(400, 'Incorrect path parameter')
 
-        row_id = req_path[1]
-        attribute = req_path[2]
-        attr_id = req_path[3]
+        attribute = req_path[1]
+        attr_id = req_path[2]
 
         qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
         cmd = qiita_plugin.get_command('delete_sample_or_column')
@@ -177,7 +176,7 @@ def sample_template_handler_patch_request(user, req_op, req_path,
         r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
                      dumps({'job_id': job.id}))
         job.submit()
-        return {'job': job.id, 'row_id': row_id}
+        return {'job': job.id}
     elif req_op == 'replace':
         # WARNING: Although the patch operation is a replace, is not a full
         # true replace. A replace is in theory equivalent to a remove + add.
@@ -217,7 +216,7 @@ def sample_template_handler_patch_request(user, req_op, req_path,
                          dumps({'job_id': job.id}))
 
             job.submit()
-            return {'job': job.id, 'row_id': None}
+            return {'job': job.id}
         else:
             raise HTTPError(404, 'Attribute %s not found' % attribute)
 
@@ -492,7 +491,8 @@ class SampleAJAX(BaseHandler):
         self.render('study_ajax/sample_prep_summary.html',
                     table=samps_table, cols=cols, meta_available=meta_cats,
                     study_id=study_id, alert_type=alert_type,
-                    alert_message=alert_msg)
+                    alert_message=alert_msg,
+                    user_can_edit=Study(study_id).can_edit(self.current_user))
 
     @authenticated
     def post(self):

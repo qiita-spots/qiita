@@ -142,12 +142,12 @@ class TestHelpers(TestHandlerBase):
                                      'User does not have access to study'):
             sample_template_handler_patch_request(
                 User('demo@microbio.me'), "remove",
-                "/1/10/columns/season_environment/")
+                "/1/columns/season_environment/")
 
         # Test study doesn't exist
         with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
             sample_template_handler_patch_request(
-                user, "remove", "/10000/10/columns/season_environment/")
+                user, "remove", "/10000/columns/season_environment/")
 
         # Test sample template doesn't exist
         new_study = self._create_study('Patching test')
@@ -155,7 +155,7 @@ class TestHelpers(TestHandlerBase):
                                      "Study %s doesn't have sample information"
                                      % new_study.id):
             sample_template_handler_patch_request(
-                user, "remove", "/%s/10/columns/season_environment/"
+                user, "remove", "/%s/columns/season_environment/"
                                 % new_study.id)
 
         # Test wrong operation value
@@ -163,7 +163,7 @@ class TestHelpers(TestHandlerBase):
                 HTTPError, 'Operation add not supported. Current supported '
                            'operations: remove.'):
             sample_template_handler_patch_request(
-                user, 'add', '/1/19/columns/season_environment')
+                user, 'add', '/1/columns/season_environment')
 
         # Test wrong path parameter < 2
         with self.assertRaisesRegexp(HTTPError, 'Incorrect path parameter'):
@@ -173,7 +173,7 @@ class TestHelpers(TestHandlerBase):
         # Test wrong path parameter
         with self.assertRaisesRegexp(HTTPError, 'Incorrect path parameter'):
             sample_template_handler_patch_request(
-                user, 'remove', '1/columns/season_environment/')
+                user, 'remove', '/1/season_environment/')
 
         # Add sample information to the new study so we can delete one column
         # without affecting the other tests
@@ -184,10 +184,9 @@ class TestHelpers(TestHandlerBase):
 
         # Test success
         obs = sample_template_handler_patch_request(
-            user, "remove", "/%s/2/columns/col2/"
+            user, "remove", "/%s/columns/col2/"
                             % new_study.id)
-        self.assertEqual(obs.keys(), ['job', 'row_id'])
-        self.assertEqual(obs['row_id'], '2')
+        self.assertEqual(obs.keys(), ['job'])
         job_info = r_client.get('sample_template_%s' % new_study.id)
         self.assertIsNotNone(job_info)
 
@@ -218,8 +217,7 @@ class TestHelpers(TestHandlerBase):
         # Test success
         obs = sample_template_handler_patch_request(
             user, "replace", "/1/data", req_value='uploaded_file.txt')
-        self.assertEqual(obs.keys(), ['job', 'row_id'])
-        self.assertIsNone(obs['row_id'])
+        self.assertEqual(obs.keys(), ['job'])
         job_info = r_client.get('sample_template_1')
         self.assertIsNotNone(job_info)
 
@@ -481,7 +479,7 @@ class TestSampleTemplateHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertIsNotNone(response.body)
         obs = loads(response.body)
-        self.assertEqual(obs.keys(), ['job', 'row_id'])
+        self.assertEqual(obs.keys(), ['job'])
         # Wait until the job is done
         wait_for_processing_job(obs['job'])
 
