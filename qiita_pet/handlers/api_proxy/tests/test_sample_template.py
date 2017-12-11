@@ -15,8 +15,8 @@ from qiita_core.qiita_settings import r_client
 from qiita_core.testing import wait_for_processing_job
 import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.sample_template import (
-    sample_template_summary_get_req, sample_template_post_req,
-    sample_template_put_req, sample_template_delete_req,
+    sample_template_summary_get_req,
+    sample_template_put_req,
     sample_template_filepaths_get_req, sample_template_get_req,
     _check_sample_template_exists, sample_template_samples_get_req,
     sample_template_category_get_req, sample_template_meta_cats_get_req,
@@ -369,29 +369,6 @@ class TestSampleAPI(TestCase):
                                'message': 'Sample template %d does not '
                                'exist' % self.new_study.id})
 
-    def test_sample_template_post_req(self):
-        obs = sample_template_post_req(1, 'test@foo.bar', '16S',
-                                       'uploaded_file.txt')
-        exp = {'status': 'success',
-               'message': '',
-               'file': 'uploaded_file.txt'}
-        self.assertEqual(obs, exp)
-
-        obs = r_client.get('sample_template_1')
-        self.assertIsNotNone(obs)
-
-        # This is needed so the clean up works - this is a distributed system
-        # so we need to make sure that all processes are done before we reset
-        # the test database
-        wait_for_processing_job(loads(obs)['job_id'])
-
-    def test_sample_template_post_req_no_access(self):
-        obs = sample_template_post_req(1, 'demo@microbio.me', '16S',
-                                       'filepath')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
     def test_sample_template_put_req(self):
         obs = sample_template_put_req(1, 'test@foo.bar',
                                       'uploaded_file.txt')
@@ -417,32 +394,6 @@ class TestSampleAPI(TestCase):
     def test_sample_template_put_req_no_template(self):
         obs = sample_template_put_req(self.new_study.id, 'test@foo.bar',
                                       'uploaded_file.txt')
-        self.assertEqual(obs, {'status': 'error',
-                               'message': 'Sample template %d does not '
-                               'exist' % self.new_study.id})
-
-    def test_sample_template_delete_req(self):
-        obs = sample_template_delete_req(1, 'test@foo.bar')
-        exp = {'status': 'success',
-               'message': ''}
-        self.assertEqual(obs, exp)
-
-        obs = r_client.get('sample_template_1')
-        self.assertIsNotNone(obs)
-
-        # This is needed so the clean up works - this is a distributed system
-        # so we need to make sure that all processes are done before we reset
-        # the test database
-        wait_for_processing_job(loads(obs)['job_id'])
-
-    def test_sample_template_delete_req_no_access(self):
-        obs = sample_template_delete_req(1, 'demo@microbio.me')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-    def test_sample_template_delete_req_no_template(self):
-        obs = sample_template_delete_req(self.new_study.id, 'test@foo.bar')
         self.assertEqual(obs, {'status': 'error',
                                'message': 'Sample template %d does not '
                                'exist' % self.new_study.id})

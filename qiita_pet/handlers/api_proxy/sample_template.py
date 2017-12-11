@@ -16,7 +16,6 @@ from qiita_core.qiita_settings import r_client
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
-from qiita_db.metadata_template.util import looks_like_qiime_mapping_file
 from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.user import User
 from qiita_db.software import Software, Parameters
@@ -287,67 +286,6 @@ def sample_template_summary_get_req(samp_id, user_id):
     return out
 
 
-def sample_template_post_req(study_id, user_id, data_type,
-                             sample_template):
-    """Creates the sample template from the given file
-
-    Parameters
-    ----------
-    study_id : int
-        The current study object id
-    user_id : str
-        The current user object id
-    data_type : str
-        Data type for the sample template
-    sample_template : str
-        filename to use for creation
-
-    Returns
-    -------
-    dict
-        results dictonary in the format
-        {'status': status,
-         'message': msg,
-         'file': sample_template}
-
-    status can be success, warning, or error depending on result
-    message has the warnings or errors
-    file has the file name
-    """
-    study_id = int(study_id)
-    access_error = check_access(study_id, user_id)
-    if access_error:
-        return access_error
-    fp_rsp = check_fp(study_id, sample_template)
-    if fp_rsp['status'] != 'success':
-        # Unknown filepath, so return the error message
-        return fp_rsp
-    fp_rsp = fp_rsp['file']
-
-    # Define here the message and message level in case of success
-    is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
-    if is_mapping_file and not data_type:
-        return {'status': 'error',
-                'message': 'Please, choose a data type if uploading a '
-                           'QIIME mapping file',
-                'file': sample_template}
-
-    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-    cmd = qiita_plugin.get_command('create_sample_template')
-    params = Parameters.load(cmd, values_dict={
-        'fp': fp_rsp, 'study_id': study_id, 'is_mapping_file': is_mapping_file,
-        'data_type': data_type})
-    job = ProcessingJob.create(User(user_id), params, True)
-
-    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
-                 dumps({'job_id': job.id}))
-
-    # Store the job id attaching it to the sample template id
-    job.submit()
-
-    return {'status': 'success', 'message': '', 'file': sample_template}
-
-
 def sample_template_put_req(study_id, user_id, sample_template):
     """Updates a sample template using the given file
 
@@ -407,48 +345,6 @@ def sample_template_put_req(study_id, user_id, sample_template):
 
 
 @execute_as_transaction
-def sample_template_delete_req(study_id, user_id):
-    """Deletes the sample template attached to the study
-
-    Parameters
-    ----------
-    study_id : int
-        The current study object id
-    user_id : str
-        The current user object id
-
-    Returns
-    -------
-    dict
-        results dictonary in the format
-        {'status': status,
-         'message': msg}
-
-    status can be success, warning, or error depending on result
-    message has the warnings or errors
-    """
-    exists = _check_sample_template_exists(int(study_id))
-    if exists['status'] != 'success':
-        return exists
-    access_error = check_access(int(study_id), user_id)
-    if access_error:
-        return access_error
-
-    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-    cmd = qiita_plugin.get_command('delete_sample_template')
-    params = Parameters.load(cmd, values_dict={'study': int(study_id)})
-    job = ProcessingJob.create(User(user_id), params, True)
-
-    # Store the job id attaching it to the sample template id
-    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
-                 dumps({'job_id': job.id}))
-
-    job.submit()
-
-    return {'status': 'success', 'message': ''}
-
-
-@execute_as_transaction
 def sample_template_filepaths_get_req(study_id, user_id):
     """Returns all the filepaths attached to the sample template
 
@@ -488,71 +384,3 @@ def sample_template_filepaths_get_req(study_id, user_id):
             'message': '',
             'filepaths': template.get_filepaths()
             }
-
-
-def sample_template_patch_request(user_id, req_op, req_path, req_value=None,
-                                  req_from=None):
-    """Modifies an attribute of the artifact
-
-    Parameters
-    ----------
-    user_id : str
-        The id of the user performing the patch operation
-    req_op : str
-        The operation to perform on the artifact
-    req_path : str
-        The prep information and attribute to patch
-    req_value : str, optional
-        The value that needs to be modified
-    req_from : str, optional
-        The original path of the element
-
-    Returns
-    -------
-    dict of {str, str}
-        A dictionary with the following keys:
-        - status: str, whether if the request is successful or not
-        - message: str, if the request is unsuccessful, a human readable error
-    """
-    if req_op == 'remove':
-        req_path = [v for v in req_path.split('/') if v]
-
-        # format
-        # column: study_id/row_id/columns/column_name
-        # sample: study_id/row_id/samples/sample_id
-        if len(req_path) != 4:
-            return {'status': 'error',
-                    'message': 'Incorrect path parameter'}
-
-        st_id = req_path[0]
-        row_id = req_path[1]
-        attribute = req_path[2]
-        attr_id = req_path[3]
-
-        # Check if the user actually has access to the template
-        st = SampleTemplate(st_id)
-        access_error = check_access(st.study_id, user_id)
-        if access_error:
-            return access_error
-
-        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-        cmd = qiita_plugin.get_command('delete_sample_or_column')
-        params = Parameters.load(
-            cmd, values_dict={'obj_class': 'SampleTemplate',
-                              'obj_id': int(st_id), 'sample_or_col': attribute,
-                              'name': attr_id})
-        job = ProcessingJob.create(User(user_id), params, True)
-
-        # Store the job id attaching it to the sample template id
-        r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % st_id,
-                     dumps({'job_id': job.id}))
-
-        job.submit()
-
-        return {'status': 'success', 'message': '', 'row_id': row_id}
-
-    else:
-        return {'status': 'error',
-                'message': 'Operation "%s" not supported. '
-                           'Current supported operations: remove' % req_op,
-                'row_id': 0}
