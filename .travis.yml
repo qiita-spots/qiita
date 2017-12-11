@@ -25,7 +25,13 @@ before_install:
   # look for EBI below as it's part of this
   # - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then openssl aes-256-cbc -K $encrypted_a2e23aea5f14_key -iv $encrypted_a2e23aea5f14_iv -in qiita_core/support_files/config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg -d ; fi
 install:
-  -
+  # Install the biom plugin so we can run the analysis tests
+  - travis_retry conda create -q --yes -n qtp-biom --file https://data.qiime2.org/distro/core/qiime2-2017.11-conda-linux-64.txt
+  - source activate qtp-biom
+  - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
+  - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
+  - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+  - source deactivate
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
   - travis_retry conda create -q --yes -n qiita python=$PYTHON_VERSION pip nose flake8
@@ -41,15 +47,6 @@ install:
   - ./webdis &
   - popd
   - travis_retry pip install . --process-dependency-links
-  # Install the biom plugin so we can run the analysis tests
-  - source deactivate
-  - travis_retry conda create -q --yes -n qtp-biom --file https://data.qiime2.org/distro/core/qiime2-2017.11-conda-linux-64.txt
-  - source activate qtp-biom
-  - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
-  - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
-  - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
-  - source deactivate
-  - source activate qiita
   # loading redbiom with Qiita's test set
   # but first let's make sure redis is empty
   # following https://github.com/biocore/redbiom/blob/master/Makefile
