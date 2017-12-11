@@ -78,7 +78,7 @@ Update prep info
 * **Data Type 16S Page**
  * Select “Update Information” and choose your updated file
  * *Barcodes and sample names cannot be updated*
-  * must create new preparation to update these
+  * Must create new preparation to update these
 
 
 
