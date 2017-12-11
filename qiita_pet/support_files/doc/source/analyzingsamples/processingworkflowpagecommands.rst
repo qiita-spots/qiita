@@ -225,7 +225,7 @@ Processing Workflow Page: Commands
   * **Alpha Correlation Citation**: *Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.*
 * **Commands from Beta Diversity Data**
  * **Perform Principal Coordinate Analysis** (PCoA): Visualizes the similarities and differences between samples using Emperor Plots
-  * **Distance matrix**(required): Distance matrix on which the PCoA should be computed
+  * **Distance matrix** (required): Distance matrix on which the PCoA should be computed
   * **PCoA Plot Citation**: *Pearson, K. (1901). "On Lines and Planes of Closest Fit to Systems of Points in Space" Philosophical Magazine. 2 (11): 559–572.*
   * **Emperor Plot Citation**: *Vazquez-Baeza Y, Pirrung M, Gonzalez A, Knight R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.*
  * **Beta Group Significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
