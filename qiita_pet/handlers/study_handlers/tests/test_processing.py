@@ -34,6 +34,7 @@ class TestJobAJAX(TestHandlerBase):
                'job_id': "063e553b-327c-4818-ab4a-adfe58e49860",
                'job_status': "queued",
                'job_step': None,
+               'job_error': None,
                'job_parameters': {'barcode_type': u'golay_12',
                                   'input_data': 1,
                                   'max_bad_run_length': 3,
