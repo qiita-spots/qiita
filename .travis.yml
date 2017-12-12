@@ -31,6 +31,7 @@ install:
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
   - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+  - mkdir -p /home/travis/.qiita_plugins/
   - configure_biom --env-script "source activate qtp-biom" --server-cert $QIITA_SERVER_CERT
   - source deactivate
   # install a few of the dependencies that pip would otherwise try to install
