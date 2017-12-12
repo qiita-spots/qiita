@@ -60,7 +60,7 @@
       data: {'op': 'replace', 'path': '/visibility/', 'value': visibility},
       success: function(data) {
         // Reload the artifact summary page so we can update the buttons
-        populateContentArtifact(aid, "prep-artifact-summary-div");
+        processingNetwork.$refs.procGraph.populateContentArtifact(aid);
       },
       error: function(object, status, error_msg) {
         // Something went wrong, show the message

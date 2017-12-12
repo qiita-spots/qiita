@@ -28,7 +28,8 @@ from qiita_pet.handlers.analysis_handlers import (
     AnalysisDescriptionHandler, AnalysisGraphHandler, CreateAnalysisHandler,
     AnalysisJobsHandler, ShareAnalysisAJAX)
 from qiita_pet.handlers.study_handlers import (
-    StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateAJAX,
+    StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateHandler,
+    SampleTemplateOverviewHandler, SampleTemplateSummaryHandler,
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
     VAMPSHandler, StudyTags, StudyGetTags,
@@ -144,13 +145,18 @@ class Application(tornado.web.Application):
             (r"/artifact/html_summary/(.*)", ArtifactSummaryHandler,
              {"path": qiita_config.base_data_dir}),
             (r"/artifact/(.*)/", ArtifactAJAX),
+            # Prep template handlers
             (r"/prep_template/", PrepTemplateHandler),
             (r"/prep_template/(.*)/graph/", PrepTemplateGraphHandler),
             (r"/prep_template/(.*)/jobs/", PrepTemplateJobHandler),
             (r"/ontology/", OntologyHandler),
             # ORDER FOR /study/description/ SUBPAGES HERE MATTERS.
             # Same reasoning as below. /study/description/(.*) should be last.
-            (r"/study/description/sample_template/", SampleTemplateAJAX),
+            (r"/study/description/sample_template/overview/",
+             SampleTemplateOverviewHandler),
+            (r"/study/description/sample_template/summary/",
+             SampleTemplateSummaryHandler),
+            (r"/study/description/sample_template/", SampleTemplateHandler),
             (r"/study/description/sample_summary/", SampleAJAX),
             (r"/study/description/prep_summary/", PrepTemplateSummaryAJAX),
             (r"/study/description/prep_template/", PrepTemplateAJAX),

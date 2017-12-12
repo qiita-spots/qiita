@@ -407,7 +407,8 @@ class SoftwareTests(TestCase):
         exp = qdb.software.Software(1)
         self.assertEqual(obs, exp)
 
-        obs = qdb.software.Software.from_name_and_version('BIOM type', '2.1.4')
+        obs = qdb.software.Software.from_name_and_version(
+            'BIOM type', '2.1.4 - Qiime2')
         exp = qdb.software.Software(2)
         self.assertEqual(obs, exp)
 
