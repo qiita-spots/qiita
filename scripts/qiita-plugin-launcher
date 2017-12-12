@@ -25,7 +25,7 @@ def start(env_script, start_script, url, job_id, job_dir):
     # When Popen executes, the shell is not in interactive mode,
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
-    cmd = "source ~/.bash_profile; %s; echo $PATH; %s" % (env_script, ' '.join(cmd))
+    cmd = ". ~/.bash_profile; %s; %s" % (env_script, ' '.join(cmd))
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
     if proc.returncode and proc.returncode != 0:

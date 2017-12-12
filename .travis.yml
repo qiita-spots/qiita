@@ -9,7 +9,6 @@ env:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
     - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_core qiita_ware"
 before_install:
-  - ls -lh /bin/sh
   - redis-server --version
   - redis-server --port 7777 &
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
