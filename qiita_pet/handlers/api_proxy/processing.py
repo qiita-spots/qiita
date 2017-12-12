@@ -236,12 +236,15 @@ def job_ajax_get_req(job_id):
     job = ProcessingJob(job_id)
     cmd = job.command
     sw = cmd.software
+    job_status = job.status
+    job_error = job.log.msg if job.log is not None else None
     return {'status': 'success',
             'message': '',
             'job_id': job.id,
-            'job_status': job.status,
+            'job_status': job_status,
             'job_step': job.step,
             'job_parameters': job.parameters.values,
+            'job_error': job_error,
             'command': cmd.name,
             'command_description': cmd.description,
             'software': sw.name,

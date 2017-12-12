@@ -21,14 +21,17 @@ from .processing import (ListCommandsHandler, ListOptionsHandler,
                          WorkflowHandler, WorkflowRunHandler, JobAJAX)
 from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
                        ArtifactAdminAJAX, ArtifactGetSamples, ArtifactGetInfo)
-from .sample_template import SampleTemplateAJAX, SampleAJAX
+from .sample_template import (
+    SampleTemplateHandler, SampleTemplateOverviewHandler,
+    SampleTemplateSummaryHandler, SampleAJAX)
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'StudyEditHandler', 'CreateStudyAJAX', 'EBISubmitHandler',
-           'VAMPSHandler', 'SearchStudiesAJAX',
-           'ArtifactGraphAJAX', 'ArtifactAdminAJAX', 'StudyIndexHandler',
-           'StudyBaseInfoAJAX', 'SampleTemplateAJAX', 'PrepTemplateAJAX',
-           'NewArtifactHandler', 'PrepFilesHandler',
+           'VAMPSHandler', 'SearchStudiesAJAX', 'ArtifactGraphAJAX',
+           'ArtifactAdminAJAX', 'StudyIndexHandler', 'StudyBaseInfoAJAX',
+           'SampleTemplateHandler', 'SampleTemplateOverviewHandler',
+           'SampleTemplateSummaryHandler',
+           'PrepTemplateAJAX', 'NewArtifactHandler', 'PrepFilesHandler',
            'ListCommandsHandler', 'ListOptionsHandler', 'SampleAJAX',
            'StudyDeleteAjax', 'NewPrepTemplateAjax',
            'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX',
