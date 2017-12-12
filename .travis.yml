@@ -53,14 +53,13 @@ install:
   - redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table-for_redbiom_tests.biom --context qiita-test --tag 5
   - mkdir ~/.qiita_plugins
   - export REDBIOM_HOST=http://127.0.0.1:7379
-  - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins
+  - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins/BIOM\ type_2.1.4\ -\ Qiime2.conf
   # Install the biom plugin so we can run the analysis tests
   - travis_retry conda create -q --yes -n qtp-biom --file https://data.qiime2.org/distro/core/qiime2-2017.11-conda-linux-64.txt
   - source activate qtp-biom
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
   - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
-  - start_biom
   - source deactivate
   - source activate qiita
 before_script:
