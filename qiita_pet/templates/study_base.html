@@ -6,36 +6,6 @@
 <link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis-network.min.css" type="text/css">
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.min.js"></script>
 <script type="text/javascript">
-  var network = null;
-  // Track what prep template is currently being shown.
-  var curr_prep = -1;
-  function togglegraphs(id) {
-    if($("#study-prep-graph-row").css('display') == 'none' ) {
-      $("#study-prep-graph-row").show();
-      $("#graph-toggle-link").text("Hide files");
-    } else {
-      $("#study-prep-graph-row").hide();
-       $("#graph-toggle-link").text("Show files");
-    }
-  }
-
-  function fill_artifact(aid) {
-    $("#study-main").html("<p><button onclick='process_from(" + aid + ")' class='btn btn-sm'>Process from here</button></p>ARTIFACT " + aid + " HTML STUFF");
-  $.get("{% raw qiita_config.portal_dir %}/admin/artifact/", {artifact_id: +aid })
-      .done(function ( data ) {
-        $("#study-admin").html(data);
-      });
-  }
-
-  function process_from(aid) {
-    $.get("{% raw qiita_config.portal_dir %}/study/process/", { artifact_id: aid })
-      .done(function ( data ){
-        $("#study-prep-graph-row").hide();
-        $("#graph-toggle-link").text("Show files");
-        $("#study-main").html(data);
-      });
-  }
-
   function validate_delete_study_text() {
     if ($("#study-alias").val() == "{% raw study_title_msg %}") {
       $('#delete-study-button').prop('disabled', false);
