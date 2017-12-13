@@ -695,7 +695,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                 cmd = qdb.software.Command.get_validator(atype)
                 values_dict = {
                     'files': dumps(filepaths), 'artifact_type': atype,
-                    'template': template, 'provenance': dumps(provenance)}
+                    'template': template, 'provenance': dumps(provenance),
+                    'analysis': None}
                 if analysis is not None:
                     values_dict['analysis'] = analysis
                 validate_params = qdb.software.Parameters.load(
