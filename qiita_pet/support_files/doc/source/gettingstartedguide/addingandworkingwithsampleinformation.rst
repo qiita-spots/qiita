@@ -92,6 +92,12 @@ Optional fields for centralized Qiita by portal
 Attaching the Sample Information to the Study
 ---------------------------------------------
 
+Example files
+-------------
+
+You can download an example sample information file from
+`here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__
+
 Upload Sample Information
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
