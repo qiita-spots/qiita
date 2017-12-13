@@ -27,3 +27,12 @@ from private to public, so consider this when submitting data and your manuscrip
    update your information files (sample or preparation) via the update option. To simplify this process,
    you can download the system generated files and add/modify these fields for each file.
 
+EBI-ENA NULL values vocabulary
+------------------------------
+
+We support the following values: *Not applicable*, *Missing: Not collected*, *Missing: Not provided*, *Missing: Restricted access*.
+
+For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
+
+.. warning::
+   Column names in your information files cannot be named as a Postgres reserved word. For example, a column cannot be named `CONDITION`, but could instead be named `DISEASE_CONDITION`. For a full list of these reserved words, see this `link <https://www.postgresql.org/docs/9.3/static/sql-keywords-appendix.html>`__.
