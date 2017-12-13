@@ -5,7 +5,7 @@ BIOM
 * No manipulation is necessary
 **.sff sample: Antonio can you help with this**
 -----------------------------------------------
-* **FASTA/fma+qual**
+* **FASTA/fna+qual**
 --------------------
 FASTQ/FAST.gz
 --------------
