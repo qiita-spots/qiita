@@ -73,28 +73,42 @@ class CommandTests(TestCase):
         self.assertItemsEqual(obs, exp)
 
     def test_get_html_artifact(self):
-        obs = qdb.software.Command.get_html_generator('BIOM')
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_html_generator('BIOM')
+
         exp = qdb.software.Command(5)
+        exp.activate()
+        obs = qdb.software.Command.get_html_generator('BIOM')
         self.assertEqual(obs, exp)
 
-        obs = qdb.software.Command.get_html_generator('Demultiplexed')
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_html_generator('Demultiplexed')
+
         exp = qdb.software.Command(7)
+        exp.activate()
+        obs = qdb.software.Command.get_html_generator('Demultiplexed')
         self.assertEqual(obs, exp)
 
-    def test_get_html_artifact_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.get_html_generator('Unknown')
 
     def test_get_validator(self):
-        obs = qdb.software.Command.get_validator('BIOM')
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_validator('BIOM')
+
         exp = qdb.software.Command(4)
+        exp.activate()
+        obs = qdb.software.Command.get_validator('BIOM')
         self.assertEqual(obs, exp)
 
-        obs = qdb.software.Command.get_validator('Demultiplexed')
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_validator('Demultiplexed')
+
         exp = qdb.software.Command(6)
+        exp.activate()
+        obs = qdb.software.Command.get_validator('Demultiplexed')
         self.assertEqual(obs, exp)
 
-    def test_get_validator_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.get_validator('Unknown')
 

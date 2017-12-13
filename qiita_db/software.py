@@ -104,7 +104,8 @@ class Command(qdb.base.QiitaObject):
                         JOIN qiita.software_artifact_type USING (software_id)
                         JOIN qiita.artifact_type USING (artifact_type_id)
                      WHERE artifact_type = %s
-                        AND name = 'Generate HTML summary'"""
+                        AND name = 'Generate HTML summary'
+                        AND active = true"""
             qdb.sql_connection.TRN.add(sql, [artifact_type])
             try:
                 res = qdb.sql_connection.TRN.execute_fetchlast()
@@ -139,7 +140,8 @@ class Command(qdb.base.QiitaObject):
                         JOIN qiita.software_artifact_type USING (software_id)
                         JOIN qiita.artifact_type USING (artifact_type_id)
                      WHERE artifact_type = %s
-                        AND name = 'Validate'"""
+                        AND name = 'Validate'
+                        AND active = true"""
             qdb.sql_connection.TRN.add(sql, [artifact_type])
             try:
                 res = qdb.sql_connection.TRN.execute_fetchlast()
