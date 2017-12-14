@@ -39,6 +39,13 @@ Looking for information about submitting your files to EBI? Please see the docum
    :maxdepth: 1
    
    europeanbioinformaticsinstitute.rst
+
+Looking for comparable studies? Please see the document here:
+
+.. toctree::
+   :maxdepth: 1
+   
+   redbiom.rst
    
 Looking for information about analyzing your data? Please see the document here:
 
@@ -46,13 +53,6 @@ Looking for information about analyzing your data? Please see the document here:
    :maxdepth: 1
    
    analyzingsample.rst
-   
-Looking for samples? Please see the document here:
-
-.. toctree::
-   :maxdepth: 1
-   
-   redbiom.rst
    
 Looking for available guides? Please see these documents:
 
