@@ -69,7 +69,7 @@ FASTQ, sff, or FASTA with qual
    * **rev comp_mapping_barcodes** (required): Reverse complement barcode in mapping before lookup
    * **sequence max_n** (required): Maximum number of N characters allowed in a sequence to retain it
 
-Deblurring 
+Deblurring
 ==========
 * **Trimming**: Removes base pairs from the sequences
  * **Input Data** (required): Data being trimmed
