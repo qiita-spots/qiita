@@ -22,7 +22,7 @@ BIOM
 ----
 * No manipulation is necessary
 
-FASTQ, SFF, or FASTA/qual Files
+FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
 -------------------------------
 * **Per-sample vs Multiplexed FASTQ Demultiplexing**
  * **Split libraries FASTQ**: Converts the raw FASTQ data into the file format used by Qiita for further analysis
