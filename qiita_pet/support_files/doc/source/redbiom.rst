@@ -7,12 +7,7 @@ Search Options
 --------------
 * Metadata
  * The search will be on the full metadata. 
- * The metadata search engine uses natural language processing to search for word stems within a samples metadata. A word stem disregards
- modifiers and plurals, so for instance, a search for "antibiotics" will actually perform a search for "antibiot". Similarly, a search for
- "crying" will actually search for "cry". The words specified can be combined with set-based operations, so for instance, a search for
- "antibiotics & crying" will obtain the set of samples in which each sample has "antibiot" in its metadata as well as "cry". N.B., the
- specific category in which a stem is found is not assured to be the same, "antibiot" could be in one category and "cry" in another. A set
- intersection can be performed with "&", a union with "|" and a difference with "-". 
+ * The metadata search engine uses natural language processing to search for word stems within a samples metadata. A word stem disregards modifiers and plurals, so for instance, a search for "antibiotics" will actually perform a search for "antibiot". Similarly, a search for "crying" will actually search for "cry". The words specified can be combined with set-based operations, so for instance, a search for "antibiotics & crying" will obtain the set of samples in which each sample has "antibiot" in its metadata as well as "cry". N.B., the specific category in which a stem is found is not assured to be the same, "antibiot" could be in one category and "cry" in another. A set intersection can be performed with "&", a union with "|" and a difference with "-". 
  * In addition to the stem-based search, value based searches can also be a applied. These use a Python-like grammar and allow for a rich set of comparisons to be performed based on a metadata category of interest. For example, "where qiita_study_id == 10317" will find all samples which have the qiita_study_id metadata category, and in which the value for that sample is "10317." 
 
 Examples: 
