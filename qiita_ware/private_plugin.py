@@ -43,7 +43,8 @@ def build_analysis_files(job):
                                   'artifact_type': 'BIOM',
                                   'provenance': dumps({'job': job.id,
                                                        'data_type': dtype}),
-                                  'analysis': analysis_id})
+                                  'analysis': analysis_id,
+                                  'tempalte': None})
             val_jobs.append(qdb.processing_job.ProcessingJob.create(
                 analysis.owner, validate_params, True))
 
