@@ -3,11 +3,8 @@ HELP WITH: .SSF SAMPLE + FASTA/FMLA + QUAL+ HAMADY AND KNIGHT PAPER
 BIOM
 ----
 * No manipulation is necessary
-**.sff sample: Antonio can you help with this**
------------------------------------------------
-* **FASTA/fna+qual**
---------------------
-FASTQ/FAST.gz
+
+FASTQ, sff, or FASTA with qual
 --------------
 * **Per-sample vs Multiplexed FASTQ Demultiplexing**
  * **Split libraries FASTQ**: Converts the raw FASTQ data into the file format used by Qiita for further analysis
