@@ -30,7 +30,7 @@ from private to public, so consider this when submitting data and your manuscrip
 EBI-ENA NULL values vocabulary
 ------------------------------
 
-We support the following values: *Not applicable*, *Missing: Not collected*, *Missing: Not provided*, *Missing: Restricted access*.
+We support the following values: *not applicable*, *missing: not collected*, *missing: not provided*, *missing: restricted access*.
 
 For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
 
