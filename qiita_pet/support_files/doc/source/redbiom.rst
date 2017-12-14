@@ -34,3 +34,5 @@ Search Options
   * Examples: 
    * Find all samples in which the genera Escherichia is found: "g__Escherichia"
    * Find all samples in which the order Clostridiales is found: "o__Clostridiales"
+   
+For more information go to the `Redbiom github page <https://github.com/biocore/redbiom>`__.
