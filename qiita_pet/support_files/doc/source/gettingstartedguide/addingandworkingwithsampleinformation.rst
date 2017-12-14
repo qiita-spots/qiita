@@ -98,6 +98,16 @@ Example files
 You can download an example sample information file from
 `here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__
 
+EBI-ENA NULL values vocabulary
+------------------------------
+
+We support the following values: *not applicable*, *missing: not collected*, *missing: not provided*, *missing: restricted access*.
+
+For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
+
+.. warning::
+   Column names in your information files cannot be named as a Postgres reserved word. For example, a column cannot be named `CONDITION`, but could instead be named `DISEASE_CONDITION`. For a full list of these reserved words, see this `link <https://www.postgresql.org/docs/9.3/static/sql-keywords-appendix.html>`__.
+   
 Upload Sample Information
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
