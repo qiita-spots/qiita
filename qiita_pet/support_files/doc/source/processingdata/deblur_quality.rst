@@ -1,8 +1,3 @@
-.. _deblur_quality:
-
-.. index:: deblur-quality
-
-========================
 Deblur quality filtering
 ========================
 
