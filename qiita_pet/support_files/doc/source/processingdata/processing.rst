@@ -18,13 +18,12 @@ Workflow Page
 
 Converting Data to BIOM Tables
 ==============================
-
 BIOM
 ----
 * No manipulation is necessary
 
-FASTQ, sff, or FASTA with qual
---------------
+FASTQ, SFF, or FASTA/qual Files
+-------------------------------
 * **Per-sample vs Multiplexed FASTQ Demultiplexing**
  * **Split libraries FASTQ**: Converts the raw FASTQ data into the file format used by Qiita for further analysis
   * **Input data** (required): Data being split
