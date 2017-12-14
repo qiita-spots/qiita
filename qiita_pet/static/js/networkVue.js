@@ -47,6 +47,42 @@ Vue.component('processing-graph', {
   methods: {
     /**
      *
+     * Enables the graph interaction
+     *
+     **/
+    enableGraphInteraction: function () {
+      let vm = this;
+      $('#interaction-btn').removeClass('btn-danger').addClass('btn-success').html('Enabled');
+      options = {interaction: { dragNodes: false,
+                                    dragView: true,
+                                    zoomView: true,
+                                    selectConnectedEdges: true,
+                                    navigationButtons: true,
+                                    keyboard: false}};
+      vm.network.setOptions(options);
+    },
+
+    /**
+     *
+     * Disables the graph interaction
+     *
+     **/
+    disableGraphInteraction: function() {
+      let vm = this;
+      $('#interaction-btn').removeClass('btn-success').addClass('btn-danger').html('Disabled');
+      options = {interaction: { dragNodes: false,
+                                dragView: false,
+                                zoomView: false,
+                                selectConnectedEdges: false,
+                                navigationButtons: false,
+                                keyboard: false}};
+      vm.network.setOptions(options);
+    },
+
+    /**
+     *
+     * Resets the zoom view of the graph
+     *
      **/
     resetZoom: function () {
       let vm = this;
@@ -57,28 +93,16 @@ Vue.component('processing-graph', {
     /**
      *
      * Enables/Disables the interaction with the graph
+     *
      **/
     toggleGraphInteraction: function () {
       let vm = this;
       var options;
       if ($('#interaction-btn').hasClass('btn-danger')) {
-        $('#interaction-btn').removeClass('btn-danger').addClass('btn-success').html('Enabled');
-        options = {interaction: { dragNodes: false,
-                                      dragView: true,
-                                      zoomView: true,
-                                      selectConnectedEdges: true,
-                                      navigationButtons: true,
-                                      keyboard: false}};
+        vm.enableGraphInteraction();
       } else {
-        $('#interaction-btn').removeClass('btn-success').addClass('btn-danger').html('Disabled');
-        options = {interaction: { dragNodes: false,
-                                  dragView: false,
-                                  zoomView: false,
-                                  selectConnectedEdges: false,
-                                  navigationButtons: false,
-                                  keyboard: false}};
+        vm.disableGraphInteraction();
       }
-      vm.network.setOptions(options);
     },
 
     /**
@@ -704,6 +728,13 @@ Vue.component('processing-graph', {
           }
         }
       });
+
+      // Make sure that the button and the behavior matches
+      if ($('#interaction-btn').hasClass('btn-danger')) {
+        vm.disableGraphInteraction();
+      } else {
+        vm.enableGraphInteraction();
+      }
     },
 
     /**
