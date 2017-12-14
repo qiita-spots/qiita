@@ -101,7 +101,7 @@ You can download an example sample information file from
 EBI-ENA NULL values vocabulary
 ------------------------------
 
-We support the following values: *not applicable*, *missing: not collected*, *missing: not provided*, *missing: restricted access*.
+For all public studies including those being submitted to EBI, no blanks are allowed in the smaple information. We support the following null values: *not applicable*, *missing: not collected*, *missing: not provided*, *missing: restricted access*.
 
 For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
 
