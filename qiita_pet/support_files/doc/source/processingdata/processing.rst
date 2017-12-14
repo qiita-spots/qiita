@@ -71,6 +71,7 @@ FASTQ, sff, or FASTA with qual
 
 Deblurring
 ==========
+*Note that sff data cannot be deblurred*
 * **Trimming**: Removes base pairs from the sequences
  * **Input Data** (required): Data being trimmed
  * **Parameter Set** (required): How many bases to trim off
