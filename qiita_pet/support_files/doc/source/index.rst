@@ -62,10 +62,9 @@ Looking for available guides? Please see these documents:
    tutorials/index.rst
    faq.rst
    glossary.rst
-   resources.rst
    
 
-If you intend to deploy or devlop Qiita we recommend that you have a look at the following documents:
+If you intend to deploy or develop Qiita we recommend that you have a look at the following documents:
 
 .. toctree::
    :maxdepth: 1
@@ -73,3 +72,4 @@ If you intend to deploy or devlop Qiita we recommend that you have a look at the
    qiita-philosophy/index.rst
    admin/index.rst
    dev/index.rst  
+   resources.rst
