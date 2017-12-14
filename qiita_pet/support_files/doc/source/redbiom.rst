@@ -11,18 +11,18 @@ Search Options
  * In addition to the stem-based search, value based searches can also be a applied. These use a Python-like grammar and allow for a rich set of comparisons to be performed based on a metadata category of interest. For example, "where qiita_study_id == 10317" will find all samples which have the qiita_study_id metadata category, and in which the value for that sample is "10317." 
  * Examples: 
   * Find all samples in which the word infant exists, as well as antibiotics, where the infants are under a year old: 
-   * infant & antibiotics where age_years <= 1
+   * *infant & antibiotics where age_years <= 1*
   * Find all samples only belonging to the EMP in which the ph is under 7 for a variety of sample types:
-   * soil: soil where ph < 7 and emp_release1 == 'True'
-   * ocean water: water & ocean where ph > 7 and emp_release1 == 'True'
-   * non-ocean water: water - ocean where ph > 7 and emp_release1 == 'True'
+   * soil: *soil where ph < 7 and emp_release1 == 'True'*
+   * ocean water: *water & ocean where ph > 7 and emp_release1 == 'True'*
+   * non-ocean water: *water - ocean where ph > 7 and emp_release1 == 'True'*
   * Or instead of ph you could search for a different metadata category:
-   * water & ocean where salinity > 20
+   * *water & ocean where salinity > 20*
   * Some other interesting examples:
-   * feces & canine
-   * (beer | cider | wine | alcohol)
-   * where sample_type == 'stool'
-   * usa where sample_type == 'stool' and host_taxid == 9606
+   * *feces & canine*
+   * *(beer | cider | wine | alcohol)*
+   * *where sample_type == 'stool'*
+   * *usa where sample_type == 'stool' and host_taxid == 9606*
 
 * **Feature**:
  * The search will be on all the features, in specific: OTU ids for close reference and exact sequences for deblur. 
