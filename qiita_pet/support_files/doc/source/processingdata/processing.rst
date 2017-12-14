@@ -107,7 +107,7 @@ Deblurring
 * **Deblur Citation**: *Amir, A., McDonald, D., Navas-Molina, J.A., Kopylova, E., Morton, J., Xu, Z.Z., Kightley, E.P.,  Thompson, L.R., Hyde, E.R., Gonzalez, A., Knight, R. (2017) “Deblur rapidly resolves single-nucleotide community sequence patterns.” mSystems. 2 (2) e00191-16.*
 
 
-Looking for information about debluring Please see the document here:
+Looking for information about debluring? Please see the document here:
 
 .. toctree::
    :maxdepth: 1
@@ -142,3 +142,9 @@ Closed-Reference OTU Picking
  * **QIIME Citation**: *Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., McMurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., Knight, R. (2013). “Advancing Our Understanding of the Human Microbiome Using QIIME”. Methods in Enzymology. (531): 371-444*
  * **Closed Reference Citation**: *Chou, H.H., Holmes, M.H. (2001). “DNA sequence quality trimming and vector removal”. Bioinformatics. 17 (12):1093–1104.*
  
+Looking for information about processing data? Please see the document here:
+
+.. toctree::
+   :maxdepth: 1
+
+   processing-recommendations.rst
