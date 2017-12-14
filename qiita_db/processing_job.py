@@ -628,7 +628,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         validator_jobs = []
         with qdb.sql_connection.TRN:
-            cmd = self.command
+            cmd_id = self.command.id
             for out_name, a_data in viewitems(artifacts_data):
                 # Correct the format of the filepaths parameter so we can
                 # create a validate job
@@ -675,7 +675,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 sql = """SELECT command_output_id
                          FROM qiita.command_output
                          WHERE name = %s AND command_id = %s"""
-                qdb.sql_connection.TRN.add(sql, [out_name, cmd.id])
+                qdb.sql_connection.TRN.add(sql, [out_name, cmd_id])
                 cmd_out_id = qdb.sql_connection.TRN.execute_fetchlast()
                 naming_params = self.command.naming_order
                 if naming_params:
