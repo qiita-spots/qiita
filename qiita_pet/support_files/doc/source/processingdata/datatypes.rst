@@ -1,5 +1,3 @@
-HELP WITH: .SSF SAMPLE + FASTA/FMLA + QUAL+ HAMADY AND KNIGHT PAPER
-
 BIOM
 ----
 * No manipulation is necessary
