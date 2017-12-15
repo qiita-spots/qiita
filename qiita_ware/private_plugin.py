@@ -44,7 +44,7 @@ def build_analysis_files(job):
                                   'provenance': dumps({'job': job.id,
                                                        'data_type': dtype}),
                                   'analysis': analysis_id,
-                                  'tempalte': None})
+                                  'template': None})
             val_jobs.append(qdb.processing_job.ProcessingJob.create(
                 analysis.owner, validate_params, True))
 
