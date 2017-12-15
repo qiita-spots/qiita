@@ -38,7 +38,7 @@ Vue.component('processing-graph', {
                       '<h4>Graph navigation</h4>' +
                     '</div>' +
                     '<div class="col-md-1">' +
-                      '<a class="btn btn-danger form-control" id="interaction-btn">Disabled</a>' +
+                      '<input type="checkbox" id="interaction-btn" data-toggle="toggle">' +
                     '</div>' +
                   '</div>' +
                   // Run workflow button
@@ -80,7 +80,6 @@ Vue.component('processing-graph', {
      **/
     enableGraphInteraction: function () {
       let vm = this;
-      $('#interaction-btn').removeClass('btn-danger').addClass('btn-success').html('Enabled');
       options = {interaction: { dragNodes: false,
                                     dragView: true,
                                     zoomView: true,
@@ -97,7 +96,6 @@ Vue.component('processing-graph', {
      **/
     disableGraphInteraction: function() {
       let vm = this;
-      $('#interaction-btn').removeClass('btn-success').addClass('btn-danger').html('Disabled');
       options = {interaction: { dragNodes: false,
                                 dragView: false,
                                 zoomView: false,
@@ -126,7 +124,7 @@ Vue.component('processing-graph', {
     toggleGraphInteraction: function () {
       let vm = this;
       var options;
-      if ($('#interaction-btn').hasClass('btn-danger')) {
+      if ($('#interaction-btn').prop('checked')) {
         vm.enableGraphInteraction();
       } else {
         vm.disableGraphInteraction();
@@ -758,10 +756,10 @@ Vue.component('processing-graph', {
       });
 
       // Make sure that the button and the behavior matches
-      if ($('#interaction-btn').hasClass('btn-danger')) {
-        vm.disableGraphInteraction();
-      } else {
+      if ($('#interaction-btn').prop('checked')) {
         vm.enableGraphInteraction();
+      } else {
+        vm.disableGraphInteraction();
       }
     },
 
@@ -1047,7 +1045,14 @@ Vue.component('processing-graph', {
     $('#run-btn').on('click', function() { vm.runWorkflow(); });
     $('#run-btn-div').hide();
 
-    $('#interaction-btn').on('click', vm.toggleGraphInteraction);
+    $('#interaction-btn').bootstrapToggle({
+      on: 'Enabled',
+      off: 'Disabled',
+      onstyle: 'success',
+      offstyle: 'danger'}
+    );
+
+    $('#interaction-btn').change(vm.toggleGraphInteraction);
 
     $('#refresh-now-link').on('click', function () {
       vm.countdownPoll = 15;
