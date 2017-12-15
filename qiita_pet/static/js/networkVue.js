@@ -32,15 +32,6 @@ Vue.component('processing-graph', {
                       '<a class="btn btn-info form-control" id="show-hide-network-btn" onclick="toggleNetworkGraph();">Hide</a>' +
                     '</div>' +
                   '</div>' +
-                  // Graph navigation toggler
-                  '<div class="row">' +
-                    '<div class="col-md-2">' +
-                      '<h4>Graph navigation</h4>' +
-                    '</div>' +
-                    '<div class="col-md-1">' +
-                      '<input type="checkbox" id="interaction-btn" data-toggle="toggle">' +
-                    '</div>' +
-                  '</div>' +
                   // Run workflow button
                   '<div class="row" id="run-btn-div">' +
                     '<div class="col-md-2">' +
@@ -75,38 +66,6 @@ Vue.component('processing-graph', {
   methods: {
     /**
      *
-     * Enables the graph interaction
-     *
-     **/
-    enableGraphInteraction: function () {
-      let vm = this;
-      options = {interaction: { dragNodes: false,
-                                    dragView: true,
-                                    zoomView: true,
-                                    selectConnectedEdges: true,
-                                    navigationButtons: true,
-                                    keyboard: false}};
-      vm.network.setOptions(options);
-    },
-
-    /**
-     *
-     * Disables the graph interaction
-     *
-     **/
-    disableGraphInteraction: function() {
-      let vm = this;
-      options = {interaction: { dragNodes: false,
-                                dragView: false,
-                                zoomView: false,
-                                selectConnectedEdges: false,
-                                navigationButtons: false,
-                                keyboard: false}};
-      vm.network.setOptions(options);
-    },
-
-    /**
-     *
      * Resets the zoom view of the graph
      *
      **/
@@ -114,20 +73,6 @@ Vue.component('processing-graph', {
       let vm = this;
       if (vm.network !== undefined && vm.network !== null) {
         vm.network.fit();
-      }
-    },
-    /**
-     *
-     * Enables/Disables the interaction with the graph
-     *
-     **/
-    toggleGraphInteraction: function () {
-      let vm = this;
-      var options;
-      if ($('#interaction-btn').prop('checked')) {
-        vm.enableGraphInteraction();
-      } else {
-        vm.disableGraphInteraction();
       }
     },
 
@@ -715,10 +660,10 @@ Vue.component('processing-graph', {
         },
         interaction: {
           dragNodes: false,
-          dragView: false,
-          zoomView: false,
-          selectConnectedEdges: false,
-          navigationButtons: false,
+          dragView: true,
+          zoomView: true,
+          selectConnectedEdges: true,
+          navigationButtons: true,
           keyboard: false
         },
         groups: {
@@ -754,13 +699,6 @@ Vue.component('processing-graph', {
           }
         }
       });
-
-      // Make sure that the button and the behavior matches
-      if ($('#interaction-btn').prop('checked')) {
-        vm.enableGraphInteraction();
-      } else {
-        vm.disableGraphInteraction();
-      }
     },
 
     /**
@@ -1044,15 +982,6 @@ Vue.component('processing-graph', {
 
     $('#run-btn').on('click', function() { vm.runWorkflow(); });
     $('#run-btn-div').hide();
-
-    $('#interaction-btn').bootstrapToggle({
-      on: 'Enabled',
-      off: 'Disabled',
-      onstyle: 'success',
-      offstyle: 'danger'}
-    );
-
-    $('#interaction-btn').change(vm.toggleGraphInteraction);
 
     $('#refresh-now-link').on('click', function () {
       vm.countdownPoll = 15;
