@@ -104,7 +104,7 @@
     });
 
     $('#process-btn').on('click', function(){
-      processingNetwork.$refs.procGraph.loadArtifactType([{{artifact_id}}]);
+      processingNetwork.$refs.procGraph.loadArtifactType({{artifact_id}});
     });
 
     qiita_websocket.init(window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', error, error);

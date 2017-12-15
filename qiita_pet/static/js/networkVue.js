@@ -530,61 +530,81 @@ Vue.component('processing-graph', {
      *
      * Generates the GUI for selecting the commands to apply to the given artifacts
      *
-     * @param p_nodes list The ids of the selected artifacts
+     * @param p_node str The id of the selected artifact
      *
      * This function executes an AJAX call to retrieve all the commands that can
      * process the selected artifacts. It generates the interface so the user
      * can select which command should be added to the workflow
      *
      **/
-    loadArtifactType: function(p_nodes) {
+    loadArtifactType: function(p_node) {
       let vm = this;
       var types = [];
       var sel_artifacts_info = {};
-      var node;
+      var node, nodeIdSplit, $rowDiv, $colDiv;
       var target = $("#processing-results");
 
-      for(var i=0; i < p_nodes.length; i++) {
-        node = vm.nodes_ds.get(p_nodes[i]);
-        if(types.indexOf(node.type) === -1) {
-          types.push(node.type);
-        }
-        sel_artifacts_info[node.id] = {'type': node.type, 'name': node.label}
-      }
-      $.get(vm.portal + '/study/process/commands/', {artifact_types: types, include_analysis: vm.isAnalysisPipeline})
-        .done(function (data) {
-          target.empty();
+      // We need to differentiate between the artifact type nodes that are part
+      // of the current in construction workflow of if the node is from a
+      // previous workflow. If it is from a previous workflow, no new commands
+      // can be added. This is due to assumptions done on different sections
+      // of the code that are not easy to remove. The easiest way to identify
+      // the type of artifact type node is by checking the job that is
+      // generating this artifact type.
+      p_node = String(p_node);
+      nodeIdSplit = p_node.split(':');
+      node = vm.nodes_ds.get(p_node);
+      if (nodeIdSplit.length < 2 || vm.nodes_ds.get(nodeIdSplit[0]).status === 'in_construction') {
+        // This means that either we are going to process a new artifact (nodeIdSplit.length < 2)
+        // or that the parent job generating this artifact type node is in construction.
+        // In both of this cases, we can add a new job to the workflow
+        types.push(node.type);
+        sel_artifacts_info[node.id] = {'type': node.type, 'name': node.label};
 
-          // Create the command select dropdown
-          var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
-          $('<label>').addClass('col-sm-2').addClass('col-form-label').text('Choose command:').appendTo($rowDiv).attr('for', 'command-sel');
-          var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
-          var sel = $('<select>').appendTo($colDiv).attr('id', 'command-sel').attr('name', 'command').addClass('form-control').attr('placeholder', 'Choose command...');
-          sel.append($("<option>").attr('value', "").text("Choose command...").prop('disabled', true).prop('selected', true));
-          var commands = data.commands;
-          commands.sort(function(a, b) {return a.command.localeCompare(b.command, 'en', {'sensitivity': 'base'});} );
-          for(var i=0; i<commands.length; i++) {
-            if (commands[i].output.length !== 0) {
-              sel.append($("<option>").attr('value', commands[i].id).text(commands[i].command));
+        $.get(vm.portal + '/study/process/commands/', {artifact_types: types, include_analysis: vm.isAnalysisPipeline})
+          .done(function (data) {
+            target.empty();
+
+            // Create the command select dropdown
+            $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
+            $('<label>').addClass('col-sm-2').addClass('col-form-label').text('Choose command:').appendTo($rowDiv).attr('for', 'command-sel');
+            $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
+            var sel = $('<select>').appendTo($colDiv).attr('id', 'command-sel').attr('name', 'command').addClass('form-control').attr('placeholder', 'Choose command...');
+            sel.append($("<option>").attr('value', "").text("Choose command...").prop('disabled', true).prop('selected', true));
+            var commands = data.commands;
+            commands.sort(function(a, b) {return a.command.localeCompare(b.command, 'en', {'sensitivity': 'base'});} );
+            for(var i=0; i<commands.length; i++) {
+              if (commands[i].output.length !== 0) {
+                sel.append($("<option>").attr('value', commands[i].id).text(commands[i].command));
+              }
             }
-          }
-          sel.change(function(event) {
-            $("#cmd-opts-div").empty();
-            $("#add-cmd-btn-div").hide();
-            var v = $("#command-sel").val();
-            if (v !== "") {
-              vm.loadCommandOptions(v, sel_artifacts_info);
-            }
+            sel.change(function(event) {
+              $("#cmd-opts-div").empty();
+              $("#add-cmd-btn-div").hide();
+              var v = $("#command-sel").val();
+              if (v !== "") {
+                vm.loadCommandOptions(v, sel_artifacts_info);
+              }
+            });
+
+            // Create the div in which the command options will be shown
+            $('<div>').appendTo(target).attr('id', 'cmd-opts-div').attr('name', 'cmd-opts-div');
+
+            // Create the add command button - but not show it yet
+            var $rowDiv = $('<div hidden>').addClass('row').addClass('form-group').appendTo(target).attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
+            var $colDiv = $('<div>').addClass('col-sm-2').appendTo($rowDiv);
+            $('<button>').appendTo($colDiv).addClass('btn btn-info').text('Add Command').click(function() {vm.addJob();});
           });
-
-          // Create the div in which the command options will be shown
-          $('<div>').appendTo(target).attr('id', 'cmd-opts-div').attr('name', 'cmd-opts-div');
-
-          // Create the add command button - but not show it yet
-          var $rowDiv = $('<div hidden>').addClass('row').addClass('form-group').appendTo(target).attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
-          var $colDiv = $('<div>').addClass('col-sm-2').appendTo($rowDiv);
-          $('<button>').appendTo($colDiv).addClass('btn btn-info').text('Add Command').click(function() {vm.addJob();});
-        });
+      } else {
+        target.empty();
+        $('<h4>').append('Future result: ' + node.label).appendTo(target);
+        $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
+        $('<label>').addClass('col-sm-1').addClass('col-form-label').text('Generated by:').appendTo($rowDiv);
+        $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv).append(vm.nodes_ds.get(nodeIdSplit[0]).label + ' (' + nodeIdSplit[0] + ')');
+        $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
+        $('<label>').addClass('col-sm-1').addClass('col-form-label').text('Output name:').appendTo($rowDiv);
+        $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv).append(nodeIdSplit[1]);
+      }
     },
 
     /**
@@ -689,13 +709,13 @@ Vue.component('processing-graph', {
         var clickedNode = vm.nodes_ds.get(ids)[0];
         var element_id = ids[0];
         if (clickedNode.group == 'artifact') {
-          vm.populateContentArtifact(element_id, target_details);
+          vm.populateContentArtifact(element_id);
         } else {
           var ei = element_id.split(':');
           if (ei.length == 2) {
-            vm.loadArtifactType([element_id], false, target_details);
+            vm.loadArtifactType(element_id);
           } else {
-            vm.populateContentJob(element_id, target_details);
+            vm.populateContentJob(element_id);
           }
         }
       });
