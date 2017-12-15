@@ -218,7 +218,8 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
                 'template': prep_template_id,
                 'files': dumps(cleaned_filepaths),
                 'artifact_type': artifact_type,
-                'name': name
+                'name': name,
+                'analysis': None,
                 }), True)
 
     # Submit the job

@@ -23,10 +23,29 @@ Vue.component('processing-graph', {
   template: '<div class="row">' +
               '<div class="row" id="network-header-div">' +
                 '<div class="col-md-12">' +
-                  '<h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggleNetworkGraph();">Hide</a><i> Processing network </i></h4>' +
-                  'Graph navigation: <a class="btn btn-danger" id="interaction-btn">Disabled</a></br>' +
-                  '<div id="run-btn-div"><a class="btn btn-success" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run workflow</a><span class="blinking-message">  Don\'t forget to hit "Run" once you are done with your workflow!</span></div>' +
-                  '<b>Click circles for more information - This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a></b>' +
+                  // Processing Network header and Show/hide button
+                  '<div class="row">' +
+                    '<div class="col-md-2">' +
+                      '<h4>Processing network</h4>' +
+                    '</div>' +
+                    '<div class="col-md-1">' +
+                      '<a class="btn btn-info form-control" id="show-hide-network-btn" onclick="toggleNetworkGraph();">Hide</a>' +
+                    '</div>' +
+                  '</div>' +
+                  // Run workflow button
+                  '<div class="row" id="run-btn-div">' +
+                    '<div class="col-md-2">' +
+                      '<h4><span class="blinking-message">Start workflow:</h4></span>' +
+                    '</div>' +
+                    '<div class="col-md-1">' +
+                      '<a class="btn btn-success form-control" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run</a>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="row">' +
+                    '<div class="col-md-12">' +
+                      '<b>Click circles for more information - This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a></b>' +
+                    '</div>' +
+                  '</div>' +
                 '</div>' +
               '</div>' +
               '<div class="row">' +
@@ -47,40 +66,6 @@ Vue.component('processing-graph', {
   methods: {
     /**
      *
-     * Enables the graph interaction
-     *
-     **/
-    enableGraphInteraction: function () {
-      let vm = this;
-      $('#interaction-btn').removeClass('btn-danger').addClass('btn-success').html('Enabled');
-      options = {interaction: { dragNodes: false,
-                                    dragView: true,
-                                    zoomView: true,
-                                    selectConnectedEdges: true,
-                                    navigationButtons: true,
-                                    keyboard: false}};
-      vm.network.setOptions(options);
-    },
-
-    /**
-     *
-     * Disables the graph interaction
-     *
-     **/
-    disableGraphInteraction: function() {
-      let vm = this;
-      $('#interaction-btn').removeClass('btn-success').addClass('btn-danger').html('Disabled');
-      options = {interaction: { dragNodes: false,
-                                dragView: false,
-                                zoomView: false,
-                                selectConnectedEdges: false,
-                                navigationButtons: false,
-                                keyboard: false}};
-      vm.network.setOptions(options);
-    },
-
-    /**
-     *
      * Resets the zoom view of the graph
      *
      **/
@@ -88,20 +73,6 @@ Vue.component('processing-graph', {
       let vm = this;
       if (vm.network !== undefined && vm.network !== null) {
         vm.network.fit();
-      }
-    },
-    /**
-     *
-     * Enables/Disables the interaction with the graph
-     *
-     **/
-    toggleGraphInteraction: function () {
-      let vm = this;
-      var options;
-      if ($('#interaction-btn').hasClass('btn-danger')) {
-        vm.enableGraphInteraction();
-      } else {
-        vm.disableGraphInteraction();
       }
     },
 
@@ -689,10 +660,10 @@ Vue.component('processing-graph', {
         },
         interaction: {
           dragNodes: false,
-          dragView: false,
-          zoomView: false,
-          selectConnectedEdges: false,
-          navigationButtons: false,
+          dragView: true,
+          zoomView: true,
+          selectConnectedEdges: true,
+          navigationButtons: true,
           keyboard: false
         },
         groups: {
@@ -728,13 +699,6 @@ Vue.component('processing-graph', {
           }
         }
       });
-
-      // Make sure that the button and the behavior matches
-      if ($('#interaction-btn').hasClass('btn-danger')) {
-        vm.disableGraphInteraction();
-      } else {
-        vm.enableGraphInteraction();
-      }
     },
 
     /**
@@ -1018,8 +982,6 @@ Vue.component('processing-graph', {
 
     $('#run-btn').on('click', function() { vm.runWorkflow(); });
     $('#run-btn-div').hide();
-
-    $('#interaction-btn').on('click', vm.toggleGraphInteraction);
 
     $('#refresh-now-link').on('click', function () {
       vm.countdownPoll = 15;

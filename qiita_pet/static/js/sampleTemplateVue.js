@@ -335,12 +335,12 @@ Vue.component('sample-template-page', {
 
       // The two "pills"
       $ul = $('<ul>').addClass('nav nav-pills').appendTo($col);
-      $li = $('<li>').appendTo($ul);
+      $li = $('<li>').css('border', '1px solid #428bca').css('border-radius', '5px').appendTo($ul);
       if (vm.rowType == 'column') {
         $li.addClass('active');
       }
       $('<a>').attr('data-toggle', 'tab').attr('href', '#sample-info-tab').appendTo($li).append('Sample Information');
-      $li = $('<li>').appendTo($ul);
+      $li = $('<li>').css('border', '1px solid #428bca').css('border-radius', '5px').appendTo($ul);
       if (vm.rowType == 'sample') {
         $li.addClass('active');
       }

@@ -379,19 +379,19 @@
 <div class="row">
   <div class="col-md-12">
     <ul class="nav nav-pills">
-      <li class="active"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
-      <li><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn">Processing</a></li>
+      <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
+      <li style="border: 1px solid #428bca; border-radius: 5px" class="active"><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn">Processing</a></li>
     </ul>
 
     <div class="tab-content">
-      <div id="summary-tab-div" class="tab-pane fade in active">
+      <div id="summary-tab-div" class="tab-pane fade">
         <b>Number of samples: </b>{{num_samples}}</br>
         <b>Number of columns: </b>{{num_columns}}</br>
         {% if editable %}
           <!-- Update prep template -->
           <div class="row">
             <div class="col-md-12">
-              <b>Update information:</b>
+              <b>Update prep information:</b>
               <select id="file-selector">
                 <option value="">Choose file...</option>
                 {% for fp in files %}
@@ -444,7 +444,7 @@
         <div id="prep-artifact-summary-div" class="tab-pane fade in active">
         </div>
       </div>
-      <div id="processing-graph-vue" class="tab-pane fade">
+      <div id="processing-graph-vue" class="tab-pane fade in active">
         <processing-graph ref="procGraph" v-bind:is-analysis-pipeline='false' v-bind:no-init-jobs-callback="load_new_artifact" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/prep_template/{{prep_id}}/graph/" jobs-endpoint="/prep_template/{{prep_id}}/jobs/"></processing-graph>
       </div>
     </div>

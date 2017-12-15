@@ -50,7 +50,7 @@
       </div>
 
       <hr>
-      <h3><u>Uploaded files</u></h3>
+      <h3><u>Files</u></h3>
       <br/>
       <form method="post" id="delete-files-form">
         <div class="uploader-list" style="display:none;">
@@ -94,7 +94,7 @@
     })(jQuery);
 
   {% for dirid, filename in files %}
-    uploader.addFile({ "dirid": "{{dirid}}", "fileName": "{{filename}}" });
+    uploader.addFile({ "dirid": "{{dirid}}", "fileName": "{{filename}}", "uploaded": "True" });
   {% end  %}
 </script>
 
