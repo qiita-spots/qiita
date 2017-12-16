@@ -43,7 +43,7 @@ Vue.component('processing-graph', {
                   '</div>' +
                   '<div class="row">' +
                     '<div class="col-md-12">' +
-                      '<b>Click circles for more information - This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a></b>' +
+                      '<b>Click on the graph to navigate through it. Click circles for more information. This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a></b>' +
                     '</div>' +
                   '</div>' +
                 '</div>' +
