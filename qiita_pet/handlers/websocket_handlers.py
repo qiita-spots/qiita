@@ -43,6 +43,12 @@ class MessageHandler(WebSocketHandler):
         else:
             return user.strip('" ')
 
+    # Open allows for any number arguments, unlike what pylint thinks.
+    # pylint: disable=W0221
+    @authenticated
+    def open(self):
+        self.write_message('hello')
+
     @authenticated
     def on_message(self, msg):
         # When the websocket receives a message from the javascript client,
@@ -97,8 +103,8 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
 
         if 'remove_sample' in msginfo:
             data = msginfo['remove_sample']
-            artifacts = [Artifact(_id) for _id in data['proc_data']]
-            default.remove_samples(artifacts, data['samples'])
+            artifact = Artifact(data['proc_data'])
+            default.remove_samples([artifact], data['samples'])
         elif 'remove_pd' in msginfo:
             data = msginfo['remove_pd']
             default.remove_samples([Artifact(data['proc_data'])])
@@ -107,6 +113,13 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
             artifacts = [Artifact(_id) for _id in data['pids']]
             default.remove_samples(artifacts)
         self.write_message(msg)
+
+    # Open allows for any number arguments, unlike what pylint thinks.
+    # pylint: disable=W0221
+    @authenticated
+    @execute_as_transaction
+    def open(self):
+        self.write_message('hello')
 
 
 class SelectSamplesHandler(WebSocketHandler, BaseHandler):
