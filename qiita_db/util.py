@@ -803,7 +803,7 @@ def _rm_exists(fp, obj, _id, delete_files):
     try:
         _id = int(_id)
         obj(_id)
-    except:
+    except Exception:
         _id = str(_id)
         if delete_files:
             with qdb.sql_connection.TRN:
