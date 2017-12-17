@@ -73,9 +73,10 @@ class PrepTemplateDBHandler(OauthBaseHandler):
             pt = _get_prep_template(prep_id)
             prep_files = [fp for _, fp in pt.get_filepaths()
                           if 'qiime' not in basename(fp)]
+            artifact = pt.artifact.id if pt.artifact is not None else None
             response = {
                 'data_type': pt.data_type(),
-                'artifact': pt.artifact.id,
+                'artifact': artifact,
                 'investigation_type': pt.investigation_type,
                 'study': pt.study_id,
                 'status': pt.status,

@@ -154,6 +154,11 @@ class PrepTemplateAPItestHandlerTests(OauthTestingBase):
         pt = qdb.metadata_template.prep_template.PrepTemplate(obs['prep'])
         self.assertItemsEqual(pt.keys(), ['1.SKB8.640193', '1.SKD8.640184'])
 
+        # testing that a new prep doesn't break the call due to empty artifact
+        obs = self.get('/qiita_db/prep_template/%d/' % pt.id,
+                       headers=self.header)
+        self.assertEqual(obs.code, 200)
+
 
 if __name__ == '__main__':
     main()
