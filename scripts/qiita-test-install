@@ -156,7 +156,7 @@ class QiitaConfig(TestCase):
             conn_handler = SQLConnectionHandler()
             sql = "SELECT version();"
             self.psql_version = conn_handler.execute_fetchone(sql)[0]
-        except:
+        except Exception:
             self.psql_version = None
         try:
             r = StrictRedis(
@@ -165,7 +165,7 @@ class QiitaConfig(TestCase):
                 port=self.config.redis_port,
                 db=self.config.redis_db)
             self.redis_version = r.info()['redis_version']
-        except:
+        except Exception:
             self.redis_version = None
 
     def test_future_library_version(self):
@@ -346,7 +346,7 @@ def main():
         smtp.connect(qiita_config.smtp_host, qiita_config.smtp_port)
         smtp.verify
         send_email = True
-    except:
+    except Exception:
         send_email = False
     ebi_credentials = (qiita_config.ebi_center_name != '' and
                        qiita_config.ebi_dropbox_url != '' and
@@ -360,7 +360,7 @@ def main():
     try:
         SQLConnectionHandler()
         psql_running = True
-    except:
+    except Exception:
         psql_running = False
     try:
         StrictRedis(
@@ -369,7 +369,7 @@ def main():
             port=qiita_config.redis_port,
             db=qiita_config.redis_db)
         redis_running = True
-    except:
+    except Exception:
         redis_running = False
 
     try:
@@ -379,7 +379,7 @@ def main():
              port=qiita_config.redbiom_redis_port,
              db=qiita_config.redbiom_redis_db)
         redbiom_redis_running = True
-    except:
+    except Exception:
         redbiom_redis_running = False
 
     print qiita_config_header

@@ -31,6 +31,7 @@ Methods
     move_upload_files_to_trash
     add_message
     get_pubmed_ids_from_dois
+    generate_analysis_list
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -55,7 +56,6 @@ from datetime import datetime
 from itertools import chain
 from contextlib import contextmanager
 from future.builtins import bytes, str
-from collections import defaultdict
 import h5py
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -1534,14 +1534,15 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
         sql = """
             WITH main_query AS (
-                SELECT a.artifact_id, a.name, a.command_id as cid,
+                SELECT a.artifact_id, a.name, a.command_id as cid, sc.name,
                        a.generated_timestamp, array_agg(a.command_parameters),
                        dt.data_type, parent_id,
-                       parent_info.command_id,
+                       parent_info.command_id, parent_info.name,
                        array_agg(parent_info.command_parameters),
                        array_agg(filepaths.filepath),
                        qiita.find_artifact_roots(a.artifact_id) AS root_id
-                FROM qiita.artifact a"""
+                FROM qiita.artifact a
+                LEFT JOIN qiita.software_command sc USING (command_id)"""
         if only_biom:
             sql += """
                 JOIN qiita.artifact_type at ON (
@@ -1552,8 +1553,9 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     a.artifact_id = pa.artifact_id)
                 LEFT JOIN qiita.data_type dt USING (data_type_id)
                 LEFT OUTER JOIN LATERAL (
-                    SELECT command_id, command_parameters
+                    SELECT command_id, sc.name, command_parameters
                     FROM qiita.artifact ap
+                    LEFT JOIN qiita.software_command sc USING (command_id)
                     WHERE ap.artifact_id = pa.parent_id) parent_info ON true
                 LEFT OUTER JOIN LATERAL (
                     SELECT filepath
@@ -1561,9 +1563,9 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     JOIN qiita.filepath USING (filepath_id)
                     WHERE af.artifact_id = a.artifact_id) filepaths ON true
                 WHERE a.artifact_id IN %s
-                GROUP BY a.artifact_id, a.name, a.command_id,
+                GROUP BY a.artifact_id, a.name, a.command_id, sc.name,
                          a.generated_timestamp, dt.data_type, parent_id,
-                         parent_info.command_id
+                         parent_info.command_id, parent_info.name
                 ORDER BY a.command_id, artifact_id),
               has_target_subfragment AS (
                 SELECT main_query.*, CASE WHEN (
@@ -1580,29 +1582,24 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             ORDER BY cid, data_type, artifact_id
             """
 
-        sql_params = """SELECT default_parameter_set_id, command_id,
-                            parameter_set_name, parameter_set AS param_set,
-                            array_agg(parameter_name)
-                        FROM qiita.default_parameter_set
-                        LEFT JOIN qiita.command_parameter
-                            USING (command_id)
+        sql_params = """SELECT command_id, array_agg(parameter_name)
+                        FROM qiita.command_parameter
                         WHERE parameter_type = 'artifact'
-                        GROUP BY default_parameter_set_id, command_id,
-                            parameter_set_name"""
+                        GROUP BY command_id"""
 
         sql_ts = """SELECT DISTINCT target_subfragment FROM qiita.prep_%s"""
 
         with qdb.sql_connection.TRN:
             results = []
+
+            # getting all commands and their artifact parameters so we can
+            # delete from the results below
             commands = {}
-            # obtaining all existing parameters, note that
-            # they are not that many (~40) and we don't expect
-            # to have a huge growth in the near future
             qdb.sql_connection.TRN.add(sql_params)
-            params = defaultdict(list)
-            for row in qdb.sql_connection.TRN.execute_fetchindex():
-                _, cid, n, param, aparam = row
-                params[cid].append((n, list(param.iteritems()), aparam))
+            for cid, params in qdb.sql_connection.TRN.execute_fetchindex():
+                commands[cid] = {
+                    'params': params,
+                    'merging_scheme': qdb.software.Command(cid).merging_scheme}
 
             # now let's get the actual artifacts
             ts = {}
@@ -1610,51 +1607,53 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             PT = qdb.metadata_template.prep_template.PrepTemplate
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
-                aid, name, cid, gt, aparams, dt, pid, pcid, pparams, \
-                    filepaths, _, target, prep_template_id = row
+                aid, name, cid, cname, gt, aparams, dt, pid, pcid, pname, \
+                    pparams, filepaths, _, target, prep_template_id = row
 
-                # cleaning fields:
-                # - [0] due to the array_agg
-                pparams = pparams[0]
-                if pparams is not None:
-                    pparams = list(pparams.iteritems())
-                    # [-1] taking the last cause it's sorted by
-                    #      the number of overlapping parameters
-                    # [0] then taking the first element that is
-                    # the name of the parameter set
-                    pparams = sorted(
-                        [(pn, len([vv for vv in v if vv in pparams]))
-                         for pn, v, a in params[pcid]], key=lambda x: x[1])[-1]
-                    pparams = 'N/A' if pparams[1] == 0 else pparams[0]
-                else:
-                    pparams = 'N/A'
+                # cleaning up aparams
                 # - [0] due to the array_agg
                 aparams = aparams[0]
                 if aparams is None:
                     aparams = {}
                 else:
                     # we are gonna remove any artifacts from the parameters
-                    # [0] cause there is only one element and [2] cause
-                    # there is where the artifact types are stored
-                    to_ignore = params[cid][0][2]
-                    for ti in to_ignore:
+                    for ti in commands[cid]['params']:
                         del aparams[ti]
+
                 # - ignoring empty filepaths
                 if filepaths == [None]:
                     filepaths = []
+                else:
+                    filepaths = [fp for fp in filepaths if fp.endswith('biom')]
+
                 # - ignoring empty target
                 if target == [None]:
                     target = []
 
+                # generating algorithm, by default is ''
                 algorithm = ''
                 if cid is not None:
-                    if cid not in commands:
-                        c = qdb.software.Command(cid)
-                        s = c.software
-                        commands[cid] = '%s, %sv%s' % (
-                            c.name, s.name, s.version)
+                    ms = commands[cid]['merging_scheme']
+                    eparams = []
+                    if ms['parameters']:
+                        eparams.append(','.join(['%s: %s' % (k, aparams[k])
+                                                 for k in ms['parameters']]))
+                    if ms['outputs'] and filepaths:
+                        eparams.append('BIOM: %s' % ', '.join(filepaths))
+                    if eparams:
+                        cname = "%s (%s)" % (cname, ', '.join(eparams))
 
-                    algorithm = '%s | %s' % (commands[cid], pparams)
+                    palgorithm = 'N/A'
+                    if pcid is not None:
+                        palgorithm = pname
+                        ms = commands[pcid]['merging_scheme']
+                        if ms['parameters']:
+                            pparams = pparams[0]
+                            params = ','.join(['%s: %s' % (k, pparams[k])
+                                               for k in ms['parameters']])
+                            palgorithm = "%s (%s)" % (palgorithm, params)
+
+                    algorithm = '%s | %s' % (cname, palgorithm)
 
                 if target is None:
                     target = []
@@ -1749,3 +1748,71 @@ def open_file(filepath_or, *args, **kwargs):
     finally:
         if own_fh:
             fh.close()
+
+
+def generate_analysis_list(analysis_ids, public_only=False):
+    """Get general analysis information
+
+    Parameters
+    ----------
+    analysis_ids : list of ints
+        The analysis ids to look for. Non-existing ids will be ignored
+    public_only : bool, optional
+        If true, return only public analyses. Default: false.
+
+    Returns
+    -------
+    list of dict
+        The list of studies and their information
+    """
+    if not analysis_ids:
+        return []
+
+    sql = """
+        SELECT analysis_id, a.name, a.description, a.timestamp,
+            array_agg(DISTINCT CASE WHEN command_id IS NOT NULL
+                      THEN artifact_id END),
+            array_agg(DISTINCT visibility),
+            array_agg(DISTINCT CASE WHEN filepath_type = 'plain_text'
+                      THEN filepath_id END)
+        FROM qiita.analysis a
+        LEFT JOIN qiita.analysis_artifact USING (analysis_id)
+        LEFT JOIN qiita.artifact USING (artifact_id)
+        LEFT JOIN qiita.visibility USING (visibility_id)
+        LEFT JOIN qiita.analysis_filepath USING (analysis_id)
+        LEFT JOIN qiita.filepath USING (filepath_id)
+        LEFT JOIN qiita.filepath_type USING (filepath_type_id)
+        WHERE dflt = false AND analysis_id IN %s
+        GROUP BY analysis_id
+        ORDER BY analysis_id"""
+
+    with qdb.sql_connection.TRN:
+        results = []
+
+        qdb.sql_connection.TRN.add(sql, [tuple(analysis_ids)])
+        for row in qdb.sql_connection.TRN.execute_fetchindex():
+            aid, name, description, ts, artifacts, av, mapping_files = row
+
+            av = 'public' if set(av) == {'public'} else 'private'
+            if av != 'public' and public_only:
+                continue
+
+            if mapping_files == [None]:
+                mapping_files = []
+            else:
+                mapping_files = [
+                    (mid, get_filepath_information(mid)['fullpath'])
+                    for mid in mapping_files if mid is not None]
+            if artifacts == [None]:
+                artifacts = []
+            else:
+                # making sure they are int so they don't break the GUI
+                artifacts = [int(a) for a in artifacts if a is not None]
+
+            results.append({
+                'analysis_id': aid, 'name': name, 'description': description,
+                'timestamp': ts.strftime("%m/%d/%y %H:%M:%S"),
+                'visibility': av, 'artifacts': artifacts,
+                'mapping_files': mapping_files})
+
+    return results

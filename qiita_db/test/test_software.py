@@ -73,28 +73,42 @@ class CommandTests(TestCase):
         self.assertItemsEqual(obs, exp)
 
     def test_get_html_artifact(self):
-        obs = qdb.software.Command.get_html_generator('BIOM')
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_html_generator('BIOM')
+
         exp = qdb.software.Command(5)
+        exp.activate()
+        obs = qdb.software.Command.get_html_generator('BIOM')
         self.assertEqual(obs, exp)
 
-        obs = qdb.software.Command.get_html_generator('Demultiplexed')
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_html_generator('Demultiplexed')
+
         exp = qdb.software.Command(7)
+        exp.activate()
+        obs = qdb.software.Command.get_html_generator('Demultiplexed')
         self.assertEqual(obs, exp)
 
-    def test_get_html_artifact_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.get_html_generator('Unknown')
 
     def test_get_validator(self):
-        obs = qdb.software.Command.get_validator('BIOM')
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_validator('BIOM')
+
         exp = qdb.software.Command(4)
+        exp.activate()
+        obs = qdb.software.Command.get_validator('BIOM')
         self.assertEqual(obs, exp)
 
-        obs = qdb.software.Command.get_validator('Demultiplexed')
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_validator('Demultiplexed')
+
         exp = qdb.software.Command(6)
+        exp.activate()
+        obs = qdb.software.Command.get_validator('Demultiplexed')
         self.assertEqual(obs, exp)
 
-    def test_get_validator_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.get_validator('Unknown')
 
@@ -298,6 +312,8 @@ class CommandTests(TestCase):
             'opt_bool': ['boolean', 'False']}
         self.assertEqual(obs.optional_parameters, exp_optional)
         self.assertFalse(obs.analysis_only)
+        self.assertEqual(obs.naming_order, [])
+        self.assertEqual(obs.merging_scheme, {'parameters': [], 'outputs': []})
 
         obs = qdb.software.Command.create(
             self.software, "Test Command 2", "This is a command for testing",
@@ -307,6 +323,8 @@ class CommandTests(TestCase):
         self.assertEqual(obs.required_parameters, exp_required)
         self.assertEqual(obs.optional_parameters, exp_optional)
         self.assertTrue(obs.analysis_only)
+        self.assertEqual(obs.naming_order, [])
+        self.assertEqual(obs.merging_scheme, {'parameters': [], 'outputs': []})
 
         # Test that the internal parameters in "Validate"
         # are created automatically
@@ -334,6 +352,34 @@ class CommandTests(TestCase):
                         'provenance': ['string', None]}
         self.assertEqual(obs.optional_parameters, exp_optional)
         self.assertFalse(obs.analysis_only)
+        self.assertEqual(obs.naming_order, [])
+        self.assertEqual(obs.merging_scheme, {'parameters': [], 'outputs': []})
+
+        # Test that the naming and merge information is provided
+        parameters = {
+            'req_art': ['artifact:["BIOM"]', None],
+            'opt_int_param': ['integer', '4', 1, True],
+            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1', 2, True],
+            'opt_bool': ['boolean', 'False', None, False]}
+        outputs = {'out1': ('BIOM', True)}
+        obs = qdb.software.Command.create(
+            self.software, "Test Command Merge", "Testing cmd", parameters,
+            outputs=outputs)
+        self.assertEqual(obs.name, "Test Command Merge")
+        self.assertEqual(obs.description, "Testing cmd")
+        exp_required = {'req_art': ('artifact', ['BIOM'])}
+        self.assertEqual(obs.required_parameters, exp_required)
+        exp_optional = {
+            'opt_int_param': ['integer', '4'],
+            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
+            'opt_bool': ['boolean', 'False']}
+        self.assertEqual(obs.optional_parameters, exp_optional)
+        self.assertFalse(obs.analysis_only)
+        self.assertEqual(obs.naming_order,
+                         ['opt_int_param', 'opt_choice_param'])
+        exp = {'parameters': ['opt_choice_param', 'opt_int_param'],
+               'outputs': ['out1']}
+        self.assertEqual(obs.merging_scheme, exp)
 
     def test_activate(self):
         qdb.software.Software.deactivate_all()
@@ -375,7 +421,8 @@ class SoftwareTests(TestCase):
         exp = qdb.software.Software(1)
         self.assertEqual(obs, exp)
 
-        obs = qdb.software.Software.from_name_and_version('BIOM type', '2.1.4')
+        obs = qdb.software.Software.from_name_and_version(
+            'BIOM type', '2.1.4 - Qiime2')
         exp = qdb.software.Software(2)
         self.assertEqual(obs, exp)
 

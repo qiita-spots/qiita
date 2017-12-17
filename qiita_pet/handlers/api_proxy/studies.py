@@ -209,7 +209,7 @@ def study_prep_get_req(study_id, user_id):
                 continue
             start_artifact = prep.artifact
             info = {
-                'name': 'PREP %d NAME' % prep.id,
+                'name': prep.name,
                 'id': prep.id,
                 'status': prep.status,
             }
@@ -280,6 +280,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
             "The requested prep id (%d) doesn't belong to the study "
             "(%d)" % (pt.study_id, study_id))
 
+    uploaded = get_files_from_uploads_folders(study_id)
     pt = pt.to_dataframe()
     ftypes_if = (ft.startswith('raw_') for ft, _ in supp_file_types
                  if ft != 'raw_sff')
@@ -289,7 +290,6 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
         # sorting prefixes by length to avoid collisions like: 100 1002
         # 10003
         prep_prefixes = sorted(prep_prefixes, key=len, reverse=True)
-        uploaded = get_files_from_uploads_folders(study_id)
         # group files by prefix
         sfiles = defaultdict(list)
         for p in prep_prefixes:

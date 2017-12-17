@@ -34,7 +34,7 @@ def user_jobs_get_req(user, limit=30):
         name = j.command.name
         hb = j.heartbeat
         hb = "" if hb is None else hb.strftime("%Y-%m-%d %H:%M:%S")
-        pjw = j.processing_job_worflow
+        pjw = j.processing_job_workflow
         wid = '' if pjw is None else pjw.id
         response.append({
             'id': j.id,
