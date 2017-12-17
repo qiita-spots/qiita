@@ -2,6 +2,39 @@
 // trigger some functions from other elements
 var processingNetwork = null;
 
+
+/**
+ *
+ * Funtion to format the node labels so they don't overlap
+ *
+ * @param label str The node label
+ *
+ **/
+function formatNodeLabel(label) {
+  // After trying different values, 35 looks like a good value that will not make
+  // the labels overlap in the network.
+  var limit = 35;
+  // Split the input string by the space characters
+  var labelArray = label.split(' ');
+  // For the new label
+  var newLabel = labelArray[0];
+  var aux;
+  var lastNewLineIdx = 0;
+  // Note that the foor loop starts with 1 because we have already used the
+  // first word
+  for (var i = 1; i < labelArray.length; i++) {
+    aux = newLabel + ' ' + labelArray[i];
+    if (aux.substr(lastNewLineIdx).length > limit) {
+      // We need to split the label here
+      lastNewLineIdx = newLabel.length;
+      newLabel = newLabel + '\n' + labelArray[i];
+    } else {
+      newLabel = newLabel + ' ' + labelArray[i];
+    }
+  }
+  return newLabel;
+};
+
 /**
  *
  * Toggle the graph view
@@ -58,7 +91,7 @@ Vue.component('processing-graph', {
                 '</div>' +
               '</div>' +
               '<div class="row">' +
-                '<div class="col-md-12" style="width:90%" id="processing-results">' +
+                '<div class="col-md-12" style="width:90%; padding-left: 30px" id="processing-results">' +
                 '</div>' +
               '</div>' +
             '</div>',
@@ -625,13 +658,13 @@ Vue.component('processing-graph', {
       $(job_info.inputs).each(function(){
         vm.edges_ds.add({id: vm.edges_ds.length + 1, from: this, to: job_info.id});
       });
-      vm.nodes_ds.add({id: job_info.id, group: "job", label: job_info.label, color: vm.colorScheme.in_construction, status: 'in_construction'});
+      vm.nodes_ds.add({id: job_info.id, group: "job", label: formatNodeLabel(job_info.label), color: vm.colorScheme.in_construction, status: 'in_construction'});
       $(job_info.outputs).each(function(){
         var out_name = this[0];
         var out_type = this[1];
         var n_id = job_info.id + ":" + out_name;
         vm.edges_ds.add({id: vm.edges_ds.length + 1, from: job_info.id, to: n_id });
-        vm.nodes_ds.add({id: n_id, label: out_name + "\n(" + out_type + ")", group: "type", name: out_name, type: out_type});
+        vm.nodes_ds.add({id: n_id, label: formatNodeLabel(out_name + "\n(" + out_type + ")"), group: "type", name: out_name, type: out_type});
       });
       vm.network.redraw();
     },
@@ -881,7 +914,7 @@ Vue.component('processing-graph', {
           }
           // Format node list data
           for(var i = 0; i < data.nodes.length; i++) {
-            vm.nodes.push({id: data.nodes[i][2], label: data.nodes[i][3], type: data.nodes[i][1], group: data.nodes[i][0], color: vm.colorScheme[data.nodes[i][4]], status: data.nodes[i][4]});
+            vm.nodes.push({id: data.nodes[i][2], label: formatNodeLabel(data.nodes[i][3]), type: data.nodes[i][1], group: data.nodes[i][0], color: vm.colorScheme[data.nodes[i][4]], status: data.nodes[i][4]});
             if (data.nodes[i][1] === 'job') {
               job_status = data.nodes[i][4];
               if (job_status === 'in_construction') {
