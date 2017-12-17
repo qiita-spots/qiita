@@ -83,6 +83,7 @@ class TestHandlerBase(AsyncHTTPTestCase):
         return self.wait(timeout=15)
 
 
+# adapted from: https://gist.github.com/crodjer/1e9989ab30fdc32db926
 class TestHandlerWebSocketBase(TestHandlerBase):
     def setUp(self):
         super(TestHandlerWebSocketBase, self).setUp()
