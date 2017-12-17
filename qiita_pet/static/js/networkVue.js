@@ -5,7 +5,7 @@ var processingNetwork = null;
 
 /**
  *
- * Funtion to format the node labels so they don't overlap
+ * Function to format the node labels so they don't overlap
  *
  * @param label str The node label
  *
@@ -16,11 +16,11 @@ function formatNodeLabel(label) {
   var limit = 35;
   // Split the input string by the space characters
   var labelArray = label.split(' ');
-  // For the new label
+  // Variable holding the new label
   var newLabel = labelArray[0];
   var aux;
   var lastNewLineIdx = 0;
-  // Note that the foor loop starts with 1 because we have already used the
+  // Note that the for loop starts with 1 because we have already used the
   // first word
   for (var i = 1; i < labelArray.length; i++) {
     aux = newLabel + ' ' + labelArray[i];
