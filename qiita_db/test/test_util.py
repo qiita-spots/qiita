@@ -301,7 +301,7 @@ class DBUtilTests(TestCase):
             qdb.util.retrieve_filepaths('artifact_filepath', 'artifact_id', 1,
                                         sort='Unknown')
 
-    def _common_purge_filpeaths_test(self):
+    def _common_purge_filepaths_test(self):
         # Get all the filepaths so we can test if they've been removed or not
         sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
         fps = [join(qdb.util.get_mountpoint_path_by_id(dd_id), fp)
@@ -369,7 +369,46 @@ class DBUtilTests(TestCase):
             self.assertTrue(exists(fp))
 
     def test_purge_filepaths(self):
-        self._common_purge_filpeaths_test()
+        self._common_purge_filepaths_test()
+
+    def test_purge_files_from_filesystem(self):
+        info = {"timeseries_type_id": 1, "metadata_complete": True,
+                "mixs_compliant": True, "number_samples_collected": 25,
+                "number_samples_promised": 28, "study_alias": "TST",
+                "study_description": "Some description of the study goes here",
+                "study_abstract": "Some abstract goes here",
+                "emp_person_id": qdb.study.StudyPerson(1),
+                "principal_investigator_id": qdb.study.StudyPerson(1),
+                "lab_person_id": qdb.study.StudyPerson(1)}
+
+        new_study = qdb.study.Study.create(
+            qdb.user.User('shared@foo.bar'),
+            'test_purge_files_from_filesystem', info=info)
+
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            metadata, new_study)
+        fps = [fp for _, fp in st.get_filepaths()]
+        qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
+        qdb.study.Study.delete(new_study.id)
+
+        for fp in fps:
+            self.assertTrue(exists(fp))
+
+        qdb.util.purge_files_from_filesystem(True)
+
+        for fp in fps:
+            self.assertFalse(exists(fp))
 
     def test_empty_trash_upload_folder(self):
         # creating file to delete so we know it actually works
@@ -396,7 +435,7 @@ class DBUtilTests(TestCase):
         ref = qdb.reference.Reference.create("null_db", "13_2", seqs_fp)
         self.files_to_remove.append(ref.sequence_fp)
 
-        self._common_purge_filpeaths_test()
+        self._common_purge_filepaths_test()
 
     def test_move_filepaths_to_upload_folder(self):
         # setting up test, done here as this is the only test that uses these
