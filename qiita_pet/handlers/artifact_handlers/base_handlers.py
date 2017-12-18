@@ -376,12 +376,15 @@ def artifact_post_req(user, artifact_id):
 
     job.submit()
 
+    return {'job': job.id}
+
 
 class ArtifactAJAX(BaseHandler):
     @authenticated
     def post(self, artifact_id):
         with safe_execution():
-            artifact_post_req(self.current_user, artifact_id)
+            res = artifact_post_req(self.current_user, artifact_id)
+        self.write(res)
         self.finish()
 
     @authenticated
