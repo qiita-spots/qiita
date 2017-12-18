@@ -6,17 +6,6 @@
 
 <script type="text/javascript">
 
-  /**
-   *
-   * This function is needed by the artifact subsection of the page. After the
-   * artifact is sent for deletion, we need to reload the current page to
-   * update the UI.
-   *
-   */
-  function reload_UI_post_artifact_delete() {
-      location.reload();
-  }
-
   $(document).ready(function(){
     // Create the processing network view object
     newProcessingNetworkVue("#analysis-graph-vue");

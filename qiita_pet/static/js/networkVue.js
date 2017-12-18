@@ -155,24 +155,42 @@ Vue.component('processing-graph', {
             jobStatus = value[0]['job_status'];
             jobNode = vm.nodes_ds.get(jobId);
 
-            // If the job is in one of the "running" states, we add it to the runningJobs list
-            if (jobStatus === 'running' || jobStatus === 'queued' || jobStatus === 'waiting') {
-              vm.runningJobs.push(jobId);
-            }
-
-            if (jobNode['status'] !== jobStatus) {
-              // The status of the job changed.
-              // we decide what to do based on the new status.
+            if (jobNode === null) {
+              // A network node does not exist for this job, this is because this
+              // job is a job deleting an artifact
               if (jobStatus === 'success' || jobStatus === 'error') {
-                // If the job succeeded or failed, we need to reset the entire graph
-                // because the changes on the nodes are substantial
+                // The jobs finished, in any of the two finishing states we need
+                // to update the graph
                 needsUpdate = true;
+                if (jobStatus === 'error') {
+                  // If the job didn't complete successfully, we need to show the
+                  // error to the user
+                  bootstrapAlert(value[0]['job_error'], "danger");
+                }
               } else {
-                // In this case the job changed to either 'running', 'queued' or 'waiting'. In
-                // this case, we just need to update the internal values of the nodes and the colors
-                jobNode.color = vm.colorScheme[jobStatus];
-                jobNode.status = jobStatus;
-                vm.nodes_ds.update(jobNode);
+                // The job is still running
+                vm.runningJobs.push(jobId);
+              }
+            } else {
+              // If the job is in one of the "running" states, we add it to the runningJobs list
+              if (jobStatus === 'running' || jobStatus === 'queued' || jobStatus === 'waiting') {
+                vm.runningJobs.push(jobId);
+              }
+
+              if (jobNode['status'] !== jobStatus) {
+                // The status of the job changed.
+                // we decide what to do based on the new status.
+                if (jobStatus === 'success' || jobStatus === 'error') {
+                  // If the job succeeded or failed, we need to reset the entire graph
+                  // because the changes on the nodes are substantial
+                  needsUpdate = true;
+                } else {
+                  // In this case the job changed to either 'running', 'queued' or 'waiting'. In
+                  // this case, we just need to update the internal values of the nodes and the colors
+                  jobNode.color = vm.colorScheme[jobStatus];
+                  jobNode.status = jobStatus;
+                  vm.nodes_ds.update(jobNode);
+                }
               }
             }
           });
@@ -184,6 +202,30 @@ Vue.component('processing-graph', {
         });
       }
     },
+
+    /**
+     *
+     * Deletes an artifact from the network
+     *
+     **/
+    deleteArtifact: function(artifactId) {
+      let vm = this;
+      $.post(vm.portal + '/artifact/' + artifactId + '/', function(data) {
+        // Clean up the div
+        $("#processing-results").empty();
+        // Update the artifact node to mark that it is being deleted
+        var node = vm.nodes_ds.get(artifactId);
+        node.group = 'deleting';
+        node.color = vm.colorScheme['deleting']
+        vm.nodes_ds.update(node);
+        // Add the job to the list of jobs to check for deletion.
+        vm.runningJobs.push(data.job);
+      })
+       .fail(function(object, status, error_msg) {
+         bootstrapAlert('Error deleting artifact: ' + object.statusText.replace("\n", "<br/>"), danger);
+       })
+    },
+
     /**
      *
      * Remove a job node from the network visualization
@@ -743,6 +785,9 @@ Vue.component('processing-graph', {
         var element_id = ids[0];
         if (clickedNode.group == 'artifact') {
           vm.populateContentArtifact(element_id);
+        } else if (clickedNode.group == 'deleting') {
+          $("#processing-results").empty();
+          $("#processing-results").append("<h4>This artifact is being deleted</h4>");
         } else {
           var ei = element_id.split(':');
           if (ei.length == 2) {
@@ -1029,7 +1074,8 @@ Vue.component('processing-graph', {
       'queued': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}},
       'waiting': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}},
       'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}},
-      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}}};
+      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}},
+      'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}}};
     show_loading('processing-network-div');
     $("#processing-network-div").hide();
 
