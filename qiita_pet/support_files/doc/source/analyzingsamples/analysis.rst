@@ -111,7 +111,7 @@ Processing Workflow Page: Commands
      * **Citation**: *DeSantis, T.Z., Hugenholtz, P., Larsen, N., Rojas, M., Brodie, E.L., Keller, K. Huber, T., Davis, D., Hu, P., Andersen, G.L. (2006). “Greengenes, a Chimera-Checked 16S rRNA Gene Database and Workbench Compatible with ARB”. Applied and Environmental Microbiology (72): 5069–5072.*
     * **Number of double occurrences**: Calculates number of double occurrence OTUs (doubletons)
      * OTUs that only occur twice
-    * Number of observed features, including singles and doubles: Calculates number of observed OTUs, singles, and doubles.
+    * **Number of observed features, including singles and doubles**: Calculates number of observed OTUs, singles, and doubles.
      * **Citation**: *DeSantis, T.Z., Hugenholtz, P., Larsen, N., Rojas, M., Brodie, E.L., Keller, K. Huber, T., Davis, D., Hu, P., Andersen, G.L. (2006). “Greengenes, a Chimera-Checked 16S rRNA Gene Database and Workbench Compatible with ARB”. Applied and Environmental Microbiology. 72 (7): 5069–5072.*
     * **Singles**: Calculates number of single occurrence OTUs (singletons)
      * OTUs that appear only once in a given sample
