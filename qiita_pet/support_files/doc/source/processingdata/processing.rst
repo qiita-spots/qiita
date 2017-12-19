@@ -55,7 +55,7 @@ FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
    * **Citation for Golay 16S**: *Caporaso, J., Lauber, C.L., Walter, W.A. Berg0Lyons, D., Huntley, J., Fierer, N., Owens, S.M., Betley, J., Fraser, L., Mauer, M., Gormley, N., Gilbert, J.A., Smith, G., Knight, R., (2012) “Ultra-high-throughput microbial community analysis on the Illumina HiSeq and MiSeq platforms”. ISME J.*
    * **Phred Citation**: *Ewing, B., Hillier, L., Wendi, M.C., Green, P. (1998). (1998). "Base-calling of automated sequencer traces using phred. I. Accuracy assessment". Genome Research. 8 (3): 175–185.*
     * *https://en.wikipedia.org/wiki/FASTQ_format*
-   * **Demultiplexing**: **https://en.wikipedia.org/wiki/Multiplexing*
+   * **Demultiplexing**: *https://en.wikipedia.org/wiki/Multiplexing*
   * **Default Parameters Set**
    * **barcode type** (required): Type of barcode used
    * **max bad_run_length** (required): Max number of consecutive low quality base calls allowed before truncating a read
