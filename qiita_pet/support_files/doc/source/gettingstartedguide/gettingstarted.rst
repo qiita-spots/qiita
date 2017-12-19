@@ -168,11 +168,20 @@ Update Sample info
 * **Upload Files Page**
  * Drag new sample info file into the box to upload the new file
  * Go to study description by clicking the “Go to study description” 
-* **Study Description Page**
+* **Study Information Page**
  * Go to the sample information page by clicking the “Sample Information” 
- * Select “Upload information” and choose the new sample info file
-  * *This will not update on your analysis*
-  * But this will not affect your processing data since the metadata isn’t applied until analysis
+ * You can edit your metadata here too:
+  *If the data has not been processed...
+   * Delete your old metadata file
+   * Upload your new metadata file
+  * If the data has been processed...
+   * The metadata file cannot be deleted 
+   * To remove data, go to the sample information page and use the trash icon to delete the unwanted sample information columns
+   * You can only update the fields that do exist (these fields can be found in the sample information page)
+   * Sample names cannot be deleted
+    * Any sample name change will be interpreted as a new sample
+  * *Note that this changes will not update on your analysis*
+  * But these changes will not affect your processing data since the metadata isn’t applied until analysis
   
 Adding Data for Analysis
 ========================
