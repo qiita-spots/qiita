@@ -21,7 +21,6 @@ Beginner Concepts
 
 **Basics of alpha-diversity with fuzzy microbe demo - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/j5bSx/basics-of-alpha-diversity-with-fuzzy-microbe-demo**
 
-
 * **Amplicon**
  * An amplicon is a DNA sequence produced from natural or artificial replication and can be used to identify individuals genetically. Amplification sequencing methods like polymerase chain reaction (PCR) and next-generation sequencing (also referred to as next-gen sequencing) help microbiome researchers profile microbial communities in cost-effective and time-efficient ways.
  * see also: Marker gene sequencing 
@@ -37,6 +36,12 @@ Beginner Concepts
  * see also: Alpha Diversity, Principal Coordinates Analysis, Unifrac, QIIME
  
 **Beta-diversity, and visualizing differences - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/NOo6W/beta-diversity-and-visualizing-differences**
+
+* **Biom format**
+ * Biom format is a table that records the counts of OTUs for each bacteria in each different sample. A biom table can be created using QIIME and pandas, and it is an important component of distance matrix measurements. 
+ * see also: OTU, sOTU, Unifrac, QIIME, Principal Coordinates Analysis
+ * GitHub Biocore|Biom Format: https://github.com/biocore/biom-format
+ * Biom format official website: http://biom-format.org
 
 * **DNA Sequencing**
  * DNA sequencing is the process of determining the order of nucleotides within a DNA molecule. Methods originate in Sanger sequencing, which uses PCR and gel electrophoresis to analyze the target DNA, but this approach is only able to do short length reads. Microbiome research has turned to next generation sequencing, which is an umbrella term for different techniques like whole genome sequencing and pyrosequencing, to analyze longer reads for a shorter amount of time at a relatively lower cost. 
@@ -67,6 +72,12 @@ Proteobacteria
 **NIH Human Microbiome Project. (2009). Microbe Magazine, 4(9), 393-393.**
 **The Human Microbiome Consotrium. (2012). Structure, Function and diversity of the healthy human microbiome. 486: 207-214.**
 
+* **Hypervariable region**
+ * A hypervariable region is a location within a DNA molecule where the nucleotide sequence consists of highly repeated or substituted base pairs. The V4 region is one of nine hypervariable regions in the 16s rRNA gene of bacteria and has been used by microbiome researchers to classify species genotypically.
+ * see also: 16s rRNA gene, Marker gene sequencing
+
+**Yang, B., Wang, Y., & Qian, P. (2016). Sensitivity and correlation of hypervariable regions in 16S rRNA genes in phylogenetic analysis. BMC Bioinformatics, 17(1).**
+
 * **Marker gene sequencing** 
  * Marker gene sequencing, also known as amplicon sequencing, is a technique that identifies a bacterial organism by its marker gene DNA sequence. In microbiome research, scientists use next-generation sequencing tools to amplify a sequence like the 16s rRNA gene, which is then used to infer the phenotypic makeup of that organism.
 	* see also: Amplicon, 16s rRNA gene, Shotgun Sequencing, qPCR, HMP
@@ -74,6 +85,12 @@ Proteobacteria
 **Lan, Y., Rosen, G., and Hershberg, R. (2016). Marker genes that are less conserved in their sequences are useful for predicting genome-wide similarity levels between closely related prokaryotic strains. Microbiome, 4(1).***
 **T. (2013, December 09). How to sequence the human genome - Mark J. Kiel. Retrieved from https://www.youtube.com/watch?v=MvuYATh7Y74**
 **Sanschagrin, S. and Yergeau, E. (2014). Next-generation Sequencing of 16S Ribosomal RNA Gene Amplicons. Journal of Visualized Experiments, (90).**
+
+* **Mass Spectrometry**
+ * Mass spectrometry is a technique that ionizes atoms or molecules in a sample and measures their mass to charge ratios and relative abundances. The goal of mass spectrometry is to identify atoms or molecules by their masses. Microbiome researchers use mass spectrometry to identify the biochemical/metabolic exchange of microbes and their host environments.
+ * see also: HMP
+
+**Isotopes and mass spectrometry (article). (n.d.). Retrieved from https://www.khanacademy.org/science/chemistry/atomic-structure-and-properties/mass-spectrometry/a/isotopes-and-mass-spectrometry**
 
 * **Metadata**
  * Metadata is data that provides information about multiple forms of data at once; for example, a clinical survey with a person’s personal information, their fecal sample raw sequences, and their psychological test scores are all linked as metadata for that one participant’s profile in a study. Gathering and organizing metadata is a fundamental step to data analysis because it allows for multivariable comparisons like how might one’s number of pets affect their gut microbiome?. 
@@ -86,6 +103,12 @@ Proteobacteria
 
 **Nguyen, N., Warnow, T., Pop, M., & White, B. (2016). A perspective on 16S rRNA operational taxonomic unit clustering using sequence similarity. Npj Biofilms and Microbiomes, 2(1).**
 **How do we identify a microbe? - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/VltJR/how-do-we-identify-a-microbe**
+
+* **PCoA**
+ * Principal Coordinates Analysis (PCoA) is a 3-D graphical approach to present the patterns of similarity and dissimilarity in a data set. It uses EMPeror as a program to visually graph a distance matrix like Unifrac into a 3-D form. It has three axes and each point on the graph represents a specific sample in the study set.
+ * see also: Beta Diversity, QIIME, DNA sequencing
+
+**Beta-diversity, and visualizing differences - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/NOo6W/beta-diversity-and-visualizing-differences**
 
 * **Phylogeny**
  * Phylogeny is the study of the evolutionary histories of organisms. Phylogeny analyzes the genotypic and phenotypic characteristics to identify individuals and uses phylogenetic trees to visualize these relationships. Speciation, or where two groups of individuals developed differently into two new species, is represented by a branching stems on the diagram.
@@ -101,15 +124,36 @@ Gammaproteobacteria
 
 **Proteobacteria. (n.d.). Retrieved from https://courses.lumenlearning.com/microbiology/chapter/proteobacteria/**
 
+* **QIIME**
+ * Qiime (pronounced chime) is an open-source bioinformatics pipeline that performs microbial analysis on raw DNA sequencing data in order to create comprehensible statistics and graphics for publication. It has been an ongoing project since its inception in 2010.
+ * see also: Principal Coordinates Analysis, Illumina sequencing, Marker gene sequencing, Demultiplexing, Biom format, Unifrac, Alpha Diversity, Beta Diversity, DNA sequencing
+ * QIIME 1.0 version website: http://qiime.org
+ * QIIME 2 version website: https://docs.qiime2.org/2017.5/concepts/
+ * “Official Repository for the QIIME 2 database”: https://github.com/qiime2/qiime2
+
+**Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., Mcmurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song, S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., and Knight, R. (2013). Advancing Our Understanding of the Human Microbiome Using QIIME. Methods in Enzymology Microbial Metagenomics, Metatranscriptomics, and Metaproteomics, 371-444.**
+
 * **Qiita**
  * Qitta (pronounced cheetah) is the open-source repository that enables scientists to rapidly analyze and store microbial ecology datasets. It is a bioinformatics resource that is built on the QIIME database, which is designed as a pipeline to generate publication-worthy presentations from raw sequencing data.
  * see also: QIIME, Biom format, Metadata
  * Access to QIITA source: https://github.com/biocore/qiita
  
+* **qPCR**
+ * qPCR, also known as quantitative PCR, is a sequencing technique that detects the quantities of amplicon DNA sequences as they are being amplified. It uses DNA-binding dyes or fluorescence-reporting probes to track the concentrations of adapters and DNA sequences being replicated. In microbiome research, it is important to know the concentrations of the amplicons for proceeding sequencing tools like next-generation sequencing.
+ * see also: DNA sequencing, Marker gene sequencing, Illumina sequencing, Shotgun sequencing
+
+**Polymerase Chain Reaction (PCR) - Quantitative PCR (qPCR). (2016, April 28). Retrieved from https://www.youtube.com/watch?v=YhXj5Yy4ksQ**
+ 
 * **Rarefraction**
  * Rarefraction is a technique that standardizes length of sequence reads and thereby the number of species measured in a sample. It is a necessary step in microbial bioinformatics because it narrows all the lengths of the raw DNA sequences to a set length; in doing so it allows for the quality of analyses to be refined and filtered and it accounts for statistical biases in the study’s procedures.
  * see also: QIIME, Principal Coordinates Analysis, OTU Picking, Demultiplexing
 
+* **Shotgun sequencing**
+ * Shotgun sequencing is a DNA sequencing technique in which all the DNA molecules in a sample are sequenced. In this way, scientists can study not only the microbial communities, but also the functional genes that are present in a sample. Shotgun sequencing differs from whole genome sequencing (sometimes referred to as whole genome shotgun sequencing) because the latter analyzes the entire genome of only one isolated bacterial species in the sample. However, they use similar mechanisms in that both WGS and Shotgun sequencing uses enzymes to cut the DNA molecule into fragments that are more easily and efficiently amplified and analyzed. 
+ * see also: DNA sequencing, Marker gene sequencing, Illumina sequencing, qPCR
+
+**Basics of high throughput DNA sequencing. (2017, February 11). Retrieved December 19, 2017, from https://www.youtube.com/watch?v=JD3UJYkxdQs**
+**Demo: Tour of the Knight Lab - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/uIYyi/demo-tour-of-the-knight-lab**
 
 * **Taxonomy**
  * Taxonomy is a classification system for understanding how organisms are related to each other. Scientists use phylogenetic trees as one form of visualizing taxonomy. A phylogenetic tree takes organisms grouped by phenotypic (physical) and genotypic (genetic) similarities and connects them to their common ancestor from which they diverged evolutionarily. In microbiome research, we have developed tools like Unifrac to measure the evolutionary distance of relatedness of the organisms in two different samples.	
@@ -119,3 +163,10 @@ Gammaproteobacteria
  * Taxonomic rank is a way of grouping organisms together based on their phenotypic and genotypic similarities. This ranking system originally proposed by Carl Linnaeus consists of seven levels: Domain, Kingdom, Phylum, Class, Order, Genus, Species. Humans, for examples, are described as Eukarya, Animalia, Chordata, Mammalia, Primate, Hominidae, Homo, H. sapiens. In microbiome research, we use sequencing techniques like amplicon sequencing which amplifies the 16s rRNA gene in bacteria to identify and classify microbes into their taxonomic ranks. 
  * see also: Taxonomy, Phylogeny, Firmicutes, Proteobacteria, Gammaproteobacteria, Actinobacteria
 
+* **Unifrac**
+ * Unifrac is a phylogenetic distance metric that compares multiple sample communities based on their locations to each other on the phylogenetic tree. The metric lies between a zero and a one: the former being no species are shared between the two samples and the latter being every species is shared between the two samples--meaning they are ecologically exactly the same. It measures the distance between communities as the percentage of phylogenetic branch length between the targeted communities. Unifrac is a computational tool to compare more than two species together simultaneously using multivariate statistics and nonparametric analyses.  
+ * see also: Beta Diversity, Alpha Diversity, Statistical Testings, Biom 
+format, QIIME
+
+**Lozupone, C., & Knight, R. (2005). UniFrac: a New Phylogenetic Method for Comparing Microbial Communities. Applied and Environmental Microbiology, 71(12), 8228-8235.**
+**Lozupone, C., Hamady, M., and Knight, R. (2006). UniFrac – An online tool for comparing microbial community diversity in a phylogenetic context. BMC bioniformatics. 7:371.**
