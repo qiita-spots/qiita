@@ -25,6 +25,13 @@ Beginner Concepts
  * An amplicon is a DNA sequence produced from natural or artificial replication and can be used to identify individuals genetically. Amplification sequencing methods like polymerase chain reaction (PCR) and next-generation sequencing (also referred to as next-gen sequencing) help microbiome researchers profile microbial communities in cost-effective and time-efficient ways.
  * see also: Marker gene sequencing 
  
+* **Anaerobic microculture**
+ * An anaerobic microculture is a method to grow different anaerobic bacterial communities (organisms that either can partly or must fully live in oxygen-free environments) in isolated plates. Scientists must replace the oxygen-rich atmosphere with a mixture of other gases like hydrogen, carbon dioxide and nitrogen. Then they dilute the solution of communities so much that there is a high probability that only one bacterial cell will be placed in the microculture plates to grow. Anaerobes are abundant in the gastrointestinal tract, and growing them in separate microcultures allows for scientists to sequence the whole genomes of a single species without it competing for resources with other organisms.
+ * see also: Firmicutes, Gammaproteobacteria
+
+**Demo: Tour of the Knight Lab - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/uIYyi/demo-tour-of-the-knight-lab**
+
+ 
 * **Bacteroidetes**
  * Bacteroidetes is a phylum of Gram-negative bacteria that includes B. fragilis and Flavobacteria. They thrive in a wide variety of places like soil, sediment, and seawater, making them well-suited for the ecosystems present in the human gut. They specialize in breaking down organic matter like proteins and carbohydrates and are able to “gain energy from otherwise refractory carbohydrate sources”(1). Microbiome research is only just beginning to understand the metabolic and ecologic impact of Bacteroidetes in the human microbiome.
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity
@@ -49,6 +56,20 @@ Beginner Concepts
 Gene Sequencing
 
 **Next Generation Sequencing (NGS) - An Introduction. (2015, June 22). Retrieved from https://www.youtube.com/watch?v=jFCD8Q6qSTM**
+
+* **Demultiplexing**
+ * Demultiplexing is a process in which the barcodes and primer sequences on a DNA fragment are removed so that the final result matches the amplified 16s rRNA gene. Barcodes are short DNA sequences unique to each sample. QIIME has demultiplexing tools that error correct the raw sequencing data back to the desired 16s rRNA gene.
+ * see also: QIIME, 16s rRNA gene
+
+**Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., Mcmurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song, S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., and Knight, R. (2013). Advancing Our Understanding of the Human Microbiome Using QIIME. Methods in Enzymology Microbial Metagenomics, Metatranscriptomics, and Metaproteomics, 371-444.**
+
+* **Differential abundance and compositionality**
+ * Differential abundance testing is a statistical testing method that determines the abundances of specific bacteria between two ecosystems. Compositionality is a statistical testing method that compares the proportions of species’ relative abundances in a sample, rather than the sample’s absolute abundances that differential abundance testing measures.
+ * see also: Statistical Testing, Alpha Diversity
+
+**D. (2016, April 01). Microbiome Discovery 19: Compositionality. Retrieved from https://www.youtube.com/watch?v=X60nFYpLWRs**
+**Weiss, S., Xu, Z. Z., Peddada, S., Amir, A., Bittinger, K., Gonzalez, A., Lozupone, C., Zaneveld, J.R., Vazquez-Baeza, Y., Birmingham, A., Hyde, E.R., and Knight, R. (2017). Normalization and microbial differential abundance strategies depend upon data characteristics. Microbiome, 5(1).**
+**Morton, J.T., Sanders, J., Quinn, R.A., Mcdonald, D., Gonzalez, A., Vázquez-Baeza, Y., Navas-Molina, J.A., Song, J.S., Metcalf, J.L., Hyde, E.R., Lladser, M., Dorrestein, P.C., and Knight, R. (2017). Balance Trees Reveal Microbial Niche Differentiation. MSystems, 2(1).**
  
 * **Firmicutes**
  * Firmicutes is a phylum of bacteria that includes species like Staphylococcus and Lactobacillus. In general, Firmicutes have Gram-positive cell walls, round cell shapes, and low guanine to cytosine content in their DNA. While some produce endospores to survive in extreme conditions, others reproduce through binary fission. They also have a wide variety of aerotolerance: some Firmicutes thrive in anaerobic environments, some in aerobic, and some in either. In microbiome research for example, higher proportions of Firmicutes in the intestinal human microbiome may be correlated with obesity (1).
@@ -77,6 +98,13 @@ Proteobacteria
  * see also: 16s rRNA gene, Marker gene sequencing
 
 **Yang, B., Wang, Y., & Qian, P. (2016). Sensitivity and correlation of hypervariable regions in 16S rRNA genes in phylogenetic analysis. BMC Bioinformatics, 17(1).**
+
+* **Illumina sequencing**
+ * Illumina sequencing is a next-generation sequencing technique developed by the company Illumina that sequences tens of millions or billions of DNA fragments in a single sequencing run. With more DNA nucleotides comes a greater need for more analytical tools like QIIME in order to comprehend the longer reads. 
+ * see also: DNA sequencing, Shotgun sequencing, QIIME
+
+**Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., Mcmurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song, S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., and Knight, R. (2013). Advancing Our Understanding of the Human Microbiome Using QIIME. Methods in Enzymology Microbial Metagenomics, Metatranscriptomics, and Metaproteomics, 371-444.**
+**I. (2016, October 05). Illumina Sequencing by Synthesis. Retrieved from https://www.youtube.com/watch?v=fCd6B5HRaZ8**
 
 * **Marker gene sequencing** 
  * Marker gene sequencing, also known as amplicon sequencing, is a technique that identifies a bacterial organism by its marker gene DNA sequence. In microbiome research, scientists use next-generation sequencing tools to amplify a sequence like the 16s rRNA gene, which is then used to infer the phenotypic makeup of that organism.
@@ -168,6 +196,13 @@ Gammaproteobacteria
 
 **Callahan, B.J., Mcmurdie, P.J., Rosen, M.J., Han, A.W., Johnson, A.J., and Holmes, S.P. (2016). DADA2: High-resolution sample inference from Illumina amplicon data. Nature Methods, 13(7), 581-583.**
 **Amir, A., McDonald, D., Navas-Molina, J.A., Kopylova, E., Morton, J.T., Xu, Z., Kightley, E.P., Thompson, L.R., Hyde, E.R., Gonzalez, A., and Knight, R. (2017). Deblur rapidly resolves singlenucleotide community sequence patterns. mSystems 2:e00191-16. https://doi.org/10.1128/mSystems.00191-16.**
+
+* **Statistical tests**
+ * In microbiome research, we use statistical tests like regression, classification, PERMANOVA, and more to validate the chance that our conclusion is wrong based off the data.
+ * see also: Differential abundance and compositionality
+ 
+**D. (2016, February 12). Microbiome Discovery 10: Statistical testing part 1. Retrieved from https://www.youtube.com/watch?v=_uDv7LRUUsY**
+**D. (2016, March 04). Microbiome Discovery 11: Statistical testing part 2. Retrieved from https://www.youtube.com/watch?v=tNxfYqa5Rtc**
 
 * **Taxonomy**
  * Taxonomy is a classification system for understanding how organisms are related to each other. Scientists use phylogenetic trees as one form of visualizing taxonomy. A phylogenetic tree takes organisms grouped by phenotypic (physical) and genotypic (genetic) similarities and connects them to their common ancestor from which they diverged evolutionarily. In microbiome research, we have developed tools like Unifrac to measure the evolutionary distance of relatedness of the organisms in two different samples.	
