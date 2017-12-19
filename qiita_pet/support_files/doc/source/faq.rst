@@ -38,7 +38,7 @@ A few more instructions: for the example above the workflow should be:
    system will let you know if you have errors or missing columns. The
    most common errors are: the sample name column should be named
    sample\_name, duplicated sample names are not permitted. For a full list of
-   required fields, visit :doc:`gettingstarted`.
+   required fields, visit :doc:`gettingstarted/gettingstarted`.
 #. **Add a prep information file to your study for each data type.** The prep
    information file should contain all the samples in the sample information
    file or a subset. If you have more than one FASTQ file set (forward,
