@@ -5,7 +5,7 @@ Beginner Concepts
  * The 16s rRNA gene is a sequence of nucleotides present only in prokaryotic DNA. It codes for the protein structure of the 30th subunit in prokaryotic ribosomes. Its sequence remains relatively the same across all bacteria, because it has been highly conserved throughout evolutionary history. However, in microbiome research, we use the hypervariable V4 region of the gene as an identification marker for classifying bacteria. Genetically identifying organisms with techniques like 16s rRNA sequencing has only developed in the last twenty years and has begun to redefine the classification system of evolutionary identity for organisms like bacteria. 
  * see also: Amplicon, Marker gene sequencing, DNA Sequencing, Shotgun Sequencing, qPCR, Hypervariable region, Illumina Sequencing
  
- **Illumina. (2014, May 21). Illumina MiSeq, 16S rRNA Sequencing and the American Gut Project. Retrieved from https://www.youtube.com/watch?v=1uZtCMY-yEw**
+**Illumina. (2014, May 21). Illumina MiSeq, 16S rRNA Sequencing and the American Gut Project. Retrieved from https://www.youtube.com/watch?v=1uZtCMY-yEw**
  
 * **Actinobacteria**
  * Actinobacteria is a phylum of bacteria with high guanine to cytosine content and Gram positive cell walls. Many are aerobic with a few exceptions, and all actinobacteria are most famous for their fungi-like characteristics. Most produce mycelium and reproduce through sporulation like fungi; they also grow by extending their tips and branching their hyphae. Some examples are Bifidobacterium spp. and Streptomyces.
