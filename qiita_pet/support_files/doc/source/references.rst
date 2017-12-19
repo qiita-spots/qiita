@@ -2,6 +2,7 @@ References
 ==========
 Abarenkov, K., Nilsson, R. H., Larsson, K., Alexander, I. J., Eberhardt, U., Erland, S., Høiland, K., Kjøller, R., Larsson, E., Pennanen, R., Sen, R., Taylor, A. F. S., Tedersoo, L., Ursing, B. M., Vrålstad, T., Liimatainen, K., Peintner, U., Kõljalg, U. (2010). “The UNITE database for molecular identification of fungi - recent updates and future perspectives”. New Phytologist. 186(2): 281-285.
 Amir, A., McDonald, D., Navas-Molina, J.A., Kopylova, E., Morton, J., Xu, Z.Z., Kightley, E.P.,  Thompson, L.R., Hyde, E.R., Gonzalez, A., Knight, R. (2017) “Deblur rapidly resolves single-nucleotide community sequence patterns.” mSystems. 2 (2) e00191-16.*
+Anderson, M.J. (2001). "A new method for non-parametric multivariate analysis of variance". Austral Ecology. 26 (1): 32–46
 Berger, W.H. and Parker, F.L. (1970). “Diversity of planktonic Foraminifera in deep sea sediments”. Science. (168): 1345-1347.
 Cantrell, C.D. (2000). “Modern Mathematical Methods for Physicists and Engineers”. Cambridge University Press.Caporaso, J., Lauber, C.L., Walter, W.A. Berg0Lyons, D., Huntley, J., Fierer, N., Owens, S.M., Betley, J., Fraser, L., Mauer, M., Gormley, N., Gilbert, J.A., Smith, G., Knight, R., (2012) “Ultra-high-throughput microbial community analysis on the Illumina HiSeq and MiSeq platforms”. ISME J.
 Chan, Y., Ching, W.K., Ng, M.K., Huang, J.Z. (2004). “An optimization algorithm for clustering using weighted dissimilarity measures”. Pattern Recognition. 37(5): 943-952.
@@ -11,6 +12,7 @@ Chao, A. and Lee, S.M.. (1992). “Estimating the number of classes via sample c
 Chase, J.M., and Knight, R. (2013). “Scale-dependent effect sizes of ecological drivers on biodiversity: why standardised sampling is not enough”. Ecology Letters (16): 17-26.
 Chen, F., Bittinger, K., Charlson, E.S., Hoffmann, C., Lewis, J., Wu, G. D., Collman, R.G., Bushman, R.D., Li,H. (2012). “Associating microbiome composition with environmental covariates using generalized UniFrac distances.” Bioinformatics. 28 (16): 2106-2113.
 Chou, H.H., Holmes, M.H. (2001). “DNA sequence quality trimming and vector removal”. Bioinformatics. 17 (12):1093–1104.
+Clarke, K.R. (1993). "Non-parametric multivariate analyses of changes in community structure". Austral Ecology. 18 (1): 117–143.
 Colwell, R.K., Mao, C.X., Chang, J. (2004). “Interpolating, extrapolating, and comparing incidence-based species accumulation curves.” Ecology. (85), 2717-2727.
 DeSantis, T.Z., Hugenholtz, P., Larsen, N., Rojas, M., Brodie, E.L., Keller, K. Huber, T., Davis, D., Hu, P., Andersen, G.L. (2006). “Greengenes, a Chimera-Checked 16S rRNA Gene Database and Workbench Compatible with ARB”. Applied and Environmental Microbiology (72): 5069–5072.
 Dice, Lee R. (1945). "Measures of the Amount of Ecologic Association Between Species". Ecology. 26 (3): 297–302.
@@ -29,6 +31,7 @@ Jaccard, P. (1908). “Nouvellesrecherches sur la distribution florale.” Bull.
 Janson, S., and Vegelius, J. (1981). “Measures of ecological association”. Oecologia. (49): 371–376.
 Kempton, R.A. and Taylor, L.R. (1976). “Models and statistics for species diversity”. Nature (262): 818-820.
 Kopylova, E., Noe, L., Touzet, H. (2012). “SortMeRNA: fast and accurate filtering of ribosomal RNAs in metatranscriptomic data”. Bioinformatics. 28 (24) 3211-7.
+Kruskal, W.H. and Wallis, W.A. (1952). "Use of ranks in one-criterion variance analysis". Journal of the American Statistical Association. 47 (260): 583–621.
 Kulcynski, S. (1927). “Die Pflanzenassoziationen der Pieninen. Bulletin International de l’Academie Polonaise des Sciences et des Lettres”. Classe des Sciences Mathematiques et Naturelles. 57-203.
 Lance, Godfrey L.N. and Williams, W.T. (1967). "A general theory of classificatory sorting strategies II. Clustering systems." The computer journal 10 (3):271-277.
 Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.
@@ -43,6 +46,7 @@ Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., McMurdie, P.J., Vázq
 Ochiai, A. (1957). “Zoogeographical Studies on the Soleoid Fishes Found in Japan and its Neighhouring Regions-II”. Nippon Suisan Gakkaishi. 22(9): 526-530.
 Paul, E.B. (2006). “Manhattan distance". Dictionary of Algorithms and Data Structures
 Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.
+Pearson, K. (1901). "On Lines and Planes of Closest Fit to Systems of Points in Space" Philosophical Magazine. 2 (11): 559–572.
 Pielou, E.C. (1966). “The measurement of diversity in different types of biological collections”. J. Theor. Biol. (13): 131-144.
 Pielou, E.C. (1975). Ecological Diversity. New York, Wiley InterScience.
 Quast, C., Pruesse, E., Yilmaz, P., Gerken, J., Schweer, T., Yarza, P., Peplies, J., Glöckner, F. O. (2013). “The SILVA ribosomal RNA gene database project: improved data processing and web-based tools”. Nucl. Acids Res. 41 (D1): D590-D596.
@@ -58,4 +62,5 @@ Sorenson, T. (1948) "A method of establishing groups of equal amplitude in plant
 Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.
 Strong, W.L. (2002). “Assessing species abundance uneveness within and between plant communities”. Community Ecology (3): 237-246.
 Tanimoto, T. (1958). "An Elementary Mathematical theory of Classification and Prediction". New York: Internal IBM Technical Report.
+Vazquez-Baeza, Y., Pirrung, M., Gonzalez, A., Knight, R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.
 Whittaker, R.H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.
