@@ -37,14 +37,32 @@ Editing a Study
 
 Adding and Working With Sample information
 ==========================================
-Creating the Sample Information File
-------------------------------------
+
+Example files
+-------------
+
+You can download an example sample information file from
+`here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__
+
+EBI-ENA NULL values vocabulary
+------------------------------
+
+For all public studies including those being submitted to EBI, no blanks are allowed in the smaple information. We support the following null values: *not applicable*, *missing: not collected*, *missing: not provided*, *missing: restricted access*.
+
+For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
+
+.. warning::
+   Column names in your information files cannot be named as a Postgres reserved word. For example, a column cannot be named `CONDITION`, but could instead be named `DISEASE_CONDITION`. For a full list of these reserved words, see this `link <https://www.postgresql.org/docs/9.3/static/sql-keywords-appendix.html>`__.
+   
+   
 Sample information file
 -----------------------
+
 The *sample information file* will define the biological context of each
 sample, with categories like ``sample_type``, ``treatment``,
 etc. The ``sample_name`` defined in this file is used to relate each
 sample in the preparation file with the biological sample.
+
 Required fields for Qiita
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -126,24 +144,10 @@ Optional fields for centralized Qiita by portal
   +===================+============+=============================================================================================================================================+
   | ``emp_status``    | free text  | EMP sample status. ‘EMP’ (part of the EMP), ‘EMP_Processed’ (processed in the weblab using EMP parameters), ‘NOT_EMP’ (not EMP compatible). |
   +-------------------+------------+---------------------------------------------------------------------------------------------------------------------------------------------+
+
+
 Attaching the Sample Information to the Study
 ---------------------------------------------
-
-Example files
--------------
-
-You can download an example sample information file from
-`here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__
-
-EBI-ENA NULL values vocabulary
-------------------------------
-
-For all public studies including those being submitted to EBI, no blanks are allowed in the smaple information. We support the following null values: *not applicable*, *missing: not collected*, *missing: not provided*, *missing: restricted access*.
-
-For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
-
-.. warning::
-   Column names in your information files cannot be named as a Postgres reserved word. For example, a column cannot be named `CONDITION`, but could instead be named `DISEASE_CONDITION`. For a full list of these reserved words, see this `link <https://www.postgresql.org/docs/9.3/static/sql-keywords-appendix.html>`__.
    
 Upload Sample Information
 ^^^^^^^^^^^^^^^^^^^^^^^^^
