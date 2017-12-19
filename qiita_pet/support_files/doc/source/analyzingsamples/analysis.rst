@@ -153,7 +153,7 @@ Processing Workflow Page: Commands
      * **Citation**: *Lance, Godfrey L.N. and Williams, W.T. (1967). "A general theory of classificatory sorting strategies II. Clustering systems." The computer journal 10 (3):271-277.*
     * **Chebyshev distance**: Calculates Chebyshev distance
      * Maximum distance between two samples
-     * **Citation**: *Cyrus. D. Cantrell (2000). “Modern Mathematical Methods for Physicists and Engineers”. Cambridge University Press.*
+     * **Citation**: *Cantrell, C.D. (2000). “Modern Mathematical Methods for Physicists and Engineers”. Cambridge University Press.*
     * **City-block distance**:  Calculates City-block distance
      * Similar to the Euclidean distance but the effect of a large difference in a single dimension is reduced
      * **Citation**: *Paul, E.B. (2006). “Manhattan distance". Dictionary of Algorithms and Data Structures*
