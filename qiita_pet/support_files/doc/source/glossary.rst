@@ -67,7 +67,9 @@ Beginner Concepts
  * see also: Statistical Testing, Alpha Diversity
 
 **D. (2016, April 01). Microbiome Discovery 19: Compositionality. Retrieved from https://www.youtube.com/watch?v=X60nFYpLWRs**
+
 **Weiss, S., Xu, Z. Z., Peddada, S., Amir, A., Bittinger, K., Gonzalez, A., Lozupone, C., Zaneveld, J.R., Vazquez-Baeza, Y., Birmingham, A., Hyde, E.R., and Knight, R. (2017). Normalization and microbial differential abundance strategies depend upon data characteristics. Microbiome, 5(1).**
+
 **Morton, J.T., Sanders, J., Quinn, R.A., Mcdonald, D., Gonzalez, A., Vázquez-Baeza, Y., Navas-Molina, J.A., Song, J.S., Metcalf, J.L., Hyde, E.R., Lladser, M., Dorrestein, P.C., and Knight, R. (2017). Balance Trees Reveal Microbial Niche Differentiation. MSystems, 2(1).**
  
 * **Firmicutes**
