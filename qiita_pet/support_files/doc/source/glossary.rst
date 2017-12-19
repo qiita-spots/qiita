@@ -52,8 +52,7 @@ Beginner Concepts
 
 * **DNA Sequencing**
  * DNA sequencing is the process of determining the order of nucleotides within a DNA molecule. Methods originate in Sanger sequencing, which uses PCR and gel electrophoresis to analyze the target DNA, but this approach is only able to do short length reads. Microbiome research has turned to next generation sequencing, which is an umbrella term for different techniques like whole genome sequencing and pyrosequencing, to analyze longer reads for a shorter amount of time at a relatively lower cost. 
- * see also: Shotgun sequencing, Illumina sequencing, Amplicon, Marker 
-Gene Sequencing
+ * see also: Shotgun sequencing, Illumina sequencing, Amplicon, Marker Gene Sequencing
 
 **Next Generation Sequencing (NGS) - An Introduction. (2015, June 22). Retrieved from https://www.youtube.com/watch?v=jFCD8Q6qSTM**
 
