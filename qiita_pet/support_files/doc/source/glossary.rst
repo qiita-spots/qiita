@@ -5,8 +5,22 @@ Beginner Concepts
  * The 16s rRNA gene is a sequence of nucleotides present only in prokaryotic DNA. It codes for the protein structure of the 30th subunit in prokaryotic ribosomes. Its sequence remains relatively the same across all bacteria, because it has been highly conserved throughout evolutionary history. However, in microbiome research, we use the hypervariable V4 region of the gene as an identification marker for classifying bacteria. Genetically identifying organisms with techniques like 16s rRNA sequencing has only developed in the last twenty years and has begun to redefine the classification system of evolutionary identity for organisms like bacteria. 
  * see also: Amplicon, Marker gene sequencing, DNA Sequencing, Shotgun Sequencing, qPCR, Hypervariable region, Illumina Sequencing
  
- 
  **Illumina. (2014, May 21). Illumina MiSeq, 16S rRNA Sequencing and the American Gut Project. Retrieved from https://www.youtube.com/watch?v=1uZtCMY-yEw**
+ 
+* **Actinobacteria**
+ * Actinobacteria is a phylum of bacteria with high guanine to cytosine content and Gram positive cell walls. Many are aerobic with a few exceptions, and all actinobacteria are most famous for their fungi-like characteristics. Most produce mycelium and reproduce through sporulation like fungi; they also grow by extending their tips and branching their hyphae. Some examples are Bifidobacterium spp. and Streptomyces.
+ * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity
+
+**Barka, E.A., Vatsa, P., Sanchez, L., Gaveau-Vaillant, N., Jacquard, C., Klenk, H-P., Clément, C., Ouhdouch, Y., and van Wezel, G.P. (2016). Taxonomy, physiology, and natural products of Actinobacteria. Microbiol Mol Biol Rev 80:1–43.** 
+**An Introduction to the Actinobacteria. (2007). Microbiology today, 34(2).**
+**Ventura, M., Canchaya, C., Tauch, A., Chandra, G., Fitzgerald, G.F., Chater, K.F., and Sinderen, D.V. (2007). Genomics of Actinobacteria: Tracing the Evolutionary History of an Ancient Phylum. Microbiology and Molecular Biology Reviews, 71(3): 495-548.**
+
+* **Alpha Diversity**
+ * Alpha diversity is a measurement of a bacterial community sample that determines the richness and evenness within that community. In other words, it measures how much of each bacterial species is in the community, and how equally distributed those bacterial organism counts are among each other in the sample. Higher alpha diversity, meaning higher richness and evenness, is associated with healthy ecosystems and communities because more functions can be performed and easier adaptations to the environment are possible. Statistical methods like Shannon and Pielou are used to calculate alpha diversity. For example, alpha diversity of the fauna at UCSD measures how much of each plant exists on campus and that count compares with the other plant numbers at UCSD.
+ * see also: Beta Diversity, QIIME
+
+**Basics of alpha-diversity with fuzzy microbe demo - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/j5bSx/basics-of-alpha-diversity-with-fuzzy-microbe-demo**
+
 
 * **Amplicon**
  * An amplicon is a DNA sequence produced from natural or artificial replication and can be used to identify individuals genetically. Amplification sequencing methods like polymerase chain reaction (PCR) and next-generation sequencing (also referred to as next-gen sequencing) help microbiome researchers profile microbial communities in cost-effective and time-efficient ways.
@@ -18,6 +32,18 @@ Beginner Concepts
 
 **Thomas, F., Hehemann, J., Rebuffet, E., Czjzek, M., & Michel, G. (2011). Environmental and Gut Bacteroidetes: The Food Connection. Frontiers in Microbiology, 2.**
 
+* **Beta Diversity**
+ * Beta diversity is a measurement that compares the species diversity between two community samples by identifying the differences and similarities in the species of those two communities. Lower beta diversity means there are lower numbers of shared organisms between the two communities; therefore, they are both environmentally different. For example, beta diversity of the fauna at UCSD measures the species of fauna on campus and compares them to the species at San Diego City College.
+ * see also: Alpha Diversity, Principal Coordinates Analysis, Unifrac, QIIME
+ 
+**Beta-diversity, and visualizing differences - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/NOo6W/beta-diversity-and-visualizing-differences**
+
+* **DNA Sequencing**
+ * DNA sequencing is the process of determining the order of nucleotides within a DNA molecule. Methods originate in Sanger sequencing, which uses PCR and gel electrophoresis to analyze the target DNA, but this approach is only able to do short length reads. Microbiome research has turned to next generation sequencing, which is an umbrella term for different techniques like whole genome sequencing and pyrosequencing, to analyze longer reads for a shorter amount of time at a relatively lower cost. 
+ * see also: Shotgun sequencing, Illumina sequencing, Amplicon, Marker 
+Gene Sequencing
+
+**Next Generation Sequencing (NGS) - An Introduction. (2015, June 22). Retrieved from https://www.youtube.com/watch?v=jFCD8Q6qSTM**
  
 * **Firmicutes**
  * Firmicutes is a phylum of bacteria that includes species like Staphylococcus and Lactobacillus. In general, Firmicutes have Gram-positive cell walls, round cell shapes, and low guanine to cytosine content in their DNA. While some produce endospores to survive in extreme conditions, others reproduce through binary fission. They also have a wide variety of aerotolerance: some Firmicutes thrive in anaerobic environments, some in aerobic, and some in either. In microbiome research for example, higher proportions of Firmicutes in the intestinal human microbiome may be correlated with obesity (1).
@@ -31,8 +57,15 @@ Beginner Concepts
  * Gammaproteobacteria is one of the four classes of the phylum of Gram-negative proteobacteria. The phylum has a wide range of characteristics, from bacillus to cocci shaped, from chemoautotrophic to photoautotrophic, from aerobic to anaerobic, and from pathogenic to symbiotic relationships. “One feature alone, 16s rRNA sequence relationship, has been used to define the class”(1). Salmonella and E.coli are both gammaproteobacteria.
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity, 
 Proteobacteria
+
 **Williams, K. P., Gillespie, J. J., Sobral, B. W., Nordberg, E. K., Snyder, E. E., Shallom, J. M., and Dickerman, A. W. (2010). Phylogeny of Gammaproteobacteria. Journal of Bacteriology, 192(9), 2305-2314.**
 
+* **HMP**
+ * The Human Microbiome Project (HMP) is “an interdisciplinary effort funded by the NIH Common Fund” to generate “resources that would enable the comprehensive characterization of the human microbiome and analysis of its role in human health and disease” (1). The HMP set five goals under a five-year-plan back in its 2008 inception: to develop a reference set of 3,000 isolate microbial genome sequences,” to produce research that estimates “the complexity of the microbial community at each body site,” “to determine the relationship between disease and changes in the human microbiome,” to invent new technologies for microbiome research analysis and establish a database resource center, and to examine the ethical, legal and social implications of studying and applying human microbiome research(1).
+ * see also: OTU, Alpha Diversity, Beta Diversity, Metadata
+
+**NIH Human Microbiome Project. (2009). Microbe Magazine, 4(9), 393-393.**
+**The Human Microbiome Consotrium. (2012). Structure, Function and diversity of the healthy human microbiome. 486: 207-214.**
 
 * **Marker gene sequencing** 
  * Marker gene sequencing, also known as amplicon sequencing, is a technique that identifies a bacterial organism by its marker gene DNA sequence. In microbiome research, scientists use next-generation sequencing tools to amplify a sequence like the 16s rRNA gene, which is then used to infer the phenotypic makeup of that organism.
@@ -42,10 +75,21 @@ Proteobacteria
 **T. (2013, December 09). How to sequence the human genome - Mark J. Kiel. Retrieved from https://www.youtube.com/watch?v=MvuYATh7Y74**
 **Sanschagrin, S. and Yergeau, E. (2014). Next-generation Sequencing of 16S Ribosomal RNA Gene Amplicons. Journal of Visualized Experiments, (90).**
 
+* **Metadata**
+ * Metadata is data that provides information about multiple forms of data at once; for example, a clinical survey with a person’s personal information, their fecal sample raw sequences, and their psychological test scores are all linked as metadata for that one participant’s profile in a study. Gathering and organizing metadata is a fundamental step to data analysis because it allows for multivariable comparisons like how might one’s number of pets affect their gut microbiome?. 
+ * see also: HMP, Statistical Tests, Biom format
+ * “Metadata Guide” Example: http://www.earthmicrobiome.org/protocols-and-standards/metadata-guide/
+ 
+* **OTU**
+ * Operational taxonomic unit (OTU) is a term for the current organism being studied and is the newest form of classifying bacteria evolutionarily. It serves as an alternative to the common methods of taxonomy because it groups organisms together by 16s rRNA sequence rather than their phenotypic similarities. A 97% similarity match or higher is the commonly accepted threshold for relatedness.
+ * see also: sOTU, 16s rRNA gene, Taxonomy
+
+**Nguyen, N., Warnow, T., Pop, M., & White, B. (2016). A perspective on 16S rRNA operational taxonomic unit clustering using sequence similarity. Npj Biofilms and Microbiomes, 2(1).**
+**How do we identify a microbe? - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/VltJR/how-do-we-identify-a-microbe**
+
 * **Phylogeny**
  * Phylogeny is the study of the evolutionary histories of organisms. Phylogeny analyzes the genotypic and phenotypic characteristics to identify individuals and uses phylogenetic trees to visualize these relationships. Speciation, or where two groups of individuals developed differently into two new species, is represented by a branching stems on the diagram.
  * see also: Taxonomy, Taxonomic Rank, Unifrac
- 
  
  **What is phylogenetics? (2016, June 08). Retrieved from https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics** 
  **Griffen, A.L., Beall, C.J., Campbell, J.H., Firestone, N.D., Kumar, P.S., Yang, Z.K., Podar, M., and Leys, E. J. (2011). Distinct and complex bacterial profiles in human periodontitis and health revealed by 16S pyrosequencing. The ISME Journal, 6(6): 1176-1185.**
@@ -56,7 +100,17 @@ Proteobacteria
 Gammaproteobacteria
 
 **Proteobacteria. (n.d.). Retrieved from https://courses.lumenlearning.com/microbiology/chapter/proteobacteria/**
+
+* **Qiita**
+ * Qitta (pronounced cheetah) is the open-source repository that enables scientists to rapidly analyze and store microbial ecology datasets. It is a bioinformatics resource that is built on the QIIME database, which is designed as a pipeline to generate publication-worthy presentations from raw sequencing data.
+ * see also: QIIME, Biom format, Metadata
+ * Access to QIITA source: https://github.com/biocore/qiita
  
+* **Rarefraction**
+ * Rarefraction is a technique that standardizes length of sequence reads and thereby the number of species measured in a sample. It is a necessary step in microbial bioinformatics because it narrows all the lengths of the raw DNA sequences to a set length; in doing so it allows for the quality of analyses to be refined and filtered and it accounts for statistical biases in the study’s procedures.
+ * see also: QIIME, Principal Coordinates Analysis, OTU Picking, Demultiplexing
+
+
 * **Taxonomy**
  * Taxonomy is a classification system for understanding how organisms are related to each other. Scientists use phylogenetic trees as one form of visualizing taxonomy. A phylogenetic tree takes organisms grouped by phenotypic (physical) and genotypic (genetic) similarities and connects them to their common ancestor from which they diverged evolutionarily. In microbiome research, we have developed tools like Unifrac to measure the evolutionary distance of relatedness of the organisms in two different samples.	
  * see also: Phylogeny, Taxonomic Rank, OTU
