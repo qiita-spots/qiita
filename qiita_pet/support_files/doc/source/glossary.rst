@@ -166,8 +166,7 @@ Proteobacteria
  
 * **Proteobacteria**
  * Proteobacteria is a phylum of Gram-negative bacteria that share similar nucleotide sequences in their genomes. The phylum is divided into five classes, each with their own distinct capabilities from intracellular pathogens, to nitrogen-converters and sulfate reducers, to scavengers. Helicobacter, Campylobacter, E.coli, and Bordetella pertussis are all proteobacteria.
- * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity, 
-Gammaproteobacteria
+ * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity, Gammaproteobacteria
 
 **Proteobacteria. (n.d.). Retrieved from https://courses.lumenlearning.com/microbiology/chapter/proteobacteria/**
 
