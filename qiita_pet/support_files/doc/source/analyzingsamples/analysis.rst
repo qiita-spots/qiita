@@ -61,7 +61,7 @@ Processing Workflow Page: Commands
     * **Effective Number of Species (ENS)/Probability of intra-or interspecific encounter (PIE) metric**: Calculates Effective Number of Species (ENS)/Probability of intra-or interspecific encounter (PIE) metric
      * Shows how absolute amount of species, relative abundances of species, and their intraspecific clustering affect differences in biodiversity among communities
      * **Citation**: *Chase, J.M., and Knight, R. (2013). “Scale-dependent effect sizes of ecological drivers on biodiversity: why standardised sampling is not enough”. Ecology Letters (16): 17-26.*
-    * **Etsy confidence interval**: Calculates Esty’s confidence interval
+    * **Esty confidence interval**: Calculates Esty’s confidence interval
      * Confidence interval for how many singletons in total individuals
      * **Citation**: *Esty, W. W. (1983). “A normal limit law for a nonparametric estimator of the coverage of a random sample”. Ann Statist. (11): 905-912.*
     * **Faith’s phylogenetic diversity**: Calculates faith’s phylogenetic diversity 
