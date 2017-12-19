@@ -12,7 +12,9 @@ Beginner Concepts
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity
 
 **Barka, E.A., Vatsa, P., Sanchez, L., Gaveau-Vaillant, N., Jacquard, C., Klenk, H-P., Clément, C., Ouhdouch, Y., and van Wezel, G.P. (2016). Taxonomy, physiology, and natural products of Actinobacteria. Microbiol Mol Biol Rev 80:1–43.** 
+
 **An Introduction to the Actinobacteria. (2007). Microbiology today, 34(2).**
+
 **Ventura, M., Canchaya, C., Tauch, A., Chandra, G., Fitzgerald, G.F., Chater, K.F., and Sinderen, D.V. (2007). Genomics of Actinobacteria: Tracing the Evolutionary History of an Ancient Phylum. Microbiology and Molecular Biology Reviews, 71(3): 495-548.**
 
 * **Alpha Diversity**
@@ -77,7 +79,9 @@ Beginner Concepts
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity
 
 **Low G C Gram Positive Bacteria. (n.d.). Retrieved from https://micro.cornell.edu/research/epulopiscium/low-g-and-c-gram-positive-bacteria**
+
 **Ley, R.E., Backhed, F., Turnbaugh, P., Lozupone, C.A., Knight, R.D., and  (2005). Obesity alters gut microbial ecology. PNAS. 102 (31): 11070-11075.**
+
 **Turnbaugh, P.J., Hamady, M., Yatsunenko, T., Cantarel, B.L., Duncan, A., Ley, R.E., Sogin, M.L., Jones, W.J., Roe., B.A., Affourtit, J.P., Egholm, M., Henrissat, B., Heath, A.C., Knight, R., and Gordon, J.I. (2008). A core gut microbiome in obese and lean twins. Nature, 457(7228): 480-484.**
 
 * **Gammaproteobacteria**
@@ -92,6 +96,7 @@ Proteobacteria
  * see also: OTU, Alpha Diversity, Beta Diversity, Metadata
 
 **NIH Human Microbiome Project. (2009). Microbe Magazine, 4(9), 393-393.**
+
 **The Human Microbiome Consotrium. (2012). Structure, Function and diversity of the healthy human microbiome. 486: 207-214.**
 
 * **Hypervariable region**
@@ -105,6 +110,7 @@ Proteobacteria
  * see also: DNA sequencing, Shotgun sequencing, QIIME
 
 **Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., Mcmurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song, S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., and Knight, R. (2013). Advancing Our Understanding of the Human Microbiome Using QIIME. Methods in Enzymology Microbial Metagenomics, Metatranscriptomics, and Metaproteomics, 371-444.**
+
 **I. (2016, October 05). Illumina Sequencing by Synthesis. Retrieved from https://www.youtube.com/watch?v=fCd6B5HRaZ8**
 
 * **Marker gene sequencing** 
@@ -112,7 +118,9 @@ Proteobacteria
 	* see also: Amplicon, 16s rRNA gene, Shotgun Sequencing, qPCR, HMP
 
 **Lan, Y., Rosen, G., and Hershberg, R. (2016). Marker genes that are less conserved in their sequences are useful for predicting genome-wide similarity levels between closely related prokaryotic strains. Microbiome, 4(1).***
+
 **T. (2013, December 09). How to sequence the human genome - Mark J. Kiel. Retrieved from https://www.youtube.com/watch?v=MvuYATh7Y74**
+
 **Sanschagrin, S. and Yergeau, E. (2014). Next-generation Sequencing of 16S Ribosomal RNA Gene Amplicons. Journal of Visualized Experiments, (90).**
 
 * **Mass Spectrometry**
@@ -131,6 +139,7 @@ Proteobacteria
  * see also: sOTU, 16s rRNA gene, Taxonomy
 
 **Nguyen, N., Warnow, T., Pop, M., & White, B. (2016). A perspective on 16S rRNA operational taxonomic unit clustering using sequence similarity. Npj Biofilms and Microbiomes, 2(1).**
+
 **How do we identify a microbe? - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/VltJR/how-do-we-identify-a-microbe**
 
 * **OTU picking**
@@ -138,6 +147,7 @@ Proteobacteria
  * see also: OTU, sOTU, DNA sequencing
 
 **Rideout, J.R., He, Y., Navas-Molina, J.A., Walters, W.A., Ursell, L.K., Gibbons, S.M., Chase, J., McDonald, D., Gonzalez, A., Robbins-Pianka, A., Clemente, J.C., Gilber, J., Huse, S.M., Zhou, H.W., Knight, R., and Caporaso, J.G. (2014). Subsampled open-reference clustering creates consistent, comprehensive OTU definitions and scales to billions of sequences.**
+
 **D. (2016, January 22). Microbiome Discovery 5: Picking OTUs. Retrieved from https://www.youtube.com/watch?v=Ok5h24KZbAE**
 
 * **PCoA**
@@ -150,8 +160,9 @@ Proteobacteria
  * Phylogeny is the study of the evolutionary histories of organisms. Phylogeny analyzes the genotypic and phenotypic characteristics to identify individuals and uses phylogenetic trees to visualize these relationships. Speciation, or where two groups of individuals developed differently into two new species, is represented by a branching stems on the diagram.
  * see also: Taxonomy, Taxonomic Rank, Unifrac
  
- **What is phylogenetics? (2016, June 08). Retrieved from https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics** 
- **Griffen, A.L., Beall, C.J., Campbell, J.H., Firestone, N.D., Kumar, P.S., Yang, Z.K., Podar, M., and Leys, E. J. (2011). Distinct and complex bacterial profiles in human periodontitis and health revealed by 16S pyrosequencing. The ISME Journal, 6(6): 1176-1185.**
+**What is phylogenetics? (2016, June 08). Retrieved from https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics** 
+
+**Griffen, A.L., Beall, C.J., Campbell, J.H., Firestone, N.D., Kumar, P.S., Yang, Z.K., Podar, M., and Leys, E. J. (2011). Distinct and complex bacterial profiles in human periodontitis and health revealed by 16S pyrosequencing. The ISME Journal, 6(6): 1176-1185.**
  
 * **Proteobacteria**
  * Proteobacteria is a phylum of Gram-negative bacteria that share similar nucleotide sequences in their genomes. The phylum is divided into five classes, each with their own distinct capabilities from intracellular pathogens, to nitrogen-converters and sulfate reducers, to scavengers. Helicobacter, Campylobacter, E.coli, and Bordetella pertussis are all proteobacteria.
@@ -189,6 +200,7 @@ Gammaproteobacteria
  * see also: DNA sequencing, Marker gene sequencing, Illumina sequencing, qPCR
 
 **Basics of high throughput DNA sequencing. (2017, February 11). Retrieved December 19, 2017, from https://www.youtube.com/watch?v=JD3UJYkxdQs**
+
 **Demo: Tour of the Knight Lab - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/uIYyi/demo-tour-of-the-knight-lab**
 
 * **sOTU**
@@ -196,6 +208,7 @@ Gammaproteobacteria
  * see also: OTU, QIIME, Biom format
 
 **Callahan, B.J., Mcmurdie, P.J., Rosen, M.J., Han, A.W., Johnson, A.J., and Holmes, S.P. (2016). DADA2: High-resolution sample inference from Illumina amplicon data. Nature Methods, 13(7), 581-583.**
+
 **Amir, A., McDonald, D., Navas-Molina, J.A., Kopylova, E., Morton, J.T., Xu, Z., Kightley, E.P., Thompson, L.R., Hyde, E.R., Gonzalez, A., and Knight, R. (2017). Deblur rapidly resolves singlenucleotide community sequence patterns. mSystems 2:e00191-16. https://doi.org/10.1128/mSystems.00191-16.**
 
 * **Statistical tests**
@@ -203,6 +216,7 @@ Gammaproteobacteria
  * see also: Differential abundance and compositionality
  
 **D. (2016, February 12). Microbiome Discovery 10: Statistical testing part 1. Retrieved from https://www.youtube.com/watch?v=_uDv7LRUUsY**
+
 **D. (2016, March 04). Microbiome Discovery 11: Statistical testing part 2. Retrieved from https://www.youtube.com/watch?v=tNxfYqa5Rtc**
 
 * **Taxonomy**
@@ -215,8 +229,8 @@ Gammaproteobacteria
 
 * **Unifrac**
  * Unifrac is a phylogenetic distance metric that compares multiple sample communities based on their locations to each other on the phylogenetic tree. The metric lies between a zero and a one: the former being no species are shared between the two samples and the latter being every species is shared between the two samples--meaning they are ecologically exactly the same. It measures the distance between communities as the percentage of phylogenetic branch length between the targeted communities. Unifrac is a computational tool to compare more than two species together simultaneously using multivariate statistics and nonparametric analyses.  
- * see also: Beta Diversity, Alpha Diversity, Statistical Testings, Biom 
-format, QIIME
+ * see also: Beta Diversity, Alpha Diversity, Statistical Testings, Biom format, QIIME
 
 **Lozupone, C., & Knight, R. (2005). UniFrac: a New Phylogenetic Method for Comparing Microbial Communities. Applied and Environmental Microbiology, 71(12), 8228-8235.**
+
 **Lozupone, C., Hamady, M., and Knight, R. (2006). UniFrac – An online tool for comparing microbial community diversity in a phylogenetic context. BMC bioniformatics. 7:371.**
