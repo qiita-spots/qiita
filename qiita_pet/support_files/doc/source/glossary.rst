@@ -104,6 +104,13 @@ Proteobacteria
 **Nguyen, N., Warnow, T., Pop, M., & White, B. (2016). A perspective on 16S rRNA operational taxonomic unit clustering using sequence similarity. Npj Biofilms and Microbiomes, 2(1).**
 **How do we identify a microbe? - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/VltJR/how-do-we-identify-a-microbe**
 
+* **OTU picking**
+ * OTU picking is a high level strategy for defining OTU clusters, or groups of bacterial organisms, and there are currently three different methods for OTU picking: de novo, closed reference, and open reference. De novo lines up input sequences and clusters OTUs based on the user-specific percentage of similarity in the compared DNA sequences; closed reference aligns input sequences with predefined clusters from a reference database. “Finally, open-reference OTU picking combines the previous protocols. First, input sequences are clustered against a reference database in parallel in a closed-reference OTU picking process. However, rather than discarding sequences that fail to match the reference, these “failures” are clustered de novo in a serial process.”(1)
+ * see also: OTU, sOTU, DNA sequencing
+
+**Rideout, J.R., He, Y., Navas-Molina, J.A., Walters, W.A., Ursell, L.K., Gibbons, S.M., Chase, J., McDonald, D., Gonzalez, A., Robbins-Pianka, A., Clemente, J.C., Gilber, J., Huse, S.M., Zhou, H.W., Knight, R., and Caporaso, J.G. (2014). Subsampled open-reference clustering creates consistent, comprehensive OTU definitions and scales to billions of sequences.**
+**D. (2016, January 22). Microbiome Discovery 5: Picking OTUs. Retrieved from https://www.youtube.com/watch?v=Ok5h24KZbAE**
+
 * **PCoA**
  * Principal Coordinates Analysis (PCoA) is a 3-D graphical approach to present the patterns of similarity and dissimilarity in a data set. It uses EMPeror as a program to visually graph a distance matrix like Unifrac into a 3-D form. It has three axes and each point on the graph represents a specific sample in the study set.
  * see also: Beta Diversity, QIIME, DNA sequencing
@@ -154,6 +161,13 @@ Gammaproteobacteria
 
 **Basics of high throughput DNA sequencing. (2017, February 11). Retrieved December 19, 2017, from https://www.youtube.com/watch?v=JD3UJYkxdQs**
 **Demo: Tour of the Knight Lab - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/uIYyi/demo-tour-of-the-knight-lab**
+
+* **sOTU**
+ * Sub-operational taxonomic unit (sOTU) is an alternative approach to identify and classify bacterial species from raw DNA sequences at a higher resolution than the traditional OTUs. The 97% confidence rate for OTU clustering dismisses the 3% of the raw DNA sequences, so sOTUs identify and group single-nucleotide variation, allowing it to have a higher resolution for taxonomic identification. Deblur and DADA2 are the bioinformatic approaches used in the Knight Lab to get sOTUs from the data. 
+ * see also: OTU, QIIME, Biom format
+
+**Callahan, B.J., Mcmurdie, P.J., Rosen, M.J., Han, A.W., Johnson, A.J., and Holmes, S.P. (2016). DADA2: High-resolution sample inference from Illumina amplicon data. Nature Methods, 13(7), 581-583.**
+**Amir, A., McDonald, D., Navas-Molina, J.A., Kopylova, E., Morton, J.T., Xu, Z., Kightley, E.P., Thompson, L.R., Hyde, E.R., Gonzalez, A., and Knight, R. (2017). Deblur rapidly resolves singlenucleotide community sequence patterns. mSystems 2:e00191-16. https://doi.org/10.1128/mSystems.00191-16.**
 
 * **Taxonomy**
  * Taxonomy is a classification system for understanding how organisms are related to each other. Scientists use phylogenetic trees as one form of visualizing taxonomy. A phylogenetic tree takes organisms grouped by phenotypic (physical) and genotypic (genetic) similarities and connects them to their common ancestor from which they diverged evolutionarily. In microbiome research, we have developed tools like Unifrac to measure the evolutionary distance of relatedness of the organisms in two different samples.	
