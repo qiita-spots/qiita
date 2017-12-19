@@ -62,6 +62,7 @@ Looking for available guides? Please see these documents:
    tutorials/index.rst
    faq.rst
    glossary.rst
+   references.rst
    
 
 If you intend to deploy or develop Qiita we recommend that you have a look at the following documents:
