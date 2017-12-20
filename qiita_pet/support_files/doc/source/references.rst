@@ -40,62 +40,62 @@ References
 38. Illumina. (2016, October 05). Illumina Sequencing by Synthesis. Retrieved from https://www.youtube.com/watch?v=fCd6B5HRaZ8
 39. Isotopes and mass spectrometry (article). (n.d.). Retrieved from https://www.khanacademy.org/science/chemistry/atomic-structure-and-properties/mass-spectrometry/a/isotopes-and-mass-spectrometry
 40. Jaccard, P. (1908). “Nouvellesrecherches sur la distribution florale.” Bull. Soc. V and. Sci. Nat., (44):223-270.
-Janson, S., and Vegelius, J. (1981). “Measures of ecological association”. Oecologia. (49): 371–376.
-Kempton, R.A. and Taylor, L.R. (1976). “Models and statistics for species diversity”. Nature (262): 818-820.
-Knights, D. (2016, January 22). Microbiome Discovery 5: Picking OTUs. Retrieved from https://www.youtube.com/watch?v=Ok5h24KZbAE
-Knights, D. (2016, February 12). Microbiome Discovery 10: Statistical testing part 1. Retrieved from https://www.youtube.com/watch?v=_uDv7LRUUsY
-Knights, D. (2016, March 04). Microbiome Discovery 11: Statistical testing part 2. Retrieved from https://www.youtube.com/watch?v=tNxfYqa5Rtc
-Knights, D. (2016, April 01). Microbiome Discovery 19: Compositionality. Retrieved from https://www.youtube.com/watch?v=X60nFYpLWRs
-Kopylova, E., Noe, L., Touzet, H. (2012). “SortMeRNA: fast and accurate filtering of ribosomal RNAs in metatranscriptomic data”. Bioinformatics. 28 (24) 3211-7.
-Kruskal, W.H. and Wallis, W.A. (1952). "Use of ranks in one-criterion variance analysis". Journal of the American Statistical Association. 47 (260): 583–621.
-Kulcynski, S. (1927). “Die Pflanzenassoziationen der Pieninen. Bulletin International de l’Academie Polonaise des Sciences et des Lettres”. Classe des Sciences Mathematiques et Naturelles. 57-203.
-Lan, Y., Rosen, G., and Hershberg, R. (2016). Marker genes that are less conserved in their sequences are useful for predicting genome-wide similarity levels between closely related prokaryotic strains. Microbiome, 4(1).
-Lance, Godfrey L.N. and Williams, W.T. (1967). "A general theory of classificatory sorting strategies II. Clustering systems." The computer journal 10 (3):271-277.
-Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.
-Ley, R.E., Backhed, F., Turnbaugh, P., Lozupone, C.A., Knight, R.D., and (2005). Obesity alters gut microbial ecology. PNAS. 102 (31): 11070-11075.
-Lladser, M.E., Gouet, R., Reeder, R. (2011). “Extrapolation of Urn Models via Poissonization: Accurate Measurements of the Microbial Unknown”. PLoS.
-Low G C Gram Positive Bacteria. (n.d.). Retrieved from https://micro.cornell.edu/research/epulopiscium/low-g-and-c-gram-positive-bacteria
-Lozupone, C. A., Hamady, M., Kelley, S. T., Knight, R. (2007). "Quantitative and qualitative beta diversity measures lead to different insights into factors that structure microbial communities". Applied and Environmental Microbiology. 73(5): 1576–85.
-Lozupone, C. and Knight, R. (2005). "UniFrac: a new phylogenetic method for comparing microbial communities." Applied and environmental microbiology 71 (12): 8228-8235.
-Magurran, A.E. (2004). “Measuring biological diversity”. Blackwell. 76-77.
-Mahalanobis, Chandra, P. (1936). "On the generalised distance in statistics". Proceedings of the National Institute of Sciences of India. 2 (1): 49–55.
-McDonald, D., Price, M. N., Goodrich, J., Nawrocki, E. P., DeSantis, T. Z., Probst, A., Anderson, G. L., Knight, R.,  Hugenholtz, P. (2012). “An improved Greengenes taxonomy with explicit ranks for ecological and evolutionary analyses of bacteria and archaea.” The ISME Journal. 6(3): 610–618.
-McIntosh, R.P. (1967). “An index of diversity and the relation of certain concepts to diversity”. Ecology (48): 392-404.
-Morton, J.T., Sanders, J., Quinn, R.A., Mcdonald, D., Gonzalez, A., Vázquez-Baeza, Y., Navas-Molina, J.A., Song, J.S., Metcalf, J.L., Hyde, E.R., Lladser, M., Dorrestein, P.C., and Knight, R. (2017). Balance Trees Reveal Microbial Niche Differentiation. MSystems, 2(1).
-Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., McMurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., Knight, R. (2013). “Advancing Our Understanding of the Human Microbiome Using QIIME”. Methods in Enzymology. (531): 371-444
-Next Generation Sequencing (NGS) - An Introduction. (2015, June 22). Retrieved from https://www.youtube.com/watch?v=jFCD8Q6qSTM
-Nguyen, N., Warnow, T., Pop, M., & White, B. (2016). A perspective on 16S rRNA operational taxonomic unit clustering using sequence similarity. Npj Biofilms and Microbiomes, 2(1).
-NIH Human Microbiome Project. (2009). Microbe Magazine, 4(9), 393-393.
-Ochiai, A. (1957). “Zoogeographical Studies on the Soleoid Fishes Found in Japan and its Neighhouring Regions-II”. Nippon Suisan Gakkaishi. 22(9): 526-530.
-Paul, E.B. (2006). “Manhattan distance". Dictionary of Algorithms and Data Structures
-Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.
-Pearson, K. (1901). "On Lines and Planes of Closest Fit to Systems of Points in Space" Philosophical Magazine. 2 (11): 559–572.
-Pielou, E.C. (1966). “The measurement of diversity in different types of biological collections”. J. Theor. Biol. (13): 131-144.
-Pielou, E.C. (1975). Ecological Diversity. New York, Wiley InterScience.
-Polymerase Chain Reaction (PCR) - Quantitative PCR (qPCR). (2016, April 28). Retrieved from https://www.youtube.com/watch?v=YhXj5Yy4ksQ
-Quast, C., Pruesse, E., Yilmaz, P., Gerken, J., Schweer, T., Yarza, P., Peplies, J., Glöckner, F. O. (2013). “The SILVA ribosomal RNA gene database project: improved data processing and web-based tools”. Nucl. Acids Res. 41 (D1): D590-D596.
-Raaijmakers, J.G.W. (1987). “Statistical analysis of the Michaelis-Menten equation”. Biometrics. (43): 793-803.
-Rideout, J.R., He, Y., Navas-Molina, J.A., Walters, W.A., Ursell, L.K., Gibbons, S.M., Chase, J., McDonald, D., Gonzalez, A., Robbins-Pianka, A., Clemente, J.C., Gilber, J., Huse, S.M., Zhou, H.W., Knight, R., and Caporaso, J.G. (2014). Subsampled open-reference clustering creates consistent, comprehensive OTU definitions and scales to billions of sequences.
-Robbins, H.E. (1968). “Estimating the Total Probability of the unobserved outcomes of an experiment”. Ann Math. Statist. 39(1): 256-257.
-Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.
-Russell, P.F. and Rao, T.R. (1940). “On habitat and association of species of anopheline larvae in south-eastern Madras”. J. Malaria Inst. India. (3): 153-178.
-Sanschagrin, S. and Yergeau, E. (2014). Next-generation Sequencing of 16S Ribosomal RNA Gene Amplicons. Journal of Visualized Experiments, (90).
-Shannon, C.E. and Weaver, W. (1949). “The mathematical theory of communication”. University of Illonois Press, Champaign, Illonois.
-Simpson, E.H. (1949). “Measurement of Diversity”. Nature. (163): 688.
-Sokal, R.R. and Michener, C.D. (1958). “A statistical method for evaluating systematic relationships”. Univ. Kans. Sci. Bull. (38) 1409-1438.
-Sokal, R.R. and Sneath, P.H.A. (1963). “Principles of Numerical Taxonomy”. W. H. Freeman, San Francisco, California.
-Sorenson, T. (1948) "A method of establishing groups of equal amplitude in plant sociology based on similarity of species content." Kongelige Danske Videnskabernes Selskab 5.1-34: 4-7.
-Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.
-Strong, W.L. (2002). “Assessing species abundance uneveness within and between plant communities”. Community Ecology (3): 237-246.
-Tanimoto, T. (1958). "An Elementary Mathematical theory of Classification and Prediction". New York: Internal IBM Technical Report.
-Ted-Ed. (2013, December 09). How to sequence the human genome - Mark J. Kiel. Retrieved from https://www.youtube.com/watch?v=MvuYATh7Y74
-The Human Microbiome Consotrium. (2012). Structure, Function and diversity of the healthy human microbiome. 486: 207-214.
-Thomas, F., Hehemann, J., Rebuffet, E., Czjzek, M., & Michel, G. (2011). Environmental and Gut Bacteroidetes: The Food Connection. Frontiers in Microbiology, 2.
-Turnbaugh, P.J., Hamady, M., Yatsunenko, T., Cantarel, B.L., Duncan, A., Ley, R.E., Sogin, M.L., Jones, W.J., Roe., B.A., Affourtit, J.P., Egholm, M., Henrissat, B., Heath, A.C., Knight, R., and Gordon, J.I. (2008). A core gut microbiome in obese and lean twins. Nature, 457(7228): 480-484.
-Vazquez-Baeza, Y., Pirrung, M., Gonzalez, A., Knight, R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.
-Ventura, M., Canchaya, C., Tauch, A., Chandra, G., Fitzgerald, G.F., Chater, K.F., and Sinderen, D.V. (2007). Genomics of Actinobacteria: Tracing the Evolutionary History of an Ancient Phylum. Microbiology and Molecular Biology Reviews, 71(3): 495-548.
-Weiss, S., Xu, Z. Z., Peddada, S., Amir, A., Bittinger, K., Gonzalez, A., Lozupone, C., Zaneveld, J.R., Vazquez-Baeza, Y., Birmingham, A., Hyde, E.R., and Knight, R. (2017). Normalization and microbial differential abundance strategies depend upon data characteristics. Microbiome, 5(1).
-What is phylogenetics? (2016, June 08). Retrieved from https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics
-Whittaker, R.H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.
-Williams, K. P., Gillespie, J. J., Sobral, B. W., Nordberg, E. K., Snyder, E. E., Shallom, J. M., and Dickerman, A. W. (2010). Phylogeny of Gammaproteobacteria. Journal of Bacteriology, 192(9), 2305-2314.
-Yang, B., Wang, Y., & Qian, P. (2016). Sensitivity and correlation of hypervariable regions in 16S rRNA genes in phylogenetic analysis. BMC Bioinformatics, 17(1).
+41. Janson, S., and Vegelius, J. (1981). “Measures of ecological association”. Oecologia. (49): 371–376.
+42. Kempton, R.A. and Taylor, L.R. (1976). “Models and statistics for species diversity”. Nature (262): 818-820.
+43. Knights, D. (2016, January 22). Microbiome Discovery 5: Picking OTUs. Retrieved from https://www.youtube.com/watch?v=Ok5h24KZbAE
+44. Knights, D. (2016, February 12). Microbiome Discovery 10: Statistical testing part 1. Retrieved from https://www.youtube.com/watch?v=_uDv7LRUUsY
+45. Knights, D. (2016, March 04). Microbiome Discovery 11: Statistical testing part 2. Retrieved from https://www.youtube.com/watch?v=tNxfYqa5Rtc
+46. Knights, D. (2016, April 01). Microbiome Discovery 19: Compositionality. Retrieved from https://www.youtube.com/watch?v=X60nFYpLWRs
+47. Kopylova, E., Noe, L., Touzet, H. (2012). “SortMeRNA: fast and accurate filtering of ribosomal RNAs in metatranscriptomic data”. Bioinformatics. 28 (24) 3211-7.
+48. Kruskal, W.H. and Wallis, W.A. (1952). "Use of ranks in one-criterion variance analysis". Journal of the American Statistical Association. 47 (260): 583–621.
+49. Kulcynski, S. (1927). “Die Pflanzenassoziationen der Pieninen. Bulletin International de l’Academie Polonaise des Sciences et des Lettres”. Classe des Sciences Mathematiques et Naturelles. 57-203.
+50. Lan, Y., Rosen, G., and Hershberg, R. (2016). Marker genes that are less conserved in their sequences are useful for predicting genome-wide similarity levels between closely related prokaryotic strains. Microbiome, 4(1).
+51. Lance, Godfrey L.N. and Williams, W.T. (1967). "A general theory of classificatory sorting strategies II. Clustering systems." The computer journal 10 (3):271-277.
+52. Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.
+53. Ley, R.E., Backhed, F., Turnbaugh, P., Lozupone, C.A., Knight, R.D., and (2005). Obesity alters gut microbial ecology. PNAS. 102 (31): 11070-11075.
+54. Lladser, M.E., Gouet, R., Reeder, R. (2011). “Extrapolation of Urn Models via Poissonization: Accurate Measurements of the Microbial Unknown”. PLoS.
+55. Low G C Gram Positive Bacteria. (n.d.). Retrieved from https://micro.cornell.edu/research/epulopiscium/low-g-and-c-gram-positive-bacteria
+56. Lozupone, C. A., Hamady, M., Kelley, S. T., Knight, R. (2007). "Quantitative and qualitative beta diversity measures lead to different insights into factors that structure microbial communities". Applied and Environmental Microbiology. 73(5): 1576–85.
+57. Lozupone, C. and Knight, R. (2005). "UniFrac: a new phylogenetic method for comparing microbial communities." Applied and environmental microbiology 71 (12): 8228-8235.
+58. Magurran, A.E. (2004). “Measuring biological diversity”. Blackwell. 76-77.
+59. Mahalanobis, Chandra, P. (1936). "On the generalised distance in statistics". Proceedings of the National Institute of Sciences of India. 2 (1): 49–55.
+60. McDonald, D., Price, M. N., Goodrich, J., Nawrocki, E. P., DeSantis, T. Z., Probst, A., Anderson, G. L., Knight, R.,  Hugenholtz, P. (2012). “An improved Greengenes taxonomy with explicit ranks for ecological and evolutionary analyses of bacteria and archaea.” The ISME Journal. 6(3): 610–618.
+61. McIntosh, R.P. (1967). “An index of diversity and the relation of certain concepts to diversity”. Ecology (48): 392-404.
+62. Morton, J.T., Sanders, J., Quinn, R.A., Mcdonald, D., Gonzalez, A., Vázquez-Baeza, Y., Navas-Molina, J.A., Song, J.S., Metcalf, J.L., Hyde, E.R., Lladser, M., Dorrestein, P.C., and Knight, R. (2017). Balance Trees Reveal Microbial Niche Differentiation. MSystems, 2(1).
+63. Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., McMurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., Knight, R. (2013). “Advancing Our Understanding of the Human Microbiome Using QIIME”. Methods in Enzymology. (531): 371-444
+64. Next Generation Sequencing (NGS) - An Introduction. (2015, June 22). Retrieved from https://www.youtube.com/watch?v=jFCD8Q6qSTM
+65. Nguyen, N., Warnow, T., Pop, M., & White, B. (2016). A perspective on 16S rRNA operational taxonomic unit clustering using sequence similarity. Npj Biofilms and Microbiomes, 2(1).
+66. NIH Human Microbiome Project. (2009). Microbe Magazine, 4(9), 393-393.
+67. Ochiai, A. (1957). “Zoogeographical Studies on the Soleoid Fishes Found in Japan and its Neighhouring Regions-II”. Nippon Suisan Gakkaishi. 22(9): 526-530.
+68. Paul, E.B. (2006). “Manhattan distance". Dictionary of Algorithms and Data Structures
+69. Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.
+70. Pearson, K. (1901). "On Lines and Planes of Closest Fit to Systems of Points in Space" Philosophical Magazine. 2 (11): 559–572.
+71. Pielou, E.C. (1966). “The measurement of diversity in different types of biological collections”. J. Theor. Biol. (13): 131-144.
+72. Pielou, E.C. (1975). Ecological Diversity. New York, Wiley InterScience.
+73. Polymerase Chain Reaction (PCR) - Quantitative PCR (qPCR). (2016, April 28). Retrieved from https://www.youtube.com/watch?v=YhXj5Yy4ksQ
+74. Quast, C., Pruesse, E., Yilmaz, P., Gerken, J., Schweer, T., Yarza, P., Peplies, J., Glöckner, F. O. (2013). “The SILVA ribosomal RNA gene database project: improved data processing and web-based tools”. Nucl. Acids Res. 41 (D1): D590-D596.
+75. Raaijmakers, J.G.W. (1987). “Statistical analysis of the Michaelis-Menten equation”. Biometrics. (43): 793-803.
+76. Rideout, J.R., He, Y., Navas-Molina, J.A., Walters, W.A., Ursell, L.K., Gibbons, S.M., Chase, J., McDonald, D., Gonzalez, A., Robbins-Pianka, A., Clemente, J.C., Gilber, J., Huse, S.M., Zhou, H.W., Knight, R., and Caporaso, J.G. (2014). Subsampled open-reference clustering creates consistent, comprehensive OTU definitions and scales to billions of sequences.
+77. Robbins, H.E. (1968). “Estimating the Total Probability of the unobserved outcomes of an experiment”. Ann Math. Statist. 39(1): 256-257.
+78. Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.
+79. Russell, P.F. and Rao, T.R. (1940). “On habitat and association of species of anopheline larvae in south-eastern Madras”. J. Malaria Inst. India. (3): 153-178.
+80. Sanschagrin, S. and Yergeau, E. (2014). Next-generation Sequencing of 16S Ribosomal RNA Gene Amplicons. Journal of Visualized Experiments, (90).
+81. Shannon, C.E. and Weaver, W. (1949). “The mathematical theory of communication”. University of Illonois Press, Champaign, Illonois.
+82. Simpson, E.H. (1949). “Measurement of Diversity”. Nature. (163): 688.
+83. Sokal, R.R. and Michener, C.D. (1958). “A statistical method for evaluating systematic relationships”. Univ. Kans. Sci. Bull. (38) 1409-1438.
+84. Sokal, R.R. and Sneath, P.H.A. (1963). “Principles of Numerical Taxonomy”. W. H. Freeman, San Francisco, California.
+85. Sorenson, T. (1948) "A method of establishing groups of equal amplitude in plant sociology based on similarity of species content." Kongelige Danske Videnskabernes Selskab 5.1-34: 4-7.
+86. Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.
+87. Strong, W.L. (2002). “Assessing species abundance uneveness within and between plant communities”. Community Ecology (3): 237-246.
+88. Tanimoto, T. (1958). "An Elementary Mathematical theory of Classification and Prediction". New York: Internal IBM Technical Report.
+89. Ted-Ed. (2013, December 09). How to sequence the human genome - Mark J. Kiel. Retrieved from https://www.youtube.com/watch?v=MvuYATh7Y74
+90. The Human Microbiome Consotrium. (2012). Structure, Function and diversity of the healthy human microbiome. 486: 207-214.
+91. Thomas, F., Hehemann, J., Rebuffet, E., Czjzek, M., & Michel, G. (2011). Environmental and Gut Bacteroidetes: The Food Connection. Frontiers in Microbiology, 2.
+92. Turnbaugh, P.J., Hamady, M., Yatsunenko, T., Cantarel, B.L., Duncan, A., Ley, R.E., Sogin, M.L., Jones, W.J., Roe., B.A., Affourtit, J.P., Egholm, M., Henrissat, B., Heath, A.C., Knight, R., and Gordon, J.I. (2008). A core gut microbiome in obese and lean twins. Nature, 457(7228): 480-484.
+93. Vazquez-Baeza, Y., Pirrung, M., Gonzalez, A., Knight, R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.
+94. Ventura, M., Canchaya, C., Tauch, A., Chandra, G., Fitzgerald, G.F., Chater, K.F., and Sinderen, D.V. (2007). Genomics of Actinobacteria: Tracing the Evolutionary History of an Ancient Phylum. Microbiology and Molecular Biology Reviews, 71(3): 495-548.
+95. Weiss, S., Xu, Z. Z., Peddada, S., Amir, A., Bittinger, K., Gonzalez, A., Lozupone, C., Zaneveld, J.R., Vazquez-Baeza, Y., Birmingham, A., Hyde, E.R., and Knight, R. (2017). Normalization and microbial differential abundance strategies depend upon data characteristics. Microbiome, 5(1).
+96. What is phylogenetics? (2016, June 08). Retrieved from https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics
+97. Whittaker, R.H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.
+98. Williams, K. P., Gillespie, J. J., Sobral, B. W., Nordberg, E. K., Snyder, E. E., Shallom, J. M., and Dickerman, A. W. (2010). Phylogeny of Gammaproteobacteria. Journal of Bacteriology, 192(9), 2305-2314.
+99. Yang, B., Wang, Y., & Qian, P. (2016). Sensitivity and correlation of hypervariable regions in 16S rRNA genes in phylogenetic analysis. BMC Bioinformatics, 17(1).
