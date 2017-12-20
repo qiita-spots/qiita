@@ -30,7 +30,7 @@ References
 28. Galton, F. (1877). "Typical laws of heredity". Nature. 15 (388): 492–495.
 29. Gini, C. (1912). “Variability and Mutability”. C. Cuppini, Bologna. 156.
 30. Golay, Marcel J. E. (1949). "Notes on Digital Coding". Proc. IRE. (37): 657
-31. Good. I.J (1953) “The populations frequency of Species and the Estimation of Populations Parameters”. Biometrika. 40(3/4):237-264
+31. Good. I.J (1953) “The populations frequency of Species and the Estimation of Populations Parameters”. Biometrika. 40(3/4):237-264.
 32. Griffen, A.L., Beall, C.J., Campbell, J.H., Firestone, N.D., Kumar, P.S., Yang, Z.K., Podar, M., and Leys, E. J. (2011). Distinct and complex bacterial profiles in human periodontitis and health revealed by 16S pyrosequencing. The ISME Journal, 6(6): 1176-1185.
 33. Hamming, R.W. (1950) “Error Detecting and Error Connecting Codes”. The Bell System Technical Journal. (29): 147-160.
 34. Heck, K.L., Van Belle, G., Simberloff, D. (1975). “Explicit Calculation of the Rarefaction Diversity Measurement and the Determination of Sufficient Sample Size”. Ecology. 56(6): 1459-1461
@@ -60,7 +60,7 @@ References
 58. Magurran, A.E. (2004). “Measuring biological diversity”. Blackwell. 76-77.
 59. Mahalanobis, Chandra, P. (1936). "On the generalised distance in statistics". Proceedings of the National Institute of Sciences of India. 2 (1): 49–55.
 60. McDonald, D., Price, M. N., Goodrich, J., Nawrocki, E. P., DeSantis, T. Z., Probst, A., Anderson, G. L., Knight, R.,  Hugenholtz, P. (2012). “An improved Greengenes taxonomy with explicit ranks for ecological and evolutionary analyses of bacteria and archaea.” The ISME Journal. 6(3): 610–618.
-61. McIntosh, R.P. (1967). “An index of diversity and the relation of certain concepts to diversity”. Ecology (48): 392-404.
+61. McIntosh, R.P. (1967). “An index of diversity and the relation of certain concepts to diversity”. Ecology. (48): 392-404.
 62. Morton, J.T., Sanders, J., Quinn, R.A., Mcdonald, D., Gonzalez, A., Vázquez-Baeza, Y., Navas-Molina, J.A., Song, J.S., Metcalf, J.L., Hyde, E.R., Lladser, M., Dorrestein, P.C., and Knight, R. (2017). Balance Trees Reveal Microbial Niche Differentiation. MSystems, 2(1).
 63. Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., McMurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., Knight, R. (2013). “Advancing Our Understanding of the Human Microbiome Using QIIME”. Methods in Enzymology. (531): 371-444
 64. Next Generation Sequencing (NGS) - An Introduction. (2015, June 22). Retrieved from https://www.youtube.com/watch?v=jFCD8Q6qSTM
@@ -79,14 +79,14 @@ References
 77. Robbins, H.E. (1968). “Estimating the Total Probability of the unobserved outcomes of an experiment”. Ann Math. Statist. 39(1): 256-257.
 78. Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.
 79. Russell, P.F. and Rao, T.R. (1940). “On habitat and association of species of anopheline larvae in south-eastern Madras”. J. Malaria Inst. India. (3): 153-178.
-80. Sanschagrin, S. and Yergeau, E. (2014). Next-generation Sequencing of 16S Ribosomal RNA Gene Amplicons. Journal of Visualized Experiments, (90).
+80. Sanschagrin, S. and Yergeau, E. (2014). Next-generation Sequencing of 16S Ribosomal RNA Gene Amplicons. Journal of Visualized Experiments. (90).
 81. Shannon, C.E. and Weaver, W. (1949). “The mathematical theory of communication”. University of Illonois Press, Champaign, Illonois.
 82. Simpson, E.H. (1949). “Measurement of Diversity”. Nature. (163): 688.
 83. Sokal, R.R. and Michener, C.D. (1958). “A statistical method for evaluating systematic relationships”. Univ. Kans. Sci. Bull. (38) 1409-1438.
 84. Sokal, R.R. and Sneath, P.H.A. (1963). “Principles of Numerical Taxonomy”. W. H. Freeman, San Francisco, California.
 85. Sorenson, T. (1948) "A method of establishing groups of equal amplitude in plant sociology based on similarity of species content." Kongelige Danske Videnskabernes Selskab 5.1-34: 4-7.
 86. Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.
-87. Strong, W.L. (2002). “Assessing species abundance uneveness within and between plant communities”. Community Ecology (3): 237-246.
+87. Strong, W.L. (2002). “Assessing species abundance uneveness within and between plant communities”. Community Ecology. (3): 237-246.
 88. Tanimoto, T. (1958). "An Elementary Mathematical theory of Classification and Prediction". New York: Internal IBM Technical Report.
 89. Ted-Ed. (2013, December 09). How to sequence the human genome - Mark J. Kiel. Retrieved from https://www.youtube.com/watch?v=MvuYATh7Y74
 90. The Human Microbiome Consotrium. (2012). Structure, Function and diversity of the healthy human microbiome. 486: 207-214.
@@ -98,4 +98,4 @@ References
 96. What is phylogenetics? (2016, June 08). Retrieved from https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics
 97. Whittaker, R.H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.
 98. Williams, K. P., Gillespie, J. J., Sobral, B. W., Nordberg, E. K., Snyder, E. E., Shallom, J. M., and Dickerman, A. W. (2010). Phylogeny of Gammaproteobacteria. Journal of Bacteriology, 192(9), 2305-2314.
-99. Yang, B., Wang, Y., & Qian, P. (2016). Sensitivity and correlation of hypervariable regions in 16S rRNA genes in phylogenetic analysis. BMC Bioinformatics, 17(1).
+99. Yang, B., Wang, Y., & Qian, P. (2016). Sensitivity and correlation of hypervariable regions in 16S rRNA genes in phylogenetic analysis. BMC Bioinformatics. 17(1).
