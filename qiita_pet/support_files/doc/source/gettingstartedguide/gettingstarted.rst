@@ -2,6 +2,7 @@ Creating an Account
 ===================
 
 * **Sign up**: Brings you to window to create an account
+
 Home Screen
 -----------
 
@@ -9,6 +10,7 @@ Home Screen
  * **Envelope Icon** (3rd from the right): Your system messages
  * **Clipboard Icon** (2nd from the right): Your selected samples
  * **Server Icon** (rightmost): Your active jobs and their statuses
+ 
 Creating a Study
 ==============
 
@@ -32,6 +34,7 @@ Creating a Study
  * **Sample Information**: A link to your metadata summary 
  * **Upload Files**: A link to a screen to upload your files to
  * **Sample Summary**: A link to a screen to view each sample separately with their respective metadata
+ 
 Editing a Study
 ----------------
 
@@ -307,6 +310,7 @@ Attaching Prep Information
  * **Go to study description**: Link to the study description page
 * **Study Description Page**
  * Select “Add New Preparation”
+ 
 Attach data
 -----------
 
@@ -321,6 +325,7 @@ Attach data
  * **Select Data Type** (required): Choose for what kind of data you studied
  * **Select Investigation Type** (optional): Not required, chooses the investigation you performed
  * **Create New Preparation**: Creates a new preparation based on the data inputted above
+ 
 Associate data with prep
 ------------------------
 
@@ -331,6 +336,7 @@ Associate data with prep
  * **Add a name for this file** (required): Give the file a name
  * **Add Files**: Shows up after Select Type has been chosen, adds files to the preparation
  * **Files Network**: Contains artifacts that represent your data
+ 
 Update prep info
 ----------------
 
