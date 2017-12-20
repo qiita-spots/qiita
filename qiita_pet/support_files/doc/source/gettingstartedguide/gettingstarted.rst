@@ -1,10 +1,9 @@
 Creating an Account
 ===================
+
 * **Sign up**: Brings you to window to create an account
 Home Screen
 -----------
-
-[1](../references.rst)
 
 * **Icons** (located on top right corner)
  * **Envelope Icon** (3rd from the right): Your system messages
@@ -12,6 +11,7 @@ Home Screen
  * **Server Icon** (rightmost): Your active jobs and their statuses
 Creating a Study
 ==============
+
 * **Creating a New Study/Edit Study Page**
  * **Study Title** (required): Name of the experiment
  * **Study Alias** (required): A different name to put your experiment under
@@ -34,6 +34,7 @@ Creating a Study
  * **Sample Summary**: A link to a screen to view each sample separately with their respective metadata
 Editing a Study
 ----------------
+
 *  Go to the “Study Information Page”
 *  Select “Edit” from “Study Information Page” to bring you to “Edit Study Page”
 *  Make the desired edits and select “Update Study”
@@ -299,6 +300,7 @@ additional column is required.
 
 Attaching Prep Information
 --------------------------
+
 * **Upload Files Page**
  * Drag your prep info file into the box to upload your files
  * If you want to delete the file, press the box that appears next to that file then click delete selected files
@@ -307,6 +309,7 @@ Attaching Prep Information
  * Select “Add New Preparation”
 Attach data
 -----------
+
 * **Upload Files Page**
  * Drag your data files into the box to upload your files
  * If you want to delete the file, press the box that appears next to that file then click delete selected files
@@ -320,6 +323,7 @@ Attach data
  * **Create New Preparation**: Creates a new preparation based on the data inputted above
 Associate data with prep
 ------------------------
+
 * **Data Type**
  * Includes preparation info files of that data type that’s associated with your study
  * **16S, or the data type you studied** (required): Preparation page
@@ -329,6 +333,7 @@ Associate data with prep
  * **Files Network**: Contains artifacts that represent your data
 Update prep info
 ----------------
+
 * **Data Type 16S Page**
  * Select “Update Information” and choose your updated file
  * *Barcodes and sample names cannot be updated*
