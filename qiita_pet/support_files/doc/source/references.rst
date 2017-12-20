@@ -20,26 +20,26 @@ References
 18. Chou, H.H., Holmes, M.H. (2001). “DNA sequence quality trimming and vector removal”. Bioinformatics. 17 (12):1093–1104.
 19. Clarke, K.R. (1993). "Non-parametric multivariate analyses of changes in community structure". Austral Ecology. 18 (1): 117–143.
 20. Colwell, R.K., Mao, C.X., Chang, J. (2004). “Interpolating, extrapolating, and comparing incidence-based species accumulation curves.” Ecology. (85), 2717-2727.
-DeSantis, T.Z., Hugenholtz, P., Larsen, N., Rojas, M., Brodie, E.L., Keller, K. Huber, T., Davis, D., Hu, P., Andersen, G.L. (2006). “Greengenes, a Chimera-Checked 16S rRNA Gene Database and Workbench Compatible with ARB”. Applied and Environmental Microbiology (72): 5069–5072.
-Demo: Tour of the Knight Lab - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/uIYyi/demo-tour-of-the-knight-lab
-Dice, Lee R. (1945). "Measures of the Amount of Ecologic Association Between Species". Ecology. 26 (3): 297–302.
-Esty, W. W. (1983). “A normal limit law for a nonparametric estimator of the coverage of a random sample”. Ann Statist. (11): 905-912.
-Ewing, B., Hillier, L., Wendi, M.C., Green, P. (1998). (1998). "Base-calling of automated sequencer traces using phred. I. Accuracy assessment". Genome Research. 8 (3): 175–185.
-Faith. D.P. (1992). “Conservation evaluation and phylogenetic diversity”. Biological Conservation. (61) 1-10.
-Fisher, R.A., Corbet, A.S. and Williams, C.B. (1943). “The relation between the number of species and the number of individuals in a random sample of an animal population”. Journal of Animal Ecology. (12): 42-58.
-Galton, F. (1877). "Typical laws of heredity". Nature. 15 (388): 492–495.
-Gini, C. (1912). “Variability and Mutability”. C. Cuppini, Bologna. 156.
-Golay, Marcel J. E. (1949). "Notes on Digital Coding". Proc. IRE. (37): 657
-Good. I.J (1953) “The populations frequency of Species and the Estimation of Populations Parameters”. Biometrika. 40(3/4):237-264
-Griffen, A.L., Beall, C.J., Campbell, J.H., Firestone, N.D., Kumar, P.S., Yang, Z.K., Podar, M., and Leys, E. J. (2011). Distinct and complex bacterial profiles in human periodontitis and health revealed by 16S pyrosequencing. The ISME Journal, 6(6): 1176-1185.
-Hamming, R.W. (1950) “Error Detecting and Error Connecting Codes”. The Bell System Technical Journal. (29): 147-160.
-Heck, K.L., Van Belle, G., Simberloff, D. (1975). “Explicit Calculation of the Rarefaction Diversity Measurement and the Determination of Sufficient Sample Size”. Ecology. 56(6): 1459-1461
-Heip, C. (1974). “A new index measuring evenness”. J. Mar. Biol. Ass. UK. (54): 555-557.
-How do we identify a microbe? - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/VltJR/how-do-we-identify-a-microbe
-Illumina. (2014, May 21). Illumina MiSeq, 16S rRNA Sequencing and the American Gut Project. Retrieved from https://www.youtube.com/watch?v=1uZtCMY-yEw
-Illumina. (2016, October 05). Illumina Sequencing by Synthesis. Retrieved from https://www.youtube.com/watch?v=fCd6B5HRaZ8
-Isotopes and mass spectrometry (article). (n.d.). Retrieved from https://www.khanacademy.org/science/chemistry/atomic-structure-and-properties/mass-spectrometry/a/isotopes-and-mass-spectrometry
-Jaccard, P. (1908). “Nouvellesrecherches sur la distribution florale.” Bull. Soc. V and. Sci. Nat., (44):223-270.
+21. DeSantis, T.Z., Hugenholtz, P., Larsen, N., Rojas, M., Brodie, E.L., Keller, K. Huber, T., Davis, D., Hu, P., Andersen, G.L. (2006). “Greengenes, a Chimera-Checked 16S rRNA Gene Database and Workbench Compatible with ARB”. Applied and Environmental Microbiology (72): 5069–5072.
+22. Demo: Tour of the Knight Lab - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/uIYyi/demo-tour-of-the-knight-lab
+23. Dice, Lee R. (1945). "Measures of the Amount of Ecologic Association Between Species". Ecology. 26 (3): 297–302.
+24. Esty, W. W. (1983). “A normal limit law for a nonparametric estimator of the coverage of a random sample”. Ann Statist. (11): 905-912.
+25. Ewing, B., Hillier, L., Wendi, M.C., Green, P. (1998). (1998). "Base-calling of automated sequencer traces using phred. I. Accuracy assessment". Genome Research. 8 (3): 175–185.
+26. Faith. D.P. (1992). “Conservation evaluation and phylogenetic diversity”. Biological Conservation. (61) 1-10.
+27. Fisher, R.A., Corbet, A.S. and Williams, C.B. (1943). “The relation between the number of species and the number of individuals in a random sample of an animal population”. Journal of Animal Ecology. (12): 42-58.
+28. Galton, F. (1877). "Typical laws of heredity". Nature. 15 (388): 492–495.
+29. Gini, C. (1912). “Variability and Mutability”. C. Cuppini, Bologna. 156.
+30. Golay, Marcel J. E. (1949). "Notes on Digital Coding". Proc. IRE. (37): 657
+31. Good. I.J (1953) “The populations frequency of Species and the Estimation of Populations Parameters”. Biometrika. 40(3/4):237-264
+32. Griffen, A.L., Beall, C.J., Campbell, J.H., Firestone, N.D., Kumar, P.S., Yang, Z.K., Podar, M., and Leys, E. J. (2011). Distinct and complex bacterial profiles in human periodontitis and health revealed by 16S pyrosequencing. The ISME Journal, 6(6): 1176-1185.
+33. Hamming, R.W. (1950) “Error Detecting and Error Connecting Codes”. The Bell System Technical Journal. (29): 147-160.
+34. Heck, K.L., Van Belle, G., Simberloff, D. (1975). “Explicit Calculation of the Rarefaction Diversity Measurement and the Determination of Sufficient Sample Size”. Ecology. 56(6): 1459-1461
+35. Heip, C. (1974). “A new index measuring evenness”. J. Mar. Biol. Ass. UK. (54): 555-557.
+36. How do we identify a microbe? - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/VltJR/how-do-we-identify-a-microbe
+37. Illumina. (2014, May 21). Illumina MiSeq, 16S rRNA Sequencing and the American Gut Project. Retrieved from https://www.youtube.com/watch?v=1uZtCMY-yEw
+38. Illumina. (2016, October 05). Illumina Sequencing by Synthesis. Retrieved from https://www.youtube.com/watch?v=fCd6B5HRaZ8
+39. Isotopes and mass spectrometry (article). (n.d.). Retrieved from https://www.khanacademy.org/science/chemistry/atomic-structure-and-properties/mass-spectrometry/a/isotopes-and-mass-spectrometry
+40. Jaccard, P. (1908). “Nouvellesrecherches sur la distribution florale.” Bull. Soc. V and. Sci. Nat., (44):223-270.
 Janson, S., and Vegelius, J. (1981). “Measures of ecological association”. Oecologia. (49): 371–376.
 Kempton, R.A. and Taylor, L.R. (1976). “Models and statistics for species diversity”. Nature (262): 818-820.
 Knights, D. (2016, January 22). Microbiome Discovery 5: Picking OTUs. Retrieved from https://www.youtube.com/watch?v=Ok5h24KZbAE
