@@ -1,5 +1,6 @@
 Glossary
 =========
+[1](../references.rst)
 
 * **16S rRNA gene**
  * The 16s rRNA gene is a sequence of nucleotides present only in prokaryotic DNA. It codes for the protein structure of the 30th subunit in prokaryotic ribosomes. Its sequence remains relatively the same across all bacteria, because it has been highly conserved throughout evolutionary history. However, in microbiome research, we use the hypervariable V4 region of the gene as an identification marker for classifying bacteria. Genetically identifying organisms with techniques like 16s rRNA sequencing has only developed in the last twenty years and has begun to redefine the classification system of evolutionary identity for organisms like bacteria. 
