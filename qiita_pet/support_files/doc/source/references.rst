@@ -5,21 +5,21 @@ References
 3. An Introduction to the Actinobacteria. (2007). Microbiology today, 34(2).
 4. Anderson, M.J. (2001). "A new method for non-parametric multivariate analysis of variance". Austral Ecology. 26 (1): 32–46
 5. Barka, E.A., Vatsa, P., Sanchez, L., Gaveau-Vaillant, N., Jacquard, C., Klenk, H-P., Clément, C., Ouhdouch, Y., and van Wezel, G.P. (2016). Taxonomy, physiology, and natural products of Actinobacteria. Microbiol Mol Biol Rev 80:1–43.
-Basics of alpha-diversity with fuzzy microbe demo - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/j5bSx/basics-of-alpha-diversity-with-fuzzy-microbe-demo
-Basics of high throughput DNA sequencing. (2017, February 11). Retrieved December 19, 2017, from https://www.youtube.com/watch?v=JD3UJYkxdQs
-Berger, W.H. and Parker, F.L. (1970). “Diversity of planktonic Foraminifera in deep sea sediments”. Science. (168): 1345-1347.
-Beta-diversity, and visualizing differences - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/NOo6W/beta-diversity-and-visualizing-differences
-Callahan, B.J., Mcmurdie, P.J., Rosen, M.J., Han, A.W., Johnson, A.J., and Holmes, S.P. (2016). DADA2: High-resolution sample inference from Illumina amplicon data. Nature Methods, 13(7), 581-583.
-Cantrell, C.D. (2000). “Modern Mathematical Methods for Physicists and Engineers”. Cambridge University Press.Caporaso, J., Lauber, C.L., Walter, W.A. Berg0Lyons, D., Huntley, J., Fierer, N., Owens, S.M., Betley, J., Fraser, L., Mauer, M., Gormley, N., Gilbert, J.A., Smith, G., Knight, R., (2012) “Ultra-high-throughput microbial community analysis on the Illumina HiSeq and MiSeq platforms”. ISME J.
-Chan, Y., Ching, W.K., Ng, M.K., Huang, J.Z. (2004). “An optimization algorithm for clustering using weighted dissimilarity measures”. Pattern Recognition. 37(5): 943-952.
-Chang, Q., Luan, Y., & Sun, F. (2011). “Variance adjusted weighted UniFrac: a powerful beta diversity measure for comparing communities based on phylogeny”. BMC Bioinformatics.12(1): 118.
-Chao, A. (1984). “Non-parametric estimation of the number of classes in a population”. Scandinavian Journal of Statistics (11): 265-270.
-Chao, A. and Lee, S.M.. (1992). “Estimating the number of classes via sample coverage”. Journal of the American Statistical Association. (87): 210-217.
-Chase, J.M., and Knight, R. (2013). “Scale-dependent effect sizes of ecological drivers on biodiversity: why standardised sampling is not enough”. Ecology Letters (16): 17-26.
-Chen, F., Bittinger, K., Charlson, E.S., Hoffmann, C., Lewis, J., Wu, G. D., Collman, R.G., Bushman, R.D., Li,H. (2012). “Associating microbiome composition with environmental covariates using generalized UniFrac distances.” Bioinformatics. 28 (16): 2106-2113.
-Chou, H.H., Holmes, M.H. (2001). “DNA sequence quality trimming and vector removal”. Bioinformatics. 17 (12):1093–1104.
-Clarke, K.R. (1993). "Non-parametric multivariate analyses of changes in community structure". Austral Ecology. 18 (1): 117–143.
-Colwell, R.K., Mao, C.X., Chang, J. (2004). “Interpolating, extrapolating, and comparing incidence-based species accumulation curves.” Ecology. (85), 2717-2727.
+6. Basics of alpha-diversity with fuzzy microbe demo - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/j5bSx/basics-of-alpha-diversity-with-fuzzy-microbe-demo
+7. Basics of high throughput DNA sequencing. (2017, February 11). Retrieved December 19, 2017, from https://www.youtube.com/watch?v=JD3UJYkxdQs
+8. Berger, W.H. and Parker, F.L. (1970). “Diversity of planktonic Foraminifera in deep sea sediments”. Science. (168): 1345-1347.
+9. Beta-diversity, and visualizing differences - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/NOo6W/beta-diversity-and-visualizing-differences
+10. Callahan, B.J., Mcmurdie, P.J., Rosen, M.J., Han, A.W., Johnson, A.J., and Holmes, S.P. (2016). DADA2: High-resolution sample inference from Illumina amplicon data. Nature Methods, 13(7), 581-583.
+11. Cantrell, C.D. (2000). “Modern Mathematical Methods for Physicists and Engineers”. Cambridge University Press.Caporaso, J., Lauber, C.L., Walter, W.A. Berg0Lyons, D., Huntley, J., Fierer, N., Owens, S.M., Betley, J., Fraser, L., Mauer, M., Gormley, N., Gilbert, J.A., Smith, G., Knight, R., (2012) “Ultra-high-throughput microbial community analysis on the Illumina HiSeq and MiSeq platforms”. ISME J.
+12. Chan, Y., Ching, W.K., Ng, M.K., Huang, J.Z. (2004). “An optimization algorithm for clustering using weighted dissimilarity measures”. Pattern Recognition. 37(5): 943-952.
+13. Chang, Q., Luan, Y., & Sun, F. (2011). “Variance adjusted weighted UniFrac: a powerful beta diversity measure for comparing communities based on phylogeny”. BMC Bioinformatics.12(1): 118.
+14. Chao, A. (1984). “Non-parametric estimation of the number of classes in a population”. Scandinavian Journal of Statistics (11): 265-270.
+15. Chao, A. and Lee, S.M.. (1992). “Estimating the number of classes via sample coverage”. Journal of the American Statistical Association. (87): 210-217.
+16. Chase, J.M., and Knight, R. (2013). “Scale-dependent effect sizes of ecological drivers on biodiversity: why standardised sampling is not enough”. Ecology Letters (16): 17-26.
+17. Chen, F., Bittinger, K., Charlson, E.S., Hoffmann, C., Lewis, J., Wu, G. D., Collman, R.G., Bushman, R.D., Li,H. (2012). “Associating microbiome composition with environmental covariates using generalized UniFrac distances.” Bioinformatics. 28 (16): 2106-2113.
+18. Chou, H.H., Holmes, M.H. (2001). “DNA sequence quality trimming and vector removal”. Bioinformatics. 17 (12):1093–1104.
+19. Clarke, K.R. (1993). "Non-parametric multivariate analyses of changes in community structure". Austral Ecology. 18 (1): 117–143.
+20. Colwell, R.K., Mao, C.X., Chang, J. (2004). “Interpolating, extrapolating, and comparing incidence-based species accumulation curves.” Ecology. (85), 2717-2727.
 DeSantis, T.Z., Hugenholtz, P., Larsen, N., Rojas, M., Brodie, E.L., Keller, K. Huber, T., Davis, D., Hu, P., Andersen, G.L. (2006). “Greengenes, a Chimera-Checked 16S rRNA Gene Database and Workbench Compatible with ARB”. Applied and Environmental Microbiology (72): 5069–5072.
 Demo: Tour of the Knight Lab - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/uIYyi/demo-tour-of-the-knight-lab
 Dice, Lee R. (1945). "Measures of the Amount of Ecologic Association Between Species". Ecology. 26 (3): 297–302.
