@@ -74,7 +74,7 @@ References
 72. Pielou, E.C. (1966). “The measurement of diversity in different types of biological collections”. J. Theor. Biol. (13): 131-144.
 73. Pielou, E.C. (1975). Ecological Diversity. New York, Wiley InterScience.
 74. Polymerase Chain Reaction (PCR) - Quantitative PCR (qPCR). (2016, April 28). Retrieved from https://www.youtube.com/watch?v=YhXj5Yy4ksQ
-75. *Proteobacteria. (n.d.). Retrieved from https://courses.lumenlearning.com/microbiology/chapter/proteobacteria/
+75. Proteobacteria. (n.d.). Retrieved from https://courses.lumenlearning.com/microbiology/chapter/proteobacteria/
 76. Quast, C., Pruesse, E., Yilmaz, P., Gerken, J., Schweer, T., Yarza, P., Peplies, J., Glöckner, F. O. (2013). “The SILVA ribosomal RNA gene database project: improved data processing and web-based tools”. Nucl. Acids Res. 41 (D1): D590-D596.
 77. Raaijmakers, J.G.W. (1987). “Statistical analysis of the Michaelis-Menten equation”. Biometrics. (43): 793-803.
 78. Rideout, J.R., He, Y., Navas-Molina, J.A., Walters, W.A., Ursell, L.K., Gibbons, S.M., Chase, J., McDonald, D., Gonzalez, A., Robbins-Pianka, A., Clemente, J.C., Gilber, J., Huse, S.M., Zhou, H.W., Knight, R., and Caporaso, J.G. (2014). Subsampled open-reference clustering creates consistent, comprehensive OTU definitions and scales to billions of sequences.
