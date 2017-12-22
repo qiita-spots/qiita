@@ -58,77 +58,55 @@ Glossary
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity
 
 
-* **Gammaproteobacteria**
+* **Gammaproteobacteria** [99](../references.rst)
  * Gammaproteobacteria is one of the four classes of the phylum of Gram-negative proteobacteria. The phylum has a wide range of characteristics, from bacillus to cocci shaped, from chemoautotrophic to photoautotrophic, from aerobic to anaerobic, and from pathogenic to symbiotic relationships. “One feature alone, 16s rRNA sequence relationship, has been used to define the class”(1). Salmonella and E.coli are both gammaproteobacteria.
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity, 
 Proteobacteria
 
-**Williams, K. P., Gillespie, J. J., Sobral, B. W., Nordberg, E. K., Snyder, E. E., Shallom, J. M., and Dickerman, A. W. (2010). Phylogeny of Gammaproteobacteria. Journal of Bacteriology, 192(9), 2305-2314.**
 
-* **HMP**
+* **HMP** [67](../references.rst), [91](../references.rst)
  * The Human Microbiome Project (HMP) is “an interdisciplinary effort funded by the NIH Common Fund” to generate “resources that would enable the comprehensive characterization of the human microbiome and analysis of its role in human health and disease” (1). The HMP set five goals under a five-year-plan back in its 2008 inception: to develop a reference set of 3,000 isolate microbial genome sequences,” to produce research that estimates “the complexity of the microbial community at each body site,” “to determine the relationship between disease and changes in the human microbiome,” to invent new technologies for microbiome research analysis and establish a database resource center, and to examine the ethical, legal and social implications of studying and applying human microbiome research(1).
  * see also: OTU, Alpha Diversity, Beta Diversity, Metadata
 
-**NIH Human Microbiome Project. (2009). Microbe Magazine, 4(9), 393-393.**
 
-**The Human Microbiome Consotrium. (2012). Structure, Function and diversity of the healthy human microbiome. 486: 207-214.**
-
-* **Hypervariable region**
+* **Hypervariable region** [100](../references.rst)
  * A hypervariable region is a location within a DNA molecule where the nucleotide sequence consists of highly repeated or substituted base pairs. The V4 region is one of nine hypervariable regions in the 16s rRNA gene of bacteria and has been used by microbiome researchers to classify species genotypically.
  * see also: 16s rRNA gene, Marker gene sequencing
 
-**Yang, B., Wang, Y., & Qian, P. (2016). Sensitivity and correlation of hypervariable regions in 16S rRNA genes in phylogenetic analysis. BMC Bioinformatics, 17(1).**
 
-* **Illumina sequencing**
+* **Illumina sequencing** [64](../references.rst), [39](../references.rst)
  * Illumina sequencing is a next-generation sequencing technique developed by the company Illumina that sequences tens of millions or billions of DNA fragments in a single sequencing run. With more DNA nucleotides comes a greater need for more analytical tools like QIIME in order to comprehend the longer reads. 
  * see also: DNA sequencing, Shotgun sequencing, QIIME
+ 
 
-**Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., Mcmurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song, S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., and Knight, R. (2013). Advancing Our Understanding of the Human Microbiome Using QIIME. Methods in Enzymology Microbial Metagenomics, Metatranscriptomics, and Metaproteomics, 371-444.**
-
-**Illumina. (2016, October 05). Illumina Sequencing by Synthesis. Retrieved from https://www.youtube.com/watch?v=fCd6B5HRaZ8**
-
-* **Marker gene sequencing** 
+* **Marker gene sequencing**  [51](../references.rst), [81](../references.rst), [90](../references.rst)
  * Marker gene sequencing, also known as amplicon sequencing, is a technique that identifies a bacterial organism by its marker gene DNA sequence. In microbiome research, scientists use next-generation sequencing tools to amplify a sequence like the 16s rRNA gene, which is then used to infer the phenotypic makeup of that organism.
 	* see also: Amplicon, 16s rRNA gene, Shotgun Sequencing, qPCR, HMP
 
-**Lan, Y., Rosen, G., and Hershberg, R. (2016). Marker genes that are less conserved in their sequences are useful for predicting genome-wide similarity levels between closely related prokaryotic strains. Microbiome, 4(1).***
 
-**Ted-Ed. (2013, December 09). How to sequence the human genome - Mark J. Kiel. Retrieved from https://www.youtube.com/watch?v=MvuYATh7Y74**
-
-**Sanschagrin, S. and Yergeau, E. (2014). Next-generation Sequencing of 16S Ribosomal RNA Gene Amplicons. Journal of Visualized Experiments, (90).**
-
-* **Mass Spectrometry**
+* **Mass Spectrometry** [40](../references.rst)
  * Mass spectrometry is a technique that ionizes atoms or molecules in a sample and measures their mass to charge ratios and relative abundances. The goal of mass spectrometry is to identify atoms or molecules by their masses. Microbiome researchers use mass spectrometry to identify the biochemical/metabolic exchange of microbes and their host environments.
  * see also: HMP
 
-**Isotopes and mass spectrometry (article). (n.d.). Retrieved from https://www.khanacademy.org/science/chemistry/atomic-structure-and-properties/mass-spectrometry/a/isotopes-and-mass-spectrometry**
 
 * **Metadata**
  * Metadata is data that provides information about multiple forms of data at once; for example, a clinical survey with a person’s personal information, their fecal sample raw sequences, and their psychological test scores are all linked as metadata for that one participant’s profile in a study. Gathering and organizing metadata is a fundamental step to data analysis because it allows for multivariable comparisons like how might one’s number of pets affect their gut microbiome?. 
  * see also: HMP, Statistical Tests, Biom format
  * “Metadata Guide” Example: http://www.earthmicrobiome.org/protocols-and-standards/metadata-guide/
  
-* **OTU**
+* **OTU** [37](../references.rst), [66](../references.rst)
  * Operational taxonomic unit (OTU) is a term for the current organism being studied and is the newest form of classifying bacteria evolutionarily. It serves as an alternative to the common methods of taxonomy because it groups organisms together by 16s rRNA sequence rather than their phenotypic similarities. A 97% similarity match or higher is the commonly accepted threshold for relatedness.
  * see also: sOTU, 16s rRNA gene, Taxonomy
 
-**Nguyen, N., Warnow, T., Pop, M., & White, B. (2016). A perspective on 16S rRNA operational taxonomic unit clustering using sequence similarity. Npj Biofilms and Microbiomes, 2(1).**
-
-**How do we identify a microbe? - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/VltJR/how-do-we-identify-a-microbe**
-
-* **OTU picking**
+* **OTU picking** [44](../references.rst), [77](../references.rst)
  * OTU picking is a high level strategy for defining OTU clusters, or groups of bacterial organisms, and there are currently three different methods for OTU picking: de novo, closed reference, and open reference. De novo lines up input sequences and clusters OTUs based on the user-specific percentage of similarity in the compared DNA sequences; closed reference aligns input sequences with predefined clusters from a reference database. “Finally, open-reference OTU picking combines the previous protocols. First, input sequences are clustered against a reference database in parallel in a closed-reference OTU picking process. However, rather than discarding sequences that fail to match the reference, these “failures” are clustered de novo in a serial process.”(1)
  * see also: OTU, sOTU, DNA sequencing
 
-**Rideout, J.R., He, Y., Navas-Molina, J.A., Walters, W.A., Ursell, L.K., Gibbons, S.M., Chase, J., McDonald, D., Gonzalez, A., Robbins-Pianka, A., Clemente, J.C., Gilber, J., Huse, S.M., Zhou, H.W., Knight, R., and Caporaso, J.G. (2014). Subsampled open-reference clustering creates consistent, comprehensive OTU definitions and scales to billions of sequences.**
 
-**Knights, D. (2016, January 22). Microbiome Discovery 5: Picking OTUs. Retrieved from https://www.youtube.com/watch?v=Ok5h24KZbAE**
-
-* **PCoA**
+* **PCoA** [9](../references.rst)
  * Principal Coordinates Analysis (PCoA) is a 3-D graphical approach to present the patterns of similarity and dissimilarity in a data set. It uses EMPeror as a program to visually graph a distance matrix like Unifrac into a 3-D form. It has three axes and each point on the graph represents a specific sample in the study set.
  * see also: Beta Diversity, QIIME, DNA sequencing
 
-**Beta-diversity, and visualizing differences - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/NOo6W/beta-diversity-and-visualizing-differences**
 
 * **Phylogeny**
  * Phylogeny is the study of the evolutionary histories of organisms. Phylogeny analyzes the genotypic and phenotypic characteristics to identify individuals and uses phylogenetic trees to visualize these relationships. Speciation, or where two groups of individuals developed differently into two new species, is represented by a branching stems on the diagram.
