@@ -107,45 +107,34 @@ Processing Workflow Page: Commands
      * Measures species abundance unevenness
    * **Phylogenetic tree** (required for certain alpha diversities, ie. Faith PD): Phylogenetic tree to be used with alpha analyses (only include when necessary ie. Faith PD)
     * Currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
-  * **Calculate beta diversity**: Measured the diversity between samples
+  * **Calculate beta diversity** [99](../references.rst): Measured the diversity between samples
    * **BIOM table** (required): Feature table containing the samples for which beta diversity should be computed
-   * **Adjust variance** (phylogenetic only): Performs variance adjustment
+   * **Adjust variance** [14](../references.rst) (phylogenetic only): Performs variance adjustment
     * Weighs distances based on the proportion of the relative abundance represented between the samples at a given node under evaluation
-    * **Citatoin**: *Chang, Q., Luan, Y., & Sun, F. (2011). “Variance adjusted weighted UniFrac: a powerful beta diversity measure for comparing communities based on phylogeny”. BMC Bioinformatics.12(1): 118.*
    * **Alpha value** (Generalized UniFrac only): Value of alpha controls importance of sample proportions. 1.0 is weighted normalized UniFrac. 0.0 is close to unweighted UniFrac, but only if the sample  are dichotomized.
    * **Bypass tips** (phylogenetic only): In a bifurcating tree, the tips make up about 50% of the nodes in a tree. By ignoring them, specificity can be traded for reduced compute time. This has the effect of collapsing the phylogeny, and is analogous (in concept) to moving from 99% to 97% OTUs
    * **Diversity metric** (required): Beta diversity metric to be run
-    * **Bray-Curtis dissimilarity**: Calculates Bray–Curtis dissimilarity
+    * **Bray-Curtis dissimilarity** [87](../references.rst): Calculates Bray–Curtis dissimilarity
      * Fraction of overabundant counts
-     * **Citation**: *Sorenson, T. (1948) "A method of establishing groups of equal amplitude in plant sociology based on similarity of species content." Kongelige Danske Videnskabernes Selskab 5.1-34: 4-7.*
-    * **Canberra distance**: Calculates Canberra distance
+    * **Canberra distance** [52](../references.rst): Calculates Canberra distance
      * Overabundance on a feature by feature basis
-     * **Citation**: *Lance, Godfrey L.N. and Williams, W.T. (1967). "A general theory of classificatory sorting strategies II. Clustering systems." The computer journal 10 (3):271-277.*
-    * **Chebyshev distance**: Calculates Chebyshev distance
+    * **Chebyshev distance** [11](../references.rst): Calculates Chebyshev distance
      * Maximum distance between two samples
-     * **Citation**: *Cantrell, C.D. (2000). “Modern Mathematical Methods for Physicists and Engineers”. Cambridge University Press.*
-    * **City-block distance**:  Calculates City-block distance
+    * **City-block distance** [69](../references.rst):  Calculates City-block distance
      * Similar to the Euclidean distance but the effect of a large difference in a single dimension is reduced
-     * **Citation**: *Paul, E.B. (2006). “Manhattan distance". Dictionary of Algorithms and Data Structures*
-    * **Correlation coefficient**: Measures Correlation coefficient
+    * **Correlation coefficient** [29](../references.rst): Measures Correlation coefficient
      * Measure of strength and direction of linear relationship between samples
-     * **Citation**: *Galton, F. (1877). "Typical laws of heredity". Nature. 15 (388): 492–495.*
-    * **Cosine Similarity**: Measures Cosine similarity
+    * **Cosine Similarity** [68](../references.rst): Measures Cosine similarity
      * Ratio of the amount of common species in a sample to the mean of the two samples
-     * **Citation**: *Ochiai, A. (1957). “Zoogeographical Studies on the Soleoid Fishes Found in Japan and its Neighhouring Regions-II”. Nippon Suisan Gakkaishi. 22(9): 526-530.*
-    * **Dice measures**: Calculates Dice measure
+    * **Dice measures** [24](../references.rst): Calculates Dice measure
      * Statistic used for comparing the similarity of two samples
      * Only counts true positives once
-     * **Citation**: *Dice, Lee R. (1945). "Measures of the Amount of Ecologic Association Between Species". Ecology. 26 (3): 297–302.*
-    * **Euclidean distance**: Measures Euclidean distance
+    * **Euclidean distance** [53](../references.rst): Measures Euclidean distance
      * Species-by-species distance matrix
-     * **Citation**: *Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.*
-    * **Generalized Unifrac**: Measures Generalized UniFrac
+    * **Generalized Unifrac** [18](../references.rst): Measures Generalized UniFrac
      * Detects a wider range of biological changes compared to unweighted and weighted UniFrac
-     * **Citation**: *Chen, F., Bittinger, K., Charlson, E.S., Hoffmann, C., Lewis, J., Wu, G. D., Collman, R.G., Bushman, R.D., Li,H. (2012). “Associating microbiome composition with environmental covariates using generalized UniFrac distances.” Bioinformatics. 28 (16): 2106-2113.*
-    * **Hamming distance**: Measures Hamming distance
+    * **Hamming distance** [34](../references.rst): Measures Hamming distance
      * Minimum number of substitutions required to change one group to the other
-     * **Citation**: *Hamming, R.W. (1950) “Error Detecting and Error Connecting Codes”. The Bell System Technical Journal. (29): 147-160.*
     * **Jaccard similarity index**: Calculates Jaccard similarity index
      * Fraction of unique features, regardless of abundance
      * **Citation**: *Jaccard, P. (1908). “Nouvellesrecherches sur la distribution florale.” Bull. Soc. V and. Sci. Nat., (44):223-270.*
@@ -200,7 +189,6 @@ Processing Workflow Page: Commands
   * **Number of jobs**: Number of workers to use
   * **Phylogenetic tree** (required for some beta diversities, ie. UniFrac): Phylogenetic tree to be used with beta analyses (only include when necessary ie. UniFrac)
    * Currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
-  * **Citation**: *Whittaker, R.H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.*
 * **Commands from Alpha Diversity Data**
  * **Alpha Correlation**: Determines if the numeric sample metadata category is correlated with alpha diversity
   * **Correlation Method** (required): Correction test being applied
