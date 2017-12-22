@@ -136,7 +136,8 @@ class DBUtilTests(TestCase):
         """Tests that get_data_types works with valid arguments"""
         obs = qdb.util.get_data_types()
         exp = {'16S': 1, '18S': 2, 'ITS': 3, 'Proteomic': 4, 'Metabolomic': 5,
-               'Metagenomic': 6, 'Multiomic': 7}
+               'Metagenomic': 6, 'Multiomic': 7, 'Metatranscriptomics': 8,
+               'Viromics': 9, 'Genomics': 10, 'Transcriptomics': 11}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_data_types(key='data_type_id')
@@ -300,7 +301,7 @@ class DBUtilTests(TestCase):
             qdb.util.retrieve_filepaths('artifact_filepath', 'artifact_id', 1,
                                         sort='Unknown')
 
-    def _common_purge_filpeaths_test(self):
+    def _common_purge_filepaths_test(self):
         # Get all the filepaths so we can test if they've been removed or not
         sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
         fps = [join(qdb.util.get_mountpoint_path_by_id(dd_id), fp)
@@ -368,7 +369,46 @@ class DBUtilTests(TestCase):
             self.assertTrue(exists(fp))
 
     def test_purge_filepaths(self):
-        self._common_purge_filpeaths_test()
+        self._common_purge_filepaths_test()
+
+    def test_purge_files_from_filesystem(self):
+        info = {"timeseries_type_id": 1, "metadata_complete": True,
+                "mixs_compliant": True, "number_samples_collected": 25,
+                "number_samples_promised": 28, "study_alias": "TST",
+                "study_description": "Some description of the study goes here",
+                "study_abstract": "Some abstract goes here",
+                "emp_person_id": qdb.study.StudyPerson(1),
+                "principal_investigator_id": qdb.study.StudyPerson(1),
+                "lab_person_id": qdb.study.StudyPerson(1)}
+
+        new_study = qdb.study.Study.create(
+            qdb.user.User('shared@foo.bar'),
+            'test_purge_files_from_filesystem', info=info)
+
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            metadata, new_study)
+        fps = [fp for _, fp in st.get_filepaths()]
+        qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
+        qdb.study.Study.delete(new_study.id)
+
+        for fp in fps:
+            self.assertTrue(exists(fp))
+
+        qdb.util.purge_files_from_filesystem(True)
+
+        for fp in fps:
+            self.assertFalse(exists(fp))
 
     def test_empty_trash_upload_folder(self):
         # creating file to delete so we know it actually works
@@ -395,7 +435,7 @@ class DBUtilTests(TestCase):
         ref = qdb.reference.Reference.create("null_db", "13_2", seqs_fp)
         self.files_to_remove.append(ref.sequence_fp)
 
-        self._common_purge_filpeaths_test()
+        self._common_purge_filepaths_test()
 
     def test_move_filepaths_to_upload_folder(self):
         # setting up test, done here as this is the only test that uses these
@@ -740,6 +780,25 @@ class DBUtilTests(TestCase):
         exp = [["biom", True], ["directory", False], ["log", False]]
         self.assertItemsEqual(obs, exp)
 
+    def test_generate_analysis_list(self):
+        self.assertEqual(qdb.util.generate_analysis_list([]), [])
+
+        obs = qdb.util.generate_analysis_list([1, 2, 3, 5])
+        exp = [{'mapping_files': [
+                (16, qdb.util.get_filepath_information(16)['fullpath'])],
+                'description': 'A test analysis', 'artifacts': [9], 'name':
+                'SomeAnalysis', 'analysis_id': 1, 'visibility': 'private'},
+               {'mapping_files': [], 'description': 'Another test analysis',
+                'artifacts': [], 'name': 'SomeSecondAnalysis',
+                'analysis_id': 2, 'visibility': 'private'}]
+        # removing timestamp for testing
+        for i in range(len(obs)):
+            del obs[i]['timestamp']
+        self.assertEqual(obs, exp)
+
+        self.assertEqual(
+            qdb.util.generate_analysis_list([1, 2, 3, 5], True), [])
+
 
 @qiita_test_checker()
 class UtilTests(TestCase):
@@ -927,7 +986,7 @@ class UtilTests(TestCase):
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
              'target_subfragment': ['V4'], 'artifact_id': 4,
              'algorithm': (
-                'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults'),
+                'Pick closed-reference OTUs | Split libraries FASTQ'),
              'data_type': '18S', 'prep_samples': 27,
              'parameters': {
                 'reference': '1', 'similarity': '0.97',
@@ -940,6 +999,45 @@ class UtilTests(TestCase):
              'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
              'prep_samples': 0, 'parameters': {}, 'name': 'noname'}]
         self.assertItemsEqual(obs, exp)
+
+        # now let's test that the order given by the commands actually give the
+        # correct results
+        with qdb.sql_connection.TRN:
+            # setting up database changes for just checking commands
+            qdb.sql_connection.TRN.add(
+                """UPDATE qiita.command_parameter SET check_biom_merge = True
+                   WHERE parameter_name = 'reference'""")
+            qdb.sql_connection.TRN.execute()
+
+            # testing that it works as expected
+            obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
+            # not testing timestamp
+            for i in range(len(obs)):
+                del obs[i]['timestamp']
+            exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1) '
+                                   '| Split libraries FASTQ')
+            self.assertItemsEqual(obs, exp)
+
+            # setting up database changes for also command output
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.command_output SET check_biom_merge = True")
+            qdb.sql_connection.TRN.execute()
+            obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
+            # not testing timestamp
+            for i in range(len(obs)):
+                del obs[i]['timestamp']
+            exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
+                                   'BIOM: 1_study_1001_closed_reference_'
+                                   'otu_table.biom) | Split libraries FASTQ')
+            self.assertItemsEqual(obs, exp)
+
+            # returning database as it was
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.command_output SET check_biom_merge = False")
+            qdb.sql_connection.TRN.add(
+                """UPDATE qiita.command_parameter SET check_biom_merge = False
+                   WHERE parameter_name = 'reference'""")
+            qdb.sql_connection.TRN.execute()
 
 
 class TestFilePathOpening(TestCase):

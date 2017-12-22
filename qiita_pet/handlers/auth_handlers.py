@@ -26,7 +26,7 @@ class AuthCreateHandler(BaseHandler):
         try:
             error_message = self.get_argument("error")
         # Tornado can raise an Exception directly, not a defined type
-        except:
+        except Exception:
             error_message = ""
         self.render("create_user.html", error=error_message)
 
@@ -60,7 +60,7 @@ class AuthCreateHandler(BaseHandler):
                            "%s/static/qiita_data_terms_of_use.html"
                            % (url, info['user_verify_code'],
                               url_escape(username), url))
-            except:
+            except Exception:
                 msg = ("Unable to send verification email. Please contact the "
                        "qiita developers at <a href='mailto:qiita-help"
                        "@gmail.com'>qiita-help@gmail.com</a>")

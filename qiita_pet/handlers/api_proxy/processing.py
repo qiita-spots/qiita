@@ -234,9 +234,91 @@ def job_ajax_get_req(job_id):
          'job_parameters': dict of {str: str}}
     """
     job = ProcessingJob(job_id)
+    cmd = job.command
+    sw = cmd.software
+    job_status = job.status
+    job_error = job.log.msg if job.log is not None else None
     return {'status': 'success',
             'message': '',
             'job_id': job.id,
-            'job_status': job.status,
+            'job_status': job_status,
             'job_step': job.step,
-            'job_parameters': job.parameters.values}
+            'job_parameters': job.parameters.values,
+            'job_error': job_error,
+            'command': cmd.name,
+            'command_description': cmd.description,
+            'software': sw.name,
+            'software_version': sw.version}
+
+
+def job_ajax_patch_req(req_op, req_path, req_value=None, req_from=None):
+    """Patches a job
+
+    Parameters
+    ----------
+    req_op : str
+        The operation to perform on the job
+    req_path : str
+        Path parameter with the job to patch
+    req_value : str, optional
+        The value that needs to be modified
+    req_from : str, optional
+        The original path of the element
+
+    Returns
+    -------
+    dict of {str: str}
+        A dictionary of the form: {'status': str, 'message': str} in which
+        status is the status of the request ('error' or 'success') and message
+        is a human readable string with the error message in case that status
+        is 'error'.
+    """
+    if req_op == 'remove':
+        req_path = [v for v in req_path.split('/') if v]
+        if len(req_path) != 1:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter: missing job id'}
+
+        # We have ensured that we only have one element on req_path
+        job_id = req_path[0]
+        try:
+            job = ProcessingJob(job_id)
+        except QiitaDBUnknownIDError as e:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter: '
+                               '%s is not a recognized job id' % job_id}
+        except Exception as e:
+            e = str(e)
+            if "invalid input syntax for uuid" in e:
+                return {'status': 'error',
+                        'message': 'Incorrect path parameter: '
+                                   '%s is not a recognized job id' % job_id}
+            else:
+                return {'status': 'error',
+                        'message': 'An error occured while accessing the '
+                                   'job: %s' % e}
+
+        job_status = job.status
+
+        if job_status == 'in_construction':
+            # A job that is in construction is in a workflow. Use the methods
+            # defined for workflows to keep everything consistent. This message
+            # should never be presented to the user, but rather to the
+            # developer if it makes a mistake during changes in the interface
+            return {'status': 'error',
+                    'message': "Can't delete job %s. It is 'in_construction' "
+                               "status. Please use /study/process/workflow/"
+                               % job_id}
+        elif job_status == 'error':
+            # When the job is in error status, we just need to hide it
+            job.hide()
+            return {'status': 'success', 'message': ''}
+        else:
+            # In any other state, we currently fail. Adding the else here
+            # because it can be useful to have it for fixing issue #2307
+            return {'status': 'error',
+                    'message': 'Only jobs in "error" status can be deleted.'}
+    else:
+        return {'status': 'error',
+                'message': 'Operation "%s" not supported. Current supported '
+                           'operations: remove' % req_op}

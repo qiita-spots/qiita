@@ -31,11 +31,12 @@
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery-ui.theme.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap-theme.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap-toggle.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/chosen.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/css/style.css" type="text/css">
-    <link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.min.css" type="text/css">
-    <link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis-network.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/vis-network.min.css" type="text/css">
     {% if portal_styling.custom_css %}
     <style type="text/css">
       {% raw portal_styling.custom_css %}
@@ -44,11 +45,14 @@
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery-2.1.0.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery-ui.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/bootstrap.min.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/bootstrap-toggle.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/chosen.jquery.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.min.js" type="text/javascript"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/vue.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/js/qiita.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.min.js"></script>
+    <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/networkVue.js"></script>
+    <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sampleTemplateVue.js"></script>
 
     <link rel="shortcut icon" href="{% raw qiita_config.portal_dir %}/static/img/favicon.ico">
 
@@ -60,6 +64,19 @@
       $(window).load(function () {
         $('body').css('padding-top', $('#navigation-bar').height()+10);
       });
+
+      function updateSelectedSamplesMenu (callback) {
+        $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
+          $("#dflt-study-count").text(result.studies);
+          $("#dflt-pd-count").text(result.processed_data);
+          $("#dflt-samp-count").text(result.samples);
+
+          if (callback !== undefined) {
+            callback();
+          }
+        });
+      }
+
 
       /**
        *
@@ -122,91 +139,6 @@
         }
       }
 
-      /*
-       * Remove a job from the workflow
-       *
-       * @param job_id str The id of the job to be removed
-       *
-       * This function executes an AJAX call to remove the given job from the
-       * current workflow and updates the graph accordingly
-       *
-       */
-      function remove_job(job_id, workflow_id = undefined) {
-        var update_graph = false;
-        if (workflow_id === undefined) {
-          workflow_id = $("#graph-network-div").attr("data-wf-id");
-          update_graph = true;
-        }
-        if(confirm("Are you sure you want to delete the job " + job_id + "? All jobs depending on this job will also be removed.")) {
-          $.ajax({
-            url: '{% raw qiita_config.portal_dir %}/study/process/workflow/',
-            type: 'PATCH',
-            data: {'op': 'remove', 'path': '/' + workflow_id + '/' + job_id},
-            success: function(data) {
-              if(data.status == 'error') {
-                bootstrapAlert(data.message, "danger");
-              }
-              else {
-                if (update_graph) {
-                  remove_job_node_from_graph(job_id);
-                  var job_count = nodes.get({filter: function(item) {
-                    return item.group == "job";
-                  }}).length;
-                  $("#graph-network-div").attr("data-wf-job-count", job_count);
-                  if (job_count == 0) {
-                    $('#run-btn').prop('disabled', true);
-                  }
-                  $("#processing-info-div").empty();
-                } else {
-                  processing_jobs_vue.update_processing_job_data();
-                  bootstrapAlert("Job deleted", "success", 10000);
-                }
-              }
-            }
-          });
-        }
-      }
-
-      /*
-       * Remove a job node from the network visualization
-       *
-       * @param job_id str The id of the job
-       *
-       * This function removes the given job and its children from the
-       * network visualization
-       *
-       */
-      function remove_job_node_from_graph(job_id) {
-        var queue = [job_id];
-        var edge_list = edges.get();
-        var current;
-        var edge;
-        while(queue.length !== 0) {
-          current = queue.pop();
-          for(var i in edge_list) {
-            edge = edge_list[i];
-            if(edge.from == current) {
-              if($.inArray(edge.to, queue) == -1) {
-                queue.push(edge.to);
-              }
-              edges.remove(edge.id);
-            }
-          }
-          nodes.remove(current);
-        }
-        var edges_to_remove = edges.get(
-          {filter: function(item) {
-            return item.to == job_id;
-          }});
-        var edge_ids = [];
-        $(edges_to_remove).each(function(i){
-          edge_ids.push(edges_to_remove[i].id);
-        });
-
-        edges.remove(edge_ids);
-        processing_network.redraw();
-      }
-
       $(document).ready(function() {
         $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
             if(parseInt(result.studies) > 0) {
@@ -215,11 +147,7 @@
         });
         // Load default analysis summary data when displayed in menu
         $("#dflt-sel-info").mouseover(function() {
-          $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
-            $("#dflt-study-count").text(result.studies);
-            $("#dflt-pd-count").text(result.processed_data);
-            $("#dflt-samp-count").text(result.samples);
-          });
+          updateSelectedSamplesMenu();
         });
 
         $("#analysis-drop-down").mouseover(function() {
@@ -470,6 +398,8 @@
                 {% set unread =  len(current_user.unread_messages) %}
                 <a href="{% raw qiita_config.portal_dir %}/user/messages/"><span class="glyphicon glyphicon-envelope"></span> {% if unread > 0 %}<span style="color:red">({{unread}})</span>{% end %}</a>
                 <ul class="dropdown-menu info-menu" style="padding: 5px">
+                  <li class="dropdown-header"><b>INBOX</b></li>
+                  <li role="separator" class="divider"></li>
                 {% if user_messages %}
                   {% for _, um, ts, read, _ in user_messages %}
                     <li class="truncated" {% if read %}style="color:gray;"{% end %}>{%raw um %}<br /><span style="font-size:60%;{% if read %}color:gray;{% end %}">{{ts}}</span></li>
@@ -481,14 +411,19 @@
               </li>
               <li class="dropdown">
                 <a href="{% raw qiita_config.portal_dir %}/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span></a>
-                <ul class="dropdown-menu" style="padding: 5px">
-                  <li> <span id="dflt-study-count"></span> Studies</li>
+                <ul class="dropdown-menu" style="padding: 5px" id='selected-samples-dropdown-menu'>
+                  <li class="dropdown-header"><b>SELECTED SAMPLES</b></li>
+                  <li role="separator" class="divider"></li>
+                  <li><span id="dflt-study-count"></span> Studies</li>
                   <li><span id="dflt-pd-count"></span> Processed Data</li>
                   <li><span id="dflt-samp-count"></span> Samples</li>
                 </ul>
               </li>
               <li class="dropdown">
                 <a href="#" data-toggle='modal' data-target='#qiita-processing' id="dflt-sel-info"><span class="glyphicon glyphicon-tasks"></span></a>
+                <ul class="dropdown-menu" style="padding: 5px">
+                  <li class="dropdown-header"><b>JOBS</b></li>
+                </ul>
               </li>
             </ul>
             <!-- otherwise show the login form -->
