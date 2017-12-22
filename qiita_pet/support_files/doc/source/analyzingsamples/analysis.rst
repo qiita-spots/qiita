@@ -135,91 +135,67 @@ Processing Workflow Page: Commands
      * Detects a wider range of biological changes compared to unweighted and weighted UniFrac
     * **Hamming distance** [34](../references.rst): Measures Hamming distance
      * Minimum number of substitutions required to change one group to the other
-    * **Jaccard similarity index**: Calculates Jaccard similarity index
+    * **Jaccard similarity index** [41](../references.rst): Calculates Jaccard similarity index
      * Fraction of unique features, regardless of abundance
-     * **Citation**: *Jaccard, P. (1908). “Nouvellesrecherches sur la distribution florale.” Bull. Soc. V and. Sci. Nat., (44):223-270.*
-    * **Kulczynski dissimilarity index**: Measures Kulczynski dissimilarity index
+    * **Kulczynski dissimilarity index** [50](../references.rst): Measures Kulczynski dissimilarity index
      * Describes the dissimilarity between two samples
-     * **Citation**: *Kulcynski, S. (1927). “Die Pflanzenassoziationen der Pieninen. Bulletin International de l’Academie Polonaise des Sciences et des Lettres”. Classe des Sciences Mathematiques et Naturelles. 57-203.*
-    * **Mahalanobis distance**: Calculates Mahalanobis distance
+    * **Mahalanobis distance** [60](../references.rst): Calculates Mahalanobis distance
      * How many standard deviations one sample is away from the mean
      * Unitless and scale-invariant
      * Takes into account the correlations of the data set
-     * **Citation**: *Mahalanobis, Chandra, P. (1936). "On the generalised distance in statistics". Proceedings of the National Institute of Sciences of India. 2 (1): 49–55.*
-    * **Matching components**: Measures Matching components
+    * **Matching components** [42](../references.rst): Measures Matching components
      * Compares indices under all possible situations
-     * **Citation**: *Janson, S., and Vegelius, J. (1981). “Measures of ecological association”. Oecologia. (49): 371–376.*
-    * **Rogers-tanimoto distance**: Measures Rogers-Tanimoto distance
+    * **Rogers-tanimoto distance** [90](../references.rst): Measures Rogers-Tanimoto distance
      * Allows the possibility of two samples, which are quite different from each other, to both be similar to a third
-     * **Citation**: *Tanimoto, T. (1958). "An Elementary Mathematical theory of Classification and Prediction". New York: Internal IBM Technical Report.*
-    * **Russel-Rao coefficient**: Calculates Russell-Rao coefficients
+    * **Russel-Rao coefficient** [81](../references.rst): Calculates Russell-Rao coefficients
      * Equal weight is given to matches and non-matches
-     * **Citation**: *Russell, P.F. and Rao, T.R. (1940). “On habitat and association of species of anopheline larvae in south-eastern Madras”. J. Malaria Inst. India. (3): 153-178.*
-    * **Sokal-Michener coefficient**: Measures Sokal-Michener coefficient
+    * **Sokal-Michener coefficient** [85](../references.rst): Measures Sokal-Michener coefficient
      * Proportion of matches between samples
-     * **Citation**: *Sokal, R.R. and Michener, C.D. (1958). “A statistical method for evaluating systematic relationships”. Univ. Kans. Sci. Bull. (38) 1409-1438.*
-    * **Sokal-Sneath Index**: Calculates Sokal-Sneath index
+    * **Sokal-Sneath Index** [86](../references.rst): Calculates Sokal-Sneath index
      * Measure of species turnover
-     * **Citation**: *Sokal, R.R. and Sneath, P.H.A. (1963). “Principles of Numerical Taxonomy”. W. H. Freeman, San Francisco, California.*
-    * **Species-by-species Euclidean**: Measures Species-by-species Euclidean
+    * **Species-by-species Euclidean** [53](../references.rst): Measures Species-by-species Euclidean
      * Standardized Euclidean distance between two groups
      * Each coordinate difference between observations is scaled by dividing by the corresponding element of the standard deviation
-     * **Citation**: *Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.*
-    * **Squared Euclidean**: Measures squared Euclidean distance
+    * **Squared Euclidean** [53](../references.rst): Measures squared Euclidean distance
      * Place progressively greater weight on samples that are farther apart
-     * **Citation**: *Legendre, P. and Caceres, M. (2013). “Beta diversity as the variance of community data: dissimilarity coefficients and partitioning.” Ecology Letters. 16(8): 951-963.*
-    * **Unweighted unifrac**: Measures unweighted UniFrac
+    * **Unweighted unifrac** [58](../references.rst): Measures unweighted UniFrac
      * Measures the fraction of unique branch length
-     * **Citation**: *Lozupone, C. and Knight, R. (2005). "UniFrac: a new phylogenetic method for comparing microbial communities." Applied and environmental microbiology 71 (12): 8228-8235.*
-    * **Weighted Minkowski metric**: Measures Weighted Minkowski metric
+    * **Weighted Minkowski metric** [13](../references.rst): Measures Weighted Minkowski metric
      * Allows the use of the k-means-type paradigm to cluster large data sets
-     * **Citation**: *Chan, Y., Ching, W.K., Ng, M.K., Huang, J.Z. (2004). “An optimization algorithm for clustering using weighted dissimilarity measures”. Pattern Recognition. 37(5): 943-952.*
-    * **Weighted normalized UniFrac**: Measures Weighted normalized UniFrac
+    * **Weighted normalized UniFrac** [57](../references.rst): Measures Weighted normalized UniFrac
      * Takes into account abundance
      * Normalization adjusts for varying root-to-tip distances.
-    * **Citation**: *Lozupone, C. A., Hamady, M., Kelley, S. T., Knight, R. (2007). "Quantitative and qualitative beta diversity measures lead to different insights into factors that structure microbial communities". Applied and Environmental Microbiology. 73(5): 1576–85.*
-   * **Weighted unnormalized UniFrac**: Measures Weighted unnormalized UniFrac
+   * **Weighted unnormalized UniFrac** [57](../references.rst): Measures Weighted unnormalized UniFrac
     * Takes into account abundance
     * *Doesn't correct for unequal sampling effort or different evolutionary rates between taxa*
-    * **Citation**: *Lozupone, C. A., Hamady, M., Kelley, S. T., Knight, R. (2007). "Quantitative and qualitative beta diversity measures lead to different insights into factors that structure microbial communities". Applied and Environmental Microbiology. 73(5): 1576–85.*
-   * **Yule index**: Measures Yule index
+   * **Yule index** [28](../references.rst): Measures Yule index
     * Measures biodiversity
     * Determined by the diversity of species and the proportions between the abundance of those species.
-    * **Citation**: *Fisher, R.A., Corbert, A.S., Williams, C.B. (1943). “The Relationship Between the Number of Species and the Number of Individuals in a Random Sample of an Animal Population”. J. Animal Ecol. (12): 42-58.*
   * **Number of jobs**: Number of workers to use
   * **Phylogenetic tree** (required for some beta diversities, ie. UniFrac): Phylogenetic tree to be used with beta analyses (only include when necessary ie. UniFrac)
    * Currently only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
 * **Commands from Alpha Diversity Data**
- * **Alpha Correlation**: Determines if the numeric sample metadata category is correlated with alpha diversity
+ * **Alpha Correlation** [80](../references.rst): Determines if the numeric sample metadata category is correlated with alpha diversity
   * **Correlation Method** (required): Correction test being applied
-   * **Spearman**: Measures if there is a linear relationship between 2 variables
-    * **Citation**: *Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.*
-   * **Pearson**: Measures how strong the linear relationship is between 2 variables
-    * **Citation**: *Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.*
+   * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
+   * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
   * **Alpha Vectors** (required): Vector of alpha diversity values by sample
-  * **Alpha Correlation Citation**: *Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.*
 * **Commands from Beta Diversity Data**
- * **Perform Principal Coordinate Analysis** (PCoA): Visualizes the similarities and differences between samples using Emperor Plots
+ * **Perform Principal Coordinate Analysis (PCoA)** [71](../references.rst): Visualizes the similarities and differences between samples using Emperor Plots [95](../references.rst)
   * **Distance matrix** (required): Distance matrix on which the PCoA should be computed
-  * **PCoA Plot Citation**: *Pearson, K. (1901). "On Lines and Planes of Closest Fit to Systems of Points in Space" Philosophical Magazine. 2 (11): 559–572.*
-  * **Emperor Plot Citation**: *Vazquez-Baeza, Y., Pirrung, M., Gonzalez, A., Knight, R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.*
  * **Beta Group Significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
   * **Distance matrix** (required): Matrix of distances between pairs of samples
   * **Comparison Type** (required): Perform or not perform pairwise tests between all pairs of groups in addition to the test across all groups
   * **Metadata category** (required): Category from metadata file or artifact viewable as metadata
   * **Method** (required): Correlation test being applied
-   * **Anosim**:  Describes the strength and significance that a category has in determining the distances between points and can accept either categorical or continuous variables in the metadata mapping file
-    * **Citation**: *Clarke, K.R. (1993). "Non-parametric multivariate analyses of changes in community structure". Austral Ecology. 18 (1): 117–143.*
-   * **Permanova**: Describes the strength and significance that a category has in determining the distances between points and can accept categorical variables
-    * **Citation**: *Anderson, M.J. (2001). "A new method for non-parametric multivariate analysis of variance". Austral Ecology. 26 (1): 32–46*
+   * **Anosim** [20](../references.rst):  Describes the strength and significance that a category has in determining the distances between points and can accept either categorical or continuous variables in the metadata mapping file
+   * **Permanova** [4](../references.rst): Describes the strength and significance that a category has in determining the distances between points and can accept categorical variables
   * **Number of permutations** (required): Number of permutations to be run when computing p-values 
  * **Beta Correlation**: Identifies a correlation between the distance matrix and a numeric sample metadata category
   * **Distance-matrix** (required): Matrix of distances between pairs of samples
   * **Correlation method** (required): Correlation test being applied
-   * **Spearman**: Measures if there is a linear relationship between 2 variables
-    * **Citation**: *Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.*
-   * **Pearson**: Measures how strong the linear relationship is between 2 variables
-    * **Citation**: *Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.*
+   * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
+   * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
   * **Metadata-category** (required): Category from metadata file or artifact viewable as metadata
   * **Number of permutations** (required): Number of permutations to be run when computing p-values
 Files Network Page: Results
@@ -234,9 +210,8 @@ Files Network Page: Results
 * **Alpha Diversity Results** 
  * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
  * **Category**: Choose the metadata category you would like to analyze
- * **Kruskal-Wallis**: Result of Kruskal-Wallis tests
+ * **Kruskal-Wallis** [49](../references.rst): Result of Kruskal-Wallis tests
   * Says if differences are statistically significant
-  * **Citation**: *Kruskal, W.H. and Wallis, W.A. (1952). "Use of ranks in one-criterion variance analysis". Journal of the American Statistical Association. 47 (260): 583–621.*
 * **Alpha Correlation**:
  * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
  * Gives the Spearman or Pearson result (rho and p-value)
@@ -257,8 +232,6 @@ Files Network Page: Results
  * Gives the Permanova or Anosim result (psuedo-F and p-value)
 * **Beta Correlation**:
  * Gives the Spearman or Pearson result (rho and p-value)
-  * **Spearman**: Measures if there is a linear relationship between 2 variables
-   * **Citation**: *Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.*
-  * **Pearson**: Measures how strong the linear relationship is between 2 variables
-   * **Citation**: *Pearson, K. (1895). "Notes on regression and inheritance in the case of two parents". Proceedings of the Royal Society of London. (58): 240–242.*
+  * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
+  * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
  * Gives scatterplot of the distance matrix on the y and the variable being tested on the x-axis
