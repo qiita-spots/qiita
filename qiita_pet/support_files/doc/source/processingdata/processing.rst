@@ -9,6 +9,8 @@ Files Network Within Data Type
  * **Delete**: Delete the artifact/data from the files network
  * **Available Files**: FASTQ files that have been uploaded to this study can be downloaded here
  * **Generate Summary**: Creates a summary for the data attached to the artifact chosen
+ 
+*The commands run on this page use the QIIME [64](..//references.rst) bioinformatics platform.
 
 Workflow Page
 -------------
@@ -52,8 +54,8 @@ FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
    * **Per-sample FASTQ defaults** (auto detect): Error detection for the FASTQ from 1 sample
    * **Per-sample FASTQs; Phred offset: 33** [26](..//references.rst): Error detection for the FASTQ from 1 sample, uses Phred offset: 33 for measuring quality
    * **Per-sample FASTQs; Phred offset: 64** [26](..//references.rst): Error detection for the FASTQ from 1 sample, uses Phred offset: 64 for measuring quality
-    * *https://en.wikipedia.org/wiki/FASTQ_format*
-   * **Demultiplexing**: *https://en.wikipedia.org/wiki/Multiplexing*
+    * For informtion regarding FASTQ formats please go to the `FASTQ wikipedia page <https://en.wikipedia.org/wiki/FASTQ_format>`__.
+   * For more information regarding Demultiplexing please go to the 'Multiplexing widipedia page <https://en.wikipedia.org/wiki/Multiplexing>`__.
   * **Default Parameters Set**
    * **barcode type** (required): Type of barcode used
    * **max bad_run_length** (required): Max number of consecutive low quality base calls allowed before truncating a read
@@ -99,9 +101,8 @@ Deblurring
     * Keeps all sequences permissively aligning to any sequence
    * **Sequence trim length (-1 for no trimming)** (required): Sequence trim length
    * **Threads per sample** (required): Number of threads to use per sample
- * **Deblur 16S Only Table**: Only contains 16S deblurred sequences 
- * **Deblur Final Table**: Contains all the sequences.
-* **Deblur Citation**: *Amir, A., McDonald, D., Navas-Molina, J.A., Kopylova, E., Morton, J., Xu, Z.Z., Kightley, E.P.,  Thompson, L.R., Hyde, E.R., Gonzalez, A., Knight, R. (2017) “Deblur rapidly resolves single-nucleotide community sequence patterns.” mSystems. 2 (2) e00191-16.*
+ * **Deblur 16S Only Table** [2](..//references.rst): Only contains 16S deblurred sequences 
+ * **Deblur Final Table** [2](..//references.rst): Contains all the sequences.
 
 
 Looking for information about debluring? Please see the document here:
@@ -113,31 +114,25 @@ Looking for information about debluring? Please see the document here:
    
 Closed-Reference OTU Picking
 ============================
-* **Pick Closed-Reference OTUs**: Removes sequences that do not match those found in a database
+* **Pick Closed-Reference OTUs** [19](..//references.rst): Removes sequences that do not match those found in a database
  * **Input data** (required): Data being close referenced 
  * **Parameter Set** (required): Chooses the database to be compared to
   * **16S OTU Picking**:
-   * **Defaults**: Compares to Greengenes 16S Database
-    * **Greengenes Citation**: *McDonald, D., Price, M. N., Goodrich, J., Nawrocki, E. P., DeSantis, T. Z., Probst, A., Anderson, G. L., Knight, R.,  Hugenholtz, P. (2012). “An improved Greengenes taxonomy with explicit ranks for ecological and evolutionary analyses of bacteria and archaea.” The ISME Journal. 6(3): 610–618.*
-   * **Defaults-parallel**: Compares to GreenGenes 16S database but performs it with multi-threading
-    * **Greengenes Citation**:  *McDonald, D., Price, M. N., Goodrich, J., Nawrocki, E. P., DeSantis, T. Z., Probst, A., Anderson, G. L., Knight, R.,  Hugenholtz, P. (2012). “An improved Greengenes taxonomy with explicit ranks for ecological and evolutionary analyses of bacteria and archaea.” The ISME Journal. 6(3): 610–618.*
+   * **Defaults**: Compares to Greengenes 16S Database [61](..//references.rst)
+   * **Defaults-parallel**: Compares to GreenGenes 16S database [61](..//references.rst) but performs it with multi-threading
   * **18S OTU Picking**:
-   * **Silva 119**: Compares to Silva 119 Database
-    * **Silve 119 Citation**: *Quast, C., Pruesse, E., Yilmaz, P., Gerken, J., Schweer, T., Yarza, P., Peplies, J., Glöckner, F. O. (2013). “The SILVA ribosomal RNA gene database project: improved data processing and web-based tools”. Nucl. Acids Res. 41 (D1): D590-D596.*
+   * **Silva 119**: Compares to Silva 119 Database [75](..//references.rst)
   * **ITS OTU Picking**:
-   * **UNITE 7**: Compares to UNITE Database
-    * **UNITE Citation**: *Abarenkov, K., Nilsson, R. H., Larsson, K., Alexander, I. J., Eberhardt, U., Erland, S., Høiland, K., Kjøller, R., Larsson, E., Pennanen, R., Sen, R., Taylor, A. F. S., Tedersoo, L., Ursing, B. M., Vrålstad, T., Liimatainen, K., Peintner, U., Kõljalg, U. (2010). “The UNITE database for molecular identification of fungi - recent updates and future perspectives”. New Phytologist. 186(2): 281-285.*
+   * **UNITE 7**: Compares to UNITE Database [1](..//references.rst)
  * **Default Parameters** (required)
-  * **Reference-seq** (required): Path to blast database (Greengenes, Silva 119, UNITE 7) as a fasta file
-  * **Reference-tax** (required): Path to corresponding taxonomy file (Greengenes, Silva 119, UNITE 7)
+  * **Reference-seq** (required): Path to blast database (Greengenes [61](..//references.rst), Silva 119 [75](..//references.rst), UNITE 7) [1](..//references.rst) as a fasta file
+  * **Reference-tax** (required): Path to corresponding taxonomy file (Greengenes [61](..//references.rst), Silva 119 [75](..//references.rst), UNITE 7 [1](..//references.rst))
   * **Similarity** (required): Sequence similarity threshold
-  * **Sortmerna coverage** (required): Minimum percent query coverage (of an alignment) to consider a hit, expressed as a fraction between 0 and 1 
-  * **Sortmerna e_value** (required): Maximum e-value when clustering (local sequence alignment tool for filtering, mapping, and OTU picking) can expect to see by chance when searching a database
-  * **Sortmerna max-pos** (required): Maximum number of positions per seed to store in the indexed database
+  * **Sortmerna coverage** [48](..//references.rst)(required): Minimum percent query coverage (of an alignment) to consider a hit, expressed as a fraction between 0 and 1 
+  * **Sortmerna e_value** [48](..//references.rst)(required): Maximum e-value when clustering (local sequence alignment tool for filtering, mapping, and OTU picking) can expect to see by chance when searching a database
+  * **Sortmerna max-pos** [48](..//references.rst)(required): Maximum number of positions per seed to store in the indexed database
   * **Threads** (required): Number of threads to use per job
-  * **SortMeRNA Citation**: *Kopylova, E., Noe, L., Touzet, H. (2012). “SortMeRNA: fast and accurate filtering of ribosomal RNAs in metatranscriptomic data”. Bioinformatics. 28 (24) 3211-7.*
- * **QIIME Citation**: *Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., McMurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., Knight, R. (2013). “Advancing Our Understanding of the Human Microbiome Using QIIME”. Methods in Enzymology. (531): 371-444*
- * **Closed Reference Citation**: *Chou, H.H., Holmes, M.H. (2001). “DNA sequence quality trimming and vector removal”. Bioinformatics. 17 (12):1093–1104.*
+
  
 Looking for information about processing data? Please see the document here:
 
