@@ -20,11 +20,10 @@ Single vs. Meta Analysis
 Processing Workflow Page: Commands
 ===================================
 * **Commands for Deblurred or Closed-Reference Data**:
- * **Rarefy features**: Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth
+ * **Rarefy features** [35](../references.rst): Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth
   *  **BIOM table** (required): Feature table containing the samples for which features should be rarefied
   *  **Parameter set**: Parameters at which the rarefication is run
   *  **Sampling depth** (required): Total frequency that each sample should be rarefied to, samples where sum of frequencies is less than sampling depth will not be included in resulting table
-  *  **Citation**: *Heck, K.L., Van Belle, G., Simberloff, D. (1975). “Explicit Calculation of the Rarefaction Diversity Measurement and the Determination of Sufficient Sample Size”. Ecology. 56(6): 1459-1461*
 * **Commands from Rarefied Data**:
  * **Filter samples by metadata**: Filters samples from an OTU table on the basis of the number of observations in that sample, or on the basis of sample metadata
   * **BIOM table** (required): Feature table containing the samples for which features should be filtered
@@ -39,19 +38,15 @@ Processing Workflow Page: Commands
  * **Calculate alpha diversity**: Measures the diversity within a sample
   * **BIOM table** (required): Feature table containing the samples for which alpha diversity should be computed
    * **Diversity metric** (required): Alpha diversity metric to be run
-    * **Abundance-based Coverage Estimator (ACE) metric**: Calculates the ACE metric
+    * **Abundance-based Coverage Estimator (ACE) metric** [15](../references.rst): Calculates the ACE metric
      * Estimates species richness using a correction factor
-     * **Citation**: *Chao, A. and Lee, S.M.. (1992). “Estimating the number of classes via sample coverage”. Journal of the American Statistical Association. (87): 210-217.*
-    * **Berger-Parker Dominance Index**: Calculates Berger-Parker dominance index
+    * **Berger-Parker Dominance Index** [8](../references.rst): Calculates Berger-Parker dominance index
      * Relative richness of the abundant species 
-     * **Citation**: *Berger, W.H. and Parker, F.L. (1970). “Diversity of planktonic Foraminifera in deep sea sediments”. Science. (168): 1345-1347.*
-    * **Brillouin’s index**: Calculates Brillouin’s index 
+    * **Brillouin’s index** [73](../references.rst): Calculates Brillouin’s index 
      * Measures the diversity of the species present
      * Use when randomness can’t be guaranteed
-     * **Citation**: *Pielou, E. C. (1975). Ecological Diversity. New York, Wiley InterScience.*
-    * **Chao1 confidence interval**: Calculates chao1 confidence interval
+    * **Chao1 confidence interval** [21](../references.rst): Calculates chao1 confidence interval
      * Confidence interval for richness estimator, Chao1
-     * **Citation**: *Colwell, R.K., Mao, C.X., Chang, J. (2004). “Interpolating, extrapolating, and comparing incidence-based species accumulation curves.” Ecology. (85), 2717-2727.*
     * **Chao1 index**: Calculates Chao1 index
      * Estimates diversity from abundant data
      * Estimates number of rare taxa missed from undersampling 
