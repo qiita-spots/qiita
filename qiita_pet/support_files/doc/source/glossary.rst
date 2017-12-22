@@ -117,53 +117,42 @@ Proteobacteria
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity, Gammaproteobacteria
 
 
-* **QIIME**
+* **QIIME** [64](../references.rst)
  * Qiime (pronounced chime) is an open-source bioinformatics pipeline that performs microbial analysis on raw DNA sequencing data in order to create comprehensible statistics and graphics for publication. It has been an ongoing project since its inception in 2010.
  * see also: Principal Coordinates Analysis, Illumina sequencing, Marker gene sequencing, Demultiplexing, Biom format, Unifrac, Alpha Diversity, Beta Diversity, DNA sequencing
  * QIIME 1.0 version website: http://qiime.org
  * QIIME 2 version website: https://docs.qiime2.org/2017.5/concepts/
  * “Official Repository for the QIIME 2 database”: https://github.com/qiime2/qiime2
 
-**Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., Mcmurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song, S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., and Knight, R. (2013). Advancing Our Understanding of the Human Microbiome Using QIIME. Methods in Enzymology Microbial Metagenomics, Metatranscriptomics, and Metaproteomics, 371-444.**
 
 * **Qiita**
  * Qitta (pronounced cheetah) is the open-source repository that enables scientists to rapidly analyze and store microbial ecology datasets. It is a bioinformatics resource that is built on the QIIME database, which is designed as a pipeline to generate publication-worthy presentations from raw sequencing data.
  * see also: QIIME, Biom format, Metadata
  * Access to QIITA source: https://github.com/biocore/qiita
  
-* **qPCR**
+* **qPCR** [74](../references.rst)
  * qPCR, also known as quantitative PCR, is a sequencing technique that detects the quantities of amplicon DNA sequences as they are being amplified. It uses DNA-binding dyes or fluorescence-reporting probes to track the concentrations of adapters and DNA sequences being replicated. In microbiome research, it is important to know the concentrations of the amplicons for proceeding sequencing tools like next-generation sequencing.
  * see also: DNA sequencing, Marker gene sequencing, Illumina sequencing, Shotgun sequencing
 
-**Polymerase Chain Reaction (PCR) - Quantitative PCR (qPCR). (2016, April 28). Retrieved from https://www.youtube.com/watch?v=YhXj5Yy4ksQ**
  
 * **Rarefraction**
  * Rarefraction is a technique that standardizes length of sequence reads and thereby the number of species measured in a sample. It is a necessary step in microbial bioinformatics because it narrows all the lengths of the raw DNA sequences to a set length; in doing so it allows for the quality of analyses to be refined and filtered and it accounts for statistical biases in the study’s procedures.
  * see also: QIIME, Principal Coordinates Analysis, OTU Picking, Demultiplexing
 
-* **Shotgun sequencing**
+* **Shotgun sequencing** [7](../references.rst), [23](../references.rst)
  * Shotgun sequencing is a DNA sequencing technique in which all the DNA molecules in a sample are sequenced. In this way, scientists can study not only the microbial communities, but also the functional genes that are present in a sample. Shotgun sequencing differs from whole genome sequencing (sometimes referred to as whole genome shotgun sequencing) because the latter analyzes the entire genome of only one isolated bacterial species in the sample. However, they use similar mechanisms in that both WGS and Shotgun sequencing uses enzymes to cut the DNA molecule into fragments that are more easily and efficiently amplified and analyzed. 
  * see also: DNA sequencing, Marker gene sequencing, Illumina sequencing, qPCR
 
-**Basics of high throughput DNA sequencing. (2017, February 11). Retrieved December 19, 2017, from https://www.youtube.com/watch?v=JD3UJYkxdQs**
 
-**Demo: Tour of the Knight Lab - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/uIYyi/demo-tour-of-the-knight-lab**
-
-* **sOTU**
+* **sOTU** [10](../references.rst), [2](../references.rst)
  * Sub-operational taxonomic unit (sOTU) is an alternative approach to identify and classify bacterial species from raw DNA sequences at a higher resolution than the traditional OTUs. The 97% confidence rate for OTU clustering dismisses the 3% of the raw DNA sequences, so sOTUs identify and group single-nucleotide variation, allowing it to have a higher resolution for taxonomic identification. Deblur and DADA2 are the bioinformatic approaches used in the Knight Lab to get sOTUs from the data. 
  * see also: OTU, QIIME, Biom format
 
-**Callahan, B.J., Mcmurdie, P.J., Rosen, M.J., Han, A.W., Johnson, A.J., and Holmes, S.P. (2016). DADA2: High-resolution sample inference from Illumina amplicon data. Nature Methods, 13(7), 581-583.**
 
-**Amir, A., McDonald, D., Navas-Molina, J.A., Kopylova, E., Morton, J.T., Xu, Z., Kightley, E.P., Thompson, L.R., Hyde, E.R., Gonzalez, A., and Knight, R. (2017). Deblur rapidly resolves singlenucleotide community sequence patterns. mSystems 2:e00191-16. https://doi.org/10.1128/mSystems.00191-16.**
-
-* **Statistical tests**
+* **Statistical tests** [45](../references.rst), [46](../references.rst)
  * In microbiome research, we use statistical tests like regression, classification, PERMANOVA, and more to validate the chance that our conclusion is wrong based off the data.
  * see also: Differential abundance and compositionality
  
-**Knights, D. (2016, February 12). Microbiome Discovery 10: Statistical testing part 1. Retrieved from https://www.youtube.com/watch?v=_uDv7LRUUsY**
-
-**Knights, D. (2016, March 04). Microbiome Discovery 11: Statistical testing part 2. Retrieved from https://www.youtube.com/watch?v=tNxfYqa5Rtc**
 
 * **Taxonomy**
  * Taxonomy is a classification system for understanding how organisms are related to each other. Scientists use phylogenetic trees as one form of visualizing taxonomy. A phylogenetic tree takes organisms grouped by phenotypic (physical) and genotypic (genetic) similarities and connects them to their common ancestor from which they diverged evolutionarily. In microbiome research, we have developed tools like Unifrac to measure the evolutionary distance of relatedness of the organisms in two different samples.	
@@ -173,10 +162,6 @@ Proteobacteria
  * Taxonomic rank is a way of grouping organisms together based on their phenotypic and genotypic similarities. This ranking system originally proposed by Carl Linnaeus consists of seven levels: Domain, Kingdom, Phylum, Class, Order, Genus, Species. Humans, for examples, are described as Eukarya, Animalia, Chordata, Mammalia, Primate, Hominidae, Homo, H. sapiens. In microbiome research, we use sequencing techniques like amplicon sequencing which amplifies the 16s rRNA gene in bacteria to identify and classify microbes into their taxonomic ranks. 
  * see also: Taxonomy, Phylogeny, Firmicutes, Proteobacteria, Gammaproteobacteria, Actinobacteria
 
-* **Unifrac**
+* **Unifrac** [57](../references.rst), [58](../references.rst)
  * Unifrac is a phylogenetic distance metric that compares multiple sample communities based on their locations to each other on the phylogenetic tree. The metric lies between a zero and a one: the former being no species are shared between the two samples and the latter being every species is shared between the two samples--meaning they are ecologically exactly the same. It measures the distance between communities as the percentage of phylogenetic branch length between the targeted communities. Unifrac is a computational tool to compare more than two species together simultaneously using multivariate statistics and nonparametric analyses.  
  * see also: Beta Diversity, Alpha Diversity, Statistical Testings, Biom format, QIIME
-
-**Lozupone, C., & Knight, R. (2005). UniFrac: a New Phylogenetic Method for Comparing Microbial Communities. Applied and Environmental Microbiology, 71(12), 8228-8235.**
-
-**Lozupone, C., Hamady, M., and Knight, R. (2006). UniFrac – An online tool for comparing microbial community diversity in a phylogenetic context. BMC bioniformatics. 7:371.**
