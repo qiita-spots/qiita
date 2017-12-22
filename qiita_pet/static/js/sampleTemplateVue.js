@@ -450,7 +450,7 @@ Vue.component('sample-template-page', {
         vm.uploadedFiles = data['uploaded_files'];
         vm.userCanEdit = data['user_can_edit'];
         vm.job = data['job'];
-        vm.downloadId = data['st_fp_id'];
+        vm.downloadId = data['download_id'];
         vm.oldFiles = data['old_files'];
         vm.numSamples = data['num_samples'];
         vm.numColumns = data['num_columns'];
