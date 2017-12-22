@@ -31,7 +31,7 @@ FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
   --------------------------------------------------
   * **Parameter Set** (required): Chooses the parameters for how to split the libraries
    * **Multiplexed FASTQ; generic 5 base pair barcodes**: Uses first 5 base pairs to identifies samples from FASTQ from multiple samples
-   * **Multiplexed FASTQ; generic 5 base pair barcodes with Phred quality threshold: 0**: Uses first 5 base pairs to identifies samples from FASTQ from multiple samples, only use samples with Phred quality score above 0
+   * **Multiplexed FASTQ; generic 5 base pair barcodes with Phred quality threshold: 0** [26](..//references.rst): Uses first 5 base pairs to identifies samples from FASTQ from multiple samples, only use samples with Phred quality score above 0
    * **Multiplexed FASTQ; generic 5 base pair reverse complement mapping file barcodes**: Uses the complementary base pairs to the last 5 base pairs in reverse order to identify samples from FASTQ from multiple samples
    * **Multiplexed FASTQ; generic 6 base pair barcodes**: Uses first 6 base pairs to identify samples from FASTQ from multiple samples
    * **Multiplexed FASTQ; generic 6 base pair reverse complement mapping file barcodes**: Uses the complementary base pairs to the last 6 base pairs in reverse order to identify samples from FASTQ from multiple samples
@@ -42,19 +42,16 @@ FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
    * **Multiplexed FASTQ; generic 11 base pair reverse complement barcodes**: Uses the complementary base pairs to the last 11 base pairs in reverse order to identify samples from FASTQ from multiple samples
    * **Multiplexed FASTQ; generic 12 base pair barcodes**: Uses first 12 base pairs to identify samples from FASTQ from multiple samples
    * **Multiplexed FASTQ; generic 12 base pair reverse complement barcodes**: Uses the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples
-   * **Multiplexed FASTQ; Golay 12 base pair barcodes**: Error correcting for the first 12 base pairs from FASTQ from multiple samples
-   * **Multiplexed FASTQ; Golay 12 base pair barcodes with Phred offset: 33**: Error correcting for the first 12 base pairs from FASTQ from multiple samples, uses Phred offset: 33 for measuring quality
-   * **Multiplexed FASTQ; Golay 12 base pair barcodes with Phred offset: 64**: Error correcting for the first 12 base pairs from FASTQ from multiple samples, uses Phred offset: 64 for measuring quality
-   * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes**: Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples
-   * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes with Phred offset: 33**: Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples, uses Phred offset: 33 for measuring quality
-   * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes with Phred offset**: 64: Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples, uses Phred offset: 64 for measuring quality
-   * **Multiplexed FASTQ; Golay 12 base pair reverse complement mapping file barcodes with reverse complement barcodes (UCSD CMI standard)**: Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples
+   * **Multiplexed FASTQ; Golay 12 base pair barcodes** [31](..//references.rst),[12](..//references.rst): Error correcting for the first 12 base pairs from FASTQ from multiple samples
+   * **Multiplexed FASTQ; Golay 12 base pair barcodes with Phred offset: 33** [12](..//references.rst), [26](..//references.rst), [31](..//references.rst): Error correcting for the first 12 base pairs from FASTQ from multiple samples, uses Phred offset: 33 for measuring quality
+   * **Multiplexed FASTQ; Golay 12 base pair barcodes with Phred offset: 64** [12](..//references.rst), [26](..//references.rst), [31](..//references.rst): Error correcting for the first 12 base pairs from FASTQ from multiple samples, uses Phred offset: 64 for measuring quality
+   * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes** [12](..//references.rst),[31](..//references.rst): Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples
+   * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes with Phred offset: 33**[12](..//references.rst), [26](..//references.rst), [31](..//references.rst): Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples, uses Phred offset: 33 for measuring quality
+   * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes with Phred offset: 64** [12](..//references.rst), [26](..//references.rst), [31](..//references.rst): Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples, uses Phred offset: 64 for measuring quality
+   * **Multiplexed FASTQ; Golay 12 base pair reverse complement mapping file barcodes with reverse complement barcodes (UCSD CMI standard)** [12](..//references.rst),[31](..//references.rst): Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples
    * **Per-sample FASTQ defaults** (auto detect): Error detection for the FASTQ from 1 sample
-   * **Per-sample FASTQs; Phred offset: 33**: Error detection for the FASTQ from 1 sample, uses Phred offset: 33 for measuring quality
-   * **Per-sample FASTQs; Phred offset: 64**: Error detection for the FASTQ from 1 sample, uses Phred offset: 64 for measuring quality
-   * **Citation for Golay Coding**: *Golay, Marcel J. E. (1949). "Notes on Digital Coding". Proc. IRE. (37): 657.*
-   * **Citation for Golay 16S**: *Caporaso, J., Lauber, C.L., Walter, W.A. Berg0Lyons, D., Huntley, J., Fierer, N., Owens, S.M., Betley, J., Fraser, L., Mauer, M., Gormley, N., Gilbert, J.A., Smith, G., Knight, R., (2012) “Ultra-high-throughput microbial community analysis on the Illumina HiSeq and MiSeq platforms”. ISME J.*
-   * **Phred Citation**: *Ewing, B., Hillier, L., Wendi, M.C., Green, P. (1998). (1998). "Base-calling of automated sequencer traces using phred. I. Accuracy assessment". Genome Research. 8 (3): 175–185.*
+   * **Per-sample FASTQs; Phred offset: 33** [26](..//references.rst): Error detection for the FASTQ from 1 sample, uses Phred offset: 33 for measuring quality
+   * **Per-sample FASTQs; Phred offset: 64** [26](..//references.rst): Error detection for the FASTQ from 1 sample, uses Phred offset: 64 for measuring quality
     * *https://en.wikipedia.org/wiki/FASTQ_format*
    * **Demultiplexing**: *https://en.wikipedia.org/wiki/Multiplexing*
   * **Default Parameters Set**
