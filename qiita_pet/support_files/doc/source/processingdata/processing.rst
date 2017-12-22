@@ -121,12 +121,12 @@ Closed-Reference OTU Picking
    * **Defaults**: Compares to Greengenes 16S Database [61](..//references.rst)
    * **Defaults-parallel**: Compares to GreenGenes 16S database [61](..//references.rst) but performs it with multi-threading
   * **18S OTU Picking**:
-   * **Silva 119**: Compares to Silva 119 Database [75](..//references.rst)
+   * **Silva 119**: Compares to Silva 119 Database [76](..//references.rst)
   * **ITS OTU Picking**:
    * **UNITE 7**: Compares to UNITE Database [1](..//references.rst)
  * **Default Parameters** (required)
-  * **Reference-seq** (required): Path to blast database (Greengenes [61](..//references.rst), Silva 119 [75](..//references.rst), UNITE 7) [1](..//references.rst) as a fasta file
-  * **Reference-tax** (required): Path to corresponding taxonomy file (Greengenes [61](..//references.rst), Silva 119 [75](..//references.rst), UNITE 7 [1](..//references.rst))
+  * **Reference-seq** (required): Path to blast database (Greengenes [61](..//references.rst), Silva 119 [76](..//references.rst), UNITE 7) [1](..//references.rst) as a fasta file
+  * **Reference-tax** (required): Path to corresponding taxonomy file (Greengenes [61](..//references.rst), Silva 119 [76](..//references.rst), UNITE 7 [1](..//references.rst))
   * **Similarity** (required): Sequence similarity threshold
   * **Sortmerna coverage** [48](..//references.rst)(required): Minimum percent query coverage (of an alignment) to consider a hit, expressed as a fraction between 0 and 1 
   * **Sortmerna e_value** [48](..//references.rst)(required): Maximum e-value when clustering (local sequence alignment tool for filtering, mapping, and OTU picking) can expect to see by chance when searching a database
