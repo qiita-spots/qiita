@@ -1,6 +1,5 @@
 Glossary
 =========
-[1](../references.rst)
 
 * **16S rRNA gene** [38](../references.rst)
  * The 16s rRNA gene is a sequence of nucleotides present only in prokaryotic DNA. It codes for the protein structure of the 30th subunit in prokaryotic ribosomes. Its sequence remains relatively the same across all bacteria, because it has been highly conserved throughout evolutionary history. However, in microbiome research, we use the hypervariable V4 region of the gene as an identification marker for classifying bacteria. Genetically identifying organisms with techniques like 16s rRNA sequencing has only developed in the last twenty years and has begun to redefine the classification system of evolutionary identity for organisms like bacteria. 
@@ -22,7 +21,7 @@ Glossary
  * An anaerobic microculture is a method to grow different anaerobic bacterial communities (organisms that either can partly or must fully live in oxygen-free environments) in isolated plates. Scientists must replace the oxygen-rich atmosphere with a mixture of other gases like hydrogen, carbon dioxide and nitrogen. Then they dilute the solution of communities so much that there is a high probability that only one bacterial cell will be placed in the microculture plates to grow. Anaerobes are abundant in the gastrointestinal tract, and growing them in separate microcultures allows for scientists to sequence the whole genomes of a single species without it competing for resources with other organisms.
  * see also: Firmicutes, Gammaproteobacteria
  
-* **Bacteroidetes** [92](../references.rst)
+* **Bacteroidetes** [93](../references.rst)
  * Bacteroidetes is a phylum of Gram-negative bacteria that includes B. fragilis and Flavobacteria. They thrive in a wide variety of places like soil, sediment, and seawater, making them well-suited for the ecosystems present in the human gut. They specialize in breaking down organic matter like proteins and carbohydrates and are able to “gain energy from otherwise refractory carbohydrate sources”(1). Microbiome research is only just beginning to understand the metabolic and ecologic impact of Bacteroidetes in the human microbiome.
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity
 
@@ -58,18 +57,18 @@ Glossary
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity
 
 
-* **Gammaproteobacteria** [99](../references.rst)
+* **Gammaproteobacteria** [100](../references.rst)
  * Gammaproteobacteria is one of the four classes of the phylum of Gram-negative proteobacteria. The phylum has a wide range of characteristics, from bacillus to cocci shaped, from chemoautotrophic to photoautotrophic, from aerobic to anaerobic, and from pathogenic to symbiotic relationships. “One feature alone, 16s rRNA sequence relationship, has been used to define the class”(1). Salmonella and E.coli are both gammaproteobacteria.
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity, 
 Proteobacteria
 
 
-* **HMP** [67](../references.rst), [91](../references.rst)
+* **HMP** [67](../references.rst), [92](../references.rst)
  * The Human Microbiome Project (HMP) is “an interdisciplinary effort funded by the NIH Common Fund” to generate “resources that would enable the comprehensive characterization of the human microbiome and analysis of its role in human health and disease” (1). The HMP set five goals under a five-year-plan back in its 2008 inception: to develop a reference set of 3,000 isolate microbial genome sequences,” to produce research that estimates “the complexity of the microbial community at each body site,” “to determine the relationship between disease and changes in the human microbiome,” to invent new technologies for microbiome research analysis and establish a database resource center, and to examine the ethical, legal and social implications of studying and applying human microbiome research(1).
  * see also: OTU, Alpha Diversity, Beta Diversity, Metadata
 
 
-* **Hypervariable region** [100](../references.rst)
+* **Hypervariable region** [101](../references.rst)
  * A hypervariable region is a location within a DNA molecule where the nucleotide sequence consists of highly repeated or substituted base pairs. The V4 region is one of nine hypervariable regions in the 16s rRNA gene of bacteria and has been used by microbiome researchers to classify species genotypically.
  * see also: 16s rRNA gene, Marker gene sequencing
 
@@ -98,7 +97,7 @@ Proteobacteria
  * Operational taxonomic unit (OTU) is a term for the current organism being studied and is the newest form of classifying bacteria evolutionarily. It serves as an alternative to the common methods of taxonomy because it groups organisms together by 16s rRNA sequence rather than their phenotypic similarities. A 97% similarity match or higher is the commonly accepted threshold for relatedness.
  * see also: sOTU, 16s rRNA gene, Taxonomy
 
-* **OTU picking** [44](../references.rst), [77](../references.rst)
+* **OTU picking** [44](../references.rst), [78](../references.rst)
  * OTU picking is a high level strategy for defining OTU clusters, or groups of bacterial organisms, and there are currently three different methods for OTU picking: de novo, closed reference, and open reference. De novo lines up input sequences and clusters OTUs based on the user-specific percentage of similarity in the compared DNA sequences; closed reference aligns input sequences with predefined clusters from a reference database. “Finally, open-reference OTU picking combines the previous protocols. First, input sequences are clustered against a reference database in parallel in a closed-reference OTU picking process. However, rather than discarding sequences that fail to match the reference, these “failures” are clustered de novo in a serial process.”(1)
  * see also: OTU, sOTU, DNA sequencing
 
@@ -108,19 +107,15 @@ Proteobacteria
  * see also: Beta Diversity, QIIME, DNA sequencing
 
 
-* **Phylogeny**
+* **Phylogeny** [33](../references.rst), [97](../references.rst)
  * Phylogeny is the study of the evolutionary histories of organisms. Phylogeny analyzes the genotypic and phenotypic characteristics to identify individuals and uses phylogenetic trees to visualize these relationships. Speciation, or where two groups of individuals developed differently into two new species, is represented by a branching stems on the diagram.
  * see also: Taxonomy, Taxonomic Rank, Unifrac
  
-**What is phylogenetics? (2016, June 08). Retrieved from https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics** 
-
-**Griffen, A.L., Beall, C.J., Campbell, J.H., Firestone, N.D., Kumar, P.S., Yang, Z.K., Podar, M., and Leys, E. J. (2011). Distinct and complex bacterial profiles in human periodontitis and health revealed by 16S pyrosequencing. The ISME Journal, 6(6): 1176-1185.**
  
-* **Proteobacteria**
+* **Proteobacteria** [75](../references.rst)
  * Proteobacteria is a phylum of Gram-negative bacteria that share similar nucleotide sequences in their genomes. The phylum is divided into five classes, each with their own distinct capabilities from intracellular pathogens, to nitrogen-converters and sulfate reducers, to scavengers. Helicobacter, Campylobacter, E.coli, and Bordetella pertussis are all proteobacteria.
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity, Gammaproteobacteria
 
-**Proteobacteria. (n.d.). Retrieved from https://courses.lumenlearning.com/microbiology/chapter/proteobacteria/**
 
 * **QIIME**
  * Qiime (pronounced chime) is an open-source bioinformatics pipeline that performs microbial analysis on raw DNA sequencing data in order to create comprehensible statistics and graphics for publication. It has been an ongoing project since its inception in 2010.
