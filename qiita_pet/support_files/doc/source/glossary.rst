@@ -2,50 +2,35 @@ Glossary
 =========
 [1](../references.rst)
 
-* **16S rRNA gene**
+* **16S rRNA gene** [38](../references.rst)
  * The 16s rRNA gene is a sequence of nucleotides present only in prokaryotic DNA. It codes for the protein structure of the 30th subunit in prokaryotic ribosomes. Its sequence remains relatively the same across all bacteria, because it has been highly conserved throughout evolutionary history. However, in microbiome research, we use the hypervariable V4 region of the gene as an identification marker for classifying bacteria. Genetically identifying organisms with techniques like 16s rRNA sequencing has only developed in the last twenty years and has begun to redefine the classification system of evolutionary identity for organisms like bacteria. 
  * see also: Amplicon, Marker gene sequencing, DNA Sequencing, Shotgun Sequencing, qPCR, Hypervariable region, Illumina Sequencing
  
-**Illumina. (2014, May 21). Illumina MiSeq, 16S rRNA Sequencing and the American Gut Project. Retrieved from https://www.youtube.com/watch?v=1uZtCMY-yEw**
- 
-* **Actinobacteria**
+* **Actinobacteria** [3](../references.rst), [5](../references.rst), [95](../references.rst)
  * Actinobacteria is a phylum of bacteria with high guanine to cytosine content and Gram positive cell walls. Many are aerobic with a few exceptions, and all actinobacteria are most famous for their fungi-like characteristics. Most produce mycelium and reproduce through sporulation like fungi; they also grow by extending their tips and branching their hyphae. Some examples are Bifidobacterium spp. and Streptomyces.
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity
 
-**Barka, E.A., Vatsa, P., Sanchez, L., Gaveau-Vaillant, N., Jacquard, C., Klenk, H-P., Clément, C., Ouhdouch, Y., and van Wezel, G.P. (2016). Taxonomy, physiology, and natural products of Actinobacteria. Microbiol Mol Biol Rev 80:1–43.** 
-
-**An Introduction to the Actinobacteria. (2007). Microbiology today, 34(2).**
-
-**Ventura, M., Canchaya, C., Tauch, A., Chandra, G., Fitzgerald, G.F., Chater, K.F., and Sinderen, D.V. (2007). Genomics of Actinobacteria: Tracing the Evolutionary History of an Ancient Phylum. Microbiology and Molecular Biology Reviews, 71(3): 495-548.**
-
-* **Alpha Diversity**
+* **Alpha Diversity** [6](../references.rst)
  * Alpha diversity is a measurement of a bacterial community sample that determines the richness and evenness within that community. In other words, it measures how much of each bacterial species is in the community, and how equally distributed those bacterial organism counts are among each other in the sample. Higher alpha diversity, meaning higher richness and evenness, is associated with healthy ecosystems and communities because more functions can be performed and easier adaptations to the environment are possible. Statistical methods like Shannon and Pielou are used to calculate alpha diversity. For example, alpha diversity of the fauna at UCSD measures how much of each plant exists on campus and that count compares with the other plant numbers at UCSD.
  * see also: Beta Diversity, QIIME
-
-**Basics of alpha-diversity with fuzzy microbe demo - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/j5bSx/basics-of-alpha-diversity-with-fuzzy-microbe-demo**
 
 * **Amplicon**
  * An amplicon is a DNA sequence produced from natural or artificial replication and can be used to identify individuals genetically. Amplification sequencing methods like polymerase chain reaction (PCR) and next-generation sequencing (also referred to as next-gen sequencing) help microbiome researchers profile microbial communities in cost-effective and time-efficient ways.
  * see also: Marker gene sequencing 
  
-* **Anaerobic microculture**
+* **Anaerobic microculture** [23](../references.rst)
  * An anaerobic microculture is a method to grow different anaerobic bacterial communities (organisms that either can partly or must fully live in oxygen-free environments) in isolated plates. Scientists must replace the oxygen-rich atmosphere with a mixture of other gases like hydrogen, carbon dioxide and nitrogen. Then they dilute the solution of communities so much that there is a high probability that only one bacterial cell will be placed in the microculture plates to grow. Anaerobes are abundant in the gastrointestinal tract, and growing them in separate microcultures allows for scientists to sequence the whole genomes of a single species without it competing for resources with other organisms.
  * see also: Firmicutes, Gammaproteobacteria
-
-**Demo: Tour of the Knight Lab - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/uIYyi/demo-tour-of-the-knight-lab**
-
  
-* **Bacteroidetes**
+* **Bacteroidetes** [92](../references.rst)
  * Bacteroidetes is a phylum of Gram-negative bacteria that includes B. fragilis and Flavobacteria. They thrive in a wide variety of places like soil, sediment, and seawater, making them well-suited for the ecosystems present in the human gut. They specialize in breaking down organic matter like proteins and carbohydrates and are able to “gain energy from otherwise refractory carbohydrate sources”(1). Microbiome research is only just beginning to understand the metabolic and ecologic impact of Bacteroidetes in the human microbiome.
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity
 
-**Thomas, F., Hehemann, J., Rebuffet, E., Czjzek, M., & Michel, G. (2011). Environmental and Gut Bacteroidetes: The Food Connection. Frontiers in Microbiology, 2.**
 
-* **Beta Diversity**
+* **Beta Diversity** [9](../references.rst)
  * Beta diversity is a measurement that compares the species diversity between two community samples by identifying the differences and similarities in the species of those two communities. Lower beta diversity means there are lower numbers of shared organisms between the two communities; therefore, they are both environmentally different. For example, beta diversity of the fauna at UCSD measures the species of fauna on campus and compares them to the species at San Diego City College.
  * see also: Alpha Diversity, Principal Coordinates Analysis, Unifrac, QIIME
  
-**Beta-diversity, and visualizing differences - University of Colorado Boulder, University of Colorado System, University of California, San Diego. (n.d.). Retrieved from https://www.coursera.org/learn/microbiome/lecture/NOo6W/beta-diversity-and-visualizing-differences**
 
 * **Biom format**
  * Biom format is a table that records the counts of OTUs for each bacteria in each different sample. A biom table can be created using QIIME and pandas, and it is an important component of distance matrix measurements. 
@@ -53,37 +38,25 @@ Glossary
  * GitHub Biocore|Biom Format: https://github.com/biocore/biom-format
  * Biom format official website: http://biom-format.org
 
-* **DNA Sequencing**
+* **DNA Sequencing** [65](../references.rst)
  * DNA sequencing is the process of determining the order of nucleotides within a DNA molecule. Methods originate in Sanger sequencing, which uses PCR and gel electrophoresis to analyze the target DNA, but this approach is only able to do short length reads. Microbiome research has turned to next generation sequencing, which is an umbrella term for different techniques like whole genome sequencing and pyrosequencing, to analyze longer reads for a shorter amount of time at a relatively lower cost. 
  * see also: Shotgun sequencing, Illumina sequencing, Amplicon, Marker Gene Sequencing
 
-**Next Generation Sequencing (NGS) - An Introduction. (2015, June 22). Retrieved from https://www.youtube.com/watch?v=jFCD8Q6qSTM**
 
-* **Demultiplexing**
+* **Demultiplexing** [64](../references.rst)
  * Demultiplexing is a process in which the barcodes and primer sequences on a DNA fragment are removed so that the final result matches the amplified 16s rRNA gene. Barcodes are short DNA sequences unique to each sample. QIIME has demultiplexing tools that error correct the raw sequencing data back to the desired 16s rRNA gene.
  * see also: QIIME, 16s rRNA gene
 
-**Navas-Molina, J.A., Peralta-Sánchez, J.M., González, A., Mcmurdie, P.J., Vázquez-Baeza, Y., Xu, Z., Ursell, L.K., Lauber, C., Zhou, H., Song, S.J., Huntley, J., Ackermann, G.L., Berg-Lyons, D., Holmes, S., Caporaso, J.G., and Knight, R. (2013). Advancing Our Understanding of the Human Microbiome Using QIIME. Methods in Enzymology Microbial Metagenomics, Metatranscriptomics, and Metaproteomics, 371-444.**
 
-* **Differential abundance and compositionality**
+* **Differential abundance and compositionality** [47](../references.rst), [63](../references.rst), [96](../references.rst)
  * Differential abundance testing is a statistical testing method that determines the abundances of specific bacteria between two ecosystems. Compositionality is a statistical testing method that compares the proportions of species’ relative abundances in a sample, rather than the sample’s absolute abundances that differential abundance testing measures.
  * see also: Statistical Testing, Alpha Diversity
 
-**Knights, D. (2016, April 01). Microbiome Discovery 19: Compositionality. Retrieved from https://www.youtube.com/watch?v=X60nFYpLWRs**
-
-**Weiss, S., Xu, Z. Z., Peddada, S., Amir, A., Bittinger, K., Gonzalez, A., Lozupone, C., Zaneveld, J.R., Vazquez-Baeza, Y., Birmingham, A., Hyde, E.R., and Knight, R. (2017). Normalization and microbial differential abundance strategies depend upon data characteristics. Microbiome, 5(1).**
-
-**Morton, J.T., Sanders, J., Quinn, R.A., Mcdonald, D., Gonzalez, A., Vázquez-Baeza, Y., Navas-Molina, J.A., Song, J.S., Metcalf, J.L., Hyde, E.R., Lladser, M., Dorrestein, P.C., and Knight, R. (2017). Balance Trees Reveal Microbial Niche Differentiation. MSystems, 2(1).**
  
-* **Firmicutes**
+* **Firmicutes** [54](../references.rst), [56](../references.rst), [93](../references.rst)
  * Firmicutes is a phylum of bacteria that includes species like Staphylococcus and Lactobacillus. In general, Firmicutes have Gram-positive cell walls, round cell shapes, and low guanine to cytosine content in their DNA. While some produce endospores to survive in extreme conditions, others reproduce through binary fission. They also have a wide variety of aerotolerance: some Firmicutes thrive in anaerobic environments, some in aerobic, and some in either. In microbiome research for example, higher proportions of Firmicutes in the intestinal human microbiome may be correlated with obesity (1).
  * see also: HMP, Taxonomic Rank, Phylogeny, Taxonomy, Beta Diversity
 
-**Low G C Gram Positive Bacteria. (n.d.). Retrieved from https://micro.cornell.edu/research/epulopiscium/low-g-and-c-gram-positive-bacteria**
-
-**Ley, R.E., Backhed, F., Turnbaugh, P., Lozupone, C.A., Knight, R.D., and  (2005). Obesity alters gut microbial ecology. PNAS. 102 (31): 11070-11075.**
-
-**Turnbaugh, P.J., Hamady, M., Yatsunenko, T., Cantarel, B.L., Duncan, A., Ley, R.E., Sogin, M.L., Jones, W.J., Roe., B.A., Affourtit, J.P., Egholm, M., Henrissat, B., Heath, A.C., Knight, R., and Gordon, J.I. (2008). A core gut microbiome in obese and lean twins. Nature, 457(7228): 480-484.**
 
 * **Gammaproteobacteria**
  * Gammaproteobacteria is one of the four classes of the phylum of Gram-negative proteobacteria. The phylum has a wide range of characteristics, from bacillus to cocci shaped, from chemoautotrophic to photoautotrophic, from aerobic to anaerobic, and from pathogenic to symbiotic relationships. “One feature alone, 16s rRNA sequence relationship, has been used to define the class”(1). Salmonella and E.coli are both gammaproteobacteria.
