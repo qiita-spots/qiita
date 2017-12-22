@@ -54,8 +54,8 @@ FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
    * **Per-sample FASTQ defaults** (auto detect): Error detection for the FASTQ from 1 sample
    * **Per-sample FASTQs; Phred offset: 33** [26](..//references.rst): Error detection for the FASTQ from 1 sample, uses Phred offset: 33 for measuring quality
    * **Per-sample FASTQs; Phred offset: 64** [26](..//references.rst): Error detection for the FASTQ from 1 sample, uses Phred offset: 64 for measuring quality
-    * For informtion regarding FASTQ formats please go to the `FASTQ wikipedia page <https://en.wikipedia.org/wiki/FASTQ_format>`__.
-   * For more information regarding Demultiplexing please go to the 'Multiplexing widipedia page <https://en.wikipedia.org/wiki/Multiplexing>`__.
+    * For informtion regarding FASTQ formats please go to the `FASTQ wikipedia page  <https://en.wikipedia.org/wiki/FASTQ_format>`__.
+   * For more information regarding Demultiplexing please go to the `Multiplexed wikipedia page  <https://en.wikipedia.org/wiki/Multiplexing>`__. 
   * **Default Parameters Set**
    * **barcode type** (required): Type of barcode used
    * **max bad_run_length** (required): Max number of consecutive low quality base calls allowed before truncating a read
