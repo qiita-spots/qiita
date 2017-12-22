@@ -74,29 +74,30 @@ References
 72. Pielou, E.C. (1966). “The measurement of diversity in different types of biological collections”. J. Theor. Biol. (13): 131-144.
 73. Pielou, E.C. (1975). Ecological Diversity. New York, Wiley InterScience.
 74. Polymerase Chain Reaction (PCR) - Quantitative PCR (qPCR). (2016, April 28). Retrieved from https://www.youtube.com/watch?v=YhXj5Yy4ksQ
-75. Quast, C., Pruesse, E., Yilmaz, P., Gerken, J., Schweer, T., Yarza, P., Peplies, J., Glöckner, F. O. (2013). “The SILVA ribosomal RNA gene database project: improved data processing and web-based tools”. Nucl. Acids Res. 41 (D1): D590-D596.
-76. Raaijmakers, J.G.W. (1987). “Statistical analysis of the Michaelis-Menten equation”. Biometrics. (43): 793-803.
-77. Rideout, J.R., He, Y., Navas-Molina, J.A., Walters, W.A., Ursell, L.K., Gibbons, S.M., Chase, J., McDonald, D., Gonzalez, A., Robbins-Pianka, A., Clemente, J.C., Gilber, J., Huse, S.M., Zhou, H.W., Knight, R., and Caporaso, J.G. (2014). Subsampled open-reference clustering creates consistent, comprehensive OTU definitions and scales to billions of sequences.
-78. Robbins, H.E. (1968). “Estimating the Total Probability of the unobserved outcomes of an experiment”. Ann Math. Statist. 39(1): 256-257.
-79. Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.
-80. Russell, P.F. and Rao, T.R. (1940). “On habitat and association of species of anopheline larvae in south-eastern Madras”. J. Malaria Inst. India. (3): 153-178.
-81. Sanschagrin, S. and Yergeau, E. (2014). Next-generation Sequencing of 16S Ribosomal RNA Gene Amplicons. Journal of Visualized Experiments. (90).
-82. Shannon, C.E. and Weaver, W. (1949). “The mathematical theory of communication”. University of Illonois Press, Champaign, Illonois.
-83. Simpson, E.H. (1949). “Measurement of Diversity”. Nature. (163): 688.
-84. Sokal, R.R. and Michener, C.D. (1958). “A statistical method for evaluating systematic relationships”. Univ. Kans. Sci. Bull. (38) 1409-1438.
-85. Sokal, R.R. and Sneath, P.H.A. (1963). “Principles of Numerical Taxonomy”. W. H. Freeman, San Francisco, California.
-86. Sorenson, T. (1948) "A method of establishing groups of equal amplitude in plant sociology based on similarity of species content." Kongelige Danske Videnskabernes Selskab 5.1-34: 4-7.
-87. Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.
-88. Strong, W.L. (2002). “Assessing species abundance uneveness within and between plant communities”. Community Ecology. (3): 237-246.
-89. Tanimoto, T. (1958). "An Elementary Mathematical theory of Classification and Prediction". New York: Internal IBM Technical Report.
-90. Ted-Ed. (2013, December 09). How to sequence the human genome - Mark J. Kiel. Retrieved from https://www.youtube.com/watch?v=MvuYATh7Y74
-91. The Human Microbiome Consotrium. (2012). Structure, Function and diversity of the healthy human microbiome. 486: 207-214.
-92. Thomas, F., Hehemann, J., Rebuffet, E., Czjzek, M., & Michel, G. (2011). Environmental and Gut Bacteroidetes: The Food Connection. Frontiers in Microbiology, 2.
-93. Turnbaugh, P.J., Hamady, M., Yatsunenko, T., Cantarel, B.L., Duncan, A., Ley, R.E., Sogin, M.L., Jones, W.J., Roe., B.A., Affourtit, J.P., Egholm, M., Henrissat, B., Heath, A.C., Knight, R., and Gordon, J.I. (2008). A core gut microbiome in obese and lean twins. Nature, 457(7228): 480-484.
-94. Vazquez-Baeza, Y., Pirrung, M., Gonzalez, A., Knight, R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.
-95. Ventura, M., Canchaya, C., Tauch, A., Chandra, G., Fitzgerald, G.F., Chater, K.F., and Sinderen, D.V. (2007). Genomics of Actinobacteria: Tracing the Evolutionary History of an Ancient Phylum. Microbiology and Molecular Biology Reviews, 71(3): 495-548.
-96. Weiss, S., Xu, Z. Z., Peddada, S., Amir, A., Bittinger, K., Gonzalez, A., Lozupone, C., Zaneveld, J.R., Vazquez-Baeza, Y., Birmingham, A., Hyde, E.R., and Knight, R. (2017). Normalization and microbial differential abundance strategies depend upon data characteristics. Microbiome, 5(1).
-97. What is phylogenetics? (2016, June 08). Retrieved from https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics
-98. Whittaker, R.H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.
-99. Williams, K. P., Gillespie, J. J., Sobral, B. W., Nordberg, E. K., Snyder, E. E., Shallom, J. M., and Dickerman, A. W. (2010). Phylogeny of Gammaproteobacteria. Journal of Bacteriology, 192(9), 2305-2314.
-100. Yang, B., Wang, Y., & Qian, P. (2016). Sensitivity and correlation of hypervariable regions in 16S rRNA genes in phylogenetic analysis. BMC Bioinformatics. 17(1).
+75. *Proteobacteria. (n.d.). Retrieved from https://courses.lumenlearning.com/microbiology/chapter/proteobacteria/
+76. Quast, C., Pruesse, E., Yilmaz, P., Gerken, J., Schweer, T., Yarza, P., Peplies, J., Glöckner, F. O. (2013). “The SILVA ribosomal RNA gene database project: improved data processing and web-based tools”. Nucl. Acids Res. 41 (D1): D590-D596.
+77. Raaijmakers, J.G.W. (1987). “Statistical analysis of the Michaelis-Menten equation”. Biometrics. (43): 793-803.
+78. Rideout, J.R., He, Y., Navas-Molina, J.A., Walters, W.A., Ursell, L.K., Gibbons, S.M., Chase, J., McDonald, D., Gonzalez, A., Robbins-Pianka, A., Clemente, J.C., Gilber, J., Huse, S.M., Zhou, H.W., Knight, R., and Caporaso, J.G. (2014). Subsampled open-reference clustering creates consistent, comprehensive OTU definitions and scales to billions of sequences.
+79. Robbins, H.E. (1968). “Estimating the Total Probability of the unobserved outcomes of an experiment”. Ann Math. Statist. 39(1): 256-257.
+80. Ronbach, L.J. (1951). "Coefficient alpha and the internal structure of tests". Psychometrika. 16 (3): 297–334.
+81. Russell, P.F. and Rao, T.R. (1940). “On habitat and association of species of anopheline larvae in south-eastern Madras”. J. Malaria Inst. India. (3): 153-178.
+82. Sanschagrin, S. and Yergeau, E. (2014). Next-generation Sequencing of 16S Ribosomal RNA Gene Amplicons. Journal of Visualized Experiments. (90).
+83. Shannon, C.E. and Weaver, W. (1949). “The mathematical theory of communication”. University of Illonois Press, Champaign, Illonois.
+84. Simpson, E.H. (1949). “Measurement of Diversity”. Nature. (163): 688.
+85. Sokal, R.R. and Michener, C.D. (1958). “A statistical method for evaluating systematic relationships”. Univ. Kans. Sci. Bull. (38) 1409-1438.
+86. Sokal, R.R. and Sneath, P.H.A. (1963). “Principles of Numerical Taxonomy”. W. H. Freeman, San Francisco, California.
+87. Sorenson, T. (1948) "A method of establishing groups of equal amplitude in plant sociology based on similarity of species content." Kongelige Danske Videnskabernes Selskab 5.1-34: 4-7.
+88. Spearman, C. (1904). "The proof and measurement of association between two things". American Journal of Psychology. (15): 72–101.
+89. Strong, W.L. (2002). “Assessing species abundance uneveness within and between plant communities”. Community Ecology. (3): 237-246.
+90. Tanimoto, T. (1958). "An Elementary Mathematical theory of Classification and Prediction". New York: Internal IBM Technical Report.
+91. Ted-Ed. (2013, December 09). How to sequence the human genome - Mark J. Kiel. Retrieved from https://www.youtube.com/watch?v=MvuYATh7Y74
+92. The Human Microbiome Consotrium. (2012). Structure, Function and diversity of the healthy human microbiome. 486: 207-214.
+93. Thomas, F., Hehemann, J., Rebuffet, E., Czjzek, M., & Michel, G. (2011). Environmental and Gut Bacteroidetes: The Food Connection. Frontiers in Microbiology, 2.
+94. Turnbaugh, P.J., Hamady, M., Yatsunenko, T., Cantarel, B.L., Duncan, A., Ley, R.E., Sogin, M.L., Jones, W.J., Roe., B.A., Affourtit, J.P., Egholm, M., Henrissat, B., Heath, A.C., Knight, R., and Gordon, J.I. (2008). A core gut microbiome in obese and lean twins. Nature, 457(7228): 480-484.
+95. Vazquez-Baeza, Y., Pirrung, M., Gonzalez, A., Knight, R. (2013). “Emperor: A tool for visualizing high-throughput microbial community data”. Gigascience 2(1):16.
+96. Ventura, M., Canchaya, C., Tauch, A., Chandra, G., Fitzgerald, G.F., Chater, K.F., and Sinderen, D.V. (2007). Genomics of Actinobacteria: Tracing the Evolutionary History of an Ancient Phylum. Microbiology and Molecular Biology Reviews, 71(3): 495-548.
+97. Weiss, S., Xu, Z. Z., Peddada, S., Amir, A., Bittinger, K., Gonzalez, A., Lozupone, C., Zaneveld, J.R., Vazquez-Baeza, Y., Birmingham, A., Hyde, E.R., and Knight, R. (2017). Normalization and microbial differential abundance strategies depend upon data characteristics. Microbiome, 5(1).
+98. What is phylogenetics? (2016, June 08). Retrieved from https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics
+99. Whittaker, R.H. (1960). “Vegetation of the Siskiyou Mountains, Oregon and California”. Ecological Monographs. (30)” 279–338.
+100. Williams, K. P., Gillespie, J. J., Sobral, B. W., Nordberg, E. K., Snyder, E. E., Shallom, J. M., and Dickerman, A. W. (2010). Phylogeny of Gammaproteobacteria. Journal of Bacteriology, 192(9), 2305-2314.
+101. Yang, B., Wang, Y., & Qian, P. (2016). Sensitivity and correlation of hypervariable regions in 16S rRNA genes in phylogenetic analysis. BMC Bioinformatics. 17(1).
