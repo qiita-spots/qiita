@@ -29,7 +29,6 @@ FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
 * **Per-sample vs Multiplexed FASTQ Demultiplexing**
  * **Split libraries FASTQ**: Converts the raw FASTQ data into the file format used by Qiita for further analysis
   * **Input data** (required): Data being split
-  * Hamady and Knight, 2005: CANNOT FIND THIS PAPER
   --------------------------------------------------
   * **Parameter Set** (required): Chooses the parameters for how to split the libraries
    * **Multiplexed FASTQ; generic 5 base pair barcodes**: Uses first 5 base pairs to identifies samples from FASTQ from multiple samples
