@@ -4,13 +4,13 @@ Files Network Within Data Type
 ------------------------------
 * **(FASTQ) artifact**: Represents the original FASTQ data from the study
 * **Click on artifact circle**: Brings up more options 
- * **Run**: Runs the command that is in the processing workflow window
  * **Edit**: Rename the artifact
  * **Process**: Brings you to processing network page so you can process the data
  * **Delete**: Delete the artifact/data from the files network
  * **Available Files**: FASTQ files that have been uploaded to this study can be downloaded here
  * **Generate Summary**: Creates a summary for the data attached to the artifact chosen
  * **Choose Command Pull down menu**: Will show you the commands that can be given to the chosen artifact
+ * **Run**: Runs the command that is in the processing workflow window
  
 *The commands run on this page use the QIIME [64](..//references.rst) bioinformatics platform.
 
