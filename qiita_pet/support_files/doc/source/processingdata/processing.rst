@@ -2,21 +2,18 @@ Processing Network Page
 =======================
 Files Network Within Data Type
 ------------------------------
-* **Dflt_name-(FASTQ) artifact**: Represents the original FASTQ data from the study
+* **(FASTQ) artifact**: Represents the original FASTQ data from the study
 * **Click on artifact circle**: Brings up more options 
+ * **Run**: Runs the command that is in the processing workflow window
  * **Edit**: Rename the artifact
  * **Process**: Brings you to processing network page so you can process the data
  * **Delete**: Delete the artifact/data from the files network
  * **Available Files**: FASTQ files that have been uploaded to this study can be downloaded here
  * **Generate Summary**: Creates a summary for the data attached to the artifact chosen
+ * **Choose Command Pull down menu**: Will show you the commands that can be given to the chosen artifact
  
 *The commands run on this page use the QIIME [64](..//references.rst) bioinformatics platform.
 
-Workflow Page
--------------
-* **Run**: Runs the command that is in the processing workflow window
-* **Select artifact**: Brings up choose command pulldown menu
-* **Choose Command Pull down menu**: Will show you the commands that can be given to the chosen artifact
 
 Converting Data to BIOM Tables
 ==============================
