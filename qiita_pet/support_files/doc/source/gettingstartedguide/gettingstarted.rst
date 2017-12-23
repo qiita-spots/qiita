@@ -7,9 +7,9 @@ Home Screen
 -----------
 
 * **Icons** (located on top right corner)
- * **Envelope Icon** (3rd from the right): Your system messages
- * **Clipboard Icon** (2nd from the right): Your selected samples
- * **Server Icon** (rightmost): Your active jobs and their statuses
+ * **Imbox** (3rd from the right): Your system messages
+ * **Selected Samples** (2nd from the right): Your selected samples
+ * **Jobs** (rightmost): Your active jobs and their statuses
  
 Creating a Study
 ==============
@@ -163,36 +163,36 @@ Upload Sample Information
  * Drag your sample info file into the box to upload your files
  * **Delete selected files**: Delete a file with the selected boxes
  * **Go to study description**: Link to the study description page
+ * Your uploaded samples will appear under the "Files" section
 
 Viewing Sample Information
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Sample Information Page**
- * **Sample Info**: Downloads the metadata onto your computer
- * See different metadata values
-* **Sample Summary Page**
- * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
+ * **Sample Information Table**
+  * **Sample Info**: Downloads the metadata onto your computer
+  * See different metadata values
+ * **Sample-Prep Summary**
+  * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
 
 Update Sample info
 ^^^^^^^^^^^^^^^^^^
 
-* **Upload Files Page**
- * Drag new sample info file into the box to upload the new file
- * Go to study description by clicking the “Go to study description” 
-* **Study Information Page**
- * Go to the sample information page by clicking the “Sample Information” 
- * You can edit your metadata here too:
-  *If the data has not been processed...
-   * Delete your old metadata file
-   * Upload your new metadata file
-  * If the data has been processed...
-   * The metadata file cannot be deleted 
-   * To remove data, go to the sample information page and use the trash icon to delete the unwanted sample information columns
-   * You can only update the fields that do exist (these fields can be found in the sample information page)
-   * Sample names cannot be deleted
-    * Any sample name change will be interpreted as a new sample
-  * *Note that this changes will not update on your analysis*
-  * But these changes will not affect your processing data since the metadata isn’t applied until analysis
+* If your data has not been processed..
+ * Upload your new metadata file using the Upload Files Page
+ * Delete your old metadata file on the Sample Information Page
+ * Update your metadata file on the Sample Information tab on the Sample Information page
+*If your data has been processed...
+ * Your past metadata file cannot be deleted but fields can be deleted 
+  * To remove data, go to the Sample Information tab on the Sample Information page and use the trash icon to delete the unwanted fields
+ * You can update the fields that do exist (these fields can be found on the sample information tab on the sample information page)
+  * Upload a new sample info file including the updated field data and the sample_name field
+ * You can add new fields
+  * Upload a new sample info file including the field data you want to add and the sample_name field
+ * Sample names cannot be deleted
+  * Any sample name change will be interpreted as a new sample
+ * *Note that these changes will not update on your analysis but these changes will not affect your processing data since the metadata isn’t applied until analysis*
+
   
 Adding Data for Analysis
 ========================
