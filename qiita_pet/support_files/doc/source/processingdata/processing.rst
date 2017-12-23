@@ -3,6 +3,8 @@ Processing Network Page
 Files Network Within Data Type
 ------------------------------
 * **(FASTQ) artifact**: Represents the original FASTQ data from the study
+* **Hide**: Hides the processing network 
+* **Show**: Shows the processing network
 * **Click on artifact circle**: Brings up more options 
  * **Edit**: Rename the artifact
  * **Process**: Brings you to processing network page so you can process the data
