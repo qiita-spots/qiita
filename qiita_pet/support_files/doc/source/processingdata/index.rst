@@ -102,6 +102,8 @@ Deblurring
  * **Deblur 16S Only Table** [2](..//references.rst): Only contains 16S deblurred sequences 
  * **Deblur Final Table** [2](..//references.rst): Contains all the sequences.
 
+Deblur Quality Filtering
+------------------------
 
 Looking for information about debluring? Please see the document here:
 
@@ -131,7 +133,9 @@ Closed-Reference OTU Picking
   * **Sortmerna max-pos** [48](..//references.rst)(required): Maximum number of positions per seed to store in the indexed database
   * **Threads** (required): Number of threads to use per job
 
- 
+Processing Recommendations
+--------------------------
+
 Looking for information about processing data? Please see the document here:
 
 .. toctree::
