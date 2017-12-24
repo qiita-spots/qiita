@@ -7,7 +7,7 @@ Home Screen
 -----------
 
 * **Icons** (located on top right corner)
- * **Imbox** (3rd from the right): Your system messages
+ * **Inbox** (3rd from the right): Your system messages
  * **Selected Samples** (2nd from the right): Your selected samples
  * **Jobs** (rightmost): Your active jobs and their statuses
  
@@ -27,13 +27,13 @@ Creating a Study
   * To find out which type of sample you have read this paper found in `Nature <http://www.nature.com/nbt/journal/v29/n5/full/nbt.1823.html>`__.
  * **Event-Based Data** (optional): If your experiment contained interventions you can include that here
 * **Study Information Page**
+ * **Add**: Adds another user to the study
  * **Edit**: Brings you to the Edit Study Page if you wanted to update your study
  * **Study tags** (optional): Keywords that will help you, and others, find your study in Qiita
   * For example, if you’re studying soil you can add that as a tag
   * Must **Save tags** To keep them otherwise they dissapear
  * **Sample Information**: A link to your metadata summary 
  * **Upload Files**: A link to a screen to upload your files to
- * **Sample Summary**: A link to a screen to view each sample separately with their respective metadata
  
 Editing a Study
 ----------------
@@ -161,18 +161,19 @@ Upload Sample Information
 
 * **Upload Files Page**
  * Drag your sample info file into the box to upload your files
+ * Your uploaded samples will appear under the "Files" section
  * **Delete selected files**: Delete a file with the selected boxes
  * **Go to study description**: Link to the study description page
- * Your uploaded samples will appear under the "Files" section
 
 Viewing Sample Information
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Sample Information Page**
- * **Sample Information Table**
-  * **Sample Info**: Downloads the metadata onto your computer
+ * **Sample Information** Tab
   * See different metadata values
- * **Sample-Prep Summary**
+  * **Sample Info**: Downloads the metadata onto your computer
+  * **Update Sample Information**: Upload a new sample information file
+ * **Sample-Prep Summary** Tab
   * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
 
 Update Sample info
@@ -186,9 +187,9 @@ Update Sample info
  * Your past metadata file cannot be deleted but fields can be deleted 
   * To remove data, go to the Sample Information tab on the Sample Information page and use the trash icon to delete the unwanted fields
  * You can update the fields that do exist (these fields can be found on the sample information tab on the sample information page)
-  * Upload a new sample info file including the updated field data and the sample_name field
+  * Upload a new sample info file including only the updated field data and the sample_name field
  * You can add new fields
-  * Upload a new sample info file including the field data you want to add and the sample_name field
+  * Upload a new sample info file including only the field data you want to add and the sample_name field
  * Sample names cannot be deleted
   * Any sample name change will be interpreted as a new sample
  * *Note that these changes will not update on your analysis but these changes will not affect your processing data since the metadata isn’t applied until analysis*
@@ -330,18 +331,23 @@ Associate data with prep
 ------------------------
 
 * **Data Type**
- * Includes preparation info files of that data type that’s associated with your study
- * **16S, or the data type you studied** (required): Preparation page
- * **Select Type** (required): Select the file type you uploaded, causing Qiita to associate your files with this preparation
- * **Add a name for this file** (required): Give the file a name
- * **Add Files**: Shows up after Select Type has been chosen, adds files to the preparation
- * **Files Network**: Contains artifacts that represent your data
+ * **16S, or the data type you studied** dropdown: Shows the preparations created on this type of data on this study
+ * **Prep Information Page**
+  * To add files
+   * **Select Type** (required): Select the file type you uploaded, causing Qiita to associate your files with this preparation
+   * **Add a name for this file** (required): Give the file a name
+   * **Add Files**: Shows up after Select Type has been chosen, adds files to the preparation
+  * **Summary** Tab
+   * Includes preparation info files of that data type that’s associated with your study
+  * **Processing** Tab
+   * **Processing Network**: Contains artifacts that represent your data and commands being run on your data
  
 Update prep info
 ----------------
 
-* **Data Type 16S Page**
- * Select “Update Information” and choose your updated file
- * *Barcodes and sample names cannot be updated*
-  * Must create new preparation to update these
+* **Prep Information Page**
+ * Under the "Summary" tab 
+  * Select “Update Information” and choose your updated file
+  * *Barcodes and sample names cannot be updated*
+   * Must create new preparation to update these
 
