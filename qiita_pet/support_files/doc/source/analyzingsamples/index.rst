@@ -113,7 +113,8 @@ Commands from Rarefied Data
  * **BIOM table** (required): Feature table containing the samples for which beta diversity should be computed
  * **Adjust variance** [14](../references.rst) (phylogenetic only): Performs variance adjustment
   * Weighs distances based on the proportion of the relative abundance represented between the samples at a given node under evaluation
- * **Alpha value** (Generalized UniFrac only): Value of alpha controls importance of sample proportions. 1.0 is weighted normalized UniFrac. 0.0 is close to unweighted UniFrac, but only if the sample  are dichotomized.
+ * **Alpha value** (Generalized UniFrac only): Controls importance of sample proportions
+  * 1.0 is weighted normalized UniFrac. 0.0 is close to unweighted UniFrac, but only if the sample  are dichotomized.
  * **Bypass tips** (phylogenetic only): In a bifurcating tree, the tips make up about 50% of the nodes in a tree. By ignoring them, specificity can be traded for reduced compute time. This has the effect of collapsing the phylogeny, and is analogous (in concept) to moving from 99% to 97% OTUs
  * **Diversity metric** (required): Beta diversity metric to be run
   * **Bray-Curtis dissimilarity** [87](../references.rst): Calculates Bray–Curtis dissimilarity
