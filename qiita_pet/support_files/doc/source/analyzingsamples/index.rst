@@ -107,7 +107,7 @@ Commands from Rarefied Data
     * Measures the relative abundance of the different species making up the sample richness
    * **Strong’s dominance index (Dw)** [89](../references.rst): Calculates Strong’s dominance index 
     * Measures species abundance unevenness
- * **Phylogenetic tree** (required for certain alpha diversities, ie. Faith PD): Phylogenetic tree to be used with alpha analyses (only include when necessary ie. Faith PD)
+ * **Phylogenetic tree** (required for Faith PD): Phylogenetic tree to be used with alpha analyses (only include when necessary)
     * Currently the only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
 * **Calculate beta diversity** [99](../references.rst): Measured the diversity between samples
  * **BIOM table** (required): Feature table containing the samples for which beta diversity should be computed
@@ -174,7 +174,7 @@ Commands from Rarefied Data
    * Measures biodiversity
    * Determined by the diversity of species and the proportions between the abundance of those species.
  * **Number of jobs**: Number of workers to use
- * **Phylogenetic tree** (required for some beta diversities, ie. UniFrac): Phylogenetic tree to be used with beta analyses (only include when necessary ie. UniFrac)
+ * **Phylogenetic tree** (required for all Unifrac): Phylogenetic tree to be used with beta analyses (only include when necessary)
   * Currently the only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
 Commands from Alpha Diversity Data
 ----------------------------------
