@@ -108,7 +108,7 @@ Commands from Rarefied Data
    * **Strong’s dominance index (Dw)** [89](../references.rst): Calculates Strong’s dominance index 
     * Measures species abundance unevenness
  * **Phylogenetic tree** (required for Faith PD): Phylogenetic tree to be used with alpha analyses (only include when necessary)
-    * Currently the only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
+  * Currently the only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
 * **Calculate beta diversity** [99](../references.rst): Measured the diversity between samples
  * **BIOM table** (required): Feature table containing the samples for which beta diversity should be computed
  * **Adjust variance** [14](../references.rst) (phylogenetic only): Performs variance adjustment
