@@ -185,6 +185,7 @@ Commands from Alpha Diversity Data
   * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
  * **Alpha Vectors** (required): Vector of alpha diversity values by sample
 Commands from Beta Diversity Data
+---------------------------------
 * **Perform Principal Coordinate Analysis (PCoA)** [71](../references.rst): Visualizes the similarities and differences between samples using Emperor Plots [95](../references.rst)
  * **Distance matrix** (required): Distance matrix on which the PCoA should be computed
 * **Beta Group Significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
