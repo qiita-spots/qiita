@@ -341,6 +341,7 @@ Associate data with prep
    * Includes preparation info files of that data type that’s associated with your study
   * **Processing** Tab
    * **Processing Network**: Contains artifacts that represent your data and commands being run on your data
+   * **Hide**: Hides the processing network
  
 Update prep info
 ----------------
