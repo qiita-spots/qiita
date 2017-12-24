@@ -175,7 +175,7 @@ Commands from Rarefied Data
    * Measures biodiversity
    * Determined by the diversity of species and the proportions between the abundance of those species.
  * **Number of jobs**: Number of workers to use
- * **Phylogenetic tree** (required for all Unifrac): Phylogenetic tree to be used with beta analyses (only include when necessary)
+ * **Phylogenetic tree** (required for Mahalanobis distance, Weighted Minkowski metric, and all UniFrac metrics): Phylogenetic tree to be used with beta analyses (only include when necessary)
   * Currently the only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
 Commands from Alpha Diversity Data
 ----------------------------------
