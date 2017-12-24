@@ -218,7 +218,7 @@ Alpha Diversity Results
 * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
 * **Category**: Choose the metadata category you would like to analyze
 * **Kruskal-Wallis** [49](../references.rst): Result of Kruskal-Wallis tests
- * Says if differences are statistically significant
+ * Says if the differences are statistically significant
 Alpha Correlation Results
 -------------------------
 * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
