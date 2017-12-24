@@ -91,7 +91,7 @@ Commands from Rarefied Data
    * **Number of distinct features** [22](../references.rst): Calculates number of distinct OTUs
    * **Number of double occurrences**: Calculates number of double occurrence OTUs (doubletons)
     * OTUs that only occur twice
-   * **Number of observed features, including singles and doubles** [22](../references.rst): Calculates number of observed OTUs, singles, and doubles.
+   * **Number of observed features, including singles and doubles** [22](../references.rst): Calculates number of observed OTUs, singles, and doubles
    * **Singles**: Calculates number of single occurrence OTUs (singletons)
     * OTUs that appear only once in a given sample
    * **Pielou’s evenness** [72](../references.rst): Calculates Pielou’s eveness
