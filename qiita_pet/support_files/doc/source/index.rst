@@ -52,7 +52,7 @@ Looking for information about analyzing your data? Please see the document here:
 .. toctree::
    :maxdepth: 1
    
-   analyzingsample.rst
+   analyzingsample/index.rst
    
 Looking for available guides? Please see these documents:
 
