@@ -1,10 +1,13 @@
+Getting Started Guide
+======================
+
 Creating an Account
-===================
+-------------------
 
 * **Sign up**: Brings you to window to create an account
 
 Home Screen
------------
+~~~~~~~~~~~
 
 * **Icons** (located on top right corner)
  * **Inbox** (3rd from the right): Your system messages
@@ -12,7 +15,7 @@ Home Screen
  * **Jobs** (rightmost): Your active jobs and their statuses
  
 Creating a Study
-==============
+----------------
 
 * **Creating a New Study/Edit Study Page**
  * **Study Title** (required): Name of the experiment
@@ -36,23 +39,23 @@ Creating a Study
  * **Upload Files**: A link to a screen to upload your files to
  
 Editing a Study
-----------------
+~~~~~~~~~~~~~~~
 
 *  Go to the “Study Information Page”
 *  Select “Edit” from “Study Information Page” to bring you to “Edit Study Page”
 *  Make the desired edits and select “Update Study”
 
 Adding and Working With Sample information
-==========================================
+------------------------------------------
 
 Example files
--------------
+~~~~~~~~~~~~~
 
 You can download an example sample information file from
 `here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__
 
 EBI-ENA NULL values vocabulary
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For all public studies including those being submitted to EBI, no blanks are allowed in the smaple information. We support the following null values: *not applicable*, *missing: not collected*, *missing: not provided*, *missing: restricted access*.
 
@@ -63,7 +66,7 @@ For the latest definitions and explanation visit the `EBI/ENA Missing value repo
    
    
 Sample information file
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 The *sample information file* will define the biological context of each
 sample, with categories like ``sample_type``, ``treatment``,
@@ -157,7 +160,7 @@ Attaching the Sample Information to the Study
 ---------------------------------------------
    
 Upload Sample Information
-^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * **Upload Files Page**
  * Drag your sample info file into the box to upload your files
@@ -166,7 +169,7 @@ Upload Sample Information
  * **Go to study description**: Link to the study description page
 
 Viewing Sample Information
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * **Sample Information Page**
  * **Sample Information** Tab
@@ -177,7 +180,7 @@ Viewing Sample Information
   * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
 
 Update Sample info
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 * If your data has not been processed..
  * Upload your new metadata file using the Upload Files Page
