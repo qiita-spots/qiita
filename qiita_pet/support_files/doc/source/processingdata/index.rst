@@ -1,8 +1,11 @@
+Processing Data
+===============
+
 Adding and Working With Preperation information
-===============================================
+-----------------------------------------------
 
 Prepare information files
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The set of required fields for the *sample information* and *preparation
 information files* varies based on the functionality that you want to
@@ -30,7 +33,7 @@ information pertains to the wet lab preparation and should be placed in the
 Ensure that your prep information column names are correct.
 
 Example files
--------------
+~~~~~~~~~~~~~
 
 You can download an example prep information file from
 `here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__
@@ -106,17 +109,7 @@ additional column is required.
 +------------------+-------------+------------------------------------------------------------------------------------------------------------------------------------------+
 
 Attaching Prep Information
---------------------------
-
-* **Upload Files Page**
- * Drag your prep info file into the box to upload your files
- * If you want to delete the file, press the box that appears next to that file then click delete selected files
- * **Go to study description**: Link to the study description page
-* **Study Description Page**
- * Select “Add New Preparation”
- 
-Attach data
------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * **Upload Files Page**
  * Drag your data files into the box to upload your files
@@ -131,7 +124,7 @@ Attach data
  * **Create New Preparation**: Creates a new preparation based on the data inputted above
  
 Associate data with prep
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 * **Data Type**
  * **16S, or the data type you studied** dropdown: Shows the preparations created on this type of data on this study
@@ -147,7 +140,7 @@ Associate data with prep
    * **Hide**: Hides the processing network
  
 Update prep info
-----------------
+~~~~~~~~~~~~~~~~
 
 * **Prep Information Page**
  * Under the "Summary" tab 
@@ -156,9 +149,11 @@ Update prep info
    * Must create new preparation to update these
 
 Processing Network Page
-=======================
+-----------------------
+
 Files Network Within Data Type
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * **(FASTQ) or other data type artifact**: Represents the data from the study
 * **Hide**: Hides the processing network 
 * **Show**: Shows the processing network
@@ -174,17 +169,19 @@ Files Network Within Data Type
 
 
 Converting Data to BIOM Tables
-==============================
+------------------------------
+
 BIOM
-----
+~~~~
+
 * No manipulation is necessary
 
 FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * **Per-sample vs Multiplexed FASTQ Demultiplexing**
  * **Split libraries FASTQ**: Converts the raw FASTQ data into the file format used by Qiita for further analysis
   * **Input data** (required): Data being split
-  --------------------------------------------------
   * **Parameter Set** (required): Chooses the parameters for how to split the libraries
    * **Multiplexed FASTQ; generic 5 base pair barcodes**: Uses first 5 base pairs to identifies samples from FASTQ from multiple samples
    * **Multiplexed FASTQ; generic 5 base pair barcodes with Phred quality threshold: 0** [26](..//references.rst): Uses first 5 base pairs to identifies samples from FASTQ from multiple samples, only use samples with Phred quality score above 0
@@ -223,7 +220,8 @@ FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
    * **sequence max_n** (required): Maximum number of N characters allowed in a sequence to retain it
 
 Deblurring
-==========
+----------
+
 *Note that sff data cannot be deblurred*
 * **Trimming**: Removes base pairs from the sequences
  * **Input Data** (required): Data being trimmed
@@ -259,7 +257,7 @@ Deblurring
  * **Deblur Final Table** [2](..//references.rst): Contains all the sequences.
 
 Deblur Quality Filtering
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Looking for information about debluring? Please see the document here:
 
@@ -269,7 +267,8 @@ Looking for information about debluring? Please see the document here:
    deblur_quality.rst
    
 Closed-Reference OTU Picking
-============================
+----------------------------
+
 * **Pick Closed-Reference OTUs** [19](..//references.rst): Removes sequences that do not match those found in a database
  * **Input data** (required): Data being close referenced 
  * **Parameter Set** (required): Chooses the database to be compared to
@@ -290,7 +289,7 @@ Closed-Reference OTU Picking
   * **Threads** (required): Number of threads to use per job
 
 Processing Recommendations
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Looking for information about processing data? Please see the document here:
 
