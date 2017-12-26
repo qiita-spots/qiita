@@ -6,6 +6,7 @@ Create New Analysis Page
 * **Filter study by Study Tags**: Searches for studies with the tag you searched for
 * **Title**: Brings you to Study Information Page of that experiment
 * **Green Expand for Analysis Button**: Reveals the studies done on this data that can be used for further analysis
+* **Per Artifact Button**: Reveals the names of the artifacts, the number of samples in the prep info, and the files
  * **Add**: Adds data to be analyzed 
   * More than 1 can be done at once to do large meta-data analysis
 * **Create New Analysis**: Creates the analysis using the data that has been added
