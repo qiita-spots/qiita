@@ -1,3 +1,160 @@
+Adding and Working With Preperation information
+===============================================
+
+Prepare information files
+-------------------------
+
+The set of required fields for the *sample information* and *preparation
+information files* varies based on the functionality that you want to
+use from the system.
+
+As described in :doc:`../qiita-philosophy/index`, a Qiita study can have
+many biological samples, each with many preparations for different kinds of
+multi-omic analysis. Thus, the study will have a single *sample information
+file* that will define the biological context of each sample. Each multi-omic
+data type prepared will have a separate *preparation information file* that
+will describe the sequencing technology or analytical chemistry used to
+generate that data set.
+
+Please note that while *sample information* and *preparation information files*
+are similar to a `QIIME metadata file
+<http://qiime.org/documentation/file_formats.html#metadata-mapping-files>`__,
+they are conceptually different. A QIIME metadata file includes information
+about the biological context, like ``sample_type``, and about the wet lab
+processing, like ``BarcodeSequence``. Qiita intentionally separates this
+information into two separate files; it would be conceptually incorrect
+to include ``BarcodeSequence`` with the *sample information*, as this
+information pertains to the wet lab preparation and should be placed in the
+*preparation information file*.
+
+Ensure that your prep information column names are correct.
+
+Example files
+-------------
+
+You can download an example prep information file from
+`here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__
+
+Required fields for Qiita
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is the minimum set of columns for a prep information file to be added the
+system:
+
++-------------------+-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field name        | Format                        | Description                                                                                                                                                                                                                                                   |
++===================+===============================+===============================================================================================================================================================================================================================================================+
+| ``sample_name``   | free text with restrictions   | Identifies a sample. It is the primary key, must be unique and should match the ones in the sample information file. Allowed characters are alphabetic ``[A-Za-z]``, numeric ``[0-9]``, and periods ``.``. Must match the sample_name in the sample template. |
++-------------------+-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+Required fields for EBI submission
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Without this columns you will not be able to submit to EBI. These are the columns required for successfully submit your data to EBI:
+
++-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field name                          | Format                                    | Description                                                                                                                                                                                                    |
++=====================================+===========================================+================================================================================================================================================================================================================+
+| ``primer``                          | IUPAC characters                          | The primer sequence (this is usually the forward primer for Illumina processed data, or the barcoded primer for LS454 data; `examples <http://www.nature.com/ismej/journal/v6/n8/extref/ismej20128x2.txt>`__). |
++-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``center_name``                     | free text                                 | Name of the site (company/institution) where the study was performed.                                                                                                                                          |
++-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``platform``                        | ``Illumina`` or ``LS454``                 | The sequencing technology used in the study. ``Illumina`` sequencing data was generated on an Illumina platform; ``LS454`` sequencing data was generated on a 454 pyrosequencing platform.                     |
++-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``instrument_model``                | see table below                           | The sequencing instrument model used for sequencing. See table below for valid options.                                                                                                                        |
++-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``library_construction_protocol``   | free text                                 | Brief description or reference to the protocol that was used for preparing this amplicon library starting from DNA, usually this includes what genomic region was targeted such as *16S*, *ITS*, *18S*, etc.   |
++-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``experiment_design_description``   | free text                                 | High-level description of the study (for example, *A longitudinal study of the gut microbiome of two human subjects*).                                                                                         |
++-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+Valid values for instrument_model per platform, taken from ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.common.xsd
+
++--------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Platform     | Valid instrument_model options                                                                                                                                                                                                                                                                    |
++==============+===================================================================================================================================================================================================================================================================================================+
+| ``LS454``    | ``454 GS``, ``454 GS 20``, ``454 GS FLX``, ``454 GS FLX+``, ``454 GS FLX Titanium``, ``454 GS Junior``, or ``unspecified``                                                                                                                                                                        |
++--------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``Illumina`` | ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``, ``Illumina Genome Analyzer IIx``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 2000``, ``Illumina HiSeq 1500``, ``Illumina HiSeq 1000``, ``Illumina MiSeq``, ``Illumina HiScanSQ``, ``HiSeq X Ten``, ``NextSeq 500``, ``unspecified`` |
++--------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+.. _required-fields-for-preprocessing-target-gene-data:
+
+Required fields for pre-processing target gene data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you are adding target gene data (e.g. 16S, 18S, ITS), there are
+additional columns that are required for successfully preprocessing
+them:
+
++---------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field name    | Format             | Description                                                                                                                                                                                                    |
++===============+====================+================================================================================================================================================================================================================+
+| ``primer``    | IUPAC characters   | The primer sequence (this is usually the forward primer for Illumina processed data, or the barcoded primer for LS454 data; `examples <http://www.nature.com/ismej/journal/v6/n8/extref/ismej20128x2.txt>`__). |
++---------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``barcode``   | IUPAC characters   | The barcode sequence (`examples <http://www.nature.com/ismej/journal/v6/n8/extref/ismej20128x2.txt>`__).                                                                                                       |
++---------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+In case that your data has been sequenced using multiple sequencing lanes or you
+have :ref:`per_sample_fastq_files_without_barcode_or_primer_information`, an
+additional column is required.
+
++------------------+-------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Field name       | Format      | Description                                                                                                                              |
++==================+=============+==========================================================================================================================================+
+| ``run_prefix``   | free text   | Name of your sequence file without the suffix (for example, ``seqs.fna`` becomes ``seqs``, and ``my-data.fastq`` becomes ``my-data``).   |
++------------------+-------------+------------------------------------------------------------------------------------------------------------------------------------------+
+
+Attaching Prep Information
+--------------------------
+
+* **Upload Files Page**
+ * Drag your prep info file into the box to upload your files
+ * If you want to delete the file, press the box that appears next to that file then click delete selected files
+ * **Go to study description**: Link to the study description page
+* **Study Description Page**
+ * Select “Add New Preparation”
+ 
+Attach data
+-----------
+
+* **Upload Files Page**
+ * Drag your data files into the box to upload your files
+ * If you want to delete the file, press the box that appears next to that file then click delete selected files
+ * **Go to study description**: Link to the study description page
+* **Study Description Page**
+ * Select “Add new preparation page”
+* **Add New Preparation Page**
+ * **Select File** (required): Select the preparatory information file you uploaded  
+ * **Select Data Type** (required): Choose for what kind of data you studied
+ * **Select Investigation Type** (optional): Not required, chooses the investigation you performed
+ * **Create New Preparation**: Creates a new preparation based on the data inputted above
+ 
+Associate data with prep
+------------------------
+
+* **Data Type**
+ * **16S, or the data type you studied** dropdown: Shows the preparations created on this type of data on this study
+ * **Prep Information Page**
+  * To add files
+   * **Select Type** (required): Select the file type you uploaded, causing Qiita to associate your files with this preparation
+   * **Add a name for this file** (required): Give the file a name
+   * **Add Files**: Shows up after Select Type has been chosen, adds files to the preparation
+  * **Summary** Tab
+   * Includes preparation info files of that data type that’s associated with your study
+  * **Processing** Tab
+   * **Processing Network**: Contains artifacts that represent your data and commands being run on your data
+   * **Hide**: Hides the processing network
+ 
+Update prep info
+----------------
+
+* **Prep Information Page**
+ * Under the "Summary" tab 
+  * Select “Update Information” and choose your updated file
+  * *Barcodes and sample names cannot be updated*
+   * Must create new preparation to update these
+
 Processing Network Page
 =======================
 Files Network Within Data Type
@@ -13,8 +170,7 @@ Files Network Within Data Type
  * **Generate Summary**: Creates a summary for the data attached to the artifact chosen
  * **Choose Command dropdown menu**: Will show you the commands that can be given to the chosen artifact
  * **Run**: Runs the command that is in the processing workflow window
- 
-*The commands run on this page use the QIIME [64](..//references.rst) bioinformatics platform.
+*The commands run on this page use the QIIME2 [64](..//references.rst) bioinformatics platform.
 
 
 Converting Data to BIOM Tables
