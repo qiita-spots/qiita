@@ -1,5 +1,9 @@
+Analyzing Samples
+=================
+
 Create New Analysis Page
-========================
+------------------------
+
 * **See Previous Analysis**
  * Shows past analysis done on your account, or shared with you.
 * **Filter results by column data (Title, Abstract, PI, etc.)**: Searches for studies with the title/abstract/PI/etc. that you inputted
@@ -12,22 +16,26 @@ Create New Analysis Page
 * **Create New Analysis**: Creates the analysis using the data that has been added
  * **Analysis Name** (required): Name for the analysis that will be done
  * **Description** (optional): Description for the analysis that will be done
+
 Single vs. Meta Analysis
 ------------------------------
 * **Single analysis**: One study chosen to analyze 
 * **Meta-analysis**: Multiple studies chosen to analyze
  * *You can only merge like data*
 
-Processing Network Commands
-===================================
+Processing Network Page: Commands
+---------------------------------
+
 Commands for Deblurred or Closed-Reference Data
------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * **Rarefy features** [35](../references.rst): Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth  
  *  **BIOM table** (required): Feature table containing the samples for which features should be rarefied
  *  **Parameter set**: Parameters at which the rarefication is run
  *  **Sampling depth** (required): Total frequency that each sample should be rarefied to, samples where sum of frequencies is less than sampling depth will not be included in resulting table
+
 Commands from Rarefied Data
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * **Filter samples by metadata**: Filters samples from an OTU table on the basis of the number of observations in that sample, or on the basis of sample metadata
  * **BIOM table** (required): Feature table containing the samples for which features should be filtered
  * **Maximum feature frequency across samples** (optional): Maximum total frequency that a feature can have to be retained
@@ -178,15 +186,19 @@ Commands from Rarefied Data
  * **Number of jobs**: Number of workers to use
  * **Phylogenetic tree** (required for Mahalanobis distance, Weighted Minkowski metric, and all UniFrac metrics): Phylogenetic tree to be used with beta analyses (only include when necessary)
   * Currently the only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
+
 Commands from Alpha Diversity Data
-----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * **Alpha Correlation** [80](../references.rst): Determines if the numeric sample metadata category is correlated with alpha diversity
  * **Correlation Method** (required): Correction test being applied
   * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
   * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
  * **Alpha Vectors** (required): Vector of alpha diversity values by sample
+
 Commands from Beta Diversity Data
----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * **Perform Principal Coordinate Analysis (PCoA)** [71](../references.rst): Visualizes the similarities and differences between samples using Emperor Plots [95](../references.rst)
  * **Distance matrix** (required): Distance matrix on which the PCoA should be computed
 * **Beta Group Significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
@@ -204,31 +216,40 @@ Commands from Beta Diversity Data
   * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
  * **Metadata-category** (required): Category from metadata file or artifact viewable as metadata
  * **Number of permutations** (required): Number of permutations to be run when computing p-values
+
 Processing Network Page: Results
-================================
+--------------------------------
+
 Taxa Bar Plot
---------------
+~~~~~~~~~~~~~
+
 * **Taxonomic Level**: How specific the taxa will be displayed 
  * 1- Kingdom, 2- Phylum, 3- Class, 4- Order, 5- Genus, 6- Species, 7- Subspecies
 * **Color Palette**: Changes the coloring of your taxa bar plot
  * **Discrete**: Each taxon is a different color
  * **Continuous**: Each taxon is a different shade of one color
 * **Sort Sample By**: Sorts data by sample metadata or taxonomic abundance and either by ascending or descending order
+
 Alpha Diversity Results
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
+
 * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
 * **Category**: Choose the metadata category you would like to analyze
 * **Kruskal-Wallis** [49](../references.rst): Result of Kruskal-Wallis tests
  * Says if the differences are statistically significant
+
 Alpha Correlation Results
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
  * Gives the Spearman or Pearson result (rho and p-value)
+
 Beta Diversity Result
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 * **Distance Matrix**: Dissimilarity value for each pairwise comparison
+
 PCoA Result
------------
+~~~~~~~~~~~
 * **Emperor Plot**: Visualization of similarities/dissimilarities between samples
  * **Color Category**: Groups each sample by the given category chosen by a given color
  * **Colors**: Choose colors for each group
@@ -238,12 +259,15 @@ PCoA Result
  * **Shape**: Groups each sample by the given category chosen by a given shape  
  * **Axis**: Change the position of the axis as well as the color of the graph
  * **Scale**: Change the size of a given category 
+
 Beta Group Significance
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 * **Boxplot**: Shows how different measures of beta diversity correlate with different metadata categories
 * Gives the Permanova or Anosim result (psuedo-F and p-value)
+
 Beta Correlation
-----------------
+~~~~~~~~~~~~~~~~
+
 * Gives the Spearman or Pearson result (rho and p-value)
  * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
  * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
