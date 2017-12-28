@@ -166,7 +166,7 @@ Files Network Within Data Type
  * **Generate Summary**: Creates a summary for the data attached to the artifact chosen
  * **Choose Command dropdown menu**: Will show you the commands that can be given to the chosen artifact
  * **Show processing information**: Shows the processing information of the artifact chosen
-*The commands run on this page use the QIIME2 [64](..//references.rst) bioinformatics platform.
+* The commands run on this page use the QIIME2 [64](..//references.rst) bioinformatics platform.
 
 
 Converting Data to BIOM Tables
