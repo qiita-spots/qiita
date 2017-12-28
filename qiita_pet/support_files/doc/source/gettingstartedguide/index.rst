@@ -186,7 +186,7 @@ Update Sample info
  * Upload your new metadata file using the Upload Files Page
  * Delete your old metadata file on the Sample Information Page
  * Update your metadata file on the Sample Information tab on the Sample Information page
-*If your data has been processed...
+* If your data has been processed...
  * Your past metadata file cannot be deleted but fields can be deleted 
   * To remove data, go to the Sample Information tab on the Sample Information page and use the trash icon to delete the unwanted fields
  * You can update the fields that do exist (these fields can be found on the sample information tab on the sample information page)
