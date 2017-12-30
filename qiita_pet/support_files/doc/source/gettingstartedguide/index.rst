@@ -201,16 +201,16 @@ Viewing Sample Information
 .. figure:: sample_information_tab.png
    :align:   center
    
-* **Sample Information** Tab
- * See different metadata values
- * **Sample Info**: Downloads the metadata onto your computer
- * **Update Sample Information**: Upload a new sample information file
+ * **Sample Information** Tab
+  * See different metadata values
+  * **Sample Info**: Downloads the metadata onto your computer
+  * **Update Sample Information**: Upload a new sample information file
  
 .. figure::  sample_prep_summary_tab.png
    :align:   center
    
-* **Sample-Prep Summary** Tab
- * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
+ * **Sample-Prep Summary** Tab
+  * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
 
 Update Sample info
 ~~~~~~~~~~~~~~~~~~
