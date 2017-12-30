@@ -152,16 +152,16 @@ Associate data with prep
    :align:   center
    
 * **Prep Information Page** 
-  * **Summary** Tab
-   * Includes preparation info files of that data type that’s associated with your study
+ * **Summary** Tab
+  * Includes preparation info files of that data type that’s associated with your study
    
 .. figure::  prep_processing.png
    :align:   center
    
- * **Prep Information Page** 
+* **Prep Information Page** 
  * **Processing** Tab
-   * **Processing Network**: Contains artifacts that represent your data and commands being run on your data
-   * **Hide**: Hides the processing network
+  * **Processing Network**: Contains artifacts that represent your data and commands being run on your data
+  * **Hide**: Hides the processing network
  
 Update prep info
 ~~~~~~~~~~~~~~~~
