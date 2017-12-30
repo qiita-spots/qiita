@@ -175,6 +175,7 @@ Attach Sample Information
 * **Sample Information Page**
  * **Select sample information file**: Attaches the uploaded sample information to the study
  * **If uploading a QIIME mapping file, select the data type of the prep information**: Selects the data type
+ * **Create**: Creates a new sample information page that includes the attached data
 
 Viewing Sample Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
