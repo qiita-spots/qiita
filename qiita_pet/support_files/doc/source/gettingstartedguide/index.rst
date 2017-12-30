@@ -8,6 +8,8 @@ Creating an Account
 
 Home Screen
 ~~~~~~~~~~~
+.. figure::  images/home_screen.png
+   :align:   center
 
 * **Icons** (located on top right corner)
  * **Inbox** (3rd from the right): Your system messages
@@ -16,7 +18,9 @@ Home Screen
  
 Creating a Study
 ----------------
-
+.. figure::  images/create_new_study.png
+   :align:   center
+   
 * **Creating a New Study/Edit Study Page**
  * **Study Title** (required): Name of the experiment
  * **Study Alias** (required): A different name to put your experiment under
@@ -30,6 +34,10 @@ Creating a Study
   * To find out which type of sample you have read this paper found in `Nature <http://www.nature.com/nbt/journal/v29/n5/full/nbt.1823.html>`__.
  * **Event-Based Data** (optional): If your experiment contained interventions you can include that here
 * **Study Information Page**
+
+.. figure::  images/study_information_page.png
+   :align:   center
+   
  * **Share**: Shares the study with other users
  * **Edit**: Brings you to the Edit Study Page if you wanted to update your study
  * **Delete**: Deletes the study
@@ -162,7 +170,9 @@ Attaching the Sample Information to the Study
    
 Upload Sample Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+.. figure::  images/upload_page.png
+   :align:   center
+   
 * **Upload Files Page**
  * Drag your sample info file into the box to upload your files
  * Your uploaded samples will appear under the "Files" section
@@ -171,7 +181,9 @@ Upload Sample Information
 
 Attach Sample Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-
+.. figure::  images/attach_sample_information.png
+   :align:   center
+   
 * **Sample Information Page**
  * **Select sample information file**: Attaches the uploaded sample information to the study
  * **If uploading a QIIME mapping file, select the data type of the prep information**: Selects the data type
@@ -182,10 +194,14 @@ Viewing Sample Information
 
 * **Sample Information Page**
  * **Sample Information** Tab
+ .. figure::  images/sample_information_tab.png
+   :align:   center
   * See different metadata values
   * **Sample Info**: Downloads the metadata onto your computer
   * **Update Sample Information**: Upload a new sample information file
  * **Sample-Prep Summary** Tab
+ .. figure::  images/sample_prep_summary_tab.png
+   :align:   center
   * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
 
 Update Sample info
