@@ -111,12 +111,23 @@ additional column is required.
 Attaching Prep Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. figure::  upload_page.png
+   :align:   center
+   
 * **Upload Files Page**
  * Drag your data files into the box to upload your files
  * If you want to delete the file, press the box that appears next to that file then click delete selected files
  * **Go to study description**: Link to the study description page
+
+.. figure::  add_preparation.png
+   :align:   center
+   
 * **Study Description Page**
- * Select “Add new preparation page”
+ * Choose **Add New Preparation** 
+
+.. figure::  add_new_preparation.png
+   :align:   center
+   
 * **Add New Preparation Page**
  * **Select File** (required): Select the preparatory information file you uploaded  
  * **Select Data Type** (required): Choose for what kind of data you studied
@@ -126,6 +137,9 @@ Attaching Prep Information
 Associate data with prep
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. figure::  data_type.png
+   :align:   center
+   
 * **Data Type**
  * **16S, or the data type you studied** dropdown: Shows the preparations created on this type of data on this study
  * **Prep Information Page**
@@ -133,9 +147,19 @@ Associate data with prep
    * **Select Type** (required): Select the file type you uploaded, causing Qiita to associate your files with this preparation
    * **Add a name for this file** (required): Give the file a name
    * **Add Files**: Shows up after Select Type has been chosen, adds files to the preparation
+   
+.. figure::  prep_summary.png
+   :align:   center
+   
+* **Prep Information Page** 
   * **Summary** Tab
    * Includes preparation info files of that data type that’s associated with your study
-  * **Processing** Tab
+   
+.. figure::  prep_processing.png
+   :align:   center
+   
+ * **Prep Information Page** 
+ * **Processing** Tab
    * **Processing Network**: Contains artifacts that represent your data and commands being run on your data
    * **Hide**: Hides the processing network
  
@@ -154,6 +178,9 @@ Processing Network Page
 Files Network Within Data Type
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. figure::  files_network.png
+   :align:   center
+   
 * **(FASTQ) or other data type artifact**: Represents the data from the study
 * **Hide**: Hides the processing network 
 * **Show**: Shows the processing network
@@ -180,6 +207,9 @@ BIOM
 FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. figure::  split_libraries.png
+   :align:   center
+   
 * **Per-sample vs Multiplexed FASTQ Demultiplexing**
  * **Split libraries FASTQ**: Converts the raw FASTQ data into the file format used by Qiita for further analysis
   * **Input data** (required): Data being split
@@ -222,8 +252,8 @@ FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
 
 Deblurring
 ----------
-
 *Note that sff data cannot be deblurred*
+
 * **Trimming**: Removes base pairs from the sequences
  * **Input Data** (required): Data being trimmed
  * **Parameter Set** (required): How many bases to trim off
