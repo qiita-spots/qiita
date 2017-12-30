@@ -169,6 +169,13 @@ Upload Sample Information
  * **Delete selected files**: Delete a file with the selected boxes
  * **Go to study description**: Link to the study description page
 
+Attach Sample Information
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **Sample Information Page**
+ * **Select sample information file**: Attaches the uploaded sample information to the study
+ * **If uploading a QIIME mapping file, select the data type of the prep information**: Selects the data type
+
 Viewing Sample Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
