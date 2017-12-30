@@ -4,6 +4,9 @@ Analyzing Samples
 Create New Analysis Page
 ------------------------
 
+.. figure::  create_analysis.png
+   :align:   center
+   
 * **See Previous Analysis**
  * Shows past analysis done on your account, or shared with you.
 * **Filter results by column data (Title, Abstract, PI, etc.)**: Searches for studies with the title/abstract/PI/etc. that you inputted
@@ -28,6 +31,10 @@ Processing Network Page: Commands
 
 Commands for Deblurred or Closed-Reference Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure::  rarefy.png
+   :align:   center
+   
 * **Rarefy features** [35](../references.rst): Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth  
  *  **BIOM table** (required): Feature table containing the samples for which features should be rarefied
  *  **Parameter set**: Parameters at which the rarefication is run
@@ -36,6 +43,9 @@ Commands for Deblurred or Closed-Reference Data
 Commands from Rarefied Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. figure::  filtering.png
+   :align:   center
+   
 * **Filter samples by metadata**: Filters samples from an OTU table on the basis of the number of observations in that sample, or on the basis of sample metadata
  * **BIOM table** (required): Feature table containing the samples for which features should be filtered
  * **Maximum feature frequency across samples** (optional): Maximum total frequency that a feature can have to be retained
@@ -46,6 +56,10 @@ Commands from Rarefied Data
 * **Summarize Taxa**: Creates a bar plot of the taxa within the analysis
  * *Can only be performed with closed-reference data*
  * **BIOM table** (required): Feature table containing the samples to visualize at various taxonomic levels
+
+.. figure::  alpha_diversity.png
+   :align:   center
+   
 * **Calculate alpha diversity** [99](../references.rst): Measures the diversity within a sample
  * **BIOM table** (required): Feature table containing the samples for which alpha diversity should be computed
   * **Diversity metric** (required): Alpha diversity metric to be run
@@ -118,6 +132,10 @@ Commands from Rarefied Data
     * Measures species abundance unevenness
  * **Phylogenetic tree** (required for Faith PD): Phylogenetic tree to be used with alpha analyses (only include when necessary)
   * Currently the only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
+
+.. figure::  beta_diversity.png
+   :align:   center
+   
 * **Calculate beta diversity** [99](../references.rst): Measured the diversity between samples
  * **BIOM table** (required): Feature table containing the samples for which beta diversity should be computed
  * **Adjust variance** [14](../references.rst) (phylogenetic only): Performs variance adjustment
@@ -190,6 +208,9 @@ Commands from Rarefied Data
 Commands from Alpha Diversity Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. figure::  alpha_correlation.png
+   :align:   center
+   
 * **Alpha Correlation** [80](../references.rst): Determines if the numeric sample metadata category is correlated with alpha diversity
  * **Correlation Method** (required): Correction test being applied
   * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
@@ -199,8 +220,15 @@ Commands from Alpha Diversity Data
 Commands from Beta Diversity Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. figure::  pcoa.png
+   :align:   center
+   
 * **Perform Principal Coordinate Analysis (PCoA)** [71](../references.rst): Visualizes the similarities and differences between samples using Emperor Plots [95](../references.rst)
  * **Distance matrix** (required): Distance matrix on which the PCoA should be computed
+
+.. figure::  beta_group_significance.png
+   :align:   center
+   
 * **Beta Group Significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
  * **Distance matrix** (required): Matrix of distances between pairs of samples
  * **Comparison Type** (required): Perform or not perform pairwise tests between all pairs of groups in addition to the test across all groups
@@ -209,6 +237,10 @@ Commands from Beta Diversity Data
   * **Anosim** [20](../references.rst):  Describes the strength and significance that a category has in determining the distances between points and can accept either categorical or continuous variables in the metadata mapping file
   * **Permanova** [4](../references.rst): Describes the strength and significance that a category has in determining the distances between points and can accept categorical variables
  * **Number of permutations** (required): Number of permutations to be run when computing p-values 
+
+.. figure::  beta_correlation.png
+   :align:   center
+   
 * **Beta Correlation**: Identifies a correlation between the distance matrix and a numeric sample metadata category
  * **Distance-matrix** (required): Matrix of distances between pairs of samples
  * **Correlation method** (required): Correlation test being applied
