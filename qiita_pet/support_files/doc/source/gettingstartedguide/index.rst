@@ -30,8 +30,9 @@ Creating a Study
   * To find out which type of sample you have read this paper found in `Nature <http://www.nature.com/nbt/journal/v29/n5/full/nbt.1823.html>`__.
  * **Event-Based Data** (optional): If your experiment contained interventions you can include that here
 * **Study Information Page**
- * **Add**: Adds another user to the study
+ * **Share**: Shares the study with other users
  * **Edit**: Brings you to the Edit Study Page if you wanted to update your study
+ * **Delete**: Deletes the study
  * **Study tags** (optional): Keywords that will help you, and others, find your study in Qiita
   * For example, if you’re studying soil you can add that as a tag
   * Must **Save tags** To keep them otherwise they dissapear
