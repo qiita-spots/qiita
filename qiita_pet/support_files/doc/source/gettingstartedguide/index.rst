@@ -8,6 +8,7 @@ Creating an Account
 
 Home Screen
 ~~~~~~~~~~~
+
 .. figure::  home_screen.png
    :align:   center
 
@@ -18,6 +19,7 @@ Home Screen
  
 Creating a Study
 ----------------
+
 .. figure::  create_new_study.png
    :align:   center
    
@@ -33,11 +35,11 @@ Creating a Study
  * **Environmental Packages** (optional): Describing the environment from which a biological sample originates
   * To find out which type of sample you have read this paper found in `Nature <http://www.nature.com/nbt/journal/v29/n5/full/nbt.1823.html>`__.
  * **Event-Based Data** (optional): If your experiment contained interventions you can include that here
-* **Study Information Page**
 
 .. figure::  study_information_page.png
    :align:   center
    
+* **Study Information Page**
  * **Share**: Shares the study with other users
  * **Edit**: Brings you to the Edit Study Page if you wanted to update your study
  * **Delete**: Deletes the study
@@ -170,6 +172,7 @@ Attaching the Sample Information to the Study
    
 Upload Sample Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. figure::  upload_page.png
    :align:   center
    
@@ -181,6 +184,7 @@ Upload Sample Information
 
 Attach Sample Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. figure::  attach_sample_information.png
    :align:   center
    
@@ -193,15 +197,19 @@ Viewing Sample Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * **Sample Information Page**
- * **Sample Information** Tab
+
 .. figure:: sample_information_tab.png
    :align:   center
+   
+ * **Sample Information** Tab
   * See different metadata values
   * **Sample Info**: Downloads the metadata onto your computer
   * **Update Sample Information**: Upload a new sample information file
- * **Sample-Prep Summary** Tab
+ 
 .. figure::  sample_prep_summary_tab.png
    :align:   center
+   
+ * **Sample-Prep Summary** Tab
   * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
 
 Update Sample info
