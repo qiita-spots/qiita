@@ -217,7 +217,7 @@ Commands from Alpha Diversity Data
 .. figure::  alpha_correlation.png
    :align:   center
    
-* **Calculate Alpha Correlation** [80](../references.rst): Determines if the numeric sample metadata category is correlated with alpha diversity
+* **Calculate alpha correlation** [80](../references.rst): Determines if the numeric sample metadata category is correlated with alpha diversity
  * **Correlation Method** (required): Correction test being applied
   * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
   * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
