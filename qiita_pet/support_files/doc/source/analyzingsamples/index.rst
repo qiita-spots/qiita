@@ -218,10 +218,10 @@ Commands from Alpha Diversity Data
    :align:   center
    
 * **Calculate alpha correlation** [80](../references.rst): Determines if the numeric sample metadata category is correlated with alpha diversity
+ * **Alpha Vectors** (required): Vector of alpha diversity values by sample
  * **Correlation Method** (required): Correction test being applied
   * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
   * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
- * **Alpha Vectors** (required): Vector of alpha diversity values by sample
 
 Commands from Beta Diversity Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
