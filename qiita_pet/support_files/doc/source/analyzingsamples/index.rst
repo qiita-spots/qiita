@@ -16,6 +16,10 @@ Create New Analysis Page
 * **Per Artifact Button**: Reveals the names of the artifacts, the number of samples in the prep info, and the files
  * **Add**: Adds data to be analyzed 
   * More than 1 can be done at once to do large meta-data analysis
+
+.. figure::  create_new_analysis.png
+   :align:   center
+   
 * **Create New Analysis**: Creates the analysis using the data that has been added
  * **Analysis Name** (required): Name for the analysis that will be done
  * **Description** (optional): Description for the analysis that will be done
