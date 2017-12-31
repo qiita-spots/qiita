@@ -235,7 +235,7 @@ Commands from Beta Diversity Data
 .. figure::  beta_group_significance.png
    :align:   center
    
-* **Beta Group Significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
+* **Calculate beta group significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
  * **Distance matrix** (required): Matrix of distances between pairs of samples
  * **Comparison Type** (required): Perform or not perform pairwise tests between all pairs of groups in addition to the test across all groups
  * **Metadata category** (required): Category from metadata file or artifact viewable as metadata
@@ -247,7 +247,7 @@ Commands from Beta Diversity Data
 .. figure::  beta_correlation.png
    :align:   center
    
-* **Beta Correlation**: Identifies a correlation between the distance matrix and a numeric sample metadata category
+* **Calculate beta correlation**: Identifies a correlation between the distance matrix and a numeric sample metadata category
  * **Distance-matrix** (required): Matrix of distances between pairs of samples
  * **Correlation method** (required): Correlation test being applied
   * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
