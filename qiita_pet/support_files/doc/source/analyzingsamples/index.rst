@@ -55,6 +55,10 @@ Commands from Rarefied Data
  * **Minimum feature frequency across samples** (optional): Minimum total frequency that a feature must have to be retained
  * **Minimum features per sample** (optional): Minimum number of features that a sample can have to be retained
  * **SQLite WHERE-clause** (optional): Metadata group that is being filtered out
+
+.. figure::  summarize_taxa.png
+   :align:   center
+   
 * **Summarize Taxa**: Creates a bar plot of the taxa within the analysis
  * *Can only be performed with closed-reference data*
  * **BIOM table** (required): Feature table containing the samples to visualize at various taxonomic levels
