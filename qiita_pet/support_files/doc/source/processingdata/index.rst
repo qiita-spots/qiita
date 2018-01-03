@@ -1,8 +1,8 @@
 Processing Data
 ===============
 
-Adding and Working With Preperation information
------------------------------------------------
+Creating and Working With Preperation information
+-------------------------------------------------
 
 Prepare information files
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -108,8 +108,11 @@ additional column is required.
 | ``run_prefix``   | free text   | Name of your sequence file without the suffix (for example, ``seqs.fna`` becomes ``seqs``, and ``my-data.fastq`` becomes ``my-data``).   |
 +------------------+-------------+------------------------------------------------------------------------------------------------------------------------------------------+
 
-Attaching Prep Information
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Attaching Preperation Information to the Study
+----------------------------------------------
+
+Upload Prep Information
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  upload_page.png
    :align:   center
@@ -118,6 +121,9 @@ Attaching Prep Information
  * Drag your data files into the box to upload your files
  * If you want to delete the file, press the box that appears next to that file then click delete selected files
  * **Go to study description**: Link to the study description page
+
+Attach Prep Information
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  add_preparation.png
    :align:   center
@@ -134,8 +140,8 @@ Attaching Prep Information
  * **Select Investigation Type** (optional): Not required, chooses the investigation you performed
  * **Create New Preparation**: Creates a new preparation based on the data inputted above
  
-Associate data with prep
-~~~~~~~~~~~~~~~~~~~~~~~~
+Associate Data with Prep Information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  data_type.png
    :align:   center
