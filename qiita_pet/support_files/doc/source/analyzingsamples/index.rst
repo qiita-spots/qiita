@@ -261,6 +261,9 @@ Processing Network Page: Results
 Taxa Bar Plot
 ~~~~~~~~~~~~~
 
+.. figure::  taxa_barplot.png
+   :align:   center
+   
 * **Taxonomic Level**: How specific the taxa will be displayed 
  * 1- Kingdom, 2- Phylum, 3- Class, 4- Order, 5- Genus, 6- Species, 7- Subspecies
 * **Color Palette**: Changes the coloring of your taxa bar plot
@@ -271,6 +274,12 @@ Taxa Bar Plot
 Alpha Diversity Results
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+.. figure::  alpha_diversity_boxplot.png
+   :align:   center
+
+.. figure::  alpha_diversity_kruskal_wallis.png
+   :align:   center
+   
 * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
 * **Category**: Choose the metadata category you would like to analyze
 * **Kruskal-Wallis** [49](../references.rst): Result of Kruskal-Wallis tests
@@ -279,15 +288,26 @@ Alpha Diversity Results
 Alpha Correlation Results
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. figure::  alpha_correlation.png
+   :align:   center
+   
 * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
  * Gives the Spearman or Pearson result (rho and p-value)
 
 Beta Diversity Result
 ~~~~~~~~~~~~~~~~~~~~~
+
+.. figure::  beta_diversity_plot.png
+   :align:   center
+   
 * **Distance Matrix**: Dissimilarity value for each pairwise comparison
 
 PCoA Result
 ~~~~~~~~~~~
+
+.. figure::  PCoA_plot.png
+   :align:   center
+   
 * **Emperor Plot**: Visualization of similarities/dissimilarities between samples
  * **Color**: Choose colors for each group
   * **Color Category**: Groups each sample by the given category chosen by a given color
@@ -303,6 +323,13 @@ PCoA Result
 
 Beta Group Significance
 ~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure::  beta_group_significance1.png
+   :align:   center
+   
+.. figure::  beta_group_significance2.png
+   :align:   center
+   
 * **Boxplot**: Shows how different measures of beta diversity correlate with different metadata categories
 * Gives the Permanova or Anosim result (psuedo-F and p-value)
 
