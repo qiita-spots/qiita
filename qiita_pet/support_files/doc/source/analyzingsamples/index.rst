@@ -289,14 +289,17 @@ Beta Diversity Result
 PCoA Result
 ~~~~~~~~~~~
 * **Emperor Plot**: Visualization of similarities/dissimilarities between samples
- * **Color Category**: Groups each sample by the given category chosen by a given color
- * **Colors**: Choose colors for each group
+ * **Color**: Choose colors for each group
+  * **Color Category**: Groups each sample by the given category chosen by a given color
  * **Visibility** Allows for making certain samples invisible
   * *Does not remove them from the analysis*
    * Must perform filtering to do that
- * **Shape**: Groups each sample by the given category chosen by a given shape  
- * **Axis**: Change the position of the axis as well as the color of the graph
+ * **Opacity**: Change the transparency of a given category
  * **Scale**: Change the size of a given category 
+ * **Shape**: Groups each sample by the given category chosen by a given shape  
+ * **Axes**: Change the position of the axis as well as the color of the graph
+ * **Animations**: 
+
 
 Beta Group Significance
 ~~~~~~~~~~~~~~~~~~~~~~~
