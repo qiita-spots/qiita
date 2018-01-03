@@ -288,7 +288,7 @@ Alpha Diversity Results
 Alpha Correlation Results
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure::  alpha_correlation.png
+.. figure::  alpha_correlation_plot.png
    :align:   center
    
 * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
