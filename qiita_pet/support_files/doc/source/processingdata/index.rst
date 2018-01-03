@@ -188,10 +188,10 @@ Files Network Within Data Type
 * **Click on artifact circle**: Brings up more options 
  * **Edit**: Rename the artifact
  * **Process**: Brings you to processing network page so you can process the data
+  * **Choose Command dropdown menu**: Will show you the commands that can be given to the chosen artifact
  * **Delete**: Delete the artifact/data from the files network
  * **Available Files**: FASTQ files that have been uploaded to this study can be downloaded here
  * **Generate Summary**: Creates a summary for the data attached to the artifact chosen
- * **Choose Command dropdown menu**: Will show you the commands that can be given to the chosen artifact
  * **Show processing information**: Shows the processing information of the artifact chosen
 * The commands run on this page use the QIIME2 [64](..//references.rst) bioinformatics platform.
 
