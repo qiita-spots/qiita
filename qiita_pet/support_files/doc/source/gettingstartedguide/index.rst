@@ -56,8 +56,8 @@ Editing a Study
 *  Select “Edit” from “Study Information Page” to bring you to “Edit Study Page”
 *  Make the desired edits and select “Update Study”
 
-Adding and Working With Sample information
-------------------------------------------
+Creating and Working With Sample information
+--------------------------------------------
 
 Example files
 ~~~~~~~~~~~~~
