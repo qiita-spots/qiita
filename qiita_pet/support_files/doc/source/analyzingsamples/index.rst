@@ -1,8 +1,11 @@
 Analyzing Samples
 =================
 
+Creating A New Analysis
+-----------------------
+
 Create New Analysis Page
-------------------------   
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  create_analysis.png
    :align:   center
