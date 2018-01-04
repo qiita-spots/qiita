@@ -318,8 +318,9 @@ PCoA Result
  * **Scale**: Change the size of a given category 
  * **Shape**: Groups each sample by the given category chosen by a given shape  
  * **Axes**: Change the position of the axis as well as the color of the graph
- * **Animations**: 
-
+ * **Animations**: Traces the samples sorted by a metadata category
+  * *Requires a gradient (the order in which samples are connected together, must be numeric) column and a trajectory (the way in which samples are grouped together) column within the sample information file* 
+  * *Works best for time series
 
 Beta Group Significance
 ~~~~~~~~~~~~~~~~~~~~~~~
