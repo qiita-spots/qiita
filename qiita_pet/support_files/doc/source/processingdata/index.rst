@@ -23,7 +23,8 @@ Files Network Within Data Type
  * **Generate Summary**: Creates a summary for the data attached to the artifact chosen
  * **Show processing information**: Shows the processing information of the artifact chosen
  * **Request Approval**: Sends the artifact to a Qiita admin to be reviewed for approval to become a public study
-  * * Note that a study must be approved by a Qiita admin prior to being sent to EBI for submission* 
+  * *Note that a study must be successfully processed to be approved my a Qiita admin*
+  * *Note that a study must be approved by a Qiita admin prior to being sent to EBI for submission* 
 * The commands run on this page use the QIIME2 [64](..//references.rst) bioinformatics platform.
 
 
