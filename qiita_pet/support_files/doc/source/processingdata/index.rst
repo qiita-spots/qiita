@@ -22,6 +22,8 @@ Files Network Within Data Type
  * **Available Files**: FASTQ files that have been uploaded to this study can be downloaded here
  * **Generate Summary**: Creates a summary for the data attached to the artifact chosen
  * **Show processing information**: Shows the processing information of the artifact chosen
+ * **Request Approval**: Sends the artifact to a Qiita admin to be reviewed for approval to become a public study
+  * *A study must be approved prior to being sent to EBI* 
 * The commands run on this page use the QIIME2 [64](..//references.rst) bioinformatics platform.
 
 
