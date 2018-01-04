@@ -334,11 +334,3 @@ Beta Group Significance
    
 * **Boxplot**: Shows how different measures of beta diversity correlate with different metadata categories
 * Gives the Permanova or Anosim result (psuedo-F and p-value)
-
-Beta Correlation
-~~~~~~~~~~~~~~~~
-
-* Gives the Spearman or Pearson result (rho and p-value)
- * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
- * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
-* Gives scatterplot of the distance matrix on the y and the variable being tested on the x-axis
