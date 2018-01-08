@@ -11,12 +11,10 @@ env:
 before_install:
   - redis-server --version
   - redis-server --port 7777 &
-  - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - wget http://repo.continuum.io/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda3/bin:$PATH
-  # Update conda itself
-  - conda update --yes conda
   # Downloading and setting up ascp for EBI testing
   - wget ftp://ftp.microbio.me/pub/qiita/ascp-install-3.5.4.102989-linux-64-qiita.sh -O ascp-install-3.5.4.102989-linux-64-qiita.sh
   - chmod +x ascp-install-3.5.4.102989-linux-64-qiita.sh
@@ -56,7 +54,7 @@ install:
   - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins/BIOM\ type_2.1.4\ -\ Qiime2.conf
   - touch ~/.bash_profile
   # Install the biom plugin so we can run the analysis tests
-  - travis_retry conda create -q --yes -n qtp-biom --file https://data.qiime2.org/distro/core/qiime2-2017.11-conda-linux-64.txt
+  - travis_retry conda create -q --yes -n qtp-biom python=3.5 --file https://data.qiime2.org/distro/core/qiime2-2017.12-conda-linux-64.txt
   - source activate qtp-biom
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
