@@ -54,9 +54,9 @@ class Archive(qdb.base.QiitaObject):
 
         Raises
         ------
-            ValueError
-                If the Artifact type is not BIOM
-                If the artifact doesn't have a biom filepath
+        ValueError
+            If the Artifact type is not BIOM
+            If the artifact doesn't have a biom filepath
         """
         with qdb.sql_connection.TRN:
             atype = artifact.artifact_type
@@ -149,8 +149,8 @@ class Archive(qdb.base.QiitaObject):
 
         Notes
         -----
-            If archive_merging_scheme is None it will return all
-            feature values
+        If archive_merging_scheme is None it will return all
+        feature values
         """
         with qdb.sql_connection.TRN:
             extras = []
