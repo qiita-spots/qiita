@@ -37,36 +37,28 @@ class ArchiveTest(TestCase):
                     'featureB%d' % i: '{valuesB: vB, float: 1.1}'})
 
         # now let's tests that all the inserts happen as expected
-        exp = [
-            ['', 'featureA8', '{valuesA: vA, int: 1}'],
-            ['', 'featureB8', '{valuesB: vB, float: 1.1}'],
-            ['Pick closed-reference OTUs | Split libraries FASTQ',
-             'featureA4', '{valuesA: vA, int: 1}'],
-            ['Pick closed-reference OTUs | Split libraries FASTQ',
-             'featureA5', '{valuesA: vA, int: 1}'],
-            ['Pick closed-reference OTUs | Split libraries FASTQ',
-             'featureB4', '{valuesB: vB, float: 1.1}'],
-            ['Pick closed-reference OTUs | Split libraries FASTQ',
-             'featureB5', '{valuesB: vB, float: 1.1}'],
-            ['Single Rarefaction | N/A', 'featureA9',
-             '{valuesA: vA, int: 1}'],
-            ['Single Rarefaction | N/A', 'featureB9',
-             '{valuesB: vB, float: 1.1}']]
+        exp = {
+            'featureA4': '{valuesA: vA, int: 1}',
+            'featureA5': '{valuesA: vA, int: 1}',
+            'featureB9': '{valuesB: vB, float: 1.1}',
+            'featureB8': '{valuesB: vB, float: 1.1}',
+            'featureB5': '{valuesB: vB, float: 1.1}',
+            'featureB4': '{valuesB: vB, float: 1.1}',
+            'featureA8': '{valuesA: vA, int: 1}',
+            'featureA9': '{valuesA: vA, int: 1}'}
         obs = qdb.archive.Archive.retrieve_feature_values()
         self.assertEqual(obs, exp)
 
         # that we retrieve only one kind
-        exp = [
-            ['Single Rarefaction | N/A', 'featureA9',
-             '{valuesA: vA, int: 1}'],
-            ['Single Rarefaction | N/A', 'featureB9',
-             '{valuesB: vB, float: 1.1}']]
+        exp = {
+            'featureB9': '{valuesB: vB, float: 1.1}',
+            'featureA9': '{valuesA: vA, int: 1}'}
         obs = qdb.archive.Archive.retrieve_feature_values(
             'Single Rarefaction | N/A')
         self.assertEqual(obs, exp)
 
         # and nothing
-        exp = []
+        exp = {}
         obs = qdb.archive.Archive.retrieve_feature_values('Nothing')
         self.assertEqual(obs, exp)
 

@@ -24,6 +24,24 @@ class Archive(qdb.base.QiitaObject):
     """
 
     @classmethod
+    def _inserting_main_steps(cls, TRN, ms, features):
+        sql = """INSERT INTO qiita.archive_merging_scheme
+                    (archive_merging_scheme)
+                 SELECT %s WHERE NOT EXISTS (
+                    SELECT 1 FROM qiita.archive_merging_scheme
+                    WHERE archive_merging_scheme = %s)"""
+        TRN.add(sql, [ms, ms])
+        sql = """SELECT archive_merging_scheme_id
+                 FROM qiita.archive_merging_scheme
+                 WHERE archive_merging_scheme = %s"""
+        TRN.add(sql, [ms])
+        amsi = TRN.execute_fetchlast()
+
+        vals = [[amsi, _id, val] for _id, val in features.items()]
+        TRN.add("SELECT archive_upsert(%s, %s, %s)", vals, many=True)
+        TRN.execute()
+
+    @classmethod
     def insert_from_artifact(cls, artifact, features):
         r"""Inserts new features to the database based on a given artifact
 
@@ -53,25 +71,75 @@ class Archive(qdb.base.QiitaObject):
             # [0] as it returns a list
             ms = qdb.util.get_artifacts_information(
                 [artifact.id])[0]['algorithm']
-            sql = """INSERT INTO qiita.archive_merging_scheme
-                        (archive_merging_scheme)
-                     SELECT %s WHERE NOT EXISTS (
-                        SELECT 1 FROM qiita.archive_merging_scheme
-                        WHERE archive_merging_scheme = %s)"""
-            qdb.sql_connection.TRN.add(sql, [ms, ms])
-            sql = """SELECT archive_merging_scheme_id
-                     FROM qiita.archive_merging_scheme
-                     WHERE archive_merging_scheme = %s"""
-            qdb.sql_connection.TRN.add(sql, [ms])
-            amsi = qdb.sql_connection.TRN.execute_fetchlast()
 
-            vals = [[amsi, _id, val] for _id, val in features.items()]
-            qdb.sql_connection.TRN.add(
-                "SELECT archive_upsert(%s, %s, %s)", vals, many=True)
-            qdb.sql_connection.TRN.execute()
+            cls._inserting_main_steps(qdb.sql_connection.TRN, ms, features)
 
     @classmethod
-    def retrieve_feature_values(cls, archive_merging_scheme=None):
+    def get_merging_scheme_from_job(cls, job):
+        r"""Inserts new features to the database based on a given job
+
+        Parameters
+        ----------
+        job : qiita_db.artifact.Artifact
+            The artifact from which the features were generated
+        features : dict {str: str}
+            A dictionary of the features and the values to be stored
+
+        Raises
+        ------
+            ValueError
+                If the Artifact type is not BIOM
+                If the artifact doesn't have a biom filepath
+        """
+        with qdb.sql_connection.TRN:
+            acmd = job.command
+            ms = acmd.merging_scheme
+
+            # 1. cleaning aparams - the parameters of the main artifact/job
+            temp = acmd.optional_parameters.copy()
+            temp.update(acmd.required_parameters)
+            # list: cause it can be tuple or lists
+            # [0]: the first value is the parameter type
+            tparams = job.parameters.values
+            aparams = ','.join(
+                ['%s: %s' % (k, tparams[k]) for k, v in temp.items()
+                 if list(v)[0] != 'artifact' and k in ms['parameters']])
+            # in theory we could check here for the filepath merging but
+            # as the files haven't been creted we don't have this info.
+            # Additionally, based on the current funtionality, this is not
+            # important as normally the difference between files is just
+            # an additional filtering step
+            if aparams:
+                cname = "%s (%s)" % (acmd.name, aparams)
+            else:
+                cname = acmd.name
+
+            # 2. cleaning pparams - the parameters of the parent artifact
+            # [0] getting the atributes from the first parent
+            pcmd = job.input_artifacts[0].processing_parameters.command
+            palgorithm = 'N/A'
+            if pcmd is not None:
+                pms = pcmd.merging_scheme
+                palgorithm = pcmd.name
+                if pms['parameters']:
+                    pass
+                    # ToDo: Archive
+                    # here we need to check for the parent parameters
+                    # pparams = ','.join(
+                    #     ['%s: %s' % (k, tparams[k]) for k, v in temp.items()
+                    #  if list(v)[0] != 'artifact' and k in ms['parameters']])
+                    #
+                    #         params = ','.join(['%s: %s' % (k, pparams[k])
+                    #                            for k in ms['parameters']])
+                    #         palgorithm = "%s (%s)" % (palgorithm, params)
+                    #
+            algorithm = '%s | %s' % (cname, palgorithm)
+
+            return algorithm
+
+    @classmethod
+    def retrieve_feature_values(cls, archive_merging_scheme=None,
+                                features=None):
         r"""Retrieves all features/values from the archive
 
         Parameters
@@ -85,15 +153,26 @@ class Archive(qdb.base.QiitaObject):
             feature values
         """
         with qdb.sql_connection.TRN:
-            extra = ("" if archive_merging_scheme is None
-                     else "WHERE archive_merging_scheme = '%s'" %
-                     archive_merging_scheme)
-            sql = """SELECT archive_merging_scheme, archive_feature,
-                        archive_feature_value
+            extras = []
+            vals = []
+            if archive_merging_scheme is not None:
+                extras.append("""archive_merging_scheme = %s""")
+                vals.append(archive_merging_scheme)
+            if features is not None:
+                extras.append("""archive_feature IN %s""")
+                vals.append(tuple(features))
+
+            sql = """SELECT archive_feature, archive_feature_value
                      FROM qiita.archive_feature_value
                      LEFT JOIN qiita.archive_merging_scheme
                         USING (archive_merging_scheme_id) {0}
-                     ORDER BY archive_merging_scheme, archive_feature
-                  """.format(extra)
-            qdb.sql_connection.TRN.add(sql)
-            return qdb.sql_connection.TRN.execute_fetchindex()
+                     ORDER BY archive_merging_scheme, archive_feature"""
+
+            if extras:
+                sql = sql.format('WHERE ' + ' AND '.join(extras))
+                qdb.sql_connection.TRN.add(sql, vals)
+            else:
+                qdb.sql_connection.TRN.add(sql.format(''))
+
+            return {k: v for k, v in
+                    qdb.sql_connection.TRN.execute_fetchindex()}

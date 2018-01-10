@@ -14,6 +14,7 @@ from unittest import main
 from json import loads
 
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
+from qiita_db.sql_connection import TRN
 
 
 class APIArchiveObservationsTests(OauthTestingBase):
@@ -32,10 +33,25 @@ class APIArchiveObservationsTests(OauthTestingBase):
                     rmtree(fp)
 
     def test_post(self):
-        obs = self.post('/qiita_db/archive/observations/', headers=self.header,
-                        data={'job_id': 'a_job_id', 'features': ['AA', 'CA']})
-        self.assertEqual(obs.code, 200)
-        self.assertEqual(loads(obs.body), {'AA': [], 'CA': []})
+        # let's archive different values from different jobs
+        with TRN:
+            # 3 - close reference picking
+            # 3 - success
+            sql = """SELECT processing_job_id
+                     FROM qiita.processing_job
+                     WHERE command_id = 3 AND processing_job_status_id = 3"""
+            TRN.add(sql)
+            jobs = TRN.execute_fetchflatten()
+
+            for j in jobs:
+                special_feature = 'AA - %s' % j
+                data = {'job_id': j, 'features': [special_feature, 'CA']}
+                obs = self.post(
+                    '/qiita_db/archive/observations/', headers=self.header,
+                    data=data)
+                exp = {}
+                self.assertEqual(obs.code, 200)
+                self.assertEqual(loads(obs.body), exp)
 
 
 if __name__ == '__main__':
