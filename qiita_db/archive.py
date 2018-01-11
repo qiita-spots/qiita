@@ -17,6 +17,7 @@ class Archive(qdb.base.QiitaObject):
     Methods
     -------
     insert_from_biom
+    insert_from_artifact
 
     See Also
     --------
@@ -24,22 +25,24 @@ class Archive(qdb.base.QiitaObject):
     """
 
     @classmethod
-    def _inserting_main_steps(cls, TRN, ms, features):
-        sql = """INSERT INTO qiita.archive_merging_scheme
-                    (archive_merging_scheme)
-                 SELECT %s WHERE NOT EXISTS (
-                    SELECT 1 FROM qiita.archive_merging_scheme
-                    WHERE archive_merging_scheme = %s)"""
-        TRN.add(sql, [ms, ms])
-        sql = """SELECT archive_merging_scheme_id
-                 FROM qiita.archive_merging_scheme
-                 WHERE archive_merging_scheme = %s"""
-        TRN.add(sql, [ms])
-        amsi = TRN.execute_fetchlast()
+    def _inserting_main_steps(cls, ms, features):
+        with qdb.sql_connection.TRN:
+            sql = """INSERT INTO qiita.archive_merging_scheme
+                        (archive_merging_scheme)
+                     SELECT %s WHERE NOT EXISTS (
+                        SELECT 1 FROM qiita.archive_merging_scheme
+                        WHERE archive_merging_scheme = %s)"""
+            qdb.sql_connection.TRN.add(sql, [ms, ms])
+            sql = """SELECT archive_merging_scheme_id
+                     FROM qiita.archive_merging_scheme
+                     WHERE archive_merging_scheme = %s"""
+            qdb.sql_connection.TRN.add(sql, [ms])
+            amsi = qdb.sql_connection.TRN.execute_fetchlast()
 
-        vals = [[amsi, _id, val] for _id, val in features.items()]
-        TRN.add("SELECT archive_upsert(%s, %s, %s)", vals, many=True)
-        TRN.execute()
+            vals = [[amsi, _id, val] for _id, val in features.items()]
+            qdb.sql_connection.TRN.add(
+                "SELECT archive_upsert(%s, %s, %s)", vals, many=True)
+            qdb.sql_connection.TRN.execute()
 
     @classmethod
     def insert_from_artifact(cls, artifact, features):
@@ -72,7 +75,7 @@ class Archive(qdb.base.QiitaObject):
             ms = qdb.util.get_artifacts_information(
                 [artifact.id])[0]['algorithm']
 
-            cls._inserting_main_steps(qdb.sql_connection.TRN, ms, features)
+            cls._inserting_main_steps(ms, features)
 
     @classmethod
     def get_merging_scheme_from_job(cls, job):
