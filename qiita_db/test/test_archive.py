@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from json import dumps
 
 from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
@@ -33,29 +34,29 @@ class ArchiveTest(TestCase):
         for i in [4, 5, 8, 9]:
             qdb.archive.Archive.insert_from_artifact(
                 qdb.artifact.Artifact(i), {
-                    'featureA%d' % i: '{valuesA: vA, int: 1}',
-                    'featureB%d' % i: '{valuesB: vB, float: 1.1}'})
+                    'featureA%d' % i: dumps({'valuesA': 'vA', 'int': 1}),
+                    'featureB%d' % i: dumps({'valuesB': 'vB', 'float': 1.1})})
 
         # now let's tests that all the inserts happen as expected
         exp = {
-            'featureA4': '{valuesA: vA, int: 1}',
-            'featureA5': '{valuesA: vA, int: 1}',
-            'featureB9': '{valuesB: vB, float: 1.1}',
-            'featureB8': '{valuesB: vB, float: 1.1}',
-            'featureB5': '{valuesB: vB, float: 1.1}',
-            'featureB4': '{valuesB: vB, float: 1.1}',
-            'featureA8': '{valuesA: vA, int: 1}',
-            'featureA9': '{valuesA: vA, int: 1}'}
+            'featureA4': dumps({'valuesA': 'vA', 'int': 1}),
+            'featureA5': dumps({'valuesA': 'vA', 'int': 1}),
+            'featureB9': dumps({'valuesB': 'vB', 'float': 1.1}),
+            'featureB8': dumps({'valuesB': 'vB', 'float': 1.1}),
+            'featureB5': dumps({'valuesB': 'vB', 'float': 1.1}),
+            'featureB4': dumps({'valuesB': 'vB', 'float': 1.1}),
+            'featureA8': dumps({'valuesA': 'vA', 'int': 1}),
+            'featureA9': dumps({'valuesA': 'vA', 'int': 1})}
         obs = qdb.archive.Archive.retrieve_feature_values()
         self.assertEqual(obs, exp)
 
         # that we retrieve only one kind
-        exp = {
-            'featureB9': '{valuesB: vB, float: 1.1}',
-            'featureA9': '{valuesA: vA, int: 1}'}
+        exp = dumps({
+            'featureB9': dumps({'valuesB': 'vB', 'float': 1.1}),
+            'featureA9': dumps({'valuesA': 'vA', 'int': 1})})
         obs = qdb.archive.Archive.retrieve_feature_values(
             'Single Rarefaction | N/A')
-        self.assertEqual(obs, exp)
+        self.assertEqual(dumps(obs), exp)
 
         # and nothing
         exp = {}
