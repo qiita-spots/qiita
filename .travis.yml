@@ -55,7 +55,7 @@ install:
   - touch ~/.bash_profile
   # Install the biom plugin so we can run the analysis tests
   - wget https://data.qiime2.org/distro/core/qiime2-2017.12-py35-linux-conda.yml
-  - travis_retry conda create -q --yes -n qtp-biom python=3.5 --file qiime2-2017.12-py35-linux-conda.yml
+  - travis_retry conda env create -q --yes -n qtp-biom python=3.5 --file qiime2-2017.12-py35-linux-conda.yml
   - rm qiime2-2017.12-py35-linux-conda.yml
   - source activate qtp-biom
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
