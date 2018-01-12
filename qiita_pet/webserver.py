@@ -30,24 +30,29 @@ from qiita_pet.handlers.analysis_handlers import (
 from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateHandler,
     SampleTemplateOverviewHandler, SampleTemplateSummaryHandler,
-    StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
-    CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
+    # StudyEditHandler,
+    ListStudiesHandler, SearchStudiesAJAX, # EBISubmitHandler,
+    CreateStudyAJAX, ShareStudyAJAX, # StudyApprovalList,
+    ArtifactGraphAJAX,
     VAMPSHandler, StudyTags, StudyGetTags,
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX, StudyDeleteAjax,
-    ArtifactAdminAJAX, NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
+    # ArtifactAdminAJAX, NewPrepTemplateAjax,
+    DataTypesMenuAJAX, StudyFilesAJAX,
     ArtifactGetSamples, ArtifactGetInfo, WorkflowHandler,
     WorkflowRunHandler, JobAJAX, AutocompleteHandler)
 from qiita_pet.handlers.artifact_handlers import (
     ArtifactSummaryAJAX, ArtifactAJAX, ArtifactSummaryHandler)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
-from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
-from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
+# from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
+# from qiita_pet.handlers.upload import UploadFileHandler,
+# StudyUploadFileHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import (
     DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease,
-    DownloadRawData, DownloadEBISampleAccessions, DownloadEBIPrepAccessions,
+    # DownloadRawData,
+    DownloadEBISampleAccessions, DownloadEBIPrepAccessions,
     DownloadUpload)
 from qiita_pet.handlers.prep_template import (
     PrepTemplateHandler, PrepTemplateGraphHandler, PrepTemplateJobHandler)
@@ -117,13 +122,13 @@ class Application(tornado.web.Application):
             (r"/artifact/samples/", ArtifactGetSamples),
             (r"/artifact/info/", ArtifactGetInfo),
             (r"/consumer/", MessageHandler),
-            (r"/admin/error/", LogEntryViewerHandler),
-            (r"/admin/approval/", StudyApprovalList),
-            (r"/admin/artifact/", ArtifactAdminAJAX),
-            (r"/ebi_submission/(.*)", EBISubmitHandler),
+            # (r"/admin/error/", LogEntryViewerHandler),
+            # (r"/admin/approval/", StudyApprovalList),
+            # (r"/admin/artifact/", ArtifactAdminAJAX),
+            # (r"/ebi_submission/(.*)", EBISubmitHandler),
             # Study handlers
-            (r"/study/create/", StudyEditHandler),
-            (r"/study/edit/(.*)", StudyEditHandler),
+            # (r"/study/create/", StudyEditHandler),
+            # (r"/study/edit/(.*)", StudyEditHandler),
             (r"/study/list/", ListStudiesHandler),
             (r"/study/process/commands/options/", ListOptionsHandler),
             (r"/study/process/commands/", ListCommandsHandler),
@@ -136,7 +141,7 @@ class Application(tornado.web.Application):
             (r"/study/files/", StudyFilesAJAX),
             (r"/study/sharing/", ShareStudyAJAX),
             (r"/study/sharing/autocomplete/", AutocompleteHandler),
-            (r"/study/new_prep_template/", NewPrepTemplateAjax),
+            # (r"/study/new_prep_template/", NewPrepTemplateAjax),
             (r"/study/tags/(.*)", StudyTags),
             (r"/study/get_tags/", StudyGetTags),
             # Artifact handlers
@@ -164,13 +169,13 @@ class Application(tornado.web.Application):
             (r"/study/description/data_type_menu/", DataTypesMenuAJAX),
             (r"/study/description/(.*)", StudyIndexHandler),
             (r"/study/delete/", StudyDeleteAjax),
-            (r"/study/upload/(.*)", StudyUploadFileHandler),
-            (r"/upload/", UploadFileHandler),
+            # (r"/study/upload/(.*)", StudyUploadFileHandler),
+            # (r"/upload/", UploadFileHandler),
             (r"/check_study/", CreateStudyAJAX),
             (r"/stats/", StatsHandler),
             (r"/download/(.*)", DownloadHandler),
             (r"/download_study_bioms/(.*)", DownloadStudyBIOMSHandler),
-            (r"/download_raw_data/(.*)", DownloadRawData),
+            # (r"/download_raw_data/(.*)", DownloadRawData),
             (r"/download_ebi_accessions/samples/(.*)",
                 DownloadEBISampleAccessions),
             (r"/download_ebi_accessions/experiments/(.*)",
