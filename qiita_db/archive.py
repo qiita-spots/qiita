@@ -132,7 +132,8 @@ class Archive(qdb.base.QiitaObject):
 
             # 2. cleaning pparams - the parameters of the parent artifact
             # [0] getting the atributes from the first parent
-            pcmd = job.input_artifacts[0].processing_parameters.command
+            ppp = job.input_artifacts[0].processing_parameters
+            pcmd = None if ppp is None else ppp.command
             palgorithm = 'N/A'
             if pcmd is not None:
                 pms = pcmd.merging_scheme
