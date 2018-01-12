@@ -78,6 +78,19 @@ class Archive(qdb.base.QiitaObject):
             cls._inserting_main_steps(ms, features)
 
     @classmethod
+    def insert_features(cls, merging_scheme, features):
+        r"""Inserts new features to the database based on a given artifact
+
+        Parameters
+        ----------
+        merging_scheme : str
+            The merging scheme to store these features
+        features : dict {str: str}
+            A dictionary of the features and the values to be stored
+        """
+        cls._inserting_main_steps(merging_scheme, features)
+
+    @classmethod
     def get_merging_scheme_from_job(cls, job):
         r"""Inserts new features to the database based on a given job
 
@@ -125,17 +138,15 @@ class Archive(qdb.base.QiitaObject):
                 pms = pcmd.merging_scheme
                 palgorithm = pcmd.name
                 if pms['parameters']:
-                    pass
-                    # ToDo: Archive
-                    # here we need to check for the parent parameters
-                    # pparams = ','.join(
-                    #     ['%s: %s' % (k, tparams[k]) for k, v in temp.items()
-                    #  if list(v)[0] != 'artifact' and k in ms['parameters']])
-                    #
-                    #         params = ','.join(['%s: %s' % (k, pparams[k])
-                    #                            for k in ms['parameters']])
-                    #         palgorithm = "%s (%s)" % (palgorithm, params)
-                    #
+                    ppms = pms['parameters']
+                    op = pcmd.optional_parameters.copy()
+                    op.update(pcmd.required_parameters)
+                    pparams = ','.join(
+                        ['%s: %s' % (k, ppms[k]) for k, v in op.items()
+                         if list(v)[0] != 'artifact' and k in ppms])
+                    params = ','.join(
+                        ['%s: %s' % (k, pparams[k]) for k in ppms])
+                    palgorithm = "%s (%s)" % (palgorithm, params)
             algorithm = '%s | %s' % (cname, palgorithm)
 
             return algorithm

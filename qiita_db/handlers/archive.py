@@ -29,3 +29,12 @@ class APIArchiveObservations(OauthBaseHandler):
             archive_merging_scheme=ms, features=features)
 
         self.write(response)
+
+    @authenticate_oauth
+    def patch(self):
+        job_id = self.get_argument('job_id')
+        features = self.request.arguments['features']
+
+        ms = Archive.get_merging_scheme_from_job(ProcessingJob(job_id))
+
+        Archive.insert_features(ms, features)
