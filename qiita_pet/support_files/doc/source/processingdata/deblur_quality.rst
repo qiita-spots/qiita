@@ -1,8 +1,3 @@
-.. _deblur_quality:
-
-.. index:: deblur-quality
-
-========================
 Deblur quality filtering
 ========================
 
@@ -76,26 +71,26 @@ Results
 
 We first set out to test whether higher quality filtering led to improved correlation between quality filtering levels. Our hypothesis being that a filtering level of N would have a higher correlation to a filtering level of N-1 then to the N-16 level. In order to assess this, we plotted the resulting Pearson r^2 values from Mantel tests between q4 vs. q20, against the Pearson r^2 values from Mantel tests between q19 vs. q20. As can be see with the unweighted UniFrac results in figure 1, the impact of quality filtering does not appear to improve correlation with more stringent filtering irrespective of the OTU methods tested. Paradoxically, there are a few examples where it appears that q4 has a higher correlation to q20 than q19. The effect is similar with weighted UniFrac (figure 2) in that studies which correlate poorly between q4 and q20 tend to correlate poorly between q19 and q20, however q2-Deblur tends to surprisingly have higher correlation between q4 and q20 in contrast to open reference. Closed reference OTU picking appears robust with weighted UniFrac. 
 
-.. figure::  images/deblur_quality_fig1.png
+.. figure::  ../images/deblur_quality_fig1.png
    :align:   center
 
 **Figure 1.** Mantel correlations of unweighted UniFrac distances between quality filtering thresholds. From left to right, the plots depict a sequence trim of 99nt, 124nt, 149nt and 250nt. Green corresponds to q2-deblur, blue to open reference and red to closed reference. The x-axes depict the r^2 for a q19 filtered table vs. a q20 filtered table, and the y-axes depict the r^2 for a q4 filtered table vs. a q20 filtered table.
 
-.. figure::  images/deblur_quality_fig2.png
+.. figure::  ../images/deblur_quality_fig2.png
    :align:   center
 
 **Figure 2.** Mantel correlations of weighted UniFrac distances between quality filtering thresholds. From left to right, the plots depict a sequence trim of 99nt, 124nt, 149nt and 250nt. Green corresponds to q2-deblur, blue to open reference and red to closed reference. The x-axes depict the r^2 for a q19 filtered table vs. a q20 filtered table, and the y-axes depict the r^2 for a q4 filtered table vs. a q20 filtered table. 
 
 Next, we sought to explore how the methods performed relative to each other. For this analysis, for each pair of methods (e.g., q2-deblur vs. q1-openref), for a common artifact, for a common trim and quality filtering level, we computed the difference between r^2 values. The distribution of the resulting differences were then plotted per-artifact in figure 3 for unweighted UniFrac comparing q2-deblur to open reference. 
 
-.. figure::  images/deblur_quality_fig3.png
+.. figure::  ../images/deblur_quality_fig3.png
    :align:   center
 
 **Figure 3.** Correlation differences for unweighted UniFrac between q2-deblur and open-reference. For a given set of parameters (i.e., the artifact, trim length and quality filtering level pair), the observed r^2 values were subtracted and plotted. Values greater than 0 indicate whether q2-deblur yielded a higher correlation to q20 than open-reference. 
 
 Finally, we examined the stability of the results by computing multiple rarefactions, and assessing Mantel correlations between the resulting tables. Specifically, we sought to understand the variability within a given quality threshold as it compares between quality thresholds (figure 4). 
 
-.. figure::  images/deblur_quality_fig4.png
+.. figure::  ../images/deblur_quality_fig4.png
    :align:   center
 
 **Figure 4.** Within and between rarefaction assessment of Mantel correlations at a trim of 99nt. For a given artifact, at a given quality filtering level, 10 rarefactions were computed. Within a quality filtering level, all pairwise Mantel tests were performed. Between quality levels, all pairwise Mantel tests of the rarefactions between levels were computed. The results suggest that more aggressive quality filtering does not have an appreciable impact on the overall relationships between samples.

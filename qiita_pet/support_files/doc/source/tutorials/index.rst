@@ -9,11 +9,11 @@ The following is a full list of the available guides:
 .. toctree::
    :maxdepth: 2
 
-   prepare-information-files
-   ebi-submission
    sharing
    no-raw-sequences
    join-paired-end-reads
+   ebi-submission.rst
+   prepare-information-files.rst
 
 To request documentation on any administration use-cases not addressed here,
 please add an issue `here <https://github.com/biocore/qiita/issues>`__.
