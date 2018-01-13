@@ -27,8 +27,8 @@ from private to public, so consider this when submitting data and your manuscrip
    the QIIME mapping file, in general, doesn't have all the EBI/ENA fields. Thus, you will need to
    update your information files (sample or preparation) via the update option. To simplify this process,
    you can download the system generated files and add/modify these fields for each file.
-   
-   
+
+
 EBI-ENA NULL values vocabulary
 ------------------------------
 
@@ -38,8 +38,8 @@ For the latest definitions and explanation visit the `EBI/ENA Missing value repo
 
 .. warning::
    Column names in your information files cannot be named as a Postgres reserved word. For example, a column cannot be named `CONDITION`, but could instead be named `DISEASE_CONDITION`. For a full list of these reserved words, see this `link <https://www.postgresql.org/docs/9.3/static/sql-keywords-appendix.html>`__.
-   
-   
+
+
 Required Sample Information Fields for EBI submission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -101,5 +101,3 @@ Valid values for instrument_model per platform, taken from ftp://ftp.sra.ebi.ac.
 +--------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``Illumina`` | ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``, ``Illumina Genome Analyzer IIx``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 2000``, ``Illumina HiSeq 1500``, ``Illumina HiSeq 1000``, ``Illumina MiSeq``, ``Illumina HiScanSQ``, ``HiSeq X Ten``, ``NextSeq 500``, ``unspecified`` |
 +--------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
-.. _required-fields-for-preprocessing-target-gene-data:

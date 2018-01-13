@@ -14,9 +14,9 @@ Home Screen
 
 * **Icons** (located on top right corner)
 
- * **Inbox** (3rd from the right): Your system messages
- * **Selected Samples** (2nd from the right): Your selected samples
- * **Jobs** (rightmost): Your active jobs and their statuses
+  * **Inbox** (3rd from the right): Your system messages
+  * **Selected Samples** (2nd from the right): Your selected samples
+  * **Jobs** (rightmost): Your active jobs and their statuses
 
 Creating a Study
 ----------------
@@ -26,19 +26,19 @@ Creating a Study
 
 * **Creating a New Study/Edit Study Page**
 
- * **Study Title** (required): Name of the experiment
- * **Study Alias** (required): A different name to put your experiment under
- * **DOI (optional)**: Not required but if your paper has already been published you will be given a DOI, or Digital Object Identifier, that scientists can use to find your paper
- * **PubMed ID** (optional): Not required but if your paper has been published in PubMed it will be given a designated PubMed ID that scientists can use to help find your paper
- * **Study Abstract** (required): Abstract for your experiment
- * **Study Description** (required): Quick description of your study, shorter than the abstract
- * **Principal Investigator** (required): Whose lab it is
- * **Lab Person** (optional): Who to contact if you have questions about the experiment
- * **Environmental Packages** (optional): Describing the environment from which a biological sample originates
+  * **Study Title** (required): Name of the experiment
+  * **Study Alias** (required): A different name to put your experiment under
+  * **DOI (optional)**: Not required but if your paper has already been published you will be given a DOI, or Digital Object Identifier, that scientists can use to find your paper
+  * **PubMed ID** (optional): Not required but if your paper has been published in PubMed it will be given a designated PubMed ID that scientists can use to help find your paper
+  * **Study Abstract** (required): Abstract for your experiment
+  * **Study Description** (required): Quick description of your study, shorter than the abstract
+  * **Principal Investigator** (required): Whose lab it is
+  * **Lab Person** (optional): Who to contact if you have questions about the experiment
+  * **Environmental Packages** (optional): Describing the environment from which a biological sample originates
 
   * To find out which type of sample you have read this paper found in `Nature <http://www.nature.com/nbt/journal/v29/n5/full/nbt.1823.html>`__.
 
- * **Event-Based Data** (optional): If your experiment contained interventions you can include that here
+  * **Event-Based Data** (optional): If your experiment contained interventions you can include that here
 
 .. figure::  study_information_page.png
    :align:   center
