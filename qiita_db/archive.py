@@ -11,13 +11,14 @@ from __future__ import division
 import qiita_db as qdb
 
 
-class Archive(qdb.base.QiitaObject):
+class Archive(object):
     r"""Extra information for any features stored in a BIOM Artifact
 
     Methods
     -------
     insert_from_biom
     insert_from_artifact
+    insert_features
 
     See Also
     --------
@@ -76,19 +77,6 @@ class Archive(qdb.base.QiitaObject):
                 [artifact.id])[0]['algorithm']
 
             cls._inserting_main_steps(ms, features)
-
-    @classmethod
-    def insert_features(cls, merging_scheme, features):
-        r"""Inserts new features to the database based on a given artifact
-
-        Parameters
-        ----------
-        merging_scheme : str
-            The merging scheme to store these features
-        features : dict {str: str}
-            A dictionary of the features and the values to be stored
-        """
-        cls._inserting_main_steps(merging_scheme, features)
 
     @classmethod
     def get_merging_scheme_from_job(cls, job):
@@ -191,3 +179,25 @@ class Archive(qdb.base.QiitaObject):
 
             return {k: v for k, v in
                     qdb.sql_connection.TRN.execute_fetchindex()}
+
+    def insert_features(self, merging_scheme, features):
+        r"""Inserts new features to the database based on a given artifact
+
+        Parameters
+        ----------
+        merging_scheme : str
+            The merging scheme to store these features
+        features : dict {str: str}
+            A dictionary of the features and the values to be stored
+
+        Returns
+        -------
+        dict, feature: value
+            The inserted new values
+        """
+        self._inserting_main_steps(merging_scheme, features)
+
+        inserted = self.retrieve_feature_values(
+            archive_merging_scheme=merging_scheme, features=features.keys())
+
+        return inserted

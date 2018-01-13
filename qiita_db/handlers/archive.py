@@ -9,6 +9,7 @@
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.archive import Archive
+from json import loads
 
 
 class APIArchiveObservations(OauthBaseHandler):
@@ -33,8 +34,9 @@ class APIArchiveObservations(OauthBaseHandler):
     @authenticate_oauth
     def patch(self):
         job_id = self.get_argument('job_id')
-        features = self.request.arguments['features']
+        features = loads(self.get_argument('features'))
 
         ms = Archive.get_merging_scheme_from_job(ProcessingJob(job_id))
+        archive = Archive()
 
-        Archive.insert_features(ms, features)
+        self.write(archive.insert_features(ms, features))
