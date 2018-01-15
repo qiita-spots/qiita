@@ -1,4 +1,14 @@
 {% from qiita_core.qiita_settings import qiita_config %}
+
+<script type="text/javascript">
+  function toggle_color_prep(div){
+    div.parent().children().each(function() {
+      $(this).css("background-color", "#FFFFF");
+    });
+    div.css("background-color", "#EEE");
+  }
+</script>
+
 {% if prep_info %}
   <h3>Data Types <small>(click on the tabs)</small></h3>
   <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
@@ -14,19 +24,20 @@
           </h4>
         </div>
         <div id="collapse{{cleaned_dt}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{cleaned_dt}}">
-          <div class="panel-body">
+          <div class="panel-body" style="padding: 0px 0px 0px 0px; border: none;">
             {% for prep in prep_info[dt] %}
-              {% if prep['ebi_experiment'] %}
-                <img src="{% raw qiita_config.portal_dir %}/static/img/ena.png" style="width:20px;height:20px;"> ({{prep['ebi_experiment']}})
-              {% end %}
-              <a href="#" style="display:block;color:black;" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep['id']}}, study_id: {{study_id}} });">
-                <span id="prep-header-{{prep['id']}}">
-                  {{prep['name']}} - ID {{prep['id']}} - {{prep['status']}}
-                </span><br/>
-                {{prep['start_artifact']}} - ID {{prep['start_artifact_id']}}<br/>
-                {{prep['youngest_artifact']}}
-              </a>
-              <hr>
+              <div class="panel-body-element" style="padding: 20px 20px 20px 20px;">
+                {% if prep['ebi_experiment'] %}
+                  <img src="{% raw qiita_config.portal_dir %}/static/img/ena.png" style="width:20px;height:20px;"> ({{prep['ebi_experiment']}})
+                {% end %}
+                <a href="#" style="display:block;color:black;" onclick="toggle_color_prep($(this).parent()); populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep['id']}}, study_id: {{study_id}} });">
+                  <span id="prep-header-{{prep['id']}}">
+                    {{prep['name']}} - ID {{prep['id']}} - {{prep['status']}}
+                  </span><br/>
+                  {{prep['start_artifact']}} - ID {{prep['start_artifact_id']}}<br/>
+                  {{prep['youngest_artifact']}}
+                </a>
+              </div>
             {% end %}
           </div>
         </div>
