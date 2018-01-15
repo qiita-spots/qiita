@@ -1726,18 +1726,6 @@ def open_file(filepath_or, *args, **kwargs):
     args, kwargs : tuple, dict
         When `filepath_or` is a string, any extra arguments are passed
         on to the ``open`` builtin.
-
-    Examples
-    --------
-    >>> with open_file('filename') as f:  # doctest: +SKIP
-    ...     pass
-    >>> fh = open('filename')             # doctest: +SKIP
-    >>> with open_file(fh) as f:          # doctest: +SKIP
-    ...     pass
-    >>> fh.closed                         # doctest: +SKIP
-    False
-    >>> fh.close()                        # doctest: +SKIP
-
     """
     fh, own_fh = _get_filehandle(filepath_or, *args, **kwargs)
     try:
