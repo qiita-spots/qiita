@@ -614,13 +614,12 @@ class DBUtilTests(TestCase):
         obs = qdb.util.get_files_from_uploads_folders("1")
         self.assertItemsEqual(obs, exp)
 
-        # testing errors
-        with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.util.move_upload_files_to_trash(2, [(fid, test_filename)])
+        # if the file doesn't exist, don't raise any errors
+        qdb.util.move_upload_files_to_trash(2, [(fid, test_filename)])
+
+        # testing error
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.util.move_upload_files_to_trash(1, [(10, test_filename)])
-        with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.util.move_upload_files_to_trash(1, [(fid, test_filename)])
 
         # removing trash folder
         rmtree(join(folder, '1', 'trash'))
