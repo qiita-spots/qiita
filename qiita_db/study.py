@@ -336,6 +336,10 @@ class Study(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBColumnError(
                 "non info keys passed: %s" % cls._non_info.intersection(info))
 
+        # cleaning up title, this is also done in JS for the GUI but rather
+        # be safe than sorry
+        title = ' '.join(title.split()).strip()
+
         with qdb.sql_connection.TRN:
             if cls.exists(title):
                 raise qdb.exceptions.QiitaDBDuplicateError(
