@@ -384,11 +384,17 @@ class TestStudy(TestCase):
         self.assertFalse(qdb.study.Study.exists('Not Cannabis Soils'))
 
     def test_create_duplicate(self):
-        with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
-            qdb.study.Study.create(
-                qdb.user.User('test@foo.bar'),
-                'Identification of the Microbiomes for Cannabis Soils',
-                self.info)
+        to_test = [
+            'Identification of the Microbiomes for Cannabis Soils',
+            'Identification  of  the Microbiomes for Cannabis Soils',
+            ' Identification of the Microbiomes for Cannabis Soils',
+            'Identification of the Microbiomes for Cannabis Soils ',
+            '  Identification of the Microbiomes for Cannabis Soils  '
+        ]
+        for tt in to_test:
+            with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
+                qdb.study.Study.create(
+                    qdb.user.User('test@foo.bar'), tt, self.info)
 
     def test_create_study_min_data(self):
         """Insert a study into the database"""
