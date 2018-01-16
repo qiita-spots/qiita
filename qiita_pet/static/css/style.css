@@ -1,3 +1,17 @@
+/*
+  Original source https://stackoverflow.com/a/18529465
+  Link
+*/
+.navbar-default .navbar-nav > li > a {
+  font-size: 14px;
+  color: #EEE;
+}
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+  color: #CCC;
+}
+/* Link END */
+
 #qiita-main {
   position: relative;
   height: 100%;
@@ -42,9 +56,15 @@ tr.shown div.details-control{
   padding-bottom: 6px;
 }
 
-.dropdown:hover .dropdown-menu {
+.dropdown:hover .dropdown-menu{
     display: block;
  }
+
+/* hover is a pseudoclass and can't be controlled - use the class below to trigger
+the same behavior as the hover pseudoclass */
+.custom-dropdown-menu {
+    display: block;
+}
 
  .info-menu {
     word-wrap: break-word;

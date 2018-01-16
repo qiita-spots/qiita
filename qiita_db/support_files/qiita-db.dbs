@@ -181,10 +181,32 @@
 				<fk_column name="email" pk="email" />
 			</fk>
 		</table>
+		<table name="archive_feature_value" >
+			<column name="archive_merging_scheme_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="archive_feature" type="varchar" jt="12" mandatory="y" />
+			<column name="archive_feature_value" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_archive_feature_value" unique="PRIMARY_KEY" >
+				<column name="archive_merging_scheme_id" />
+				<column name="archive_feature" />
+			</index>
+			<index name="idx_archive_feature_value_0" unique="NORMAL" >
+				<column name="archive_merging_scheme_id" />
+			</index>
+			<fk name="fk_archive_feature_value" to_schema="qiita" to_table="archive_merging_scheme" >
+				<fk_column name="archive_merging_scheme_id" pk="archive_merging_scheme_id" />
+			</fk>
+		</table>
+		<table name="archive_merging_scheme" >
+			<column name="archive_merging_scheme_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="archive_merging_scheme" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_merging_scheme" unique="PRIMARY_KEY" >
+				<column name="archive_merging_scheme_id" />
+			</index>
+		</table>
 		<table name="artifact" >
 			<comment>Represents data in the system</comment>
 			<column name="artifact_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="name" type="varchar" length="35" jt="12" mandatory="y" />
+			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="generated_timestamp" type="timestamp" jt="93" mandatory="y" />
 			<column name="command_id" type="bigint" jt="-5" />
 			<column name="command_parameters" type="varchar" jt="12" >
@@ -383,6 +405,9 @@
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="command_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="artifact_type_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="check_biom_merge" type="bool" jt="-7" mandatory="y" >
+				<defo>&#039;False&#039;</defo>
+			</column>
 			<index name="pk_command_output" unique="PRIMARY_KEY" >
 				<column name="command_output_id" />
 			</index>
@@ -410,6 +435,10 @@
 			<column name="parameter_type" type="varchar" jt="12" mandatory="y" />
 			<column name="required" type="bool" jt="-7" mandatory="y" />
 			<column name="default_value" type="varchar" jt="12" />
+			<column name="name_order" type="integer" jt="4" />
+			<column name="check_biom_merge" type="bool" jt="-7" mandatory="y" >
+				<defo>&#039;False&#039;</defo>
+			</column>
 			<index name="idx_command_parameter" unique="NORMAL" >
 				<column name="command_id" />
 			</index>
@@ -902,6 +931,9 @@
 				<comment><![CDATA[The investigation type (e.g., one of the values from EBI's set of known types)]]></comment>
 			</column>
 			<column name="artifact_id" type="bigint" jt="-5" />
+			<column name="name" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;Default Name&#039;</defo>
+			</column>
 			<index name="pk_prep_template" unique="PRIMARY_KEY" >
 				<column name="prep_template_id" />
 			</index>
@@ -1013,6 +1045,9 @@
 			</column>
 			<column name="step" type="varchar" jt="12" />
 			<column name="pending" type="varchar" jt="12" />
+			<column name="hidden" type="bool" jt="-7" mandatory="y" >
+				<defo>&#039;False&#039;</defo>
+			</column>
 			<index name="pk_processing_job" unique="PRIMARY_KEY" >
 				<column name="processing_job_id" />
 			</index>
@@ -1609,84 +1644,86 @@ Controlled Vocabulary]]></comment>
 	</schema>
 	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-9.2-1003.jdbc3.jar" host="localhost" port="5432" instance="qiita_test" user="mcdonadt" schema_mapping="" />
 	<layout id="Layout669806" name="qiita" confirmed="y" show_relation_columns="y" >
-		<entity schema="qiita" name="controlled_vocab_values" color="d0def5" x="45" y="1695" />
-		<entity schema="qiita" name="column_controlled_vocabularies" color="d0def5" x="270" y="1485" />
-		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="300" y="1650" />
-		<entity schema="qiita" name="analysis_users" color="d0def5" x="60" y="900" />
-		<entity schema="qiita" name="logging" color="c0d4f3" x="735" y="1515" />
-		<entity schema="qiita" name="analysis_filepath" color="c0d4f3" x="405" y="900" />
-		<entity schema="qiita" name="column_ontology" color="d0def5" x="285" y="1875" />
-		<entity schema="qiita" name="controlled_vocab" color="d0def5" x="45" y="1485" />
-		<entity schema="qiita" name="ontology" color="d0def5" x="510" y="1485" />
-		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="240" />
-		<entity schema="qiita" name="prep_y" color="d0def5" x="1230" y="255" />
-		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="735" y="1035" />
-		<entity schema="qiita" name="user_level" color="d0def5" x="165" y="225" />
-		<entity schema="qiita" name="severity" color="c0d4f3" x="870" y="1515" />
-		<entity schema="qiita" name="filepath" color="c0d4f3" x="645" y="825" />
-		<entity schema="qiita" name="term" color="d0def5" x="540" y="1785" />
-		<entity schema="qiita" name="study_prep_template" color="d0def5" x="1590" y="480" />
-		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1335" y="255" />
-		<entity schema="qiita" name="portal_type" color="c0d4f3" x="720" y="510" />
-		<entity schema="qiita" name="analysis_portal" color="a8c4ef" x="180" y="795" />
-		<entity schema="qiita" name="message_user" color="a8c4ef" x="1230" y="1320" />
-		<entity schema="qiita" name="message" color="a8c4ef" x="1425" y="1335" />
-		<entity schema="qiita" name="sample_x" color="d0def5" x="1635" y="210" />
-		<entity schema="qiita" name="prep_template_filepath" color="b2cdf7" x="1050" y="435" />
-		<entity schema="qiita" name="sample_template_filepath" color="b2cdf7" x="1050" y="585" />
-		<entity schema="qiita" name="prep_template" color="b2cdf7" x="1305" y="435" />
-		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1335" />
-		<entity schema="qiita" name="parent_artifact" color="b2cdf7" x="1065" y="840" />
-		<entity schema="qiita" name="artifact_filepath" color="b2cdf7" x="1050" y="930" />
-		<entity schema="qiita" name="study_users" color="d0def5" x="1920" y="135" />
-		<entity schema="qiita" name="study" color="d0def5" x="1935" y="255" />
-		<entity schema="qiita" name="study_portal" color="a8c4ef" x="1995" y="45" />
-		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1170" />
-		<entity schema="qiita" name="software_publication" color="b2cdf7" x="1980" y="795" />
-		<entity schema="qiita" name="visibility" color="b2cdf7" x="1050" y="1035" />
-		<entity schema="qiita" name="study_sample" color="d0def5" x="1455" y="150" />
-		<entity schema="qiita" name="publication" color="b2cdf7" x="2175" y="795" />
-		<entity schema="qiita" name="oauth_identifiers" color="b7c8e3" x="2490" y="720" />
-		<entity schema="qiita" name="oauth_software" color="b2cdf7" x="2340" y="720" />
-		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="885" />
-		<entity schema="qiita" name="ebi_run_accession" color="b2cdf7" x="1350" y="1065" />
-		<entity schema="qiita" name="artifact" color="b2cdf7" x="1200" y="840" />
-		<entity schema="qiita" name="artifact_type" color="d0def5" x="1410" y="840" />
-		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="825" y="780" />
-		<entity schema="qiita" name="data_directory" color="b2cdf7" x="585" y="990" />
-		<entity schema="qiita" name="artifact_type_filepath_type" color="b2cdf7" x="1380" y="705" />
-		<entity schema="qiita" name="study_artifact" color="b2cdf7" x="1605" y="690" />
-		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="2115" y="1035" />
-		<entity schema="qiita" name="parameter_artifact_type" color="b2cdf7" x="1920" y="1050" />
-		<entity schema="qiita" name="command_output" color="b2cdf7" x="1935" y="1155" />
-		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2400" y="1155" />
-		<entity schema="qiita" name="default_workflow" color="b2cdf7" x="2625" y="1155" />
-		<entity schema="qiita" name="default_workflow_node" color="b2cdf7" x="2400" y="1305" />
-		<entity schema="qiita" name="default_workflow_edge" color="b2cdf7" x="2640" y="1320" />
-		<entity schema="qiita" name="artifact_processing_job" color="b2cdf7" x="1785" y="1275" />
-		<entity schema="qiita" name="artifact_output_processing_job" color="b2cdf7" x="1755" y="1380" />
-		<entity schema="qiita" name="reference" color="c0d4f3" x="1785" y="1680" />
-		<entity schema="qiita" name="processing_job_status" color="b2cdf7" x="1800" y="1560" />
-		<entity schema="qiita" name="parent_processing_job" color="b2cdf7" x="2085" y="1575" />
-		<entity schema="qiita" name="processing_job_workflow" color="b2cdf7" x="2265" y="1710" />
-		<entity schema="qiita" name="processing_job_workflow_root" color="b2cdf7" x="2250" y="1590" />
-		<entity schema="qiita" name="prep_template_processing_job" color="b2cdf7" x="1740" y="960" />
-		<entity schema="qiita" name="software_artifact_type" color="b2cdf7" x="2040" y="945" />
-		<entity schema="qiita" name="software_type" color="b2cdf7" x="2625" y="930" />
-		<entity schema="qiita" name="software" color="b2cdf7" x="2400" y="930" />
-		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1980" y="1335" />
-		<entity schema="qiita" name="default_workflow_edge_connections" color="b2cdf7" x="2340" y="1455" />
-		<entity schema="qiita" name="processing_job_validator" color="b2cdf7" x="2190" y="1380" />
-		<entity schema="qiita" name="study_publication" color="b2cdf7" x="1980" y="705" />
-		<entity schema="qiita" name="software_command" color="b2cdf7" x="2175" y="1215" />
-		<entity schema="qiita" name="study_environmental_package" color="b2cdf7" x="2190" y="45" />
-		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="2160" y="540" />
-		<entity schema="qiita" name="study_tags" color="b2cdf7" x="2310" y="540" />
+		<entity schema="qiita" name="column_controlled_vocabularies" color="d0def5" x="270" y="1215" />
+		<entity schema="qiita" name="analysis_users" color="d0def5" x="45" y="840" />
+		<entity schema="qiita" name="logging" color="c0d4f3" x="975" y="1335" />
+		<entity schema="qiita" name="analysis_filepath" color="c0d4f3" x="390" y="840" />
+		<entity schema="qiita" name="controlled_vocab" color="d0def5" x="45" y="1215" />
+		<entity schema="qiita" name="qiita_user" color="d0def5" x="585" y="330" />
+		<entity schema="qiita" name="user_level" color="d0def5" x="420" y="315" />
+		<entity schema="qiita" name="severity" color="c0d4f3" x="1110" y="1335" />
+		<entity schema="qiita" name="filepath" color="c0d4f3" x="630" y="795" />
+		<entity schema="qiita" name="analysis_portal" color="a8c4ef" x="165" y="735" />
+		<entity schema="qiita" name="message_user" color="a8c4ef" x="1305" y="1290" />
+		<entity schema="qiita" name="message" color="a8c4ef" x="1500" y="1305" />
+		<entity schema="qiita" name="sample_x" color="d0def5" x="1530" y="240" />
+		<entity schema="qiita" name="parent_artifact" color="b2cdf7" x="1050" y="900" />
+		<entity schema="qiita" name="artifact_filepath" color="b2cdf7" x="1035" y="990" />
+		<entity schema="qiita" name="study_users" color="d0def5" x="1770" y="135" />
+		<entity schema="qiita" name="study_portal" color="a8c4ef" x="1845" y="45" />
+		<entity schema="qiita" name="visibility" color="b2cdf7" x="1035" y="1095" />
+		<entity schema="qiita" name="oauth_identifiers" color="b7c8e3" x="2340" y="720" />
+		<entity schema="qiita" name="oauth_software" color="b2cdf7" x="2190" y="720" />
+		<entity schema="qiita" name="analysis" color="d0def5" x="210" y="825" />
+		<entity schema="qiita" name="ebi_run_accession" color="b2cdf7" x="1335" y="1125" />
+		<entity schema="qiita" name="artifact_type" color="d0def5" x="1395" y="900" />
+		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="810" y="750" />
+		<entity schema="qiita" name="data_directory" color="b2cdf7" x="570" y="960" />
+		<entity schema="qiita" name="artifact_type_filepath_type" color="b2cdf7" x="1365" y="765" />
+		<entity schema="qiita" name="study_artifact" color="b2cdf7" x="1590" y="750" />
+		<entity schema="qiita" name="prep_template_processing_job" color="b2cdf7" x="1725" y="990" />
+		<entity schema="qiita" name="software_type" color="b2cdf7" x="2610" y="960" />
+		<entity schema="qiita" name="software" color="b2cdf7" x="2385" y="960" />
+		<entity schema="qiita" name="study_publication" color="b2cdf7" x="1845" y="720" />
+		<entity schema="qiita" name="software_command" color="b2cdf7" x="2160" y="1245" />
+		<entity schema="qiita" name="investigation_study" color="c0d4f3" x="2025" y="360" />
+		<entity schema="qiita" name="investigation" color="c0d4f3" x="2250" y="315" />
+		<entity schema="qiita" name="artifact" color="b2cdf7" x="1185" y="900" />
+		<entity schema="qiita" name="analysis_sample" color="d0def5" x="240" y="1035" />
+		<entity schema="qiita" name="portal_type" color="c0d4f3" x="810" y="585" />
+		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1155" />
+		<entity schema="qiita" name="prep_y" color="d0def5" x="1020" y="285" />
+		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1140" y="285" />
+		<entity schema="qiita" name="study_sample" color="d0def5" x="1350" y="240" />
+		<entity schema="qiita" name="study_prep_template" color="d0def5" x="1500" y="480" />
+		<entity schema="qiita" name="prep_template" color="b2cdf7" x="1230" y="465" />
+		<entity schema="qiita" name="prep_template_filepath" color="b2cdf7" x="1020" y="465" />
+		<entity schema="qiita" name="sample_template_filepath" color="b2cdf7" x="1035" y="600" />
+		<entity schema="qiita" name="study_environmental_package" color="b2cdf7" x="2085" y="45" />
+		<entity schema="qiita" name="environmental_package" color="b2cdf7" x="2160" y="180" />
+		<entity schema="qiita" name="study_person" color="c0d4f3" x="2010" y="135" />
+		<entity schema="qiita" name="study" color="d0def5" x="1785" y="240" />
 		<entity schema="qiita" name="per_study_tags" color="b2cdf7" x="2145" y="450" />
-		<entity schema="qiita" name="study_person" color="c0d4f3" x="2160" y="135" />
-		<entity schema="qiita" name="environmental_package" color="b2cdf7" x="2370" y="180" />
-		<entity schema="qiita" name="investigation_study" color="c0d4f3" x="2175" y="360" />
-		<entity schema="qiita" name="investigation" color="c0d4f3" x="2400" y="315" />
+		<entity schema="qiita" name="study_tags" color="b2cdf7" x="2295" y="480" />
+		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="2010" y="540" />
+		<entity schema="qiita" name="software_publication" color="b2cdf7" x="1980" y="810" />
+		<entity schema="qiita" name="publication" color="b2cdf7" x="2010" y="720" />
+		<entity schema="qiita" name="parameter_artifact_type" color="b2cdf7" x="1755" y="1095" />
+		<entity schema="qiita" name="command_output" color="b2cdf7" x="1755" y="1185" />
+		<entity schema="qiita" name="artifact_processing_job" color="b2cdf7" x="1755" y="1320" />
+		<entity schema="qiita" name="artifact_output_processing_job" color="b2cdf7" x="1740" y="1425" />
+		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1935" y="1140" />
+		<entity schema="qiita" name="software_artifact_type" color="b2cdf7" x="1965" y="990" />
+		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="2175" y="1020" />
+		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2385" y="1140" />
+		<entity schema="qiita" name="default_workflow_node" color="b2cdf7" x="2385" y="1260" />
+		<entity schema="qiita" name="default_workflow" color="b2cdf7" x="2580" y="1080" />
+		<entity schema="qiita" name="default_workflow_edge" color="b2cdf7" x="2610" y="1290" />
+		<entity schema="qiita" name="default_workflow_edge_connections" color="b2cdf7" x="2370" y="1395" />
+		<entity schema="qiita" name="processing_job_status" color="b2cdf7" x="1740" y="1530" />
+		<entity schema="qiita" name="processing_job_workflow_root" color="b2cdf7" x="2400" y="1545" />
+		<entity schema="qiita" name="parent_processing_job" color="b2cdf7" x="1995" y="1440" />
+		<entity schema="qiita" name="processing_job_validator" color="b2cdf7" x="2160" y="1395" />
+		<entity schema="qiita" name="reference" color="c0d4f3" x="1995" y="1545" />
+		<entity schema="qiita" name="processing_job_workflow" color="b2cdf7" x="2175" y="1545" />
+		<entity schema="qiita" name="controlled_vocab_values" color="d0def5" x="45" y="1335" />
+		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="255" y="1320" />
+		<entity schema="qiita" name="column_ontology" color="d0def5" x="270" y="1470" />
+		<entity schema="qiita" name="archive_feature_value" color="b2cdf7" x="1470" y="1515" />
+		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="720" y="1005" />
+		<entity schema="qiita" name="ontology" color="d0def5" x="570" y="1440" />
+		<entity schema="qiita" name="term" color="d0def5" x="720" y="1440" />
+		<entity schema="qiita" name="archive_merging_scheme" color="b2cdf7" x="1245" y="1515" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1787,6 +1824,10 @@ Controlled Vocabulary]]></comment>
 		<group name="Group_oauth2" color="ccffcc" >
 			<entity schema="qiita" name="oauth_identifiers" />
 			<entity schema="qiita" name="oauth_software" />
+		</group>
+		<group name="Group_archive" color="9999ff" >
+			<entity schema="qiita" name="archive_feature_value" />
+			<entity schema="qiita" name="archive_merging_scheme" />
 		</group>
 		<script name="Sql" id="SQL5888335" confirmed="y" >
 			<string><![CDATA[CREATE TABLE oauth_software (

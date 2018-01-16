@@ -28,6 +28,13 @@ $(document).ready(function() {
     $( "#{{creation_form.lab_person.id}}" ).chosen({
         allow_single_deselect: true
       });
+    $("#study_title").on("keyup", function() {
+      var title = $(this).val();
+      // removing any duplicated whitespaces
+      title = title.replace(/ +(?= )/g, '');
+      // removing wite spaces from the front of the text
+      $(this).val(title.trimLeft());
+    });
     $("#create_study").validate({
       ignore: "",
       submitHandler: function (form) {
@@ -39,7 +46,7 @@ $(document).ready(function() {
         request = $.ajax({
           type: "GET",
           url: '{% raw qiita_config.portal_dir %}/check_study/',
-          data: {study_title: $("#study_title")[0].value {% if study %}, old_study_title: "{% raw study.title.replace('"', '\\"') %}"{% end %} }
+          data: {study_title: $("#study_title")[0].value.trim() {% if study %}, old_study_title: "{% raw study.title.replace('"', '\\"') %}"{% end %} }
         });
 
         // callback handler that will be called on success
@@ -48,9 +55,11 @@ $(document).ready(function() {
                 form.submit();
             }
             else {
+                var title = $("#study_title")[0].value.trim();
                 $("#create_study_submit").prop('disabled', false);
-                $("#messagespan").text("Study '" + $("#study_title")[0].value + "' already exists! Please choose a different name.");
+                $("#messagespan").text("Study '" + title + "' already exists! Please choose a different name.");
                 alert($("#messagespan").text());
+                $("#study_title").val(title)
             }
         });
 

@@ -17,8 +17,12 @@
   }
   // adding new column to cols, we need to add a Formatter
   function linkFormatter(row, cell, value, columnDef, dataContext) {
-    return "<a class=\"btn btn-danger\" onclick=\"delete_sample('" + value +
-           "', " + row + ");\"><span class=\"glyphicon glyphicon-trash\"></span></a>";
+    {% if user_can_edit %}
+    return "<button class=\"btn btn-danger st-interactive\" onclick=\"sampleTemplatePage.$refs.stElem.deleteSample('" + value +
+           "', " + row + ");\"><span class=\"glyphicon glyphicon-trash\"></span></button>";
+    {% else %}
+    return ""
+    {% end %}
   }
   cols.unshift({ name: "", field: "slick-grid-sample-delete", width: 60, formatter: linkFormatter })
   var grid = new Slick.Grid("#samples-div", table, cols, options);

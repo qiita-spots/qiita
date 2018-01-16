@@ -1,5 +1,4 @@
 {% from qiita_core.qiita_settings import qiita_config %}
-{% from future.utils import viewitems %}
 
 <script type="text/javascript">
   function delete_sample_template() {
@@ -75,29 +74,7 @@
   }
 
   $(document).ready(function() {
-    $('#file-btn').prop('disabled', true);
-    $("#file-selector").change(function (event){
-      if($("#file-selector").val() === "" ){
-        $('#file-btn').prop('disabled', true);
-      }
-      else {
-        $('#file-btn').prop('disabled', false);
-      }
-    });
-
-    {% if alert_type != 'success' and alert_message != '' %}
-      bootstrapAlert(decodeURIComponent("{% raw alert_message %}").replace(/\+/g,' '), "{{alert_type}}");
-    {% else %}
-      $('#alert-message').alert('close');
-    {% end %}
-
-    // taken from: http://stackoverflow.com/a/2906009
-    if ({{row_id}} > 1) {
-      var container = $("html, body"), scrollTo = $("#row_{{row_id}}");
-      container.animate({
-          scrollTop: scrollTo.offset().top - container.offset().top + container.scrollTop()
-      });
-    }
+    newSampleTemplateVue('#sample-temaplate-page-vue');
   });
 </script>
 

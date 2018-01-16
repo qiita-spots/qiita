@@ -17,6 +17,7 @@ from natsort import natsorted
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
+from qiita_pet.util import get_network_nodes_edges
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
@@ -104,9 +105,8 @@ def prep_template_ajax_get_req(user_id, prep_id):
         attached
         - study_id: int, the study id of the template
     """
-    # Currently there is no name attribute, but it will be soon
-    name = "Prep information %d" % prep_id
     pt = PrepTemplate(prep_id)
+    name = pt.name
 
     # Initialize variables here
     processing = False
@@ -312,7 +312,7 @@ def prep_template_summary_get_req(prep_id, user_id):
 def prep_template_post_req(study_id, user_id, prep_template, data_type,
                            investigation_type=None,
                            user_defined_investigation_type=None,
-                           new_investigation_type=None):
+                           new_investigation_type=None, name=None):
     """Adds a prep template to the system
 
     Parameters
@@ -331,6 +331,8 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
         Existing user added investigation type to attach to the prep template
     new_investigation_type: str, optional
         Investigation type to add to the system
+    name : str, optional
+        The name of the new prep template
 
     Returns
     -------
@@ -357,12 +359,14 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     msg = ''
     status = 'success'
     prep = None
+    if name:
+        name = name if name.strip() else None
     try:
         with warnings.catch_warnings(record=True) as warns:
             # deleting previous uploads and inserting new one
             prep = PrepTemplate.create(
                 load_template_to_dataframe(fp_rpt), Study(study_id), data_type,
-                investigation_type=investigation_type)
+                investigation_type=investigation_type, name=name)
             remove(fp_rpt)
 
             # join all the warning messages into one. Note that this info
@@ -437,11 +441,13 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             cmd = qiita_plugin.get_command('update_prep_template')
             params = Parameters.load(
                 cmd, values_dict={'prep_template': prep_id, 'template_fp': fp})
-            job = ProcessingJob.create(User(user_id), params)
+            job = ProcessingJob.create(User(user_id), params, True)
 
             r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                          dumps({'job_id': job.id}))
             job.submit()
+        elif attribute == 'name':
+            prep.name = req_value.strip()
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',
@@ -473,7 +479,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
                               'obj_id': prep_id,
                               'sample_or_col': attribute,
                               'name': attr_id})
-        job = ProcessingJob.create(User(user_id), params)
+        job = ProcessingJob.create(User(user_id), params, True)
         # Store the job id attaching it to the sample template id
         r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                      dumps({'job_id': job.id}))
@@ -624,32 +630,53 @@ def prep_template_graph_get_req(prep_id, user_id):
     # doesn't have full access to the study
     full_access = Study(prep.study_id).can_edit(User(user_id))
 
-    G = prep.artifact.descendants_with_jobs
+    artifact = prep.artifact
 
-    # n[0] is the data type: job/artifact
-    # n[1] is the object
-    node_labels = []
-    for n in G.nodes():
-        if n[0] == 'job':
-            name = n[1].command.name
-        elif n[0] == 'artifact':
-            if full_access or n[1].visibility == 'public':
-                name = '%s - %s' % (n[1].name, n[1].artifact_type)
-            else:
-                continue
-        node_labels.append((n[0], n[1].id, name))
+    if artifact is None:
+        return {'edges': [], 'nodes': [],
+                'status': 'success', 'message': ''}
 
-    return {'edge_list': [(n[1].id, m[1].id) for n, m in G.edges()],
-            'node_labels': node_labels,
+    G = artifact.descendants_with_jobs
+
+    nodes, edges, wf_id = get_network_nodes_edges(G, full_access)
+
+    return {'edges': edges,
+            'nodes': nodes,
+            'workflow': wf_id,
             'status': 'success',
             'message': ''}
 
-    G = prep.artifact.descendants
-    node_ids = [id_ for id_, label in node_labels]
-    edge_list = [(n.id, m.id) for n, m in G.edges()
-                 if n.id in node_ids and m.id in node_ids]
 
-    return {'status': 'success',
-            'message': '',
-            'edge_list': edge_list,
-            'node_labels': node_labels}
+def prep_template_jobs_get_req(prep_id, user_id):
+    """Returns graph of all artifacts created from the prep base artifact
+
+    Parameters
+    ----------
+    prep_id : int
+        Prep template ID to get graph for
+    user_id : str
+        User making the request
+
+    Returns
+    -------
+    dict with the jobs information
+
+    Notes
+    -----
+    Nodes are identified by the corresponding Artifact ID.
+    """
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
+
+    job_info = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
+    result = {}
+    if job_info:
+        job_info = defaultdict(lambda: '', loads(job_info))
+        job_id = job_info['job_id']
+        job = ProcessingJob(job_id)
+        result[job.id] = {'status': job.status, 'step': job.step,
+                          'error': job.log.msg if job.log else ""}
+
+    return result

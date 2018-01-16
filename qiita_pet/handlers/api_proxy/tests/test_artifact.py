@@ -229,9 +229,9 @@ class TestArtifactAPI(TestCase):
              'artifact_id': 6, 'data_type': '16S',
              'timestamp': '2012-10-02 17:30:00', 'prep_samples': 27,
              'parameters': {
-                'reference': 2, 'similarity': 0.97, u'sortmerna_e_value': 1,
-                'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
-                'sortmerna_coverage': 0.97}, 'name': 'BIOM'},
+                'reference': '2', 'similarity': '0.97',
+                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+                'threads': '1', 'sortmerna_coverage': '0.97'}, 'name': 'BIOM'},
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
              'target_subfragment': ['V4'],
              'algorithm': (
@@ -239,9 +239,9 @@ class TestArtifactAPI(TestCase):
              'artifact_id': 5, 'data_type': '18S',
              'timestamp': '2012-10-02 17:30:00', 'prep_samples': 27,
              'parameters': {
-                'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
-                'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
-                'sortmerna_coverage': 0.97}, 'name': 'BIOM'},
+                'reference': '1', 'similarity': '0.97',
+                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+                'threads': '1', 'sortmerna_coverage': '0.97'}, 'name': 'BIOM'},
             {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
              'artifact_id': 7, 'data_type': '16S',
              'timestamp': '2012-10-02 17:30:00', 'prep_samples': 27,

@@ -101,7 +101,10 @@ class CommandListHandlerTests(OauthTestingBase):
             'description': 'Analysis command added for testing',
             'required_parameters': dumps(
                 {'in_data': ['artifact:["BIOM"]', None]}),
-            'optional_parameters': dumps({'param1': ['string', 'default']}),
+            'optional_parameters': dumps(
+                {'param1': ['string', 'default'],
+                 'param4': ['mchoice:["opt1", "opt2", "opt3"]',
+                            dumps(['opt1', 'opt2']), None, True]}),
             'outputs': dumps({'outtable': 'BIOM'}),
             'default_parameter_sets': dumps({'dflt1': {'param1': 'test'}}),
             'analysis_only': True
@@ -112,6 +115,8 @@ class CommandListHandlerTests(OauthTestingBase):
         obs = _get_command('QIIME', '1.9.1', 'New analysis command')
         self.assertEqual(obs.name, 'New analysis command')
         self.assertTrue(obs.analysis_only)
+        self.assertEqual(obs.merging_scheme,
+                         {'parameters': ['param4'], 'outputs': []})
 
 
 class CommandHandlerTests(OauthTestingBase):

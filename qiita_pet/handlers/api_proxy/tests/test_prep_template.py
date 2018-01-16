@@ -30,7 +30,8 @@ from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_graph_get_req, prep_template_filepaths_get_req,
     _process_investigation_type, prep_template_patch_req,
     _check_prep_template_exists, new_prep_template_get_req,
-    prep_template_ajax_get_req, _get_ENA_ontology)
+    prep_template_ajax_get_req, _get_ENA_ontology,
+    prep_template_jobs_get_req)
 
 
 class TestPrepAPIReadOnly(TestCase):
@@ -51,8 +52,9 @@ class TestPrepAPIReadOnly(TestCase):
         exp = {
             'status': 'success',
             'prep_files': ['uploaded_file.txt'],
-            'data_types': ['16S', '18S', 'ITS', 'Metabolomic', 'Metagenomic',
-                           'Multiomic', 'Proteomic'],
+            'data_types': ['16S', '18S', 'Genomics', 'ITS', 'Metabolomic',
+                           'Metagenomic', 'Metatranscriptomics', 'Multiomic',
+                           'Proteomic', 'Transcriptomics', 'Viromics'],
             'ontology': {
                 'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
                         'Forensic or Paleo-genomics', 'Gene Regulation Study',
@@ -298,64 +300,116 @@ class TestPrepAPI(TestCase):
         # jobs are randomly generated then testing composition
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['status'], 'success')
-        self.assertEqual(11, len(obs['node_labels']))
-        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'),
-                      obs['node_labels'])
-        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'),
-                      obs['node_labels'])
-        self.assertIn(('artifact', 3, 'Demultiplexed 2 - Demultiplexed'),
-                      obs['node_labels'])
-        self.assertIn(('artifact', 4, 'BIOM - BIOM'),
-                      obs['node_labels'])
-        self.assertIn(('artifact', 5, 'BIOM - BIOM'),
-                      obs['node_labels'])
-        self.assertIn(('artifact', 6, 'BIOM - BIOM'),
-                      obs['node_labels'])
-        self.assertEqual(3, len([n for dt, _, n in obs['node_labels']
+        self.assertEqual(11, len(obs['nodes']))
+        self.assertIn(
+            ('artifact', 'FASTQ', 1, 'Raw data 1\n(FASTQ)', 'artifact'),
+            obs['nodes'])
+        self.assertIn(
+            ('artifact', 'Demultiplexed', 2,
+             'Demultiplexed 1\n(Demultiplexed)', 'artifact'),
+            obs['nodes'])
+        self.assertIn(
+            ('artifact', 'Demultiplexed', 3,
+             'Demultiplexed 2\n(Demultiplexed)', 'artifact'),
+            obs['nodes'])
+        self.assertIn(('artifact', 'BIOM', 4, 'BIOM\n(BIOM)', 'artifact'),
+                      obs['nodes'])
+        self.assertIn(('artifact', 'BIOM', 5, 'BIOM\n(BIOM)', 'artifact'),
+                      obs['nodes'])
+        self.assertIn(('artifact', 'BIOM', 6, 'BIOM\n(BIOM)', 'artifact'),
+                      obs['nodes'])
+        self.assertEqual(3, len([n for dt, _, _, n, _ in obs['nodes']
                                  if n == 'Pick closed-reference OTUs' and
                                  dt == 'job']))
-        self.assertEqual(2, len([n for dt, _, n in obs['node_labels']
+        self.assertEqual(2, len([n for dt, _, _, n, _ in obs['nodes']
                                  if n == 'Split libraries FASTQ' and
                                  dt == 'job']))
 
-        self.assertEqual(10, len(obs['edge_list']))
-        self.assertEqual(2, len([x for x, y in obs['edge_list'] if x == 1]))
-        self.assertEqual(3, len([x for x, y in obs['edge_list'] if x == 2]))
-        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 2]))
-        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 3]))
-        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 4]))
-        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 5]))
-        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 6]))
+        self.assertEqual(10, len(obs['edges']))
+        self.assertEqual(2, len([x for x, y in obs['edges'] if x == 1]))
+        self.assertEqual(3, len([x for x, y in obs['edges'] if x == 2]))
+        self.assertEqual(1, len([x for x, y in obs['edges'] if y == 2]))
+        self.assertEqual(1, len([x for x, y in obs['edges'] if y == 3]))
+        self.assertEqual(1, len([x for x, y in obs['edges'] if y == 4]))
+        self.assertEqual(1, len([x for x, y in obs['edges'] if y == 5]))
+        self.assertEqual(1, len([x for x, y in obs['edges'] if y == 6]))
+
+        self.assertIsNone(obs['workflow'])
 
         Artifact(4).visibility = "public"
         obs = prep_template_graph_get_req(1, 'demo@microbio.me')
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['status'], 'success')
-        self.assertEqual(11, len(obs['node_labels']))
-        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'),
-                      obs['node_labels'])
-        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'),
-                      obs['node_labels'])
-        self.assertIn(('artifact', 4, 'BIOM - BIOM'), obs['node_labels'])
-        self.assertEqual(3, len([n for dt, _, n in obs['node_labels']
+        self.assertEqual(11, len(obs['nodes']))
+        self.assertIn(
+            ('artifact', 'FASTQ', 1, 'Raw data 1\n(FASTQ)', 'artifact'),
+            obs['nodes'])
+        self.assertIn(
+            ('artifact', 'Demultiplexed', 2,
+             'Demultiplexed 1\n(Demultiplexed)', 'artifact'),
+            obs['nodes'])
+        self.assertIn(('artifact', 'BIOM', 4, 'BIOM\n(BIOM)', 'artifact'),
+                      obs['nodes'])
+        self.assertEqual(3, len([n for dt, _, _, n, _ in obs['nodes']
                                  if n == 'Pick closed-reference OTUs' and
                                  dt == 'job']))
-        self.assertEqual(2, len([n for dt, _, n in obs['node_labels']
+        self.assertEqual(2, len([n for dt, _, _, n, _ in obs['nodes']
                                  if n == 'Split libraries FASTQ' and
                                  dt == 'job']))
 
-        self.assertEqual(10, len(obs['edge_list']))
-        self.assertEqual(2, len([x for x, y in obs['edge_list'] if x == 1]))
-        self.assertEqual(3, len([x for x, y in obs['edge_list'] if x == 2]))
-        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 2]))
-        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 3]))
-        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 4]))
-        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 5]))
-        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 6]))
+        self.assertEqual(10, len(obs['edges']))
+        self.assertEqual(2, len([x for x, y in obs['edges'] if x == 1]))
+        self.assertEqual(3, len([x for x, y in obs['edges'] if x == 2]))
+        self.assertEqual(1, len([x for x, y in obs['edges'] if y == 2]))
+        self.assertEqual(1, len([x for x, y in obs['edges'] if y == 3]))
+        self.assertEqual(1, len([x for x, y in obs['edges'] if y == 4]))
+        self.assertEqual(1, len([x for x, y in obs['edges'] if y == 5]))
+        self.assertEqual(1, len([x for x, y in obs['edges'] if y == 6]))
+
+        self.assertIsNone(obs['workflow'])
 
         # Reset visibility of the artifacts
         for i in range(4, 0, -1):
             Artifact(i).visibility = "private"
+
+    def test_prep_template_jobs_get_req(self):
+        # Create a new template:
+        metadata = pd.DataFrame.from_dict(
+            {'SKD6.640190': {'center_name': 'ANL',
+                             'target_subfragment': 'V4',
+                             'center_project_name': 'Test Project',
+                             'ebi_submission_accession': None,
+                             'EMP_status': 'EMP',
+                             'str_column': 'Value for sample 1',
+                             'primer': 'GTGCCAGCMGCCGCGGTAA',
+                             'barcode': 'GTCCGCAAGTTA',
+                             'run_prefix': "s_G1_L001_sequences",
+                             'platform': 'ILLUMINA',
+                             'instrument_model': 'Illumina MiSeq',
+                             'library_construction_protocol': 'AAAA',
+                             'experiment_design_description': 'BBBB'}},
+            orient='index', dtype=str)
+        pt = PrepTemplate.create(metadata, Study(1), '16S')
+
+        # Check that it returns an empty dictionary when there are no jobs
+        # attached to the prep template
+        self.assertEqual(prep_template_jobs_get_req(pt.id, 'test@foo.bar'), {})
+
+        # Create a job on the template
+        prep_template_patch_req(
+            'test@foo.bar', 'remove',
+            '/%s/10/columns/target_subfragment/' % pt.id)
+        # To ensure a deterministic result, wait until the job is completed
+        self._wait_for_parallel_job('prep_template_%s' % pt.id)
+        obs = prep_template_jobs_get_req(pt.id, 'test@foo.bar')
+        self.assertEqual(len(obs), 1)
+        self.assertEqual(obs.values(),
+                         [{'error': '', 'status': 'success', 'step': None}])
+
+        obs = prep_template_jobs_get_req(pt.id, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
 
     def test_process_investigation_type(self):
         obs = _process_investigation_type('Metagenomics', '', '')
@@ -377,7 +431,7 @@ class TestPrepAPI(TestCase):
 
     def test_prep_template_post_req(self):
         obs = prep_template_post_req(1, 'test@foo.bar', 'update.txt',
-                                     '16S')
+                                     '16S', name="  ")
         exp = {'status': 'warning',
                'message': [
                     ('Some columns required to generate a QIIME-compliant '
@@ -389,7 +443,7 @@ class TestPrepAPI(TestCase):
                      'columns:'),
                     ('\tDemultiplexing with multiple input files disabled.: '
                      'barcode, primer, run_prefix;'),
-                    '\tDemultiplexing disabled.: barcode, primer;',
+                    '\tDemultiplexing disabled.: barcode;',
                     ('\tEBI submission disabled: center_name, '
                      'experiment_design_description, instrument_model, '
                      'library_construction_protocol, platform.'),
@@ -409,6 +463,7 @@ class TestPrepAPI(TestCase):
         self.assertEqual([x for x in prep.keys()], ['1.SKD6.640190'])
         self.assertEqual([x._to_dict() for x in prep.values()],
                          [{'new_col': 'new_value'}])
+        self.assertEqual(prep.name, "Prep information %s" % prep.id)
 
     def test_prep_template_post_req_errors(self):
         # User doesn't have access
@@ -471,6 +526,13 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs, exp)
         self._wait_for_parallel_job('prep_template_%s' % pt.id)
         self.assertNotIn('target_subfragment', pt.categories())
+
+        # Change the name of the prep template
+        obs = prep_template_patch_req(
+            'test@foo.bar', 'replace', '/%s/name' % pt.id, ' My New Name ')
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(obs, exp)
+        self.assertEqual(pt.name, 'My New Name')
 
         # Test all the errors
         # Operation not supported

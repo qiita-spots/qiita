@@ -650,7 +650,7 @@ class Transaction(object):
             ec_lu = errorcodes.lookup(error.pgcode)
             raise ValueError(
                 "Error running SQL: %s. MSG: %s\n" % (ec_lu, error.message))
-        except KeyError:
+        except (KeyError, AttributeError):
             raise ValueError("Error running SQL query: %s" % error.message)
 
     @_checker

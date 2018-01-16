@@ -43,9 +43,10 @@ def build_analysis_files(job):
                                   'artifact_type': 'BIOM',
                                   'provenance': dumps({'job': job.id,
                                                        'data_type': dtype}),
-                                  'analysis': analysis_id})
+                                  'analysis': analysis_id,
+                                  'template': None})
             val_jobs.append(qdb.processing_job.ProcessingJob.create(
-                analysis.owner, validate_params))
+                analysis.owner, validate_params, True))
 
         job._set_validator_jobs(val_jobs)
 
@@ -310,7 +311,7 @@ def delete_study(job):
 
 
 def complete_job(job):
-    """Deletes a sample or a column from the metadata
+    """Completes a job
 
     Parameters
     ----------
@@ -329,8 +330,39 @@ def complete_job(job):
         c_job = qdb.processing_job.ProcessingJob(param_vals['job_id'])
         try:
             c_job.complete(payload['success'], artifacts, error)
-        except:
+        except Exception:
             c_job._set_error(traceback.format_exception(*exc_info()))
+
+        job._set_status('success')
+
+    if 'archive' in payload:
+        pass
+        # ToDo: Archive
+        # features = payload['archive']
+        # here we should call the method from the command to archive
+
+
+def delete_analysis(job):
+    """Deletes a full analysis
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        analysis_id = job.parameters.values['analysis_id']
+        analysis = qdb.analysis.Analysis(analysis_id)
+
+        artifacts = sorted(
+            analysis.artifacts, key=lambda a: a.id, reverse=True)
+
+        for artifact in artifacts:
+            qdb.artifact.Artifact.delete(artifact.id)
+
+        qdb.analysis.Analysis.delete(analysis_id)
+
+        r_client.delete('analysis_delete_%d' % analysis_id)
 
         job._set_status('success')
 
@@ -347,7 +379,8 @@ TASK_DICT = {'build_analysis_files': build_analysis_files,
              'update_prep_template': update_prep_template,
              'delete_sample_or_column': delete_sample_or_column,
              'delete_study': delete_study,
-             'complete_job': complete_job}
+             'complete_job': complete_job,
+             'delete_analysis': delete_analysis}
 
 
 def private_task(job_id):

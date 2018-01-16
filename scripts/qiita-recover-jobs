@@ -26,8 +26,7 @@ def _submit_jobs(jids_to_recover, recover_type):
         sleep(SLEEP_TIME)
 
 
-def qiita_recover_jobs():
-    # Step 1: get current jobs running in the queue
+def _retrieve_queue_jobs():
     qiita_jobs = [line.split()[0] for line in check_output("qstat").split("\n")
                   # just retriving 'qiita' and ignoring [] (ipython workers)
                   if 'qiita' in line and '[]' not in line and
@@ -43,35 +42,39 @@ def qiita_recover_jobs():
                for line in check_output(args).split("\n")
                if 'Job_Name' in line]
         qiita_jids.extend(qji)
-    qiita_jids = set(qiita_jids)
 
+    return set(qiita_jids)
+
+
+def qiita_recover_jobs():
     sql = """SELECT processing_job_id
              FROM qiita.processing_job
              JOIN qiita.processing_job_status
              USING (processing_job_status_id)
              WHERE processing_job_status = %s"""
+
     sql_validators = """SELECT processing_job_id, array_agg(validator_id)
                         FROM qiita.processing_job_validator
                         WHERE processing_job_id in %s
                         GROUP BY processing_job_id"""
 
-    # Step 2: recover jobs that are in queue status
+    # Step 1: recover jobs that are in queue status
     with TRN:
         recover_type = 'queued'
         TRN.add(sql, [recover_type])
         jids = set(TRN.execute_fetchflatten())
-        jids_to_recover = jids - qiita_jids
+        jids_to_recover = jids - _retrieve_queue_jobs()
 
         _submit_jobs(jids_to_recover, recover_type)
 
-    # Step 3: recover jobs that are running, note that there are several steps
-    #         to recover this group: 3.1. check if they have validators,
-    #         3.2. if so, recover validators, 3. recover failed jobs
+    # Step 2: recover jobs that are running, note that there are several steps
+    #         to recover this group: 2.1. check if they have validators,
+    #         2.2. if so, recover validators, 2. recover failed jobs
     with TRN:
-        # getting all "running" jobs, discard those in qiita_jids
         recover_type = 'running'
         TRN.add(sql, [recover_type])
         jids = set(TRN.execute_fetchflatten())
+        qiita_jids = _retrieve_queue_jobs()
         jids_to_recover = jids - qiita_jids
 
         # 3.1, and 3.2: checking which jobs have validators, and recover them
@@ -102,7 +105,10 @@ def qiita_recover_jobs():
 
             if status == 'waiting':
                 print "releasing job validators: %s" % j
-                job.release_validators()
+                try:
+                    job.release_validators()
+                except Exception:
+                    print "ERROR, releasing %s validators" % j
                 sleep(SLEEP_TIME)
             elif status == 'running':
                 _submit_jobs(validators, recover_type + ' validator, running')
@@ -113,14 +119,14 @@ def qiita_recover_jobs():
                 for v in validators:
                     vjob = ProcessingJob(v)
                     vjob._set_status('in_construction')
-                _submit_jobs(validators + ' validator, error')
+                _submit_jobs(validators, recover_type + ' validator, error')
             else:
                 print ("Check the status of this job %s : %s and validators"
                        "%s." % (j, status, validators))
 
         jids_to_recover = jids_to_recover - set(jobs_with_validators)
 
-    # Step 4: Finally, we recover all the leftover jobs
+    # Step 3: Finally, we recover all the leftover jobs
     for i, j in enumerate(jids_to_recover):
         job = ProcessingJob(j)
         status = job.status

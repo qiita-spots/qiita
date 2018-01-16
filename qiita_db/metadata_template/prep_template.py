@@ -93,7 +93,8 @@ class PrepTemplate(MetadataTemplate):
     _filepath_table = 'prep_template_filepath'
 
     @classmethod
-    def create(cls, md_template, study, data_type, investigation_type=None):
+    def create(cls, md_template, study, data_type, investigation_type=None,
+               name=None):
         r"""Creates the metadata template in the database
 
         Parameters
@@ -106,6 +107,8 @@ class PrepTemplate(MetadataTemplate):
             The data_type of the prep template
         investigation_type : str, optional
             The investigation type, if relevant
+        name : str, optional
+            The prep template name
 
         Returns
         -------
@@ -180,6 +183,10 @@ class PrepTemplate(MetadataTemplate):
             pt = cls(prep_id)
             pt.validate(pt_cols)
             pt.generate_files()
+
+            # Add the name to the prep information
+            pt.name = (name if name is not None
+                       else "Prep information %s" % pt.id)
 
             return pt
 
@@ -701,3 +708,29 @@ class PrepTemplate(MetadataTemplate):
                 "samples." % (self._id))
 
         self._common_delete_sample_steps(sample_name)
+
+    @property
+    def name(self):
+        """The name of the prep information
+
+        Returns
+        -------
+        str
+            The name of the prep information
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name
+                     FROM qiita.prep_template
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @name.setter
+    def name(self, value):
+        """Changes the name of the prep template"""
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.prep_template
+                     SET name = %s
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [value, self.id])
+            qdb.sql_connection.TRN.execute()

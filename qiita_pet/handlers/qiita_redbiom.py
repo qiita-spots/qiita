@@ -31,14 +31,13 @@ class RedbiomPublicSearch(BaseHandler):
     def _redbiom_metadata_search(self, query, contexts):
         study_artifacts = defaultdict(list)
         message = ''
-        query = query.lower()
         try:
             samples = redbiom.search.metadata_full(query, False)
         except ValueError:
             message = (
                 'Not a valid search: "%s", your query is too small '
                 '(too few letters), try a longer query' % query)
-        except:
+        except Exception:
             message = (
                 'The query ("%s") did not work and may be malformed. Please '
                 'check the search help for more information on the queries.'

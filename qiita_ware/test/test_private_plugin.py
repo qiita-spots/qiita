@@ -30,6 +30,7 @@ from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.util import get_count
 from qiita_db.logger import LogEntry
 from qiita_db.sql_connection import TRN
+from qiita_db.analysis import Analysis
 from qiita_ware.private_plugin import private_task
 
 
@@ -39,7 +40,7 @@ class BaseTestPrivatePlugin(TestCase):
         qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
         cmd = qiita_plugin.get_command(cmd_name)
         params = Parameters.load(cmd, values_dict=values_dict)
-        job = ProcessingJob.create(self.user, params)
+        job = ProcessingJob.create(self.user, params, True)
         job._set_status('queued')
         return job
 
@@ -322,7 +323,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
                 Command.get_validator('BIOM'),
                 values_dict={'template': pt.id,
                              'files': dumps({'BIOM': ['file']}),
-                             'artifact_type': 'BIOM'}))
+                             'artifact_type': 'BIOM'}), True)
         c_job._set_status('running')
         fd, fp = mkstemp(suffix='_table.biom')
         close(fd)
@@ -364,7 +365,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
                 Command.get_validator('BIOM'),
                 values_dict={'template': pt.id,
                              'files': dumps({'BIOM': ['file']}),
-                             'artifact_type': 'BIOM'}))
+                             'artifact_type': 'BIOM'}), True)
         c_job._set_status('running')
         fp = '/surprised/if/this/path/exists.biom'
         payload = dumps(

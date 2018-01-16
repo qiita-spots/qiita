@@ -80,7 +80,6 @@ def artifact_summary_get_request(user, artifact_id):
          'processing_parameters': dict of {str: object},
          'files': list of (int, str),
          'is_from_analysis': bool,
-         'processing_jobs': list of [str, str, str, str, str],
          'summary': str or None,
          'job': [str, str, str],
          'errored_jobs': list of [str, str]}
@@ -94,16 +93,7 @@ def artifact_summary_get_request(user, artifact_id):
     visibility = artifact.visibility
     summary = artifact.html_summary_fp
     job_info = None
-    errored_jobs = []
-    processing_jobs = []
-    for j in artifact.jobs():
-        if j.command.software.type == "artifact transformation":
-            status = j.status
-            if status == 'success':
-                continue
-            j_msg = j.log.msg if status == 'error' else None
-            processing_jobs.append(
-                [j.id, j.command.name, j.status, j.step, j_msg])
+    errored_summary_jobs = []
 
     # Check if the HTML summary exists
     if summary:
@@ -117,9 +107,13 @@ def artifact_summary_get_request(user, artifact_id):
         # Check if the summary is being generated
         command = Command.get_html_generator(artifact_type)
         all_jobs = set(artifact.jobs(cmd=command))
-        jobs = [j for j in all_jobs if j.status in ['queued', 'running']]
-        errored_jobs = [(j.id, j.log.msg)
-                        for j in all_jobs if j.status in ['error']]
+        jobs = []
+        errored_summary_jobs = []
+        for j in all_jobs:
+            if j.status in ['queued', 'running']:
+                jobs.append(j)
+            elif j.status in ['error']:
+                errored_summary_jobs.append(j)
         if jobs:
             # There is already a job generating the HTML. Also, there should be
             # at most one job, because we are not allowing here to start more
@@ -138,14 +132,7 @@ def artifact_summary_get_request(user, artifact_id):
         'artifact id: {0}?\')) {{ set_artifact_visibility(\'%s\', {0}) }}" '
         'class="btn btn-primary btn-sm">%s</button>').format(artifact_id)
 
-    if analysis:
-        # If the artifact is part of an analysis, we don't require admin
-        # approval, and the artifact can be made public only if all the
-        # artifacts used to create the initial artifact set are public
-        if analysis.can_be_publicized and visibility != 'public':
-            buttons.append(btn_base % ('make public', 'public', 'Make public'))
-
-    else:
+    if not analysis:
         # If the artifact is part of a study, the buttons shown depend in
         # multiple factors (see each if statement for an explanation of those)
         if qiita_config.require_approval:
@@ -201,9 +188,18 @@ def artifact_summary_get_request(user, artifact_id):
         if not artifact.study.has_access(user, no_public=True):
             files = []
 
-    processing_parameters = (artifact.processing_parameters.values
-                             if artifact.processing_parameters is not None
-                             else {})
+    proc_params = artifact.processing_parameters
+    if proc_params:
+        cmd = proc_params.command
+        sw = cmd.software
+        processing_info = {
+            'command': cmd.name,
+            'software': sw.name,
+            'software_version': sw.version,
+            'processing_parameters': proc_params.values
+            }
+    else:
+        processing_info = {}
 
     return {'name': artifact.name,
             'artifact_id': artifact_id,
@@ -211,15 +207,14 @@ def artifact_summary_get_request(user, artifact_id):
             'visibility': visibility,
             'editable': editable,
             'buttons': ' '.join(buttons),
-            'processing_parameters': processing_parameters,
+            'processing_info': processing_info,
             'files': files,
             'is_from_analysis': artifact.analysis is not None,
-            'processing_jobs': processing_jobs,
             'summary': summary,
             'job': job_info,
             'artifact_timestamp': artifact.timestamp.strftime(
                 "%Y-%m-%d %H:%m"),
-            'errored_jobs': errored_jobs}
+            'errored_summary_jobs': errored_summary_jobs}
 
 
 def artifact_summary_post_request(user, artifact_id):
@@ -258,7 +253,7 @@ def artifact_summary_post_request(user, artifact_id):
         # Create a new job to generate the HTML summary and return the newly
         # created job information
         job = ProcessingJob.create(user, Parameters.load(
-            command, values_dict={'input_data': artifact_id}))
+            command, values_dict={'input_data': artifact_id}), True)
         job.submit()
 
     return {'job': [job.id, job.status, job.step]}
@@ -375,18 +370,21 @@ def artifact_post_req(user, artifact_id):
     qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
     cmd = qiita_plugin.get_command('delete_artifact')
     params = Parameters.load(cmd, values_dict={'artifact': artifact_id})
-    job = ProcessingJob.create(user, params)
+    job = ProcessingJob.create(user, params, True)
 
     r_client.set(redis_key, dumps({'job_id': job.id, 'is_qiita_job': True}))
 
     job.submit()
+
+    return {'job': job.id}
 
 
 class ArtifactAJAX(BaseHandler):
     @authenticated
     def post(self, artifact_id):
         with safe_execution():
-            artifact_post_req(self.current_user, artifact_id)
+            res = artifact_post_req(self.current_user, artifact_id)
+        self.write(res)
         self.finish()
 
     @authenticated

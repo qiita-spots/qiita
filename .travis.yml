@@ -3,7 +3,7 @@ language: python
 sudo: false
 env:
   global:
-    - PYTHON_VERSION=2.7
+    - PYTHON_VERSION=3.5
   matrix:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
@@ -11,12 +11,10 @@ env:
 before_install:
   - redis-server --version
   - redis-server --port 7777 &
-  - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - wget http://repo.continuum.io/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda3/bin:$PATH
-  # Update conda itself
-  - conda update --yes conda
   # Downloading and setting up ascp for EBI testing
   - wget ftp://ftp.microbio.me/pub/qiita/ascp-install-3.5.4.102989-linux-64-qiita.sh -O ascp-install-3.5.4.102989-linux-64-qiita.sh
   - chmod +x ascp-install-3.5.4.102989-linux-64-qiita.sh
@@ -40,10 +38,6 @@ install:
   - ./webdis &
   - popd
   - travis_retry pip install . --process-dependency-links
-  # Install the biom plugin so we can run the analysis tests
-  - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
-  - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
-  - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
   # loading redbiom with Qiita's test set
   # but first let's make sure redis is empty
   # following https://github.com/biocore/redbiom/blob/master/Makefile
@@ -57,7 +51,18 @@ install:
   - redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table-for_redbiom_tests.biom --context qiita-test --tag 5
   - mkdir ~/.qiita_plugins
   - export REDBIOM_HOST=http://127.0.0.1:7379
-  - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins
+  - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins/BIOM\ type_2.1.4\ -\ Qiime2.conf
+  - touch ~/.bash_profile
+  # Install the biom plugin so we can run the analysis tests
+  - wget https://data.qiime2.org/distro/core/qiime2-2017.12-py35-linux-conda.yml
+  - travis_retry conda env create -q -n qtp-biom --file qiime2-2017.12-py35-linux-conda.yml
+  - rm qiime2-2017.12-py35-linux-conda.yml
+  - source activate qtp-biom
+  - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
+  - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
+  - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+  - source deactivate
+  - source activate qiita
 before_script:
   # EBI, see the end of before_install about why this block is commented out
   # - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then

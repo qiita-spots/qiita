@@ -68,14 +68,6 @@ function format_extra_info_processing_jobs ( data ) {
                 '<tr>'+
                     '<td colspan="2"><h5>Parameters:</h5>'+ data[6] +'</td>'+
                 '</tr>';
-    if (data[7] !== '' && data[3] === 'in_construction') {
-      row += '<tr>'+
-                '<td colspan="2">'+
-                  '<button class="btn btn-danger btn-sm" onclick="remove_job(\''+ data[5] + "', '" + data[7] +'\');">'+
-                  '<span class="glyphicon glyphicon-trash"></span></button>'+
-                '</td>'
-             '</tr>';
-    }
     row += '</table>';
 
     return row
@@ -157,94 +149,6 @@ function send_samples_to_analysis(button, aids, samples = null) {
     $(button).removeClass("btn-info");
   }
 }
-
-/**
- * Draw the artifact + jobs processing graph
- *
- * Draws a vis.Network graph in the given target div with the network
- * information stored in nodes and and edges
- *
- * @param nodes: list of {id: str, label: str, group: {'artifact', 'job'}}
- *  The node information. Id is the unique id of the node (artifact or job),
- *  label is the name to show under the node and group is the type of node
- * @param edges: list of {from: str, to: str, arrows: 'to'}
- *  The connectivity information in the graph. from and to are the nodes of
- *  origin and destination of the edge, respectivelly.
- * @param target: str. The id of the target div to draw the graph
- * @param artifactFunc: function. The function to execute when the user
- *  clicks on a node of group 'artifact'. It should accept only 1 parameter
- *  which is the artifact (node) id
- * @param jobFunc: function. The function to execute when the user clicks on
- *  a node of group 'job'. It should accept only 1 parameter which is the
- *  job (node) id
- *
- */
-function draw_processing_graph(nodes, edges, target, artifactFunc, jobFunc) {
-  var container = document.getElementById(target);
-  container.innerHTML = "";
-
-  var nodes = new vis.DataSet(nodes);
-  var edges = new vis.DataSet(edges);
-  var data = {
-    nodes: nodes,
-    edges: edges
-  };
-  var options = {
-    clickToUse: true,
-    nodes: {
-      shape: 'dot',
-      font: {
-        size: 16,
-        color: '#000000'
-      },
-      size: 13,
-      borderWidth: 2,
-    },
-    edges: {
-      color: 'grey'
-    },
-    layout: {
-      hierarchical: {
-        direction: "LR",
-        sortMethod: "directed",
-        levelSeparation: 260
-      }
-    },
-    interaction: {
-      dragNodes: false,
-      dragView: true,
-      zoomView: true,
-      selectConnectedEdges: true,
-      navigationButtons: true,
-      keyboard: false
-    },
-    groups: {
-      jobs: {
-        color: '#FF9152'
-      },
-      artifact: {
-        color: '#FFFFFF'
-      }
-    }
-  };
-
-  var network = new vis.Network(container, data, options);
-  network.on("click", function (properties) {
-    var ids = properties.nodes;
-    if (ids.length == 0) {
-      return
-    }
-    // [0] cause only users can only select 1 node
-    var clickedNode = nodes.get(ids)[0];
-    var element_id = ids[0];
-    if (clickedNode.group == 'artifact') {
-      artifactFunc(element_id);
-    } else {
-      jobFunc(element_id);
-    }
-  });
-};
-
 
 /**
  *
@@ -373,7 +277,25 @@ function error(evt) {
 
 function show_alert(data) {
   bootstrapAlert(data + ' samples selected.', "success", 10000);
-   $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
+  $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
+  updateSelectedSamplesMenu(function(){
+    // Show the dropdown menu
+    $('#selected-samples-dropdown-menu').addClass('custom-dropdown-menu');
+    // Hide it after 3 seconds
+    setTimeout(function() { $('#selected-samples-dropdown-menu').removeClass('custom-dropdown-menu'); }, 3000)
+  });
+}
+
+function send_children_buttons(button, aids) {
+  button.disabled = true;
+
+  $.each(aids, function(idx, aid){
+    button.value = 'Adding ' + (idx + 1);
+    $('#send-button-'+aid).trigger("click");
+  });
+
+  button.value = 'Added';
+  $(button).removeClass("btn-info");
 }
 
 function send_children_buttons(button, aids) {
@@ -416,9 +338,25 @@ function format_biom_rows(data, row, for_study_list = true, samples = null) {
         processing_method[algorithm][data_type] = {};
       }
 
-      var params = '';
-      for (var key in info.parameters) {
-        params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
+  // creating rows
+  $.each(Object.keys(processing_method).sort(), function (idx, pm) {
+    var data_types = processing_method[pm];
+    $.each(data_types, function (dt, artifacts) {
+      proc_data_table += '<tr>';
+
+      if (for_study_list) {
+        var artifact_to_send = [];
+        $.each(artifacts, function (idx, a) {
+          var aid = a.artifact_id;
+          artifact_to_send.push(aid);
+        });
+        var artifact_to_send_name = artifact_to_send.join('');
+        proc_data_table += '<td>';
+        proc_data_table += '<input type="button" class="btn btn-sm" value="Add all" onclick="send_children_buttons(this, [' + artifact_to_send + '])"></td>';
+        proc_data_table += '<td>' +
+          '<button class="btn btn-secondary btn-sm" data-toggle="collapse" data-target="#aids-' + artifact_to_send_name + '">' +
+            'Per Artifact (' + artifacts.length + ')' +
+          '</button>' + '</td>';
       }
       if (!(params in processing_method[algorithm][data_type])) {
         processing_method[algorithm][data_type][params] = [];

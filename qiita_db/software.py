@@ -104,7 +104,8 @@ class Command(qdb.base.QiitaObject):
                         JOIN qiita.software_artifact_type USING (software_id)
                         JOIN qiita.artifact_type USING (artifact_type_id)
                      WHERE artifact_type = %s
-                        AND name = 'Generate HTML summary'"""
+                        AND name = 'Generate HTML summary'
+                        AND active = true"""
             qdb.sql_connection.TRN.add(sql, [artifact_type])
             try:
                 res = qdb.sql_connection.TRN.execute_fetchlast()
@@ -139,7 +140,8 @@ class Command(qdb.base.QiitaObject):
                         JOIN qiita.software_artifact_type USING (software_id)
                         JOIN qiita.artifact_type USING (artifact_type_id)
                      WHERE artifact_type = %s
-                        AND name = 'Validate'"""
+                        AND name = 'Validate'
+                        AND active = true"""
             qdb.sql_connection.TRN.add(sql, [artifact_type])
             try:
                 res = qdb.sql_connection.TRN.execute_fetchlast()
@@ -222,12 +224,18 @@ class Command(qdb.base.QiitaObject):
             The description of the command
         parameters : dict
             The description of the parameters that this command received. The
-            format is: {parameter_name: (parameter_type, default)},
-            where parameter_name, parameter_type and default are strings. If
-            default is None.
+            format is: {parameter_name: (parameter_type, default, name_order,
+            check_biom_merge)},
+            where parameter_name, parameter_type and default are strings,
+            name_order is an optional integer value and check_biom_merge is
+            an optional boolean value. name_order is used to specify the order
+            of the parameter when automatically naming the artifacts.
+            check_biom_merge is used when merging artifacts in the analysis
+            pipeline.
         outputs : dict, optional
             The description of the outputs that this command generated. The
-            format is: {output_name: artifact_type}
+            format is either {output_name: artifact_type} or
+            {output_name: (artifact_type, check_biom_merge)}
         analysis_only : bool, optional
             If true, then the command will only be available on the analysis
             pipeline. Default: False.
@@ -263,13 +271,21 @@ class Command(qdb.base.QiitaObject):
         sql_param_values = []
         sql_artifact_params = []
         for pname, vals in parameters.items():
-            if len(vals) != 2:
+            lenvals = len(vals)
+            if lenvals == 2:
+                ptype, dflt = vals
+                name_order = None
+                check_biom_merge = False
+            elif lenvals == 4:
+                ptype, dflt, name_order, check_biom_merge = vals
+            else:
                 raise qdb.exceptions.QiitaDBError(
                     "Malformed parameters dictionary, the format should be "
-                    "{param_name: [parameter_type, default]}. Found: "
-                    "%s for parameter name %s" % (vals, pname))
+                    "either {param_name: [parameter_type, default]} or "
+                    "{parameter_name: (parameter_type, default, name_order, "
+                    "check_biom_merge)}. Found: %s for parameter name %s"
+                    % (vals, pname))
 
-            ptype, dflt = vals
             # Check that the type is one of the supported types
             supported_types = ['string', 'integer', 'float', 'reference',
                                'boolean', 'prep_template', 'analysis']
@@ -303,10 +319,9 @@ class Command(qdb.base.QiitaObject):
                 sql_artifact_params.append(
                     [pname, 'artifact', atypes])
             else:
-                if dflt is not None:
-                    sql_param_values.append([pname, ptype, False, dflt])
-                else:
-                    sql_param_values.append([pname, ptype, True, None])
+                sql_param_values.append(
+                    [pname, ptype, dflt is None, dflt, name_order,
+                     check_biom_merge])
 
         with qdb.sql_connection.TRN:
             if cls.exists(software, name):
@@ -324,12 +339,13 @@ class Command(qdb.base.QiitaObject):
 
             # Add the parameters to the DB
             sql = """INSERT INTO qiita.command_parameter
-                        (command_id, parameter_name, parameter_type, required,
-                         default_value)
-                     VALUES (%s, %s, %s, %s, %s)
+                        (command_id, parameter_name, parameter_type,
+                         required, default_value, name_order, check_biom_merge)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                      RETURNING command_parameter_id"""
-            sql_params = [[c_id, pname, p_type, reqd, default]
-                          for pname, p_type, reqd, default in sql_param_values]
+            sql_params = [
+                [c_id, pname, p_type, reqd, default, no, chm]
+                for pname, p_type, reqd, default, no, chm in sql_param_values]
             qdb.sql_connection.TRN.add(sql, sql_params, many=True)
             qdb.sql_connection.TRN.execute()
 
@@ -339,7 +355,7 @@ class Command(qdb.base.QiitaObject):
                           VALUES (%s, %s)"""
             supported_types = []
             for pname, p_type, atypes in sql_artifact_params:
-                sql_params = [c_id, pname, p_type, True, None]
+                sql_params = [c_id, pname, p_type, True, None, None, False]
                 qdb.sql_connection.TRN.add(sql, sql_params)
                 pid = qdb.sql_connection.TRN.execute_fetchlast()
                 sql_params = [
@@ -375,12 +391,23 @@ class Command(qdb.base.QiitaObject):
 
             # Add the outputs to the command
             if outputs:
+                sql_args = []
+                for pname, at in outputs.items():
+                    if isinstance(at, tuple):
+                        sql_args.append(
+                            [pname, c_id,
+                             qdb.util.convert_to_id(at[0], 'artifact_type'),
+                             at[1]])
+                    else:
+                        sql_args.append(
+                            [pname, c_id,
+                             qdb.util.convert_to_id(at, 'artifact_type'),
+                             False])
+
                 sql = """INSERT INTO qiita.command_output
-                            (name, command_id, artifact_type_id)
-                         VALUES (%s, %s, %s)"""
-                sql_args = [
-                    [pname, c_id, qdb.util.convert_to_id(at, 'artifact_type')]
-                    for pname, at in outputs.items()]
+                            (name, command_id, artifact_type_id,
+                             check_biom_merge)
+                         VALUES (%s, %s, %s, %s)"""
                 qdb.sql_connection.TRN.add(sql, sql_args, many=True)
                 qdb.sql_connection.TRN.execute()
 
@@ -578,6 +605,45 @@ class Command(qdb.base.QiitaObject):
                      WHERE command_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def naming_order(self):
+        """The ordered list of parameters to use to name the output artifacts
+
+        Returns
+        -------
+        list of str
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT parameter_name
+                     FROM qiita.command_parameter
+                     WHERE command_id = %s AND name_order IS NOT NULL
+                     ORDER BY name_order"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchflatten()
+
+    @property
+    def merging_scheme(self):
+        """The values to check when merging the output result
+
+        Returns
+        -------
+        dict of {'parameters': [list of str], 'outputs': [list of str]}
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT parameter_name
+                     FROM qiita.command_parameter
+                     WHERE command_id = %s AND check_biom_merge = TRUE
+                     ORDER BY parameter_name"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            params = qdb.sql_connection.TRN.execute_fetchflatten()
+            sql = """SELECT name
+                     FROM qiita.command_output
+                     WHERE command_id = %s AND check_biom_merge = TRUE
+                     ORDER BY name"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            outputs = qdb.sql_connection.TRN.execute_fetchflatten()
+            return {'parameters': params, 'outputs': outputs}
 
 
 class Software(qdb.base.QiitaObject):

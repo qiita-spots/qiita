@@ -31,13 +31,13 @@ class StudyUploadFileHandler(BaseHandler):
         """Simple function to avoid duplication of code"""
         study_id = int(study_id)
         study = Study(study_id)
-        check_access(self.current_user, study, no_public=True,
-                     raise_error=True)
+        user = self.current_user
+        check_access(user, study, no_public=True, raise_error=True)
 
         # getting the ontologies
         self.render('upload.html',
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id,
+                    study_id=study_id, is_admin=user.level == 'admin',
                     extensions=','.join(qiita_config.valid_upload_extension),
                     max_upload_size=qiita_config.max_upload_size,
                     files=get_files_from_uploads_folders(str(study_id)))

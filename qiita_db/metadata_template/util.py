@@ -267,7 +267,10 @@ def validate_invalid_column_names(column_names):
     forbidden_values = {
         # https://github.com/biocore/qiita/issues/2026
         'sampleid',
-        # https://github.com/biocore/qiita/issues/1866
+        # https://github.com/biocore/qiita/issues/
+        # Note that this are actually remove/ignored in the function that
+        # calls this function: base_metadata_template._clean_validate_template.
+        # However, leaving here to avoid any possible issues.
         'qiita_study_id',
         'qiita_prep_id'
     }

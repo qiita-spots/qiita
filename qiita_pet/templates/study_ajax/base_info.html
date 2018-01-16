@@ -41,8 +41,10 @@
   }
 
   $(document).ready(function () {
-    init_sharing("{% raw qiita_config.portal_dir %}");
-    update_share();
+    {% if editable %}
+      init_sharing("{% raw qiita_config.portal_dir %}");
+      update_share();
+    {% end %}
     update_tags();
 
     var color_previously = '#32CD32';

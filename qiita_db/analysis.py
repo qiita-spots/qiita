@@ -23,6 +23,7 @@ from os.path import join
 from future.utils import viewitems
 from biom import load_table
 from biom.util import biom_open
+from biom.exception import DisjointIDError
 from re import sub
 import pandas as pd
 
@@ -178,7 +179,7 @@ class Analysis(qdb.base.QiitaObject):
                     'analysis': a_id,
                     'merge_dup_sample_ids': merge_duplicated_sample_ids})
             job = qdb.processing_job.ProcessingJob.create(
-                owner, params)
+                owner, params, True)
             sql = """INSERT INTO qiita.analysis_processing_job
                         (analysis_id, processing_job_id)
                      VALUES (%s, %s)"""
@@ -526,18 +527,70 @@ class Analysis(qdb.base.QiitaObject):
         Returns
         -------
         bool
-            Whether the analysis can be publicized or not
+            Whether the analysis can be publicized
+        list
+            A list of not public (private) artifacts
         """
         # The analysis can be made public if all the artifacts used
         # to get the samples from are public
         with qdb.sql_connection.TRN:
+            non_public = []
             sql = """SELECT DISTINCT artifact_id
                      FROM qiita.analysis_sample
-                     WHERE analysis_id = %s"""
+                     WHERE analysis_id = %s
+                     ORDER BY artifact_id"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            return all(
-                [qdb.artifact.Artifact(aid).visibility == 'public'
-                 for aid in qdb.sql_connection.TRN.execute_fetchflatten()])
+            for aid in qdb.sql_connection.TRN.execute_fetchflatten():
+                if qdb.artifact.Artifact(aid).visibility != 'public':
+                    non_public.append(aid)
+
+            return (non_public == [], non_public)
+
+    @property
+    def is_public(self):
+        """Returns if the analysis is public
+
+        Returns
+        -------
+        bool
+            If the analysis is public
+        """
+        with qdb.sql_connection.TRN:
+            # getting all root artifacts / command_id IS NULL
+            sql = """SELECT DISTINCT visibility
+                     FROM qiita.analysis_artifact
+                     LEFT JOIN qiita.artifact USING (artifact_id)
+                     LEFT JOIN qiita.visibility USING (visibility_id)
+                     WHERE analysis_id = %s AND command_id IS NULL"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            visibilities = set(qdb.sql_connection.TRN.execute_fetchflatten())
+
+            return visibilities == {'public'}
+
+    def make_public(self):
+        """Makes an analysis public
+
+        Raises
+        ------
+        ValueError
+            If can_be_publicized is not true
+        """
+        with qdb.sql_connection.TRN:
+            can_be_publicized, non_public = self.can_be_publicized
+            if not can_be_publicized:
+                raise ValueError('Not all artifacts that generated this '
+                                 'analysis are public: %s' % ', '.join(
+                                     map(str, non_public)))
+
+            # getting all root artifacts / command_id IS NULL
+            sql = """SELECT artifact_id
+                     FROM qiita.analysis_artifact
+                     LEFT JOIN qiita.artifact USING (artifact_id)
+                     WHERE analysis_id = %s AND command_id IS NULL"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            aids = qdb.sql_connection.TRN.execute_fetchflatten()
+            for aid in aids:
+                qdb.artifact.Artifact(aid).visibility = 'public'
 
     def add_artifact(self, artifact):
         """Adds an artifact to the analysis
@@ -791,26 +844,11 @@ class Analysis(qdb.base.QiitaObject):
                          if bi['artifact_id'] == aid][0]
 
                 data_type = ainfo['data_type']
-                # algorithm is: processing_method | parent_processing, just
-                # keeping processing_method
-                algorithm = ainfo['algorithm'].split('|')[0].strip()
-                files = ainfo['files']
 
-                l = "%s || %s" % (data_type, algorithm)
-                # deblur special case, we need to account for file name
-                if 'deblur-workflow' in algorithm:
-                    # [0] there is always just one biom
-                    l += " || %s" % [f for f in files
-                                     if f.endswith('.biom')][0]
-                elif 'Pick closed-reference OTUs, QIIME' in algorithm:
-                    l = ("%s || Pick closed-reference OTUs, QIIME ||" % (
-                         data_type))
-                else:
-                    l += " ||"
-
-                if l not in grouped_samples:
-                    grouped_samples[l] = []
-                grouped_samples[l].append((aid, asamples))
+                label = "%s || %s" % (data_type, ainfo['algorithm'])
+                if label not in grouped_samples:
+                    grouped_samples[label] = []
+                grouped_samples[label].append((aid, asamples))
             # 2. if rename_dup_samples is still False, make sure that we don't
             #    need to rename samples by checking that there are not
             #    duplicated samples per group
@@ -843,7 +881,7 @@ class Analysis(qdb.base.QiitaObject):
 
             biom_files = []
             for label, tables in viewitems(grouped_samples):
-                data_type, algorithm, files = [
+                data_type, algorithm = [
                     l.strip() for l in label.split('||')]
 
                 new_table = None
@@ -884,7 +922,10 @@ class Analysis(qdb.base.QiitaObject):
                     if new_table is None:
                         new_table = biom_table
                     else:
-                        new_table = new_table.merge(biom_table)
+                        try:
+                            new_table = new_table.concat([biom_table])
+                        except DisjointIDError:
+                            new_table = new_table.merge(biom_table)
 
                 if not new_table or len(new_table.ids()) == 0:
                     # if we get to this point the only reason for failure is
@@ -895,8 +936,7 @@ class Analysis(qdb.base.QiitaObject):
                 # write out the file
                 data_type = sub('[^0-9a-zA-Z]+', '', data_type)
                 algorithm = sub('[^0-9a-zA-Z]+', '', algorithm)
-                files = sub('[^0-9a-zA-Z]+', '', files)
-                info = "%s_%s_%s" % (data_type, algorithm, files)
+                info = "%s_%s" % (data_type, algorithm)
                 fn = "%d_analysis_%s.biom" % (self._id, info)
                 biom_fp = join(base_fp, fn)
                 with biom_open(biom_fp, 'w') as f:

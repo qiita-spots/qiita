@@ -81,11 +81,6 @@ class TestBaseHandlersUtils(TestCase):
         user = User('test@foo.bar')
         # Artifact w/o summary
         obs = artifact_summary_get_request(user, 1)
-        exp_p_jobs = [
-            ['063e553b-327c-4818-ab4a-adfe58e49860', 'Split libraries FASTQ',
-             'queued', None, None],
-            ['bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'Split libraries',
-             'running', 'demultiplexing', None]]
         exp_files = [
             (1L, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)'),
             (2L, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)')]
@@ -104,13 +99,12 @@ class TestBaseHandlersUtils(TestCase):
                            '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
                            '}" class="btn btn-primary btn-sm">Revert to '
                            'sandbox</button>'),
-               'processing_parameters': {},
+               'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
                'summary': None,
                'job': None,
-               'processing_jobs': exp_p_jobs,
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
         # Artifact with summary being generated
@@ -135,13 +129,12 @@ class TestBaseHandlersUtils(TestCase):
                            '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
                            '}" class="btn btn-primary btn-sm">Revert to '
                            'sandbox</button>'),
-               'processing_parameters': {},
+               'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
                'summary': None,
                'job': [job.id, 'queued', None],
-               'processing_jobs': exp_p_jobs,
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
         # Artifact with summary
@@ -173,13 +166,12 @@ class TestBaseHandlersUtils(TestCase):
                            '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
                            '}" class="btn btn-primary btn-sm">Revert to '
                            'sandbox</button>'),
-               'processing_parameters': {},
+               'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
                'summary': exp_summary_path,
                'job': None,
-               'processing_jobs': exp_p_jobs,
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
         # No access
@@ -197,13 +189,12 @@ class TestBaseHandlersUtils(TestCase):
                'visibility': 'public',
                'editable': False,
                'buttons': '',
-               'processing_parameters': {},
+               'processing_info': {},
                'files': [],
                'is_from_analysis': False,
                'summary': exp_summary_path,
                'job': None,
-               'processing_jobs': exp_p_jobs,
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
         # returnig to private
@@ -211,10 +202,6 @@ class TestBaseHandlersUtils(TestCase):
 
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
-        exp_p_jobs = [
-            ['d19f76ee-274e-4c1b-b3a2-a12d73507c55',
-             'Pick closed-reference OTUs', 'error', 'generating demux file',
-             'Error message']]
         exp_files = [
             (3L, '1_seqs.fna (preprocessed fasta)'),
             (4L, '1_seqs.qual (preprocessed fastq)'),
@@ -239,20 +226,23 @@ class TestBaseHandlersUtils(TestCase):
                            'Submit to EBI</a> <a class="btn btn-primary '
                            'btn-sm" href="/vamps/2"><span class="glyphicon '
                            'glyphicon-export"></span> Submit to VAMPS</a>'),
-               'processing_parameters': {
-                   'max_barcode_errors': 1.5, 'sequence_max_n': 0,
-                   'max_bad_run_length': 3, 'phred_offset': u'auto',
-                   'rev_comp': False, 'phred_quality_threshold': 3,
-                   'input_data': 1, 'rev_comp_barcode': False,
-                   'rev_comp_mapping_barcodes': False,
-                   'min_per_read_length_fraction': 0.75,
-                   'barcode_type': u'golay_12'},
+               'processing_info': {
+                    'command': 'Split libraries FASTQ',
+                    'software': 'QIIME',
+                    'software_version': '1.9.1',
+                    'processing_parameters': {
+                        'max_barcode_errors': '1.5', 'sequence_max_n': '0',
+                        'max_bad_run_length': '3', 'phred_offset': u'auto',
+                        'rev_comp': 'False', 'phred_quality_threshold': '3',
+                        'input_data': '1', 'rev_comp_barcode': 'False',
+                        'rev_comp_mapping_barcodes': 'False',
+                        'min_per_read_length_fraction': '0.75',
+                        'barcode_type': u'golay_12'}},
                'files': exp_files,
                'is_from_analysis': False,
                'summary': None,
                'job': None,
-               'processing_jobs': exp_p_jobs,
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
         # analysis artifact
@@ -265,13 +255,12 @@ class TestBaseHandlersUtils(TestCase):
                'visibility': 'sandbox',
                'editable': True,
                'buttons': '',
-               'processing_parameters': {},
+               'processing_info': {},
                'files': [(27, 'biom_table.biom (biom)')],
                'is_from_analysis': True,
                'summary': None,
                'job': None,
-               'processing_jobs': [],
-               'errored_jobs': []}
+               'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
     def test_artifact_summary_post_request(self):
@@ -294,7 +283,8 @@ class TestBaseHandlersUtils(TestCase):
         with self.assertRaises(QiitaHTTPError):
             artifact_post_req(User('demo@microbio.me'), 1)
 
-        artifact_post_req(User('test@foo.bar'), 2)
+        obs = artifact_post_req(User('test@foo.bar'), 2)
+        self.assertEqual(obs.keys(), ['job'])
         # Wait until the job is completed
         wait_for_prep_information_job(1)
         # Check that the delete function has been actually called
