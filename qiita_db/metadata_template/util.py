@@ -34,29 +34,25 @@ def prefix_sample_names_with_id(md_template, study_id):
     study_id : int
         The study to which the metadata belongs to
     """
-    # Get all the prefixes of the index, defined as any string before a '.'
-    prefixes = {idx.split('.', 1)[0] for idx in md_template.index}
-    # If the samples have been already prefixed with the study id, the prefixes
-    # set will contain only one element and it will be the str representation
-    # of the study id
-    if len(prefixes) == 1 and prefixes.pop() == str(study_id):
-        # The samples were already prefixed with the study id
-        warnings.warn("Sample names were already prefixed with the study id.",
-                      qdb.exceptions.QiitaDBWarning)
-    else:
-        # Create a new pandas series in which all the values are the study_id
-        # and it is indexed as the metadata template
-        study_ids = pd.Series([str(study_id)] * len(md_template.index),
-                              index=md_template.index)
-        # Create a new column on the metadata template that includes the
-        # metadata template indexes prefixed with the study id
-        md_template['sample_name_with_id'] = (study_ids + '.' +
-                                              md_template.index.values)
-        md_template.index = md_template.sample_name_with_id
-        del md_template['sample_name_with_id']
-        # The original metadata template had the index column unnamed - remove
-        # the name of the index for consistency
-        md_template.index.name = None
+    # loop over the samples and prefix those that aren't prefixed
+    md_template['qiita_sample_name_with_id'] = pd.Series(
+        [idx if idx.split('.', 1)[0] == str(study_id)
+         else '%d.%s' % (study_id, idx)
+         for idx in md_template.index], index=md_template.index)
+
+    # get the rows that are gonna change
+    changes = len(md_template.index[
+        md_template['qiita_sample_name_with_id'] != md_template.index])
+    if changes != 0 and changes != len(md_template.index):
+        warnings.warn(
+            "Some of the samples were already prefixed with the study id.",
+            qdb.exceptions.QiitaDBWarning)
+
+    md_template.index = md_template.qiita_sample_name_with_id
+    del md_template['qiita_sample_name_with_id']
+    # The original metadata template had the index column unnamed -> remove
+    # the name of the index for consistency
+    md_template.index.name = None
 
 
 def load_template_to_dataframe(fn, index='sample_name'):

@@ -1,6 +1,6 @@
-.. _prepare-information-files:
+#.. _prepare-information-files:
 
-.. index:: prepare-information-files
+#.. index:: prepare-information-files
 
 Prepare information files
 =========================

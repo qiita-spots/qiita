@@ -64,6 +64,7 @@ def analysis_description_handler_get_request(analysis_id, user):
     return {'analysis_name': analysis.name,
             'analysis_id': analysis.id,
             'analysis_description': analysis.description,
+            'analysis_mapping_id': analysis.mapping_file,
             'alert_type': alert_type,
             'alert_msg': alert_msg}
 

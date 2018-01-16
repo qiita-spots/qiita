@@ -9,8 +9,6 @@ The following is a full list of the available guides:
 .. toctree::
    :maxdepth: 2
 
-   prepare-information-files
-   ebi-submission
    sharing
    no-raw-sequences
    join-paired-end-reads
