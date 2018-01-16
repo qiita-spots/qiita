@@ -12,6 +12,8 @@ The following is a full list of the available guides:
    sharing
    no-raw-sequences
    join-paired-end-reads
+   ebi-submission.rst
+   prepare-information-files.rst
 
 To request documentation on any administration use-cases not addressed here,
 please add an issue `here <https://github.com/biocore/qiita/issues>`__.
