@@ -36,7 +36,7 @@ Creating a Study
   * **Lab Person** (optional): Who to contact if you have questions about the experiment
   * **Environmental Packages** (optional): Describing the environment from which a biological sample originates
 
-  * To find out which type of sample you have read this paper found in `Nature <http://www.nature.com/nbt/journal/v29/n5/full/nbt.1823.html>`__.
+    * To find out which type of sample you have read this paper found in `Nature <http://www.nature.com/nbt/journal/v29/n5/full/nbt.1823.html>`__.
 
   * **Event-Based Data** (optional): If your experiment contained interventions you can include that here
 
@@ -45,16 +45,16 @@ Creating a Study
 
 * **Study Information Page**
 
- * **Share**: Shares the study with other users
- * **Edit**: Brings you to the Edit Study Page if you wanted to update your study
- * **Delete**: Deletes the study
- * **Study tags** (optional): Keywords that will help you, and others, find your study in Qiita
+  * **Share**: Shares the study with other users
+  * **Edit**: Brings you to the Edit Study Page if you wanted to update your study
+  * **Delete**: Deletes the study
+  * **Study tags** (optional): Keywords that will help you, and others, find your study in Qiita
 
-  * For example, if you’re studying soil you can add that as a tag
-  * Must **Save tags** To keep them otherwise they dissapear
+    * For example, if you’re studying soil you can add that as a tag
+    * Must **Save tags** To keep them otherwise they disappear
 
- * **Sample Information**: A link to your metadata summary
- * **Upload Files**: A link to a screen to upload your files to
+  * **Sample Information**: A link to your metadata summary
+  * **Upload Files**: A link to a screen to upload your files to
 
 Editing a Study
 ~~~~~~~~~~~~~~~
@@ -75,7 +75,7 @@ You can download an example sample information file from
 EBI-ENA NULL values vocabulary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For all public studies including those being submitted to EBI, no blanks are allowed in the smaple information. We support the following null values: *not applicable*, *missing: not collected*, *missing: not provided*, *missing: restricted access*.
+For all public studies including those being submitted to EBI, no blanks are allowed in the sample information. We support the following null values: *not applicable*, *missing: not collected*, *missing: not provided*, *missing: restricted access*.
 
 For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
 
@@ -185,10 +185,10 @@ Upload Sample Information
 
 * **Upload Files Page**
 
- * Drag your sample info file into the box to upload your files
- * Your uploaded samples will appear under the "Files" section
- * **Delete selected files**: Delete a file with the selected boxes
- * **Go to study description**: Link to the study description page
+  * Drag your sample info file into the box to upload your files
+  * Your uploaded samples will appear under the "Files" section
+  * **Delete selected files**: Delete a file with the selected boxes
+  * **Go to study description**: Link to the study description page
 
 Attach Sample Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -198,9 +198,9 @@ Attach Sample Information
 
 * **Sample Information Page**
 
- * **Select sample information file**: Attaches the uploaded sample information to the study
- * **If uploading a QIIME mapping file, select the data type of the prep information**: Selects the data type
- * **Create**: Creates a new sample information page that includes the attached data
+  * **Select sample information file**: Attaches the uploaded sample information to the study
+  * **If uploading a QIIME mapping file, select the data type of the prep information**: Selects the data type
+  * **Create**: Creates a new sample information page that includes the attached data
 
 Viewing Sample Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -210,51 +210,51 @@ Viewing Sample Information
 
 * **Sample Information Page**
 
- * **Sample Information** Tab
+  * **Sample Information** Tab
 
-  * See different metadata values
-  * **Sample Info**: Downloads the metadata onto your computer
-  * **Update Sample Information**: Upload a new sample information file
+    * See different metadata values
+    * **Sample Info**: Downloads the metadata onto your computer
+    * **Update Sample Information**: Upload a new sample information file
 
 .. figure::  sample_prep_summary_tab.png
    :align:   center
 
 * **Sample Information Page**
 
- * **Sample-Prep Summary** Tab
+  * **Sample-Prep Summary** Tab
 
-  * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
+    * **Add sample column information to table**: Allows you to add an additional metadata column to the sample summary for comparison on this page
 
 Update Sample info
 ~~~~~~~~~~~~~~~~~~
 
 * If your data has not been processed..
 
- * Upload your new metadata file using the Upload Files Page
- * Delete your old metadata file on the Sample Information Page
- * Update your metadata file on the Sample Information tab on the Sample Information page
+  * Upload your new metadata file using the Upload Files Page
+  * Delete your old metadata file on the Sample Information Page
+  * Update your metadata file on the Sample Information tab on the Sample Information page
 
 * If your data has been processed...
 
- * Your past metadata file cannot be deleted but fields can be deleted
+  * Your past metadata file cannot be deleted but fields can be deleted
 
-  * To remove data, go to the Sample Information tab on the Sample Information page and use the trash icon to delete the unwanted fields
+    * To remove data, go to the Sample Information tab on the Sample Information page and use the trash icon to delete the unwanted fields
 
- * You can update the fields that do exist (these fields can be found on the sample information tab on the sample information page)
+  * You can update the fields that do exist (these fields can be found on the sample information tab on the sample information page)
 
-  * Upload a new sample info file including only the updated field data and the sample_name field
+    * Upload a new sample info file including only the updated field data and the sample_name field
 
- * You can add new fields
+  * You can add new fields
 
-  * Upload a new sample info file including only the field data you want to add and the sample_name field
+    * Upload a new sample info file including only the field data you want to add and the sample_name field
 
- * Sample names cannot be deleted
+  * Sample names cannot be deleted
 
-  * Any sample name change will be interpreted as a new sample
+    * Any sample name change will be interpreted as a new sample
 
- * *Note that these changes will not update on your analysis but these changes will not affect your processing data since the metadata isn’t applied until analysis*
+  * *Note that these changes will not update on your analysis but these changes will not affect your processing data since the metadata isn’t applied until analysis*
 
-Creating and Working With Preperation information
+Creating and Working With Preparation information
 -------------------------------------------------
 
 Prepare information files
@@ -359,7 +359,7 @@ additional column is required.
 | ``run_prefix``   | free text   | Name of your sequence file without the suffix (for example, ``seqs.fna`` becomes ``seqs``, and ``my-data.fastq`` becomes ``my-data``).   |
 +------------------+-------------+------------------------------------------------------------------------------------------------------------------------------------------+
 
-Attaching Preperation Information to the Study
+Attaching Preparation Information to the Study
 ----------------------------------------------
 
 Upload Prep Information
@@ -370,9 +370,9 @@ Upload Prep Information
 
 * **Upload Files Page**
 
- * Drag your data files into the box to upload your files
- * If you want to delete the file, press the box that appears next to that file then click delete selected files
- * **Go to study description**: Link to the study description page
+  * Drag your data files into the box to upload your files
+  * If you want to delete the file, press the box that appears next to that file then click delete selected files
+  * **Go to study description**: Link to the study description page
 
 Attach Prep Information
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -382,17 +382,17 @@ Attach Prep Information
 
 * **Study Description Page**
 
- * Choose **Add New Preparation**
+  * Choose **Add New Preparation**
 
 .. figure::  add_new_preparation.png
    :align:   center
 
 * **Add New Preparation Page**
 
- * **Select File** (required): Select the preparatory information file you uploaded
- * **Select Data Type** (required): Choose for what kind of data you studied
- * **Select Investigation Type** (optional): Not required, chooses the investigation you performed
- * **Create New Preparation**: Creates a new preparation based on the data inputted above
+  * **Select File** (required): Select the preparatory information file you uploaded
+  * **Select Data Type** (required): Choose for what kind of data you studied
+  * **Select Investigation Type** (optional): Not required, chooses the investigation you performed
+  * **Create New Preparation**: Creates a new preparation based on the data inputted above
 
 Associate Data with Prep Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -402,42 +402,42 @@ Associate Data with Prep Information
 
 * **Data Type**
 
- * **16S, or the data type you studied** dropdown: Shows the preparations created on this type of data on this study
- * **Prep Information Page**
+  * **16S, or the data type you studied** dropdown: Shows the preparations created on this type of data on this study
+  * **Prep Information Page**
 
-  * To add files
+    * To add files
 
-   * **Select Type** (required): Select the file type you uploaded, causing Qiita to associate your files with this preparation
-   * **Add a name for this file** (required): Give the file a name
-   * **Add Files**: Shows up after Select Type has been chosen, adds files to the preparation
+      * **Select Type** (required): Select the file type you uploaded, causing Qiita to associate your files with this preparation
+      * **Add a name for this file** (required): Give the file a name
+      * **Add Files**: Shows up after Select Type has been chosen, adds files to the preparation
 
 .. figure::  prep_summary.png
    :align:   center
 
 * **Prep Information Page**
 
- * **Summary** Tab
+  * **Summary** Tab
 
-  * Includes preparation info files of that data type that’s associated with your study
+    * Includes preparation info files of that data type that’s associated with your study
 
 .. figure::  prep_processing.png
    :align:   center
 
 * **Prep Information Page**
 
- * **Processing** Tab
+  * **Processing** Tab
 
-  * **Processing Network**: Contains artifacts that represent your data and commands being run on your data
-  * **Hide**: Hides the processing network
+    * **Processing Network**: Contains artifacts that represent your data and commands being run on your data
+    * **Hide**: Hides the processing network
 
 Update prep info
 ~~~~~~~~~~~~~~~~
 
 * **Prep Information Page**
 
- * Under the "Summary" tab
+  * Under the "Summary" tab
 
-  * Select “Update Information” and choose your updated file
-  * *Barcodes and sample names cannot be updated*
+    * Select “Update Information” and choose your updated file
+    * *Barcodes and sample names cannot be updated*
 
-   * Must create new preparation to update these
+      * Must create new preparation to update these
