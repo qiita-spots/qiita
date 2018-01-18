@@ -7,13 +7,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import main
-from mock import Mock
-
-from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.test.tornado_test_base import TestHandlerBase
-from qiita_db.study import StudyPerson, Study
-from qiita_db.user import User
-from qiita_db.util import get_count, check_count
 
 
 class TestStudyEditorForm(TestHandlerBase):
@@ -32,123 +26,6 @@ class TestStudyEditHandlerReadOnly(TestHandlerBase):
         response = self.get('/study/create/')
         self.assertEqual(response.code, 200)
         self.assertNotEqual(str(response.body), "")
-
-
-class TestStudyEditHandler(TestHandlerBase):
-
-    def test_get_edit_utf8(self):
-        """Make sure the page loads when utf8 characters are present"""
-        study = Study(1)
-        study.title = "TEST_ø"
-        study.alias = "TEST_ø"
-        study.description = "TEST_ø"
-        study.abstract = "TEST_ø"
-        response = self.get('/study/edit/1')
-        self.assertEqual(response.code, 200)
-        self.assertNotEqual(str(response.body), "")
-
-    def test_post(self):
-        person_count_before = get_count('qiita.study_person')
-        study_count_before = get_count('qiita.study')
-
-        post_data = {'new_people_names': ['Adam', 'Ethan'],
-                     'new_people_emails': ['a@mail.com', 'e@mail.com'],
-                     'new_people_affiliations': ['CU Boulder', 'NYU'],
-                     'new_people_addresses': ['Some St., Boulder, CO 80305',
-                                              ''],
-                     'new_people_phones': ['', ''],
-                     'study_title': 'dummy title',
-                     'study_alias': 'dummy alias',
-                     'pubmed_id': 'dummy pmid',
-                     'environmental_packages': ['air'],
-                     'timeseries': '1',
-                     'study_abstract': "dummy abstract",
-                     'study_description': 'dummy description',
-                     'principal_investigator': '-2',
-                     'lab_person': '1'}
-
-        self.post('/study/create/', post_data)
-
-        # Check that the new person was created
-        expected_id = person_count_before + 1
-        self.assertTrue(check_count('qiita.study_person', expected_id))
-
-        new_person = StudyPerson(expected_id)
-        self.assertTrue(new_person.name == 'Ethan')
-        self.assertTrue(new_person.email == 'e@mail.com')
-        self.assertTrue(new_person.affiliation == 'NYU')
-        self.assertTrue(new_person.address is None)
-        self.assertTrue(new_person.phone is None)
-
-        # Check the study was created
-        expected_id = study_count_before + 1
-        self.assertTrue(check_count('qiita.study', expected_id))
-
-    def test_post_edit(self):
-        study_count_before = get_count('qiita.study')
-        study = Study(1)
-        study_info = study.info
-
-        post_data = {
-            'new_people_names': [],
-            'new_people_emails': [],
-            'new_people_affiliations': [],
-            'new_people_addresses': [],
-            'new_people_phones': [],
-            'study_title': 'New title - test post edit',
-            'study_alias': study_info['study_alias'],
-            'publications_doi': ','.join(
-                [doi for doi, _ in study.publications]),
-            'study_abstract': study_info['study_abstract'],
-            'study_description': study_info['study_description'],
-            'principal_investigator': study_info['principal_investigator'].id,
-            'lab_person': study_info['lab_person'].id}
-
-        self.post('/study/edit/1', post_data)
-
-        # Check that the study was updated
-        self.assertTrue(check_count('qiita.study', study_count_before))
-        self.assertEqual(study.title, 'New title - test post edit')
-
-    def test_post_edit_blank_doi(self):
-        study_count_before = get_count('qiita.study')
-        study = Study(1)
-        study_info = study.info
-
-        post_data = {
-            'new_people_names': [],
-            'new_people_emails': [],
-            'new_people_affiliations': [],
-            'new_people_addresses': [],
-            'new_people_phones': [],
-            'study_title': 'New title - test post edit',
-            'study_alias': study_info['study_alias'],
-            'publications_doi': '',
-            'study_abstract': study_info['study_abstract'],
-            'study_description': study_info['study_description'],
-            'principal_investigator': study_info['principal_investigator'].id,
-            'lab_person': study_info['lab_person'].id}
-
-        response = self.post('/study/edit/1', post_data)
-        self.assertEqual(response.code, 200)
-        # Check that the study was updated
-        self.assertTrue(check_count('qiita.study', study_count_before))
-        self.assertEqual(study.title, 'New title - test post edit')
-        self.assertEqual(study.publications, [])
-
-        # check for failure
-        old_title = post_data['study_title']
-        post_data['study_title'] = 'My new title!'
-        shared = User('shared@foo.bar')
-        study.unshare(shared)
-        BaseHandler.get_current_user = Mock(return_value=shared)
-        response = self.post('/study/edit/1', post_data)
-        self.assertEqual(response.code, 403)
-        # Check that the study wasn't updated
-        self.assertEqual(study.title, old_title)
-
-        # returning sharing
-        study.share(shared)
 
 
 class TestCreateStudyAJAX(TestHandlerBase):

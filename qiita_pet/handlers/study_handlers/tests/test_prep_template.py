@@ -10,12 +10,6 @@ from unittest import main
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
-class TestNewPrepTemplateAjax(TestHandlerBase):
-    def test_get(self):
-        response = self.get('/study/new_prep_template/', {'study_id': '1'})
-        self.assertEqual(response.code, 200)
-
-
 class TestPrepTemplateAJAXReadOnly(TestHandlerBase):
     def test_get(self):
         response = self.get('/study/description/prep_template/',

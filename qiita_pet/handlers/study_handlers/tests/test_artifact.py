@@ -17,7 +17,6 @@ import numpy.testing as npt
 
 from qiita_core.testing import wait_for_prep_information_job
 from qiita_pet.test.tornado_test_base import TestHandlerBase
-from qiita_db.artifact import Artifact
 from qiita_db.study import Study
 from qiita_db.util import get_mountpoint
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -182,35 +181,6 @@ class ArtifactGetInfoTest(TestHandlerBase):
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['msg'], exp['msg'])
         self.assertItemsEqual(obs['data'], exp['data'])
-
-
-class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):
-    def test_get_admin(self):
-        response = self.get('/admin/artifact/',
-                            {'artifact_id': 3})
-        self.assertEqual(response.code, 200)
-
-        # checking that proper actions shown
-        self.assertIn("Make public</button>", response.body)
-        self.assertIn("Revert to sandbox</button>", response.body)
-        self.assertIn("Submit to EBI</a>", response.body)
-        self.assertIn("Submit to VAMPS</a>", response.body)
-
-
-class ArtifactAdminAJAXTests(TestHandlerBase):
-
-    def test_post_admin(self):
-        response = self.post('/admin/artifact/',
-                             {'artifact_id': 3,
-                              'visibility': 'sandbox'})
-        self.assertEqual(response.code, 200)
-
-        # checking that proper actions shown
-        self.assertEqual({"status": "success",
-                          "message": "Artifact visibility changed to sandbox"},
-                         loads(response.body))
-
-        self.assertEqual(Artifact(3).visibility, 'sandbox')
 
 
 if __name__ == "__main__":

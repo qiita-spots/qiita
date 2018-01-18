@@ -8,17 +8,13 @@
 from unittest import main
 from json import loads
 
-from mock import Mock
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config, r_client
-from qiita_db.artifact import Artifact
 from qiita_db.study import Study
 from qiita_db.user import User
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.study_handlers.listing_handlers import (
     _build_study_info)
-from qiita_pet.handlers.base_handlers import BaseHandler
 
 GPARAMS = {'similarity': 0.97, 'reference_name': 'Greengenes',
            'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000, 'threads': 1,
@@ -170,16 +166,6 @@ class TestListStudiesHandler(TestHandlerBase):
     def test_get(self):
         response = self.get('/study/list/')
         self.assertEqual(response.code, 200)
-
-
-class TestStudyApprovalList(TestHandlerBase):
-
-    def test_get(self):
-        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
-        Artifact(4).visibility = "awaiting_approval"
-        response = self.get('/admin/approval/')
-        self.assertEqual(response.code, 200)
-        self.assertIn("test@foo.bar", response.body)
 
 
 class TestAutocompleteHandler(TestHandlerBase):
