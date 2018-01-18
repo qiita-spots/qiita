@@ -20,14 +20,6 @@ class TestStudyEditorExtendedForm(TestHandlerBase):
     pass
 
 
-class TestStudyEditHandlerReadOnly(TestHandlerBase):
-    def test_get(self):
-        """Make sure the page loads when no arguments are passed"""
-        response = self.get('/study/create/')
-        self.assertEqual(response.code, 200)
-        self.assertNotEqual(str(response.body), "")
-
-
 class TestCreateStudyAJAX(TestHandlerBase):
     def test_get(self):
         response = self.get('/check_study/', {'study_title': 'notreal'})
