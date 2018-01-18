@@ -501,11 +501,8 @@ def move_upload_files_to_trash(study_id, files_to_move):
         fullpath = join(foldername, filename)
         new_fullpath = join(foldername, trash_folder, filename)
 
-        if not exists(fullpath):
-            raise qdb.exceptions.QiitaDBError(
-                "The filepath %s doesn't exist in the system" % fullpath)
-
-        rename(fullpath, new_fullpath)
+        if exists(fullpath):
+            rename(fullpath, new_fullpath)
 
 
 def get_mountpoint(mount_type, retrieve_all=False, retrieve_subdir=False):

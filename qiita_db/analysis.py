@@ -23,6 +23,7 @@ from os.path import join
 from future.utils import viewitems
 from biom import load_table
 from biom.util import biom_open
+from biom.exception import DisjointIDError
 from re import sub
 import pandas as pd
 
@@ -921,7 +922,10 @@ class Analysis(qdb.base.QiitaObject):
                     if new_table is None:
                         new_table = biom_table
                     else:
-                        new_table = new_table.merge(biom_table)
+                        try:
+                            new_table = new_table.concat([biom_table])
+                        except DisjointIDError:
+                            new_table = new_table.merge(biom_table)
 
                 if not new_table or len(new_table.ids()) == 0:
                     # if we get to this point the only reason for failure is
