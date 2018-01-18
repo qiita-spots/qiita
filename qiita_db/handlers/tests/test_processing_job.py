@@ -226,6 +226,40 @@ class CompleteHandlerTests(OauthTestingBase):
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
 
+    def test_post_job_success_with_archive(self):
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
+            qdb.study.Study(1), '16S')
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(
+                qdb.software.Command.get_validator('BIOM'),
+                values_dict={'template': pt.id, 'files':
+                             dumps({'BIOM': ['file']}),
+                             'artifact_type': 'BIOM'}))
+        job._set_status('running')
+
+        fd, fp = mkstemp(suffix='_table.biom')
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+
+        self._clean_up_files.append(fp)
+
+        payload = dumps(
+            {'success': True, 'error': '',
+             'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
+                                         'artifact_type': 'BIOM'}},
+             'archive': {'AAAA': 'AAA', 'CCC': 'CCC'}})
+
+        obs = self.post(
+            '/qiita_db/jobs/%s/complete/' % job.id,
+            payload, headers=self.header)
+        wait_for_processing_job(job.id)
+        self.assertEqual(obs.code, 200)
+
 
 class ProcessingJobAPItestHandlerTests(OauthTestingBase):
     def test_post_processing_job(self):

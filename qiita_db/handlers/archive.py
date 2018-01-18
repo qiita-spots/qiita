@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from .oauth2 import OauthBaseHandler, authenticate_oauth
+from qiita_db.processing_job import ProcessingJob
+from qiita_db.archive import Archive
 
 
 class APIArchiveObservations(OauthBaseHandler):
@@ -19,10 +21,11 @@ class APIArchiveObservations(OauthBaseHandler):
         dict
             The contents of the analysis keyed by sample id
         """
-        # job_id = self.get_argument('job_id')
+        job_id = self.get_argument('job_id')
         features = self.request.arguments['features']
 
-        # TODO: search on artifact
-        response = {v: [] for v in features}
+        ms = Archive.get_merging_scheme_from_job(ProcessingJob(job_id))
+        response = Archive.retrieve_feature_values(
+            archive_merging_scheme=ms, features=features)
 
         self.write(response)
