@@ -1,3 +1,17 @@
+/*
+  Original source https://stackoverflow.com/a/18529465
+  Link
+*/
+.navbar-default .navbar-nav > li > a {
+  font-size: 14px;
+  color: #EEE;
+}
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+  color: #CCC;
+}
+/* Link END */
+
 #qiita-main {
   position: relative;
   height: 100%;
