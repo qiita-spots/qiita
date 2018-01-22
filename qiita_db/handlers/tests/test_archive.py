@@ -59,8 +59,8 @@ class APIArchiveObservationsTests(OauthTestingBase):
                 self.assertEqual(loads(obs.body), exp)
 
                 # inserting and testing insertion
-                data = {'job_id': j,
-                        'features': dumps({featureA: 'CA', featureB: 'CB'})}
+                data = {'path': j,
+                        'value': dumps({featureA: 'CA', featureB: 'CB'})}
                 obs = self.patch(
                     '/qiita_db/archive/observations/', headers=self.header,
                     data=data)
