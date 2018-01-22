@@ -33,10 +33,10 @@ class APIArchiveObservations(OauthBaseHandler):
 
     @authenticate_oauth
     def patch(self):
-        job_id = self.get_argument('job_id')
-        features = loads(self.get_argument('features'))
+        req_path = self.get_argument('path')
+        req_value = self.get_argument('value')
 
-        ms = Archive.get_merging_scheme_from_job(ProcessingJob(job_id))
+        ms = Archive.get_merging_scheme_from_job(ProcessingJob(req_path))
+
         archive = Archive()
-
-        self.write(archive.insert_features(ms, features))
+        self.write(archive.insert_features(ms, loads(req_value)))
