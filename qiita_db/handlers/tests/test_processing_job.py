@@ -70,7 +70,7 @@ class HeartbeatHandlerTests(OauthTestingBase):
             '/qiita_db/jobs/6d368e16-2242-4cf8-87b4-a5dc40bb890b/heartbeat/',
             '', headers=self.header)
         self.assertEqual(obs.code, 403)
-        self.assertEqual(obs.body,
+        self.assertEqual(obs.reason,
                          "Can't execute heartbeat on job: already completed")
 
     def test_post(self):
@@ -119,8 +119,8 @@ class ActiveStepHandlerTests(OauthTestingBase):
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/step/',
             payload, headers=self.header)
         self.assertEqual(obs.code, 403)
-        self.assertEqual(obs.body, "Cannot change the step of a job whose "
-                                   "status is not 'running'")
+        self.assertEqual(obs.reason, "Cannot change the step of a job whose "
+                                     "status is not 'running'")
 
     def test_post(self):
         payload = dumps({'step': 'Step 1 of 4: demultiplexing'})
