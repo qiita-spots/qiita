@@ -39,7 +39,7 @@ def _get_artifact(a_id):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating artifact %s: %s'
+        raise HTTPError(500, reason='Error instantiating artifact %s: %s'
                              % (a_id, str(e)))
 
     return artifact
@@ -128,7 +128,7 @@ class ArtifactHandler(OauthBaseHandler):
         if req_op == 'add':
             req_path = [v for v in req_path.split('/') if v]
             if len(req_path) != 1 or req_path[0] != 'html_summary':
-                raise HTTPError(400, 'Incorrect path parameter value')
+                raise HTTPError(400, reason='Incorrect path parameter value')
             else:
                 artifact = _get_artifact(artifact_id)
 
@@ -143,10 +143,10 @@ class ArtifactHandler(OauthBaseHandler):
                 try:
                     artifact.set_html_summary(html_fp, html_dir)
                 except Exception as e:
-                    raise HTTPError(500, str(e))
+                    raise HTTPError(500, reason=str(e))
         else:
-            raise HTTPError(400, 'Operation "%s" not supported. Current '
-                                 'supported operations: add' % req_op)
+            raise HTTPError(400, reason='Operation "%s" not supported. '
+                            'Current supported operations: add' % req_op)
 
         self.finish()
 

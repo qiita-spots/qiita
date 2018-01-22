@@ -32,12 +32,12 @@ class EBISubmitHandler(BaseHandler):
         try:
             preprocessed_data = Artifact(preprocessed_data_id)
         except QiitaDBUnknownIDError:
-            raise HTTPError(404, "Artifact %d does not exist!" %
+            raise HTTPError(404, reason="Artifact %d does not exist!" %
                                  preprocessed_data_id)
         else:
             user = self.current_user
             if user.level != 'admin':
-                raise HTTPError(403, "No permissions of admin, "
+                raise HTTPError(403, reason="No permissions of admin, "
                                      "get/EBISubmitHandler: %s!" % user.id)
 
         prep_templates = preprocessed_data.prep_templates
@@ -113,13 +113,13 @@ class EBISubmitHandler(BaseHandler):
         user = self.current_user
         # make sure user is admin and can therefore actually submit to EBI
         if user.level != 'admin':
-            raise HTTPError(403, "User %s cannot submit to EBI!" %
+            raise HTTPError(403, reason="User %s cannot submit to EBI!" %
                             user.id)
         submission_type = self.get_argument('submission_type')
 
         if submission_type not in ['ADD', 'MODIFY']:
-            raise HTTPError(403, "User: %s, %s is not a recognized submission "
-                            "type" % (user.id, submission_type))
+            raise HTTPError(403, reason="User: %s, %s is not a recognized "
+                            "submission type" % (user.id, submission_type))
 
         study = Artifact(preprocessed_data_id).study
         state = study.ebi_submission_status

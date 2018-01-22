@@ -190,7 +190,7 @@ class UserMessagesHander(BaseHandler):
         elif action == "delete":
             self.current_user.delete_messages(messages)
         else:
-            raise HTTPError(400, "Unknown action: %s" % action)
+            raise HTTPError(400, reason="Unknown action: %s" % action)
 
         self.render("user_messages.html",
                     messages=self.current_user.messages())

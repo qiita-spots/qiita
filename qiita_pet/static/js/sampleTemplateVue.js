@@ -188,8 +188,7 @@ Vue.component('sample-template-page', {
       let vm = this;
       if(confirm("Are you sure you want to delete the sample information?")) {
         $.ajax({
-          url: vm.portal + '/study/description/sample_template/',
-          data: {study_id: vm.studyId},
+          url: vm.portal + '/study/description/sample_template/?study_id=' + vm.studyId,
           type: 'DELETE',
           success: function(data) {
             vm.startJobCheckInterval(data['job']);

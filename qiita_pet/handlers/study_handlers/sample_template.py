@@ -55,13 +55,13 @@ def sample_template_checks(study_id, user, check_exists=False):
     try:
         study = Study(int(study_id))
     except QiitaDBUnknownIDError:
-        raise HTTPError(404, 'Study does not exist')
+        raise HTTPError(404, reason='Study does not exist')
     if not study.has_access(user):
-        raise HTTPError(403, 'User does not have access to study')
+        raise HTTPError(403, reason='User does not have access to study')
 
     # Check if the sample template exists
     if check_exists and not SampleTemplate.exists(study_id):
-        raise HTTPError(404, "Study %s doesn't have sample information"
+        raise HTTPError(404, reason="Study %s doesn't have sample information"
                              % study_id)
 
 
@@ -97,13 +97,13 @@ def sample_template_handler_post_request(study_id, user, filepath,
     # Check if the file exists
     fp_rsp = check_fp(study_id, filepath)
     if fp_rsp['status'] != 'success':
-        raise HTTPError(404, 'Filepath not found')
+        raise HTTPError(404, reason='Filepath not found')
     filepath = fp_rsp['file']
 
     is_mapping_file = looks_like_qiime_mapping_file(filepath)
     if is_mapping_file and not data_type:
-        raise HTTPError(400, 'Please, choose a data type if uploading a '
-                             'QIIME mapping file')
+        raise HTTPError(400, reason='Please, choose a data type if uploading '
+                        'a QIIME mapping file')
 
     qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
     cmd = qiita_plugin.get_command('create_sample_template')
@@ -147,7 +147,7 @@ def sample_template_handler_patch_request(user, req_op, req_path,
     req_path = [v for v in req_path.split('/') if v]
     # At this point we know the path should be at least length 2
     if len(req_path) < 2:
-        raise HTTPError(400, 'Incorrect path parameter')
+        raise HTTPError(400, reason='Incorrect path parameter')
 
     study_id = int(req_path[0])
     # Check if the current user has access to the study and if the sample
@@ -159,7 +159,7 @@ def sample_template_handler_patch_request(user, req_op, req_path,
         # column: study_id/columns/column_name
         # sample: study_id/samples/sample_id
         if len(req_path) != 3:
-            raise HTTPError(400, 'Incorrect path parameter')
+            raise HTTPError(400, reason='Incorrect path parameter')
 
         attribute = req_path[1]
         attr_id = req_path[2]
@@ -188,20 +188,20 @@ def sample_template_handler_patch_request(user, req_op, req_path,
         # to use this function to replace other elements of the sample
         # information
         if len(req_path) != 2:
-            raise HTTPError(400, 'Incorrect path parameter')
+            raise HTTPError(400, reason='Incorrect path parameter')
 
         attribute = req_path[1]
 
         if attribute == 'data':
             # Update the sample information
             if req_value is None:
-                raise HTTPError(400, "Value is required when updating "
+                raise HTTPError(400, reason="Value is required when updating "
                                      "sample information")
 
             # Check if the file exists
             fp_rsp = check_fp(study_id, req_value)
             if fp_rsp['status'] != 'success':
-                raise HTTPError(404, 'Filepath not found')
+                raise HTTPError(404, reason='Filepath not found')
             filepath = fp_rsp['file']
 
             qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
@@ -218,11 +218,11 @@ def sample_template_handler_patch_request(user, req_op, req_path,
             job.submit()
             return {'job': job.id}
         else:
-            raise HTTPError(404, 'Attribute %s not found' % attribute)
+            raise HTTPError(404, reason='Attribute %s not found' % attribute)
 
     else:
-        raise HTTPError(400, 'Operation %s not supported. Current supported '
-                             'operations: remove, replace' % req_op)
+        raise HTTPError(400, reason='Operation %s not supported. Current '
+                        'supported operations: remove, replace' % req_op)
 
 
 def sample_template_handler_delete_request(study_id, user):
@@ -477,11 +477,11 @@ class SampleAJAX(BaseHandler):
 
         if res['status'] == 'error':
             if 'does not exist' in res['message']:
-                raise HTTPError(404, res['message'])
+                raise HTTPError(404, reason=res['message'])
             elif 'User does not have access to study' in res['message']:
-                raise HTTPError(403, res['message'])
+                raise HTTPError(403, reason=res['message'])
             else:
-                raise HTTPError(500, res['message'])
+                raise HTTPError(500, reason=res['message'])
 
         meta_cats = res['categories']
         cols, samps_table = _build_sample_summary(study_id,
