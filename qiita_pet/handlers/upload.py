@@ -92,7 +92,7 @@ class UploadFileHandler(BaseHandler):
         if not filename.endswith(tuple(qiita_config.valid_upload_extension)):
             self.set_status(415)
             raise HTTPError(415, reason="User %s is trying to upload %s" %
-                                 (self.current_user, str(filename)))
+                            (self.current_user, str(filename)))
 
     @authenticated
     @execute_as_transaction

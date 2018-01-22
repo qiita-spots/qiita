@@ -27,12 +27,12 @@ class VAMPSHandler(BaseHandler):
             preprocessed_data = Artifact(preprocessed_data_id)
         except QiitaDBUnknownIDError:
             raise HTTPError(404, reason="Artifact %d does not exist!" %
-                                 preprocessed_data_id)
+                            preprocessed_data_id)
         else:
             user = self.current_user
             if user.level != 'admin':
                 raise HTTPError(403, reason="No permissions of admin, "
-                                     "get/VAMPSSubmitHandler: %s!" % user.id)
+                                "get/VAMPSSubmitHandler: %s!" % user.id)
         prep_templates = preprocessed_data.prep_templates
         allow_submission = len(prep_templates) == 1
         msg_list = ["Submission to EBI disabled:"]

@@ -62,7 +62,7 @@ def sample_template_checks(study_id, user, check_exists=False):
     # Check if the sample template exists
     if check_exists and not SampleTemplate.exists(study_id):
         raise HTTPError(404, reason="Study %s doesn't have sample information"
-                             % study_id)
+                        % study_id)
 
 
 def sample_template_handler_post_request(study_id, user, filepath,
@@ -196,7 +196,7 @@ def sample_template_handler_patch_request(user, req_op, req_path,
             # Update the sample information
             if req_value is None:
                 raise HTTPError(400, reason="Value is required when updating "
-                                     "sample information")
+                                "sample information")
 
             # Check if the file exists
             fp_rsp = check_fp(study_id, req_value)

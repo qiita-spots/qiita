@@ -30,8 +30,8 @@ class BaseHandlerDownload(BaseHandler):
         # Check general access to study
         study_info = check_access(sid, self.current_user.id)
         if study_info:
-            raise HTTPError(405, reason="%s: %s, %s" % (study_info['message'],
-                                                 self.current_user.email, sid))
+            raise HTTPError(405, reason="%s: %s, %s" % (
+                study_info['message'], self.current_user.email, sid))
         return Study(sid)
 
     def _generate_files(self, header_name, accessions, filename):

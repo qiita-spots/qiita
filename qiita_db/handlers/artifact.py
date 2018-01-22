@@ -40,7 +40,7 @@ def _get_artifact(a_id):
         raise HTTPError(404)
     except Exception as e:
         raise HTTPError(500, reason='Error instantiating artifact %s: %s'
-                             % (a_id, str(e)))
+                        % (a_id, str(e)))
 
     return artifact
 
