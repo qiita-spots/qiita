@@ -16,8 +16,9 @@ class Archive(object):
 
     Methods
     -------
-    insert_from_biom
     insert_from_artifact
+    get_merging_scheme_from_job
+    retrieve_feature_values
     insert_features
 
     See Also
@@ -84,10 +85,9 @@ class Archive(object):
 
         Parameters
         ----------
-        job : qiita_db.artifact.Artifact
-            The artifact from which the features were generated
-        features : dict {str: str}
-            A dictionary of the features and the values to be stored
+        job : str
+            The Qiita process job_id generating the artifact holding the
+            features to be retrieved or stored.
 
         Raises
         ------
@@ -149,6 +149,8 @@ class Archive(object):
         ----------
         archive_merging_scheme : optional, str
             The name of the archive_merging_scheme to retrieve
+        features : list of str
+            List of features to retrieve information from the archive
 
         Notes
         -----
