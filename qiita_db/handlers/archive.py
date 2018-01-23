@@ -21,6 +21,16 @@ class APIArchiveObservations(OauthBaseHandler):
         -------
         dict
             The contents of the analysis keyed by sample id
+
+        Notes
+        -----
+            Argument "path" must be the Qiita job_id which is used to infer
+            the merging scheme.
+            Argument "features" is a list of feature identifier,
+            e.g. Deblur sequences.
+
+            Feature identifiers not found in the archive won't be included in
+            the return dictionary.
         """
         job_id = self.get_argument('job_id')
         features = self.request.arguments['features']
@@ -33,6 +43,15 @@ class APIArchiveObservations(OauthBaseHandler):
 
     @authenticate_oauth
     def patch(self):
+        """Updates / stores feature information in the archive.
+
+        Notes
+        -----
+            Argument "path" must be the Qiita job_id which is used to infer
+            the merging scheme.
+            Argument "value" is a json string, i.e. result of a json.dump(obj)
+            of a dictionary, keyed with feature identifiers.
+        """
         req_path = self.get_argument('path')
         req_value = self.get_argument('value')
 
