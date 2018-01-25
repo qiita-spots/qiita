@@ -501,11 +501,11 @@ table {
 	study_artifact references study ( study_id )</title>
 </path>
 <text x='1687' y='760' transform='rotate(0 1687,760)' title='Foreign Key fk_study_artifact_study
-	study_artifact references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 825 L 1605,1027 Q 1605,1035 1597,1035 L 1335,1035' >
+	study_artifact references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1575 750 L 1567,750 Q 1560,750 1560,742 L 1560,742 Q 1560,735 1552,735 L 1327,735 Q 1320,735 1320,742 L 1320,885' >
 	<title>Foreign Key fk_study_artifact_artifact
 	study_artifact references artifact ( artifact_id )</title>
 </path>
-<text x='1618' y='825' transform='rotate(90 1618,825)' title='Foreign Key fk_study_artifact_artifact
+<text x='1523' y='745' transform='rotate(0 1523,745)' title='Foreign Key fk_study_artifact_artifact
 	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1710 990 L 1702,990 Q 1695,990 1695,982 L 1695,592 Q 1695,585 1687,585 L 1380,585' >
 	<title>Foreign Key fk_prep_template_processing_job
 	prep_template_processing_job references prep_template ( prep_template_id )</title>
@@ -696,12 +696,12 @@ table {
 	parameter_artifact_type references command_parameter ( command_parameter_id )</title>
 </path>
 <text x='1927' y='1105' transform='rotate(0 1927,1105)' title='Foreign Key fk_parameter_artifact_type
-	parameter_artifact_type references command_parameter ( command_parameter_id )' style='fill:#a1a0a0;'>command_parameter_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1095 L 1582,1095 Q 1575,1095 1575,1087 L 1575,1020' >
+	parameter_artifact_type references command_parameter ( command_parameter_id )' style='fill:#a1a0a0;'>command_parameter_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1095 L 1582,1095 Q 1575,1095 1575,1087 L 1575,1035' >
 	<title>Foreign Key fk_parameter_artifact_type_0
 	parameter_artifact_type references artifact_type ( artifact_type_id )</title>
 </path>
 <text x='1659' y='1090' transform='rotate(0 1659,1090)' title='Foreign Key fk_parameter_artifact_type_0
-	parameter_artifact_type references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1185 L 1567,1185 Q 1560,1185 1560,1177 L 1560,1020' >
+	parameter_artifact_type references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1185 L 1567,1185 Q 1560,1185 1560,1177 L 1560,1035' >
 	<title>Foreign Key fk_command_output_0
 	command_output references artifact_type ( artifact_type_id )</title>
 </path>
@@ -1184,24 +1184,6 @@ PMID of paper from the analysis</title></a>
 <a xlink:href='#ebi_run_accession.artifact_id'><use id='fk' x='1458' y='1166' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
   <use id='nn' x='1337' y='1182' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.ebi_run_accession'><use id='pk' x='1337' y='1181' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) </title></a>
 <a xlink:href='#ebi_run_accession.ebi_run_accession'><text x='1353' y='1192'>ebi_run_accession</text><title>ebi_run_accession bigint not null</title></a>
-
-<!-- ============= Table 'artifact_type' ============= -->
-<rect class='table' x='1395' y='893' width='195' height='120' rx='7' ry='7' />
-<path d='M 1395.50 919.50 L 1395.50 900.50 Q 1395.50 893.50 1402.50 893.50 L 1582.50 893.50 Q 1589.50 893.50 1589.50 900.50 L 1589.50 919.50 L1395.50 919.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#artifact_type'><text x='1459' y='907' class='tableTitle'>artifact_type</text><title>Table qiita.artifact_type
-Type of artifact</title></a>
-  <use id='nn' x='1397' y='927' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type_id'><use id='pk' x='1397' y='926' xlink:href='#pk'/><title>Primary Key  ( artifact_type_id ) </title></a>
-<a xlink:href='#artifact_type.artifact_type_id'><text x='1413' y='937'>artifact_type_id</text><title>artifact_type_id bigserial not null</title></a>
-<a xlink:href='#artifact_type.artifact_type_id'><use id='ref' x='1578' y='926' xlink:href='#ref'/><title>Referred by artifact ( artifact_type_id ) 
-Referred by artifact_type_filepath_type ( artifact_type_id ) 
-Referred by command_output ( artifact_type_id ) 
-Referred by parameter_artifact_type ( artifact_type_id ) 
-Referred by software_artifact_type ( artifact_type_id ) </title></a>
-  <use id='nn' x='1397' y='942' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type'><use id='unq' x='1397' y='941' xlink:href='#unq'/><title>Unique Index  ( artifact_type ) </title></a>
-<a xlink:href='#artifact_type.artifact_type'><text x='1413' y='952'>artifact_type</text><title>artifact_type varchar not null</title></a>
-  <use id='nn' x='1397' y='957' xlink:href='#nn'/><a xlink:href='#artifact_type.description'><text x='1413' y='967'>description</text><title>description varchar not null</title></a>
-  <use id='nn' x='1397' y='972' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_ebi'><text x='1413' y='982'>can_be_submitted_to_ebi</text><title>can_be_submitted_to_ebi bool not null default &#039;FALSE&#039;</title></a>
-  <use id='nn' x='1397' y='987' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_vamps'><text x='1413' y='997'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
 
 <!-- ============= Table 'filepath_type' ============= -->
 <rect class='table' x='810' y='743' width='120' height='75' rx='7' ry='7' />
@@ -2042,9 +2024,27 @@ Whether or not this term was defined by a user</title></a>
 <a xlink:href='#archive_merging_scheme'><text x='1274' y='1522' class='tableTitle'>archive_merging_scheme</text><title>Table qiita.archive_merging_scheme</title></a>
   <use id='nn' x='1247' y='1542' xlink:href='#nn'/><a xlink:href='#archive_merging_scheme.archive_merging_scheme_id'><use id='pk' x='1247' y='1541' xlink:href='#pk'/><title>Primary Key  ( archive_merging_scheme_id ) </title></a>
 <a xlink:href='#archive_merging_scheme.archive_merging_scheme_id'><text x='1263' y='1552'>archive_merging_scheme_id</text><title>archive_merging_scheme_id bigserial not null</title></a>
-<a xlink:href='#archive_merging_scheme.archive_merging_scheme_id'><use id='ref' x='1428' y='1541' xlink:href='#ref'/><title>Referred by archive_feature_value ( archive_merging_scheme_id ) 
-Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
+<a xlink:href='#archive_merging_scheme.archive_merging_scheme_id'><use id='ref' x='1428' y='1541' xlink:href='#ref'/><title>Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
   <use id='nn' x='1247' y='1557' xlink:href='#nn'/><a xlink:href='#archive_merging_scheme.archive_merging_scheme'><text x='1263' y='1567'>archive_merging_scheme</text><title>archive_merging_scheme varchar not null</title></a>
+
+<!-- ============= Table 'artifact_type' ============= -->
+<rect class='table' x='1395' y='893' width='195' height='135' rx='7' ry='7' />
+<path d='M 1395.50 919.50 L 1395.50 900.50 Q 1395.50 893.50 1402.50 893.50 L 1582.50 893.50 Q 1589.50 893.50 1589.50 900.50 L 1589.50 919.50 L1395.50 919.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#artifact_type'><text x='1459' y='907' class='tableTitle'>artifact_type</text><title>Table qiita.artifact_type
+Type of artifact</title></a>
+  <use id='nn' x='1397' y='927' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type_id'><use id='pk' x='1397' y='926' xlink:href='#pk'/><title>Primary Key  ( artifact_type_id ) </title></a>
+<a xlink:href='#artifact_type.artifact_type_id'><text x='1413' y='937'>artifact_type_id</text><title>artifact_type_id bigserial not null</title></a>
+<a xlink:href='#artifact_type.artifact_type_id'><use id='ref' x='1578' y='926' xlink:href='#ref'/><title>Referred by artifact ( artifact_type_id ) 
+Referred by artifact_type_filepath_type ( artifact_type_id ) 
+Referred by command_output ( artifact_type_id ) 
+Referred by parameter_artifact_type ( artifact_type_id ) 
+Referred by software_artifact_type ( artifact_type_id ) </title></a>
+  <use id='nn' x='1397' y='942' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type'><use id='unq' x='1397' y='941' xlink:href='#unq'/><title>Unique Index  ( artifact_type ) </title></a>
+<a xlink:href='#artifact_type.artifact_type'><text x='1413' y='952'>artifact_type</text><title>artifact_type varchar not null</title></a>
+  <use id='nn' x='1397' y='957' xlink:href='#nn'/><a xlink:href='#artifact_type.description'><text x='1413' y='967'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='1397' y='972' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_ebi'><text x='1413' y='982'>can_be_submitted_to_ebi</text><title>can_be_submitted_to_ebi bool not null default &#039;FALSE&#039;</title></a>
+  <use id='nn' x='1397' y='987' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_vamps'><text x='1413' y='997'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
+  <a xlink:href='#artifact_type.can_be_raw'><text x='1413' y='1012'>can_be_raw</text><title>can_be_raw bool</title></a>
 
 </g></svg>
 
@@ -3103,55 +3103,6 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 	<tr>
 		<td>&nbsp;</td><td>fk_ebi_run_accession_artifact</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='artifact_type'>Table artifact_type</a></th></tr>
-<tr><td colspan='3'>Type of artifact </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='artifact_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='artifact_type.artifact_type'>artifact&#095;type</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='artifact_type.description'>description</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='artifact_type.can_be_submitted_to_ebi'>can&#095;be&#095;submitted&#095;to&#095;ebi</a></td>
-		<td> bool   DEFO 'FALSE' </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='artifact_type.can_be_submitted_to_vamps'>can&#095;be&#095;submitted&#095;to&#095;vamps</a></td>
-		<td> bool   DEFO 'FALSE' </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;filetype</td>
-		<td> ON artifact&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>U</td><td>idx&#095;filetype</td>
-		<td> ON artifact&#095;type</td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -6161,6 +6112,61 @@ Controlled Vocabulary </td>
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;merging&#095;scheme</td>
 		<td> ON archive&#095;merging&#095;scheme&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='artifact_type'>Table artifact_type</a></th></tr>
+<tr><td colspan='3'>Type of artifact </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact_type.artifact_type'>artifact&#095;type</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact_type.description'>description</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact_type.can_be_submitted_to_ebi'>can&#095;be&#095;submitted&#095;to&#095;ebi</a></td>
+		<td> bool   DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact_type.can_be_submitted_to_vamps'>can&#095;be&#095;submitted&#095;to&#095;vamps</a></td>
+		<td> bool   DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='artifact_type.can_be_raw'>can&#095;be&#095;raw</a></td>
+		<td> bool   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;filetype</td>
+		<td> ON artifact&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>U</td><td>idx&#095;filetype</td>
+		<td> ON artifact&#095;type</td>
 		<td>  </td>
 	</tr>
 </tbody>

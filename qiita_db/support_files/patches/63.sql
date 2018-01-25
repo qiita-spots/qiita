@@ -40,3 +40,10 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql;
+
+-- January 25th, 2017
+-- Adding to artifact_type can_be_raw
+-- Note that at time of creation we will need to update the following qiita-spots: qtp-biom, qtp-visualization, qtp-diversity, qtp-target-gene & qtp-template-cookiecutter
+
+ALTER TABLE qiita.artifact_type ADD can_be_raw BOOL DEFAULT FALSE;
+UPDATE qiita.artifact_type SET can_be_raw=TRUE WHERE artifact_type IN ('FASTQ', 'BIOM', 'per_sample_FASTQ');

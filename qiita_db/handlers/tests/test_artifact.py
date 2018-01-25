@@ -274,12 +274,13 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
                 'description': 'some_description',
                 'can_be_submitted_to_ebi': False,
                 'can_be_submitted_to_vamps': False,
+                'can_be_raw': False,
                 'filepath_types': dumps([("log", False),
                                          ("raw_forward_seqs", True)])}
         obs = self.post('/qiita_db/artifacts/types/', headers=self.header,
                         data=data)
         self.assertEqual(obs.code, 200)
-        self.assertIn(['new_type', 'some_description'],
+        self.assertIn(['new_type', 'some_description', False, False, False],
                       qdb.artifact.Artifact.types())
 
         obs = self.post('/qiita_db/artifacts/types/', headers=self.header,

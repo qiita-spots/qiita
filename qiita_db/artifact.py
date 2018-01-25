@@ -100,10 +100,13 @@ class Artifact(qdb.base.QiitaObject):
         -------
         list of list of str
             The artifact type and description of the artifact type, in the form
-            [[artifact_type, description], ...]
+            [[artifact_type, description, can_be_submitted_to_ebi,
+              can_be_submitted_to_vamps, can_be_raw], ...]
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT artifact_type, description
+            sql = """SELECT artifact_type, description,
+                            can_be_submitted_to_ebi,
+                            can_be_submitted_to_vamps, can_be_raw
                      FROM qiita.artifact_type
                      ORDER BY artifact_type"""
             qdb.sql_connection.TRN.add(sql)
@@ -111,7 +114,7 @@ class Artifact(qdb.base.QiitaObject):
 
     @staticmethod
     def create_type(name, description, can_be_submitted_to_ebi,
-                    can_be_submitted_to_vamps, filepath_types):
+                    can_be_submitted_to_vamps, can_be_raw, filepath_types):
         """Creates a new artifact type in the system
 
         Parameters
@@ -124,6 +127,8 @@ class Artifact(qdb.base.QiitaObject):
             Whether the artifact type can be submitted to EBI or not
         can_be_submitted_to_vamps : bool
             Whether the artifact type can be submitted to VAMPS or not
+        can_be_raw : bool
+            Whether the artifact type can be raw: upload directly to qiita
         filepath_types : list of (str, bool)
             The list filepath types that the new artifact type supports, and
             if they're required or not in an artifact instance of this type
@@ -144,12 +149,12 @@ class Artifact(qdb.base.QiitaObject):
                     'artifact type', 'name: %s' % name)
             sql = """INSERT INTO qiita.artifact_type
                         (artifact_type, description, can_be_submitted_to_ebi,
-                         can_be_submitted_to_vamps)
-                     VALUES (%s, %s, %s, %s)
+                         can_be_submitted_to_vamps, can_be_raw)
+                     VALUES (%s, %s, %s, %s, %s)
                      RETURNING artifact_type_id"""
             qdb.sql_connection.TRN.add(
                 sql, [name, description, can_be_submitted_to_ebi,
-                      can_be_submitted_to_vamps])
+                      can_be_submitted_to_vamps, can_be_raw])
             at_id = qdb.sql_connection.TRN.execute_fetchlast()
             sql = """INSERT INTO qiita.artifact_type_filepath_type
                         (artifact_type_id, filepath_type_id, required)

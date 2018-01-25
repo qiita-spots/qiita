@@ -212,6 +212,8 @@ class ArtifactTypeHandler(OauthBaseHandler):
             Whether the artifact type can be submitted to EBI or not
         can_be_submitted_to_vamps : bool
             Whether the artifact type can be submitted to VAMPS or not
+        can_be_raw : bool
+            Whether the artifact type can be raw: direct upload to qiita
         filepath_types : list of (str, bool)
             The list filepath types that the new artifact type supports, and
             if they're required or not in an artifact instance of this type
@@ -220,10 +222,11 @@ class ArtifactTypeHandler(OauthBaseHandler):
         a_desc = self.get_argument('description')
         ebi = self.get_argument('can_be_submitted_to_ebi')
         vamps = self.get_argument('can_be_submitted_to_vamps')
+        raw = self.get_argument('can_be_raw')
         fp_types = loads(self.get_argument('filepath_types'))
 
         try:
-            qdb.artifact.Artifact.create_type(a_type, a_desc, ebi, vamps,
+            qdb.artifact.Artifact.create_type(a_type, a_desc, ebi, vamps, raw,
                                               fp_types)
         except qdb.exceptions.QiitaDBDuplicateError:
             # Ignoring this error as we want this endpoint in the rest api
