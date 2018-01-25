@@ -98,16 +98,20 @@ class TestArtifactAPIReadOnly(TestCase):
         obs = artifact_types_get_req()
         exp = {'message': '',
                'status': 'success',
-               'types': [['BIOM', 'BIOM table'],
-                         ['Demultiplexed', 'Demultiplexed and QC sequences'],
-                         ['FASTA', None],
-                         ['FASTA_Sanger', None],
-                         ['FASTQ', None],
-                         ['SFF', None],
-                         ['per_sample_FASTQ', None],
-                         ['beta_div_plots', 'Qiime 1 beta diversity results'],
-                         ['rarefaction_curves', 'Rarefaction curves'],
-                         ['taxa_summary', 'Taxa summary plots']]}
+               'types': [['BIOM', 'BIOM table', False, False, True],
+                         ['Demultiplexed', 'Demultiplexed and QC sequences',
+                          True, True, False],
+                          ['FASTA', None, False, False, False],
+                          ['FASTA_Sanger', None, False, False, False],
+                          ['FASTQ', None, False, False, True],
+                          ['SFF', None, False, False, False],
+                          ['beta_div_plots', 'Qiime 1 beta diversity results',
+                           False, False, False],
+                          ['per_sample_FASTQ', None, True, False, True],
+                          ['rarefaction_curves', 'Rarefaction curves', False,
+                           False, False],
+                          ['taxa_summary', 'Taxa summary plots', False, False,
+                           False]]}
 
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['status'], exp['status'])
