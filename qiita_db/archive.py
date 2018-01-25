@@ -85,7 +85,7 @@ class Archive(object):
 
         Parameters
         ----------
-        job : str
+        job : qiita_db.processing_job.ProcessingJob
             The Qiita process job_id generating the artifact holding the
             features to be retrieved or stored.
 
@@ -149,7 +149,7 @@ class Archive(object):
         ----------
         archive_merging_scheme : optional, str
             The name of the archive_merging_scheme to retrieve
-        features : list of str
+        features : list of str, optional
             List of features to retrieve information from the archive
 
         Notes
