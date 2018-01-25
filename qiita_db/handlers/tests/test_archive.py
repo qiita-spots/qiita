@@ -11,10 +11,11 @@ from os import remove
 from shutil import rmtree
 
 from unittest import main
-from json import loads
+from json import loads, dumps
 
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 from qiita_db.sql_connection import TRN
+from qiita_db.archive import Archive
 
 
 class APIArchiveObservationsTests(OauthTestingBase):
@@ -32,7 +33,7 @@ class APIArchiveObservationsTests(OauthTestingBase):
                 else:
                     rmtree(fp)
 
-    def test_post(self):
+    def test_full_query_and_insertion(self):
         # let's archive different values from different jobs
         with TRN:
             # 3 - close reference picking
@@ -43,15 +44,36 @@ class APIArchiveObservationsTests(OauthTestingBase):
             TRN.add(sql)
             jobs = TRN.execute_fetchflatten()
 
+            exp_all_features = {}
             for j in jobs:
-                special_feature = 'AA - %s' % j
-                data = {'job_id': j, 'features': [special_feature, 'CA']}
+                featureA = 'AA - %s' % j
+                featureB = 'BB - %s' % j
+
+                # testing that nothing is there
+                data = {'job_id': j, 'features': [featureA, featureB]}
                 obs = self.post(
                     '/qiita_db/archive/observations/', headers=self.header,
                     data=data)
                 exp = {}
                 self.assertEqual(obs.code, 200)
                 self.assertEqual(loads(obs.body), exp)
+
+                # inserting and testing insertion
+                data = {'path': j,
+                        'value': dumps({featureA: 'CA', featureB: 'CB'})}
+                obs = self.patch(
+                    '/qiita_db/archive/observations/', headers=self.header,
+                    data=data)
+                exp = {featureA: 'CA', featureB: 'CB'}
+                self.assertEqual(obs.code, 200)
+                self.assertEqual(loads(obs.body), exp)
+
+                exp_all_features[featureA] = 'CA'
+                exp_all_features[featureB] = 'CB'
+
+            # testing retrieve all featues
+            obs = Archive.retrieve_feature_values()
+            self.assertEqual(obs, exp_all_features)
 
 
 if __name__ == '__main__':

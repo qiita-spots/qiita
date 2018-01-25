@@ -11,13 +11,15 @@ from __future__ import division
 import qiita_db as qdb
 
 
-class Archive(qdb.base.QiitaObject):
+class Archive(object):
     r"""Extra information for any features stored in a BIOM Artifact
 
     Methods
     -------
-    insert_from_biom
     insert_from_artifact
+    get_merging_scheme_from_job
+    retrieve_feature_values
+    insert_features
 
     See Also
     --------
@@ -83,10 +85,9 @@ class Archive(qdb.base.QiitaObject):
 
         Parameters
         ----------
-        job : qiita_db.artifact.Artifact
-            The artifact from which the features were generated
-        features : dict {str: str}
-            A dictionary of the features and the values to be stored
+        job : qiita_db.processing_job.ProcessingJob
+            The Qiita process job_id generating the artifact holding the
+            features to be retrieved or stored.
 
         Raises
         ------
@@ -119,23 +120,22 @@ class Archive(qdb.base.QiitaObject):
 
             # 2. cleaning pparams - the parameters of the parent artifact
             # [0] getting the atributes from the first parent
-            pcmd = job.input_artifacts[0].processing_parameters.command
+            ppp = job.input_artifacts[0].processing_parameters
+            pcmd = None if ppp is None else ppp.command
             palgorithm = 'N/A'
             if pcmd is not None:
                 pms = pcmd.merging_scheme
                 palgorithm = pcmd.name
                 if pms['parameters']:
-                    pass
-                    # ToDo: Archive
-                    # here we need to check for the parent parameters
-                    # pparams = ','.join(
-                    #     ['%s: %s' % (k, tparams[k]) for k, v in temp.items()
-                    #  if list(v)[0] != 'artifact' and k in ms['parameters']])
-                    #
-                    #         params = ','.join(['%s: %s' % (k, pparams[k])
-                    #                            for k in ms['parameters']])
-                    #         palgorithm = "%s (%s)" % (palgorithm, params)
-                    #
+                    ppms = pms['parameters']
+                    op = pcmd.optional_parameters.copy()
+                    op.update(pcmd.required_parameters)
+                    pparams = ','.join(
+                        ['%s: %s' % (k, ppms[k]) for k, v in op.items()
+                         if list(v)[0] != 'artifact' and k in ppms])
+                    params = ','.join(
+                        ['%s: %s' % (k, pparams[k]) for k in ppms])
+                    palgorithm = "%s (%s)" % (palgorithm, params)
             algorithm = '%s | %s' % (cname, palgorithm)
 
             return algorithm
@@ -149,6 +149,8 @@ class Archive(qdb.base.QiitaObject):
         ----------
         archive_merging_scheme : optional, str
             The name of the archive_merging_scheme to retrieve
+        features : list of str, optional
+            List of features to retrieve information from the archive
 
         Notes
         -----
@@ -179,3 +181,25 @@ class Archive(qdb.base.QiitaObject):
 
             return {k: v for k, v in
                     qdb.sql_connection.TRN.execute_fetchindex()}
+
+    def insert_features(self, merging_scheme, features):
+        r"""Inserts new features to the database based on a given artifact
+
+        Parameters
+        ----------
+        merging_scheme : str
+            The merging scheme to store these features
+        features : dict {str: str}
+            A dictionary of the features and the values to be stored
+
+        Returns
+        -------
+        dict, feature: value
+            The inserted new values
+        """
+        self._inserting_main_steps(merging_scheme, features)
+
+        inserted = self.retrieve_feature_values(
+            archive_merging_scheme=merging_scheme, features=features.keys())
+
+        return inserted
