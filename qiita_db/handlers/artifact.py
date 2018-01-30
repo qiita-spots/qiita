@@ -212,7 +212,7 @@ class ArtifactTypeHandler(OauthBaseHandler):
             Whether the artifact type can be submitted to EBI or not
         can_be_submitted_to_vamps : bool
             Whether the artifact type can be submitted to VAMPS or not
-        can_be_raw : bool
+        is_user_uploadable : bool
             Whether the artifact type can be raw: direct upload to qiita
         filepath_types : list of (str, bool)
             The list filepath types that the new artifact type supports, and
@@ -222,7 +222,7 @@ class ArtifactTypeHandler(OauthBaseHandler):
         a_desc = self.get_argument('description')
         ebi = self.get_argument('can_be_submitted_to_ebi')
         vamps = self.get_argument('can_be_submitted_to_vamps')
-        raw = self.get_argument('can_be_raw')
+        raw = self.get_argument('is_user_uploadable')
         fp_types = loads(self.get_argument('filepath_types'))
 
         try:

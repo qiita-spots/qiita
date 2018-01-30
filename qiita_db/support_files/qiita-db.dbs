@@ -322,7 +322,7 @@
 			<column name="can_be_submitted_to_vamps" type="bool" jt="-7" mandatory="y" >
 				<defo>&#039;FALSE&#039;</defo>
 			</column>
-			<column name="can_be_raw" type="bool" jt="-7" />
+			<column name="is_user_uploadable" type="bool" jt="-7" />
 			<index name="pk_filetype" unique="PRIMARY_KEY" >
 				<column name="artifact_type_id" />
 			</index>

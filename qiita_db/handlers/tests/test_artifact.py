@@ -274,7 +274,7 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
                 'description': 'some_description',
                 'can_be_submitted_to_ebi': False,
                 'can_be_submitted_to_vamps': False,
-                'can_be_raw': False,
+                'is_user_uploadable': False,
                 'filepath_types': dumps([("log", False),
                                          ("raw_forward_seqs", True)])}
         obs = self.post('/qiita_db/artifacts/types/', headers=self.header,
