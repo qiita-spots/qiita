@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+# This script will perform these jobs:
+# 1. Create the travis enviorment
+# 2. Install qiita dependencies
+# 3. Configure the env variables
+# 4. Create and activate a conda virtual env.
+
+travis_retry conda create --yes -n qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran
+  'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
+source activate qiita
+pip install sphinx==1.5.5 sphinx-bootstrap-theme coveralls
+pip install https://github.com/biocore/qiita/archive/master.zip --process-dependency-links
+export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
+export MOI_CONFIG_FP=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg
+# as we don't need redbiom we are going to use the default redis port
+sed 's/PORT = 7777/PORT = 6379/g' $HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg > config_test.cfg
+export QIITA_CONFIG_FP=${PWD}/config_test.cfg
+export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
+qiita-env make --no-load-ontologies
+source deactivate
