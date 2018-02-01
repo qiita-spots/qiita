@@ -15,10 +15,6 @@ Classes
    :toctree: generated/
 
    User
-
-Examples
---------
-TODO
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
