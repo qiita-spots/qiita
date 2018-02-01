@@ -163,7 +163,7 @@ class StudyEditHandler(BaseHandler):
             study = Study(int(study_id))
         except QiitaDBUnknownIDError:
             # Study not in database so fail nicely
-            raise HTTPError(404, "Study %s does not exist" % study_id)
+            raise HTTPError(404, reason="Study %s does not exist" % study_id)
 
         # We need to check if the user has access to the study
         check_access(self.current_user, study, raise_error=True)

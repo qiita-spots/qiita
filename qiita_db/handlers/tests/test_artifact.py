@@ -150,8 +150,8 @@ class ArtifactHandlerTests(OauthTestingBase):
                          headers=self.header,
                          data=arguments)
         self.assertEqual(obs.code, 400)
-        self.assertEqual(obs.body, 'Operation "wrong" not supported. Current '
-                                   'supported operations: add')
+        self.assertEqual(obs.reason, 'Operation "wrong" not supported. '
+                                     'Current supported operations: add')
 
         # Wrong path parameter
         arguments = {'op': 'add', 'path': '/wrong/',
@@ -160,7 +160,7 @@ class ArtifactHandlerTests(OauthTestingBase):
                          headers=self.header,
                          data=arguments)
         self.assertEqual(obs.code, 400)
-        self.assertEqual(obs.body, 'Incorrect path parameter value')
+        self.assertEqual(obs.reason, 'Incorrect path parameter value')
 
         # Wrong value parameter
         arguments = {'op': 'add', 'path': '/html_summary/',
@@ -169,7 +169,7 @@ class ArtifactHandlerTests(OauthTestingBase):
                          headers=self.header,
                          data=arguments)
         self.assertEqual(obs.code, 500)
-        self.assertIn('No such file or directory', obs.body)
+        self.assertIn('No such file or directory', obs.reason)
 
 
 class ArtifactAPItestHandlerTests(OauthTestingBase):
