@@ -442,8 +442,8 @@ def start(port, master):
                 "--port." % port)
         else:
             raise
-
-    click.echo("Qiita started on port %d" % port)
+    base_url = qiita_config.base_url
+    click.echo("Qiita started on %s:%d " % (base_url, port))
     ioloop = tornado.ioloop.IOLoop.instance()
 
     if master:
