@@ -63,6 +63,9 @@ Editing a Study
 *  Select “Edit” from “Study Information Page” to bring you to “Edit Study Page”
 *  Make the desired edits and select “Update Study”
 
+
+.. _prepare-information-files:
+
 Creating and Working With Sample information
 --------------------------------------------
 
@@ -256,6 +259,8 @@ Update Sample info
 
 Creating and Working With Preparation information
 -------------------------------------------------
+
+.. _prepare_information_files:
 
 Prepare information files
 ~~~~~~~~~~~~~~~~~~~~~~~~~

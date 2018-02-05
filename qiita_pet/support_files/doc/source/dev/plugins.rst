@@ -28,7 +28,7 @@ community development effort, there are two different types of plugins:
 The ``Qiita Type Plugins`` define new artifact types. These plugins must define
 two operations: ``Validate`` and ``Generate HTML summary``.
 
-Given the artifact type, the :doc:`prep information <../tutorials/prepare-information-files>`
+Given the artifact type, the prep information (see, :ref:`prepare_information_files`)
 and the user-uploaded files, the ``Validate`` operation decides if the
 user-uploaded files conform ``Artifact`` of the new type. If the files do
 not create a valid artifact, the plugin should try to fix the files using the

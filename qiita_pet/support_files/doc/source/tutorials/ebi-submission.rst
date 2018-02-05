@@ -15,7 +15,7 @@ requirement for publication. Your study will be housed with all other Qiita subm
 and so we require adherence to the MiXs standard.
 
 EBI/ENA requires a given set of column fields to describe your samples and experiments, for more
-information visit :doc:`prepare-information-files` and pay most attention to EBI required fields,
+information visit :ref:`prepare-information-files` and pay most attention to EBI required fields,
 without these **Qiita Admins** will not be able to submit. If you want to submit your data or need
 help send an email to `qiita.help@gmail.com <qiita.help@gmail.com>`__. Help will include
 advice on additional fields to add to ensure MiXs compliance.

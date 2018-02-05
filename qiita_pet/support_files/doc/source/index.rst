@@ -53,7 +53,6 @@ Looking for information about analyzing your data? Please see the document here:
    :maxdepth: 2
 
    analyzingsamples/index.rst
-   analysisguides/index.rst
 
 Looking for available guides? Please see these documents:
 
