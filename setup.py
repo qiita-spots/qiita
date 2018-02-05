@@ -108,7 +108,8 @@ setup(name='qiita-spots',
                         'natsort', 'networkx < 2.0',
                         'scikit-bio == 0.4.2', 'wtforms == 2.0.1',
                         'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
-                        'gitpython', 'qiita-files', 'redbiom==0.1.0-dev'],
+                        'gitpython', 'qiita-files', 'redbiom==0.1.0-dev',
+                        'sphinx_rtd_theme'],
       dependency_links=[
         'https://github.com/qiita-spots/qiita-files/archive/master.zip#'
         'egg=qiita-files-0.1.0-dev',
