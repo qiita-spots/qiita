@@ -178,3 +178,5 @@ Glossary
 
   * Unifrac is a phylogenetic distance metric that compares multiple sample communities based on their locations to each other on the phylogenetic tree. The metric lies between a zero and a one: the former being no species are shared between the two samples and the latter being every species is shared between the two samples--meaning they are ecologically exactly the same. It measures the distance between communities as the percentage of phylogenetic branch length between the targeted communities. Unifrac is a computational tool to compare more than two species together simultaneously using multivariate statistics and nonparametric analyses.
   * see also: Beta Diversity, Alpha Diversity, Statistical Testings, Biom format, QIIME
+
+Glossary prepared by `Maret Rossi <https://github.com/maretrossi>`__, 2017
