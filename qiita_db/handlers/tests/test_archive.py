@@ -44,6 +44,15 @@ class APIArchiveObservationsTests(OauthTestingBase):
             TRN.add(sql)
             jobs = TRN.execute_fetchflatten()
 
+            # this is so we can also tests the parent merging scheme
+            # 1 - split libraries
+            sql = """UPDATE qiita.command_parameter
+                     SET check_biom_merge = True
+                     WHERE command_id = 1
+                        and parameter_name = 'barcode_type'"""
+            TRN.add(sql)
+            TRN.execute()
+
             exp_all_features = {}
             for j in jobs:
                 featureA = 'AA - %s' % j
@@ -73,6 +82,15 @@ class APIArchiveObservationsTests(OauthTestingBase):
 
             # testing retrieve all featues
             obs = Archive.retrieve_feature_values()
+            self.assertEqual(obs, exp_all_features)
+
+            # this doesn't exist so should be empty
+            obs = Archive.retrieve_feature_values(archive_merging_scheme='')
+            self.assertEqual(obs, {})
+
+            obs = Archive.retrieve_feature_values(
+                archive_merging_scheme='Pick closed-reference OTUs | Split '
+                'libraries FASTQ (barcode_type: golay_12)')
             self.assertEqual(obs, exp_all_features)
 
 
