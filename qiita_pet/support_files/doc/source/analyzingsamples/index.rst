@@ -443,7 +443,7 @@ Taxa Bar Plot
 * **Sort Sample By**: Sorts data by sample metadata or taxonomic abundance and either by ascending or descending order
 
 Alpha Diversity Box Plots and Statistics
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  alpha_diversity_boxplot.png
    :align:   center
