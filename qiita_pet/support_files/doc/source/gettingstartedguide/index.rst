@@ -189,7 +189,7 @@ Optional fields for centralized Qiita by portal
 Checking for Errors In Sample information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* After creating your sample information file, you can check for any errors using `Keemei <https://keemei.qiime2.org/>`__.
+* `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet.
 
 
 Attaching the Sample Information to the Study
@@ -382,7 +382,7 @@ additional column is required.
 Checking for Errors In Preparation information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* After creating your preparation information file, you can check for any errors using `Keemei <https://keemei.qiime2.org/>`__.
+* `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet. 
 
 Attaching Preparation Information to the Study
 ----------------------------------------------
