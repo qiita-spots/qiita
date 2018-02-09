@@ -5,12 +5,12 @@ Qiita now uses `QIIME2 <http://qiime2.org>`__ plugins for analysis.
 -------------------------------------------------------------------
 Thanks to this, we've got new layout of the analysis panel and the following new features:
 
-* `alpha diversity <https://docs.qiime2.org/2017.6/plugins/available/diversity/alpha/>`__ (including statistics calculations; example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.6%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Ffaith-pd-group-significance.qzv>`__)
-* `beta diversity <https://docs.qiime2.org/2017.6/plugins/available/diversity/beta/>`__ (including stats)
-* principal coordinate analysis (`PCoA <https://docs.qiime2.org/2017.6/plugins/available/diversity/pcoa/>`__), including ordination results and EMPeror plots (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.6%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Funweighted-unifrac-emperor.qzv>`__)
-* `rarefaction <https://docs.qiime2.org/2017.6/plugins/available/feature-table/rarefy/>`__
-* `filter samples <https://docs.qiime2.org/2017.6/plugins/available/feature-table/filter_samples/>`__
-* `taxa summary <https://docs.qiime2.org/2017.6/plugins/available/taxa/barplot/>`__ (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.6%2Fdata%2Ftutorials%2Fmoving-pictures%2Ftaxa-bar-plots.qzv>`__)
+* `alpha diversity <https://docs.qiime2.org/2017.12/plugins/available/diversity/alpha/>`__ (including statistics calculations; example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Ffaith-pd-group-significance.qzv>`__)
+* `beta diversity <https://docs.qiime2.org/2017.12/plugins/available/diversity/beta/>`__ (including stats)
+* principal coordinate analysis (`PCoA <https://docs.qiime2.org/2017.12/plugins/available/diversity/pcoa/>`__), including ordination results and EMPeror plots (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Funweighted-unifrac-emperor.qzv>`__)
+* `rarefaction <https://docs.qiime2.org/2017.12/plugins/available/feature-table/rarefy/>`__
+* `filter samples <https://docs.qiime2.org/2017.12/plugins/available/feature-table/filter_samples/>`__
+* `taxa summary <https://docs.qiime2.org/2017.12/plugins/available/taxa/barplot/>`__ (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Ftaxa-bar-plots.qzv>`__)
 
 Creating A New Analysis
 -----------------------
@@ -48,8 +48,8 @@ Single vs. Meta Analysis
 Processing Network Page: Commands
 ---------------------------------
 
-Commands for Deblurred or Closed-Reference Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Rarefying Features
+~~~~~~~~~~~~~~~~~~
 
 .. figure::  rarefy.png
    :align:   center
@@ -60,8 +60,8 @@ Commands for Deblurred or Closed-Reference Data
   *  **Parameter set**: Parameters at which the rarefication is run
   *  **Sampling depth** (required): Total frequency that each sample should be rarefied to, samples where sum of frequencies is less than sampling depth will not be included in resulting table
 
-Commands from Rarefied Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Filtering Samples by Metadata
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  filtering.png
    :align:   center
@@ -75,6 +75,9 @@ Commands from Rarefied Data
   * **Minimum features per sample** (optional): Minimum number of features that a sample can have to be retained
   * **SQLite WHERE-clause** (optional): Metadata group that is being filtered out
 
+Summarizing Taxa
+~~~~~~~~~~~~~~~~
+
 .. figure::  summarize_taxa.png
    :align:   center
 
@@ -82,6 +85,9 @@ Commands from Rarefied Data
 
   * *Can only be performed with closed-reference data*
   * **BIOM table** (required): Feature table containing the samples to visualize at various taxonomic levels
+
+Calculating Alpha Diversity
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  alpha_diversity.png
    :align:   center
@@ -222,6 +228,9 @@ Commands from Rarefied Data
 
       * Currently the only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
 
+Calculating Beta Diversity
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. figure::  beta_diversity.png
    :align:   center
 
@@ -351,8 +360,8 @@ Commands from Rarefied Data
 
     * Currently the only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
 
-Commands from Alpha Diversity Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Calculating Alpha Correlation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  alpha_correlation.png
    :align:   center
@@ -365,8 +374,8 @@ Commands from Alpha Diversity Data
     * **Spearman** :ref:`[88]<reference88>` : Measures if there is a linear relationship between 2 variables
     * **Pearson** :ref:`[70]<reference70>` : Measures how strong the linear relationship is between 2 variables
 
-Commands from Beta Diversity Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Performing Principal Coordinate Analysis
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  pcoa.png
    :align:   center
@@ -375,8 +384,14 @@ Commands from Beta Diversity Data
 
   * **Distance matrix** (required): Distance matrix on which the PCoA should be computed
 
+Calculating Beta Group Significance
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. figure::  beta_group_significance.png
    :align:   center
+
+Calculating Beta Group Significance
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * **Calculate beta group significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
 
@@ -392,6 +407,9 @@ Commands from Beta Diversity Data
 
 .. figure::  beta_correlation.png
    :align:   center
+
+Calculating Beta Correlation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * **Calculate beta correlation**: Identifies a correlation between the distance matrix and a numeric sample metadata category
 
@@ -424,8 +442,8 @@ Taxa Bar Plot
 
 * **Sort Sample By**: Sorts data by sample metadata or taxonomic abundance and either by ascending or descending order
 
-Alpha Diversity Results
-~~~~~~~~~~~~~~~~~~~~~~~
+Alpha Diversity Box Plots and Statistics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  alpha_diversity_boxplot.png
    :align:   center
@@ -439,8 +457,8 @@ Alpha Diversity Results
 
   * Says if the differences are statistically significant
 
-Alpha Correlation Results
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Alpha Correlation Box Plots and Statistics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  alpha_correlation_plot.png
    :align:   center
@@ -449,16 +467,16 @@ Alpha Correlation Results
 
   * Gives the Spearman or Pearson result (rho and p-value)
 
-Beta Diversity Result
-~~~~~~~~~~~~~~~~~~~~~
+Beta Diversity Distance Matrix
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  beta_diversity_plot.png
    :align:   center
 
 * **Distance Matrix**: Dissimilarity value for each pairwise comparison
 
-PCoA Result
-~~~~~~~~~~~
+Principal Coordinate Analysis Plot
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  PCoA_plot.png
    :align:   center
@@ -484,8 +502,8 @@ PCoA Result
     * *Requires a gradient (the order in which samples are connected together, must be numeric) column and a trajectory (the way in which samples are grouped together) column within the sample information file*
     * *Works best for time series*
 
-Beta Group Significance
-~~~~~~~~~~~~~~~~~~~~~~~
+Beta Group Significance Box Plots and Statistics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure::  beta_group_significance1.png
    :align:   center

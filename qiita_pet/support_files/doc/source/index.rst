@@ -50,7 +50,7 @@ Looking for comparable studies? Please see the document here:
 Looking for information about analyzing your data? Please see the document here:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    analyzingsamples/index.rst
 

@@ -40,6 +40,16 @@ Creating a Study
 
   * **Event-Based Data** (optional): If your experiment contained interventions you can include that here
 
+    * **single intervention, real**: a time series with a single intervention on one or more individuals over time
+    * **multiple intervention, real**: a time series with multiple interventions on one or more individuals over time
+    * **combo intervention, real**: a time series with some subjects having one intervention while other subjects have multiple interventions over time
+    * **single intervention, pseudo**: a time series with a single intervention on groups with no subject being present in multiple time points
+    * **multiple intervention, pseudo**: a time series with multiple interventions on groups with no subject being present in multiple time points
+    * **combo intervention, pseudo**: a time series with some groups having one intervention while other groups have multiple interventions on another group with no subject being present in multiple time points
+    * **single intervention, real**: a time series with a single intervention on groups with some subject being present in multiple time points while others are only present in a single time point
+    * **multiple intervention, real**: a time series with multiple interventions on groups with some subject being present in multiple time points while others are only present in a single time point
+    * **combo intervention, real**: a time series with some groups having single intervention while other groups having multiple interventions on groups with some subject being present in multiple time points while others are only present in a single time point
+
 .. figure::  study_information_page.png
    :align:   center
 
@@ -175,6 +185,11 @@ Optional fields for centralized Qiita by portal
   +===================+============+=============================================================================================================================================+
   | ``emp_status``    | free text  | EMP sample status. ‘EMP’ (part of the EMP), ‘EMP_Processed’ (processed in the weblab using EMP parameters), ‘NOT_EMP’ (not EMP compatible). |
   +-------------------+------------+---------------------------------------------------------------------------------------------------------------------------------------------+
+
+Checking for Errors In Sample information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet.
 
 
 Attaching the Sample Information to the Study
@@ -363,6 +378,11 @@ additional column is required.
 +==================+=============+==========================================================================================================================================+
 | ``run_prefix``   | free text   | Name of your sequence file without the suffix (for example, ``seqs.fna`` becomes ``seqs``, and ``my-data.fastq`` becomes ``my-data``).   |
 +------------------+-------------+------------------------------------------------------------------------------------------------------------------------------------------+
+
+Checking for Errors In Preparation information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet.
 
 Attaching Preparation Information to the Study
 ----------------------------------------------
