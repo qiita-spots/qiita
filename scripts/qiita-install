@@ -75,20 +75,20 @@ like master and development.\n"
 }
 
 install () {
-  echo "I'm going to execute...\n "
-  echo "travis_retry conda create --yes -n qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran
-  'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'"
-  echo "source activate qiita"
-  echo "pip install sphinx==1.5.5 sphinx-bootstrap-theme coveralls"
-  echo "pip install https://github.com/biocore/qiita/archive/$mode.zip --process-dependency-links"
-  echo "export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt"
-  echo "export MOI_CONFIG_FP=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg"
+  # Took from the diverse scripts
+  travis_retry conda create --yes -n qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran
+  'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
+  source activate qiita
+  pip install sphinx==1.5.5 sphinx-bootstrap-theme coveralls
+  pip install https://github.com/biocore/qiita/archive/$mode.zip --process-dependency-links
+  export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
+  export MOI_CONFIG_FP=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg
   # as we don't need redbiom we are going to use the default redis port
-  echo "sed 's/PORT = 7777/PORT = 6379/g' $HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg > config_test.cfg"
-  echo "export QIITA_CONFIG_FP=${PWD}/config_test.cfg"
-  echo "export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt"
-  echo "qiita-env make --no-load-ontologies"
-  echo "source deactivate"
+  sed 's/PORT = 7777/PORT = 6379/g' $HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg > config_test.cfg
+  export QIITA_CONFIG_FP=${PWD}/config_test.cfg
+  export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
+  qiita-env make --no-load-ontologies
+  source deactivate
 }
 
 if [[ -z "$@" ]]; then
