@@ -14,16 +14,89 @@
 # 3. Configure the env variables
 # 4. Create and activate a conda virtual env.
 
-travis_retry conda create --yes -n qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran
-  'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
-source activate qiita
-pip install sphinx==1.5.5 sphinx-bootstrap-theme coveralls
-pip install https://github.com/biocore/qiita/archive/master.zip --process-dependency-links
-export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
-export MOI_CONFIG_FP=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg
-# as we don't need redbiom we are going to use the default redis port
-sed 's/PORT = 7777/PORT = 6379/g' $HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg > config_test.cfg
-export QIITA_CONFIG_FP=${PWD}/config_test.cfg
-export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
-qiita-env make --no-load-ontologies
-source deactivate
+# Original idea took from: https://www.ibm.com/developerworks/library/l-bash-parameters/index.html
+version=1.0
+mode="dev"
+
+show_opts () {
+  while getopts "e:vh" optname
+    do
+      case "$optname" in
+        "e")
+          if [[ "$OPTARG" == "master" ]]; then
+            mode='master'
+          elif [[ "$OPTARG" == "dev" ]]; then
+            mode='dev'
+          else
+            echo "Error: bad argument $OPTARG"
+            echo "Check qiita_install -h for more information."
+            exit 0
+          fi
+          install
+          exit 0
+          ;;
+        "v")
+          show_version
+          exit 0
+          ;;
+        "h")
+          help
+          exit 0
+          ;;
+        "?")
+          echo "Unknown option $OPTARG"
+          echo "Check qiita_install -h for more information."
+          ;;
+        ":")
+          echo "No argument value for option $OPTARG"
+          ;;
+        *)
+          echo "Unknown error while processing options"
+          ;;
+      esac
+    done
+  return $OPTIND
+}
+
+show_version () {
+  echo "Copyright (c) 2014--, The Qiita Development Team."
+  echo "qiita_install $version"
+}
+
+help () {
+  printf "Copyright (c) 2014--, The Qiita Development Team.\n"
+  printf "qiita_install: CLI utility to install qiita in different enviorments \
+like master and development.\n"
+  printf "usage: qiita_install [-e <dev|master>] [-h] [-v]\n"
+  printf "\t\t      -e: enviornment <dev|master>\n"
+  printf "\t\t      -v: version\n"
+  printf "\t\t      -h: help\n"
+  printf "\t\t      <command> <opts> <args>\n"
+}
+
+install () {
+  echo "I'm going to execute...\n "
+  echo "travis_retry conda create --yes -n qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran
+  'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'"
+  echo "source activate qiita"
+  echo "pip install sphinx==1.5.5 sphinx-bootstrap-theme coveralls"
+  echo "pip install https://github.com/biocore/qiita/archive/$mode.zip --process-dependency-links"
+  echo "export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt"
+  echo "export MOI_CONFIG_FP=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg"
+  # as we don't need redbiom we are going to use the default redis port
+  echo "sed 's/PORT = 7777/PORT = 6379/g' $HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg > config_test.cfg"
+  echo "export QIITA_CONFIG_FP=${PWD}/config_test.cfg"
+  echo "export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt"
+  echo "qiita-env make --no-load-ontologies"
+  echo "source deactivate"
+}
+
+if [[ -z "$@" ]]; then
+  # Defult Mode
+  printf "Bad usage: \n"
+  printf "Check qiita_install -h for more information. \n"
+  exit 0
+fi
+
+optinfo=$(show_opts "$@")
+echo "$optinfo"
