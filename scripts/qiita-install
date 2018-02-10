@@ -9,7 +9,7 @@
 # -----------------------------------------------------------------------------
 
 # This script will perform these jobs:
-# 1. Create the travis enviorment
+# 1. Create the travis enviroment
 # 2. Install qiita dependencies
 # 3. Configure the env variables
 # 4. Create and activate a conda virtual env.
@@ -65,10 +65,10 @@ show_version () {
 
 help () {
   printf "Copyright (c) 2014--, The Qiita Development Team.\n"
-  printf "qiita_install: CLI utility to install qiita in different enviorments \
+  printf "qiita_install: CLI utility to install qiita in different environment \
 like master and development.\n"
   printf "usage: qiita_install [-e <dev|master>] [-h] [-v]\n"
-  printf "\t\t      -e: enviornment <dev|master>\n"
+  printf "\t\t      -e: environment <dev|master>\n"
   printf "\t\t      -v: version\n"
   printf "\t\t      -h: help\n"
   printf "\t\t      <command> <opts> <args>\n"
