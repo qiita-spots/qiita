@@ -75,8 +75,8 @@ Filtering Samples by Metadata
   * **Minimum features per sample** (optional): Minimum number of features that a sample can have to be retained
   * **SQLite WHERE-clause** (optional): Metadata group that is being filtered out
 
-    * If you want to filter your samples by body_site and you want to only keep the tongue samples, fill the clause this way: `body_site = 'UBERON:tongue'`
-    * If you want to filter your samples by body_site and you want to only remove the tongue samples, fill the clause this way: `body_site != 'UBERON:tongue'`
+    * If you want to filter your samples by body_site and you want to only keep the tongue samples, fill the clause this way: ``body_site = 'UBERON:tongue'``
+    * If you want to filter your samples by body_site and you want to only remove the tongue samples, fill the clause this way: ``body_site != 'UBERON:tongue'``
 
 Summarizing Taxa
 ~~~~~~~~~~~~~~~~
