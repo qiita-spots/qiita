@@ -493,7 +493,7 @@ class ProcessingJobTest(TestCase):
         self._wait_for_job(job)
         # Retrieve the job that is performing the validation:
         val_job = qdb.processing_job.ProcessingJob(job.step.rsplit(" ", 1)[-1])
-        # Test the the output artifact is going to be named based on the
+        # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(
             loads(val_job.parameters.values['provenance'])['name'],
@@ -545,7 +545,7 @@ class ProcessingJobTest(TestCase):
 
         # Retrieve the job that is performing the validation:
         val_job = qdb.processing_job.ProcessingJob(job.step.rsplit(" ", 1)[-1])
-        # Test the the output artifact is going to be named based on the
+        # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(
             loads(val_job.parameters.values['provenance'])['name'],

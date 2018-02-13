@@ -88,12 +88,16 @@ You can download an example sample information file from
 EBI-ENA NULL values vocabulary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For all public studies including those being submitted to EBI, no blanks are allowed in the sample information. We support the following null values: *not applicable*, *missing: not collected*, *missing: not provided*, *missing: restricted access*.
+For all public studies including those being submitted to EBI, no blanks are allowed in the sample information.
+We support the following null values: *not applicable*, *missing: not collected*, *missing: not provided*,
+*missing: restricted access*.
 
 For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
 
 .. warning::
-   Column names in your information files cannot be named as a Postgres reserved word. For example, a column cannot be named `CONDITION`, but could instead be named `DISEASE_CONDITION`. For a full list of these reserved words, see this `link <https://www.postgresql.org/docs/9.3/static/sql-keywords-appendix.html>`__.
+   Column names in your information files cannot be named as a Postgres reserved word. For example, a column cannot be named
+   `CONDITION`, but could instead be named `DISEASE_CONDITION`. For a full list of these reserved words, see this
+   `link <https://www.postgresql.org/docs/9.3/static/sql-keywords-appendix.html>`__.
 
 
 Sample information file
@@ -110,81 +114,24 @@ Required fields for Qiita
 This is the minimum set of columns for a sample information file to be added to
 the system:
 
-+-------------------+-------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Field name        | Format                        | Description                                                                                                                                            |
-+===================+===============================+========================================================================================================================================================+
-| ``sample_name``   | free text with restrictions   | Identifies a sample. It is the primary key and must be unique. Allowed characters are alphabetic ``[A-Za-z]``, numeric ``[0-9]``, and periods ``.``.   |
-+-------------------+-------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
++-------------------+-----------------------------+-------------------------------------------------------------------------------+
+| Field name        | Format                      | Description                                                                   |
++===================+=============================+===============================================================================+
+| ``sample_name``   | free text with restrictions | Identifies a sample. It is the primary key and must be unique. Allowed        |
+|                   |                             | characters are alphabetic ``[A-Za-z]``, numeric ``[0-9]``, and periods ``.``. |
++-------------------+-----------------------------+-------------------------------------------------------------------------------+
 
 Required fields for EBI submission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-These are the columns required for successfully submit your data to EBI:
+In order to submit your data to EBI, certain fields are required in your sample information file. You can download a spread sheet containing these required fields on the `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__ under "MetaData Template".
 
-+----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| Field name                       | Format                  | Description                                                                                                                                         |
-+==================================+=========================+=====================================================================================================================================================+
-| ``collection_timestamp``         | ``yyyy-mm-dd hh:mm:ss`` | The time stamp (preferred) of when the sample was collected. Several format are accepted, all ISO 8601.                                             |
-|                                  | or ``yyyy-mm-dd hh:mm`` |                                                                                                                                                     |
-|                                  | or ``yyyy-mm-dd hh``    |                                                                                                                                                     |
-|                                  | or ``yyyy-mm-dd ``      |                                                                                                                                                     |
-|                                  | or ``yyyy-mm``          |                                                                                                                                                     |
-|                                  | or ``yyyy``.            |                                                                                                                                                     |
-|                                  | Years are only          |                                                                                                                                                     |
-|                                  | supported as 4 ``yyyy`` |                                                                                                                                                     |
-|                                  | digits                  |                                                                                                                                                     |
-+----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``physical_specimen_location``   | free text               | Where you would go to find physical sample or DNA, regardless of whether it is still available or not.                                              |
-+----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``taxon_id``                     | integer                 | NCBI taxon ID for the sample. Should indicate metagenome being investigated. Examples: 410658 for soil metagenome, 749906 for gut metagenome,       |
-|                                  |                         | 256318 for metagenome (used for unspecified or blanks). To find others visit `NCBI Taxonomy Database <http://www.ncbi.nlm.nih.gov/taxonomy>`__.     |
-+----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``scientific_name``              | free text               | NCBI's scientific name for the provided taxon ID. This is the name of the metagenome, not the host scientific name. Examples: soil metagenome,      |
-|                                  |                         | gut metagenome, marine sediment metagenome, marine metagenome.                                                                                      |
-+----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``description``                  | free text               | Description of the sample.                                                                                                                          |
-+----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+Checking for Errors In Sample information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Required fields for centralized Qiita
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet.
 
-These are the columns required if you want to make your date public at
-the centralized `Qiita server <http://qiita.microbio.me>`__:
-
-+-----------------------------------+----------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Field name                        | Format                                                               | Description                                                                                                                                                                                                                                                                                                                                       |
-+===================================+======================================================================+===================================================================================================================================================================================================================================================================================================================================================+
-| ``host_subject_id``               | free text                                                            | An identifier for the “host”. Should be specific to a host, and can be a one-to-many relationship with samples. All samples from the same source (host, sample) should have the same identifier to facilitate analysis. If this is not a host-associated study, this can be an identifier for a replicate, or can be the same as ``sample_name``. |
-+-----------------------------------+----------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``sample_type``                   | free text                                                            | Description of the type of sample.                                                                                                                                                                                                                                                                                                                |
-+-----------------------------------+----------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``physical_specimen_remaining``   | ``TRUE`` or ``FALSE``                                                | Is there still physical sample (e.g., soil, not DNA) available?                                                                                                                                                                                                                                                                                   |
-+-----------------------------------+----------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``dna_extracted``                 | ``TRUE`` or ``FALSE``                                                | Has DNA already been extracted for this sample?                                                                                                                                                                                                                                                                                                   |
-+-----------------------------------+----------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``latitude``                      | `decimal degrees <http://en.wikipedia.org/wiki/Decimal_degrees>`__   | Latitude where sample was collected.                                                                                                                                                                                                                                                                                                              |
-+-----------------------------------+----------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``longitude``                     | `decimal degrees <http://en.wikipedia.org/wiki/Decimal_degrees>`__   | Longitude where sample was collected.                                                                                                                                                                                                                                                                                                             |
-+-----------------------------------+----------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
-Optional fields for centralized Qiita by portal
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* Sloan, Microbiology of the Built Environment
-
-  +------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-  | Field name | Format     | Description                                                                                                                                                                   |
-  +============+============+===============================================================================================================================================================================+
-  | ``sloan``  | free text  | Sloan sample status. SLOAN (funded by Sloan), SLOAN_COMPATIBLE (not Sloan funded but with compatible metadata, usually public), NOT_SLOAN (not included i.e. private study).  |
-  +------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
-* Earth Microbiome Project
-
-  +-------------------+------------+---------------------------------------------------------------------------------------------------------------------------------------------+
-  | Field name        | Format     | Description                                                                                                                                 |
-  +===================+============+=============================================================================================================================================+
-  | ``emp_status``    | free text  | EMP sample status. ‘EMP’ (part of the EMP), ‘EMP_Processed’ (processed in the weblab using EMP parameters), ‘NOT_EMP’ (not EMP compatible). |
-  +-------------------+------------+---------------------------------------------------------------------------------------------------------------------------------------------+
+**Remember that spelling and capitalization matters in Qiita**
 
 Checking for Errors In Sample information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -299,7 +246,7 @@ they are conceptually different. A QIIME metadata file includes information
 about the biological context, like ``sample_type``, and about the wet lab
 processing, like ``BarcodeSequence``. Qiita intentionally separates this
 information into two separate files; it would be conceptually incorrect
-to include ``BarcodeSequence`` with the *sample information*, as this
+to include ``BarcodeSequence`` (barcode) with the *sample information*, as this
 information pertains to the wet lab preparation and should be placed in the
 *preparation information file*.
 
@@ -317,42 +264,36 @@ Required fields for Qiita
 This is the minimum set of columns for a prep information file to be added the
 system:
 
-+-------------------+-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Field name        | Format                        | Description                                                                                                                                                                                                                                                   |
-+===================+===============================+===============================================================================================================================================================================================================================================================+
-| ``sample_name``   | free text with restrictions   | Identifies a sample. It is the primary key, must be unique and should match the ones in the sample information file. Allowed characters are alphabetic ``[A-Za-z]``, numeric ``[0-9]``, and periods ``.``. Must match the sample_name in the sample template. |
-+-------------------+-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-------------------+-------------------------------+------------------------------------------------------------------------+
+| Field name        | Format                        | Description                                                            |
++===================+===============================+========================================================================+
+| ``sample_name``   | free text with restrictions   | Identifies a sample. It is the primary key, must be unique and should  |
+|                   |                               | match the ones in the sample information file. Allowed characters are  |
+|                   |                               | alphabetic ``[A-Za-z]``, numeric ``[0-9]``, and periods ``.``. Must    |
+|                   |                               | match the sample_name in the sample template.                          |
++-------------------+-------------------------------+------------------------------------------------------------------------+
 
 Required fields for EBI submission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Without this columns you will not be able to submit to EBI. These are the columns required for successfully submit your data to EBI:
 
-+-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Field name                          | Format                                    | Description                                                                                                                                                                                                    |
-+=====================================+===========================================+================================================================================================================================================================================================================+
-| ``primer``                          | IUPAC characters                          | The primer sequence (this is usually the forward primer for Illumina processed data, or the barcoded primer for LS454 data; `examples <http://www.nature.com/ismej/journal/v6/n8/extref/ismej20128x2.txt>`__). |
-+-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``center_name``                     | free text                                 | Name of the site (company/institution) where the study was performed.                                                                                                                                          |
-+-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``platform``                        | ``Illumina`` or ``LS454``                 | The sequencing technology used in the study. ``Illumina`` sequencing data was generated on an Illumina platform; ``LS454`` sequencing data was generated on a 454 pyrosequencing platform.                     |
-+-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``instrument_model``                | see table below                           | The sequencing instrument model used for sequencing. See table below for valid options.                                                                                                                        |
-+-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``library_construction_protocol``   | free text                                 | Brief description or reference to the protocol that was used for preparing this amplicon library starting from DNA, usually this includes what genomic region was targeted such as *16S*, *ITS*, *18S*, etc.   |
-+-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``experiment_design_description``   | free text                                 | High-level description of the study (for example, *A longitudinal study of the gut microbiome of two human subjects*).                                                                                         |
-+-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+In order to submit your data to EBI, certain fields are required in your preparation information file. You can download a spread sheet containing these required fields on the `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__ under "Prep Template".
 
-Valid values for instrument_model per platform, taken from ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.common.xsd
 
-+--------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Platform     | Valid instrument_model options                                                                                                                                                                                                                                                                    |
-+==============+===================================================================================================================================================================================================================================================================================================+
-| ``LS454``    | ``454 GS``, ``454 GS 20``, ``454 GS FLX``, ``454 GS FLX+``, ``454 GS FLX Titanium``, ``454 GS Junior``, or ``unspecified``                                                                                                                                                                        |
-+--------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``Illumina`` | ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``, ``Illumina Genome Analyzer IIx``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 2000``, ``Illumina HiSeq 1500``, ``Illumina HiSeq 1000``, ``Illumina MiSeq``, ``Illumina HiScanSQ``, ``HiSeq X Ten``, ``NextSeq 500``, ``unspecified`` |
-+--------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+For all valid values for instrument_model per platform, view the values in the table below:
+
++--------------+----------------------------------------------------------------------------------------------------------+
+| Platform     | Valid instrument_model options                                                                           |
++==============+==========================================================================================================+
+| ``LS454``    |  ``454 GS``, ``454 GS 20``, ``454 GS FLX``, ``454 GS FLX+``, ``454 GS FLX Titanium``, ``454 GS Junior``, |
+|              |  ``454 GS Junior`` or ``unspecified``                                                                    |
++--------------+----------------------------------------------------------------------------------------------------------+
+| ``Illumina`` |  ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``, ``Illumina Genome Analyzer IIx``,        |
+|              |  ``Illumina HiSeq 4000``, ``Illumina HiSeq 3000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 2000``,     |
+|              |  ``Illumina HiSeq 1500``, ``Illumina HiSeq 1000``, ``Illumina MiSeq``, ``Illumina MiniSeq``,             |
+|              |  ``Illumina NovaSeq 6000````Illumina HiScanSQ``,``HiSeq X Ten``, ``NextSeq 500``, ``NextSeq 550``,       |
+|              |  or ``unspecified``                                                                                      |
++--------------+----------------------------------------------------------------------------------------------------------+
 
 Required fields for pre-processing target gene data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -361,23 +302,34 @@ If you are adding target gene data (e.g. 16S, 18S, ITS), there are
 additional columns that are required for successfully preprocessing
 them:
 
-+---------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Field name    | Format             | Description                                                                                                                                                                                                    |
-+===============+====================+================================================================================================================================================================================================================+
-| ``primer``    | IUPAC characters   | The primer sequence (this is usually the forward primer for Illumina processed data, or the barcoded primer for LS454 data; `examples <http://www.nature.com/ismej/journal/v6/n8/extref/ismej20128x2.txt>`__). |
-+---------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``barcode``   | IUPAC characters   | The barcode sequence (`examples <http://www.nature.com/ismej/journal/v6/n8/extref/ismej20128x2.txt>`__).                                                                                                       |
-+---------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++---------------+--------------------+---------------------------------------------------------------------------------------+
+| Field name    | Format             | Description                                                                           |
++===============+====================+=======================================================================================+
+| ``primer``    | IUPAC characters   | The primer sequence (this is usually the forward primer for Illumina processed data,  |
+|               |                    | or the barcoded primer for LS454 data;                                                |
+|               |                    | `examples <http://www.nature.com/ismej/journal/v6/n8/extref/ismej20128x2.txt>`__).    |
++---------------+--------------------+---------------------------------------------------------------------------------------+
+| ``barcode``   | IUPAC characters   | The barcode sequence                                                                  |
+|               |                    | (`examples <http://www.nature.com/ismej/journal/v6/n8/extref/ismej20128x2.txt>`__).   |
++---------------+--------------------+---------------------------------------------------------------------------------------+
 
 In case that your data has been sequenced using multiple sequencing lanes or you
 have :ref:`per_sample_fastq_files_without_barcode_or_primer_information`, an
 additional column is required.
 
-+------------------+-------------+------------------------------------------------------------------------------------------------------------------------------------------+
-| Field name       | Format      | Description                                                                                                                              |
-+==================+=============+==========================================================================================================================================+
-| ``run_prefix``   | free text   | Name of your sequence file without the suffix (for example, ``seqs.fna`` becomes ``seqs``, and ``my-data.fastq`` becomes ``my-data``).   |
-+------------------+-------------+------------------------------------------------------------------------------------------------------------------------------------------+
++------------------+-------------+--------------------------------------------------------------------------------------------+
+| Field name       | Format      | Description                                                                                |
++==================+=============+============================================================================================+
+| ``run_prefix``   | free text   | Name of your sequence file without the suffix (for example, ``seqs.fna`` becomes ``seqs``, |
+|                  |             | and ``my-data.fastq`` becomes ``my-data``).                                                |
++------------------+-------------+--------------------------------------------------------------------------------------------+
+
+Checking for Errors In Preparation information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet.
+
+**Remember that spelling and capitalization matters in Qiita**
 
 Checking for Errors In Preparation information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
