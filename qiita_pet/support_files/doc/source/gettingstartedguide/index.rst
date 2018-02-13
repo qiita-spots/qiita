@@ -124,7 +124,7 @@ the system:
 Required fields for EBI submission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In order to submit your data to EBI, certain fields are required in your sample information file. You can download a spread sheet containing these required fields on the  the `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__ under "MetaData Template".
+In order to submit your data to EBI, certain fields are required in your sample information file. You can download a spread sheet containing these required fields on the `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__ under "MetaData Template".
 
 Checking for Errors In Sample information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -277,7 +277,7 @@ Required fields for EBI submission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-In order to submit your data to EBI, certain fields are required in your preparation information file. You can download a spread sheet containing these required fields on the  the `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__ under "Prep Template".
+In order to submit your data to EBI, certain fields are required in your preparation information file. You can download a spread sheet containing these required fields on the `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__ under "Prep Template".
 
 
 For all valid values for instrument_model per platform, view the values in the table below:

@@ -135,7 +135,7 @@ Deblurring
     * **Maximum number of insertion/deletion (indel)** (required): Maximum number of allowed insertions/deletions
     * **Mean per nucleotide error rate** (required): Mean per nucleotide error rate
 
-      * Used for original sequence estimate if the the typical Illumina error wasn’t passed for the original
+      * Used for original sequence estimate if the typical Illumina error wasn’t passed for the original
 
     * **Minimum dataset-wide read threshold** (required): Keep only the sequences which appear at this many times study wide (as opposed to per-sample)
     * **Minimum per-sample read threshold** (required): Keep only the sequences which appear at this many times per sample (as opposed to study wide)

@@ -313,7 +313,7 @@ Packages:
      ....etc....
 ```
 
-Install the the appropriate channel name that corresponds to your platform. For example, for Mac OS X 64-bit this would be:
+Install the appropriate channel name that corresponds to your platform. For example, for Mac OS X 64-bit this would be:
 
 `conda install --channel https://conda.anaconda.org/OpenMDAO libgfortran`
 
