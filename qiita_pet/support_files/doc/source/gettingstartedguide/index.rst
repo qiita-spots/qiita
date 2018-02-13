@@ -133,6 +133,11 @@ Checking for Errors In Sample information
 
 **Remember that spelling and capitalization matters in Qiita**
 
+Checking for Errors In Sample information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet.
+
 
 Attaching the Sample Information to the Study
 ---------------------------------------------
@@ -325,6 +330,11 @@ Checking for Errors In Preparation information
 * `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet.
 
 **Remember that spelling and capitalization matters in Qiita**
+
+Checking for Errors In Preparation information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet.
 
 Attaching Preparation Information to the Study
 ----------------------------------------------
