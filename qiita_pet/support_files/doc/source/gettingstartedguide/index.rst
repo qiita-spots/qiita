@@ -246,7 +246,7 @@ they are conceptually different. A QIIME metadata file includes information
 about the biological context, like ``sample_type``, and about the wet lab
 processing, like ``BarcodeSequence``. Qiita intentionally separates this
 information into two separate files; it would be conceptually incorrect
-to include ``BarcodeSequence``(barcode) with the *sample information*, as this
+to include ``BarcodeSequence`` (barcode) with the *sample information*, as this
 information pertains to the wet lab preparation and should be placed in the
 *preparation information file*.
 
