@@ -10,10 +10,13 @@ Qiita (canonically pronounced cheetah) is a software package intended for
 analysis and administration of multi-omics datasets.
 
 Qiita provides a free and open platform for users to:
-1) Easily share and reuse existing data-sets in the form of studies.
-2) Perform analyses (by combining one or more studies/data-sets) using published and unpublished data that meet the
+
+  1. Easily share and reuse existing data-sets in the form of studies.
+
+  2. Perform analyses (by combining one or more studies/data-sets) using published and unpublished data that meet the
 standards as described by this documentation.
-3) Easily interface with the EBI repository for automated deposition. Query and interact with Qiita data programmatically.
+
+  3. Easily interface with the EBI repository for automated deposition. Query and interact with Qiita data programmatically.
 
 
 Beginner's Guides:
