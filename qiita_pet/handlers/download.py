@@ -30,8 +30,8 @@ class BaseHandlerDownload(BaseHandler):
         # Check general access to study
         study_info = check_access(sid, self.current_user.id)
         if study_info:
-            raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
-                                                 self.current_user.email, sid))
+            raise HTTPError(405, reason="%s: %s, %s" % (
+                study_info['message'], self.current_user.email, sid))
         return Study(sid)
 
     def _generate_files(self, header_name, accessions, filename):
@@ -254,9 +254,8 @@ class DownloadRawData(BaseHandlerDownload):
         user = self.current_user
         # Check "owner" access to the study
         if not study.has_access(user, True):
-            raise HTTPError(405, "%s: %s, %s" % ('No raw data access',
-                                                 self.current_user.email,
-                                                 str(study_id)))
+            raise HTTPError(405, reason="%s: %s, %s" % (
+                'No raw data access', self.current_user.email, str(study_id)))
 
         # loop over artifacts and retrieve raw data (no parents)
         to_download = []
@@ -309,8 +308,8 @@ class DownloadUpload(BaseHandlerDownload):
     def get(self, path):
         user = self.current_user
         if user.level != 'admin':
-            raise HTTPError(403, "%s doesn't have access to download uploaded "
-                            "files" % user.email)
+            raise HTTPError(403, reason="%s doesn't have access to download "
+                            "uploaded files" % user.email)
 
         # [0] because it returns a list
         # [1] we only need the filepath

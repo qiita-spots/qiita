@@ -107,7 +107,8 @@ class StudyApprovalList(BaseHandler):
     def get(self):
         user = self.current_user
         if user.level != 'admin':
-            raise HTTPError(403, 'User %s is not admin' % self.current_user)
+            raise HTTPError(403,
+                            reason='User %s is not admin' % self.current_user)
 
         studies = defaultdict(list)
         for artifact in Artifact.iter_by_visibility('awaiting_approval'):
@@ -182,9 +183,9 @@ class SearchStudiesAJAX(BaseHandler):
         echo = int(self.get_argument('sEcho'))
 
         if user != self.current_user.id:
-            raise HTTPError(403, 'Unauthorized search!')
+            raise HTTPError(403, reason='Unauthorized search!')
         if search_type not in ['user', 'public']:
-            raise HTTPError(400, 'Not a valid search type')
+            raise HTTPError(400, reason='Not a valid search type')
         if query:
             # Search for samples matching the query
             search = QiitaStudySearch()

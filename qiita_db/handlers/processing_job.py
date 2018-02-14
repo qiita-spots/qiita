@@ -40,7 +40,7 @@ def _get_job(job_id):
     try:
         job = qdb.processing_job.ProcessingJob(job_id)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating the job: %s' % str(e))
+        raise HTTPError(500, reason='Error instantiating the job: %s' % str(e))
 
     return job
 
@@ -93,7 +93,7 @@ class HeartbeatHandler(OauthBaseHandler):
             try:
                 job.update_heartbeat_state()
             except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
-                raise HTTPError(403, str(e))
+                raise HTTPError(403, reason=str(e))
 
         self.finish()
 
@@ -115,7 +115,7 @@ class ActiveStepHandler(OauthBaseHandler):
             try:
                 job.step = step
             except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
-                raise HTTPError(403, str(e))
+                raise HTTPError(403, reason=str(e))
 
         self.finish()
 

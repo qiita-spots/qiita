@@ -43,7 +43,7 @@ def _get_plugin(name, version):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating plugin %s %s: %s'
+        raise HTTPError(500, reason='Error instantiating plugin %s %s: %s'
                         % (name, version, str(e)))
 
     return plugin
@@ -167,8 +167,9 @@ def _get_command(plugin_name, plugin_version, cmd_name):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating cmd %s of plugin %s %s: %s'
-                        % (cmd_name, plugin_name, plugin_version, str(e)))
+        raise HTTPError(500, reason='Error instantiating cmd %s of plugin '
+                        '%s %s: %s' % (cmd_name, plugin_name,
+                                       plugin_version, str(e)))
 
     return cmd
 

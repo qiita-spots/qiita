@@ -188,8 +188,7 @@ Vue.component('sample-template-page', {
       let vm = this;
       if(confirm("Are you sure you want to delete the sample information?")) {
         $.ajax({
-          url: vm.portal + '/study/description/sample_template/',
-          data: {study_id: vm.studyId},
+          url: vm.portal + '/study/description/sample_template/?study_id=' + vm.studyId,
           type: 'DELETE',
           success: function(data) {
             vm.startJobCheckInterval(data['job']);
@@ -237,7 +236,7 @@ Vue.component('sample-template-page', {
           $td = $('<td>').attr('colspan', '2').appendTo($tr);
           $('<b>').append(cat + ': ').appendTo($td);
           if (catValues.length === 1) {
-            $('<tt>').append(catValues[0]).appendTo($td);
+            $('<tt>').append(catValues[0][0]).appendTo($td);
             $td.append(' is repeated in all rows');
           } else if (catValues.length === vm.numSamples) {
             $td.append('All the values in this category are different');

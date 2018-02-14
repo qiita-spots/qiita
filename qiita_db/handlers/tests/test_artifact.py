@@ -150,8 +150,8 @@ class ArtifactHandlerTests(OauthTestingBase):
                          headers=self.header,
                          data=arguments)
         self.assertEqual(obs.code, 400)
-        self.assertEqual(obs.body, 'Operation "wrong" not supported. Current '
-                                   'supported operations: add')
+        self.assertEqual(obs.reason, 'Operation "wrong" not supported. '
+                                     'Current supported operations: add')
 
         # Wrong path parameter
         arguments = {'op': 'add', 'path': '/wrong/',
@@ -160,7 +160,7 @@ class ArtifactHandlerTests(OauthTestingBase):
                          headers=self.header,
                          data=arguments)
         self.assertEqual(obs.code, 400)
-        self.assertEqual(obs.body, 'Incorrect path parameter value')
+        self.assertEqual(obs.reason, 'Incorrect path parameter value')
 
         # Wrong value parameter
         arguments = {'op': 'add', 'path': '/html_summary/',
@@ -169,7 +169,7 @@ class ArtifactHandlerTests(OauthTestingBase):
                          headers=self.header,
                          data=arguments)
         self.assertEqual(obs.code, 500)
-        self.assertIn('No such file or directory', obs.body)
+        self.assertIn('No such file or directory', obs.reason)
 
 
 class ArtifactAPItestHandlerTests(OauthTestingBase):
@@ -274,12 +274,13 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
                 'description': 'some_description',
                 'can_be_submitted_to_ebi': False,
                 'can_be_submitted_to_vamps': False,
+                'is_user_uploadable': False,
                 'filepath_types': dumps([("log", False),
                                          ("raw_forward_seqs", True)])}
         obs = self.post('/qiita_db/artifacts/types/', headers=self.header,
                         data=data)
         self.assertEqual(obs.code, 200)
-        self.assertIn(['new_type', 'some_description'],
+        self.assertIn(['new_type', 'some_description', False, False, False],
                       qdb.artifact.Artifact.types())
 
         obs = self.post('/qiita_db/artifacts/types/', headers=self.header,

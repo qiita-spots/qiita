@@ -41,8 +41,8 @@ def _get_prep_template(pid):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating prep template %s: %s'
-                             % (pid, str(e)))
+        raise HTTPError(500, reason='Error instantiating prep template %s: %s'
+                        % (pid, str(e)))
 
     return pt
 

@@ -25,4 +25,5 @@ def check_analysis_access(user, analysis):
         Tried to access analysis that user does not have access to
     """
     if not analysis.has_access(user):
-        raise HTTPError(403, "Analysis access denied to %s" % (analysis.id))
+        raise HTTPError(403, reason="Analysis access denied to %s" % (
+            analysis.id))
