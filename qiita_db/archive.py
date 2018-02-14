@@ -127,10 +127,8 @@ class Archive(object):
                 palgorithm = pcmd.name
                 if pms['parameters']:
                     ppms = pms['parameters']
-                    op = pcmd.optional_parameters.copy()
-                    op.update(pcmd.required_parameters)
                     pparams = ','.join(
-                        ['%s: %s' % (k, op[k][1]) for k, v in op.items()
+                        ['%s: %s' % (k, v) for k, v in ppp.values.items()
                          if list(v)[0] != 'artifact' and k in ppms])
                     if pparams:
                         palgorithm = "%s (%s)" % (palgorithm, pparams)
