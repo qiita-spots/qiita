@@ -150,7 +150,10 @@ Deblurring
     * **Sequence trim length (-1 for no trimming)** (required): Sequence trim length
     * **Threads per sample** (required): Number of threads to use per sample
 
-* **Deblur 16S Only Table** :ref:`[2]<reference2>` : Only contains 16S deblurred sequences
+* **Deblur Reference Hit Table** :ref:`[2]<reference2>` : Only contains 16S deblurred sequences
+
+  * To download the deblurred phylogenetic tree that can be imported into QIIME2 to be used in commands select **insertion_table.relabelled.tre** under "Available Files"
+
 * **Deblur Final Table** :ref:`[2]<reference2>` : Contains all the sequences.
 
 Deblur Quality Filtering

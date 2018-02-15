@@ -68,6 +68,6 @@ For all valid values for instrument_model per platform, view the values in the t
 | ``Illumina`` |  ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``, ``Illumina Genome Analyzer IIx``,        |
 |              |  ``Illumina HiSeq 4000``, ``Illumina HiSeq 3000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 2000``,     |
 |              |  ``Illumina HiSeq 1500``, ``Illumina HiSeq 1000``, ``Illumina MiSeq``, ``Illumina MiniSeq``,             |
-|              |  ``Illumina NovaSeq 6000````Illumina HiScanSQ``,``HiSeq X Ten``, ``NextSeq 500``, ``NextSeq 550``,       |
+|              |  ``Illumina NovaSeq 6000````Illumina HiScanSQ``, ``HiSeq X Ten``, ``NextSeq 500``, ``NextSeq 550``,      |
 |              |  or ``unspecified``                                                                                      |
 +--------------+----------------------------------------------------------------------------------------------------------+

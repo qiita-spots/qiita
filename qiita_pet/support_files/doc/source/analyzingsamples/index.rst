@@ -5,12 +5,12 @@ Qiita now uses `QIIME2 <http://qiime2.org>`__ plugins for analysis.
 -------------------------------------------------------------------
 Thanks to this, we've got new layout of the analysis panel and the following new features:
 
-* `alpha diversity <https://docs.qiime2.org/2017.12/plugins/available/diversity/alpha/>`__ (including statistics calculations; example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Ffaith-pd-group-significance.qzv>`__)
-* `beta diversity <https://docs.qiime2.org/2017.12/plugins/available/diversity/beta/>`__ (including stats)
-* principal coordinate analysis (`PCoA <https://docs.qiime2.org/2017.12/plugins/available/diversity/pcoa/>`__), including ordination results and EMPeror plots (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Funweighted-unifrac-emperor.qzv>`__)
-* `rarefaction <https://docs.qiime2.org/2017.12/plugins/available/feature-table/rarefy/>`__
-* `filter samples <https://docs.qiime2.org/2017.12/plugins/available/feature-table/filter_samples/>`__
-* `taxa summary <https://docs.qiime2.org/2017.12/plugins/available/taxa/barplot/>`__ (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Ftaxa-bar-plots.qzv>`__)
+* `Alpha Diversity <https://docs.qiime2.org/2017.12/plugins/available/diversity/alpha/>`__ (including statistics calculations; example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Ffaith-pd-group-significance.qzv>`__)
+* `Beta Diversity <https://docs.qiime2.org/2017.12/plugins/available/diversity/beta/>`__ (including stats)
+* Principal Coordinate Analysis (`PCoA <https://docs.qiime2.org/2017.12/plugins/available/diversity/pcoa/>`__), including ordination results and EMPeror plots (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Funweighted-unifrac-emperor.qzv>`__)
+* `Rarefaction <https://docs.qiime2.org/2017.12/plugins/available/feature-table/rarefy/>`__
+* `Filter Samples <https://docs.qiime2.org/2017.12/plugins/available/feature-table/filter_samples/>`__
+* `Taxa Summary <https://docs.qiime2.org/2017.12/plugins/available/taxa/barplot/>`__ (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Ftaxa-bar-plots.qzv>`__)
 
 Creating A New Analysis
 -----------------------
@@ -115,10 +115,6 @@ Calculating Alpha Diversity
 
         * Use when randomness can’t be guaranteed
 
-      * **Chao1 confidence interval** :ref:`[21]<reference21>`: Calculates chao1 confidence interval
-
-        * Confidence interval for richness estimator, Chao1
-
       * **Chao1 index** :ref:`[15]<reference15>`: Calculates Chao1 index
 
         * Estimates diversity from abundant data
@@ -131,10 +127,6 @@ Calculating Alpha Diversity
       * **Effective Number of Species (ENS)/Probability of intra-or interspecific encounter (PIE) metric** :ref:`[17]<reference17>` : Calculates Effective Number of Species (ENS)/Probability of intra-or interspecific encounter (PIE) metric
 
         * Shows how absolute amount of species, relative abundances of species, and their intraspecific clustering affect differences in biodiversity among communities
-
-      * **Esty confidence interval** :ref:`[25]<reference25>` : Calculates Esty’s confidence interval
-
-        * Confidence interval for how many singletons in total individuals
 
       * **Faith’s phylogenetic diversity** :ref:`[25]<reference25>` : Calculates faith’s phylogenetic diversity
 
@@ -157,15 +149,6 @@ Calculating Alpha Diversity
       * **Heip’s evenness measure** :ref:`[36]<reference36>` : Calculates Heip’s evenness measure.
 
         * Removes dependency on species number
-
-      * **Kempton-Taylor Q index** :ref:`[43]<reference43>` : Calculates Kempton-Taylor Q index
-
-        * Measured diversity based off the distributions of species
-        * Makes abundance curve based off all species and IQR is used to measure diversity
-
-      * **Lladser’s confidence interval** :ref:`[55]<reference55>` : Calculates Lladser’s confidence interval
-
-        * Single confidence interval of the conditional uncovered probability
 
       * **Lladser’s point estimate** :ref:`[55]<reference55>` : Calculates Lladser’ point estimate
 
@@ -197,7 +180,6 @@ Calculating Alpha Diversity
 
         * OTUs that only occur twice
 
-      * **Number of observed features, including singles and doubles** :ref:`[22]<reference22>` : Calculates number of observed OTUs, singles, and doubles
       * **Number of single occurrences**: Calculates number of single occurrence OTUs (singletons)
 
         * OTUs that appear only once in a given sample
@@ -299,12 +281,6 @@ Calculating Beta Diversity
     * **Kulczynski dissimilarity index** :ref:`[50]<reference50>` : Measures Kulczynski dissimilarity index
 
       * Describes the dissimilarity between two samples
-
-    * **Mahalanobis distance** :ref:`[60]<reference60>` : Calculates Mahalanobis distance
-
-      * How many standard deviations one sample is away from the mean
-      * Unitless and scale-invariant
-      * Takes into account the correlations of the data set
 
     * **Matching components** :ref:`[42]<reference42>`: Measures Matching components
 
@@ -502,7 +478,7 @@ Principal Coordinate Analysis Plot
   * **Axes**: Change the position of the axis as well as the color of the graph
   * **Animations**: Traces the samples sorted by a metadata category
 
-    * *Requires a gradient (the order in which samples are connected together, must be numeric) column and a trajectory (the way in which samples are grouped together) column within the sample information file*
+    * *Requires a gradient column (the order in which samples are connected together, must be numeric) and a trajectory column (the way in which samples are grouped together) within the sample information file*
     * *Works best for time series*
 
 Beta Group Significance Box Plots and Statistics
@@ -516,3 +492,19 @@ Beta Group Significance Box Plots and Statistics
 
 * **Boxplot**: Shows how different measures of beta diversity correlate with different metadata categories
 * Gives the Permanova or Anosim result (psuedo-F and p-value)
+
+Beta Correlation
+~~~~~~~~~~~~~~~~
+
+.. figure::  beta_correlation1.png
+   :align:   center
+
+.. figure::  beta_correlation2.png
+   :align:   center
+
+* Gives the Spearman or Pearson result (rho and p-value)
+
+  * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
+  * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
+
+* Gives scatterplot of the distance matrix on the x-axis and the variable being tested on the y-axis
