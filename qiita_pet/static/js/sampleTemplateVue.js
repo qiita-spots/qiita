@@ -49,7 +49,12 @@ Vue.component('sample-template-page', {
             bootstrapAlert(data['job_error'], "danger");
           } else {
             // The job succeeded - reload the interface to show changes
-            vm.updateSampleTemplateOverview();
+            if (vm.refresh) {
+              vm.refresh = false;
+              location.reload();
+            } else {
+              vm.updateSampleTemplateOverview();
+            }
           }
         }
       })
@@ -100,6 +105,7 @@ Vue.component('sample-template-page', {
       let vm = this;
       var fp = $('#file-select').val();
       var dtype = $('#data-type-select').val();
+      vm.refresh = true;
 
       $.post(vm.portal + '/study/description/sample_template/', {study_id: vm.studyId, filepath: fp, data_type: dtype}, function(data) {
           vm.startJobCheckInterval(data['job']);
@@ -187,9 +193,9 @@ Vue.component('sample-template-page', {
     deleteSampleTemplate: function() {
       let vm = this;
       if(confirm("Are you sure you want to delete the sample information?")) {
+        vm.refresh = true;
         $.ajax({
-          url: vm.portal + '/study/description/sample_template/',
-          data: {study_id: vm.studyId},
+          url: vm.portal + '/study/description/sample_template/?study_id=' + vm.studyId,
           type: 'DELETE',
           success: function(data) {
             vm.startJobCheckInterval(data['job']);
@@ -237,7 +243,7 @@ Vue.component('sample-template-page', {
           $td = $('<td>').attr('colspan', '2').appendTo($tr);
           $('<b>').append(cat + ': ').appendTo($td);
           if (catValues.length === 1) {
-            $('<tt>').append(catValues[0]).appendTo($td);
+            $('<tt>').append(catValues[0][0]).appendTo($td);
             $td.append(' is repeated in all rows');
           } else if (catValues.length === vm.numSamples) {
             $td.append('All the values in this category are different');
@@ -507,6 +513,7 @@ Vue.component('sample-template-page', {
     vm.editable = true;
     vm.rowId = null;
     vm.rowType = 'column';
+    vm.refresh = false;
     $('#st-processsing-div').hide();
 
     show_loading('sample-template-contents');

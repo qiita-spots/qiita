@@ -81,9 +81,26 @@ class TestUtil(TestCase):
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_duplicate_cols(self):
+        LTTD = qdb.metadata_template.util.load_template_to_dataframe
+
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateHeaderError):
-            qdb.metadata_template.util.load_template_to_dataframe(
-                StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
+            LTTD(StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
+
+        # testing duplicated empty headers
+        test = (
+            "sample_name\tdescription\t   \t  \t\t \t\n"
+            "sample1\tsample1\t   \t    \t\t\n"
+            "sample2\tsample2\t\t\t\t  \t")
+        with self.assertRaises(ValueError):
+            LTTD(StringIO(test))
+
+        # testing empty columns
+        test = (
+            "sample_name\tdescription\tcol1\ttcol2\n"
+            "sample1\tsample1\t   \t    \n"
+            "sample2\tsample2\t  \t")
+        df = LTTD(StringIO(test))
+        self.assertEqual(df.columns.values, ['description'])
 
     def test_load_template_to_dataframe_scrubbing(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(

@@ -34,7 +34,9 @@ class NewArtifactHandler(BaseHandler):
     def get(self):
         study_id = self.get_argument("study_id")
         prep_id = self.get_argument("prep_template_id")
-        artifact_types = artifact_types_get_req()['types']
+        artifact_types = [(at, desc) for at, desc, _, _, is_user_uploadable in
+                          artifact_types_get_req()['types']
+                          if is_user_uploadable]
 
         self.render("study_ajax/add_artifact.html",
                     study_id=study_id, prep_id=prep_id,

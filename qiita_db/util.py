@@ -501,11 +501,8 @@ def move_upload_files_to_trash(study_id, files_to_move):
         fullpath = join(foldername, filename)
         new_fullpath = join(foldername, trash_folder, filename)
 
-        if not exists(fullpath):
-            raise qdb.exceptions.QiitaDBError(
-                "The filepath %s doesn't exist in the system" % fullpath)
-
-        rename(fullpath, new_fullpath)
+        if exists(fullpath):
+            rename(fullpath, new_fullpath)
 
 
 def get_mountpoint(mount_type, retrieve_all=False, retrieve_subdir=False):
@@ -1729,18 +1726,6 @@ def open_file(filepath_or, *args, **kwargs):
     args, kwargs : tuple, dict
         When `filepath_or` is a string, any extra arguments are passed
         on to the ``open`` builtin.
-
-    Examples
-    --------
-    >>> with open_file('filename') as f:  # doctest: +SKIP
-    ...     pass
-    >>> fh = open('filename')             # doctest: +SKIP
-    >>> with open_file(fh) as f:          # doctest: +SKIP
-    ...     pass
-    >>> fh.closed                         # doctest: +SKIP
-    False
-    >>> fh.close()                        # doctest: +SKIP
-
     """
     fh, own_fh = _get_filehandle(filepath_or, *args, **kwargs)
     try:

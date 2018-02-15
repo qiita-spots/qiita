@@ -38,13 +38,12 @@ A few more instructions: for the example above the workflow should be:
    system will let you know if you have errors or missing columns. The
    most common errors are: the sample name column should be named
    sample\_name, duplicated sample names are not permitted. For a full list of
-   required fields, visit :doc:`tutorials/prepare-information-files`.
+   required fields, visit :doc:`gettingstartedguide/index`.
 #. **Add a prep information file to your study for each data type.** The prep
    information file should contain all the samples in the sample information
    file or a subset. If you have more than one FASTQ file set (forward,
-   reverse (optional) and barcodes) you will need to add a
-   :ref:`run_prefix <required-fields-for-preprocessing-target-gene-data>`
-   column.
+   reverse (optional) and barcodes) you will need to add a run_prefix column,
+   see :ref:`prepare_information_files`.
    A prep information file and a QIIME compatible mapping file will
    be available for download after the prep information file is added
    successfully.

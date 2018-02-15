@@ -107,7 +107,7 @@ class AuthLoginHandler(BaseHandler):
     @execute_as_transaction
     def post(self):
         if r_client.get('maintenance') is not None:
-            raise HTTPError(503, "Site is down for maintenance")
+            raise HTTPError(503, reason="Site is down for maintenance")
 
         username = self.get_argument("username", "").strip().lower()
         passwd = self.get_argument("password", "")

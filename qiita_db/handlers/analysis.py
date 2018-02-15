@@ -37,7 +37,7 @@ def _get_analysis(a_id):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating analysis %s: %s'
+        raise HTTPError(500, reason='Error instantiating analysis %s: %s'
                         % (a_id, str(e)))
     return a
 

@@ -45,34 +45,46 @@ class ArtifactTestsReadOnly(TestCase):
 
     def test_create_type(self):
         obs = qdb.artifact.Artifact.types()
-        exp = [['BIOM', 'BIOM table'],
-               ['Demultiplexed', 'Demultiplexed and QC sequences'],
-               ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
-               ['SFF', None], ['per_sample_FASTQ', None],
-               ['beta_div_plots', 'Qiime 1 beta diversity results'],
-               ['rarefaction_curves', 'Rarefaction curves'],
-               ['taxa_summary', 'Taxa summary plots']]
+        exp = [['BIOM', 'BIOM table', False, False, True],
+               ['Demultiplexed', 'Demultiplexed and QC sequences', True, True,
+                False],
+               ['FASTA', None, False, False, False],
+               ['FASTA_Sanger', None, False, False, False],
+               ['FASTQ', None, False, False, True],
+               ['SFF', None, False, False, False],
+               ['per_sample_FASTQ', None, True, False, True],
+               ['beta_div_plots', 'Qiime 1 beta diversity results', False,
+                False, False],
+               ['rarefaction_curves', 'Rarefaction curves', False, False,
+                False],
+               ['taxa_summary', 'Taxa summary plots', False, False, False]]
         self.assertItemsEqual(obs, exp)
 
         qdb.artifact.Artifact.create_type(
-            "NewType", "NewTypeDesc", False, False,
+            "NewType", "NewTypeDesc", False, False, False,
             [("log", False), ("raw_forward_seqs", True)])
 
         obs = qdb.artifact.Artifact.types()
-        exp = [['BIOM', 'BIOM table'],
-               ['Demultiplexed', 'Demultiplexed and QC sequences'],
-               ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
-               ['SFF', None], ['per_sample_FASTQ', None],
-               ['beta_div_plots', 'Qiime 1 beta diversity results'],
-               ['rarefaction_curves', 'Rarefaction curves'],
-               ['taxa_summary', 'Taxa summary plots'],
-               ['NewType', 'NewTypeDesc']]
+        exp = [['BIOM', 'BIOM table', False, False, True],
+               ['Demultiplexed', 'Demultiplexed and QC sequences', True, True,
+                False],
+               ['FASTA', None, False, False, False],
+               ['FASTA_Sanger', None, False, False, False],
+               ['FASTQ', None, False, False, True],
+               ['SFF', None, False, False, False],
+               ['per_sample_FASTQ', None, True, False, True],
+               ['beta_div_plots', 'Qiime 1 beta diversity results', False,
+                False, False],
+               ['rarefaction_curves', 'Rarefaction curves', False, False,
+                False],
+               ['taxa_summary', 'Taxa summary plots', False, False, False],
+               ['NewType', 'NewTypeDesc', False, False, False]]
         self.assertItemsEqual(obs, exp)
         self.assertTrue(exists(qdb.util.get_mountpoint('NewType')[0][1]))
 
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
             qdb.artifact.Artifact.create_type(
-                "NewType", "NewTypeDesc", False, False,
+                "NewType", "NewTypeDesc", False, False, False,
                 [("log", False), ("raw_forward_seqs", True)])
 
     def test_name(self):

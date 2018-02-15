@@ -117,7 +117,7 @@
 
       {% if artifact_type == 'BIOM' and not is_from_analysis %}
         <input type="button" class="btn btn-default btn-sm" value="Add to Analysis" onclick="send_samples_to_analysis(this, [{{artifact_id}}]);">
-      {% elif editable %}
+      {% else %}
         <a class="btn btn-default btn-sm" id="process-btn"><span class="glyphicon glyphicon-play"></span> Process</a>
       {% end %}
 

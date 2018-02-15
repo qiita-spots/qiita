@@ -144,7 +144,11 @@ def load_template_to_dataframe(fn, index='sample_name'):
                 for c in cols]
 
             # while we are here, let's check for duplicate columns headers
-            if len(set(newcols)) != len(newcols):
+            ncols = set(newcols)
+            if len(ncols) != len(newcols):
+                if '' in ncols:
+                    raise ValueError(
+                        'Your file has empty columns headers.')
                 raise qdb.exceptions.QiitaDBDuplicateHeaderError(
                     find_duplicates(newcols))
         else:
@@ -176,6 +180,8 @@ def load_template_to_dataframe(fn, index='sample_name'):
     # remove newlines and tabs from fields
     template.replace(to_replace='[\t\n\r\x0b\x0c]+', value='',
                      regex=True, inplace=True)
+    # removing columns with empty values
+    template.dropna(axis='columns', how='all', inplace=True)
 
     initial_columns = set(template.columns)
 

@@ -70,7 +70,7 @@ class HeartbeatHandlerTests(OauthTestingBase):
             '/qiita_db/jobs/6d368e16-2242-4cf8-87b4-a5dc40bb890b/heartbeat/',
             '', headers=self.header)
         self.assertEqual(obs.code, 403)
-        self.assertEqual(obs.body,
+        self.assertEqual(obs.reason,
                          "Can't execute heartbeat on job: already completed")
 
     def test_post(self):
@@ -119,8 +119,8 @@ class ActiveStepHandlerTests(OauthTestingBase):
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/step/',
             payload, headers=self.header)
         self.assertEqual(obs.code, 403)
-        self.assertEqual(obs.body, "Cannot change the step of a job whose "
-                                   "status is not 'running'")
+        self.assertEqual(obs.reason, "Cannot change the step of a job whose "
+                                     "status is not 'running'")
 
     def test_post(self):
         payload = dumps({'step': 'Step 1 of 4: demultiplexing'})
@@ -225,6 +225,40 @@ class CompleteHandlerTests(OauthTestingBase):
         self.assertEqual(job.status, 'success')
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
+
+    def test_post_job_success_with_archive(self):
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
+            qdb.study.Study(1), '16S')
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(
+                qdb.software.Command.get_validator('BIOM'),
+                values_dict={'template': pt.id, 'files':
+                             dumps({'BIOM': ['file']}),
+                             'artifact_type': 'BIOM'}))
+        job._set_status('running')
+
+        fd, fp = mkstemp(suffix='_table.biom')
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+
+        self._clean_up_files.append(fp)
+
+        payload = dumps(
+            {'success': True, 'error': '',
+             'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
+                                         'artifact_type': 'BIOM'}},
+             'archive': {'AAAA': 'AAA', 'CCC': 'CCC'}})
+
+        obs = self.post(
+            '/qiita_db/jobs/%s/complete/' % job.id,
+            payload, headers=self.header)
+        wait_for_processing_job(job.id)
+        self.assertEqual(obs.code, 200)
 
 
 class ProcessingJobAPItestHandlerTests(OauthTestingBase):

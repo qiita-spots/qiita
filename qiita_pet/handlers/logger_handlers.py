@@ -19,8 +19,9 @@ from tornado.web import HTTPError
 class LogEntryViewerHandler(BaseHandler):
     def check_access(self):
         if self.current_user.level not in {'admin', 'dev'}:
-            raise HTTPError(405, "User %s doesn't have sufficient privileges "
-                            "to view error page" % self.current_user)
+            raise HTTPError(405, reason="User %s doesn't have sufficient "
+                            "privileges to view error page" %
+                            self.current_user)
 
     @authenticated
     @execute_as_transaction

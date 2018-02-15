@@ -50,9 +50,9 @@ class ShareAnalysisAJAX(BaseHandler):
         analysis_id = int(self.get_argument('id'))
         analysis = Analysis(analysis_id)
         if not analysis.has_access(self.current_user):
-            raise HTTPError(403, 'User %s does not have permissions to share '
-                            'analysis %s' % (
-                                self.current_user.id, analysis.id))
+            raise HTTPError(403, reason='User %s does not have permissions to '
+                            'share analysis %s' % (self.current_user.id,
+                                                   analysis.id))
 
         selected = self.get_argument('selected', None)
         deselected = self.get_argument('deselected', None)
