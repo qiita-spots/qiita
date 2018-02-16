@@ -15,44 +15,6 @@ Classes
     :toctree: generated/
 
     QiitaStudySearch
-
-Examples
---------
-Searches are done using boolean language, with AND, OR, and NOT supported,
-as well as ordering through parenthesis. You can search over metadata using the
-following operators::
-
->  <  =  <=  >=  includes
-
-The operators act as they normally do, with includes used for substring
-searches.
-
-The object itself is used to search using the call method. In this
-example, we will use the complex query::
-
-(sample_type = ENVO:soil AND COMMON_NAME = "rhizosphere metagenome") AND
-NOT Description_duplicate includes Burmese
-
->>> from qiita_db.search import Qiitaqdb.study.StudySearch # doctest: +SKIP
->>> search = QiitaStudySearch() # doctest: +SKIP
->>> res, meta = search('(sample_type = ENVO:soil AND COMMON_NAME = '
-...                    '"rhizosphere metagenome") AND NOT '
-...                    'Description_duplicate includes Burmese',
-...                    "test@foo.bar") # doctest: +SKIP
->>> print(res) # doctest: +SKIP
-{1: [['SKM4.640180', 'rhizosphere metagenome', 'Bucu Rhizo', 'ENVO:soil'],
-     ['SKM5.640177', 'rhizosphere metagenome', 'Bucu Rhizo', 'ENVO:soil'],
-     ['SKD4.640185', 'rhizosphere metagenome', 'Diesel Rhizo', 'ENVO:soil'],
-     ['SKD6.640190', 'rhizosphere metagenome', 'Diesel Rhizo', 'ENVO:soil'],
-     ['SKM6.640187', 'rhizosphere metagenome', 'Bucu Rhizo', 'ENVO:soil'],
-     ['SKD5.640186', 'rhizosphere metagenome', 'Diesel Rhizo', 'ENVO:soil']]}
->>> print(meta) # doctest: +SKIP
-["COMMON_NAME", "Description_duplicate", "sample_type"]
-
-Note that the userid performing the search must also be passed, so the search
-knows what studies are accessable. Also note that the sample list is in the
-order of sample ID followed by metadata in the same order as the metadata
-headers returned.
 """
 
 # -----------------------------------------------------------------------------

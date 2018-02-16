@@ -22,67 +22,6 @@ Classes
 
    Study
    StudyPerson
-
-Examples
---------
-Studies contain contact people (PIs, Lab members, and EBI contacts). These
-people have names, emails, addresses, and phone numbers. The email and name are
-the minimum required information.
-
->>> from qiita_db.study import StudyPerson # doctest: +SKIP
->>> person = StudyPerson.create('Some Dude', 'somedude@foo.bar',
-...                             address='111 fake street',
-...                             phone='111-121-1313') # doctest: +SKIP
->>> person.name # doctest: +SKIP
-Some dude
->>> person.email # doctest: +SKIP
-somedude@foobar
->>> person.address # doctest: +SKIP
-111 fake street
->>> person.phone # doctest: +SKIP
-111-121-1313
-
-A study requres a minimum of information to be created. Note that the people
-must be passed as StudyPerson objects and the owner as a User object.
-
->>> from qiita_db.study import Study # doctest: +SKIP
->>> from qiita_db.user import User # doctest: +SKIP
->>> info = {
-...     "timeseries_type_id": 1,
-...     "metadata_complete": True,
-...     "mixs_compliant": True,
-...     "number_samples_collected": 25,
-...     "number_samples_promised": 28,
-...     "study_alias": "TST",
-...     "study_description": "Some description of the study goes here",
-...     "study_abstract": "Some abstract goes here",
-...     "emp_person_id": StudyPerson(2),
-...     "principal_investigator_id": StudyPerson(3),
-...     "lab_person_id": StudyPerson(1)} # doctest: +SKIP
->>> owner = User('owner@foo.bar') # doctest: +SKIP
->>> Study(owner, "New Study Title", 1, info) # doctest: +SKIP
-
-You can also add a study to an investigation by passing the investigation
-object while creating the study.
-
->>> from qiita_db.study import Study # doctest: +SKIP
->>> from qiita_db.user import User # doctest: +SKIP
->>> from qiita_db.study import Investigation # doctest: +SKIP
->>> info = {
-...     "timeseries_type_id": 1,
-...     "metadata_complete": True,
-...     "mixs_compliant": True,
-...     "number_samples_collected": 25,
-...     "number_samples_promised": 28,
-...     "study_alias": "TST",
-...     "study_description": "Some description of the study goes here",
-...     "study_abstract": "Some abstract goes here",
-...     "emp_person_id": StudyPerson(2),
-...     "principal_investigator_id": StudyPerson(3),
-...     "lab_person_id": StudyPerson(1)} # doctest: +SKIP
->>> owner = User('owner@foo.bar') # doctest: +SKIP
->>> investigation = Investigation(1) # doctest: +SKIP
->>> Study(owner, "New Study Title", 1, info, investigation) # doctest: +SKIP
 """
 
 # -----------------------------------------------------------------------------

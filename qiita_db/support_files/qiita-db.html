@@ -110,6 +110,7 @@ table {
   rect.grp            { opacity:0.5; stroke:#b1b1b1; stroke-width:1.7; }
 </style>
 <defs>
+<<<<<<< HEAD
   <pattern patternUnits='userSpaceOnUse' id='layoutBgA' width='10' height='20' x='0' y='0' viewBox='0 0 5 10'>  
      <line x1='-2' y1='1' x2='7' y2='10' stroke='#f0f0f0' stroke-width='.5'/>  
      <line x1='-2' y1='6' x2='7' y2='15' stroke='#f0f0f0' stroke-width='.5'/>  
@@ -128,30 +129,51 @@ table {
           <stop offset='0%' stop-color='#a8c4ef'/> 
           <stop offset='30%' stop-color='white'/> 
           <stop offset='100%' stop-color='#a8c4ef'/> 
+=======
+  <pattern patternUnits='userSpaceOnUse' id='layoutBgA' width='10' height='20' x='0' y='0' viewBox='0 0 5 10'>
+     <line x1='-2' y1='1' x2='7' y2='10' stroke='#f0f0f0' stroke-width='.5'/>
+     <line x1='-2' y1='6' x2='7' y2='15' stroke='#f0f0f0' stroke-width='.5'/>
+     <line x1='-2' y1='-4' x2='7' y2='5' stroke='#f0f0f0' stroke-width='.5'/>
+  </pattern>
+  <radialGradient id='layoutBgB' gradientUnits='userSpaceOnUse' cx='50%' cy='50%' r='75%' fx='46%' fy='22%'>
+     <stop offset='0%' stop-opacity='.2' stop-color='#f5f5f5' />
+     <stop offset='100%' stop-color='#f0f0f0' />
+  </radialGradient>
+  <linearGradient id='tableHeaderGradient3' x1='0%' y1='0%' x2='0%' y2='90%' >
+          <stop offset='0%' stop-color='#b2cdf7'/>
+          <stop offset='30%' stop-color='white'/>
+          <stop offset='100%' stop-color='#b2cdf7'/>
+   </linearGradient>
+  <linearGradient id='tableHeaderGradient2' x1='0%' y1='0%' x2='0%' y2='90%' >
+          <stop offset='0%' stop-color='#a8c4ef'/>
+          <stop offset='30%' stop-color='white'/>
+          <stop offset='100%' stop-color='#a8c4ef'/>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
    </linearGradient>
   <linearGradient id='tableHeaderGradient4' x1='0%' y1='0%' x2='0%' y2='90%' >
-          <stop offset='0%' stop-color='#b7c8e3'/> 
-          <stop offset='30%' stop-color='white'/> 
-          <stop offset='100%' stop-color='#b7c8e3'/> 
+          <stop offset='0%' stop-color='#b7c8e3'/>
+          <stop offset='30%' stop-color='white'/>
+          <stop offset='100%' stop-color='#b7c8e3'/>
    </linearGradient>
   <linearGradient id='tableHeaderGradient1' x1='0%' y1='0%' x2='0%' y2='90%' >
-          <stop offset='0%' stop-color='#c0d4f3'/> 
-          <stop offset='30%' stop-color='white'/> 
-          <stop offset='100%' stop-color='#c0d4f3'/> 
+          <stop offset='0%' stop-color='#c0d4f3'/>
+          <stop offset='30%' stop-color='white'/>
+          <stop offset='100%' stop-color='#c0d4f3'/>
    </linearGradient>
   <linearGradient id='tableHeaderGradient0' x1='0%' y1='0%' x2='0%' y2='90%' >
-          <stop offset='0%' stop-color='#d0def5'/> 
-          <stop offset='30%' stop-color='white'/> 
-          <stop offset='100%' stop-color='#d0def5'/> 
+          <stop offset='0%' stop-color='#d0def5'/>
+          <stop offset='30%' stop-color='white'/>
+          <stop offset='100%' stop-color='#d0def5'/>
    </linearGradient>
   <linearGradient id='groupUnderTitleLine' x1='0%' y1='0%' x2='100%' y2='0%' >
-          <stop offset='0%' stop-color='#999999' stop-opacity='0.7'/> 
-          <stop offset='100%' stop-color='#999999' stop-opacity='0' /> 
+          <stop offset='0%' stop-color='#999999' stop-opacity='0.7'/>
+          <stop offset='100%' stop-color='#999999' stop-opacity='0' />
    </linearGradient>
   <radialGradient id='calloutGradient' cx='20%' cy='20%' r='100%' fx='10%' fy='10%'>
 	   <stop offset='0%' stop-color='#ffffff' />
     <stop offset='100%' stop-color='#f8f6d1' />
   </radialGradient>
+<<<<<<< HEAD
   <filter id='shadow' width='120%' height='120%'> 
       <feOffset result='offOut' in='SourceGraphic' dx='2' dy='2' /> 
       <feColorMatrix result='matrixOut' in='offOut' type='matrix' 
@@ -160,6 +182,16 @@ table {
       <feBlend in='SourceGraphic' in2='blurOut' mode='normal' /> 
     </filter> 
   <filter id='formerShadow' height='130%'> 
+=======
+  <filter id='shadow' width='120%' height='120%'>
+      <feOffset result='offOut' in='SourceGraphic' dx='2' dy='2' />
+      <feColorMatrix result='matrixOut' in='offOut' type='matrix'
+      values='0.1 0 0 0 0 0 0.1 0 0 0 0 0 0.1 0 0 0 0 0 0.5 0' />
+      <feGaussianBlur result='blurOut' in='matrixOut' stdDeviation='2' />
+      <feBlend in='SourceGraphic' in2='blurOut' mode='normal' />
+    </filter>
+  <filter id='formerShadow' height='130%'>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
     <feGaussianBlur in='SourceAlpha' stdDeviation='1.5'/> <!-- stdDeviation is how much to blur -->
     <feOffset dx='1.2' dy='1.2' result='offsetblur'/> <!-- how much to offset -->
     <feMerge>
@@ -167,22 +199,33 @@ table {
     <feMergeNode in='SourceGraphic'/> <!-- this contains the element that the filter is applied to -->
     </feMerge>
   </filter>
+<<<<<<< HEAD
   <filter id='legendShadow' filterUnits='userSpaceOnUse' x='0' y='0' width='400' height='120'> 
      <feGaussianBlur in='SourceAlpha' stdDeviation='3' result='blur'/> 
      <feOffset in='blur' dx='2' dy='2' result='offsetBlur'/> 
+=======
+  <filter id='legendShadow' filterUnits='userSpaceOnUse' x='0' y='0' width='400' height='120'>
+     <feGaussianBlur in='SourceAlpha' stdDeviation='3' result='blur'/>
+     <feOffset in='blur' dx='2' dy='2' result='offsetBlur'/>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
      <feSpecularLighting in='blur' surfaceScale='5' specularConstant='.75' specularExponent='20' lighting-color='#bbbbbb' result='specOut'>
-        <fePointLight x='-5000' y='-10000' z='20000'/>  
-     </feSpecularLighting> 
-     <feComposite in='specOut' in2='SourceAlpha' operator='in' result='specOut'/> 
-     <feComposite in='SourceGraphic' in2='specOut' operator='arithmetic' k1='0' k2='1' k3='1' k4='0' result='litPaint'/>  
-     <feMerge> 
-         <feMergeNode in='offsetBlur'/> 
-         <feMergeNode in='litPaint'/> 
-     </feMerge> 
-  </filter> 
+        <fePointLight x='-5000' y='-10000' z='20000'/>
+     </feSpecularLighting>
+     <feComposite in='specOut' in2='SourceAlpha' operator='in' result='specOut'/>
+     <feComposite in='SourceGraphic' in2='specOut' operator='arithmetic' k1='0' k2='1' k3='1' k4='0' result='litPaint'/>
+     <feMerge>
+         <feMergeNode in='offsetBlur'/>
+         <feMergeNode in='litPaint'/>
+     </feMerge>
+  </filter>
   <radialGradient id='legendGradient' fx='5%' fy='5%' r='75%' spreadMethod='pad'>
+<<<<<<< HEAD
           <stop offset='0%' stop-color='#eaeef6' stop-opacity='1'/> 
           <stop offset='100%' stop-color='#cad2e3' stop-opacity='1' /> 
+=======
+          <stop offset='0%' stop-color='#eaeef6' stop-opacity='1'/>
+          <stop offset='100%' stop-color='#cad2e3' stop-opacity='1' />
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
    </radialGradient>
   <symbol id='calloutArrowDown' overflow='visible' >
       <path d='M 0,0 L 7,11 L 15,0 z' style='fill:#f8f6d1;stroke:none;' />
@@ -254,10 +297,17 @@ table {
 <rect width='120%' x='-10%' y='-10%' height='120%' fill='url(#layoutBgB)'/>
 <!-- ============= Legend ============= -->
 <g transform='translate(10,10)'>
+<<<<<<< HEAD
   <rect x='10' y='10' width='300' height='64' rx='6' ry='6' style='fill:url(#legendGradient);filter:url(#legendShadow);'/> 
   <text x='20' y='30'><tspan>Project</tspan> qiita @ <a xlink:href='http://www.dbschema.com'>DbSchema</a></text> 
   <text x='20' y='44'><tspan>Layout</tspan> qiita</text> 
   <text x='20' y='58' style='fill:#777'><tspan>Hint: Schema comments available as mouse-over tooltips.</tspan></text> 
+=======
+  <rect x='10' y='10' width='300' height='64' rx='6' ry='6' style='fill:url(#legendGradient);filter:url(#legendShadow);'/>
+  <text x='20' y='30'><tspan>Project</tspan> qiita @ <a xlink:href='http://www.dbschema.com'>DbSchema</a></text>
+  <text x='20' y='44'><tspan>Layout</tspan> qiita</text>
+  <text x='20' y='58' style='fill:#777'><tspan>Hint: Schema comments available as mouse-over tooltips.</tspan></text>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 </g>
 
 <g transform='translate(0,110)'>
@@ -501,11 +551,19 @@ table {
 	study_artifact references study ( study_id )</title>
 </path>
 <text x='1687' y='760' transform='rotate(0 1687,760)' title='Foreign Key fk_study_artifact_study
+<<<<<<< HEAD
 	study_artifact references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 825 L 1605,1027 Q 1605,1035 1597,1035 L 1335,1035' >
 	<title>Foreign Key fk_study_artifact_artifact
 	study_artifact references artifact ( artifact_id )</title>
 </path>
 <text x='1618' y='825' transform='rotate(90 1618,825)' title='Foreign Key fk_study_artifact_artifact
+=======
+	study_artifact references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1575 750 L 1567,750 Q 1560,750 1560,742 L 1560,742 Q 1560,735 1552,735 L 1327,735 Q 1320,735 1320,742 L 1320,885' >
+	<title>Foreign Key fk_study_artifact_artifact
+	study_artifact references artifact ( artifact_id )</title>
+</path>
+<text x='1523' y='745' transform='rotate(0 1523,745)' title='Foreign Key fk_study_artifact_artifact
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1710 990 L 1702,990 Q 1695,990 1695,982 L 1695,592 Q 1695,585 1687,585 L 1380,585' >
 	<title>Foreign Key fk_prep_template_processing_job
 	prep_template_processing_job references prep_template ( prep_template_id )</title>
@@ -696,12 +754,20 @@ table {
 	parameter_artifact_type references command_parameter ( command_parameter_id )</title>
 </path>
 <text x='1927' y='1105' transform='rotate(0 1927,1105)' title='Foreign Key fk_parameter_artifact_type
+<<<<<<< HEAD
 	parameter_artifact_type references command_parameter ( command_parameter_id )' style='fill:#a1a0a0;'>command_parameter_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1095 L 1582,1095 Q 1575,1095 1575,1087 L 1575,1020' >
+=======
+	parameter_artifact_type references command_parameter ( command_parameter_id )' style='fill:#a1a0a0;'>command_parameter_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1095 L 1582,1095 Q 1575,1095 1575,1087 L 1575,1035' >
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 	<title>Foreign Key fk_parameter_artifact_type_0
 	parameter_artifact_type references artifact_type ( artifact_type_id )</title>
 </path>
 <text x='1659' y='1090' transform='rotate(0 1659,1090)' title='Foreign Key fk_parameter_artifact_type_0
+<<<<<<< HEAD
 	parameter_artifact_type references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1185 L 1567,1185 Q 1560,1185 1560,1177 L 1560,1020' >
+=======
+	parameter_artifact_type references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1185 L 1567,1185 Q 1560,1185 1560,1177 L 1560,1035' >
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 	<title>Foreign Key fk_command_output_0
 	command_output references artifact_type ( artifact_type_id )</title>
 </path>
@@ -724,12 +790,21 @@ table {
 	artifact_output_processing_job references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1920 1440 L 1942,1440 Q 1950,1440 1950,1432 L 1950,1335' >
 	<title>Foreign Key fk_artifact_output_processing_job_0
 	artifact_output_processing_job references processing_job ( processing_job_id )</title>
+<<<<<<< HEAD
 </path>
 <text x='1927' y='1435' transform='rotate(0 1927,1435)' title='Foreign Key fk_artifact_output_processing_job_0
 	artifact_output_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1725 1440 L 1717,1440 Q 1710,1440 1710,1432 L 1710,1282 Q 1710,1275 1717,1275 L 1740,1275' >
 	<title>Foreign Key fk_artifact_output_processing_job_1
 	artifact_output_processing_job references command_output ( command_output_id )</title>
 </path>
+=======
+</path>
+<text x='1927' y='1435' transform='rotate(0 1927,1435)' title='Foreign Key fk_artifact_output_processing_job_0
+	artifact_output_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1725 1440 L 1717,1440 Q 1710,1440 1710,1432 L 1710,1282 Q 1710,1275 1717,1275 L 1740,1275' >
+	<title>Foreign Key fk_artifact_output_processing_job_1
+	artifact_output_processing_job references command_output ( command_output_id )</title>
+</path>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 <text x='1616' y='1435' transform='rotate(0 1616,1435)' title='Foreign Key fk_artifact_output_processing_job_1
 	artifact_output_processing_job references command_output ( command_output_id )' style='fill:#a1a0a0;'>command_output_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2115 1155 L 2122,1155 Q 2130,1155 2130,1147 L 2130,697 Q 2130,690 2122,690 L 727,690 Q 720,690 720,682 L 720,525' >
 	<title>Foreign Key fk_processing_job_qiita_user
@@ -749,6 +824,7 @@ table {
 	processing_job references processing_job_status ( processing_job_status_id )' style='fill:#a1a0a0;'>processing_job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1950 990 L 1927,990 Q 1920,990 1920,982 L 1920,967 Q 1920,960 1912,960 L 1590,960' >
 	<title>Foreign Key fk_software_artifact_type
 	software_artifact_type references artifact_type ( artifact_type_id )</title>
+<<<<<<< HEAD
 </path>
 <text x='1869' y='985' transform='rotate(0 1869,985)' title='Foreign Key fk_software_artifact_type
 	software_artifact_type references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2100 1005 L 2137,1005 Q 2145,1005 2145,997 L 2145,997 Q 2145,990 2152,990 L 2370,990' >
@@ -775,6 +851,34 @@ table {
 	<title>Foreign Key fk_default_workflow_command_0
 	default_workflow_node references default_parameter_set ( default_parameter_set_id )</title>
 </path>
+=======
+</path>
+<text x='1869' y='985' transform='rotate(0 1869,985)' title='Foreign Key fk_software_artifact_type
+	software_artifact_type references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2100 1005 L 2137,1005 Q 2145,1005 2145,997 L 2145,997 Q 2145,990 2152,990 L 2370,990' >
+	<title>Foreign Key fk_software_artifact_type_sw
+	software_artifact_type references software ( software_id )</title>
+</path>
+<text x='2107' y='1000' transform='rotate(0 2107,1000)' title='Foreign Key fk_software_artifact_type_sw
+	software_artifact_type references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2190 1185 L 2190,1230' >
+	<title>Foreign Key fk_command_parameter
+	command_parameter references software_command ( command_id )</title>
+</path>
+<text x='2203' y='1185' transform='rotate(90 2203,1185)' title='Foreign Key fk_command_parameter
+	command_parameter references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2370 1200 L 2272,1200 Q 2265,1200 2265,1207 L 2265,1230' >
+	<title>Foreign Key fk_default_parameter_set
+	default_parameter_set references software_command ( command_id )</title>
+</path>
+<text x='2303' y='1195' transform='rotate(0 2303,1195)' title='Foreign Key fk_default_parameter_set
+	default_parameter_set references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2370 1260 L 2280,1260' >
+	<title>Foreign Key fk_default_workflow_command
+	default_workflow_node references software_command ( command_id )</title>
+</path>
+<text x='2303' y='1255' transform='rotate(0 2303,1255)' title='Foreign Key fk_default_workflow_command
+	default_workflow_node references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2550 1245 L 2550,1230' >
+	<title>Foreign Key fk_default_workflow_command_0
+	default_workflow_node references default_parameter_set ( default_parameter_set_id )</title>
+</path>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 <text x='2552' y='1240' transform='rotate(270 2552,1240)' title='Foreign Key fk_default_workflow_command_0
 	default_workflow_node references default_parameter_set ( default_parameter_set_id )' style='fill:#a1a0a0;'>default_parameter_set_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2565 1275 L 2572,1275 Q 2580,1275 2580,1267 L 2580,1192 Q 2580,1185 2587,1185 L 2587,1185 Q 2595,1185 2595,1177 L 2595,1170' >
 	<title>Foreign Key fk_default_workflow_command_1
@@ -854,6 +958,7 @@ table {
 	reference references filepath ( tree_filepath -> filepath_id )' style='fill:#a1a0a0;'>tree_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 60 1320 L 60,1290' >
 	<title>Foreign Key fk_controlled_vocab_values
 	controlled_vocab_values references controlled_vocab ( controlled_vocab_id )</title>
+<<<<<<< HEAD
 </path>
 <text x='62' y='1315' transform='rotate(270 62,1315)' title='Foreign Key fk_controlled_vocab_values
 	controlled_vocab_values references controlled_vocab ( controlled_vocab_id )' style='fill:#a1a0a0;'>controlled_vocab_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 1455 L 390,1440' >
@@ -865,6 +970,19 @@ table {
 	<title>Foreign Key fk_archive_feature_value
 	archive_feature_value references archive_merging_scheme ( archive_merging_scheme_id )</title>
 </path>
+=======
+</path>
+<text x='62' y='1315' transform='rotate(270 62,1315)' title='Foreign Key fk_controlled_vocab_values
+	controlled_vocab_values references controlled_vocab ( controlled_vocab_id )' style='fill:#a1a0a0;'>controlled_vocab_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 1455 L 390,1440' >
+	<title>Foreign Key fk_column_ontology
+	column_ontology references mixs_field_description ( column_name )</title>
+</path>
+<text x='392' y='1450' transform='rotate(270 392,1450)' title='Foreign Key fk_column_ontology
+	column_ontology references mixs_field_description ( column_name )' style='fill:#a1a0a0;'>column_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1455 1530 L 1440,1530' >
+	<title>Foreign Key fk_archive_feature_value
+	archive_feature_value references archive_merging_scheme ( archive_merging_scheme_id )</title>
+</path>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 <text x='1304' y='1525' transform='rotate(0 1304,1525)' title='Foreign Key fk_archive_feature_value
 	archive_feature_value references archive_merging_scheme ( archive_merging_scheme_id )' style='fill:#a1a0a0;'>archive_merging_scheme_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 705 1455 L 675,1455' >
 	<title>Foreign Key fk_term_ontology
@@ -901,7 +1019,11 @@ Links analyses to the users they are shared with</title></a>
 <a xlink:href='#logging'><text x='1007' y='1342' class='tableTitle'>logging</text><title>Table qiita.logging</title></a>
   <use id='nn' x='977' y='1362' xlink:href='#nn'/><a xlink:href='#logging.logging_id'><use id='pk' x='977' y='1361' xlink:href='#pk'/><title>Primary Key  ( logging_id ) </title></a>
 <a xlink:href='#logging.logging_id'><text x='993' y='1372'>logging_id</text><title>logging_id bigserial not null</title></a>
+<<<<<<< HEAD
 <a xlink:href='#logging.logging_id'><use id='ref' x='1068' y='1361' xlink:href='#ref'/><title>Referred by analysis ( logging_id ) 
+=======
+<a xlink:href='#logging.logging_id'><use id='ref' x='1068' y='1361' xlink:href='#ref'/><title>Referred by analysis ( logging_id )
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 Referred by processing_job ( logging_id ) </title></a>
   <use id='nn' x='977' y='1377' xlink:href='#nn'/><a xlink:href='#logging.time'><text x='993' y='1387'>time</text><title>time timestamp not null
 Time the error was thrown</title></a>
@@ -934,7 +1056,11 @@ Stores link between analysis and the data file used for the analysis&#046;</titl
 <a xlink:href='#controlled_vocab'><text x='73' y='1222' class='tableTitle'>controlled_vocab</text><title>Table qiita.controlled_vocab</title></a>
   <use id='nn' x='47' y='1242' xlink:href='#nn'/><a xlink:href='#controlled_vocab.controlled_vocab_id'><use id='pk' x='47' y='1241' xlink:href='#pk'/><title>Primary Key  ( controlled_vocab_id ) </title></a>
 <a xlink:href='#controlled_vocab.controlled_vocab_id'><text x='63' y='1252'>controlled_vocab_id</text><title>controlled_vocab_id bigserial not null</title></a>
+<<<<<<< HEAD
 <a xlink:href='#controlled_vocab.controlled_vocab_id'><use id='ref' x='183' y='1241' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( controlled_vocab_id ) 
+=======
+<a xlink:href='#controlled_vocab.controlled_vocab_id'><use id='ref' x='183' y='1241' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( controlled_vocab_id )
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 Referred by controlled_vocab_values ( controlled_vocab_id ) </title></a>
   <use id='nn' x='47' y='1257' xlink:href='#nn'/><a xlink:href='#controlled_vocab.controlled_vocab'><text x='63' y='1267'>controlled_vocab</text><title>controlled_vocab varchar not null</title></a>
 
@@ -945,6 +1071,7 @@ Referred by controlled_vocab_values ( controlled_vocab_id ) </title></a>
 Holds all user information</title></a>
   <use id='nn' x='587' y='357' xlink:href='#nn'/><a xlink:href='#qiita_user.email'><use id='pk' x='587' y='356' xlink:href='#pk'/><title>Primary Key  ( email ) </title></a>
 <a xlink:href='#qiita_user.email'><text x='603' y='367'>email</text><title>email varchar not null</title></a>
+<<<<<<< HEAD
 <a xlink:href='#qiita_user.email'><use id='ref' x='723' y='356' xlink:href='#ref'/><title>Referred by analysis ( email ) 
 Referred by analysis_users ( email ) 
 Referred by message_user ( email ) 
@@ -952,6 +1079,15 @@ Referred by processing_job ( email )
 Referred by processing_job_workflow ( email ) 
 Referred by study ( email ) 
 Referred by study_tags ( email ) 
+=======
+<a xlink:href='#qiita_user.email'><use id='ref' x='723' y='356' xlink:href='#ref'/><title>Referred by analysis ( email )
+Referred by analysis_users ( email )
+Referred by message_user ( email )
+Referred by processing_job ( email )
+Referred by processing_job_workflow ( email )
+Referred by study ( email )
+Referred by study_tags ( email )
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 Referred by study_users ( email ) </title></a>
   <use id='nn' x='587' y='372' xlink:href='#nn'/><a xlink:href='#qiita_user.user_level_id'><use id='idx' x='587' y='371' xlink:href='#idx'/><title>Index  ( user_level_id ) </title></a>
 <a xlink:href='#qiita_user.user_level_id'><text x='603' y='382'>user_level_id</text><title>user_level_id integer not null default 5
@@ -998,12 +1134,21 @@ One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041;</title
 <a xlink:href='#filepath'><text x='692' y='802' class='tableTitle'>filepath</text><title>Table qiita.filepath</title></a>
   <use id='nn' x='632' y='822' xlink:href='#nn'/><a xlink:href='#filepath.filepath_id'><use id='pk' x='632' y='821' xlink:href='#pk'/><title>Primary Key  ( filepath_id ) </title></a>
 <a xlink:href='#filepath.filepath_id'><text x='648' y='832'>filepath_id</text><title>filepath_id bigserial not null</title></a>
+<<<<<<< HEAD
 <a xlink:href='#filepath.filepath_id'><use id='ref' x='783' y='821' xlink:href='#ref'/><title>Referred by analysis_filepath ( filepath_id ) 
 Referred by artifact_filepath ( filepath_id ) 
 Referred by prep_template_filepath ( filepath_id ) 
 Referred by reference ( sequence_filepath -> filepath_id ) 
 Referred by reference ( taxonomy_filepath -> filepath_id ) 
 Referred by reference ( tree_filepath -> filepath_id ) 
+=======
+<a xlink:href='#filepath.filepath_id'><use id='ref' x='783' y='821' xlink:href='#ref'/><title>Referred by analysis_filepath ( filepath_id )
+Referred by artifact_filepath ( filepath_id )
+Referred by prep_template_filepath ( filepath_id )
+Referred by reference ( sequence_filepath -> filepath_id )
+Referred by reference ( taxonomy_filepath -> filepath_id )
+Referred by reference ( tree_filepath -> filepath_id )
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 Referred by sample_template_filepath ( filepath_id ) </title></a>
   <use id='nn' x='632' y='837' xlink:href='#nn'/><a xlink:href='#filepath.filepath'><text x='648' y='847'>filepath</text><title>filepath varchar not null</title></a>
   <use id='nn' x='632' y='852' xlink:href='#nn'/><a xlink:href='#filepath.filepath_type_id'><use id='idx' x='632' y='851' xlink:href='#idx'/><title>Index  ( filepath_type_id ) </title></a>
@@ -1148,11 +1293,19 @@ Holds analysis information</title></a>
   <use id='nn' x='212' y='852' xlink:href='#nn'/><a xlink:href='#analysis.analysis_id'><use id='pk' x='212' y='851' xlink:href='#pk'/><title>Primary Key  ( analysis_id ) </title></a>
 <a xlink:href='#analysis.analysis_id'><text x='228' y='862'>analysis_id</text><title>analysis_id bigserial not null
 Unique identifier for analysis</title></a>
+<<<<<<< HEAD
 <a xlink:href='#analysis.analysis_id'><use id='ref' x='318' y='851' xlink:href='#ref'/><title>Referred by analysis_artifact ( analysis_id ) 
 Referred by analysis_filepath ( analysis_id ) 
 Referred by analysis_portal ( analysis_id ) 
 Referred by analysis_processing_job ( analysis_id ) 
 Referred by analysis_sample ( analysis_id ) 
+=======
+<a xlink:href='#analysis.analysis_id'><use id='ref' x='318' y='851' xlink:href='#ref'/><title>Referred by analysis_artifact ( analysis_id )
+Referred by analysis_filepath ( analysis_id )
+Referred by analysis_portal ( analysis_id )
+Referred by analysis_processing_job ( analysis_id )
+Referred by analysis_sample ( analysis_id )
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 Referred by analysis_users ( analysis_id ) </title></a>
   <use id='nn' x='212' y='867' xlink:href='#nn'/><a xlink:href='#analysis.email'><use id='idx' x='212' y='866' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#analysis.email'><text x='228' y='877'>email</text><title>email varchar not null
@@ -1184,6 +1337,7 @@ PMID of paper from the analysis</title></a>
 <a xlink:href='#ebi_run_accession.artifact_id'><use id='fk' x='1458' y='1166' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
   <use id='nn' x='1337' y='1182' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.ebi_run_accession'><use id='pk' x='1337' y='1181' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) </title></a>
 <a xlink:href='#ebi_run_accession.ebi_run_accession'><text x='1353' y='1192'>ebi_run_accession</text><title>ebi_run_accession bigint not null</title></a>
+<<<<<<< HEAD
 
 <!-- ============= Table 'artifact_type' ============= -->
 <rect class='table' x='1395' y='893' width='195' height='120' rx='7' ry='7' />
@@ -1202,6 +1356,8 @@ Referred by software_artifact_type ( artifact_type_id ) </title></a>
   <use id='nn' x='1397' y='957' xlink:href='#nn'/><a xlink:href='#artifact_type.description'><text x='1413' y='967'>description</text><title>description varchar not null</title></a>
   <use id='nn' x='1397' y='972' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_ebi'><text x='1413' y='982'>can_be_submitted_to_ebi</text><title>can_be_submitted_to_ebi bool not null default &#039;FALSE&#039;</title></a>
   <use id='nn' x='1397' y='987' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_vamps'><text x='1413' y='997'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
+=======
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 
 <!-- ============= Table 'filepath_type' ============= -->
 <rect class='table' x='810' y='743' width='120' height='75' rx='7' ry='7' />
@@ -1209,7 +1365,11 @@ Referred by software_artifact_type ( artifact_type_id ) </title></a>
 <a xlink:href='#filepath_type'><text x='835' y='757' class='tableTitle'>filepath_type</text><title>Table qiita.filepath_type</title></a>
   <use id='nn' x='812' y='777' xlink:href='#nn'/><a xlink:href='#filepath_type.filepath_type_id'><use id='pk' x='812' y='776' xlink:href='#pk'/><title>Primary Key  ( filepath_type_id ) </title></a>
 <a xlink:href='#filepath_type.filepath_type_id'><text x='828' y='787'>filepath_type_id</text><title>filepath_type_id bigserial not null</title></a>
+<<<<<<< HEAD
 <a xlink:href='#filepath_type.filepath_type_id'><use id='ref' x='918' y='776' xlink:href='#ref'/><title>Referred by artifact_type_filepath_type ( filepath_type_id ) 
+=======
+<a xlink:href='#filepath_type.filepath_type_id'><use id='ref' x='918' y='776' xlink:href='#ref'/><title>Referred by artifact_type_filepath_type ( filepath_type_id )
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 Referred by filepath ( filepath_type_id ) </title></a>
   <a xlink:href='#filepath_type.filepath_type'><use id='unq' x='812' y='791' xlink:href='#unq'/><title>Unique Index  ( filepath_type ) </title></a>
 <a xlink:href='#filepath_type.filepath_type'><text x='828' y='802'>filepath_type</text><title>filepath_type varchar</title></a>
@@ -1248,6 +1408,7 @@ Referred by filepath ( filepath_type_id ) </title></a>
   <use id='nn' x='1592' y='792' xlink:href='#nn'/><a xlink:href='#study_artifact.artifact_id'><use id='pk' x='1592' y='791' xlink:href='#pk'/><title>Primary Key  ( study_id, artifact_id ) Index  ( artifact_id ) </title></a>
 <a xlink:href='#study_artifact.artifact_id'><text x='1608' y='802'>artifact_id</text><title>artifact_id bigint not null</title></a>
 <a xlink:href='#study_artifact.artifact_id'><use id='fk' x='1668' y='791' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
+<<<<<<< HEAD
 
 <!-- ============= Table 'prep_template_processing_job' ============= -->
 <rect class='table' x='1725' y='983' width='180' height='75' rx='7' ry='7' />
@@ -1503,6 +1664,263 @@ The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#03
 <a xlink:href='#prep_template_filepath.filepath_id'><text x='1038' y='517'>filepath_id</text><title>filepath_id bigint not null</title></a>
 <a xlink:href='#prep_template_filepath.filepath_id'><use id='fk' x='1143' y='506' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
 
+=======
+
+<!-- ============= Table 'prep_template_processing_job' ============= -->
+<rect class='table' x='1725' y='983' width='180' height='75' rx='7' ry='7' />
+<path d='M 1725.50 1009.50 L 1725.50 990.50 Q 1725.50 983.50 1732.50 983.50 L 1897.50 983.50 Q 1904.50 983.50 1904.50 990.50 L 1904.50 1009.50 L1725.50 1009.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#prep_template_processing_job'><text x='1732' y='997' class='tableTitle'>prep_template_processing_job</text><title>Table qiita.prep_template_processing_job</title></a>
+  <use id='nn' x='1727' y='1017' xlink:href='#nn'/><a xlink:href='#prep_template_processing_job.prep_template_id'><use id='pk' x='1727' y='1016' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, processing_job_id ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_template_processing_job.prep_template_id'><text x='1743' y='1027'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
+<a xlink:href='#prep_template_processing_job.prep_template_id'><use id='fk' x='1893' y='1016' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1727' y='1032' xlink:href='#nn'/><a xlink:href='#prep_template_processing_job.processing_job_id'><use id='pk' x='1727' y='1031' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, processing_job_id ) Index  ( processing_job_id ) </title></a>
+<a xlink:href='#prep_template_processing_job.processing_job_id'><text x='1743' y='1042'>processing_job_id</text><title>processing_job_id bigint not null</title></a>
+<a xlink:href='#prep_template_processing_job.processing_job_id'><use id='fk' x='1893' y='1031' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
+
+<!-- ============= Table 'software_type' ============= -->
+<rect class='table' x='2610' y='953' width='120' height='90' rx='7' ry='7' />
+<path d='M 2610.50 979.50 L 2610.50 960.50 Q 2610.50 953.50 2617.50 953.50 L 2722.50 953.50 Q 2729.50 953.50 2729.50 960.50 L 2729.50 979.50 L2610.50 979.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#software_type'><text x='2632' y='967' class='tableTitle'>software_type</text><title>Table qiita.software_type</title></a>
+  <use id='nn' x='2612' y='987' xlink:href='#nn'/><a xlink:href='#software_type.software_type_id'><use id='pk' x='2612' y='986' xlink:href='#pk'/><title>Primary Key  ( software_type_id ) </title></a>
+<a xlink:href='#software_type.software_type_id'><text x='2628' y='997'>software_type_id</text><title>software_type_id bigserial not null</title></a>
+<a xlink:href='#software_type.software_type_id'><use id='ref' x='2718' y='986' xlink:href='#ref'/><title>Referred by software ( software_type_id ) </title></a>
+  <use id='nn' x='2612' y='1002' xlink:href='#nn'/><a xlink:href='#software_type.software_type'><text x='2628' y='1012'>software_type</text><title>software_type varchar not null</title></a>
+  <use id='nn' x='2612' y='1017' xlink:href='#nn'/><a xlink:href='#software_type.description'><text x='2628' y='1027'>description</text><title>description varchar not null</title></a>
+
+<!-- ============= Table 'software' ============= -->
+<rect class='table' x='2385' y='953' width='135' height='165' rx='7' ry='7' />
+<path d='M 2385.50 979.50 L 2385.50 960.50 Q 2385.50 953.50 2392.50 953.50 L 2512.50 953.50 Q 2519.50 953.50 2519.50 960.50 L 2519.50 979.50 L2385.50 979.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#software'><text x='2429' y='967' class='tableTitle'>software</text><title>Table qiita.software</title></a>
+  <use id='nn' x='2387' y='987' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='2387' y='986' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
+<a xlink:href='#software.software_id'><text x='2403' y='997'>software_id</text><title>software_id bigserial not null</title></a>
+<a xlink:href='#software.software_id'><use id='ref' x='2508' y='986' xlink:href='#ref'/><title>Referred by default_workflow ( software_id )
+Referred by oauth_software ( software_id )
+Referred by software_artifact_type ( software_id )
+Referred by software_command ( software_id )
+Referred by software_publication ( software_id ) </title></a>
+  <use id='nn' x='2387' y='1002' xlink:href='#nn'/><a xlink:href='#software.name'><text x='2403' y='1012'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2387' y='1017' xlink:href='#nn'/><a xlink:href='#software.version'><text x='2403' y='1027'>version</text><title>version varchar not null</title></a>
+  <use id='nn' x='2387' y='1032' xlink:href='#nn'/><a xlink:href='#software.description'><text x='2403' y='1042'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='2387' y='1047' xlink:href='#nn'/><a xlink:href='#software.environment_script'><text x='2403' y='1057'>environment_script</text><title>environment_script varchar not null</title></a>
+  <use id='nn' x='2387' y='1062' xlink:href='#nn'/><a xlink:href='#software.start_script'><text x='2403' y='1072'>start_script</text><title>start_script varchar not null</title></a>
+  <use id='nn' x='2387' y='1077' xlink:href='#nn'/><a xlink:href='#software.software_type_id'><use id='idx' x='2387' y='1076' xlink:href='#idx'/><title>Index  ( software_type_id ) </title></a>
+<a xlink:href='#software.software_type_id'><text x='2403' y='1087'>software_type_id</text><title>software_type_id bigint not null</title></a>
+<a xlink:href='#software.software_type_id'><use id='fk' x='2508' y='1076' xlink:href='#fk'/><title>References software_type ( software_type_id ) </title></a>
+  <use id='nn' x='2387' y='1092' xlink:href='#nn'/><a xlink:href='#software.active'><text x='2403' y='1102'>active</text><title>active bool not null default &#039;True&#039;</title></a>
+
+<!-- ============= Table 'study_publication' ============= -->
+<rect class='table' x='1845' y='713' width='120' height='90' rx='7' ry='7' />
+<path d='M 1845.50 739.50 L 1845.50 720.50 Q 1845.50 713.50 1852.50 713.50 L 1957.50 713.50 Q 1964.50 713.50 1964.50 720.50 L 1964.50 739.50 L1845.50 739.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#study_publication'><text x='1857' y='727' class='tableTitle'>study_publication</text><title>Table qiita.study_publication</title></a>
+  <use id='nn' x='1847' y='747' xlink:href='#nn'/><a xlink:href='#study_publication.study_id'><text x='1863' y='757'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_publication.study_id'><use id='fk' x='1953' y='746' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <use id='nn' x='1847' y='762' xlink:href='#nn'/><a xlink:href='#study_publication.publication'><text x='1863' y='772'>publication</text><title>publication varchar not null</title></a>
+  <a xlink:href='#study_publication.is_doi'><text x='1863' y='787'>is_doi</text><title>is_doi bool</title></a>
+
+<!-- ============= Table 'software_command' ============= -->
+<rect class='table' x='2160' y='1238' width='120' height='135' rx='7' ry='7' />
+<path d='M 2160.50 1264.50 L 2160.50 1245.50 Q 2160.50 1238.50 2167.50 1238.50 L 2272.50 1238.50 Q 2279.50 1238.50 2279.50 1245.50 L 2279.50 1264.50 L2160.50 1264.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#software_command'><text x='2167' y='1252' class='tableTitle'>software_command</text><title>Table qiita.software_command</title></a>
+  <use id='nn' x='2162' y='1272' xlink:href='#nn'/><a xlink:href='#software_command.command_id'><use id='pk' x='2162' y='1271' xlink:href='#pk'/><title>Primary Key  ( command_id ) </title></a>
+<a xlink:href='#software_command.command_id'><text x='2178' y='1282'>command_id</text><title>command_id bigserial not null</title></a>
+<a xlink:href='#software_command.command_id'><use id='ref' x='2268' y='1271' xlink:href='#ref'/><title>Referred by artifact ( command_id )
+Referred by command_output ( command_id )
+Referred by command_parameter ( command_id )
+Referred by default_parameter_set ( command_id )
+Referred by default_workflow_node ( command_id )
+Referred by processing_job ( command_id ) </title></a>
+  <use id='nn' x='2162' y='1287' xlink:href='#nn'/><a xlink:href='#software_command.name'><text x='2178' y='1297'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2162' y='1302' xlink:href='#nn'/><a xlink:href='#software_command.software_id'><use id='idx' x='2162' y='1301' xlink:href='#idx'/><title>Index  ( software_id ) </title></a>
+<a xlink:href='#software_command.software_id'><text x='2178' y='1312'>software_id</text><title>software_id bigint not null</title></a>
+<a xlink:href='#software_command.software_id'><use id='fk' x='2268' y='1301' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
+  <use id='nn' x='2162' y='1317' xlink:href='#nn'/><a xlink:href='#software_command.description'><text x='2178' y='1327'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='2162' y='1332' xlink:href='#nn'/><a xlink:href='#software_command.active'><text x='2178' y='1342'>active</text><title>active bool not null default &#039;True&#039;</title></a>
+  <use id='nn' x='2162' y='1347' xlink:href='#nn'/><a xlink:href='#software_command.is_analysis'><text x='2178' y='1357'>is_analysis</text><title>is_analysis bool not null default &#039;False&#039;</title></a>
+
+<!-- ============= Table 'investigation_study' ============= -->
+<rect class='table' x='2025' y='353' width='120' height='75' rx='7' ry='7' />
+<path d='M 2025.50 379.50 L 2025.50 360.50 Q 2025.50 353.50 2032.50 353.50 L 2137.50 353.50 Q 2144.50 353.50 2144.50 360.50 L 2144.50 379.50 L2025.50 379.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#investigation_study'><text x='2032' y='367' class='tableTitle'>investigation_study</text><title>Table qiita.investigation_study</title></a>
+  <use id='nn' x='2027' y='387' xlink:href='#nn'/><a xlink:href='#investigation_study.investigation_id'><use id='pk' x='2027' y='386' xlink:href='#pk'/><title>Primary Key  ( investigation_id, study_id ) Index  ( investigation_id ) </title></a>
+<a xlink:href='#investigation_study.investigation_id'><text x='2043' y='397'>investigation_id</text><title>investigation_id bigint not null</title></a>
+<a xlink:href='#investigation_study.investigation_id'><use id='fk' x='2133' y='386' xlink:href='#fk'/><title>References investigation ( investigation_id ) </title></a>
+  <use id='nn' x='2027' y='402' xlink:href='#nn'/><a xlink:href='#investigation_study.study_id'><use id='pk' x='2027' y='401' xlink:href='#pk'/><title>Primary Key  ( investigation_id, study_id ) Index  ( study_id ) </title></a>
+<a xlink:href='#investigation_study.study_id'><text x='2043' y='412'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#investigation_study.study_id'><use id='fk' x='2133' y='401' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+
+<!-- ============= Table 'investigation' ============= -->
+<rect class='table' x='2250' y='308' width='165' height='105' rx='7' ry='7' />
+<path d='M 2250.50 334.50 L 2250.50 315.50 Q 2250.50 308.50 2257.50 308.50 L 2407.50 308.50 Q 2414.50 308.50 2414.50 315.50 L 2414.50 334.50 L2250.50 334.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#investigation'><text x='2298' y='322' class='tableTitle'>investigation</text><title>Table qiita.investigation
+Overarching investigation information&#046;An investigation comprises one or more individual studies&#046;</title></a>
+  <use id='nn' x='2252' y='342' xlink:href='#nn'/><a xlink:href='#investigation.investigation_id'><use id='pk' x='2252' y='341' xlink:href='#pk'/><title>Primary Key  ( investigation_id ) </title></a>
+<a xlink:href='#investigation.investigation_id'><text x='2268' y='352'>investigation_id</text><title>investigation_id bigserial not null</title></a>
+<a xlink:href='#investigation.investigation_id'><use id='ref' x='2403' y='341' xlink:href='#ref'/><title>Referred by investigation_study ( investigation_id ) </title></a>
+  <use id='nn' x='2252' y='357' xlink:href='#nn'/><a xlink:href='#investigation.investigation_name'><text x='2268' y='367'>investigation_name</text><title>investigation_name varchar not null</title></a>
+  <use id='nn' x='2252' y='372' xlink:href='#nn'/><a xlink:href='#investigation.investigation_description'><text x='2268' y='382'>investigation_description</text><title>investigation_description varchar not null
+Describes the overarching goal of the investigation</title></a>
+  <a xlink:href='#investigation.contact_person_id'><use id='idx' x='2252' y='386' xlink:href='#idx'/><title>Index  ( contact_person_id ) </title></a>
+<a xlink:href='#investigation.contact_person_id'><text x='2268' y='397'>contact_person_id</text><title>contact_person_id bigint</title></a>
+<a xlink:href='#investigation.contact_person_id'><use id='fk' x='2403' y='386' xlink:href='#fk'/><title>References study_person ( contact_person_id -> study_person_id ) </title></a>
+
+<!-- ============= Table 'artifact' ============= -->
+<rect class='table' x='1185' y='893' width='150' height='180' rx='7' ry='7' />
+<path d='M 1185.50 919.50 L 1185.50 900.50 Q 1185.50 893.50 1192.50 893.50 L 1327.50 893.50 Q 1334.50 893.50 1334.50 900.50 L 1334.50 919.50 L1185.50 919.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#artifact'><text x='1241' y='907' class='tableTitle'>artifact</text><title>Table qiita.artifact
+Represents data in the system</title></a>
+  <use id='nn' x='1187' y='927' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1187' y='926' xlink:href='#pk'/><title>Primary Key  ( artifact_id ) </title></a>
+<a xlink:href='#artifact.artifact_id'><text x='1203' y='937'>artifact_id</text><title>artifact_id bigserial not null</title></a>
+<a xlink:href='#artifact.artifact_id'><use id='ref' x='1323' y='926' xlink:href='#ref'/><title>Referred by analysis_artifact ( artifact_id )
+Referred by analysis_sample ( artifact_id )
+Referred by artifact_filepath ( artifact_id )
+Referred by artifact_output_processing_job ( artifact_id )
+Referred by artifact_processing_job ( artifact_id )
+Referred by ebi_run_accession ( artifact_id )
+Referred by parent_artifact ( artifact_id )
+Referred by parent_artifact ( parent_id -> artifact_id )
+Referred by prep_template ( artifact_id )
+Referred by study_artifact ( artifact_id ) </title></a>
+  <use id='nn' x='1187' y='942' xlink:href='#nn'/><a xlink:href='#artifact.name'><text x='1203' y='952'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='1187' y='957' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1203' y='967'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
+  <a xlink:href='#artifact.command_id'><use id='idx' x='1187' y='971' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
+<a xlink:href='#artifact.command_id'><text x='1203' y='982'>command_id</text><title>command_id bigint</title></a>
+<a xlink:href='#artifact.command_id'><use id='fk' x='1323' y='971' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <a xlink:href='#artifact.command_parameters'><text x='1203' y='997'>command_parameters</text><title>command_parameters varchar
+Varchar in dbschema but is JSON in the postgresDB</title></a>
+  <use id='nn' x='1187' y='1002' xlink:href='#nn'/><a xlink:href='#artifact.visibility_id'><use id='idx' x='1187' y='1001' xlink:href='#idx'/><title>Index  ( visibility_id ) </title></a>
+<a xlink:href='#artifact.visibility_id'><text x='1203' y='1012'>visibility_id</text><title>visibility_id bigint not null
+If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public</title></a>
+<a xlink:href='#artifact.visibility_id'><use id='fk' x='1323' y='1001' xlink:href='#fk'/><title>References visibility ( visibility_id ) </title></a>
+  <a xlink:href='#artifact.artifact_type_id'><use id='idx' x='1187' y='1016' xlink:href='#idx'/><title>Index  ( artifact_type_id ) </title></a>
+<a xlink:href='#artifact.artifact_type_id'><text x='1203' y='1027'>artifact_type_id</text><title>artifact_type_id integer</title></a>
+<a xlink:href='#artifact.artifact_type_id'><use id='fk' x='1323' y='1016' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
+  <use id='nn' x='1187' y='1032' xlink:href='#nn'/><a xlink:href='#artifact.data_type_id'><use id='idx' x='1187' y='1031' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
+<a xlink:href='#artifact.data_type_id'><text x='1203' y='1042'>data_type_id</text><title>data_type_id bigint not null</title></a>
+<a xlink:href='#artifact.data_type_id'><use id='fk' x='1323' y='1031' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
+  <use id='nn' x='1187' y='1047' xlink:href='#nn'/><a xlink:href='#artifact.submitted_to_vamps'><text x='1203' y='1057'>submitted_to_vamps</text><title>submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
+
+<!-- ============= Table 'analysis_sample' ============= -->
+<rect class='table' x='240' y='1028' width='105' height='90' rx='7' ry='7' />
+<path d='M 240.50 1054.50 L 240.50 1035.50 Q 240.50 1028.50 247.50 1028.50 L 337.50 1028.50 Q 344.50 1028.50 344.50 1035.50 L 344.50 1054.50 L240.50 1054.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#analysis_sample'><text x='249' y='1042' class='tableTitle'>analysis_sample</text><title>Table qiita.analysis_sample</title></a>
+  <use id='nn' x='242' y='1062' xlink:href='#nn'/><a xlink:href='#analysis_sample.analysis_id'><use id='pk' x='242' y='1061' xlink:href='#pk'/><title>Index  ( analysis_id ) Primary Key  ( analysis_id, artifact_id, sample_id ) </title></a>
+<a xlink:href='#analysis_sample.analysis_id'><text x='258' y='1072'>analysis_id</text><title>analysis_id bigint not null</title></a>
+<a xlink:href='#analysis_sample.analysis_id'><use id='fk' x='333' y='1061' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
+  <use id='nn' x='242' y='1077' xlink:href='#nn'/><a xlink:href='#analysis_sample.artifact_id'><use id='pk' x='242' y='1076' xlink:href='#pk'/><title>Index  ( artifact_id ) Primary Key  ( analysis_id, artifact_id, sample_id ) </title></a>
+<a xlink:href='#analysis_sample.artifact_id'><text x='258' y='1087'>artifact_id</text><title>artifact_id bigint not null</title></a>
+<a xlink:href='#analysis_sample.artifact_id'><use id='fk' x='333' y='1076' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
+  <use id='nn' x='242' y='1092' xlink:href='#nn'/><a xlink:href='#analysis_sample.sample_id'><use id='pk' x='242' y='1091' xlink:href='#pk'/><title>Index  ( sample_id ) Primary Key  ( analysis_id, artifact_id, sample_id ) </title></a>
+<a xlink:href='#analysis_sample.sample_id'><text x='258' y='1102'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#analysis_sample.sample_id'><use id='fk' x='333' y='1091' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
+
+<!-- ============= Table 'portal_type' ============= -->
+<rect class='table' x='810' y='578' width='135' height='90' rx='7' ry='7' />
+<path d='M 810.50 604.50 L 810.50 585.50 Q 810.50 578.50 817.50 578.50 L 937.50 578.50 Q 944.50 578.50 944.50 585.50 L 944.50 604.50 L810.50 604.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#portal_type'><text x='847' y='592' class='tableTitle'>portal_type</text><title>Table qiita.portal_type
+What portals are available to show a study in</title></a>
+  <use id='nn' x='812' y='612' xlink:href='#nn'/><a xlink:href='#portal_type.portal_type_id'><use id='pk' x='812' y='611' xlink:href='#pk'/><title>Primary Key  ( portal_type_id ) </title></a>
+<a xlink:href='#portal_type.portal_type_id'><text x='828' y='622'>portal_type_id</text><title>portal_type_id bigserial not null</title></a>
+<a xlink:href='#portal_type.portal_type_id'><use id='ref' x='933' y='611' xlink:href='#ref'/><title>Referred by analysis ( portal_type_id )
+Referred by analysis_portal ( portal_type_id )
+Referred by study_portal ( portal_type_id ) </title></a>
+  <use id='nn' x='812' y='627' xlink:href='#nn'/><a xlink:href='#portal_type.portal'><text x='828' y='637'>portal</text><title>portal varchar not null</title></a>
+  <use id='nn' x='812' y='642' xlink:href='#nn'/><a xlink:href='#portal_type.portal_description'><text x='828' y='652'>portal_description</text><title>portal_description varchar not null</title></a>
+
+<!-- ============= Table 'data_type' ============= -->
+<rect class='table' x='690' y='1148' width='105' height='75' rx='7' ry='7' />
+<path d='M 690.50 1174.50 L 690.50 1155.50 Q 690.50 1148.50 697.50 1148.50 L 787.50 1148.50 Q 794.50 1148.50 794.50 1155.50 L 794.50 1174.50 L690.50 1174.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#data_type'><text x='716' y='1162' class='tableTitle'>data_type</text><title>Table qiita.data_type</title></a>
+  <use id='nn' x='692' y='1182' xlink:href='#nn'/><a xlink:href='#data_type.data_type_id'><use id='pk' x='692' y='1181' xlink:href='#pk'/><title>Primary Key  ( data_type_id ) </title></a>
+<a xlink:href='#data_type.data_type_id'><text x='708' y='1192'>data_type_id</text><title>data_type_id bigserial not null</title></a>
+<a xlink:href='#data_type.data_type_id'><use id='ref' x='783' y='1181' xlink:href='#ref'/><title>Referred by analysis_filepath ( data_type_id )
+Referred by artifact ( data_type_id )
+Referred by prep_template ( data_type_id ) </title></a>
+  <use id='nn' x='692' y='1197' xlink:href='#nn'/><a xlink:href='#data_type.data_type'><use id='unq' x='692' y='1196' xlink:href='#unq'/><title>Unique Index  ( data_type ) </title></a>
+<a xlink:href='#data_type.data_type'><text x='708' y='1207'>data_type</text><title>data_type varchar not null
+Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use</title></a>
+
+<!-- ============= Table 'prep_y' ============= -->
+<rect class='table' x='1020' y='278' width='90' height='75' rx='7' ry='7' />
+<path d='M 1020.50 304.50 L 1020.50 285.50 Q 1020.50 278.50 1027.50 278.50 L 1102.50 278.50 Q 1109.50 278.50 1109.50 285.50 L 1109.50 304.50 L1020.50 304.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#prep_y'><text x='1046' y='292' class='tableTitle'>prep_y</text><title>Table qiita.prep_y
+Information on how raw data y was prepared &#040;prep template&#041;Linked by y being raw&#095;data&#095;id from raw data table&#046;</title></a>
+  <use id='nn' x='1022' y='312' xlink:href='#nn'/><a xlink:href='#prep_y.sample_id'><use id='pk' x='1022' y='311' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
+<a xlink:href='#prep_y.sample_id'><text x='1038' y='322'>sample_id</text><title>sample_id varchar not null</title></a>
+  <a xlink:href='#prep_y.data'><text x='1038' y='337'>data</text><title>data bigint
+STUFFFFF</title></a>
+
+<!-- ============= Table 'prep_template_sample' ============= -->
+<rect class='table' x='1140' y='278' width='180' height='90' rx='7' ry='7' />
+<path d='M 1140.50 304.50 L 1140.50 285.50 Q 1140.50 278.50 1147.50 278.50 L 1312.50 278.50 Q 1319.50 278.50 1319.50 285.50 L 1319.50 304.50 L1140.50 304.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#prep_template_sample'><text x='1169' y='292' class='tableTitle'>prep_template_sample</text><title>Table qiita.prep_template_sample</title></a>
+  <use id='nn' x='1142' y='312' xlink:href='#nn'/><a xlink:href='#prep_template_sample.prep_template_id'><use id='pk' x='1142' y='311' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, sample_id ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_template_sample.prep_template_id'><text x='1158' y='322'>prep_template_id</text><title>prep_template_id bigint not null
+The prep template identifier</title></a>
+<a xlink:href='#prep_template_sample.prep_template_id'><use id='fk' x='1308' y='311' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1142' y='327' xlink:href='#nn'/><a xlink:href='#prep_template_sample.sample_id'><use id='pk' x='1142' y='326' xlink:href='#pk'/><title>Index  ( sample_id ) Index  ( sample_id ) Primary Key  ( prep_template_id, sample_id ) </title></a>
+<a xlink:href='#prep_template_sample.sample_id'><text x='1158' y='337'>sample_id</text><title>sample_id varchar not null</title></a>
+  <a xlink:href='#prep_template_sample.ebi_experiment_accession'><text x='1158' y='352'>ebi_experiment_accession</text><title>ebi_experiment_accession varchar</title></a>
+
+<!-- ============= Table 'study_sample' ============= -->
+<rect class='table' x='1350' y='233' width='150' height='105' rx='7' ry='7' />
+<path d='M 1350.50 259.50 L 1350.50 240.50 Q 1350.50 233.50 1357.50 233.50 L 1492.50 233.50 Q 1499.50 233.50 1499.50 240.50 L 1499.50 259.50 L1350.50 259.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#study_sample'><text x='1388' y='247' class='tableTitle'>study_sample</text><title>Table qiita.study_sample
+Required info for each sample&#046; One row is one sample&#046;</title></a>
+  <use id='nn' x='1352' y='267' xlink:href='#nn'/><a xlink:href='#study_sample.sample_id'><use id='pk' x='1352' y='266' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
+<a xlink:href='#study_sample.sample_id'><text x='1368' y='277'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#study_sample.sample_id'><use id='ref' x='1488' y='266' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id )
+Referred by ebi_run_accession ( sample_id ) </title></a>
+  <use id='nn' x='1352' y='282' xlink:href='#nn'/><a xlink:href='#study_sample.study_id'><use id='idx' x='1352' y='281' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
+<a xlink:href='#study_sample.study_id'><text x='1368' y='292'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_sample.study_id'><use id='fk' x='1488' y='281' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <a xlink:href='#study_sample.ebi_sample_accession'><text x='1368' y='307'>ebi_sample_accession</text><title>ebi_sample_accession varchar</title></a>
+  <a xlink:href='#study_sample.biosample_accession'><text x='1368' y='322'>biosample_accession</text><title>biosample_accession varchar</title></a>
+
+<!-- ============= Table 'study_prep_template' ============= -->
+<rect class='table' x='1500' y='473' width='135' height='75' rx='7' ry='7' />
+<path d='M 1500.50 499.50 L 1500.50 480.50 Q 1500.50 473.50 1507.50 473.50 L 1627.50 473.50 Q 1634.50 473.50 1634.50 480.50 L 1634.50 499.50 L1500.50 499.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#study_prep_template'><text x='1511' y='487' class='tableTitle'>study_prep_template</text><title>Table qiita.study_prep_template
+links study to its prep templates</title></a>
+  <use id='nn' x='1502' y='507' xlink:href='#nn'/><a xlink:href='#study_prep_template.study_id'><use id='pk' x='1502' y='506' xlink:href='#pk'/><title>Primary Key  ( study_id, prep_template_id ) Index  ( study_id ) </title></a>
+<a xlink:href='#study_prep_template.study_id'><text x='1518' y='517'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_prep_template.study_id'><use id='fk' x='1623' y='506' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <use id='nn' x='1502' y='522' xlink:href='#nn'/><a xlink:href='#study_prep_template.prep_template_id'><use id='pk' x='1502' y='521' xlink:href='#pk'/><title>Primary Key  ( study_id, prep_template_id ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#study_prep_template.prep_template_id'><text x='1518' y='532'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
+<a xlink:href='#study_prep_template.prep_template_id'><use id='fk' x='1623' y='521' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+
+<!-- ============= Table 'prep_template' ============= -->
+<rect class='table' x='1230' y='458' width='150' height='135' rx='7' ry='7' />
+<path d='M 1230.50 484.50 L 1230.50 465.50 Q 1230.50 458.50 1237.50 458.50 L 1372.50 458.50 Q 1379.50 458.50 1379.50 465.50 L 1379.50 484.50 L1230.50 484.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#prep_template'><text x='1266' y='472' class='tableTitle'>prep_template</text><title>Table qiita.prep_template</title></a>
+  <use id='nn' x='1232' y='492' xlink:href='#nn'/><a xlink:href='#prep_template.prep_template_id'><use id='pk' x='1232' y='491' xlink:href='#pk'/><title>Primary Key  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_template.prep_template_id'><text x='1248' y='502'>prep_template_id</text><title>prep_template_id bigserial not null</title></a>
+<a xlink:href='#prep_template.prep_template_id'><use id='ref' x='1368' y='491' xlink:href='#ref'/><title>Referred by prep_template_filepath ( prep_template_id )
+Referred by prep_template_processing_job ( prep_template_id )
+Referred by prep_template_sample ( prep_template_id )
+Referred by study_prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1232' y='507' xlink:href='#nn'/><a xlink:href='#prep_template.data_type_id'><use id='idx' x='1232' y='506' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
+<a xlink:href='#prep_template.data_type_id'><text x='1248' y='517'>data_type_id</text><title>data_type_id bigint not null</title></a>
+<a xlink:href='#prep_template.data_type_id'><use id='fk' x='1368' y='506' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
+  <use id='nn' x='1232' y='522' xlink:href='#nn'/><a xlink:href='#prep_template.preprocessing_status'><text x='1248' y='532'>preprocessing_status</text><title>preprocessing_status varchar not null default &#039;not&#095;preprocessed&#039;</title></a>
+  <a xlink:href='#prep_template.investigation_type'><text x='1248' y='547'>investigation_type</text><title>investigation_type varchar
+The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#039;s set of known types&#041;</title></a>
+  <a xlink:href='#prep_template.artifact_id'><use id='idx' x='1232' y='551' xlink:href='#idx'/><title>Index  ( artifact_id ) </title></a>
+<a xlink:href='#prep_template.artifact_id'><text x='1248' y='562'>artifact_id</text><title>artifact_id bigint</title></a>
+<a xlink:href='#prep_template.artifact_id'><use id='fk' x='1368' y='551' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
+  <use id='nn' x='1232' y='567' xlink:href='#nn'/><a xlink:href='#prep_template.name'><text x='1248' y='577'>name</text><title>name varchar not null default &#039;Default Name&#039;</title></a>
+
+<!-- ============= Table 'prep_template_filepath' ============= -->
+<rect class='table' x='1020' y='458' width='135' height='75' rx='7' ry='7' />
+<path d='M 1020.50 484.50 L 1020.50 465.50 Q 1020.50 458.50 1027.50 458.50 L 1147.50 458.50 Q 1154.50 458.50 1154.50 465.50 L 1154.50 484.50 L1020.50 484.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#prep_template_filepath'><text x='1026' y='472' class='tableTitle'>prep_template_filepath</text><title>Table qiita.prep_template_filepath</title></a>
+  <use id='nn' x='1022' y='492' xlink:href='#nn'/><a xlink:href='#prep_template_filepath.prep_template_id'><use id='pk' x='1022' y='491' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, filepath_id ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_template_filepath.prep_template_id'><text x='1038' y='502'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
+<a xlink:href='#prep_template_filepath.prep_template_id'><use id='fk' x='1143' y='491' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1022' y='507' xlink:href='#nn'/><a xlink:href='#prep_template_filepath.filepath_id'><use id='pk' x='1022' y='506' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, filepath_id ) Index  ( filepath_id ) </title></a>
+<a xlink:href='#prep_template_filepath.filepath_id'><text x='1038' y='517'>filepath_id</text><title>filepath_id bigint not null</title></a>
+<a xlink:href='#prep_template_filepath.filepath_id'><use id='fk' x='1143' y='506' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
+
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 <!-- ============= Table 'sample_template_filepath' ============= -->
 <rect class='table' x='1035' y='593' width='150' height='75' rx='7' ry='7' />
 <path d='M 1035.50 619.50 L 1035.50 600.50 Q 1035.50 593.50 1042.50 593.50 L 1177.50 593.50 Q 1184.50 593.50 1184.50 600.50 L 1184.50 619.50 L1035.50 619.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
@@ -1544,9 +1962,15 @@ Contains the name of the table that contains the pre&#045;defined metadata colum
 Contact information for the various people involved in a study</title></a>
   <use id='nn' x='2012' y='162' xlink:href='#nn'/><a xlink:href='#study_person.study_person_id'><use id='pk' x='2012' y='161' xlink:href='#pk'/><title>Primary Key  ( study_person_id ) </title></a>
 <a xlink:href='#study_person.study_person_id'><text x='2028' y='172'>study_person_id</text><title>study_person_id bigserial not null</title></a>
+<<<<<<< HEAD
 <a xlink:href='#study_person.study_person_id'><use id='ref' x='2118' y='161' xlink:href='#ref'/><title>Referred by investigation ( contact_person_id -> study_person_id ) 
 Referred by study ( emp_person_id -> study_person_id ) 
 Referred by study ( lab_person_id -> study_person_id ) 
+=======
+<a xlink:href='#study_person.study_person_id'><use id='ref' x='2118' y='161' xlink:href='#ref'/><title>Referred by investigation ( contact_person_id -> study_person_id )
+Referred by study ( emp_person_id -> study_person_id )
+Referred by study ( lab_person_id -> study_person_id )
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 Referred by study ( principal_investigator_id -> study_person_id ) </title></a>
   <use id='nn' x='2012' y='177' xlink:href='#nn'/><a xlink:href='#study_person.name'><use id='unq' x='2012' y='176' xlink:href='#unq'/><title>Unique Index  ( name, affiliation ) </title></a>
 <a xlink:href='#study_person.name'><text x='2028' y='187'>name</text><title>name varchar not null</title></a>
@@ -1564,6 +1988,7 @@ The institution with which this person is affiliated</title></a>
   <use id='nn' x='1787' y='267' xlink:href='#nn'/><a xlink:href='#study.study_id'><use id='pk' x='1787' y='266' xlink:href='#pk'/><title>Primary Key  ( study_id ) </title></a>
 <a xlink:href='#study.study_id'><text x='1803' y='277'>study_id</text><title>study_id bigserial not null
 Unique name for study</title></a>
+<<<<<<< HEAD
 <a xlink:href='#study.study_id'><use id='ref' x='1953' y='266' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
 Referred by per_study_tags ( study_id ) 
 Referred by sample_template_filepath ( study_id ) 
@@ -1573,6 +1998,17 @@ Referred by study_portal ( study_id )
 Referred by study_prep_template ( study_id ) 
 Referred by study_publication ( study_id ) 
 Referred by study_sample ( study_id ) 
+=======
+<a xlink:href='#study.study_id'><use id='ref' x='1953' y='266' xlink:href='#ref'/><title>Referred by investigation_study ( study_id )
+Referred by per_study_tags ( study_id )
+Referred by sample_template_filepath ( study_id )
+Referred by study_artifact ( study_id )
+Referred by study_environmental_package ( study_id )
+Referred by study_portal ( study_id )
+Referred by study_prep_template ( study_id )
+Referred by study_publication ( study_id )
+Referred by study_sample ( study_id )
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 Referred by study_users ( study_id ) </title></a>
   <use id='nn' x='1787' y='282' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1787' y='281' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study.email'><text x='1803' y='292'>email</text><title>email varchar not null
@@ -1683,7 +2119,11 @@ Controlled Vocabulary</title></a>
 <a xlink:href='#command_output'><text x='1782' y='1192' class='tableTitle'>command_output</text><title>Table qiita.command_output</title></a>
   <use id='nn' x='1757' y='1212' xlink:href='#nn'/><a xlink:href='#command_output.command_output_id'><use id='pk' x='1757' y='1211' xlink:href='#pk'/><title>Primary Key  ( command_output_id ) </title></a>
 <a xlink:href='#command_output.command_output_id'><text x='1773' y='1222'>command_output_id</text><title>command_output_id bigserial not null</title></a>
+<<<<<<< HEAD
 <a xlink:href='#command_output.command_output_id'><use id='ref' x='1893' y='1211' xlink:href='#ref'/><title>Referred by artifact_output_processing_job ( command_output_id ) 
+=======
+<a xlink:href='#command_output.command_output_id'><use id='ref' x='1893' y='1211' xlink:href='#ref'/><title>Referred by artifact_output_processing_job ( command_output_id )
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 Referred by default_workflow_edge_connections ( parent_output_id -> command_output_id ) </title></a>
   <use id='nn' x='1757' y='1227' xlink:href='#nn'/><a xlink:href='#command_output.name'><use id='unq' x='1757' y='1226' xlink:href='#unq'/><title>Unique Index  ( name, command_id ) </title></a>
 <a xlink:href='#command_output.name'><text x='1773' y='1237'>name</text><title>name varchar not null</title></a>
@@ -1727,6 +2167,7 @@ Referred by default_workflow_edge_connections ( parent_output_id -> command_outp
   <use id='nn' x='1937' y='1167' xlink:href='#nn'/><a xlink:href='#processing_job.processing_job_id'><use id='pk' x='1937' y='1166' xlink:href='#pk'/><title>Primary Key  ( processing_job_id ) </title></a>
 <a xlink:href='#processing_job.processing_job_id'><text x='1953' y='1177'>processing_job_id</text><title>processing_job_id bigserial not null
 Using bigserial in DBSchema &#045; however in the postgres DB this column is of type UUID&#046;</title></a>
+<<<<<<< HEAD
 <a xlink:href='#processing_job.processing_job_id'><use id='ref' x='2103' y='1166' xlink:href='#ref'/><title>Referred by analysis_processing_job ( processing_job_id ) 
 Referred by artifact_output_processing_job ( processing_job_id ) 
 Referred by artifact_processing_job ( processing_job_id ) 
@@ -1735,6 +2176,16 @@ Referred by parent_processing_job ( child_id -> processing_job_id )
 Referred by prep_template_processing_job ( processing_job_id ) 
 Referred by processing_job_validator ( processing_job_id ) 
 Referred by processing_job_validator ( validator_id -> processing_job_id ) 
+=======
+<a xlink:href='#processing_job.processing_job_id'><use id='ref' x='2103' y='1166' xlink:href='#ref'/><title>Referred by analysis_processing_job ( processing_job_id )
+Referred by artifact_output_processing_job ( processing_job_id )
+Referred by artifact_processing_job ( processing_job_id )
+Referred by parent_processing_job ( parent_id -> processing_job_id )
+Referred by parent_processing_job ( child_id -> processing_job_id )
+Referred by prep_template_processing_job ( processing_job_id )
+Referred by processing_job_validator ( processing_job_id )
+Referred by processing_job_validator ( validator_id -> processing_job_id )
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
   <use id='nn' x='1937' y='1182' xlink:href='#nn'/><a xlink:href='#processing_job.email'><use id='idx' x='1937' y='1181' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#processing_job.email'><text x='1953' y='1192'>email</text><title>email varchar not null
@@ -1758,6 +2209,7 @@ The last heartbeat received by this job</title></a>
   <a xlink:href='#processing_job.step'><text x='1953' y='1282'>step</text><title>step varchar</title></a>
   <a xlink:href='#processing_job.pending'><text x='1953' y='1297'>pending</text><title>pending varchar</title></a>
   <use id='nn' x='1937' y='1302' xlink:href='#nn'/><a xlink:href='#processing_job.hidden'><text x='1953' y='1312'>hidden</text><title>hidden bool not null default &#039;False&#039;</title></a>
+<<<<<<< HEAD
 
 <!-- ============= Table 'software_artifact_type' ============= -->
 <rect class='table' x='1965' y='983' width='135' height='75' rx='7' ry='7' />
@@ -2036,16 +2488,321 @@ Identifier used in the old system&#044; we are keeping this for consistency</tit
   <use id='nn' x='722' y='1617' xlink:href='#nn'/><a xlink:href='#term.user_defined'><text x='738' y='1627'>user_defined</text><title>user_defined bool not null default False
 Whether or not this term was defined by a user</title></a>
 
+=======
+
+<!-- ============= Table 'software_artifact_type' ============= -->
+<rect class='table' x='1965' y='983' width='135' height='75' rx='7' ry='7' />
+<path d='M 1965.50 1009.50 L 1965.50 990.50 Q 1965.50 983.50 1972.50 983.50 L 2092.50 983.50 Q 2099.50 983.50 2099.50 990.50 L 2099.50 1009.50 L1965.50 1009.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#software_artifact_type'><text x='1973' y='997' class='tableTitle'>software_artifact_type</text><title>Table qiita.software_artifact_type
+In case that the software is of type &quot;type plugin&quot;&#044; it holds the artifact types that such software can validate and generate the summary&#046;</title></a>
+  <use id='nn' x='1967' y='1017' xlink:href='#nn'/><a xlink:href='#software_artifact_type.software_id'><use id='pk' x='1967' y='1016' xlink:href='#pk'/><title>Primary Key  ( software_id, artifact_type_id ) Index  ( software_id ) </title></a>
+<a xlink:href='#software_artifact_type.software_id'><text x='1983' y='1027'>software_id</text><title>software_id bigint not null</title></a>
+<a xlink:href='#software_artifact_type.software_id'><use id='fk' x='2088' y='1016' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
+  <use id='nn' x='1967' y='1032' xlink:href='#nn'/><a xlink:href='#software_artifact_type.artifact_type_id'><use id='pk' x='1967' y='1031' xlink:href='#pk'/><title>Primary Key  ( software_id, artifact_type_id ) Index  ( artifact_type_id ) </title></a>
+<a xlink:href='#software_artifact_type.artifact_type_id'><text x='1983' y='1042'>artifact_type_id</text><title>artifact_type_id bigint not null</title></a>
+<a xlink:href='#software_artifact_type.artifact_type_id'><use id='fk' x='2088' y='1031' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
+
+<!-- ============= Table 'command_parameter' ============= -->
+<rect class='table' x='2175' y='1013' width='165' height='165' rx='7' ry='7' />
+<path d='M 2175.50 1039.50 L 2175.50 1020.50 Q 2175.50 1013.50 2182.50 1013.50 L 2332.50 1013.50 Q 2339.50 1013.50 2339.50 1020.50 L 2339.50 1039.50 L2175.50 1039.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#command_parameter'><text x='2200' y='1027' class='tableTitle'>command_parameter</text><title>Table qiita.command_parameter</title></a>
+  <use id='nn' x='2177' y='1047' xlink:href='#nn'/><a xlink:href='#command_parameter.command_parameter_id'><use id='pk' x='2177' y='1046' xlink:href='#pk'/><title>Primary Key  ( command_parameter_id ) </title></a>
+<a xlink:href='#command_parameter.command_parameter_id'><text x='2193' y='1057'>command_parameter_id</text><title>command_parameter_id bigserial not null</title></a>
+<a xlink:href='#command_parameter.command_parameter_id'><use id='ref' x='2328' y='1046' xlink:href='#ref'/><title>Referred by default_workflow_edge_connections ( child_input_id -> command_parameter_id )
+Referred by parameter_artifact_type ( command_parameter_id ) </title></a>
+  <use id='nn' x='2177' y='1062' xlink:href='#nn'/><a xlink:href='#command_parameter.command_id'><use id='unq' x='2177' y='1061' xlink:href='#unq'/><title>Index  ( command_id ) Unique Index  ( command_id, parameter_name ) </title></a>
+<a xlink:href='#command_parameter.command_id'><text x='2193' y='1072'>command_id</text><title>command_id bigint not null</title></a>
+<a xlink:href='#command_parameter.command_id'><use id='fk' x='2328' y='1061' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <use id='nn' x='2177' y='1077' xlink:href='#nn'/><a xlink:href='#command_parameter.parameter_name'><use id='unq' x='2177' y='1076' xlink:href='#unq'/><title>Unique Index  ( command_id, parameter_name ) </title></a>
+<a xlink:href='#command_parameter.parameter_name'><text x='2193' y='1087'>parameter_name</text><title>parameter_name varchar not null</title></a>
+  <use id='nn' x='2177' y='1092' xlink:href='#nn'/><a xlink:href='#command_parameter.parameter_type'><text x='2193' y='1102'>parameter_type</text><title>parameter_type varchar not null</title></a>
+  <use id='nn' x='2177' y='1107' xlink:href='#nn'/><a xlink:href='#command_parameter.required'><text x='2193' y='1117'>required</text><title>required bool not null</title></a>
+  <a xlink:href='#command_parameter.default_value'><text x='2193' y='1132'>default_value</text><title>default_value varchar</title></a>
+  <a xlink:href='#command_parameter.name_order'><text x='2193' y='1147'>name_order</text><title>name_order integer</title></a>
+  <use id='nn' x='2177' y='1152' xlink:href='#nn'/><a xlink:href='#command_parameter.check_biom_merge'><text x='2193' y='1162'>check_biom_merge</text><title>check_biom_merge bool not null default &#039;False&#039;</title></a>
+
+<!-- ============= Table 'default_parameter_set' ============= -->
+<rect class='table' x='2385' y='1133' width='165' height='105' rx='7' ry='7' />
+<path d='M 2385.50 1159.50 L 2385.50 1140.50 Q 2385.50 1133.50 2392.50 1133.50 L 2542.50 1133.50 Q 2549.50 1133.50 2549.50 1140.50 L 2549.50 1159.50 L2385.50 1159.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#default_parameter_set'><text x='2407' y='1147' class='tableTitle'>default_parameter_set</text><title>Table qiita.default_parameter_set</title></a>
+  <use id='nn' x='2387' y='1167' xlink:href='#nn'/><a xlink:href='#default_parameter_set.default_parameter_set_id'><use id='pk' x='2387' y='1166' xlink:href='#pk'/><title>Primary Key  ( default_parameter_set_id ) </title></a>
+<a xlink:href='#default_parameter_set.default_parameter_set_id'><text x='2403' y='1177'>default_parameter_set_id</text><title>default_parameter_set_id bigserial not null</title></a>
+<a xlink:href='#default_parameter_set.default_parameter_set_id'><use id='ref' x='2538' y='1166' xlink:href='#ref'/><title>Referred by default_workflow_node ( default_parameter_set_id ) </title></a>
+  <use id='nn' x='2387' y='1182' xlink:href='#nn'/><a xlink:href='#default_parameter_set.command_id'><use id='unq' x='2387' y='1181' xlink:href='#unq'/><title>Index  ( command_id ) Unique Index  ( command_id, parameter_set_name ) </title></a>
+<a xlink:href='#default_parameter_set.command_id'><text x='2403' y='1192'>command_id</text><title>command_id bigint not null</title></a>
+<a xlink:href='#default_parameter_set.command_id'><use id='fk' x='2538' y='1181' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <use id='nn' x='2387' y='1197' xlink:href='#nn'/><a xlink:href='#default_parameter_set.parameter_set_name'><use id='unq' x='2387' y='1196' xlink:href='#unq'/><title>Unique Index  ( command_id, parameter_set_name ) </title></a>
+<a xlink:href='#default_parameter_set.parameter_set_name'><text x='2403' y='1207'>parameter_set_name</text><title>parameter_set_name varchar not null</title></a>
+  <use id='nn' x='2387' y='1212' xlink:href='#nn'/><a xlink:href='#default_parameter_set.parameter_set'><text x='2403' y='1222'>parameter_set</text><title>parameter_set varchar not null
+This is a varchar here &#045; but is of type JSON in postgresql&#046;</title></a>
+
+<!-- ============= Table 'default_workflow_node' ============= -->
+<rect class='table' x='2385' y='1253' width='180' height='105' rx='7' ry='7' />
+<path d='M 2385.50 1279.50 L 2385.50 1260.50 Q 2385.50 1253.50 2392.50 1253.50 L 2557.50 1253.50 Q 2564.50 1253.50 2564.50 1260.50 L 2564.50 1279.50 L2385.50 1279.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#default_workflow_node'><text x='2413' y='1267' class='tableTitle'>default_workflow_node</text><title>Table qiita.default_workflow_node</title></a>
+  <use id='nn' x='2387' y='1287' xlink:href='#nn'/><a xlink:href='#default_workflow_node.default_workflow_node_id'><use id='pk' x='2387' y='1286' xlink:href='#pk'/><title>Primary Key  ( default_workflow_node_id ) </title></a>
+<a xlink:href='#default_workflow_node.default_workflow_node_id'><text x='2403' y='1297'>default_workflow_node_id</text><title>default_workflow_node_id bigserial not null</title></a>
+<a xlink:href='#default_workflow_node.default_workflow_node_id'><use id='ref' x='2553' y='1286' xlink:href='#ref'/><title>Referred by default_workflow_edge ( parent_id -> default_workflow_node_id )
+Referred by default_workflow_edge ( child_id -> default_workflow_node_id ) </title></a>
+  <use id='nn' x='2387' y='1302' xlink:href='#nn'/><a xlink:href='#default_workflow_node.default_workflow_id'><use id='idx' x='2387' y='1301' xlink:href='#idx'/><title>Index  ( default_workflow_id ) </title></a>
+<a xlink:href='#default_workflow_node.default_workflow_id'><text x='2403' y='1312'>default_workflow_id</text><title>default_workflow_id bigint not null</title></a>
+<a xlink:href='#default_workflow_node.default_workflow_id'><use id='fk' x='2553' y='1301' xlink:href='#fk'/><title>References default_workflow ( default_workflow_id ) </title></a>
+  <use id='nn' x='2387' y='1317' xlink:href='#nn'/><a xlink:href='#default_workflow_node.command_id'><use id='idx' x='2387' y='1316' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
+<a xlink:href='#default_workflow_node.command_id'><text x='2403' y='1327'>command_id</text><title>command_id bigint not null</title></a>
+<a xlink:href='#default_workflow_node.command_id'><use id='fk' x='2553' y='1316' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <use id='nn' x='2387' y='1332' xlink:href='#nn'/><a xlink:href='#default_workflow_node.default_parameter_set_id'><use id='idx' x='2387' y='1331' xlink:href='#idx'/><title>Index  ( default_parameter_set_id ) </title></a>
+<a xlink:href='#default_workflow_node.default_parameter_set_id'><text x='2403' y='1342'>default_parameter_set_id</text><title>default_parameter_set_id bigint not null</title></a>
+<a xlink:href='#default_workflow_node.default_parameter_set_id'><use id='fk' x='2553' y='1331' xlink:href='#fk'/><title>References default_parameter_set ( default_parameter_set_id ) </title></a>
+
+<!-- ============= Table 'default_workflow' ============= -->
+<rect class='table' x='2580' y='1073' width='150' height='90' rx='7' ry='7' />
+<path d='M 2580.50 1099.50 L 2580.50 1080.50 Q 2580.50 1073.50 2587.50 1073.50 L 2722.50 1073.50 Q 2729.50 1073.50 2729.50 1080.50 L 2729.50 1099.50 L2580.50 1099.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#default_workflow'><text x='2609' y='1087' class='tableTitle'>default_workflow</text><title>Table qiita.default_workflow</title></a>
+  <use id='nn' x='2582' y='1107' xlink:href='#nn'/><a xlink:href='#default_workflow.default_workflow_id'><use id='pk' x='2582' y='1106' xlink:href='#pk'/><title>Primary Key  ( default_workflow_id ) </title></a>
+<a xlink:href='#default_workflow.default_workflow_id'><text x='2598' y='1117'>default_workflow_id</text><title>default_workflow_id bigserial not null</title></a>
+<a xlink:href='#default_workflow.default_workflow_id'><use id='ref' x='2718' y='1106' xlink:href='#ref'/><title>Referred by default_workflow_node ( default_workflow_id ) </title></a>
+  <use id='nn' x='2582' y='1122' xlink:href='#nn'/><a xlink:href='#default_workflow.software_id'><use id='unq' x='2582' y='1121' xlink:href='#unq'/><title>Unique Index  ( software_id, name ) Index  ( software_id ) </title></a>
+<a xlink:href='#default_workflow.software_id'><text x='2598' y='1132'>software_id</text><title>software_id bigint not null</title></a>
+<a xlink:href='#default_workflow.software_id'><use id='fk' x='2718' y='1121' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
+  <use id='nn' x='2582' y='1137' xlink:href='#nn'/><a xlink:href='#default_workflow.name'><use id='unq' x='2582' y='1136' xlink:href='#unq'/><title>Unique Index  ( software_id, name ) </title></a>
+<a xlink:href='#default_workflow.name'><text x='2598' y='1147'>name</text><title>name varchar not null</title></a>
+
+<!-- ============= Table 'default_workflow_edge' ============= -->
+<rect class='table' x='2610' y='1283' width='180' height='90' rx='7' ry='7' />
+<path d='M 2610.50 1309.50 L 2610.50 1290.50 Q 2610.50 1283.50 2617.50 1283.50 L 2782.50 1283.50 Q 2789.50 1283.50 2789.50 1290.50 L 2789.50 1309.50 L2610.50 1309.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#default_workflow_edge'><text x='2638' y='1297' class='tableTitle'>default_workflow_edge</text><title>Table qiita.default_workflow_edge</title></a>
+  <use id='nn' x='2612' y='1317' xlink:href='#nn'/><a xlink:href='#default_workflow_edge.default_workflow_edge_id'><use id='pk' x='2612' y='1316' xlink:href='#pk'/><title>Primary Key  ( default_workflow_edge_id ) </title></a>
+<a xlink:href='#default_workflow_edge.default_workflow_edge_id'><text x='2628' y='1327'>default_workflow_edge_id</text><title>default_workflow_edge_id bigserial not null</title></a>
+<a xlink:href='#default_workflow_edge.default_workflow_edge_id'><use id='ref' x='2778' y='1316' xlink:href='#ref'/><title>Referred by default_workflow_edge_connections ( default_workflow_edge_id ) </title></a>
+  <use id='nn' x='2612' y='1332' xlink:href='#nn'/><a xlink:href='#default_workflow_edge.parent_id'><use id='idx' x='2612' y='1331' xlink:href='#idx'/><title>Index  ( parent_id ) </title></a>
+<a xlink:href='#default_workflow_edge.parent_id'><text x='2628' y='1342'>parent_id</text><title>parent_id bigint not null</title></a>
+<a xlink:href='#default_workflow_edge.parent_id'><use id='fk' x='2778' y='1331' xlink:href='#fk'/><title>References default_workflow_node ( parent_id -> default_workflow_node_id ) </title></a>
+  <use id='nn' x='2612' y='1347' xlink:href='#nn'/><a xlink:href='#default_workflow_edge.child_id'><use id='idx' x='2612' y='1346' xlink:href='#idx'/><title>Index  ( child_id ) </title></a>
+<a xlink:href='#default_workflow_edge.child_id'><text x='2628' y='1357'>child_id</text><title>child_id bigint not null</title></a>
+<a xlink:href='#default_workflow_edge.child_id'><use id='fk' x='2778' y='1346' xlink:href='#fk'/><title>References default_workflow_node ( child_id -> default_workflow_node_id ) </title></a>
+
+<!-- ============= Table 'default_workflow_edge_connections' ============= -->
+<rect class='table' x='2370' y='1388' width='210' height='90' rx='7' ry='7' />
+<path d='M 2370.50 1414.50 L 2370.50 1395.50 Q 2370.50 1388.50 2377.50 1388.50 L 2572.50 1388.50 Q 2579.50 1388.50 2579.50 1395.50 L 2579.50 1414.50 L2370.50 1414.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#default_workflow_edge_connections'><text x='2377' y='1402' class='tableTitle'>default_workflow_edge_connections</text><title>Table qiita.default_workflow_edge_connections</title></a>
+  <use id='nn' x='2372' y='1422' xlink:href='#nn'/><a xlink:href='#default_workflow_edge_connections.default_workflow_edge_id'><use id='pk' x='2372' y='1421' xlink:href='#pk'/><title>Primary Key  ( default_workflow_edge_id, parent_output_id, child_input_id ) Index  ( default_workflow_edge_id ) </title></a>
+<a xlink:href='#default_workflow_edge_connections.default_workflow_edge_id'><text x='2388' y='1432'>default_workflow_edge_id</text><title>default_workflow_edge_id bigint not null</title></a>
+<a xlink:href='#default_workflow_edge_connections.default_workflow_edge_id'><use id='fk' x='2568' y='1421' xlink:href='#fk'/><title>References default_workflow_edge ( default_workflow_edge_id ) </title></a>
+  <use id='nn' x='2372' y='1437' xlink:href='#nn'/><a xlink:href='#default_workflow_edge_connections.parent_output_id'><use id='pk' x='2372' y='1436' xlink:href='#pk'/><title>Primary Key  ( default_workflow_edge_id, parent_output_id, child_input_id ) Index  ( parent_output_id ) </title></a>
+<a xlink:href='#default_workflow_edge_connections.parent_output_id'><text x='2388' y='1447'>parent_output_id</text><title>parent_output_id bigint not null</title></a>
+<a xlink:href='#default_workflow_edge_connections.parent_output_id'><use id='fk' x='2568' y='1436' xlink:href='#fk'/><title>References command_output ( parent_output_id -> command_output_id ) </title></a>
+  <use id='nn' x='2372' y='1452' xlink:href='#nn'/><a xlink:href='#default_workflow_edge_connections.child_input_id'><use id='pk' x='2372' y='1451' xlink:href='#pk'/><title>Primary Key  ( default_workflow_edge_id, parent_output_id, child_input_id ) Index  ( child_input_id ) </title></a>
+<a xlink:href='#default_workflow_edge_connections.child_input_id'><text x='2388' y='1462'>child_input_id</text><title>child_input_id bigint not null</title></a>
+<a xlink:href='#default_workflow_edge_connections.child_input_id'><use id='fk' x='2568' y='1451' xlink:href='#fk'/><title>References command_parameter ( child_input_id -> command_parameter_id ) </title></a>
+
+<!-- ============= Table 'processing_job_status' ============= -->
+<rect class='table' x='1740' y='1523' width='225' height='90' rx='7' ry='7' />
+<path d='M 1740.50 1549.50 L 1740.50 1530.50 Q 1740.50 1523.50 1747.50 1523.50 L 1957.50 1523.50 Q 1964.50 1523.50 1964.50 1530.50 L 1964.50 1549.50 L1740.50 1549.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#processing_job_status'><text x='1791' y='1537' class='tableTitle'>processing_job_status</text><title>Table qiita.processing_job_status</title></a>
+  <use id='nn' x='1742' y='1557' xlink:href='#nn'/><a xlink:href='#processing_job_status.processing_job_status_id'><use id='pk' x='1742' y='1556' xlink:href='#pk'/><title>Primary Key  ( processing_job_status_id ) </title></a>
+<a xlink:href='#processing_job_status.processing_job_status_id'><text x='1758' y='1567'>processing_job_status_id</text><title>processing_job_status_id bigserial not null</title></a>
+<a xlink:href='#processing_job_status.processing_job_status_id'><use id='ref' x='1953' y='1556' xlink:href='#ref'/><title>Referred by processing_job ( processing_job_status_id ) </title></a>
+  <use id='nn' x='1742' y='1572' xlink:href='#nn'/><a xlink:href='#processing_job_status.processing_job_status'><text x='1758' y='1582'>processing_job_status</text><title>processing_job_status varchar not null</title></a>
+  <use id='nn' x='1742' y='1587' xlink:href='#nn'/><a xlink:href='#processing_job_status.processing_job_status_description'><text x='1758' y='1597'>processing_job_status_description</text><title>processing_job_status_description varchar not null</title></a>
+
+<!-- ============= Table 'processing_job_workflow_root' ============= -->
+<rect class='table' x='2400' y='1538' width='195' height='75' rx='7' ry='7' />
+<path d='M 2400.50 1564.50 L 2400.50 1545.50 Q 2400.50 1538.50 2407.50 1538.50 L 2587.50 1538.50 Q 2594.50 1538.50 2594.50 1545.50 L 2594.50 1564.50 L2400.50 1564.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#processing_job_workflow_root'><text x='2414' y='1552' class='tableTitle'>processing_job_workflow_root</text><title>Table qiita.processing_job_workflow_root</title></a>
+  <use id='nn' x='2402' y='1572' xlink:href='#nn'/><a xlink:href='#processing_job_workflow_root.processing_job_workflow_id'><use id='pk' x='2402' y='1571' xlink:href='#pk'/><title>Index  ( processing_job_workflow_id ) Primary Key  ( processing_job_workflow_id, processing_job_id ) </title></a>
+<a xlink:href='#processing_job_workflow_root.processing_job_workflow_id'><text x='2418' y='1582'>processing_job_workflow_id</text><title>processing_job_workflow_id bigint not null</title></a>
+<a xlink:href='#processing_job_workflow_root.processing_job_workflow_id'><use id='fk' x='2583' y='1571' xlink:href='#fk'/><title>References processing_job_workflow ( processing_job_workflow_id ) </title></a>
+  <use id='nn' x='2402' y='1587' xlink:href='#nn'/><a xlink:href='#processing_job_workflow_root.processing_job_id'><use id='pk' x='2402' y='1586' xlink:href='#pk'/><title>Index  ( processing_job_id ) Primary Key  ( processing_job_workflow_id, processing_job_id ) </title></a>
+<a xlink:href='#processing_job_workflow_root.processing_job_id'><text x='2418' y='1597'>processing_job_id</text><title>processing_job_id bigint not null</title></a>
+<a xlink:href='#processing_job_workflow_root.processing_job_id'><use id='fk' x='2583' y='1586' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
+
+<!-- ============= Table 'parent_processing_job' ============= -->
+<rect class='table' x='1995' y='1433' width='135' height='75' rx='7' ry='7' />
+<path d='M 1995.50 1459.50 L 1995.50 1440.50 Q 1995.50 1433.50 2002.50 1433.50 L 2122.50 1433.50 Q 2129.50 1433.50 2129.50 1440.50 L 2129.50 1459.50 L1995.50 1459.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#parent_processing_job'><text x='2000' y='1447' class='tableTitle'>parent_processing_job</text><title>Table qiita.parent_processing_job</title></a>
+  <use id='nn' x='1997' y='1467' xlink:href='#nn'/><a xlink:href='#parent_processing_job.parent_id'><use id='pk' x='1997' y='1466' xlink:href='#pk'/><title>Primary Key  ( parent_id, child_id ) Index  ( parent_id ) </title></a>
+<a xlink:href='#parent_processing_job.parent_id'><text x='2013' y='1477'>parent_id</text><title>parent_id bigint not null</title></a>
+<a xlink:href='#parent_processing_job.parent_id'><use id='fk' x='2118' y='1466' xlink:href='#fk'/><title>References processing_job ( parent_id -> processing_job_id ) </title></a>
+  <use id='nn' x='1997' y='1482' xlink:href='#nn'/><a xlink:href='#parent_processing_job.child_id'><use id='pk' x='1997' y='1481' xlink:href='#pk'/><title>Primary Key  ( parent_id, child_id ) Index  ( child_id ) </title></a>
+<a xlink:href='#parent_processing_job.child_id'><text x='2013' y='1492'>child_id</text><title>child_id bigint not null</title></a>
+<a xlink:href='#parent_processing_job.child_id'><use id='fk' x='2118' y='1481' xlink:href='#fk'/><title>References processing_job ( child_id -> processing_job_id ) </title></a>
+
+<!-- ============= Table 'processing_job_validator' ============= -->
+<rect class='table' x='2160' y='1388' width='150' height='90' rx='7' ry='7' />
+<path d='M 2160.50 1414.50 L 2160.50 1395.50 Q 2160.50 1388.50 2167.50 1388.50 L 2302.50 1388.50 Q 2309.50 1388.50 2309.50 1395.50 L 2309.50 1414.50 L2160.50 1414.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#processing_job_validator'><text x='2167' y='1402' class='tableTitle'>processing_job_validator</text><title>Table qiita.processing_job_validator</title></a>
+  <use id='nn' x='2162' y='1422' xlink:href='#nn'/><a xlink:href='#processing_job_validator.processing_job_id'><use id='pk' x='2162' y='1421' xlink:href='#pk'/><title>Index  ( processing_job_id ) Primary Key  ( processing_job_id, validator_id ) </title></a>
+<a xlink:href='#processing_job_validator.processing_job_id'><text x='2178' y='1432'>processing_job_id</text><title>processing_job_id bigint not null</title></a>
+<a xlink:href='#processing_job_validator.processing_job_id'><use id='fk' x='2298' y='1421' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
+  <use id='nn' x='2162' y='1437' xlink:href='#nn'/><a xlink:href='#processing_job_validator.validator_id'><use id='pk' x='2162' y='1436' xlink:href='#pk'/><title>Index  ( validator_id ) Primary Key  ( processing_job_id, validator_id ) </title></a>
+<a xlink:href='#processing_job_validator.validator_id'><text x='2178' y='1447'>validator_id</text><title>validator_id bigint not null</title></a>
+<a xlink:href='#processing_job_validator.validator_id'><use id='fk' x='2298' y='1436' xlink:href='#fk'/><title>References processing_job ( validator_id -> processing_job_id ) </title></a>
+  <a xlink:href='#processing_job_validator.artifact_info'><text x='2178' y='1462'>artifact_info</text><title>artifact_info varchar</title></a>
+
+<!-- ============= Table 'reference' ============= -->
+<rect class='table' x='1995' y='1538' width='135' height='135' rx='7' ry='7' />
+<path d='M 1995.50 1564.50 L 1995.50 1545.50 Q 1995.50 1538.50 2002.50 1538.50 L 2122.50 1538.50 Q 2129.50 1538.50 2129.50 1545.50 L 2129.50 1564.50 L1995.50 1564.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#reference'><text x='2037' y='1552' class='tableTitle'>reference</text><title>Table qiita.reference</title></a>
+  <use id='nn' x='1997' y='1572' xlink:href='#nn'/><a xlink:href='#reference.reference_id'><use id='pk' x='1997' y='1571' xlink:href='#pk'/><title>Primary Key  ( reference_id ) </title></a>
+<a xlink:href='#reference.reference_id'><text x='2013' y='1582'>reference_id</text><title>reference_id bigserial not null</title></a>
+  <use id='nn' x='1997' y='1587' xlink:href='#nn'/><a xlink:href='#reference.reference_name'><text x='2013' y='1597'>reference_name</text><title>reference_name varchar not null</title></a>
+  <a xlink:href='#reference.reference_version'><text x='2013' y='1612'>reference_version</text><title>reference_version varchar</title></a>
+  <use id='nn' x='1997' y='1617' xlink:href='#nn'/><a xlink:href='#reference.sequence_filepath'><use id='idx' x='1997' y='1616' xlink:href='#idx'/><title>Index  ( sequence_filepath ) </title></a>
+<a xlink:href='#reference.sequence_filepath'><text x='2013' y='1627'>sequence_filepath</text><title>sequence_filepath bigint not null</title></a>
+<a xlink:href='#reference.sequence_filepath'><use id='fk' x='2118' y='1616' xlink:href='#fk'/><title>References filepath ( sequence_filepath -> filepath_id ) </title></a>
+  <a xlink:href='#reference.taxonomy_filepath'><use id='idx' x='1997' y='1631' xlink:href='#idx'/><title>Index  ( taxonomy_filepath ) </title></a>
+<a xlink:href='#reference.taxonomy_filepath'><text x='2013' y='1642'>taxonomy_filepath</text><title>taxonomy_filepath bigint</title></a>
+<a xlink:href='#reference.taxonomy_filepath'><use id='fk' x='2118' y='1631' xlink:href='#fk'/><title>References filepath ( taxonomy_filepath -> filepath_id ) </title></a>
+  <a xlink:href='#reference.tree_filepath'><use id='idx' x='1997' y='1646' xlink:href='#idx'/><title>Index  ( tree_filepath ) </title></a>
+<a xlink:href='#reference.tree_filepath'><text x='2013' y='1657'>tree_filepath</text><title>tree_filepath bigint</title></a>
+<a xlink:href='#reference.tree_filepath'><use id='fk' x='2118' y='1646' xlink:href='#fk'/><title>References filepath ( tree_filepath -> filepath_id ) </title></a>
+
+<!-- ============= Table 'processing_job_workflow' ============= -->
+<rect class='table' x='2175' y='1538' width='195' height='90' rx='7' ry='7' />
+<path d='M 2175.50 1564.50 L 2175.50 1545.50 Q 2175.50 1538.50 2182.50 1538.50 L 2362.50 1538.50 Q 2369.50 1538.50 2369.50 1545.50 L 2369.50 1564.50 L2175.50 1564.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#processing_job_workflow'><text x='2204' y='1552' class='tableTitle'>processing_job_workflow</text><title>Table qiita.processing_job_workflow</title></a>
+  <use id='nn' x='2177' y='1572' xlink:href='#nn'/><a xlink:href='#processing_job_workflow.processing_job_workflow_id'><use id='pk' x='2177' y='1571' xlink:href='#pk'/><title>Primary Key  ( processing_job_workflow_id ) </title></a>
+<a xlink:href='#processing_job_workflow.processing_job_workflow_id'><text x='2193' y='1582'>processing_job_workflow_id</text><title>processing_job_workflow_id bigserial not null</title></a>
+<a xlink:href='#processing_job_workflow.processing_job_workflow_id'><use id='ref' x='2358' y='1571' xlink:href='#ref'/><title>Referred by processing_job_workflow_root ( processing_job_workflow_id ) </title></a>
+  <use id='nn' x='2177' y='1587' xlink:href='#nn'/><a xlink:href='#processing_job_workflow.email'><use id='idx' x='2177' y='1586' xlink:href='#idx'/><title>Index  ( email ) </title></a>
+<a xlink:href='#processing_job_workflow.email'><text x='2193' y='1597'>email</text><title>email varchar not null</title></a>
+<a xlink:href='#processing_job_workflow.email'><use id='fk' x='2358' y='1586' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+  <a xlink:href='#processing_job_workflow.name'><text x='2193' y='1612'>name</text><title>name varchar</title></a>
+
+<!-- ============= Table 'controlled_vocab_values' ============= -->
+<rect class='table' x='45' y='1328' width='150' height='120' rx='7' ry='7' />
+<path d='M 45.50 1354.50 L 45.50 1335.50 Q 45.50 1328.50 52.50 1328.50 L 187.50 1328.50 Q 194.50 1328.50 194.50 1335.50 L 194.50 1354.50 L45.50 1354.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#controlled_vocab_values'><text x='53' y='1342' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
+  <use id='nn' x='47' y='1362' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.vocab_value_id'><use id='pk' x='47' y='1361' xlink:href='#pk'/><title>Primary Key  ( vocab_value_id ) </title></a>
+<a xlink:href='#controlled_vocab_values.vocab_value_id'><text x='63' y='1372'>vocab_value_id</text><title>vocab_value_id bigserial not null</title></a>
+  <use id='nn' x='47' y='1377' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.controlled_vocab_id'><use id='idx' x='47' y='1376' xlink:href='#idx'/><title>Index  ( controlled_vocab_id ) </title></a>
+<a xlink:href='#controlled_vocab_values.controlled_vocab_id'><text x='63' y='1387'>controlled_vocab_id</text><title>controlled_vocab_id bigint not null</title></a>
+<a xlink:href='#controlled_vocab_values.controlled_vocab_id'><use id='fk' x='183' y='1376' xlink:href='#fk'/><title>References controlled_vocab ( controlled_vocab_id ) </title></a>
+  <use id='nn' x='47' y='1392' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.term'><text x='63' y='1402'>term</text><title>term varchar not null</title></a>
+  <use id='nn' x='47' y='1407' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.order_by'><text x='63' y='1417'>order_by</text><title>order_by varchar not null</title></a>
+  <a xlink:href='#controlled_vocab_values.default_item'><text x='63' y='1432'>default_item</text><title>default_item varchar</title></a>
+
+<!-- ============= Table 'mixs_field_description' ============= -->
+<rect class='table' x='255' y='1313' width='135' height='135' rx='7' ry='7' />
+<path d='M 255.50 1339.50 L 255.50 1320.50 Q 255.50 1313.50 262.50 1313.50 L 382.50 1313.50 Q 389.50 1313.50 389.50 1320.50 L 389.50 1339.50 L255.50 1339.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#mixs_field_description'><text x='261' y='1327' class='tableTitle'>mixs_field_description</text><title>Table qiita.mixs_field_description</title></a>
+  <use id='nn' x='257' y='1347' xlink:href='#nn'/><a xlink:href='#mixs_field_description.column_name'><use id='pk' x='257' y='1346' xlink:href='#pk'/><title>Primary Key  ( column_name ) </title></a>
+<a xlink:href='#mixs_field_description.column_name'><text x='273' y='1357'>column_name</text><title>column_name varchar not null</title></a>
+<a xlink:href='#mixs_field_description.column_name'><use id='ref' x='378' y='1346' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( column_name )
+Referred by column_ontology ( column_name ) </title></a>
+  <use id='nn' x='257' y='1362' xlink:href='#nn'/><a xlink:href='#mixs_field_description.data_type'><text x='273' y='1372'>data_type</text><title>data_type varchar not null</title></a>
+  <use id='nn' x='257' y='1377' xlink:href='#nn'/><a xlink:href='#mixs_field_description.desc_or_value'><text x='273' y='1387'>desc_or_value</text><title>desc_or_value varchar not null</title></a>
+  <use id='nn' x='257' y='1392' xlink:href='#nn'/><a xlink:href='#mixs_field_description.definition'><text x='273' y='1402'>definition</text><title>definition varchar not null</title></a>
+  <a xlink:href='#mixs_field_description.min_length'><text x='273' y='1417'>min_length</text><title>min_length integer</title></a>
+  <use id='nn' x='257' y='1422' xlink:href='#nn'/><a xlink:href='#mixs_field_description.active'><text x='273' y='1432'>active</text><title>active integer not null</title></a>
+
+<!-- ============= Table 'column_ontology' ============= -->
+<rect class='table' x='270' y='1463' width='150' height='105' rx='7' ry='7' />
+<path d='M 270.50 1489.50 L 270.50 1470.50 Q 270.50 1463.50 277.50 1463.50 L 412.50 1463.50 Q 419.50 1463.50 419.50 1470.50 L 419.50 1489.50 L270.50 1489.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#column_ontology'><text x='298' y='1477' class='tableTitle'>column_ontology</text><title>Table qiita.column_ontology
+This table relates a column with an ontology&#046;</title></a>
+  <use id='nn' x='272' y='1497' xlink:href='#nn'/><a xlink:href='#column_ontology.column_name'><use id='pk' x='272' y='1496' xlink:href='#pk'/><title>Primary Key  ( column_name, ontology_short_name ) Index  ( column_name ) </title></a>
+<a xlink:href='#column_ontology.column_name'><text x='288' y='1507'>column_name</text><title>column_name varchar not null</title></a>
+<a xlink:href='#column_ontology.column_name'><use id='fk' x='408' y='1496' xlink:href='#fk'/><title>References mixs_field_description ( column_name ) </title></a>
+  <use id='nn' x='272' y='1512' xlink:href='#nn'/><a xlink:href='#column_ontology.ontology_short_name'><use id='pk' x='272' y='1511' xlink:href='#pk'/><title>Primary Key  ( column_name, ontology_short_name ) </title></a>
+<a xlink:href='#column_ontology.ontology_short_name'><text x='288' y='1522'>ontology_short_name</text><title>ontology_short_name varchar not null</title></a>
+  <use id='nn' x='272' y='1527' xlink:href='#nn'/><a xlink:href='#column_ontology.bioportal_id'><text x='288' y='1537'>bioportal_id</text><title>bioportal_id integer not null</title></a>
+  <a xlink:href='#column_ontology.ontology_branch_id'><text x='288' y='1552'>ontology_branch_id</text><title>ontology_branch_id varchar</title></a>
+
+<!-- ============= Table 'archive_feature_value' ============= -->
+<rect class='table' x='1470' y='1508' width='195' height='90' rx='7' ry='7' />
+<path d='M 1470.50 1534.50 L 1470.50 1515.50 Q 1470.50 1508.50 1477.50 1508.50 L 1657.50 1508.50 Q 1664.50 1508.50 1664.50 1515.50 L 1664.50 1534.50 L1470.50 1534.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#archive_feature_value'><text x='1509' y='1522' class='tableTitle'>archive_feature_value</text><title>Table qiita.archive_feature_value</title></a>
+  <use id='nn' x='1472' y='1542' xlink:href='#nn'/><a xlink:href='#archive_feature_value.archive_merging_scheme_id'><use id='pk' x='1472' y='1541' xlink:href='#pk'/><title>Primary Key  ( archive_merging_scheme_id, archive_feature ) Index  ( archive_merging_scheme_id ) </title></a>
+<a xlink:href='#archive_feature_value.archive_merging_scheme_id'><text x='1488' y='1552'>archive_merging_scheme_id</text><title>archive_merging_scheme_id bigint not null</title></a>
+<a xlink:href='#archive_feature_value.archive_merging_scheme_id'><use id='fk' x='1653' y='1541' xlink:href='#fk'/><title>References archive_merging_scheme ( archive_merging_scheme_id ) </title></a>
+  <use id='nn' x='1472' y='1557' xlink:href='#nn'/><a xlink:href='#archive_feature_value.archive_feature'><use id='pk' x='1472' y='1556' xlink:href='#pk'/><title>Primary Key  ( archive_merging_scheme_id, archive_feature ) </title></a>
+<a xlink:href='#archive_feature_value.archive_feature'><text x='1488' y='1567'>archive_feature</text><title>archive_feature varchar not null</title></a>
+  <use id='nn' x='1472' y='1572' xlink:href='#nn'/><a xlink:href='#archive_feature_value.archive_feature_value'><text x='1488' y='1582'>archive_feature_value</text><title>archive_feature_value varchar not null</title></a>
+
+<!-- ============= Table 'checksum_algorithm' ============= -->
+<rect class='table' x='720' y='998' width='165' height='75' rx='7' ry='7' />
+<path d='M 720.50 1024.50 L 720.50 1005.50 Q 720.50 998.50 727.50 998.50 L 877.50 998.50 Q 884.50 998.50 884.50 1005.50 L 884.50 1024.50 L720.50 1024.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#checksum_algorithm'><text x='746' y='1012' class='tableTitle'>checksum_algorithm</text><title>Table qiita.checksum_algorithm</title></a>
+  <use id='nn' x='722' y='1032' xlink:href='#nn'/><a xlink:href='#checksum_algorithm.checksum_algorithm_id'><use id='pk' x='722' y='1031' xlink:href='#pk'/><title>Primary Key  ( checksum_algorithm_id ) </title></a>
+<a xlink:href='#checksum_algorithm.checksum_algorithm_id'><text x='738' y='1042'>checksum_algorithm_id</text><title>checksum_algorithm_id bigserial not null</title></a>
+<a xlink:href='#checksum_algorithm.checksum_algorithm_id'><use id='ref' x='873' y='1031' xlink:href='#ref'/><title>Referred by filepath ( checksum_algorithm_id ) </title></a>
+  <use id='nn' x='722' y='1047' xlink:href='#nn'/><a xlink:href='#checksum_algorithm.name'><use id='unq' x='722' y='1046' xlink:href='#unq'/><title>Unique Index  ( name ) </title></a>
+<a xlink:href='#checksum_algorithm.name'><text x='738' y='1057'>name</text><title>name varchar not null</title></a>
+
+<!-- ============= Table 'ontology' ============= -->
+<rect class='table' x='570' y='1433' width='105' height='165' rx='7' ry='7' />
+<path d='M 570.50 1459.50 L 570.50 1440.50 Q 570.50 1433.50 577.50 1433.50 L 667.50 1433.50 Q 674.50 1433.50 674.50 1440.50 L 674.50 1459.50 L570.50 1459.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#ontology'><text x='598' y='1447' class='tableTitle'>ontology</text><title>Table qiita.ontology</title></a>
+  <use id='nn' x='572' y='1467' xlink:href='#nn'/><a xlink:href='#ontology.ontology_id'><use id='pk' x='572' y='1466' xlink:href='#pk'/><title>Primary Key  ( ontology_id ) </title></a>
+<a xlink:href='#ontology.ontology_id'><text x='588' y='1477'>ontology_id</text><title>ontology_id bigint not null</title></a>
+<a xlink:href='#ontology.ontology_id'><use id='ref' x='663' y='1466' xlink:href='#ref'/><title>Referred by term ( ontology_id ) </title></a>
+  <use id='nn' x='572' y='1482' xlink:href='#nn'/><a xlink:href='#ontology.ontology'><use id='unq' x='572' y='1481' xlink:href='#unq'/><title>Unique Index  ( ontology ) </title></a>
+<a xlink:href='#ontology.ontology'><text x='588' y='1492'>ontology</text><title>ontology varchar not null</title></a>
+  <use id='nn' x='572' y='1497' xlink:href='#nn'/><a xlink:href='#ontology.fully_loaded'><text x='588' y='1507'>fully_loaded</text><title>fully_loaded bool not null</title></a>
+  <a xlink:href='#ontology.fullname'><text x='588' y='1522'>fullname</text><title>fullname varchar</title></a>
+  <a xlink:href='#ontology.query_url'><text x='588' y='1537'>query_url</text><title>query_url varchar</title></a>
+  <a xlink:href='#ontology.source_url'><text x='588' y='1552'>source_url</text><title>source_url varchar</title></a>
+  <a xlink:href='#ontology.definition'><text x='588' y='1567'>definition</text><title>definition text</title></a>
+  <use id='nn' x='572' y='1572' xlink:href='#nn'/><a xlink:href='#ontology.load_date'><text x='588' y='1582'>load_date</text><title>load_date date not null</title></a>
+
+<!-- ============= Table 'term' ============= -->
+<rect class='table' x='720' y='1433' width='105' height='210' rx='7' ry='7' />
+<path d='M 720.50 1459.50 L 720.50 1440.50 Q 720.50 1433.50 727.50 1433.50 L 817.50 1433.50 Q 824.50 1433.50 824.50 1440.50 L 824.50 1459.50 L720.50 1459.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#term'><text x='760' y='1447' class='tableTitle'>term</text><title>Table qiita.term</title></a>
+  <use id='nn' x='722' y='1467' xlink:href='#nn'/><a xlink:href='#term.term_id'><use id='pk' x='722' y='1466' xlink:href='#pk'/><title>Primary Key  ( term_id ) </title></a>
+<a xlink:href='#term.term_id'><text x='738' y='1477'>term_id</text><title>term_id bigserial not null</title></a>
+  <use id='nn' x='722' y='1482' xlink:href='#nn'/><a xlink:href='#term.ontology_id'><use id='idx' x='722' y='1481' xlink:href='#idx'/><title>Index  ( ontology_id ) </title></a>
+<a xlink:href='#term.ontology_id'><text x='738' y='1492'>ontology_id</text><title>ontology_id bigint not null</title></a>
+<a xlink:href='#term.ontology_id'><use id='fk' x='813' y='1481' xlink:href='#fk'/><title>References ontology ( ontology_id ) </title></a>
+  <a xlink:href='#term.old_term_id'><text x='738' y='1507'>old_term_id</text><title>old_term_id bigint default NULL
+Identifier used in the old system&#044; we are keeping this for consistency</title></a>
+  <use id='nn' x='722' y='1512' xlink:href='#nn'/><a xlink:href='#term.term'><text x='738' y='1522'>term</text><title>term varchar not null</title></a>
+  <a xlink:href='#term.identifier'><text x='738' y='1537'>identifier</text><title>identifier varchar</title></a>
+  <a xlink:href='#term.definition'><text x='738' y='1552'>definition</text><title>definition varchar</title></a>
+  <a xlink:href='#term.namespace'><text x='738' y='1567'>namespace</text><title>namespace varchar</title></a>
+  <a xlink:href='#term.is_obsolete'><text x='738' y='1582'>is_obsolete</text><title>is_obsolete bool default &#039;false&#039;</title></a>
+  <a xlink:href='#term.is_root_term'><text x='738' y='1597'>is_root_term</text><title>is_root_term bool</title></a>
+  <a xlink:href='#term.is_leaf'><text x='738' y='1612'>is_leaf</text><title>is_leaf bool</title></a>
+  <use id='nn' x='722' y='1617' xlink:href='#nn'/><a xlink:href='#term.user_defined'><text x='738' y='1627'>user_defined</text><title>user_defined bool not null default False
+Whether or not this term was defined by a user</title></a>
+
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 <!-- ============= Table 'archive_merging_scheme' ============= -->
 <rect class='table' x='1245' y='1508' width='195' height='75' rx='7' ry='7' />
 <path d='M 1245.50 1534.50 L 1245.50 1515.50 Q 1245.50 1508.50 1252.50 1508.50 L 1432.50 1508.50 Q 1439.50 1508.50 1439.50 1515.50 L 1439.50 1534.50 L1245.50 1534.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
 <a xlink:href='#archive_merging_scheme'><text x='1274' y='1522' class='tableTitle'>archive_merging_scheme</text><title>Table qiita.archive_merging_scheme</title></a>
   <use id='nn' x='1247' y='1542' xlink:href='#nn'/><a xlink:href='#archive_merging_scheme.archive_merging_scheme_id'><use id='pk' x='1247' y='1541' xlink:href='#pk'/><title>Primary Key  ( archive_merging_scheme_id ) </title></a>
 <a xlink:href='#archive_merging_scheme.archive_merging_scheme_id'><text x='1263' y='1552'>archive_merging_scheme_id</text><title>archive_merging_scheme_id bigserial not null</title></a>
+<<<<<<< HEAD
 <a xlink:href='#archive_merging_scheme.archive_merging_scheme_id'><use id='ref' x='1428' y='1541' xlink:href='#ref'/><title>Referred by archive_feature_value ( archive_merging_scheme_id ) 
 Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
   <use id='nn' x='1247' y='1557' xlink:href='#nn'/><a xlink:href='#archive_merging_scheme.archive_merging_scheme'><text x='1263' y='1567'>archive_merging_scheme</text><title>archive_merging_scheme varchar not null</title></a>
 
+=======
+<a xlink:href='#archive_merging_scheme.archive_merging_scheme_id'><use id='ref' x='1428' y='1541' xlink:href='#ref'/><title>Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
+  <use id='nn' x='1247' y='1557' xlink:href='#nn'/><a xlink:href='#archive_merging_scheme.archive_merging_scheme'><text x='1263' y='1567'>archive_merging_scheme</text><title>archive_merging_scheme varchar not null</title></a>
+
+<!-- ============= Table 'artifact_type' ============= -->
+<rect class='table' x='1395' y='893' width='195' height='135' rx='7' ry='7' />
+<path d='M 1395.50 919.50 L 1395.50 900.50 Q 1395.50 893.50 1402.50 893.50 L 1582.50 893.50 Q 1589.50 893.50 1589.50 900.50 L 1589.50 919.50 L1395.50 919.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#artifact_type'><text x='1459' y='907' class='tableTitle'>artifact_type</text><title>Table qiita.artifact_type
+Type of artifact</title></a>
+  <use id='nn' x='1397' y='927' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type_id'><use id='pk' x='1397' y='926' xlink:href='#pk'/><title>Primary Key  ( artifact_type_id ) </title></a>
+<a xlink:href='#artifact_type.artifact_type_id'><text x='1413' y='937'>artifact_type_id</text><title>artifact_type_id bigserial not null</title></a>
+<a xlink:href='#artifact_type.artifact_type_id'><use id='ref' x='1578' y='926' xlink:href='#ref'/><title>Referred by artifact ( artifact_type_id )
+Referred by artifact_type_filepath_type ( artifact_type_id )
+Referred by command_output ( artifact_type_id )
+Referred by parameter_artifact_type ( artifact_type_id )
+Referred by software_artifact_type ( artifact_type_id ) </title></a>
+  <use id='nn' x='1397' y='942' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type'><use id='unq' x='1397' y='941' xlink:href='#unq'/><title>Unique Index  ( artifact_type ) </title></a>
+<a xlink:href='#artifact_type.artifact_type'><text x='1413' y='952'>artifact_type</text><title>artifact_type varchar not null</title></a>
+  <use id='nn' x='1397' y='957' xlink:href='#nn'/><a xlink:href='#artifact_type.description'><text x='1413' y='967'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='1397' y='972' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_ebi'><text x='1413' y='982'>can_be_submitted_to_ebi</text><title>can_be_submitted_to_ebi bool not null default &#039;FALSE&#039;</title></a>
+  <use id='nn' x='1397' y='987' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_vamps'><text x='1413' y='997'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
+  <a xlink:href='#artifact_type.is_user_uploadable'><text x='1413' y='1012'>is_user_uploadable</text><title>is_user_uploadable bool</title></a>
+
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 </g></svg>
 
 <br/><br/>
@@ -2449,16 +3206,42 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 		<td>*</td>
 		<td><a name='filepath.filepath'>filepath</a></td>
 		<td> varchar   </td>
+<<<<<<< HEAD
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
 		<td><a name='filepath.filepath_type_id'>filepath&#095;type&#095;id</a></td>
 		<td> bigint   </td>
+=======
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='filepath.checksum'>checksum</a></td>
+		<td> varchar   </td>
+=======
+		<td><a name='filepath.filepath_type_id'>filepath&#095;type&#095;id</a></td>
+		<td> bigint   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='filepath.checksum_algorithm_id'>checksum&#095;algorithm&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='filepath.data_directory_id'>data&#095;directory&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+=======
 		<td><a name='filepath.checksum'>checksum</a></td>
 		<td> varchar   </td>
 		<td>  </td>
@@ -2475,6 +3258,7 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 		<td> bigserial   </td>
 		<td>  </td>
 	</tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;filepath</td>
 		<td> ON filepath&#095;id</td>
@@ -3111,12 +3895,17 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
+<<<<<<< HEAD
 <tr><th colspan='4'><a name='artifact_type'>Table artifact_type</a></th></tr>
 <tr><td colspan='3'>Type of artifact </td></tr>
+=======
+<tr><th colspan='4'><a name='filepath_type'>Table filepath_type</a></th></tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 </thead>
 <tbody>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
 		<td><a name='artifact_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
 		<td> bigserial   </td>
 		<td>  </td>
@@ -3152,19 +3941,7 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 	</tr>
 	<tr>		<td>U</td><td>idx&#095;filetype</td>
 		<td> ON artifact&#095;type</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='filepath_type'>Table filepath_type</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
+=======
 		<td><a name='filepath_type.filepath_type_id'>filepath&#095;type&#095;id</a></td>
 		<td> bigserial   </td>
 		<td>  </td>
@@ -3226,6 +4003,7 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;data&#095;directory</td>
 		<td> ON data&#095;directory&#095;id</td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 </tbody>
@@ -3234,11 +4012,34 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
+<<<<<<< HEAD
+<tr><th colspan='4'><a name='filepath_type'>Table filepath_type</a></th></tr>
+=======
 <tr><th colspan='4'><a name='artifact_type_filepath_type'>Table artifact_type_filepath_type</a></th></tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 </thead>
 <tbody>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='filepath_type.filepath_type_id'>filepath&#095;type&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='filepath_type.filepath_type'>filepath&#095;type</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;filepath&#095;type</td>
+		<td> ON filepath&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>U</td><td>idx&#095;filepath&#095;type</td>
+		<td> ON filepath&#095;type</td>
+=======
 		<td><a name='artifact_type_filepath_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
@@ -3277,6 +4078,7 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 	<tr>
 		<td>&nbsp;</td><td>fk_artifact_type_filepath_type_0</td>
 		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 </tbody>
@@ -3285,17 +4087,53 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
+<<<<<<< HEAD
+<tr><th colspan='4'><a name='data_directory'>Table data_directory</a></th></tr>
+=======
 <tr><th colspan='4'><a name='study_artifact'>Table study_artifact</a></th></tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 </thead>
 <tbody>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='data_directory.data_directory_id'>data&#095;directory&#095;id</a></td>
+		<td> bigserial   </td>
+=======
 		<td><a name='study_artifact.study_id'>study&#095;id</a></td>
 		<td> bigint   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='data_directory.data_type'>data&#095;type</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='data_directory.mountpoint'>mountpoint</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='data_directory.subdirectory'>subdirectory</a></td>
+		<td> bool   DEFO FALSE </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='data_directory.active'>active</a></td>
+		<td> bool   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;data&#095;directory</td>
+		<td> ON data&#095;directory&#095;id</td>
+=======
 		<td><a name='study_artifact.artifact_id'>artifact&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
@@ -3322,6 +4160,7 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 	<tr>
 		<td>&nbsp;</td><td>fk_study_artifact_artifact</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 </tbody>
@@ -3330,17 +4169,184 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
+<<<<<<< HEAD
+<tr><th colspan='4'><a name='artifact_type_filepath_type'>Table artifact_type_filepath_type</a></th></tr>
+=======
 <tr><th colspan='4'><a name='prep_template_processing_job'>Table prep_template_processing_job</a></th></tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 </thead>
 <tbody>
 	<tr>
 		<td>*</td>
-		<td><a name='prep_template_processing_job.prep_template_id'>prep&#095;template&#095;id</a></td>
+<<<<<<< HEAD
+		<td><a name='artifact_type_filepath_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
+		<td><a name='artifact_type_filepath_type.filepath_type_id'>filepath&#095;type&#095;id</a></td>
+=======
+		<td><a name='prep_template_processing_job.prep_template_id'>prep&#095;template&#095;id</a></td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='artifact_type_filepath_type.required'>required</a></td>
+		<td> bool   DEFO 'TRUE' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>idx&#095;artifact&#095;type&#095;filepath&#095;type</td>
+		<td> ON artifact&#095;type&#095;id&#044; filepath&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;type&#095;filepath&#095;type</td>
+		<td> ON artifact&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;type&#095;filepath&#095;type</td>
+		<td> ON filepath&#095;type&#095;id</td>
+=======
+		<td><a name='prep_template_processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>idx&#095;prep&#095;template&#095;processing&#095;job</td>
+		<td> ON prep&#095;template&#095;id&#044; processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;processing&#095;job</td>
+		<td> ON prep&#095;template&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;processing&#095;job</td>
+		<td> ON processing&#095;job&#095;id</td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+<<<<<<< HEAD
+		<td>&nbsp;</td><td>fk_artifact_type_filepath_type</td>
+		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_artifact_type_filepath_type_0</td>
+		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
+=======
+		<td>&nbsp;</td><td>fk_prep_template_processing_job</td>
+		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_prep_template_processing_job_0</td>
+		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<<<<<<< HEAD
+<tr><th colspan='4'><a name='study_artifact'>Table study_artifact</a></th></tr>
+=======
+<tr><th colspan='4'><a name='software_type'>Table software_type</a></th></tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='study_artifact.study_id'>study&#095;id</a></td>
+		<td> bigint   </td>
+=======
+		<td><a name='software_type.software_type_id'>software&#095;type&#095;id</a></td>
+		<td> bigserial   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='study_artifact.artifact_id'>artifact&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>idx&#095;study&#095;artifact</td>
+		<td> ON study&#095;id&#044; artifact&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;artifact</td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;artifact</td>
+		<td> ON artifact&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_study_artifact_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_study_artifact_artifact</td>
+		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
+=======
+		<td><a name='software_type.software_type'>software&#095;type</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software_type.description'>description</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;software&#095;type</td>
+		<td> ON software&#095;type&#095;id</td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<<<<<<< HEAD
+<tr><th colspan='4'><a name='prep_template_processing_job'>Table prep_template_processing_job</a></th></tr>
+=======
+<tr><th colspan='4'><a name='software'>Table software</a></th></tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='prep_template_processing_job.prep_template_id'>prep&#095;template&#095;id</a></td>
+		<td> bigint   </td>
+=======
+		<td><a name='software.software_id'>software&#095;id</a></td>
+		<td> bigserial   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
 		<td><a name='prep_template_processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
@@ -3387,37 +4393,7 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 	<tr>
 		<td>*</td>
 		<td><a name='software_type.software_type'>software&#095;type</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='software_type.description'>description</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;software&#095;type</td>
-		<td> ON software&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='software'>Table software</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='software.software_id'>software&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
+=======
 		<td><a name='software.name'>name</a></td>
 		<td> varchar   </td>
 		<td>  </td>
@@ -3491,6 +4467,187 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 	<tr>
 		<td>*</td>
 		<td><a name='study_publication.publication'>publication</a></td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+<<<<<<< HEAD
+		<td>*</td>
+		<td><a name='software_type.description'>description</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;software&#095;type</td>
+		<td> ON software&#095;type&#095;id</td>
+=======
+		<td>&nbsp;</td>
+		<td><a name='study_publication.is_doi'>is&#095;doi</a></td>
+		<td> bool   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_study_publication_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<<<<<<< HEAD
+<tr><th colspan='4'><a name='software'>Table software</a></th></tr>
+=======
+<tr><th colspan='4'><a name='software_command'>Table software_command</a></th></tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='software.software_id'>software&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.name'>name</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.version'>version</a></td>
+=======
+		<td><a name='software_command.command_id'>command&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software_command.name'>name</a></td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='software.description'>description</a></td>
+		<td> varchar   </td>
+=======
+		<td><a name='software_command.software_id'>software&#095;id</a></td>
+		<td> bigint   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='software.environment_script'>environment&#095;script</a></td>
+=======
+		<td><a name='software_command.description'>description</a></td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='software.start_script'>start&#095;script</a></td>
+		<td> varchar   </td>
+=======
+		<td><a name='software_command.active'>active</a></td>
+		<td> bool   DEFO 'True' </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='software.software_type_id'>software&#095;type&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.active'>active</a></td>
+		<td> bool   DEFO 'True' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;software</td>
+		<td> ON software&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;software</td>
+		<td> ON software&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_software_software_type</td>
+		<td > ( software&#095;type&#095;id ) ref <a href='#software&#095;type'>software&#095;type</a> (software&#095;type&#095;id) </td>
+=======
+		<td><a name='software_command.is_analysis'>is&#095;analysis</a></td>
+		<td> bool   DEFO 'False' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;soft&#095;command</td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;soft&#095;command</td>
+		<td> ON software&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_soft_command_software</td>
+		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='investigation_study'>Table investigation_study</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='investigation_study.investigation_id'>investigation&#095;id</a></td>
+		<td> bigint   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='study_publication'>Table study_publication</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='study_publication.study_id'>study&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study_publication.publication'>publication</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
@@ -3525,22 +4682,70 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 		<td>*</td>
 		<td><a name='software_command.name'>name</a></td>
 		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='software_command.software_id'>software&#095;id</a></td>
+=======
+		<td><a name='investigation_study.study_id'>study&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>idx&#095;investigation&#095;study</td>
+		<td> ON investigation&#095;id&#044; study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;investigation&#095;study&#095;investigation</td>
+		<td> ON investigation&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;investigation&#095;study&#095;study</td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_investigation_study</td>
+		<td > ( investigation&#095;id ) ref <a href='#investigation'>investigation</a> (investigation&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_investigation_study_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='investigation'>Table investigation</a></th></tr>
+<tr><td colspan='3'>Overarching investigation information&#046;An investigation comprises one or more individual studies&#046; </td></tr>
+</thead>
+<tbody>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='software_command.software_id'>software&#095;id</a></td>
+		<td> bigint   </td>
+=======
+		<td><a name='investigation.investigation_id'>investigation&#095;id</a></td>
+		<td> bigserial   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
 		<td><a name='software_command.description'>description</a></td>
+=======
+		<td><a name='investigation.investigation_name'>investigation&#095;name</a></td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
 		<td><a name='software_command.active'>active</a></td>
 		<td> bool   DEFO 'True' </td>
 		<td>  </td>
@@ -3579,10 +4784,58 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 		<td>*</td>
 		<td><a name='investigation_study.investigation_id'>investigation&#095;id</a></td>
 		<td> bigint   </td>
+=======
+		<td><a name='investigation.investigation_description'>investigation&#095;description</a></td>
+		<td> varchar   </td>
+		<td> Describes the overarching goal of the investigation </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='investigation.contact_person_id'>contact&#095;person&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;investigation</td>
+		<td> ON investigation&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;investigation</td>
+		<td> ON contact&#095;person&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_investigation_study_person</td>
+		<td > ( contact&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='artifact'>Table artifact</a></th></tr>
+<tr><td colspan='3'>Represents data in the system </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact.artifact_id'>artifact&#095;id</a></td>
+		<td> bigserial   </td>
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
+		<td><a name='artifact.name'>name</a></td>
+		<td> varchar   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
 		<td><a name='investigation_study.study_id'>study&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
@@ -3599,9 +4852,33 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 	<tr>		<td>&nbsp;</td><td>idx&#095;investigation&#095;study&#095;study</td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
+=======
+		<td><a name='artifact.generated_timestamp'>generated&#095;timestamp</a></td>
+		<td> timestamp   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='artifact.command_id'>command&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='artifact.command_parameters'>command&#095;parameters</a></td>
+		<td> varchar   </td>
+		<td> Varchar in dbschema but is JSON in the postgresDB </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact.visibility_id'>visibility&#095;id</a></td>
+		<td> bigint   </td>
+		<td> If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 	</tr>
 <tr><th colspan='4'><b>Foreign Keys</b></th></tr>
 	<tr>
+<<<<<<< HEAD
 		<td>&nbsp;</td><td>fk_investigation_study</td>
 		<td > ( investigation&#095;id ) ref <a href='#investigation'>investigation</a> (investigation&#095;id) </td>
 		<td>  </td>
@@ -3652,10 +4929,49 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 	</tr>
 	<tr>		<td>&nbsp;</td><td>idx&#095;investigation</td>
 		<td> ON contact&#095;person&#095;id</td>
+=======
+		<td>&nbsp;</td>
+		<td><a name='artifact.artifact_type_id'>artifact&#095;type&#095;id</a></td>
+		<td> integer   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact.data_type_id'>data&#095;type&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact.submitted_to_vamps'>submitted&#095;to&#095;vamps</a></td>
+		<td> bool   DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;artifact</td>
+		<td> ON artifact&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;0</td>
+		<td> ON visibility&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;1</td>
+		<td> ON artifact&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;artifact</td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;2</td>
+		<td> ON data&#095;type&#095;id</td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 <tr><th colspan='4'><b>Foreign Keys</b></th></tr>
 	<tr>
+<<<<<<< HEAD
 		<td>&nbsp;</td><td>fk_investigation_study_person</td>
 		<td > ( contact&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
 		<td>  </td>
@@ -3710,16 +5026,55 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 		<td>&nbsp;</td>
 		<td><a name='artifact.artifact_type_id'>artifact&#095;type&#095;id</a></td>
 		<td> integer   </td>
+=======
+		<td>&nbsp;</td><td>fk_artifact_visibility</td>
+		<td > ( visibility&#095;id ) ref <a href='#visibility'>visibility</a> (visibility&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_artifact_filetype</td>
+		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_artifact_soft_command</td>
+		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_artifact_data_type</td>
+		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='analysis_sample'>Table analysis_sample</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='analysis_sample.analysis_id'>analysis&#095;id</a></td>
+		<td> bigint   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
 		<td><a name='artifact.data_type_id'>data&#095;type&#095;id</a></td>
+=======
+		<td><a name='analysis_sample.artifact_id'>artifact&#095;id</a></td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
 		<td><a name='artifact.submitted_to_vamps'>submitted&#095;to&#095;vamps</a></td>
 		<td> bool   DEFO 'FALSE' </td>
 		<td>  </td>
@@ -3824,6 +5179,42 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 	<tr>
 		<td>&nbsp;</td><td>fk_analysis_sample_artifact</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
+=======
+		<td><a name='analysis_sample.sample_id'>sample&#095;id</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;sample</td>
+		<td> ON analysis&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;sample&#095;0</td>
+		<td> ON artifact&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;sample&#095;1</td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>Pk</td><td>pk&#095;analysis&#095;sample</td>
+		<td> ON analysis&#095;id&#044; artifact&#095;id&#044; sample&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_analysis_sample_analysis</td>
+		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_analysis_sample</td>
+		<td > ( sample&#095;id ) ref <a href='#study&#095;sample'>study&#095;sample</a> (sample&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_analysis_sample_artifact</td>
+		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -3840,16 +5231,41 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 		<td>*</td>
 		<td><a name='portal_type.portal_type_id'>portal&#095;type&#095;id</a></td>
 		<td> bigserial   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='portal_type'>Table portal_type</a></th></tr>
+<tr><td colspan='3'>What portals are available to show a study in </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='portal_type.portal_type_id'>portal&#095;type&#095;id</a></td>
+		<td> bigserial   </td>
+=======
+		<td><a name='portal_type.portal'>portal</a></td>
+		<td> varchar   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
 		<td><a name='portal_type.portal'>portal</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
+=======
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td><a name='portal_type.portal_description'>portal&#095;description</a></td>
 		<td> varchar   </td>
 		<td>  </td>
@@ -4109,12 +5525,21 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;prep&#095;template</td>
 		<td> ON prep&#095;template&#095;id</td>
+<<<<<<< HEAD
 		<td>  </td>
 	</tr>
 	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template</td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
+=======
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template</td>
+		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;0</td>
 		<td> ON artifact&#095;id</td>
 		<td>  </td>
@@ -4249,12 +5674,21 @@ Referred by archive_feature_value ( archive_merging_scheme_id ) </title></a>
 	</tr>
 	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;environmental&#095;package</td>
 		<td> ON study&#095;id</td>
+<<<<<<< HEAD
 		<td>  </td>
 	</tr>
 	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;environmental&#095;package&#095;0</td>
 		<td> ON environmental&#095;package&#095;name</td>
 		<td>  </td>
 	</tr>
+=======
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;environmental&#095;package&#095;0</td>
+		<td> ON environmental&#095;package&#095;name</td>
+		<td>  </td>
+	</tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 <tr><th colspan='4'><b>Foreign Keys</b></th></tr>
 	<tr>
 		<td>&nbsp;</td><td>fk_study_environmental_package</td>
@@ -4695,6 +6129,7 @@ Controlled Vocabulary </td>
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>&nbsp;</td><td>idx&#095;software&#095;publication</td>
 		<td> ON software&#095;id</td>
+<<<<<<< HEAD
 		<td>  </td>
 	</tr>
 	<tr>		<td>&nbsp;</td><td>idx&#095;software&#095;publication</td>
@@ -4705,6 +6140,18 @@ Controlled Vocabulary </td>
 		<td> ON software&#095;id&#044; publication&#095;doi</td>
 		<td>  </td>
 	</tr>
+=======
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;software&#095;publication</td>
+		<td> ON publication&#095;doi</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>Pk</td><td>idx&#095;software&#095;publication&#095;0</td>
+		<td> ON software&#095;id&#044; publication&#095;doi</td>
+		<td>  </td>
+	</tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 <tr><th colspan='4'><b>Foreign Keys</b></th></tr>
 	<tr>
 		<td>&nbsp;</td><td>fk_software_publication</td>
@@ -4728,6 +6175,20 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>*</td>
 		<td><a name='publication.doi'>doi</a></td>
+<<<<<<< HEAD
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='publication.pubmed_id'>pubmed&#095;id</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;publication</td>
+		<td> ON doi</td>
+=======
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
@@ -4755,10 +6216,29 @@ Controlled Vocabulary </td>
 		<td>*</td>
 		<td><a name='parameter_artifact_type.command_parameter_id'>command&#095;parameter&#095;id</a></td>
 		<td> bigserial   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='parameter_artifact_type'>Table parameter_artifact_type</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='parameter_artifact_type.command_parameter_id'>command&#095;parameter&#095;id</a></td>
+		<td> bigserial   </td>
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>*</td>
+=======
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td><a name='parameter_artifact_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
@@ -4937,6 +6417,7 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>		<td>&nbsp;</td><td>idx&#095;artifact&#095;output&#095;processing&#095;job</td>
 		<td> ON command&#095;output&#095;id</td>
+<<<<<<< HEAD
 		<td>  </td>
 	</tr>
 <tr><th colspan='4'><b>Foreign Keys</b></th></tr>
@@ -4946,6 +6427,17 @@ Controlled Vocabulary </td>
 		<td>  </td>
 	</tr>
 	<tr>
+=======
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_artifact_output_processing_job</td>
+		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>&nbsp;</td><td>fk_artifact_output_processing_job_0</td>
 		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
@@ -5280,6 +6772,7 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;command</td>
 		<td> ON default&#095;parameter&#095;set&#095;id</td>
+<<<<<<< HEAD
 		<td>  </td>
 	</tr>
 	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;command&#095;0</td>
@@ -5290,6 +6783,18 @@ Controlled Vocabulary </td>
 		<td> ON default&#095;workflow&#095;node&#095;id</td>
 		<td>  </td>
 	</tr>
+=======
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;default&#095;workflow&#095;command&#095;0</td>
+		<td> ON default&#095;workflow&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>Pk</td><td>pk&#095;default&#095;workflow&#095;command</td>
+		<td> ON default&#095;workflow&#095;node&#095;id</td>
+		<td>  </td>
+	</tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 <tr><th colspan='4'><b>Foreign Keys</b></th></tr>
 	<tr>
 		<td>&nbsp;</td><td>fk_default_workflow_command</td>
@@ -5787,6 +7292,7 @@ Controlled Vocabulary </td>
 		<td>*</td>
 		<td><a name='controlled_vocab_values.order_by'>order&#095;by</a></td>
 		<td> varchar   </td>
+<<<<<<< HEAD
 		<td>  </td>
 	</tr>
 	<tr>
@@ -5795,6 +7301,16 @@ Controlled Vocabulary </td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
+=======
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='controlled_vocab_values.default_item'>default&#095;item</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;controlled&#095;vocab&#095;values</td>
 		<td> ON vocab&#095;value&#095;id</td>
@@ -6084,22 +7600,51 @@ Controlled Vocabulary </td>
 		<td>&nbsp;</td>
 		<td><a name='term.identifier'>identifier</a></td>
 		<td> varchar   </td>
+<<<<<<< HEAD
+=======
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>&nbsp;</td>
 		<td><a name='term.definition'>definition</a></td>
 		<td> varchar   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>&nbsp;</td>
+<<<<<<< HEAD
+		<td><a name='term.definition'>definition</a></td>
+=======
+		<td><a name='term.namespace'>namespace</a></td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+<<<<<<< HEAD
 		<td><a name='term.namespace'>namespace</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>&nbsp;</td>
+		<td><a name='term.is_obsolete'>is&#095;obsolete</a></td>
+		<td> bool   DEFO 'false' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='term.is_root_term'>is&#095;root&#095;term</a></td>
+		<td> bool   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='term.is_leaf'>is&#095;leaf</a></td>
+		<td> bool   </td>
+=======
 		<td><a name='term.is_obsolete'>is&#095;obsolete</a></td>
 		<td> bool   DEFO 'false' </td>
 		<td>  </td>
@@ -6135,6 +7680,7 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>&nbsp;</td><td>fk_term_ontology</td>
 		<td > ( ontology&#095;id ) ref <a href='#ontology'>ontology</a> (ontology&#095;id) </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 </tbody>
@@ -6148,6 +7694,25 @@ Controlled Vocabulary </td>
 <tbody>
 	<tr>
 		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='term.user_defined'>user&#095;defined</a></td>
+		<td> bool   DEFO False </td>
+		<td> Whether or not this term was defined by a user </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;term</td>
+		<td> ON term&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;term</td>
+		<td> ON ontology&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_term_ontology</td>
+		<td > ( ontology&#095;id ) ref <a href='#ontology'>ontology</a> (ontology&#095;id) </td>
+=======
 		<td><a name='archive_merging_scheme.archive_merging_scheme_id'>archive&#095;merging&#095;scheme&#095;id</a></td>
 		<td> bigserial   </td>
 		<td>  </td>
@@ -6161,6 +7726,81 @@ Controlled Vocabulary </td>
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;merging&#095;scheme</td>
 		<td> ON archive&#095;merging&#095;scheme&#095;id</td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<<<<<<< HEAD
+<tr><th colspan='4'><a name='archive_merging_scheme'>Table archive_merging_scheme</a></th></tr>
+=======
+<tr><th colspan='4'><a name='artifact_type'>Table artifact_type</a></th></tr>
+<tr><td colspan='3'>Type of artifact </td></tr>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='archive_merging_scheme.archive_merging_scheme_id'>archive&#095;merging&#095;scheme&#095;id</a></td>
+		<td> bigserial   </td>
+=======
+		<td><a name='artifact_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact_type.artifact_type'>artifact&#095;type</a></td>
+		<td> varchar   </td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+<<<<<<< HEAD
+		<td><a name='archive_merging_scheme.archive_merging_scheme'>archive&#095;merging&#095;scheme</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;merging&#095;scheme</td>
+		<td> ON archive&#095;merging&#095;scheme&#095;id</td>
+=======
+		<td><a name='artifact_type.description'>description</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact_type.can_be_submitted_to_ebi'>can&#095;be&#095;submitted&#095;to&#095;ebi</a></td>
+		<td> bool   DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='artifact_type.can_be_submitted_to_vamps'>can&#095;be&#095;submitted&#095;to&#095;vamps</a></td>
+		<td> bool   DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='artifact_type.is_user_uploadable'>is&#095;user&#095;uploadable</a></td>
+		<td> bool   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;filetype</td>
+		<td> ON artifact&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>U</td><td>idx&#095;filetype</td>
+		<td> ON artifact&#095;type</td>
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 		<td>  </td>
 	</tr>
 </tbody>

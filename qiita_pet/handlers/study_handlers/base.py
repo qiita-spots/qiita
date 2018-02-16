@@ -26,7 +26,7 @@ class StudyIndexHandler(BaseHandler):
 
         study_info = study_get_req(study, self.current_user.id)
         if study_info['status'] != 'success':
-            raise HTTPError(404, study_info['message'])
+            raise HTTPError(404, reason=study_info['message'])
 
         if message != '' and level != '':
             study_info['level'] = level
@@ -82,7 +82,7 @@ class DataTypesMenuAJAX(BaseHandler):
         prep_info = study_prep_get_req(study_id, self.current_user.id)
         # Make sure study exists
         if prep_info['status'] != 'success':
-            raise HTTPError(404, prep_info['message'])
+            raise HTTPError(404, reason=prep_info['message'])
 
         prep_info = prep_info['info']
 

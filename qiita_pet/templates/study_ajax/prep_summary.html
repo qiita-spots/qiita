@@ -383,14 +383,17 @@
           <!-- Investigation type info -->
           <div class="row">
             <!-- Ena ontology selector -->
-            <div class="col-md-4">
-              <b>Select Investigation Type:</b>
+            <div class="col-md-6">
+              <b>Select Investigation Type:</b> <small>Unsure? <a href="" target="_blank">Check</a></small>
               <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
                 <option value=""></option>
                 {% for o in ontology['ENA'] %}
                   <option value="{{o}}">{{o}}</option>
                 {% end %}
               </select>
+            </div>
+            <div class="col-md-3">
+
             </div>
             <!-- user-defined selector -->
             <div class="col-md-4" id="user-ena-info" hidden> User defined investigation type:

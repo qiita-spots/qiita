@@ -40,3 +40,13 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql;
+<<<<<<< HEAD
+=======
+
+-- January 25th, 2017
+-- Adding to artifact_type is_user_uploadable
+-- Note that at time of creation we will need to update the following qiita-spots: qtp-biom, qtp-visualization, qtp-diversity, qtp-target-gene & qtp-template-cookiecutter
+
+ALTER TABLE qiita.artifact_type ADD is_user_uploadable BOOL DEFAULT FALSE;
+UPDATE qiita.artifact_type SET is_user_uploadable=TRUE WHERE artifact_type IN ('FASTQ', 'BIOM', 'per_sample_FASTQ');
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca

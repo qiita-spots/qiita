@@ -113,10 +113,16 @@ class Archive(object):
             # Additionally, based on the current funtionality, this is not
             # important as normally the difference between files is just
             # an additional filtering step
+<<<<<<< HEAD
             if aparams:
                 cname = "%s (%s)" % (acmd.name, aparams)
             else:
                 cname = acmd.name
+=======
+            cname = acmd.name
+            if aparams:
+                cname = "%s (%s)" % (cname, aparams)
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
 
             # 2. cleaning pparams - the parameters of the parent artifact
             # [0] getting the atributes from the first parent
@@ -128,6 +134,7 @@ class Archive(object):
                 palgorithm = pcmd.name
                 if pms['parameters']:
                     ppms = pms['parameters']
+<<<<<<< HEAD
                     op = pcmd.optional_parameters.copy()
                     op.update(pcmd.required_parameters)
                     pparams = ','.join(
@@ -136,6 +143,13 @@ class Archive(object):
                     params = ','.join(
                         ['%s: %s' % (k, pparams[k]) for k in ppms])
                     palgorithm = "%s (%s)" % (palgorithm, params)
+=======
+                    pparams = ','.join(
+                        ['%s: %s' % (k, v) for k, v in ppp.values.items()
+                         if list(v)[0] != 'artifact' and k in ppms])
+                    if pparams:
+                        palgorithm = "%s (%s)" % (palgorithm, pparams)
+>>>>>>> 52c9ab1bafff75b8a150c0a9afce86515ca854ca
             algorithm = '%s | %s' % (cname, palgorithm)
 
             return algorithm

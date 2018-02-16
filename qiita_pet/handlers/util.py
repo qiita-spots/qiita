@@ -36,8 +36,8 @@ def check_access(user, study, no_public=False, raise_error=False):
     """make sure user has access to the study requested"""
     if not study.has_access(user, no_public):
         if raise_error:
-            raise HTTPError(403, "User %s does not have access to study %d" %
-                                 (user.id, study.id))
+            raise HTTPError(403, reason="User %s does not have access to "
+                            "study %d" % (user.id, study.id))
         else:
             return False
     return True
@@ -104,7 +104,8 @@ def to_int(value):
     try:
         res = int(value)
     except ValueError:
-        raise HTTPError(400, "%s cannot be converted to an integer" % value)
+        raise HTTPError(400, reason="%s cannot be converted to an "
+                        "integer" % value)
     return res
 
 

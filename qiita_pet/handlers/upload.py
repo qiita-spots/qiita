@@ -48,7 +48,7 @@ class StudyUploadFileHandler(BaseHandler):
         try:
             study = Study(int(study_id))
         except QiitaDBUnknownIDError:
-            raise HTTPError(404, "Study %s does not exist" % study_id)
+            raise HTTPError(404, reason="Study %s does not exist" % study_id)
         check_access(self.current_user, study, no_public=True,
                      raise_error=True)
         self.display_template(study_id, "")
@@ -59,7 +59,7 @@ class StudyUploadFileHandler(BaseHandler):
         try:
             study = Study(int(study_id))
         except QiitaDBUnknownIDError:
-            raise HTTPError(404, "Study %s does not exist" % study_id)
+            raise HTTPError(404, reason="Study %s does not exist" % study_id)
         check_access(self.current_user, study, no_public=True,
                      raise_error=True)
 
@@ -91,8 +91,8 @@ class UploadFileHandler(BaseHandler):
         """
         if not filename.endswith(tuple(qiita_config.valid_upload_extension)):
             self.set_status(415)
-            raise HTTPError(415, "User %s is trying to upload %s" %
-                                 (self.current_user, str(filename)))
+            raise HTTPError(415, reason="User %s is trying to upload %s" %
+                            (self.current_user, str(filename)))
 
     @authenticated
     @execute_as_transaction
