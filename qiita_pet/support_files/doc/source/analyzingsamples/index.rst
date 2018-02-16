@@ -5,12 +5,12 @@ Qiita now uses `QIIME2 <http://qiime2.org>`__ plugins for analysis.
 -------------------------------------------------------------------
 Thanks to this, we've got new layout of the analysis panel and the following new features:
 
-* `Alpha Diversity <https://docs.qiime2.org/2017.12/plugins/available/diversity/alpha/>`__ (including statistics calculations; example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Ffaith-pd-group-significance.qzv>`__)
-* `Beta Diversity <https://docs.qiime2.org/2017.12/plugins/available/diversity/beta/>`__ (including stats)
-* Principal Coordinate Analysis (`PCoA <https://docs.qiime2.org/2017.12/plugins/available/diversity/pcoa/>`__), including ordination results and EMPeror plots (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Funweighted-unifrac-emperor.qzv>`__)
-* `Rarefaction <https://docs.qiime2.org/2017.12/plugins/available/feature-table/rarefy/>`__
-* `Filter Samples <https://docs.qiime2.org/2017.12/plugins/available/feature-table/filter_samples/>`__
-* `Taxa Summary <https://docs.qiime2.org/2017.12/plugins/available/taxa/barplot/>`__ (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2017.12%2Fdata%2Ftutorials%2Fmoving-pictures%2Ftaxa-bar-plots.qzv>`__)
+* `Alpha Diversity <https://docs.qiime2.org/2018.2/plugins/available/diversity/alpha/>`__ (including statistics calculations; example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2018.2%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Ffaith-pd-group-significance.qzv>`__)
+* `Beta Diversity <https://docs.qiime2.org/2018.2/plugins/available/diversity/beta/>`__ (including stats)
+* Principal Coordinate Analysis (`PCoA <https://docs.qiime2.org/2018.2/plugins/available/diversity/pcoa/>`__), including ordination results and EMPeror plots (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2018.2%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Funweighted_unifrac_emperor.qzv>`__)
+* `Rarefaction <https://docs.qiime2.org/2018.2/plugins/available/feature-table/rarefy/>`__
+* `Filter Samples <https://docs.qiime2.org/2018.2/plugins/available/feature-table/>`__
+* `Taxa Summary <https://docs.qiime2.org/2018.2/plugins/available/taxa/barplot/>`__ (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2018.2%2Fdata%2Ftutorials%2Fmoving-pictures%2Ftaxa-bar-plots.qzv>`__)
 
 Creating A New Analysis
 -----------------------
