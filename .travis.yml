@@ -80,7 +80,7 @@ script:
   - kill $QIITA_PID
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then qiita-cron-job ; fi
-  - flake8 qiita_* setup.py scripts/*
+  - flake8 qiita_* setup.py scripts/*.py
   - qiita pet webserver
 addons:
   postgresql: "9.3"
