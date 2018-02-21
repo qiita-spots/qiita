@@ -192,8 +192,9 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
     try:
         admin_conn.execute('CREATE DATABASE %s' % qiita_config.database)
     except ValueError as error:
-        # if database exists, ignore if sett
-        if 'database "qiita_test" already exists' in error.message:
+        # if database exists ignore
+        msg = 'database "%s" already exists' % qiita_config.database
+        if msg in error.message:
             print("Database exits, let's make sure it's test")
             with qdb.sql_connection.TRN:
                 # Insert the settings values to the database
