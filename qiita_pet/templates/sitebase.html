@@ -2,7 +2,6 @@
 {% from qiita_core.util import get_qiita_version, get_release_info %}
 {% from qiita_pet import allowed_min_browser_versions %}
 {% from qiita_pet.portal import portal_styling %}
-{% set maintenance = r_client.get('maintenance') %}
 {% set sysmessage = r_client.get('sysmessage') %}
 {% set user = current_user %}
 {% set qiita_version, qiita_sha = get_qiita_version() %}
@@ -13,11 +12,7 @@
     {% set level = 'info' %}
 {% end %}
 {% set message = globals().get('message', '') %}
-{% if maintenance is not None %}
-  {# maintenance mode takes precedence #}
-  {% set level = 'danger' %}
-  {% set message = maintenance %}
-{% elif sysmessage is not None %}
+{% if sysmessage is not None %}
   {# since this is a systemwide message, allow regular messages as well #}
   {% set message = sysmessage + "<br />" + str(message) %}
 {% end %}
@@ -427,7 +422,6 @@
               </li>
             </ul>
             <!-- otherwise show the login form -->
-            {% elif  maintenance is None %}
             <ul class="nav navbar-nav">
               <li>
                 <a href="{% raw qiita_config.portal_dir %}/auth/forgot/">Forgot Password</a>
@@ -445,7 +439,6 @@
               </div>
               <button tabindex="3" type="submit" class="btn btn-success">Sign in</button>
             </form>
-            {% end %}
             <ul class="nav navbar-nav">
               <!-- generic elements -->
               <li class="dropdown">
