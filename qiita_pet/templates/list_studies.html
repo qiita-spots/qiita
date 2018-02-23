@@ -58,6 +58,7 @@ $(document).ready(function() {
   $('#user-studies-table').dataTable({
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
+      "sDom": '<"top">l',
       "columns": [
         { "orderable": false, "data": "artifact_biom_ids" },
         { "data": "study_title" },
@@ -112,7 +113,6 @@ $(document).ready(function() {
         }, targets: [5]},
         ],
       "language": {
-          "search": "Filter results by column data (Title, abstract, PI, etc):",
           "loadingRecords": "Please wait - loading information ...",
           "zeroRecords": "No studies found"
       },
@@ -176,7 +176,6 @@ $(document).ready(function() {
         }, targets: [1]},
         ],
       "language": {
-          "search": "Filter results by column data (Title, abstract, PI, etc):",
           "loadingRecords": "Please wait - loading information ...",
           "zeroRecords": "No studies found"
       },
@@ -241,8 +240,9 @@ $(document).ready(function() {
   });
 
   // connecting searches
-  $('#user-studies-table').on('search.dt', function () {
-    var search_text = $('.dataTables_filter input').val();
+  $('#study-search-input').keyup(function(){
+    var search_text = $(this).val();
+    $('#user-studies-table').DataTable().search(search_text).draw();
     $('#studies-table').DataTable().search(search_text).draw();
   });
 
@@ -341,14 +341,25 @@ function add_metacat(metacat) {
 <!--User Studies-->
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
-    <h5 class="gray-msg">
-      Filter studies by tags:
-      <small>(
-        <span style="color: #FFA500">Admin</span>,
-        <span style="color: #1E90FF">User</span>
-      )</small>
-    </h5>
-    <select class="js-select2-multiple form-control" id="study_tags_multiple" multiple="multiple" style="width: 100%"></select>
+    <table border="0" width="100%">
+      <tr>
+        <td width="70%">
+          <h5 class="gray-msg">Filter by column data (Title, abstract, PI, etc):</h5>
+          <input type="text" class="form-control" id="study-search-input" style="width: 100%">
+        </td>
+        <td width="10px">&nbsp;</td>
+        <td>
+          <h5 class="gray-msg">
+            Filter studies by tags:
+            <small>(
+              <span style="color: #FFA500">Admin</span>,
+              <span style="color: #1E90FF">User</span>
+            )</small>
+          </h5>
+          <select class="js-select2-multiple form-control" id="study_tags_multiple" multiple="multiple" style="width: 100%"></select>
+        </td>
+      </tr>
+    </table>
 
     <h3 class="gray-msg">Your Studies</h3>
     <table id="user-studies-table" class="table table-bordered gray-msg">
