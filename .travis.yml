@@ -7,8 +7,7 @@ env:
   matrix:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
-    - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_core qiita_ware"
-    - secure: ta4qrBQleTSwDUml9+jtnJES1qHCgLtjUpOHKX25ZCdw3vi/SpXxyErn5yrXvdefIDYtspVv3OWpWesiwFf3Qq1PSWJBeIrxdYizqebRr6GuUcdPN+Mj8PQ09UDWY3GthMfb26oIKmWi9YyELjwqkb6zztSW/e276scrEWppsVI=
+    - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_core qiita_ware" secure: ta4qrBQleTSwDUml9+jtnJES1qHCgLtjUpOHKX25ZCdw3vi/SpXxyErn5yrXvdefIDYtspVv3OWpWesiwFf3Qq1PSWJBeIrxdYizqebRr6GuUcdPN+Mj8PQ09UDWY3GthMfb26oIKmWi9YyELjwqkb6zztSW/e276scrEWppsVI=
 before_install:
   - redis-server --version
   - redis-server --port 7777 &

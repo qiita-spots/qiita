@@ -134,24 +134,20 @@ class CommandsTests(TestCase):
         return ppd
 
     def test_submit_EBI_step_2_failure(self):
-        # see issue #406
-        # ppd = self.write_demux_files(PrepTemplate(1), False)
-        #
-        # with self.assertRaises(AttributeError):
-        #     submit_EBI(ppd.id, 'ADD', True)
-        pass
+        ppd = self.write_demux_files(PrepTemplate(1), False)
+
+        with self.assertRaises(AttributeError):
+            submit_EBI(ppd.id, 'VALIDATE', True)
 
     def test_submit_EBI_parse_EBI_reply_failure(self):
         ppd = self.write_demux_files(PrepTemplate(1))
         with self.assertRaises(ComputeError):
-            submit_EBI(ppd.id, 'ADD', True)
+            submit_EBI(ppd.id, 'VALIDATE', True)
 
     def test_full_submission(self):
-        # see issue #406
-        # ppd = self.generate_new_study_with_preprocessed_data()
-        #
-        # submit_EBI(ppd.id, 'ADD', True)
-        pass
+        ppd = self.generate_new_study_with_preprocessed_data()
+
+        submit_EBI(ppd.id, 'VALIDATE', True)
 
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0

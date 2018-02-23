@@ -21,20 +21,20 @@ from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import ComputeError, EBISubmissionError
 
 
-def submit_EBI(preprocessed_data_id, action, send):
-    """Submit a preprocessed data to EBI
+def submit_EBI(artifact_id, action, send):
+    """Submit a artifact to EBI
 
     Parameters
     ----------
-    preprocessed_data_id : int
-        The preprocesssed data id
+    artifact_id : int
+        The artifact id
     action : %s
         The action to perform with this data
     send : bool
         True to actually send the files
     """
     # step 1: init and validate
-    ebi_submission = EBISubmission(preprocessed_data_id, action)
+    ebi_submission = EBISubmission(artifact_id, action)
 
     # step 2: generate demux fastq files
     ebi_submission.study.ebi_submission_status = 'submitting'
@@ -46,7 +46,7 @@ def submit_EBI(preprocessed_data_id, action, send):
             rmtree(ebi_submission.full_ebi_dir)
         ebi_submission.study.ebi_submission_status = 'failed: %s' % error_msg
         LogEntry.create('Runtime', error_msg,
-                        info={'ebi_submission': preprocessed_data_id})
+                        info={'ebi_submission': artifact_id})
         raise
 
     # step 3: generate and write xml files
@@ -60,7 +60,7 @@ def submit_EBI(preprocessed_data_id, action, send):
 
             LogEntry.create('Runtime',
                             ("Submitting sequences for pre_processed_id: "
-                             "%d" % preprocessed_data_id))
+                             "%d" % artifact_id))
             for cmd in ebi_submission.generate_send_sequences_cmd():
                 stdout, stderr, rv = system_call(cmd)
                 if rv != 0:
@@ -72,14 +72,13 @@ def submit_EBI(preprocessed_data_id, action, send):
             environ['ASPERA_SCP_PASS'] = old_ascp_pass
             LogEntry.create('Runtime',
                             ('Submission of sequences of pre_processed_id: '
-                             '%d completed successfully' %
-                             preprocessed_data_id))
+                             '%d completed successfully' % artifact_id))
 
         # step 5: sending xml and parsing answer
         xmls_cmds = ebi_submission.generate_curl_command()
         LogEntry.create('Runtime',
                         ("Submitting XMLs for pre_processed_id: "
-                         "%d" % preprocessed_data_id))
+                         "%d" % artifact_id))
         xml_content, stderr, rv = system_call(xmls_cmds)
         if rv != 0:
             error_msg = ("Error:\nStd output:%s\nStd error:%s" % (
@@ -88,8 +87,7 @@ def submit_EBI(preprocessed_data_id, action, send):
         else:
             LogEntry.create('Runtime',
                             ('Submission of sequences of pre_processed_id: '
-                             '%d completed successfully' %
-                             preprocessed_data_id))
+                             '%d completed successfully' % artifact_id))
         open(ebi_submission.curl_reply, 'w').write(
             'stdout:\n%s\n\nstderr: %s' % (xml_content, stderr))
 
@@ -99,7 +97,7 @@ def submit_EBI(preprocessed_data_id, action, send):
         except EBISubmissionError as e:
             le = LogEntry.create(
                 'Fatal', "Command: %s\nError: %s\n" % (xml_content, str(e)),
-                info={'ebi_submission': preprocessed_data_id})
+                info={'ebi_submission': artifact_id})
             ebi_submission.study.ebi_submission_status = (
                 "failed: XML parsing, log id: %d" % le.id)
             raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
