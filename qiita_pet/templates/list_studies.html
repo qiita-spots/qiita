@@ -341,25 +341,22 @@ function add_metacat(metacat) {
 <!--User Studies-->
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
-    <table border="0" width="100%">
-      <tr>
-        <td width="70%">
-          <h5 class="gray-msg">Filter by column data (Title, abstract, PI, etc):</h5>
-          <input type="text" class="form-control" id="study-search-input" style="width: 100%">
-        </td>
-        <td width="10px">&nbsp;</td>
-        <td>
-          <h5 class="gray-msg">
-            Filter studies by tags:
-            <small>(
-              <span style="color: #FFA500">Admin</span>,
-              <span style="color: #1E90FF">User</span>
-            )</small>
-          </h5>
-          <select class="js-select2-multiple form-control" id="study_tags_multiple" multiple="multiple" style="width: 100%"></select>
-        </td>
-      </tr>
-    </table>
+    <div class="row">
+      <div class="col-md-8">
+        <h5 class="gray-msg">Filter by column data (Title, abstract, PI, etc):</h5>
+        <input type="text" class="form-control" id="study-search-input" style="width: 100%">
+      </div>
+      <div class="col-md-4">
+        <h5 class="gray-msg">
+          Filter studies by tags:
+          <small>(
+            <span style="color: #FFA500">Admin</span>,
+            <span style="color: #1E90FF">User</span>
+          )</small>
+        </h5>
+        <select class="js-select2-multiple form-control" id="study_tags_multiple" multiple="multiple" style="width: 100%"></select>
+      </div>
+    </div>
 
     <h3 class="gray-msg">Your Studies</h3>
     <table id="user-studies-table" class="table table-bordered gray-msg">
