@@ -90,21 +90,10 @@ def plugins():
     pass
 
 
-# The private group holds commands that should never be called by the user
-# since they are used internally by Qiita to be able to distribute compute
-@qiita.group()
-def private():
-    pass
-
-
 @ware.group()
 def ebi():
     pass
 
-
-@db.group()
-def portal():
-    pass
 
 # #############################################################################
 # DB COMMANDS
@@ -166,23 +155,6 @@ def load_artifact(fp, fp_type, artifact_type, prep_template, parents,
 
 
 @db.command()
-@click.option('--fp', required=True, type=click.Path(resolve_path=True,
-              readable=True, exists=True), multiple=True,
-              help='Path to the artifact files. This option can be used '
-              'multiple times if there are multiple artifact files.')
-@click.option('--fp_type', required=True, multiple=True, help='Describes the '
-              'contents of the file. Pass one fp_type per fp.',
-              type=click.Choice(qdb.util.get_filepath_types().keys()))
-@click.option('--artifact_id', required=True,
-              help="The artifact to update",
-              type=click.IntRange(1))
-def update_artifact(fp, fp_type, artifact_id):
-    """Updates an artifact from the database"""
-    artifact = qdb.commands.update_artifact_from_cmd(fp, fp_type, artifact_id)
-    click.echo("Artifact %s successfully updated" % artifact.id)
-
-
-@db.command()
 @click.argument('fp', required=True,
                 type=click.Path(resolve_path=True, readable=True, exists=True))
 @click.option('--study', required=True, type=int,
@@ -210,95 +182,9 @@ def load_prep_template(fp, study, data_type):
                % prep_template.id)
 
 
-@db.command()
-@click.option('--name', required=True, type=str,
-              help='The name of the new reference database')
-@click.option('--version', required=True, type=str,
-              help='The version of the reference database')
-@click.option('--seq_fp', required=True,
-              type=click.Path(resolve_path=True, readable=True, exists=True),
-              help="Path to the reference sequences file")
-@click.option('--tax_fp', required=False,
-              type=click.Path(resolve_path=True, readable=True, exists=True),
-              help="Path to the reference taxonomy file")
-@click.option('--tree_fp', required=False,
-              type=click.Path(resolve_path=True, readable=True, exists=True),
-              help="Path to the reference tree file")
-def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
-    """Loads a reference db to the database"""
-    reference = qdb.reference.Reference.create(
-        name, version, seq_fp, tax_fp, tree_fp)
-    click.echo("Reference db successfully added to the database with id %s"
-               % reference.id)
-
-
-@db.command()
-@click.argument('fp', required=True,
-                type=click.Path(resolve_path=True, readable=True, exists=True))
-@click.option('--cmd-id', required=True,
-              type=click.IntRange(1, None),
-              help='The command to add the parameter set')
-@click.option('--name', required=True, type=str,
-              help='The name of the parameters set')
-def load_parameters(fp, cmd_id, name):
-    """Loads a parameter set to the database"""
-    param = qdb.commands.load_parameters_from_cmd(name, fp, cmd_id)
-    click.echo("Parameters successfully added to the command %s with id %s"
-               % (cmd_id, param.id))
-
-
-# #############################################################################
-# PORTAL COMMANDS
-# #############################################################################
-
-
-@portal.command(name="add-analyses")
-@click.argument('portal', required=True,
-                type=click.Choice(qdb.portal.Portal.list_portals()))
-@click.argument('analyses', required=True, type=int, nargs=-1)
-def add_analysis(portal, analyses):
-    try:
-        qdb.portal.Portal(portal).add_analyses(analyses)
-    except qdb.exceptions.QiitaDBError as e:
-        raise click.BadOptionUsage("analyses", str(e))
-
-
-@portal.command(name="remove-analyses")
-@click.argument('portal', required=True,
-                type=click.Choice(qdb.portal.Portal.list_portals()))
-@click.argument('analyses', required=True, type=int, nargs=-1)
-def remove_analysis(portal, analyses):
-    try:
-        qdb.portal.Portal(portal).remove_analyses(analyses)
-    except qdb.exceptions.QiitaDBError as e:
-        raise click.BadOptionUsage("analyses", str(e))
-
-
-@portal.command(name="add-studies")
-@click.argument('portal', required=True,
-                type=click.Choice(qdb.portal.Portal.list_portals()))
-@click.argument('studies', required=True, type=int, nargs=-1)
-def add_study(portal, studies):
-    try:
-        qdb.portal.Portal(portal).add_studies(studies)
-    except qdb.exceptions.QiitaDBError as e:
-        raise click.BadOptionUsage("studies", str(e))
-
-
-@portal.command(name="remove-studies")
-@click.argument('portal', required=True,
-                type=click.Choice(qdb.portal.Portal.list_portals()))
-@click.argument('studies', required=True, type=int, nargs=-1)
-def remove_study(portal, studies):
-    try:
-        qdb.portal.Portal(portal).remove_studies(studies)
-    except qdb.exceptions.QiitaDBError as e:
-        raise click.BadOptionUsage("studies", str(e))
-
 # #############################################################################
 # EBI COMMANDS
 # #############################################################################
-
 
 @ebi.command()
 @click.option('--preprocessed_data_id', required=True, type=int)
@@ -316,21 +202,6 @@ def submit(preprocessed_data_id, action, send):
 # #############################################################################
 # MAINTENANCE COMMANDS
 # #############################################################################
-
-
-@maintenance.command()
-@click.option('--time', required=True, type=int,
-              help='The amount of time to lock the site, in hours')
-@click.option('--message', required=True, type=str,
-              help="Message to show users")
-def lock(message, time):
-    r_client.setex('maintenance', message, time * 60 * 60)
-
-
-@maintenance.command()
-def unlock():
-    r_client.delete('maintenance')
-
 
 @maintenance.command()
 @click.option('--time', required=True, type=int,
@@ -355,15 +226,7 @@ def clear_sysmessage():
 
 @maintenance.command()
 def status():
-    maint_status = r_client.get('maintenance')
     sys_status = r_client.get('sysmessage')
-
-    if maint_status is None:
-        click.echo("Site is not in maintenance mode")
-    else:
-        click.echo("Site is in maintenance mode:")
-        click.echo(maint_status)
-        click.echo(r_client.ttl('maintenance'), "seconds remaining")
 
     if sys_status is None:
         click.echo("Site has no system message")

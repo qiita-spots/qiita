@@ -186,45 +186,6 @@ def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
         prep_temp, qdb.study.Study(study_id), data_type)
 
 
-def load_parameters_from_cmd(name, fp, cmd_id):
-    """Add a new parameters entry on `table`
-
-    Parameters
-    ----------
-    fp : str
-        The filepath to the parameters file
-    cmd_id : int
-        The command to add the new default parameter set
-
-    Returns
-    -------
-    qiita_db.software.DefaultParameters
-        The newly parameter set object created
-
-    Raises
-    ------
-    ValueError
-        If the table does not exists on the DB
-        If the fp is not correctly formatted
-
-    Notes
-    -----
-    `fp` should be a tab-delimited text file following this format:
-        parameter_1<TAB>value
-        parameter_2<TAB>value
-        ...
-    """
-    cmd = qdb.software.Command(cmd_id)
-
-    try:
-        params = dict(tuple(l.strip().split('\t')) for l in open(fp, 'U'))
-    except ValueError:
-        raise ValueError("The format of the parameters files is not correct. "
-                         "The format is PARAMETER_NAME<tab>VALUE")
-
-    return qdb.software.DefaultParameters.create(name, cmd, **params)
-
-
 def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
     """Updates the artifact `artifact_id` with the given files
 
