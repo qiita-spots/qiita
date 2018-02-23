@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from tornado.escape import url_escape, json_encode
-from tornado.web import HTTPError
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config, r_client
@@ -106,9 +105,6 @@ class AuthLoginHandler(BaseHandler):
 
     @execute_as_transaction
     def post(self):
-        if r_client.get('maintenance') is not None:
-            raise HTTPError(503, reason="Site is down for maintenance")
-
         username = self.get_argument("username", "").strip().lower()
         passwd = self.get_argument("password", "")
         nextpage = self.get_argument("next", None)
