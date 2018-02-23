@@ -57,7 +57,11 @@ for i in ${studies[@]}; do
 
     # Making study public by making its processed data public
     echo "\tmaking study public... "
-    echo -e "from qiita_db.artifact import Artifact\nArtifact(${pd_id}).status = 'public'\n\n" | python
+    echo -e "from qiita_db.artifact import Artifact\nArtifact(${pd_id}).visibility = 'public'\n\n" | python
     echo "Ok"
     rm $conf_fp
 done
+
+# Making sure the studies/artifacts are public
+aids=`echo -e "from qiita_db.study import Study\nstudies = Study.get_by_status('public')\naids = [a.id for s in studies for a in s.artifacts()]\nprint(aids)" | python`
+if [ "$aids" != "[10, 11, 12]" ]; then echo "ERROR: artifacts not created: ", aids; exit 1; fi

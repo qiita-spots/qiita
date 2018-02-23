@@ -422,6 +422,7 @@
               </li>
             </ul>
             <!-- otherwise show the login form -->
+            {% else %}
             <ul class="nav navbar-nav">
               <li>
                 <a href="{% raw qiita_config.portal_dir %}/auth/forgot/">Forgot Password</a>
