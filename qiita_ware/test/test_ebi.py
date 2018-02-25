@@ -639,10 +639,12 @@ class TestEBISubmission(TestCase):
              '1.SKM2.640199', '1.SKB3.640195', '1.SKB6.640176'])
 
         artifact = self.write_demux_files(PrepTemplate(1))
+        print artifact.id
         # This is testing that only the samples with sequences are going to
         # be created
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        print obs_demux_samples
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
         self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
@@ -654,6 +656,8 @@ class TestEBISubmission(TestCase):
         # exists and that we have the same files and ignore not fastq.gz files
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        print artifact.id
+        print obs_demux_samples
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
         self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
