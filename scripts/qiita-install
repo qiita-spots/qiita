@@ -17,6 +17,7 @@
 # Original idea took from: https://www.ibm.com/developerworks/library/l-bash-parameters/index.html
 version=1.0
 mode="dev"
+set -e
 
 show_opts () {
   while getopts "e:vh" optname
@@ -73,6 +74,29 @@ like master and development.\n"
   printf "\t\t      -h: help\n"
   printf "\t\t      <command> <opts> <args>\n"
 }
+
+# Solution for travis_retry on shell scripts https://gist.github.com/letmaik/caa0f6cc4375cbfcc1ff26bd4530c2a3
+travis_retry () {
+  local result=0
+  local count=1
+  while [ $count -le 3 ]; do
+    [ $result -ne 0 ] && {
+      echo -e "\n${ANSI_RED}The command \"$@\" failed. Retrying, $count of 3.${ANSI_RESET}\n" >&2
+    }
+    # ! { } ignores set -e, see https://stackoverflow.com/a/4073372
+    ! { "$@"; result=$?; }
+    [ $result -eq 0 ] && break
+    count=$(($count + 1))
+    sleep 1
+  done
+
+  [ $count -gt 3 ] && {
+    echo -e "\n${ANSI_RED}The command \"$@\" failed 3 times.${ANSI_RESET}\n" >&2
+  }
+
+  return $result
+}
+
 
 install () {
   # Took from the diverse scripts
