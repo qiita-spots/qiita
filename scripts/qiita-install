@@ -76,8 +76,8 @@ like master and development.\n"
 
 install () {
   # Took from the diverse scripts
-  travis_retry conda create --yes -n qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran
-  'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
+  conda info --envs
+  travis_retry conda create --yes -n qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran 'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   source activate qiita
   pip install sphinx==1.5.5 sphinx-bootstrap-theme coveralls
   pip install https://github.com/biocore/qiita/archive/$mode.zip --process-dependency-links
