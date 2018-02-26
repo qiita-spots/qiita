@@ -206,7 +206,6 @@ Update Sample info
 
   * *Note that these changes will not update on your analysis but these changes will not affect your processing data since the metadata isn’t applied until analysis*
 
-
 Creating and Working With Preparation information
 -------------------------------------------------
 
