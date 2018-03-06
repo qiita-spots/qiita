@@ -623,7 +623,7 @@ class TestEBISubmission(TestCase):
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
         with self.assertRaises(EBISubmissionError):
-            ebi_submission.generate_demultiplexed_fastq()
+            ebi_submission.generate_demultiplexed_fastq(rewrite_fastq=True)
 
         artifact = self.write_demux_files(PrepTemplate(1), 'WRONG-SEQS')
         ebi_submission = EBISubmission(artifact.id, 'ADD')

@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from os.path import basename, join, isdir, isfile, exists
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
 from urllib import quote
@@ -1028,6 +1028,10 @@ class EBISubmission(object):
         dir_not_exists = not isdir(self.full_ebi_dir)
         missing_samples = []
         if dir_not_exists or rewrite_fastq:
+            # if it exists, remove folder and start from scratch
+            if isdir(self.full_ebi_dir)
+                rmtree(self.full_ebi_dir)
+
             makedirs(self.full_ebi_dir)
 
             if self.artifact.artifact_type == 'per_sample_FASTQ':
