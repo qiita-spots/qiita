@@ -4,11 +4,11 @@ sudo: false
 env:
   global:
     - PYTHON_VERSION=3.5
-    - secure: ta4qrBQleTSwDUml9+jtnJES1qHCgLtjUpOHKX25ZCdw3vi/SpXxyErn5yrXvdefIDYtspVv3OWpWesiwFf3Qq1PSWJBeIrxdYizqebRr6GuUcdPN+Mj8PQ09UDWY3GthMfb26oIKmWi9YyELjwqkb6zztSW/e276scrEWppsVI=
+    - secure: "Gk1H6oLfzX1LHbF2hS1TP4x5MIuu61u0VBBYQDxlHefyIsn2xVsbwouKHzty/GlEoKlqnebBgWN6Y8o/X7Gd6iIBAhEltainS24/3re2HtkyW3eH81qRpKrxATsK2tCWxMdPqMyI2uZ/3aJEAIiJpySc7gVhk1F1hkj+tsB6C/Y="
   matrix:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
-    - secure: "jFMiaNruzfl5BomH6IyCz3zW/ZhSojXVbgQUQdBgSUWRTr18CjiK6HJ69J/wVIY9yqAcpZs311oVvHSSn+4XScZs1bTnjJQsuuMS3evA4oP1QrZ3to6bplwVl2jSzw7dng0ptPBlx1VJthN/+da6VO83VkFLSw6oHknXkYDxmEI="
+    - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_core qiita_ware"
 before_install:
   - redis-server --version
   - redis-server --port 7777 &
