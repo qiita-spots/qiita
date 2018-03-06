@@ -835,13 +835,15 @@ class EBISubmission(object):
 
         return ascp_commands
 
-    def parse_EBI_reply(self, curl_result):
+    def parse_EBI_reply(self, curl_result, test=False):
         """Parse and verify reply from EBI after sending XML files
 
         Parameters
         ----------
         curl_result : str
             The reply sent by EBI after sending XML files
+        test : bool
+            If true we will assume is a test and ignore some parsing errors
 
         Returns
         -------
@@ -901,7 +903,10 @@ class EBISubmission(object):
             sample_id = self._sample_aliases[alias]
             sample_accessions[sample_id] = elem.get('accession')
             ext_id = elem.find('EXT_ID')
-            biosample_accessions[sample_id] = ext_id.get('accession')
+            if test:
+                biosample_accessions[sample_id] = 'test_' + sample_id
+            else:
+                biosample_accessions[sample_id] = ext_id.get('accession')
 
         def data_retriever(key, trans_dict):
             res = {}

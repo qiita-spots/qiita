@@ -145,10 +145,14 @@ class CommandsTests(TestCase):
             submit_EBI(ppd.id, 'VALIDATE', True)
 
     def test_full_submission(self):
-        ppd = self.generate_new_study_with_preprocessed_data()
+        artifact = self.generate_new_study_with_preprocessed_data()
 
-        with self.assertRaises(ComputeError):
-            submit_EBI(ppd.id, 'VALIDATE', True)
+        # just making sure
+        self.assertEqual(artifact.study.ebi_submission_status, 'not submitted')
+
+        submit_EBI(artifact.id, 'VALIDATE', True, test=True)
+
+        self.assertEqual(artifact.study.ebi_submission_status, 'submitted')
 
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0

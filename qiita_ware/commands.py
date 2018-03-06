@@ -21,7 +21,7 @@ from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import ComputeError, EBISubmissionError
 
 
-def submit_EBI(artifact_id, action, send):
+def submit_EBI(artifact_id, action, send, test=False):
     """Submit a artifact to EBI
 
     Parameters
@@ -32,6 +32,8 @@ def submit_EBI(artifact_id, action, send):
         The action to perform with this data
     send : bool
         True to actually send the files
+    test : bool
+        If True some restrictions will be ignored, only used in parse_EBI_reply
     """
     # step 1: init and validate
     ebi_submission = EBISubmission(artifact_id, action)
@@ -56,7 +58,8 @@ def submit_EBI(artifact_id, action, send):
         # step 4: sending sequences
         if action != 'MODIFY':
             old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
-            environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
+            if old_ascp_pass == '':
+                environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
 
             LogEntry.create('Runtime',
                             ("Submitting sequences for pre_processed_id: "
@@ -69,13 +72,16 @@ def submit_EBI(artifact_id, action, send):
                     raise ComputeError(error_msg)
                 open(ebi_submission.ascp_reply, 'a').write(
                     'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
+
+            ascp_passwd = environ['ASPERA_SCP_PASS']
             environ['ASPERA_SCP_PASS'] = old_ascp_pass
             LogEntry.create('Runtime',
                             ('Submission of sequences of pre_processed_id: '
                              '%d completed successfully' % artifact_id))
 
         # step 5: sending xml and parsing answer
-        xmls_cmds = ebi_submission.generate_curl_command()
+        xmls_cmds = ebi_submission.generate_curl_command(
+            ebi_seq_xfer_pass=ascp_passwd)
         LogEntry.create('Runtime',
                         ("Submitting XMLs for pre_processed_id: "
                          "%d" % artifact_id))
@@ -93,7 +99,7 @@ def submit_EBI(artifact_id, action, send):
 
         try:
             st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
-                ebi_submission.parse_EBI_reply(xml_content)
+                ebi_submission.parse_EBI_reply(xml_content, test=test)
         except EBISubmissionError as e:
             le = LogEntry.create(
                 'Fatal', "Command: %s\nError: %s\n" % (xml_content, str(e)),
