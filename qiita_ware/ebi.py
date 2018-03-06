@@ -1029,7 +1029,7 @@ class EBISubmission(object):
         missing_samples = []
         if dir_not_exists or rewrite_fastq:
             # if it exists, remove folder and start from scratch
-            if isdir(self.full_ebi_dir)
+            if isdir(self.full_ebi_dir):
                 rmtree(self.full_ebi_dir)
 
             makedirs(self.full_ebi_dir)
