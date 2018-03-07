@@ -4,6 +4,7 @@ sudo: false
 env:
   global:
     - PYTHON_VERSION=3.5
+    - secure: "nrDiR0N/5E5KMOa6OB53joSB/POKN1crFIYcyyEpRJR6fic3YWLGdFabnLOinm+AZA3PoO2Nh203t3UrkQfvPxJ8Rpztm0gLTcp42U9bUPkXhmnnf/m7e1Q3odxhoxy4//bF+7SLXpfyDxNBO3fScckzpNqFepNVPgyEmJpf3LU="
   matrix:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
@@ -19,9 +20,6 @@ before_install:
   - wget ftp://ftp.microbio.me/pub/qiita/ascp-install-3.5.4.102989-linux-64-qiita.sh -O ascp-install-3.5.4.102989-linux-64-qiita.sh
   - chmod +x ascp-install-3.5.4.102989-linux-64-qiita.sh
   - ./ascp-install-3.5.4.102989-linux-64-qiita.sh
-  # once we have ebi testing we should uncomment this line
-  # look for EBI below as it's part of this
-  # - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then openssl aes-256-cbc -K $encrypted_a2e23aea5f14_key -iv $encrypted_a2e23aea5f14_iv -in qiita_core/support_files/config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg -d ; fi
 install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
@@ -64,10 +62,6 @@ install:
   - source deactivate
   - source activate qiita
 before_script:
-  # EBI, see the end of before_install about why this block is commented out
-  # - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
-  #   export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
-  #   fi
   - qiita-env make --no-load-ontologies
   - qiita-test-install
 script:

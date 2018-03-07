@@ -187,7 +187,7 @@ def load_prep_template(fp, study, data_type):
 # #############################################################################
 
 @ebi.command()
-@click.option('--preprocessed_data_id', required=True, type=int)
+@click.option('--artifact-id', required=True, type=int)
 @click.option('--action', type=click.Choice(EBISubmission.valid_ebi_actions),
               default='submit', help='The generated XML files will specify '
               'this "action", which controls how the EBI servers handle the '
@@ -195,8 +195,8 @@ def load_prep_template(fp, study, data_type):
 @click.option('--send/--no-send', default=False, help="Controls whether or "
               "not sequence files and metadata will actually be sent to EBI "
               "(default is to generate all the files, but not to send)")
-def submit(preprocessed_data_id, action, send):
-    _submit_EBI(preprocessed_data_id, action, send)
+def submit(artifact_id, action, send):
+    _submit_EBI(artifact_id, action, send)
 
 
 # #############################################################################
