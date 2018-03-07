@@ -126,13 +126,6 @@ Required fields for EBI submission
 
 In order to submit your data to EBI, certain fields are required in your sample information file. You can download a spread sheet containing these required fields on the `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__ under "MetaData Template".
 
-Checking for Errors In Sample information
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet.
-
-**Remember that spelling and capitalization matters in Qiita**
-
 Attaching the Sample Information to the Study
 ---------------------------------------------
 
@@ -318,12 +311,6 @@ additional column is required.
 |                  |             | and ``my-data.fastq`` becomes ``my-data``).                                                |
 +------------------+-------------+--------------------------------------------------------------------------------------------+
 
-Checking for Errors In Preparation information
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* `Keemei <https://keemei.qiime2.org/>`__ is a Google Sheets add-on for validating sample metadata. Validation of sample metadata is important before beginning any analysis. Install Keemei and follow the instructions on its website to validate your sample information spread sheet.
-
-**Remember that spelling and capitalization matters in Qiita**
 
 Attaching Preparation Information to the Study
 ----------------------------------------------

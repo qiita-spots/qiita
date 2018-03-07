@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from os.path import basename, join, isdir, isfile, exists
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
 from urllib import quote
@@ -835,13 +835,15 @@ class EBISubmission(object):
 
         return ascp_commands
 
-    def parse_EBI_reply(self, curl_result):
+    def parse_EBI_reply(self, curl_result, test=False):
         """Parse and verify reply from EBI after sending XML files
 
         Parameters
         ----------
         curl_result : str
             The reply sent by EBI after sending XML files
+        test : bool
+            If true we will assume is a test and ignore some parsing errors
 
         Returns
         -------
@@ -901,7 +903,10 @@ class EBISubmission(object):
             sample_id = self._sample_aliases[alias]
             sample_accessions[sample_id] = elem.get('accession')
             ext_id = elem.find('EXT_ID')
-            biosample_accessions[sample_id] = ext_id.get('accession')
+            if test:
+                biosample_accessions[sample_id] = 'test_' + sample_id
+            else:
+                biosample_accessions[sample_id] = ext_id.get('accession')
 
         def data_retriever(key, trans_dict):
             res = {}
@@ -1028,6 +1033,10 @@ class EBISubmission(object):
         dir_not_exists = not isdir(self.full_ebi_dir)
         missing_samples = []
         if dir_not_exists or rewrite_fastq:
+            # if it exists, remove folder and start from scratch
+            if isdir(self.full_ebi_dir):
+                rmtree(self.full_ebi_dir)
+
             makedirs(self.full_ebi_dir)
 
             if self.artifact.artifact_type == 'per_sample_FASTQ':
