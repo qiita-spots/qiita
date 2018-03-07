@@ -22,7 +22,7 @@ from qiita_ware.exceptions import ComputeError, EBISubmissionError
 
 
 def submit_EBI(artifact_id, action, send, test=False):
-    """Submit a artifact to EBI
+    """Submit an artifact to EBI
 
     Parameters
     ----------
