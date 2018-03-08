@@ -34,6 +34,7 @@ class CommandsTests(TestCase):
         self.files_to_remove = []
         self.temp_dir = mkdtemp()
         self.files_to_remove.append(self.temp_dir)
+        self.ascp_pass = environ.get('ASPERA_SCP_PASS', '')
 
     def write_demux_files(self, prep_template, generate_hdf5=True):
         """Writes a demux test file to avoid duplication of code"""
@@ -146,14 +147,16 @@ class CommandsTests(TestCase):
         with self.assertRaises(ComputeError) as error:
             submit_EBI(ppd.id, 'VALIDATE', True)
         error = str(error.exception)
-        self.assertIn('EBI Submission failed! Log id:', error)
-        self.assertIn('The EBI submission failed:', error)
-        self.assertIn('Failed to validate run xml, error: Expected element',
-                      error)
+        if self.ascp_pass:
+            self.assertIn('EBI Submission failed! Log id:', error)
+            self.assertIn('The EBI submission failed:', error)
+            self.assertIn('Failed to validate run xml, error: Expected element',
+                          error)
+        else:
+            self.assertIn('ASCP Error:', error)
 
     def test_full_submission(self):
-        ascp_pass = environ.get('ASPERA_SCP_PASS', '')
-        if ascp_pass:
+        if self.ascp_pass:
             artifact = self.generate_new_study_with_preprocessed_data()
             self.assertEqual(
                 artifact.study.ebi_submission_status, 'not submitted')
