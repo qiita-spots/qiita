@@ -253,8 +253,7 @@ class TestStudy(TestCase):
                     'publications', 'study_title']
         obs = qdb.study.Study.get_info([1], exp_keys)
         self.assertEqual(len(obs), 1)
-        obs = dict(obs[0])
-        exp = {
+        exp = [{
             'metadata_complete': True, 'reprocess': False,
             'timeseries_type': 'None',
             'publications': [{'f1': '10.100/123456', 'f2': True},
@@ -262,7 +261,7 @@ class TestStudy(TestCase):
                              {'f1': '10.100/7891011', 'f2': True},
                              {'f1': '7891011', 'f2': False}],
             'study_title': 'Identification of the Microbiomes for Cannabis '
-            'Soils'}
+            'Soils'}]
         self.assertEqual(obs, exp)
 
         # Test get specific keys for all studies
@@ -279,13 +278,18 @@ class TestStudy(TestCase):
 
         s = qdb.study.Study.create(user, 'test_study_1', info=info)
         obs = qdb.study.Study.get_info(info_cols=exp_keys)
-        exp = [[True, [{'f1': '7891011', 'f2': False},
-                       {'f1': '10.100/7891011', 'f2': True},
-                       {'f1': '123456', 'f2': False},
-                       {'f1': '10.100/123456', 'f2': True}], False,
-                'Identification of the Microbiomes for Cannabis Soils',
-                'None'],
-               [False, None, False, 'test_study_1', 'None']]
+        exp = [
+            {'metadata_complete': True, 'reprocess': False,
+             'timeseries_type': 'None',
+             'publications': [{'f1': '7891011', 'f2': False},
+                              {'f1': '10.100/7891011', 'f2': True},
+                              {'f1': '123456', 'f2': False},
+                              {'f1': '10.100/123456', 'f2': True}],
+             'study_title': 'Identification of the Microbiomes '
+                            'for Cannabis Soils'},
+            {'metadata_complete': False, 'reprocess': False,
+             'timeseries_type': 'None', 'publications': None,
+             'study_title': 'test_study_1'}]
         self.assertEqual(obs, exp)
         qdb.study.Study.delete(s.id)
 

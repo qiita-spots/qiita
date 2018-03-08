@@ -1363,7 +1363,7 @@ def generate_study_list(study_ids, public_only=False):
     with qdb.sql_connection.TRN:
         sql = """
             SELECT metadata_complete, study_abstract, study_id, study_alias,
-                study_title, ebi_study_accession, ebi_submission_status,
+                study_title, ebi_study_accession,
                 qiita.study_person.name AS pi_name,
                 qiita.study_person.email AS pi_email,
                 (SELECT COUNT(sample_id) FROM qiita.study_sample
@@ -1470,7 +1470,7 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
     with qdb.sql_connection.TRN:
         sql = """
             SELECT metadata_complete, study_abstract, study_id, study_alias,
-                study_title, ebi_study_accession, ebi_submission_status,
+                study_title, ebi_study_accession,
                 qiita.study_person.name AS pi_name,
                 qiita.study_person.email AS pi_email,
                 (SELECT COUNT(sample_id) FROM qiita.study_sample

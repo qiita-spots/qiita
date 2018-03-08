@@ -209,10 +209,19 @@ class Study(qdb.base.QiitaObject):
                 args.append(tuple(study_ids))
 
             qdb.sql_connection.TRN.add(sql, args)
-            res = qdb.sql_connection.TRN.execute_fetchindex()
-            if study_ids is not None and len(res) != len(study_ids):
+            rows = qdb.sql_connection.TRN.execute_fetchindex()
+            if study_ids is not None and len(rows) != len(study_ids):
                 raise qdb.exceptions.QiitaDBError(
                     'Non-portal-accessible studies asked for!')
+
+            res = []
+            for r in rows:
+                r = dict(r)
+                if 'ebi_study_accession' in info_cols:
+                    r['ebi_submission_status'] = cls(
+                        r['study_id']).ebi_submission_status
+                res.append(r)
+
             return res
 
     @classmethod
