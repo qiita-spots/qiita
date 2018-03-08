@@ -596,23 +596,6 @@ class TestStudy(TestCase):
         self.assertEqual(new.ebi_submission_status, 'not submitted')
         qdb.study.Study.delete(new.id)
 
-    def test_ebi_submission_status_setter(self):
-        new = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), 'Test 1', self.info)
-        self.assertEqual(new.ebi_submission_status, "not submitted")
-        new.ebi_submission_status = 'submitting'
-        self.assertEqual(new.ebi_submission_status, 'submitting')
-        new.ebi_submission_status = 'failed: something horrible happened'
-        self.assertEqual(new.ebi_submission_status,
-                         'failed: something horrible happened')
-        new.ebi_submission_status = 'submitted'
-        self.assertEqual(new.ebi_submission_status, 'submitted')
-
-        with self.assertRaises(ValueError):
-            new.ebi_submission_status = "unknown"
-
-        qdb.study.Study.delete(new.id)
-
     def test_set_info(self):
         """Set info in a study"""
         newinfo = {

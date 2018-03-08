@@ -8,6 +8,7 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
+from os import environ
 from os.path import join
 from tempfile import mkdtemp
 import pandas as pd
@@ -145,14 +146,13 @@ class CommandsTests(TestCase):
             submit_EBI(ppd.id, 'VALIDATE', True)
 
     def test_full_submission(self):
-        artifact = self.generate_new_study_with_preprocessed_data()
-
-        # just making sure
-        self.assertEqual(artifact.study.ebi_submission_status, 'not submitted')
-
-        submit_EBI(artifact.id, 'VALIDATE', True, test=True)
-
-        self.assertEqual(artifact.study.ebi_submission_status, 'submitted')
+        ascp_pass = environ.get('ASPERA_SCP_PASS', '')
+        if ascp_pass:
+            artifact = self.generate_new_study_with_preprocessed_data()
+            self.assertEqual(
+                artifact.study.ebi_submission_status, 'not submitted')
+            submit_EBI(artifact.id, 'VALIDATE', True, test=True)
+            self.assertEqual(artifact.study.ebi_submission_status, 'submitted')
 
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0

@@ -1327,7 +1327,7 @@ def generate_study_list(study_ids, public_only=False):
     The main select might look scary but it's pretty simple:
     - We select the requiered fields from qiita.study and qiita.study_person
         SELECT metadata_complete, study_abstract, study_id, study_alias,
-            study_title, ebi_study_accession, ebi_submission_status,
+            study_title, ebi_study_accession,
             qiita.study_person.name AS pi_name,
             qiita.study_person.email AS pi_email,
     - the total number of samples collected by counting sample_ids
@@ -1428,7 +1428,9 @@ def generate_study_list(study_ids, public_only=False):
             del info["shared_with_name"]
             del info["shared_with_email"]
 
-            info['status'] = qdb.study.Study(info['study_id']).status
+            study = qdb.study.Study(info['study_id'])
+            info['status'] = study.status
+            info['ebi_submission_status'] = study.ebi_submission_status
             infolist.append(info)
     return infolist
 
@@ -1453,7 +1455,7 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
     The main select might look scary but it's pretty simple:
     - We select the requiered fields from qiita.study and qiita.study_person
         SELECT metadata_complete, study_abstract, study_id, study_alias,
-            study_title, ebi_study_accession, ebi_submission_status,
+            study_title, ebi_study_accession,
             qiita.study_person.name AS pi_name,
             qiita.study_person.email AS pi_email,
     - the total number of samples collected by counting sample_ids
@@ -1506,7 +1508,9 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
             del info["pi_email"]
             del info["pi_name"]
 
-            info['status'] = qdb.study.Study(info['study_id']).status
+            study = qdb.study.Study(info['study_id'])
+            info['status'] = study.status
+            info['ebi_submission_status'] = study.ebi_submission_status
             infolist.append(info)
     return infolist
 
