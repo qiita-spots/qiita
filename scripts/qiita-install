@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+# This script will perform these jobs:
+# 1. Create the travis enviroment
+# 2. Install qiita dependencies
+# 3. Configure the env variables
+# 4. Create and activate a conda virtual env.
+
+# Original idea took from: https://www.ibm.com/developerworks/library/l-bash-parameters/index.html
+version=1.0
+mode="dev"
+set -e
+
+show_opts () {
+  while getopts "e:vh" optname
+    do
+      case "$optname" in
+        "e")
+          if [[ "$OPTARG" == "master" ]]; then
+            mode='master'
+          elif [[ "$OPTARG" == "dev" ]]; then
+            mode='dev'
+          else
+            echo "Error: bad argument $OPTARG"
+            echo "Check qiita_install -h for more information."
+            exit 0
+          fi
+          install
+          exit 0
+          ;;
+        "v")
+          show_version
+          exit 0
+          ;;
+        "h")
+          help
+          exit 0
+          ;;
+        "?")
+          echo "Unknown option $OPTARG"
+          echo "Check qiita_install -h for more information."
+          ;;
+        ":")
+          echo "No argument value for option $OPTARG"
+          ;;
+        *)
+          echo "Unknown error while processing options"
+          ;;
+      esac
+    done
+  return $OPTIND
+}
+
+show_version () {
+  echo "Copyright (c) 2014--, The Qiita Development Team."
+  echo "qiita_install $version"
+}
+
+help () {
+  printf "Copyright (c) 2014--, The Qiita Development Team.\n"
+  printf "qiita_install: CLI utility to install qiita in different environment \
+like master and development.\n"
+  printf "usage: qiita_install [-e <dev|master>] [-h] [-v]\n"
+  printf "\t\t      -e: environment <dev|master>\n"
+  printf "\t\t      -v: version\n"
+  printf "\t\t      -h: help\n"
+  printf "\t\t      <command> <opts> <args>\n"
+}
+
+# Solution for travis_retry on shell scripts https://gist.github.com/letmaik/caa0f6cc4375cbfcc1ff26bd4530c2a3
+travis_retry () {
+  local result=0
+  local count=1
+  while [ $count -le 3 ]; do
+    [ $result -ne 0 ] && {
+      echo -e "\n${ANSI_RED}The command \"$@\" failed. Retrying, $count of 3.${ANSI_RESET}\n" >&2
+    }
+    # ! { } ignores set -e, see https://stackoverflow.com/a/4073372
+    ! { "$@"; result=$?; }
+    [ $result -eq 0 ] && break
+    count=$(($count + 1))
+    sleep 1
+  done
+
+  [ $count -gt 3 ] && {
+    echo -e "\n${ANSI_RED}The command \"$@\" failed 3 times.${ANSI_RESET}\n" >&2
+  }
+
+  return $result
+}
+
+
+install () {
+  # Took from the diverse scripts
+  conda info --envs
+  travis_retry conda create --yes -n qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran 'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
+  source activate qiita
+  pip install sphinx==1.5.5 sphinx-bootstrap-theme coveralls
+  pip install https://github.com/biocore/qiita/archive/$mode.zip --process-dependency-links
+  export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
+  export MOI_CONFIG_FP=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg
+  # as we don't need redbiom we are going to use the default redis port
+  sed 's/PORT = 7777/PORT = 6379/g' $HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg > config_test.cfg
+  export QIITA_CONFIG_FP=${PWD}/config_test.cfg
+  export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
+  # DEBUG
+  echo "Config file:"
+  cat ${PWD}/config_test.cfg
+  echo $QIITA_CONFIG_FP
+  echo $QIITA_SERVER_CERT
+  qiita-env make --no-load-ontologies
+  source deactivate
+}
+
+if [[ -z "$@" ]]; then
+  # Defult Mode
+  printf "Bad usage: \n"
+  printf "Check qiita_install -h for more information. \n"
+  exit 0
+fi
+
+optinfo=$(show_opts "$@")
+echo "$optinfo"
