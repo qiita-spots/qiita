@@ -112,6 +112,8 @@ install () {
   export QIITA_CONFIG_FP=${PWD}/config_test.cfg
   export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
   # DEBUG
+  echo "Config file:"
+  cat ${PWD}/config_test.cfg
   echo $QIITA_CONFIG_FP
   echo $QIITA_SERVER_CERT
   qiita-env make --no-load-ontologies
