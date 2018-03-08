@@ -882,8 +882,11 @@ class EBISubmission(object):
 
         success = root.get('success') == 'true'
         if not success:
+            # here we want to parse out the errors so the failures are clearer
+            errors = {elem.text for elem in root.iter("ERROR")}
+
             raise EBISubmissionError("The EBI submission failed:\n%s"
-                                     % curl_result)
+                                     % '\n'.join(errors))
 
         study_elem = root.findall("STUDY")
         if study_elem:

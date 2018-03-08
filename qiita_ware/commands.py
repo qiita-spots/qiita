@@ -65,7 +65,7 @@ def submit_EBI(artifact_id, action, send, test=False):
             for cmd in ebi_submission.generate_send_sequences_cmd():
                 stdout, stderr, rv = system_call(cmd)
                 if rv != 0:
-                    error_msg = ("Error:\nStd output:%s\nStd error:%s" % (
+                    error_msg = ("ASCP Error:\nStd output:%s\nStd error:%s" % (
                         stdout, stderr))
                     raise ComputeError(error_msg)
                 open(ebi_submission.ascp_reply, 'a').write(
@@ -99,10 +99,12 @@ def submit_EBI(artifact_id, action, send, test=False):
             st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
                 ebi_submission.parse_EBI_reply(xml_content, test=test)
         except EBISubmissionError as e:
+            error = str(e)
             le = LogEntry.create(
-                'Fatal', "Command: %s\nError: %s\n" % (xml_content, str(e)),
+                'Fatal', "Command: %s\nError: %s\n" % (xml_content, error),
                 info={'ebi_submission': artifact_id})
-            raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
+            raise ComputeError(
+                "EBI Submission failed! Log id: %d\n%s" % (le.id, error))
 
         if action == 'ADD':
             if st_acc:
