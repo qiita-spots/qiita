@@ -150,8 +150,8 @@ class CommandsTests(TestCase):
         if self.ascp_pass:
             self.assertIn('EBI Submission failed! Log id:', error)
             self.assertIn('The EBI submission failed:', error)
-            self.assertIn('Failed to validate run xml, error: Expected element',
-                          error)
+            self.assertIn(
+                'Failed to validate run xml, error: Expected element', error)
         else:
             self.assertIn('ASCP Error:', error)
 
