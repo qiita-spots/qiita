@@ -145,7 +145,8 @@ class CommandsTests(TestCase):
         with self.assertRaises(ComputeError):
             submit_EBI(ppd.id, 'VALIDATE', True)
 
-    @skipIf(environ.get('ASPERA_SCP_PASS', ''), 'skip: ascp not configured')
+    @skipIf(
+        environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_full_submission(self):
         artifact = self.generate_new_study_with_preprocessed_data()
         self.assertEqual(
