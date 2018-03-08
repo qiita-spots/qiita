@@ -7,7 +7,8 @@ from __future__ import division
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
+from os import environ
 from os.path import join
 from tempfile import mkdtemp
 import pandas as pd
@@ -144,14 +145,13 @@ class CommandsTests(TestCase):
         with self.assertRaises(ComputeError):
             submit_EBI(ppd.id, 'VALIDATE', True)
 
+    @skipIf(
+        environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_full_submission(self):
         artifact = self.generate_new_study_with_preprocessed_data()
-
-        # just making sure
-        self.assertEqual(artifact.study.ebi_submission_status, 'not submitted')
-
+        self.assertEqual(
+            artifact.study.ebi_submission_status, 'not submitted')
         submit_EBI(artifact.id, 'VALIDATE', True, test=True)
-
         self.assertEqual(artifact.study.ebi_submission_status, 'submitted')
 
 
