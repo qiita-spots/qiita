@@ -106,7 +106,7 @@ def submit_EBI(artifact_id, action, send, test=False):
             raise ComputeError(
                 "EBI Submission failed! Log id: %d\n%s" % (le.id, error))
 
-        if action == 'ADD':
+        if action == 'ADD' or test:
             if st_acc:
                 ebi_submission.study.ebi_study_accession = st_acc
             if sa_acc:

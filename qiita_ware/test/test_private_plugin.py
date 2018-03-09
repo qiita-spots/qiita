@@ -36,6 +36,7 @@ from qiita_db.logger import LogEntry
 from qiita_db.sql_connection import TRN
 from qiita_db.analysis import Analysis
 from qiita_ware.private_plugin import private_task
+from qiita_ware.test.test_ebi import FASTA_EXAMPLE
 
 
 class BaseTestPrivatePlugin(TestCase):
@@ -389,8 +390,6 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
 
     def test_submit_to_EBI(self):
         # setting up test
-        from qiita_ware.test.test_ebi import FASTA_EXAMPLE
-
         fna_fp = join(self.temp_dir, 'seqs.fna')
         demux_fp = join(self.temp_dir, 'demux.seqs')
         with open(fna_fp, 'w') as f:
@@ -413,7 +412,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
 
         # wait for the job to fail, and check that the status is submitting
         checked_submitting = True
-        while (job.status != 'error'):
+        while job.status != 'error':
             if checked_submitting:
                 self.assertEqual('submitting',
                                  artifact.study.ebi_submission_status)

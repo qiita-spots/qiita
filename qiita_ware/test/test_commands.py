@@ -7,7 +7,7 @@ from __future__ import division
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
 from os import environ
 from os.path import join
 from tempfile import mkdtemp
@@ -34,7 +34,6 @@ class CommandsTests(TestCase):
         self.files_to_remove = []
         self.temp_dir = mkdtemp()
         self.files_to_remove.append(self.temp_dir)
-        self.ascp_pass = environ.get('ASPERA_SCP_PASS', '')
 
     def write_demux_files(self, prep_template, generate_hdf5=True):
         """Writes a demux test file to avoid duplication of code"""
@@ -141,27 +140,27 @@ class CommandsTests(TestCase):
         with self.assertRaises(EBISubmissionError):
             submit_EBI(ppd.id, 'VALIDATE', True)
 
+    @skipIf(
+        environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_submit_EBI_parse_EBI_reply_failure(self):
         ppd = self.write_demux_files(PrepTemplate(1))
 
         with self.assertRaises(ComputeError) as error:
             submit_EBI(ppd.id, 'VALIDATE', True)
         error = str(error.exception)
-        if self.ascp_pass:
-            self.assertIn('EBI Submission failed! Log id:', error)
-            self.assertIn('The EBI submission failed:', error)
-            self.assertIn(
-                'Failed to validate run xml, error: Expected element', error)
-        else:
-            self.assertIn('ASCP Error:', error)
+        self.assertIn('EBI Submission failed! Log id:', error)
+        self.assertIn('The EBI submission failed:', error)
+        self.assertIn(
+            'Failed to validate run xml, error: Expected element', error)
 
+    @skipIf(
+        environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_full_submission(self):
-        if self.ascp_pass:
-            artifact = self.generate_new_study_with_preprocessed_data()
-            self.assertEqual(
-                artifact.study.ebi_submission_status, 'not submitted')
-            submit_EBI(artifact.id, 'VALIDATE', True, test=True)
-            self.assertEqual(artifact.study.ebi_submission_status, 'submitted')
+        artifact = self.generate_new_study_with_preprocessed_data()
+        self.assertEqual(
+            artifact.study.ebi_submission_status, 'not submitted')
+        submit_EBI(artifact.id, 'VALIDATE', True, test=True)
+        self.assertEqual(artifact.study.ebi_submission_status, 'submitted')
 
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
