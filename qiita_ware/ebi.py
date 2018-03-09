@@ -886,7 +886,7 @@ class EBISubmission(object):
             errors = {elem.text for elem in root.iter("ERROR")}
 
             raise EBISubmissionError("The EBI submission failed:\n%s"
-                                     % curl_result)
+                                     % '\n'.join(errors))
         if test:
             study_accession = 'MyStudyAccession'
             sample_accessions = {}
