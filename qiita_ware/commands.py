@@ -39,14 +39,12 @@ def submit_EBI(artifact_id, action, send, test=False):
     ebi_submission = EBISubmission(artifact_id, action)
 
     # step 2: generate demux fastq files
-    ebi_submission.study.ebi_submission_status = 'submitting'
     try:
         ebi_submission.generate_demultiplexed_fastq()
     except Exception:
         error_msg = format_exc()
         if isdir(ebi_submission.full_ebi_dir):
             rmtree(ebi_submission.full_ebi_dir)
-        ebi_submission.study.ebi_submission_status = 'failed: %s' % error_msg
         LogEntry.create('Runtime', error_msg,
                         info={'ebi_submission': artifact_id})
         raise
@@ -104,11 +102,8 @@ def submit_EBI(artifact_id, action, send, test=False):
             le = LogEntry.create(
                 'Fatal', "Command: %s\nError: %s\n" % (xml_content, str(e)),
                 info={'ebi_submission': artifact_id})
-            ebi_submission.study.ebi_submission_status = (
-                "failed: XML parsing, log id: %d" % le.id)
             raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
 
-        ebi_submission.study.ebi_submission_status = 'submitted'
         if action == 'ADD':
             if st_acc:
                 ebi_submission.study.ebi_study_accession = st_acc

@@ -33,6 +33,7 @@ Classes
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+from collections import defaultdict
 from future.utils import viewitems
 from copy import deepcopy
 from itertools import chain
@@ -41,9 +42,6 @@ import warnings
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
-
-
-_VALID_EBI_STATUS = ('not submitted', 'submitting', 'submitted')
 
 
 class Study(qdb.base.QiitaObject):
@@ -81,8 +79,7 @@ class Study(qdb.base.QiitaObject):
     _table = "study"
     _portal_table = "study_portal"
     # The following columns are considered not part of the study info
-    _non_info = frozenset(["email", "study_title", "ebi_submission_status",
-                           "ebi_study_accession"])
+    _non_info = frozenset(["email", "study_title", "ebi_study_accession"])
 
     def _lock_non_sandbox(self):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
@@ -212,10 +209,19 @@ class Study(qdb.base.QiitaObject):
                 args.append(tuple(study_ids))
 
             qdb.sql_connection.TRN.add(sql, args)
-            res = qdb.sql_connection.TRN.execute_fetchindex()
-            if study_ids is not None and len(res) != len(study_ids):
+            rows = qdb.sql_connection.TRN.execute_fetchindex()
+            if study_ids is not None and len(rows) != len(study_ids):
                 raise qdb.exceptions.QiitaDBError(
                     'Non-portal-accessible studies asked for!')
+
+            res = []
+            for r in rows:
+                r = dict(r)
+                if 'ebi_study_accession' in info_cols:
+                    r['ebi_submission_status'] = cls(
+                        r['study_id']).ebi_submission_status
+                res.append(r)
+
             return res
 
     @classmethod
@@ -825,39 +831,58 @@ class Study(qdb.base.QiitaObject):
         -------
         str
             The study EBI submission status
+
+        Notes
+        -----
+        There are 4 possible states: 'not submitted', 'submitting',
+        'submitted' & 'failed'. We are going to assume 'not submitted' if the
+        study doesn't have an accession, 'submitted' if it has an accession,
+        'submitting' if there are submit_to_EBI jobs running using the study
+        artifacts, & 'failed' if there are artifacts with failed jobs without
+        successful ones.
         """
+        status = 'not submitted'
         with qdb.sql_connection.TRN:
-            sql = """SELECT ebi_submission_status
-                     FROM qiita.{0}
-                     WHERE study_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [self.id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            if self.ebi_study_accession:
+                status = 'submitted'
 
-    @ebi_submission_status.setter
-    def ebi_submission_status(self, value):
-        """Sets the study's EBI submission status
+            plugin = qdb.software.Software.from_name_and_version(
+                'Qiita', 'alpha')
+            cmd = plugin.get_command('submit_to_EBI')
 
-        Parameters
-        ----------
-        value : str {%s}
-            The new EBI submission status
+            sql = """SELECT processing_job_id, command_parameters->>'artifact',
+                        processing_job_status
+                     FROM qiita.processing_job
+                     LEFT JOIN qiita.processing_job_status
+                        USING (processing_job_status_id)
+                     WHERE command_parameters->>'artifact' IN (
+                        SELECT artifact_id::text
+                        FROM qiita.study_artifact
+                        WHERE study_id = {0}) AND command_id = {1}""".format(
+                            self._id, cmd.id)
+            qdb.sql_connection.TRN.add(sql)
+            jobs = defaultdict(dict)
+            for info in qdb.sql_connection.TRN.execute_fetchindex():
+                jid, aid, js = info
+                jobs[js][aid] = jid
 
-        Raises
-        ------
-        ValueError
-            If the status is not known
-        """
-        if not (value in _VALID_EBI_STATUS or
-                value.startswith('failed')):
-            raise ValueError("Unknown status: %s" % value)
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{}
-                     SET ebi_submission_status = %s
-                     WHERE study_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+            if 'queued' in jobs or 'running' in jobs:
+                status = 'submitting'
+            elif 'error' in jobs:
+                aids_error = []
+                aids_other = []
+                for s, aids in jobs.items():
+                    for aid in aids.keys():
+                        if s == 'error':
+                            aids_error.append(aid)
+                        else:
+                            aids_other.append(aid)
+                difference = set(aids_error) - set(aids_other)
+                if difference:
+                    status = ('Some artifact submissions failed: %s' %
+                              ', '.join(map(str, list(difference))))
 
-    ebi_submission_status.__doc__.format(', '.join(_VALID_EBI_STATUS))
+        return status
 
     @property
     def tags(self):
