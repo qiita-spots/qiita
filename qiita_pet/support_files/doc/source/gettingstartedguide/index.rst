@@ -275,12 +275,13 @@ For all valid values for instrument_model per platform, view the values in the t
 | ``LS454``    |  ``454 GS``, ``454 GS 20``, ``454 GS FLX``, ``454 GS FLX+``, ``454 GS FLX Titanium``, ``454 GS Junior``, |
 |              |  ``454 GS Junior`` or ``unspecified``                                                                    |
 +--------------+----------------------------------------------------------------------------------------------------------+
-| ``Illumina`` |  ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``, ``Illumina Genome Analyzer IIx``,        |
-|              |  ``Illumina HiSeq 4000``, ``Illumina HiSeq 3000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 2000``,     |
-|              |  ``Illumina HiSeq 1500``, ``Illumina HiSeq 1000``, ``Illumina MiSeq``, ``Illumina MiniSeq``,             |
-|              |  ``Illumina NovaSeq 6000``, ``Illumina HiScanSQ``, ``HiSeq X Ten``, ``NextSeq 500``, ``NextSeq 550``,    |
-|              |  or ``unspecified``                                                                                      |
+| ``Illumina`` |  ``HiSeq X Five``, ``HiSeq X Ten``, ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``,       |
+|              |  ``Illumina Genome Analyzer IIx``, ``Illumina HiScanSQ``, ``Illumina HiSeq 1000``,                       |
+|              |  ``Illumina HiSeq 1500``,, ``Illumina HiSeq 2000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 3000``,    |
+|              |  ``Illumina HiSeq 4000``, ``Illumina MiSeq``, ``Illumina MiniSeq``, ``Illumina NovaSeq 6000``,           |
+|              |  ``NextSeq 500``, ``NextSeq 550``, or ``unspecified``                                                    |
 +--------------+----------------------------------------------------------------------------------------------------------+
+
 
 Required fields for pre-processing target gene data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
