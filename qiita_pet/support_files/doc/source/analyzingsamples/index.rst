@@ -95,7 +95,7 @@ Calculating Alpha Diversity
 .. figure::  alpha_diversity.png
    :align:   center
 
-* **Calculate alpha diversity** :ref:`[99]<reference99>`: Measures the diversity within a sample
+* **Calculate alpha diversity** :ref:`[99]<reference99>` : Measures the diversity within a sample
 
   * **BIOM table** (required): Feature table containing the samples for which alpha diversity should be computed
 
@@ -109,13 +109,13 @@ Calculating Alpha Diversity
 
         * Relative richness of the abundant species
 
-      * **Brillouin’s index** :ref:`[73]<reference73>`: Calculates Brillouin’s index
+      * **Brillouin’s index** :ref:`[73]<reference73>` : Calculates Brillouin’s index
 
         * Measures the diversity of the species present
 
         * Use when randomness can’t be guaranteed
 
-      * **Chao1 index** :ref:`[15]<reference15>`: Calculates Chao1 index
+      * **Chao1 index** :ref:`[15]<reference15>` : Calculates Chao1 index
 
         * Estimates diversity from abundant data
         * Estimates number of rare taxa missed from undersampling
@@ -159,7 +159,7 @@ Calculating Alpha Diversity
 
         * Measures species richness in a given area or community
 
-      * **Mcintosh dominance index D** :ref:`[62]<reference62>`: Calculates McIntosh dominance index D
+      * **Mcintosh dominance index D** :ref:`[62]<reference62>` : Calculates McIntosh dominance index D
 
         * Affected by the variation in dominant taxa and less affected by the variation in less abundant or rare taxa
 
@@ -205,7 +205,7 @@ Calculating Alpha Diversity
 
         * Measures the relative abundance of the different species making up the sample richness
 
-      * **Strong’s dominance index (Dw)** :ref:`[89]<reference89>`:  Calculates Strong’s dominance index
+      * **Strong’s dominance index (Dw)** :ref:`[89]<reference89>` :  Calculates Strong’s dominance index
 
         * Measures species abundance unevenness
 
@@ -219,7 +219,7 @@ Calculating Beta Diversity
 .. figure::  beta_diversity.png
    :align:   center
 
-* **Calculate beta diversity** :ref:`[99]<reference99>`: Measured the diversity between samples
+* **Calculate beta diversity** :ref:`[99]<reference99>` : Measured the diversity between samples
 
   * **BIOM table** (required): Feature table containing the samples for which beta diversity should be computed
   * **Adjust variance** :ref:`[14]<reference14>` (phylogenetic only): Performs variance adjustment
@@ -249,7 +249,7 @@ Calculating Beta Diversity
 
       * Similar to the Euclidean distance but the effect of a large difference in a single dimension is reduced
 
-    * **Correlation coefficient** :ref:`[29]<reference29>`: Measures Correlation coefficient
+    * **Correlation coefficient** :ref:`[29]<reference29>` : Measures Correlation coefficient
 
       * Measure of strength and direction of linear relationship between samples
 
@@ -282,7 +282,7 @@ Calculating Beta Diversity
 
       * Describes the dissimilarity between two samples
 
-    * **Matching components** :ref:`[42]<reference42>`: Measures Matching components
+    * **Matching components** :ref:`[42]<reference42>` : Measures Matching components
 
       * Compares indices under all possible situations
 
@@ -294,7 +294,7 @@ Calculating Beta Diversity
 
       * Equal weight is given to matches and non-matches
 
-    * **Sokal-Michener coefficient** :ref:`[85]<reference85>`: Measures Sokal-Michener coefficient
+    * **Sokal-Michener coefficient** :ref:`[85]<reference85>` : Measures Sokal-Michener coefficient
 
       * Proportion of matches between samples
 
@@ -380,7 +380,7 @@ Calculating Beta Group Significance
   * **Method** (required): Correlation test being applied
 
     * **Anosim** :ref:`[20]<reference20>` :  Describes the strength and significance that a category has in determining the distances between points and can accept either categorical or continuous variables in the metadata mapping file
-    * **Permanova** :ref:`[4]<reference4>`: Describes the strength and significance that a category has in determining the distances between points and can accept categorical variables
+    * **Permanova** :ref:`[4]<reference4>` : Describes the strength and significance that a category has in determining the distances between points and can accept categorical variables
 
   * **Number of permutations** (required): Number of permutations to be run when computing p-values
 
@@ -395,8 +395,8 @@ Calculating Beta Correlation
   * **Distance-matrix** (required): Matrix of distances between pairs of samples
   * **Correlation method** (required): Correlation test being applied
 
-    * **Spearman** :ref:`[88]<reference88>`: Measures if there is a linear relationship between 2 variables
-    * **Pearson** :ref:`[70]<reference70>`: Measures how strong the linear relationship is between 2 variables
+    * **Spearman** :ref:`[88]<reference88>` : Measures if there is a linear relationship between 2 variables
+    * **Pearson** :ref:`[70]<reference70>` : Measures how strong the linear relationship is between 2 variables
 
   * **Metadata-category** (required): Category from metadata file or artifact viewable as metadata
   * **Number of permutations** (required): Number of permutations to be run when computing p-values
@@ -432,7 +432,7 @@ Alpha Diversity Box Plots and Statistics
 
 * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
 * **Category**: Choose the metadata category you would like to analyze
-* **Kruskal-Wallis** :ref:`[49]<reference49>`: Result of Kruskal-Wallis tests
+* **Kruskal-Wallis** :ref:`[49]<reference49>` : Result of Kruskal-Wallis tests
 
   * Says if the differences are statistically significant
 
@@ -504,7 +504,7 @@ Beta Correlation
 
 * Gives the Spearman or Pearson result (rho and p-value)
 
-  * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
-  * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
+  * **Spearman** :ref:`[88]<reference88>` : Measures if there is a linear relationship between 2 variables
+  * **Pearson** :ref:`[70]<reference70>` : Measures how strong the linear relationship is between 2 variables
 
 * Gives scatterplot of the distance matrix on the x-axis and the variable being tested on the y-axis
