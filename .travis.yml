@@ -4,7 +4,7 @@ sudo: false
 env:
   global:
     - PYTHON_VERSION=3.5
-    - secure: "nrDiR0N/5E5KMOa6OB53joSB/POKN1crFIYcyyEpRJR6fic3YWLGdFabnLOinm+AZA3PoO2Nh203t3UrkQfvPxJ8Rpztm0gLTcp42U9bUPkXhmnnf/m7e1Q3odxhoxy4//bF+7SLXpfyDxNBO3fScckzpNqFepNVPgyEmJpf3LU="
+    - secure: "bR44P87PdbaXtdh4SMw7wF6pVCvPF1UkJequCABT1fQknljI2seBLda6otdXFJiWynmvKnubJQh2iz22wJ/maLwhoNorZ7OLFof0pRtA916uoBzcWCeocf1QhPxqR2kJOIV4oaRSdd9xvy9oKS3lrODxyuQ2CTnWMYD9oe9n8qk="
   matrix:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet

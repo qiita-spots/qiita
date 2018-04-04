@@ -90,15 +90,25 @@ class EBISubmission(object):
     valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
                                  '454 GS FLX+', '454 GS FLX TITANIUM',
                                  '454 GS JUNIOR', 'UNSPECIFIED'],
-                       'ILLUMINA': ['ILLUMINA GENOME ANALYZER',
+                       'ILLUMINA': ['HISEQ X FIVE',
+                                    'HISEQ X TEN',
+                                    'ILLUMINA GENOME ANALYZER',
                                     'ILLUMINA GENOME ANALYZER II',
-                                    'ILLUMINA GENOME ANALYZER IX',
-                                    'ILLUMINA HISEQ 2500',
-                                    'ILLUMINA HISEQ 2000',
+                                    'ILLUMINA GENOME ANALYZER IIX',
+                                    'ILLUMINA HISCANSQ',
+                                    'ILLUMINA HISEQ 1000',
                                     'ILLUMINA HISEQ 1500',
-                                    'ILLUMINA HISEQ 1000', 'ILLUMINA MISEQ',
-                                    'ILLUMINA HISCANSQ', 'HISEQ X TEN',
-                                    'NEXTSEQ 500', 'UNSPECIFIED']}
+                                    'ILLUMINA HISEQ 2000',
+                                    'ILLUMINA HISEQ 2500',
+                                    'ILLUMINA HISEQ 3000',
+                                    'ILLUMINA HISEQ 4000',
+                                    'ILLUMINA MISEQ',
+                                    'ILLUMINA MINISEQ',
+                                    'ILLUMINA NOVASEQ 6000',
+                                    'NEXTSEQ 500',
+                                    'NEXTSEQ 550',
+                                    'UNSPECIFIED']}
+
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
     experiment_library_fields = ['library_strategy']
