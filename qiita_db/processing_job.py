@@ -969,7 +969,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 params, pending = qdb.sql_connection.TRN.execute_fetchflatten()
                 for pname, out_name in viewitems(pending[self.id]):
                     a_id = new_map[out_name]
-                    params[pname] = a_id
+                    params[pname] = str(a_id)
                     del pending[self.id]
                     # Link the input artifact with the child job
                     qdb.sql_connection.TRN.add(sql_link, [a_id, c.id])
