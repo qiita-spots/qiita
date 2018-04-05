@@ -5,8 +5,8 @@
 Downloading From Qiita
 ======================
 
-Qiita allows user to download public data as well as the user's own private
-data. This data can then be used for processing and analysis external tools.
+Qiita allows users to download public data as well as the user's own private
+data. This data can then be used for processing and analysis in external tools.
 
 Downloading All Public Data
 ---------------------------
@@ -14,8 +14,7 @@ Downloading All Public Data
 Users can download all public studies on Qiita. To do this, users can select
 "Downloads" from the center of the toolbar located on the top of the screen.
 This will download a zip file with each study and their respective processed
-BIOM tables. *Note that this does not download any BIOM tables post-processing
-or analyses.*
+BIOM tables. *Note that this does not download any BIOM tables from analyses.*
 
 Download Processed Data
 -----------------------
@@ -51,5 +50,5 @@ Searching for Samples
 ---------------------
 
 For help on doing complex searches for samples go to :doc:`../redbiom`. Redbiom
-helps users find samples similar to their own and can be used both in Qiita
-and on the command line.
+helps users find samples based on their metadata, a specific taxon or feature
+of interest via a simple Qiita GUI or the command line (more powerful).
