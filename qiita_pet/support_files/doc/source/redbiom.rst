@@ -1,9 +1,13 @@
+.. _redbiom:
+
+.. index:: redbiom
+
 Redbiom
 =======
 * Allows you to search through public studies to find comparable data to your own
 * Can search by: metadata, feature, or taxon
 
-For more information, advance queries and generating biom files go to the `Redbiom github page <https://github.com/biocore/redbiom>`__.
+For more information, advance queries and generating biom files go to the `Redbiom github page <https://github.com/biocore/redbiom/blob/master/README.md>`__.
 
 Search Options
 --------------
