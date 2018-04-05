@@ -892,8 +892,20 @@ class EBISubmission(object):
 
         success = root.get('success') == 'true'
         if not success:
+            # here we want to parse out the errors so the failures are clearer
+            errors = {elem.text for elem in root.iter("ERROR")}
+
             raise EBISubmissionError("The EBI submission failed:\n%s"
-                                     % curl_result)
+                                     % '\n'.join(errors))
+        if test:
+            study_accession = 'MyStudyAccession'
+            sample_accessions = {}
+            biosample_accessions = {}
+            experiment_accessions = {}
+            run_accessions = {}
+
+            return (study_accession, sample_accessions, biosample_accessions,
+                    experiment_accessions, run_accessions)
 
         study_elem = root.findall("STUDY")
         if study_elem:
@@ -913,10 +925,7 @@ class EBISubmission(object):
             sample_id = self._sample_aliases[alias]
             sample_accessions[sample_id] = elem.get('accession')
             ext_id = elem.find('EXT_ID')
-            if test:
-                biosample_accessions[sample_id] = 'test_' + sample_id
-            else:
-                biosample_accessions[sample_id] = ext_id.get('accession')
+            biosample_accessions[sample_id] = ext_id.get('accession')
 
         def data_retriever(key, trans_dict):
             res = {}

@@ -93,6 +93,15 @@ class PluginHandler(OauthBaseHandler):
 class CommandListHandler(OauthBaseHandler):
     @authenticate_oauth
     def post(self, name, version):
+        """Create new command for a plugin
+
+        Parameters
+        ----------
+        name : str
+            The name of the plugin
+        version : str
+            The version of the plugin
+        """
         with qdb.sql_connection.TRN:
             plugin = _get_plugin(name, version)
 
