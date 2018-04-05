@@ -23,7 +23,7 @@ for row in all_rows:
     if params is None:
         continue
 
-    if not all([isinstance(v, int) for k, v in params.items()]):
+    if any([isinstance(v, int) for k, v in params.items()]):
         continue
 
     params = {k: str(v) if isinstance(v, int) else v
