@@ -85,6 +85,7 @@
     $('#update-artifact-name').on('shown.bs.modal', function() {
       $('#new-artifact-name').val($("#summary-title").text());
       $('#new-artifact-name').focus();
+      $('#new-artifact-name').select();
     });
 
     $('#process-btn').on('click', function(){
