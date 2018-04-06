@@ -61,6 +61,7 @@ from humanize import naturalsize
 from os.path import getsize
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
 
@@ -1438,7 +1439,8 @@ def generate_study_list(study_ids, public_only=False):
     return infolist
 
 
-def generate_study_list_without_artifacts(study_ids, public_only=False):
+def generate_study_list_without_artifacts(study_ids, public_only=False,
+                                          portal=None):
     """Get general study information without artifacts
 
     Parameters
@@ -1447,6 +1449,8 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
         The study ids to look for. Non-existing ids will be ignored
     public_only : bool, optional
         If true, return only public BIOM artifacts. Default: false.
+    portal : str
+        Portal to use, if None take it from configuration. Mainly for tests.
 
     Returns
     -------
@@ -1470,6 +1474,8 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
                 FROM qiita.study_publication
                 WHERE study_id=qiita.study.study_id) AS publications
     """
+    if portal is None:
+        portal = qiita_config.portal
     with qdb.sql_connection.TRN:
         sql = """
             SELECT metadata_complete, study_abstract, study_id, study_alias,
@@ -1483,11 +1489,13 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
                     FROM qiita.study_publication
                     WHERE study_id=qiita.study.study_id) AS publications
                 FROM qiita.study
+                LEFT JOIN qiita.study_portal USING (study_id)
+                LEFT JOIN qiita.portal_type USING (portal_type_id)
                 LEFT JOIN qiita.study_person ON (
                     study_person_id=principal_investigator_id)
-                WHERE study_id IN %s
+                WHERE study_id IN %s AND portal = %s
                 ORDER BY study_id"""
-        qdb.sql_connection.TRN.add(sql, [tuple(study_ids)])
+        qdb.sql_connection.TRN.add(sql, [tuple(study_ids), portal])
         infolist = []
         for info in qdb.sql_connection.TRN.execute_fetchindex():
             info = dict(info)
