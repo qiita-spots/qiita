@@ -300,7 +300,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
                     to_remove.append((fid, f))
             uploaded = [x for x in uploaded if x not in to_remove]
         inuse = [y for x in sfiles.values() for y in x]
-        remaining.extend([f for _, f in uploaded if f not in inuse])
+        remaining.extend([f for _, f, _ in uploaded if f not in inuse])
         supp_file_types_len = len(supp_file_types)
 
         for k, v in viewitems(sfiles):
@@ -316,7 +316,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
                 selected.append(v)
     else:
         num_prefixes = 0
-        remaining = [f for _, f in uploaded]
+        remaining = [f for _, f, _ in uploaded]
 
     # get file_types, format: filetype, required, list of files
     file_types = [(t, req, [x[i] for x in selected if i+1 <= len(x)])
