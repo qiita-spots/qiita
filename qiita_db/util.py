@@ -57,6 +57,7 @@ from itertools import chain
 from contextlib import contextmanager
 from future.builtins import bytes, str
 import h5py
+import re
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
@@ -1605,6 +1606,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             # now let's get the actual artifacts
             ts = {}
             ps = {}
+            algorithm_az = {'': ''}
+            regex = re.compile('[^a-zA-Z]')
             PT = qdb.metadata_template.prep_template.PrepTemplate
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
@@ -1655,6 +1658,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                             palgorithm = "%s (%s)" % (palgorithm, params)
 
                     algorithm = '%s | %s' % (cname, palgorithm)
+                    if algorithm not in algorithm_az:
+                        algorithm_az[algorithm] = regex.sub('', algorithm)
 
                 if target is None:
                     target = []
@@ -1665,23 +1670,37 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                             qdb.sql_connection.TRN.execute_fetchflatten()
                     target = ts[target]
 
-                if prep_template_id is None:
-                    prep_samples = 0
-                else:
+                prep_samples = 0
+                platform = ''
+                target_gene = ''
+                if prep_template_id is not None:
                     if prep_template_id not in ps:
-                        ps[prep_template_id] = len(list(
-                            PT(prep_template_id).keys()))
-                    prep_samples = ps[prep_template_id]
+                        pt = PT(prep_template_id)
+                        categories = pt.categories()
+                        if 'platform' in categories:
+                            platform = ', '.join(
+                                set(pt.get_category('platform').values()))
+                        if 'target_gene' in categories:
+                            target_gene = ', '.join(
+                                set(pt.get_category('target_gene').values()))
+
+                        ps[prep_template_id] = [
+                            len(list(pt.keys())), platform, target_gene]
+
+                    prep_samples, patform, target_gene = ps[prep_template_id]
 
                 results.append({
                     'artifact_id': aid,
                     'target_subfragment': target,
                     'prep_samples': prep_samples,
+                    'platform': platform,
+                    'target_gene': target_gene,
                     'name': name,
                     'data_type': dt,
                     'timestamp': str(gt),
                     'parameters': aparams,
                     'algorithm': algorithm,
+                    'algorithm_az': algorithm_az[algorithm],
                     'files': filepaths})
 
             return results

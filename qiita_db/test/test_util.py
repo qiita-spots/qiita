@@ -987,20 +987,23 @@ class UtilTests(TestCase):
 
         exp = [
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'target_subfragment': ['V4'], 'artifact_id': 4,
-             'algorithm': (
-                'Pick closed-reference OTUs | Split libraries FASTQ'),
-             'data_type': '18S', 'prep_samples': 27,
+             'artifact_id': 4, 'data_type': '18S', 'target_gene': '16S rRNA',
+             'name': 'BIOM', 'target_subfragment': ['V4'],
              'parameters': {
                 'reference': '1', 'similarity': '0.97',
                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                'threads': '1', 'sortmerna_coverage': '0.97'}, 'name': 'BIOM'},
-            {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
-             'artifact_id': 7, 'data_type': '16S', 'prep_samples': 27,
-             'parameters': {}, 'name': 'BIOM'},
-            {'files': ['biom_table.biom'], 'target_subfragment': [],
-             'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
-             'prep_samples': 0, 'parameters': {}, 'name': 'noname'}]
+                'threads': '1', 'sortmerna_coverage': '0.97'},
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
+             'platform': 'Illumina', 'prep_samples': 27},
+            {'files': [], 'artifact_id': 7, 'data_type': '16S',
+             'target_gene': '16S rRNA', 'name': 'BIOM',
+             'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
+             'algorithm_az': '', 'platform': 'Illumina', 'prep_samples': 27},
+            {'files': ['biom_table.biom'], 'artifact_id': 8,
+             'data_type': '18S', 'target_gene': '', 'name': 'noname',
+             'target_subfragment': [], 'parameters': {}, 'algorithm': '',
+             'algorithm_az': '', 'platform': '', 'prep_samples': 0}]
         self.assertItemsEqual(obs, exp)
 
         # now let's test that the order given by the commands actually give the
@@ -1019,6 +1022,8 @@ class UtilTests(TestCase):
                 del obs[i]['timestamp']
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1) '
                                    '| Split libraries FASTQ')
+            exp[0]['algorithm_az'] = (
+                'PickclosedreferenceOTUsreferenceSplitlibrariesFASTQ')
             self.assertItemsEqual(obs, exp)
 
             # setting up database changes for also command output
@@ -1032,6 +1037,9 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom) | Split libraries FASTQ')
+            exp[0]['algorithm_az'] = (
+                'PickclosedreferenceOTUsreferenceBIOMstudyclosedreference'
+                'otutablebiomSplitlibrariesFASTQ')
             self.assertItemsEqual(obs, exp)
 
             # returning database as it was
