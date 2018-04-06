@@ -63,7 +63,7 @@ def new_prep_template_get_req(study_id):
         The list of available data types
         The investigation type ontology information
     """
-    prep_files = [f for _, f in get_files_from_uploads_folders(study_id)
+    prep_files = [f for _, f, _ in get_files_from_uploads_folders(study_id)
                   if f.endswith(('.txt', '.tsv'))]
     data_types = sorted(Study.all_data_types())
 
@@ -131,7 +131,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
 
     artifact_attached = pt.artifact is not None
     study_id = pt.study_id
-    files = [f for _, f in get_files_from_uploads_folders(study_id)
+    files = [f for _, f, _ in get_files_from_uploads_folders(study_id)
              if f.endswith(('.txt', '.tsv'))]
 
     # The call to list is needed because keys is an iterator
