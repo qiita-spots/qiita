@@ -14,7 +14,8 @@ Downloading All Public Data
 Users can download all public studies on Qiita. To do this, users can select
 "Downloads" from the center of the toolbar located on the top of the screen.
 This will download a zip file with each study and their respective processed
-BIOM tables. *Note that this does not download any BIOM tables, post processing.*
+BIOM tables. *Note that this does not download any BIOM tables after the
+processing steps (BIOM tables from analyses).*
 
 Download Processed Data
 -----------------------
@@ -47,7 +48,7 @@ other resulting files. These can be download from here and further analyzed
 outside of Qiita.
 
 Finding Samples Based On Their Metadata
-----------------------------------------
+---------------------------------------
 
 For help on doing complex searches for samples go to :doc:`../redbiom`. Redbiom
 helps users find samples based on their metadata, a specific taxon or feature
