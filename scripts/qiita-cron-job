@@ -20,17 +20,6 @@ from qiita_db.meta_util import (
     qiita_generate_biom_and_metadata_release)
 
 
-# This script will perform these jobs:
-# 1. purge_filepaths:
-#
-# 2. empty_trash_upload_folder: remove files that are present in the trash
-#    of the upload folders
-# 3. update_redis_stats: updates the redis stats information
-# 4. generate public releases of biom tables and metadata
-#
-# Note that is responsability of the Qiita install system admin to add to a
-# cron job this script and responsible to define how often it should run
-
 @click.group()
 def commands():
     pass
