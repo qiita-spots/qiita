@@ -30,7 +30,7 @@ Files Network Within Data Type
     * *Note that a study must be successfully processed to be approved my a Qiita admin*
     * *Note that a study must be approved by a Qiita admin prior to being sent to EBI for submission*
 
-* The commands run on this page use the QIIME2 :ref:`[64]<reference64>` bioinformatics platform.
+* The commands run on this page use the QIIME2 :ref:`[1]<reference1>` bioinformatics platform.
 
 
 Converting Data to BIOM Tables
@@ -56,27 +56,27 @@ FASTQ, SFF, FNA/QUAL, or FASTA/QUAL Files
     * **Parameter Set** (required): Chooses the parameters for how to split the libraries
 
       * **Multiplexed FASTQ; generic 5 base pair barcodes**: Uses first 5 base pairs to identifies samples from FASTQ from multiple samples
-      * **Multiplexed FASTQ; generic 5 base pair barcodes with Phred quality threshold: 0** :ref:`[26]<reference26>` : Uses first 5 base pairs to identifies samples from FASTQ from multiple samples, only use samples with Phred quality score above 0
+      * **Multiplexed FASTQ; generic 5 base pair barcodes with Phred quality threshold: 0** :ref:`[2]<reference2>` : Uses first 5 base pairs to identifies samples from FASTQ from multiple samples, only use samples with Phred quality score above 0
       * **Multiplexed FASTQ; generic 5 base pair reverse complement mapping file barcodes**: Uses the complementary base pairs to the last 5 base pairs in reverse order to identify samples from FASTQ from multiple samples
       * **Multiplexed FASTQ; generic 6 base pair barcodes**: Uses first 6 base pairs to identify samples from FASTQ from multiple samples
       * **Multiplexed FASTQ; generic 6 base pair reverse complement mapping file barcodes**: Uses the complementary base pairs to the last 6 base pairs in reverse order to identify samples from FASTQ from multiple samples
       * **Multiplexed FASTQ; generic 8 base pair barcodes**: Uses first 8 base pairs to identify samples from FASTQ from multiple samples
-      * **Multiplexed FASTQ; generic 8 base pair barcodes with Phred offset: 33** :ref:`[26]<reference26>` : Uses first 8 base pairs to identify samples from FASTQ from multiple samples, uses Phred offset: 33 for measuring quality
+      * **Multiplexed FASTQ; generic 8 base pair barcodes with Phred offset: 33** :ref:`[2]<reference2>` : Uses first 8 base pairs to identify samples from FASTQ from multiple samples, uses Phred offset: 33 for measuring quality
       * **Multiplexed FASTQ; generic 8 base pair reverse complement mapping file barcodes**: Uses the complementary base pairs to the last 8 base pairs in reverse order to identify samples from FASTQ from multiple samples
       * **Multiplexed FASTQ; generic 11 base pair barcodes**: Uses first 11 base pairs to identify samples from FASTQ from multiple samples
       * **Multiplexed FASTQ; generic 11 base pair reverse complement barcodes**: Uses the complementary base pairs to the last 11 base pairs in reverse order to identify samples from FASTQ from multiple samples
       * **Multiplexed FASTQ; generic 12 base pair barcodes**: Uses first 12 base pairs to identify samples from FASTQ from multiple samples
       * **Multiplexed FASTQ; generic 12 base pair reverse complement barcodes**: Uses the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples
-      * **Multiplexed FASTQ; Golay 12 base pair barcodes** :ref:`[31]<reference31>` , :ref:`[12]<reference12>` : Error correcting for the first 12 base pairs from FASTQ from multiple samples
-      * **Multiplexed FASTQ; Golay 12 base pair barcodes with Phred offset: 33** :ref:`[12]<reference12>` , :ref:`[26]<reference26>` , :ref:`[31]<reference31>` : Error correcting for the first 12 base pairs from FASTQ from multiple samples, uses Phred offset: 33 for measuring quality
-      * **Multiplexed FASTQ; Golay 12 base pair barcodes with Phred offset: 64** :ref:`[12]<reference12>` , :ref:`[26]<reference26>` , :ref:`[31]<reference31>` : Error correcting for the first 12 base pairs from FASTQ from multiple samples, uses Phred offset: 64 for measuring quality
-      * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes** :ref:`[12]<reference12>` , :ref:`[31]<reference31>` : Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples
-      * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes with Phred offset: 33** :ref:`[12]<reference12>` , :ref:`[26]<reference26>` , :ref:`[31]<reference31>` : Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples, uses Phred offset: 33 for measuring quality
-      * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes with Phred offset: 64** :ref:`[12]<reference12>` , :ref:`[26]<reference26>` , :ref:`[31]<reference31>` : Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples, uses Phred offset: 64 for measuring quality
-      * **Multiplexed FASTQ; Golay 12 base pair reverse complement mapping file barcodes with reverse complement barcodes (UCSD CMI standard)** :ref:`[12]<reference12>` , :ref:`[31]<reference31>` : Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples
+      * **Multiplexed FASTQ; Golay 12 base pair barcodes** :ref:`[3]<reference3>` , :ref:`[4]<reference4>` : Error correcting for the first 12 base pairs from FASTQ from multiple samples
+      * **Multiplexed FASTQ; Golay 12 base pair barcodes with Phred offset: 33** :ref:`[4]<reference4>` , :ref:`[2]<reference2>` , :ref:`[3]<reference3>` : Error correcting for the first 12 base pairs from FASTQ from multiple samples, uses Phred offset: 33 for measuring quality
+      * **Multiplexed FASTQ; Golay 12 base pair barcodes with Phred offset: 64** :ref:`[4]<reference4>` , :ref:`[2]<reference2>` , :ref:`[3]<reference3>` : Error correcting for the first 12 base pairs from FASTQ from multiple samples, uses Phred offset: 64 for measuring quality
+      * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes** :ref:`[4]<reference4>` , :ref:`[3]<reference3>` : Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples
+      * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes with Phred offset: 33** :ref:`[4]<reference4>` , :ref:`[2]<reference2>` , :ref:`[3]<reference3>` : Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples, uses Phred offset: 33 for measuring quality
+      * **Multiplexed FASTQ; Golay 12 base pair reverse complement barcodes with Phred offset: 64** :ref:`[4]<reference4>` , :ref:`[2]<reference2>` , :ref:`[3]<reference3>` : Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples, uses Phred offset: 64 for measuring quality
+      * **Multiplexed FASTQ; Golay 12 base pair reverse complement mapping file barcodes with reverse complement barcodes (UCSD CMI standard)** :ref:`[4]<reference4>` , :ref:`[3]<reference3>` : Error correcting for the complementary base pairs to the last 12 base pairs in reverse order to identify samples from FASTQ from multiple samples
       * **Per-sample FASTQ defaults** (auto detect): Error detection for the FASTQ from 1 sample
-      * **Per-sample FASTQs; Phred offset: 33** :ref:`[26]<reference26>` : Error detection for the FASTQ from 1 sample, uses Phred offset: 33 for measuring quality
-      * **Per-sample FASTQs; Phred offset: 64** :ref:`[26]<reference26>` : Error detection for the FASTQ from 1 sample, uses Phred offset: 64 for measuring quality
+      * **Per-sample FASTQs; Phred offset: 33** :ref:`[2]<reference2>` : Error detection for the FASTQ from 1 sample, uses Phred offset: 33 for measuring quality
+      * **Per-sample FASTQs; Phred offset: 64** :ref:`[2]<reference2>` : Error detection for the FASTQ from 1 sample, uses Phred offset: 64 for measuring quality
 
     * For information regarding FASTQ formats please go to the `FASTQ wikipedia page  <https://en.wikipedia.org/wiki/FASTQ_format>`__.
 
@@ -150,11 +150,11 @@ Deblurring
     * **Sequence trim length (-1 for no trimming)** (required): Sequence trim length
     * **Threads per sample** (required): Number of threads to use per sample
 
-* **Deblur Reference Hit Table** :ref:`[2]<reference2>` : Only contains 16S deblurred sequences
+* **Deblur Reference Hit Table** :ref:`[5]<reference5>` : Only contains 16S deblurred sequences
 
   * To download the deblurred phylogenetic tree that can be imported into QIIME2 to be used in commands select **insertion_table.relabelled.tre** under "Available Files"
 
-* **Deblur Final Table** :ref:`[2]<reference2>` : Contains all the sequences.
+* **Deblur Final Table** :ref:`[5]<reference5>` : Contains all the sequences.
 
 Deblur Quality Filtering
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -172,32 +172,32 @@ Closed-Reference OTU Picking
 .. figure::  closed_reference.png
    :align:   center
 
-* **Pick Closed-Reference OTUs** :ref:`[19]<reference19>`: Removes sequences that do not match those found in a database
+* **Pick Closed-Reference OTUs** :ref:`[6]<reference6>`: Removes sequences that do not match those found in a database
 
   * **Input data** (required): Data being close referenced
   * **Parameter Set** (required): Chooses the database to be compared to
 
     * **16S OTU Picking**:
 
-      * **Defaults**: Compares to Greengenes 16S Database :ref:`[61]<reference61>`
-      * **Defaults-parallel**: Compares to GreenGenes 16S database :ref:`[61]<reference61>` but performs it with multi-threading
+      * **Defaults**: Compares to Greengenes 16S Database :ref:`[7]<reference7>`
+      * **Defaults-parallel**: Compares to GreenGenes 16S database :ref:`[7]<reference7>` but performs it with multi-threading
 
     * **18S OTU Picking**:
 
-      * **Silva 119**: Compares to Silva 119 Database :ref:`[76]<reference76>`
+      * **Silva 119**: Compares to Silva 119 Database :ref:`[8]<reference8>`
 
     * **ITS OTU Picking**:
 
-      * **UNITE 7**: Compares to UNITE Database :ref:`[1]<reference1>`
+      * **UNITE 7**: Compares to UNITE Database :ref:`[9]<reference9>`
 
   * **Default Parameters** (required)
 
-    * **Reference-seq** (required): Path to blast database (Greengenes :ref:`[61]<reference61>`, Silva 119 :ref:`[76]<reference76>` , UNITE 7) :ref:`[1]<reference1>` ) as a fasta file
-    * **Reference-tax** (required): Path to corresponding taxonomy file (Greengenes :ref:`[61]<reference61>` , Silva 119 :ref:`[76]<reference76>` , UNITE 7 :ref:`[1]<reference1>` )
+    * **Reference-seq** (required): Path to blast database (Greengenes :ref:`[7]<reference7>`, Silva 119 :ref:`[8]<reference8>` , UNITE 7) :ref:`[9]<reference9>` ) as a fasta file
+    * **Reference-tax** (required): Path to corresponding taxonomy file (Greengenes :ref:`[7]<reference7>` , Silva 119 :ref:`[8]<reference8>` , UNITE 7 :ref:`[9]<reference9>` )
     * **Similarity** (required): Sequence similarity threshold
-    * **Sortmerna coverage** :ref:`[48]<reference48>` (required): Minimum percent query coverage (of an alignment) to consider a hit, expressed as a fraction between 0 and 1
-    * **Sortmerna e_value** :ref:`[48]<reference48>` (required): Maximum e-value when clustering (local sequence alignment tool for filtering, mapping, and OTU picking) can expect to see by chance when searching a database
-    * **Sortmerna max-pos** :ref:`[48]<reference48>` (required): Maximum number of positions per seed to store in the indexed database
+    * **Sortmerna coverage** :ref:`[10]<reference10>` (required): Minimum percent query coverage (of an alignment) to consider a hit, expressed as a fraction between 0 and 1
+    * **Sortmerna e_value** :ref:`[10]<reference10>` (required): Maximum e-value when clustering (local sequence alignment tool for filtering, mapping, and OTU picking) can expect to see by chance when searching a database
+    * **Sortmerna max-pos** :ref:`[10]<reference10>` (required): Maximum number of positions per seed to store in the indexed database
     * **Threads** (required): Number of threads to use per job
 
 Processing Recommendations
