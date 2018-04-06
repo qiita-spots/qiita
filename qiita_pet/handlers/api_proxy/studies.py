@@ -294,7 +294,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
         sfiles = defaultdict(list)
         for p in prep_prefixes:
             to_remove = []
-            for fid, f in uploaded:
+            for fid, f, _ in uploaded:
                 if f.startswith(p):
                     sfiles[p].append(f)
                     to_remove.append((fid, f))
