@@ -1471,7 +1471,7 @@ def generate_study_list_without_artifacts(study_ids, public_only=False,
                 FROM qiita.study_publication
                 WHERE study_id=qiita.study.study_id) AS publications
     """
-    if portal == None:
+    if portal is None:
         portal = qiita_config.portal
     with qdb.sql_connection.TRN:
         sql = """
