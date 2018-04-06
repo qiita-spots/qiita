@@ -27,23 +27,24 @@ def commands():
 
 @commands.command()
 @click.option('--remove/--no-remove', default=True,
-              help=('remove files from that are leftover in the '
-                    'qiita.filepath and are present in the filesystem'))
+              help='remove any filepaths from the qiita.filepath table that '
+              'are not linked to any other table')
 def purge_filepaths(remove):
     qiita_purge_filepaths(remove)
 
 
 @commands.command()
 @click.option('--remove/--no-remove', default=False,
-              help='check the filesystem and remove not used')
+              help='check the filesystem mounts and remove files not used in '
+              'the database')
 def purge_files_from_filesystem(remove):
     qiita_purge_files_from_filesystem(remove)
 
 
 @commands.command()
 @click.option('--remove/--no-remove', default=True,
-              help=('remove files from the trash folder within the upload '
-                    'folders'))
+              help='remove files from the trash folder within the upload '
+              'folders')
 def empty_trash_upload_folder(remove):
     qiita_empty_trash_upload_folder(remove)
 
