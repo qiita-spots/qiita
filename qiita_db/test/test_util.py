@@ -584,7 +584,7 @@ class DBUtilTests(TestCase):
     def test_get_files_from_uploads_folders(self):
         # something has been uploaded and ignoring hidden files/folders
         # and folders
-        exp = [(7, 'uploaded_file.txt')]
+        exp = [(7, 'uploaded_file.txt', '0 Bytes')]
         obs = qdb.util.get_files_from_uploads_folders("1")
         self.assertEqual(obs, exp)
 
@@ -604,13 +604,14 @@ class DBUtilTests(TestCase):
 
         self.files_to_remove.append(test_fp)
 
-        exp = [(fid, 'this_is_a_test_file.txt'), (fid, 'uploaded_file.txt')]
+        exp = [(fid, 'this_is_a_test_file.txt', '4 Bytes'),
+               (fid, 'uploaded_file.txt', '0 Bytes')]
         obs = qdb.util.get_files_from_uploads_folders("1")
         self.assertItemsEqual(obs, exp)
 
         # move file
         qdb.util.move_upload_files_to_trash(1, [(fid, test_filename)])
-        exp = [(fid, 'uploaded_file.txt')]
+        exp = [(fid, 'uploaded_file.txt', '0 Bytes')]
         obs = qdb.util.get_files_from_uploads_folders("1")
         self.assertItemsEqual(obs, exp)
 
@@ -620,7 +621,7 @@ class DBUtilTests(TestCase):
         # testing errors
         # - study doesn't exist
         with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.util.move_upload_files_to_trash(2, [(fid, test_filename)])
+            qdb.util.move_upload_files_to_trash(100, [(fid, test_filename)])
         # - fid doen't exist
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.util.move_upload_files_to_trash(1, [(10, test_filename)])
