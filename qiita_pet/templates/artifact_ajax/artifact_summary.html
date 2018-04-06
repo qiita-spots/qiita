@@ -159,10 +159,16 @@
 {% if files %}
 <div class='row'>
   <div class='col-md-12'>
-    <label>Available files:</label>
-    {% for f_id, f_name in files %}
-      </br><a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a>
-    {% end %}
+    <button class="btn btn-default" data-toggle="collapse" data-target="#available-files-div">
+      <span class="glyphicon glyphicon-eye-open"></span>
+      Available files:
+    </button>
+    <div id="available-files-div" class="collapse {% if len(files) <= 10 %} in {% end %}" style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
+      {% for f_id, f_name in files %}
+        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a>
+        </br>
+      {% end %}
+    </div>
   </div>
 </div>
 {% end %}
