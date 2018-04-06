@@ -73,7 +73,7 @@ script:
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE
   - kill $QIITA_PID
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
-  - if [ ${TEST_ADD_STUDIES} == "True" ]; then qiita-cron-job ; fi
+  - if [ ${TEST_ADD_STUDIES} == "True" ]; then qiita-cron-job empty_trash_upload_folder ; qiita-cron-job generate_biom_and_metadata_release ; qiita-cron-job purge_filepaths ; qiita-cron-job purge_files_from_filesystem ; qiita-cron-job update_redis_stats ; fi
   - flake8 qiita_* setup.py scripts/*
   - qiita pet webserver
 addons:
