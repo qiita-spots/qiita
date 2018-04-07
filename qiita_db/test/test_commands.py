@@ -354,7 +354,8 @@ class TestUpdateArtifactFromCmd(TestCase):
         new_files = set(new_uploaded_files).difference(self.uploaded_files)
         path_builder = partial(
             join, qdb.util.get_mountpoint("uploads")[0][1], '1')
-        self._clean_up_files.extend([path_builder(fp) for _, fp in new_files])
+        self._clean_up_files.extend(
+            [path_builder(fp) for _, fp, _ in new_files])
         for f in self._clean_up_files:
             if exists(f):
                 remove(f)

@@ -141,7 +141,8 @@
        var alphaNumFileName = fileName.replace(/[^0-9a-z]/gi, '');
        var iconClass = resumableFile.uploaded !== undefined ? 'glyphicon-ok' : 'blinking-message glyphicon-circle-arrow-up';
        var html = '<div class="row" class="checkbox">' +
-                    '<label>' + fileName + '&nbsp; <input type="checkbox" value="' + dirId + '-' + fileName  + '" name="files_to_erase">&nbsp;</label>' +
+                    '<label>' + fileName + '&nbsp;(' +  resumableFile.size + ')&nbsp; <input type="checkbox" value="' + dirId +
+                    '-' + fileName  + '" name="files_to_erase">&nbsp;</label>' +
                     '<i id="file-icon-' + alphaNumFileName + '" class="glyphicon ' + iconClass + '"></i>';
 
        if (is_admin) {

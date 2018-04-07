@@ -90,7 +90,7 @@ class PrepFilesHandler(BaseHandler):
                         not_selected.append(filename)
         else:
             per_prefix = False
-            not_selected = [f for _, f in uploaded]
+            not_selected = [f for _, f, _ in uploaded]
 
         # Write out if this prep template supports per-prefix files, and the
         # as well as pre-selected and remaining files
