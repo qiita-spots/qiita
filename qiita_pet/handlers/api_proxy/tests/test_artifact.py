@@ -247,7 +247,7 @@ class TestArtifactAPI(TestCase):
                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
                 'threads': '1', 'sortmerna_coverage': '0.97'},
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-             'platform': '',
+             'platform': 'not provided',
              'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
              'prep_samples': 27},
             {'files': [], 'artifact_id': 7, 'data_type': '16S',

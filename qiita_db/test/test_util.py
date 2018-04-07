@@ -1001,9 +1001,10 @@ class UtilTests(TestCase):
              'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
              'algorithm_az': '', 'platform': 'Illumina', 'prep_samples': 27},
             {'files': ['biom_table.biom'], 'artifact_id': 8,
-             'data_type': '18S', 'target_gene': '', 'name': 'noname',
-             'target_subfragment': [], 'parameters': {}, 'algorithm': '',
-             'algorithm_az': '', 'platform': '', 'prep_samples': 0}]
+             'data_type': '18S', 'target_gene': 'not provided',
+             'name': 'noname', 'target_subfragment': [], 'parameters': {},
+             'algorithm': '', 'algorithm_az': '', 'platform': 'not provided',
+             'prep_samples': 0}]
         self.assertItemsEqual(obs, exp)
 
         # now let's test that the order given by the commands actually give the

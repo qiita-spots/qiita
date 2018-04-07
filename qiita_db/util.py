@@ -1671,8 +1671,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     target = ts[target]
 
                 prep_samples = 0
-                platform = ''
-                target_gene = ''
+                platform = 'not provided'
+                target_gene = 'not provided'
                 if prep_template_id is not None:
                     if prep_template_id not in ps:
                         pt = PT(prep_template_id)
