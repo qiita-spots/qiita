@@ -227,29 +227,34 @@ class TestArtifactAPI(TestCase):
         obs = artifact_get_info('test@foo.bar', [5, 6, 7])
         data = [
             {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
-             'target_subfragment': ['V4'],
-             'algorithm': (
-                'Pick closed-reference OTUs | Split libraries FASTQ'),
              'artifact_id': 6, 'data_type': '16S',
-             'timestamp': '2012-10-02 17:30:00', 'prep_samples': 27,
+             'timestamp': '2012-10-02 17:30:00', 'target_gene': '16S rRNA',
+             'name': 'BIOM', 'target_subfragment': ['V4'],
              'parameters': {
                 'reference': '2', 'similarity': '0.97',
                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                'threads': '1', 'sortmerna_coverage': '0.97'}, 'name': 'BIOM'},
+                'threads': '1', 'sortmerna_coverage': '0.97'},
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'platform': 'Illumina',
+             'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
+             'prep_samples': 27},
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'target_subfragment': ['V4'],
-             'algorithm': (
-                'Pick closed-reference OTUs | Split libraries FASTQ'),
              'artifact_id': 5, 'data_type': '18S',
-             'timestamp': '2012-10-02 17:30:00', 'prep_samples': 27,
+             'timestamp': '2012-10-02 17:30:00', 'target_gene': '16S rRNA',
+             'name': 'BIOM', 'target_subfragment': ['V4'],
              'parameters': {
                 'reference': '1', 'similarity': '0.97',
                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                'threads': '1', 'sortmerna_coverage': '0.97'}, 'name': 'BIOM'},
-            {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
-             'artifact_id': 7, 'data_type': '16S',
-             'timestamp': '2012-10-02 17:30:00', 'prep_samples': 27,
-             'parameters': {}, 'name': 'BIOM'}]
+                'threads': '1', 'sortmerna_coverage': '0.97'},
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'platform': 'not provided',
+             'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
+             'prep_samples': 27},
+            {'files': [], 'artifact_id': 7, 'data_type': '16S',
+             'timestamp': '2012-10-02 17:30:00', 'target_gene': '16S rRNA',
+             'name': 'BIOM', 'target_subfragment': ['V4'], 'parameters': {},
+             'algorithm': '', 'platform': 'Illumina', 'algorithm_az': '',
+             'prep_samples': 27}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         self.assertItemsEqual(obs.keys(), exp.keys())
         self.assertEqual(obs['status'], exp['status'])
