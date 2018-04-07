@@ -165,16 +165,20 @@ class ArtifactGetInfoTest(TestHandlerBase):
         data = [
             {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
              'target_subfragment': ['V4'], 'artifact_id': 6,
-             'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
+             'data_type': '16S', 'timestamp': u'2012-10-02 17:30:00',
+             'platform': 'Illumina',
+             'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
              'prep_samples': 27,
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
              'parameters': {
-                'reference': '2', 'similarity': '0.97',
-                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                'threads': '1', 'sortmerna_coverage': '0.97'}, 'name': 'BIOM'},
+                 'reference': u'2', 'similarity': '0.97',
+                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+                 'threads': '1', 'sortmerna_coverage': '0.97'},
+             'target_gene': '16S rRNA', 'name': 'BIOM'},
             {'files': [], 'target_subfragment': ['V4'], 'artifact_id': 7,
              'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
-             'prep_samples': 27, 'algorithm': '', 'parameters': {},
+             'platform': 'Illumina', 'algorithm_az': '', 'prep_samples': 27,
+             'algorithm': '', 'parameters': {}, 'target_gene': '16S rRNA',
              'name': 'BIOM'}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         obs = loads(response.body)
