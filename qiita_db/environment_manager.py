@@ -53,8 +53,8 @@ def _check_db_exists(db, conn_handler):
     return (db,) in dbs
 
 
-def create_layout_and_patch(test=False, verbose=False):
-    r"""Builds the SQL layout and applies all the patches
+def create_layout(test=False, verbose=False):
+    r"""Builds the SQL layout
 
     Parameters
     ----------
@@ -68,10 +68,6 @@ def create_layout_and_patch(test=False, verbose=False):
         with open(LAYOUT_FP, 'U') as f:
             qdb.sql_connection.TRN.add(f.read())
         qdb.sql_connection.TRN.execute()
-
-        if verbose:
-            print('Patching Database...')
-        patch(verbose=verbose, test=test)
 
 
 def _populate_test_db():
@@ -191,8 +187,26 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
 
     # Create the database
     print('Creating database')
+    create_settings_table = True
     admin_conn.autocommit = True
-    admin_conn.execute('CREATE DATABASE %s' % qiita_config.database)
+    try:
+        admin_conn.execute('CREATE DATABASE %s' % qiita_config.database)
+    except ValueError as error:
+        # if database exists ignore
+        msg = 'database "%s" already exists' % qiita_config.database
+        if msg in error.message:
+            print("Database exits, let's make sure it's test")
+            with qdb.sql_connection.TRN:
+                # Insert the settings values to the database
+                sql = """SELECT test FROM settings"""
+                qdb.sql_connection.TRN.add(sql)
+                is_test = qdb.sql_connection.TRN.execute_fetchlast()
+                if not is_test:
+                    print('Not a test database')
+                    raise
+                create_settings_table = False
+        else:
+            raise
     admin_conn.autocommit = False
 
     del admin_conn
@@ -200,21 +214,24 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
 
     with qdb.sql_connection.TRN:
         print('Inserting database metadata')
-        # Build the SQL layout into the database
-        with open(SETTINGS_FP, 'U') as f:
-            qdb.sql_connection.TRN.add(f.read())
-        qdb.sql_connection.TRN.execute()
+        test = qiita_config.test_environment
+        verbose = True
+        if create_settings_table:
+            # Build the SQL layout into the database
+            with open(SETTINGS_FP, 'U') as f:
+                qdb.sql_connection.TRN.add(f.read())
+            qdb.sql_connection.TRN.execute()
 
-        # Insert the settings values to the database
-        sql = """INSERT INTO settings (test, base_data_dir, base_work_dir)
-                 VALUES (%s, %s, %s)"""
-        qdb.sql_connection.TRN.add(
-            sql, [qiita_config.test_environment, qiita_config.base_data_dir,
-                  qiita_config.working_dir])
-        qdb.sql_connection.TRN.execute()
+            # Insert the settings values to the database
+            sql = """INSERT INTO settings (test, base_data_dir, base_work_dir)
+                     VALUES (%s, %s, %s)"""
+            qdb.sql_connection.TRN.add(
+                sql, [test, qiita_config.base_data_dir,
+                      qiita_config.working_dir])
+            qdb.sql_connection.TRN.execute()
+            create_layout(test=test, verbose=verbose)
 
-        create_layout_and_patch(test=qiita_config.test_environment,
-                                verbose=True)
+        patch(verbose=verbose, test=test)
 
         if load_ontologies:
             _add_ontology_data()
@@ -315,7 +332,8 @@ def drop_and_rebuild_tst_database():
         qdb.sql_connection.TRN.add(
             "UPDATE settings SET current_patch = 'unpatched'")
         # Create the database and apply patches
-        create_layout_and_patch(test=True)
+        create_layout(test=True)
+        patch(test=True)
 
         qdb.sql_connection.TRN.execute()
 

@@ -93,8 +93,8 @@
                                     '{% raw qiita_config.portal_dir %}/download_upload/{{study_id}}/'));
     })(jQuery);
 
-  {% for dirid, filename in files %}
-    uploader.addFile({ "dirid": "{{dirid}}", "fileName": "{{filename}}", "uploaded": "True" });
+  {% for dirid, filename, size in files %}
+    uploader.addFile({ "dirid": "{{dirid}}", "fileName": "{{filename}}", "size": "{{size}}", "uploaded": "True" });
   {% end  %}
 </script>
 

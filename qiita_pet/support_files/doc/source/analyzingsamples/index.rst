@@ -54,7 +54,7 @@ Rarefying Features
 .. figure::  rarefy.png
    :align:   center
 
-* **Rarefy features** :ref:`[35]<reference35>` : Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth
+* **Rarefy features** :ref:`[11]<reference11>` , :ref:`[12]<reference12>` : Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth
 
   *  **BIOM table** (required): Feature table containing the samples for which features should be rarefied
   *  **Parameter set**: Parameters at which the rarefication is run
@@ -95,27 +95,27 @@ Calculating Alpha Diversity
 .. figure::  alpha_diversity.png
    :align:   center
 
-* **Calculate alpha diversity** :ref:`[99]<reference99>`: Measures the diversity within a sample
+* **Calculate alpha diversity** :ref:`[13]<reference13>` : Measures the diversity within a sample
 
   * **BIOM table** (required): Feature table containing the samples for which alpha diversity should be computed
 
     * **Diversity metric** (required): Alpha diversity metric to be run
 
-      * **Abundance-based Coverage Estimator (ACE) metric** :ref:`[15]<reference15>` : Calculates the ACE metric
+      * **Abundance-based Coverage Estimator (ACE) metric** :ref:`[14]<reference14>` : Calculates the ACE metric
 
         * Estimates species richness using a correction factor
 
-      * **Berger-Parker Dominance Index** :ref:`[8]<reference8>` : Calculates Berger-Parker dominance index
+      * **Berger-Parker Dominance Index** :ref:`[15]<reference15>` : Calculates Berger-Parker dominance index
 
         * Relative richness of the abundant species
 
-      * **Brillouin’s index** :ref:`[73]<reference73>`: Calculates Brillouin’s index
+      * **Brillouin’s index** :ref:`[16]<reference16>` : Calculates Brillouin’s index
 
         * Measures the diversity of the species present
 
         * Use when randomness can’t be guaranteed
 
-      * **Chao1 index** :ref:`[15]<reference15>`: Calculates Chao1 index
+      * **Chao1 index** :ref:`[14]<reference14>` : Calculates Chao1 index
 
         * Estimates diversity from abundant data
         * Estimates number of rare taxa missed from undersampling
@@ -128,54 +128,54 @@ Calculating Alpha Diversity
 
         * Shows how absolute amount of species, relative abundances of species, and their intraspecific clustering affect differences in biodiversity among communities
 
-      * **Faith’s phylogenetic diversity** :ref:`[25]<reference25>` : Calculates faith’s phylogenetic diversity
+      * **Faith’s phylogenetic diversity** :ref:`[18]<reference18>` : Calculates faith’s phylogenetic diversity
 
         * Measures of biodiversity that incorporates phylogenetic difference between species
         * Sum of length of branches
 
-      * **Fisher’s index** :ref:`[28]<reference28>` : Calculates Fisher’s index
+      * **Fisher’s index** :ref:`[19]<reference19>` : Calculates Fisher’s index
 
         * Relationship between the number of species and the abundance of each species
 
-      * **Gini index** :ref:`[30]<reference30>` : Calculates Gini index
+      * **Gini index** :ref:`[20]<reference20>` : Calculates Gini index
 
         * Measures species abundance
         * Assumes that the sampling is accurate and that additional data would fall on linear gradients between the values of the given data
 
-      * **Good’s coverage of counts** :ref:`[32]<reference32>` : Calculates Good’s coverage of counts.
+      * **Good’s coverage of counts** :ref:`[21]<reference21>` : Calculates Good’s coverage of counts.
 
         * Estimates the percent of an entire species that is represented in a sample
 
-      * **Heip’s evenness measure** :ref:`[36]<reference36>` : Calculates Heip’s evenness measure.
+      * **Heip’s evenness measure** :ref:`[22]<reference22>` : Calculates Heip’s evenness measure.
 
         * Removes dependency on species number
 
-      * **Lladser’s point estimate** :ref:`[55]<reference55>` : Calculates Lladser’ point estimate
+      * **Lladser’s point estimate** :ref:`[23]<reference23>` : Calculates Lladser’ point estimate
 
         * Estimates how much of the environment contains unsampled taxa
         * Best estimate on a complete sample
 
-      * **Margalef’s richness index** :ref:`[59]<reference59>` : Calculates Margalef’s richness index
+      * **Margalef’s richness index** :ref:`[24]<reference24>` : Calculates Margalef’s richness index
 
         * Measures species richness in a given area or community
 
-      * **Mcintosh dominance index D** :ref:`[62]<reference62>`: Calculates McIntosh dominance index D
+      * **Mcintosh dominance index D** :ref:`[25]<reference25>` : Calculates McIntosh dominance index D
 
         * Affected by the variation in dominant taxa and less affected by the variation in less abundant or rare taxa
 
-      * **Mcintosh evenness index E** :ref:`[36]<reference36>` : Calculates McIntosh’s evenness measure E
+      * **Mcintosh evenness index E** :ref:`[22]<reference22>` : Calculates McIntosh’s evenness measure E
 
         * How evenly abundant taxa are
 
-      * **Menhinick’s richness index** :ref:`[59]<reference59>` : Calculates Menhinick’s richness index
+      * **Menhinick’s richness index** :ref:`[24]<reference24>` : Calculates Menhinick’s richness index
 
         * The ratio of the number of taxa to the square root of the sample size
 
-      * **Michaelis-Menten fit to rarefaction curve of observed OTUs** :ref:`[77]<reference77>` : Calculates Michaelis-Menten fit to rarefaction curve of observed OTUs.
+      * **Michaelis-Menten fit to rarefaction curve of observed OTUs** :ref:`[26]<reference26>` : Calculates Michaelis-Menten fit to rarefaction curve of observed OTUs.
 
         * Estimated richness of species pools
 
-      * **Number of distinct features** :ref:`[22]<reference22>` : Calculates number of distinct OTUs
+      * **Number of distinct features** :ref:`[27]<reference27>` : Calculates number of distinct OTUs
       * **Number of double occurrences**: Calculates number of double occurrence OTUs (doubletons)
 
         * OTUs that only occur twice
@@ -184,28 +184,28 @@ Calculating Alpha Diversity
 
         * OTUs that appear only once in a given sample
 
-      * **Pielou’s evenness** :ref:`[72]<reference72>` : Calculates Pielou’s eveness
+      * **Pielou’s evenness** :ref:`[28]<reference28>` : Calculates Pielou’s eveness
 
         * Measure of relative evenness of species richness
 
-      * **Robbins’ estimator** :ref:`[79]<reference79>` : Calculates Robbins’ estimator
+      * **Robbins’ estimator** :ref:`[29]<reference29>` : Calculates Robbins’ estimator
 
         * Probability of unobserved outcomes
 
-      * **Shannon’s index** :ref:`[83]<reference83>` : Calculates Shannon’s index
+      * **Shannon’s index** :ref:`[30]<reference30>` : Calculates Shannon’s index
 
         * Calculates richness and diversity using a natural logarithm
         * Accounts for both abundance and evenness of the taxa present
 
-      * **Simpson evenness measure E** :ref:`[84]<reference84>` : Calculates Simpson’s evenness measure E.
+      * **Simpson evenness measure E** :ref:`[31]<reference31>` : Calculates Simpson’s evenness measure E.
 
         * Diversity that account for the number of organisms and number of species
 
-      * **Simpson’s index** :ref:`[84]<reference84>` : Calculates Simpson’s index
+      * **Simpson’s index** :ref:`[31]<reference31>` : Calculates Simpson’s index
 
         * Measures the relative abundance of the different species making up the sample richness
 
-      * **Strong’s dominance index (Dw)** :ref:`[89]<reference89>`:  Calculates Strong’s dominance index
+      * **Strong’s dominance index (Dw)** :ref:`[32]<reference32>` :  Calculates Strong’s dominance index
 
         * Measures species abundance unevenness
 
@@ -219,10 +219,10 @@ Calculating Beta Diversity
 .. figure::  beta_diversity.png
    :align:   center
 
-* **Calculate beta diversity** :ref:`[99]<reference99>`: Measured the diversity between samples
+* **Calculate beta diversity** :ref:`[13]<reference13>` : Measured the diversity between samples
 
   * **BIOM table** (required): Feature table containing the samples for which beta diversity should be computed
-  * **Adjust variance** :ref:`[14]<reference14>` (phylogenetic only): Performs variance adjustment
+  * **Adjust variance** :ref:`[33]<reference33>` (phylogenetic only): Performs variance adjustment
 
     * Weighs distances based on the proportion of the relative abundance represented between the samples at a given node under evaluation
 
@@ -233,109 +233,109 @@ Calculating Beta Diversity
   * **Bypass tips** (phylogenetic only): In a bifurcating tree, the tips make up about 50% of the nodes in a tree. By ignoring them, specificity can be traded for reduced compute time. This has the effect of collapsing the phylogeny, and is analogous (in concept) to moving from 99% to 97% OTUs
   * **Diversity metric** (required): Beta diversity metric to be run
 
-    * **Bray-Curtis dissimilarity** :ref:`[87]<reference87>` : Calculates Bray–Curtis dissimilarity
+    * **Bray-Curtis dissimilarity** :ref:`[34]<reference34>` : Calculates Bray–Curtis dissimilarity
 
       * Fraction of overabundant counts
 
-    * **Canberra distance** :ref:`[52]<reference52>` : Calculates Canberra distance
+    * **Canberra distance** :ref:`[35]<reference35>` : Calculates Canberra distance
 
       * Overabundance on a feature by feature basis
 
-    * **Chebyshev distance** :ref:`[11]<reference11>` : Calculates Chebyshev distance
+    * **Chebyshev distance** :ref:`[36]<reference36>` : Calculates Chebyshev distance
 
       * Maximum distance between two samples
 
-    * **City-block distance** :ref:`[69]<reference69>` :  Calculates City-block distance
+    * **City-block distance** :ref:`[37]<reference37>` :  Calculates City-block distance
 
       * Similar to the Euclidean distance but the effect of a large difference in a single dimension is reduced
 
-    * **Correlation coefficient** :ref:`[29]<reference29>`: Measures Correlation coefficient
+    * **Correlation coefficient** :ref:`[38]<reference38>` : Measures Correlation coefficient
 
       * Measure of strength and direction of linear relationship between samples
 
-    * **Cosine Similarity** :ref:`[68]<reference68>` : Measures Cosine similarity
+    * **Cosine Similarity** :ref:`[39]<reference39>` : Measures Cosine similarity
 
       * Ratio of the amount of common species in a sample to the mean of the two samples
 
-    * **Dice measures** :ref:`[24]<reference24>` : Calculates Dice measure
+    * **Dice measures** :ref:`[40]<reference40>` : Calculates Dice measure
 
       * Statistic used for comparing the similarity of two samples
       * Only counts true positives once
 
-    * **Euclidean distance** :ref:`[53]<reference53>` : Measures Euclidean distance
+    * **Euclidean distance** :ref:`[41]<reference41>` : Measures Euclidean distance
 
       * Species-by-species distance matrix
 
-    * **Generalized Unifrac** :ref:`[18]<reference18>` : Measures Generalized UniFrac
+    * **Generalized Unifrac** :ref:`[42]<reference42>` : Measures Generalized UniFrac
 
       * Detects a wider range of biological changes compared to unweighted and weighted UniFrac
 
-    * **Hamming distance** :ref:`[34]<reference34>` : Measures Hamming distance
+    * **Hamming distance** :ref:`[43]<reference43>` : Measures Hamming distance
 
       * Minimum number of substitutions required to change one group to the other
 
-    * **Jaccard similarity index** :ref:`[41]<reference41>` : Calculates Jaccard similarity index
+    * **Jaccard similarity index** :ref:`[44]<reference44>` : Calculates Jaccard similarity index
 
       * Fraction of unique features, regardless of abundance
 
-    * **Kulczynski dissimilarity index** :ref:`[50]<reference50>` : Measures Kulczynski dissimilarity index
+    * **Kulczynski dissimilarity index** :ref:`[45]<reference45>` : Measures Kulczynski dissimilarity index
 
       * Describes the dissimilarity between two samples
 
-    * **Matching components** :ref:`[42]<reference42>`: Measures Matching components
+    * **Matching components** :ref:`[46]<reference46>` : Measures Matching components
 
       * Compares indices under all possible situations
 
-    * **Rogers-tanimoto distance** :ref:`[90]<reference90>` : Measures Rogers-Tanimoto distance
+    * **Rogers-tanimoto distance** :ref:`[47]<reference47>` : Measures Rogers-Tanimoto distance
 
       * Allows the possibility of two samples, which are quite different from each other, to both be similar to a third
 
-    * **Russel-Rao coefficient** :ref:`[81]<reference81>` : Calculates Russell-Rao coefficients
+    * **Russel-Rao coefficient** :ref:`[48]<reference48>` : Calculates Russell-Rao coefficients
 
       * Equal weight is given to matches and non-matches
 
-    * **Sokal-Michener coefficient** :ref:`[85]<reference85>`: Measures Sokal-Michener coefficient
+    * **Sokal-Michener coefficient** :ref:`[49]<reference49>` : Measures Sokal-Michener coefficient
 
       * Proportion of matches between samples
 
-    * **Sokal-Sneath Index** :ref:`[86]<reference86>` : Calculates Sokal-Sneath index
+    * **Sokal-Sneath Index** :ref:`[50]<reference50>` : Calculates Sokal-Sneath index
 
       * Measure of species turnover
 
-    * **Species-by-species Euclidean** :ref:`[53]<reference53>` : Measures Species-by-species Euclidean
+    * **Species-by-species Euclidean** :ref:`[41]<reference41>` : Measures Species-by-species Euclidean
 
       * Standardized Euclidean distance between two groups
       * Each coordinate difference between observations is scaled by dividing by the corresponding element of the standard deviation
 
-    * **Squared Euclidean** :ref:`[53]<reference53>` : Measures squared Euclidean distance
+    * **Squared Euclidean** :ref:`[41]<reference41>` : Measures squared Euclidean distance
 
       * Place progressively greater weight on samples that are farther apart
 
-    * **Unweighted Unifrac** :ref:`[58]<reference58>` : Measures unweighted UniFrac
+    * **Unweighted Unifrac** :ref:`[51]<reference51>` : Measures unweighted UniFrac
 
       * Measures the fraction of unique branch length
 
-    * **Weighted Minkowski metric** :ref:`[13]<reference13>` : Measures Weighted Minkowski metric
+    * **Weighted Minkowski metric** :ref:`[52]<reference52>` : Measures Weighted Minkowski metric
 
       * Allows the use of the k-means-type paradigm to cluster large data sets
 
-    * **Weighted normalized UniFrac** :ref:`[57]<reference57>` : Measures Weighted normalized UniFrac
+    * **Weighted normalized UniFrac** :ref:`[53]<reference53>` : Measures Weighted normalized UniFrac
 
       * Takes into account abundance
       * Normalization adjusts for varying root-to-tip distances.
 
-    * **Weighted unnormalized UniFrac** :ref:`[57]<reference57>` : Measures Weighted unnormalized UniFrac
+    * **Weighted unnormalized UniFrac** :ref:`[53]<reference53>` : Measures Weighted unnormalized UniFrac
 
       * Takes into account abundance
       * *Doesn't correct for unequal sampling effort or different evolutionary rates between taxa*
 
-    * **Yule index** :ref:`[28]<reference28>` : Measures Yule index
+    * **Yule index** :ref:`[19]<reference19>` : Measures Yule index
 
       * Measures biodiversity
       * Determined by the diversity of species and the proportions between the abundance of those species.
 
   * **Number of jobs**: Number of workers to use
-  * **Phylogenetic tree** (required for Mahalanobis distance, Weighted Minkowski metric, and all UniFrac metrics): Phylogenetic tree to be used with beta analyses (only include when necessary)
+  * **Phylogenetic tree** (required for Weighted Minkowski metric and all UniFrac metrics): Phylogenetic tree to be used with beta analyses (only include when necessary)
 
     * Currently the only tree that can be used is the GreenGenes 97% OTU based phylogenetic tree
 
@@ -345,13 +345,13 @@ Calculating Alpha Correlation
 .. figure::  alpha_correlation.png
    :align:   center
 
-* **Calculate alpha correlation** :ref:`[80]<reference80>` : Determines if the numeric sample metadata category is correlated with alpha diversity
+* **Calculate alpha correlation** :ref:`[54]<reference54>` : Determines if the numeric sample metadata category is correlated with alpha diversity
 
   * **Alpha Vectors** (required): Vector of alpha diversity values by sample
   * **Correlation Method** (required): Correction test being applied
 
-    * **Spearman** :ref:`[88]<reference88>` : Measures if there is a linear relationship between 2 variables
-    * **Pearson** :ref:`[70]<reference70>` : Measures how strong the linear relationship is between 2 variables
+    * **Spearman** :ref:`[55]<reference55>` : Measures if there is a linear relationship between 2 variables
+    * **Pearson** :ref:`[56]<reference56>` : Measures how strong the linear relationship is between 2 variables
 
 Performing Principal Coordinate Analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -359,7 +359,7 @@ Performing Principal Coordinate Analysis
 .. figure::  pcoa.png
    :align:   center
 
-* **Perform Principal Coordinate Analysis (PCoA)** :ref:`[71]<reference71>` : Visualizes the similarities and differences between samples using Emperor Plots :ref:`[95]<reference95>`
+* **Perform Principal Coordinate Analysis (PCoA)** :ref:`[57]<reference57>` : Visualizes the similarities and differences between samples using Emperor Plots :ref:`[58]<reference58>`
 
   * **Distance matrix** (required): Distance matrix on which the PCoA should be computed
 
@@ -379,8 +379,8 @@ Calculating Beta Group Significance
   * **Metadata category** (required): Category from metadata file or artifact viewable as metadata
   * **Method** (required): Correlation test being applied
 
-    * **Anosim** :ref:`[20]<reference20>` :  Describes the strength and significance that a category has in determining the distances between points and can accept either categorical or continuous variables in the metadata mapping file
-    * **Permanova** :ref:`[4]<reference4>`: Describes the strength and significance that a category has in determining the distances between points and can accept categorical variables
+    * **Anosim** :ref:`[59]<reference59>` :  Describes the strength and significance that a category has in determining the distances between points and can accept either categorical or continuous variables in the metadata mapping file
+    * **Permanova** :ref:`[60]<reference60>` : Describes the strength and significance that a category has in determining the distances between points and can accept categorical variables
 
   * **Number of permutations** (required): Number of permutations to be run when computing p-values
 
@@ -395,8 +395,8 @@ Calculating Beta Correlation
   * **Distance-matrix** (required): Matrix of distances between pairs of samples
   * **Correlation method** (required): Correlation test being applied
 
-    * **Spearman** :ref:`[88]<reference88>`: Measures if there is a linear relationship between 2 variables
-    * **Pearson** :ref:`[70]<reference70>`: Measures how strong the linear relationship is between 2 variables
+    * **Spearman** :ref:`[55]<reference55>` : Measures if there is a linear relationship between 2 variables
+    * **Pearson** :ref:`[56]<reference56>` : Measures how strong the linear relationship is between 2 variables
 
   * **Metadata-category** (required): Category from metadata file or artifact viewable as metadata
   * **Number of permutations** (required): Number of permutations to be run when computing p-values
@@ -432,7 +432,7 @@ Alpha Diversity Box Plots and Statistics
 
 * **Boxplot**: Shows how different measures of alpha diversity correlate with different metadata categories
 * **Category**: Choose the metadata category you would like to analyze
-* **Kruskal-Wallis** :ref:`[49]<reference49>`: Result of Kruskal-Wallis tests
+* **Kruskal-Wallis** :ref:`[61]<reference61>` : Result of Kruskal-Wallis tests
 
   * Says if the differences are statistically significant
 
@@ -504,7 +504,7 @@ Beta Correlation
 
 * Gives the Spearman or Pearson result (rho and p-value)
 
-  * **Spearman** [88](../references.rst): Measures if there is a linear relationship between 2 variables
-  * **Pearson** [70](../references.rst): Measures how strong the linear relationship is between 2 variables
+  * **Spearman** :ref:`[55]<reference55>` : Measures if there is a linear relationship between 2 variables
+  * **Pearson** :ref:`[56]<reference56>` : Measures how strong the linear relationship is between 2 variables
 
 * Gives scatterplot of the distance matrix on the x-axis and the variable being tested on the y-axis

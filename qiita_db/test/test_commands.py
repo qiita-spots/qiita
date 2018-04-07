@@ -211,29 +211,6 @@ class TestLoadParametersFromCmd(TestCase):
             if exists(fp):
                 remove(fp)
 
-    def test_load_parameters_from_cmd_error(self):
-        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.commands.load_parameters_from_cmd(
-                "test", self.fp, 20000)
-
-    def test_load_parameters_from_cmd_error_format(self):
-        with self.assertRaises(ValueError):
-            qdb.commands.load_parameters_from_cmd(
-                "test", self.fp_wrong, 1)
-
-    def test_load_parameters_from_cmd(self):
-        new = qdb.commands.load_parameters_from_cmd(
-            "test", self.fp, 1)
-        obs = new.values
-        exp = {"barcode_type": "hamming_8", "max_bad_run_length": "3",
-               "phred_offset": "auto", "max_barcode_errors": "1.5",
-               "min_per_read_length_fraction": "0.75",
-               "phred_quality_threshold": "3", "sequence_max_n": "0",
-               "rev_comp": "False", "rev_comp_barcode": "False",
-               "rev_comp_mapping_barcodes": "False",
-               "sequence_max_n": "0"}
-        self.assertEqual(obs, exp)
-
 
 @qiita_test_checker()
 class TestPatch(TestCase):
@@ -377,7 +354,8 @@ class TestUpdateArtifactFromCmd(TestCase):
         new_files = set(new_uploaded_files).difference(self.uploaded_files)
         path_builder = partial(
             join, qdb.util.get_mountpoint("uploads")[0][1], '1')
-        self._clean_up_files.extend([path_builder(fp) for _, fp in new_files])
+        self._clean_up_files.extend(
+            [path_builder(fp) for _, fp, _ in new_files])
         for f in self._clean_up_files:
             if exists(f):
                 remove(f)

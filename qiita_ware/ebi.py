@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from os.path import basename, join, isdir, isfile, exists
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
 from urllib import quote
@@ -90,15 +90,25 @@ class EBISubmission(object):
     valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
                                  '454 GS FLX+', '454 GS FLX TITANIUM',
                                  '454 GS JUNIOR', 'UNSPECIFIED'],
-                       'ILLUMINA': ['ILLUMINA GENOME ANALYZER',
+                       'ILLUMINA': ['HISEQ X FIVE',
+                                    'HISEQ X TEN',
+                                    'ILLUMINA GENOME ANALYZER',
                                     'ILLUMINA GENOME ANALYZER II',
-                                    'ILLUMINA GENOME ANALYZER IX',
-                                    'ILLUMINA HISEQ 2500',
-                                    'ILLUMINA HISEQ 2000',
+                                    'ILLUMINA GENOME ANALYZER IIX',
+                                    'ILLUMINA HISCANSQ',
+                                    'ILLUMINA HISEQ 1000',
                                     'ILLUMINA HISEQ 1500',
-                                    'ILLUMINA HISEQ 1000', 'ILLUMINA MISEQ',
-                                    'ILLUMINA HISCANSQ', 'HISEQ X TEN',
-                                    'NEXTSEQ 500', 'UNSPECIFIED']}
+                                    'ILLUMINA HISEQ 2000',
+                                    'ILLUMINA HISEQ 2500',
+                                    'ILLUMINA HISEQ 3000',
+                                    'ILLUMINA HISEQ 4000',
+                                    'ILLUMINA MISEQ',
+                                    'ILLUMINA MINISEQ',
+                                    'ILLUMINA NOVASEQ 6000',
+                                    'NEXTSEQ 500',
+                                    'NEXTSEQ 550',
+                                    'UNSPECIFIED']}
+
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
     experiment_library_fields = ['library_strategy']
@@ -835,13 +845,15 @@ class EBISubmission(object):
 
         return ascp_commands
 
-    def parse_EBI_reply(self, curl_result):
+    def parse_EBI_reply(self, curl_result, test=False):
         """Parse and verify reply from EBI after sending XML files
 
         Parameters
         ----------
         curl_result : str
             The reply sent by EBI after sending XML files
+        test : bool
+            If true we will assume is a test and ignore some parsing errors
 
         Returns
         -------
@@ -880,8 +892,20 @@ class EBISubmission(object):
 
         success = root.get('success') == 'true'
         if not success:
+            # here we want to parse out the errors so the failures are clearer
+            errors = {elem.text for elem in root.iter("ERROR")}
+
             raise EBISubmissionError("The EBI submission failed:\n%s"
-                                     % curl_result)
+                                     % '\n'.join(errors))
+        if test:
+            study_accession = 'MyStudyAccession'
+            sample_accessions = {}
+            biosample_accessions = {}
+            experiment_accessions = {}
+            run_accessions = {}
+
+            return (study_accession, sample_accessions, biosample_accessions,
+                    experiment_accessions, run_accessions)
 
         study_elem = root.findall("STUDY")
         if study_elem:
@@ -1028,6 +1052,10 @@ class EBISubmission(object):
         dir_not_exists = not isdir(self.full_ebi_dir)
         missing_samples = []
         if dir_not_exists or rewrite_fastq:
+            # if it exists, remove folder and start from scratch
+            if isdir(self.full_ebi_dir):
+                rmtree(self.full_ebi_dir)
+
             makedirs(self.full_ebi_dir)
 
             if self.artifact.artifact_type == 'per_sample_FASTQ':

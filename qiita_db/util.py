@@ -57,8 +57,12 @@ from itertools import chain
 from contextlib import contextmanager
 from future.builtins import bytes, str
 import h5py
+from humanize import naturalsize
+from os.path import getsize
+import re
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
 
@@ -454,9 +458,10 @@ def get_files_from_uploads_folders(study_id):
     for pid, p in get_mountpoint("uploads", retrieve_all=True):
         t = join(p, study_id)
         if exists(t):
-            fp.extend([(pid, f)
-                       for f in listdir(t)
-                       if not f.startswith('.') and not isdir(join(t, f))])
+            for f in listdir(t):
+                d = join(t, f)
+                if not f.startswith('.') and not isdir(d):
+                    fp.append((pid, f, naturalsize(getsize(d))))
 
     return fp
 
@@ -1327,7 +1332,7 @@ def generate_study_list(study_ids, public_only=False):
     The main select might look scary but it's pretty simple:
     - We select the requiered fields from qiita.study and qiita.study_person
         SELECT metadata_complete, study_abstract, study_id, study_alias,
-            study_title, ebi_study_accession, ebi_submission_status,
+            study_title, ebi_study_accession,
             qiita.study_person.name AS pi_name,
             qiita.study_person.email AS pi_email,
     - the total number of samples collected by counting sample_ids
@@ -1363,7 +1368,7 @@ def generate_study_list(study_ids, public_only=False):
     with qdb.sql_connection.TRN:
         sql = """
             SELECT metadata_complete, study_abstract, study_id, study_alias,
-                study_title, ebi_study_accession, ebi_submission_status,
+                study_title, ebi_study_accession,
                 qiita.study_person.name AS pi_name,
                 qiita.study_person.email AS pi_email,
                 (SELECT COUNT(sample_id) FROM qiita.study_sample
@@ -1428,12 +1433,15 @@ def generate_study_list(study_ids, public_only=False):
             del info["shared_with_name"]
             del info["shared_with_email"]
 
-            info['status'] = qdb.study.Study(info['study_id']).status
+            study = qdb.study.Study(info['study_id'])
+            info['status'] = study.status
+            info['ebi_submission_status'] = study.ebi_submission_status
             infolist.append(info)
     return infolist
 
 
-def generate_study_list_without_artifacts(study_ids, public_only=False):
+def generate_study_list_without_artifacts(study_ids, public_only=False,
+                                          portal=None):
     """Get general study information without artifacts
 
     Parameters
@@ -1442,6 +1450,8 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
         The study ids to look for. Non-existing ids will be ignored
     public_only : bool, optional
         If true, return only public BIOM artifacts. Default: false.
+    portal : str
+        Portal to use, if None take it from configuration. Mainly for tests.
 
     Returns
     -------
@@ -1453,7 +1463,7 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
     The main select might look scary but it's pretty simple:
     - We select the requiered fields from qiita.study and qiita.study_person
         SELECT metadata_complete, study_abstract, study_id, study_alias,
-            study_title, ebi_study_accession, ebi_submission_status,
+            study_title, ebi_study_accession,
             qiita.study_person.name AS pi_name,
             qiita.study_person.email AS pi_email,
     - the total number of samples collected by counting sample_ids
@@ -1465,10 +1475,12 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
                 FROM qiita.study_publication
                 WHERE study_id=qiita.study.study_id) AS publications
     """
+    if portal is None:
+        portal = qiita_config.portal
     with qdb.sql_connection.TRN:
         sql = """
             SELECT metadata_complete, study_abstract, study_id, study_alias,
-                study_title, ebi_study_accession, ebi_submission_status,
+                study_title, ebi_study_accession,
                 qiita.study_person.name AS pi_name,
                 qiita.study_person.email AS pi_email,
                 (SELECT COUNT(sample_id) FROM qiita.study_sample
@@ -1478,11 +1490,13 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
                     FROM qiita.study_publication
                     WHERE study_id=qiita.study.study_id) AS publications
                 FROM qiita.study
+                LEFT JOIN qiita.study_portal USING (study_id)
+                LEFT JOIN qiita.portal_type USING (portal_type_id)
                 LEFT JOIN qiita.study_person ON (
                     study_person_id=principal_investigator_id)
-                WHERE study_id IN %s
+                WHERE study_id IN %s AND portal = %s
                 ORDER BY study_id"""
-        qdb.sql_connection.TRN.add(sql, [tuple(study_ids)])
+        qdb.sql_connection.TRN.add(sql, [tuple(study_ids), portal])
         infolist = []
         for info in qdb.sql_connection.TRN.execute_fetchindex():
             info = dict(info)
@@ -1506,7 +1520,9 @@ def generate_study_list_without_artifacts(study_ids, public_only=False):
             del info["pi_email"]
             del info["pi_name"]
 
-            info['status'] = qdb.study.Study(info['study_id']).status
+            study = qdb.study.Study(info['study_id'])
+            info['status'] = study.status
+            info['ebi_submission_status'] = study.ebi_submission_status
             infolist.append(info)
     return infolist
 
@@ -1601,6 +1617,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             # now let's get the actual artifacts
             ts = {}
             ps = {}
+            algorithm_az = {'': ''}
+            regex = re.compile('[^a-zA-Z]')
             PT = qdb.metadata_template.prep_template.PrepTemplate
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
@@ -1651,6 +1669,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                             palgorithm = "%s (%s)" % (palgorithm, params)
 
                     algorithm = '%s | %s' % (cname, palgorithm)
+                    if algorithm not in algorithm_az:
+                        algorithm_az[algorithm] = regex.sub('', algorithm)
 
                 if target is None:
                     target = []
@@ -1661,23 +1681,37 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                             qdb.sql_connection.TRN.execute_fetchflatten()
                     target = ts[target]
 
-                if prep_template_id is None:
-                    prep_samples = 0
-                else:
+                prep_samples = 0
+                platform = 'not provided'
+                target_gene = 'not provided'
+                if prep_template_id is not None:
                     if prep_template_id not in ps:
-                        ps[prep_template_id] = len(list(
-                            PT(prep_template_id).keys()))
-                    prep_samples = ps[prep_template_id]
+                        pt = PT(prep_template_id)
+                        categories = pt.categories()
+                        if 'platform' in categories:
+                            platform = ', '.join(
+                                set(pt.get_category('platform').values()))
+                        if 'target_gene' in categories:
+                            target_gene = ', '.join(
+                                set(pt.get_category('target_gene').values()))
+
+                        ps[prep_template_id] = [
+                            len(list(pt.keys())), platform, target_gene]
+
+                    prep_samples, patform, target_gene = ps[prep_template_id]
 
                 results.append({
                     'artifact_id': aid,
                     'target_subfragment': target,
                     'prep_samples': prep_samples,
+                    'platform': platform,
+                    'target_gene': target_gene,
                     'name': name,
                     'data_type': dt,
                     'timestamp': str(gt),
                     'parameters': aparams,
                     'algorithm': algorithm,
+                    'algorithm_az': algorithm_az[algorithm],
                     'files': filepaths})
 
             return results

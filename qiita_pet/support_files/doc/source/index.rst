@@ -63,6 +63,7 @@ Looking for available guides? Please see these documents:
 
    tutorials/index.rst
    faq.rst
+   tutorials/downloading
    glossary.rst
    references.rst
 

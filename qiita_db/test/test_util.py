@@ -584,9 +584,9 @@ class DBUtilTests(TestCase):
     def test_get_files_from_uploads_folders(self):
         # something has been uploaded and ignoring hidden files/folders
         # and folders
-        exp = [(7, 'uploaded_file.txt')]
+        exp = (7, 'uploaded_file.txt', '0 Bytes')
         obs = qdb.util.get_files_from_uploads_folders("1")
-        self.assertEqual(obs, exp)
+        self.assertIn(exp, obs)
 
         # nothing has been uploaded
         exp = []
@@ -604,15 +604,14 @@ class DBUtilTests(TestCase):
 
         self.files_to_remove.append(test_fp)
 
-        exp = [(fid, 'this_is_a_test_file.txt'), (fid, 'uploaded_file.txt')]
+        exp = (fid, 'this_is_a_test_file.txt', '4 Bytes')
         obs = qdb.util.get_files_from_uploads_folders("1")
-        self.assertItemsEqual(obs, exp)
+        self.assertIn(exp, obs)
 
         # move file
         qdb.util.move_upload_files_to_trash(1, [(fid, test_filename)])
-        exp = [(fid, 'uploaded_file.txt')]
         obs = qdb.util.get_files_from_uploads_folders("1")
-        self.assertItemsEqual(obs, exp)
+        self.assertNotIn(obs, exp)
 
         # if the file doesn't exist, don't raise any errors
         qdb.util.move_upload_files_to_trash(1, [(fid, test_filename)])
@@ -620,7 +619,7 @@ class DBUtilTests(TestCase):
         # testing errors
         # - study doesn't exist
         with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.util.move_upload_files_to_trash(2, [(fid, test_filename)])
+            qdb.util.move_upload_files_to_trash(100, [(fid, test_filename)])
         # - fid doen't exist
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.util.move_upload_files_to_trash(1, [(10, test_filename)])
@@ -973,6 +972,10 @@ class UtilTests(TestCase):
             [1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
 
+        obs_info = qdb.util.generate_study_list_without_artifacts(
+            [1, 2, 3, 4], False, 'EMP')
+        self.assertEqual(obs_info, [])
+
         # resetting to private and deleting the old study
         qdb.artifact.Artifact(4).visibility = 'private'
         qdb.study.Study.delete(new_study.id)
@@ -987,20 +990,24 @@ class UtilTests(TestCase):
 
         exp = [
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'target_subfragment': ['V4'], 'artifact_id': 4,
-             'algorithm': (
-                'Pick closed-reference OTUs | Split libraries FASTQ'),
-             'data_type': '18S', 'prep_samples': 27,
+             'artifact_id': 4, 'data_type': '18S', 'target_gene': '16S rRNA',
+             'name': 'BIOM', 'target_subfragment': ['V4'],
              'parameters': {
                 'reference': '1', 'similarity': '0.97',
                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                'threads': '1', 'sortmerna_coverage': '0.97'}, 'name': 'BIOM'},
-            {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
-             'artifact_id': 7, 'data_type': '16S', 'prep_samples': 27,
-             'parameters': {}, 'name': 'BIOM'},
-            {'files': ['biom_table.biom'], 'target_subfragment': [],
-             'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
-             'prep_samples': 0, 'parameters': {}, 'name': 'noname'}]
+                'threads': '1', 'sortmerna_coverage': '0.97'},
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
+             'platform': 'Illumina', 'prep_samples': 27},
+            {'files': [], 'artifact_id': 7, 'data_type': '16S',
+             'target_gene': '16S rRNA', 'name': 'BIOM',
+             'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
+             'algorithm_az': '', 'platform': 'Illumina', 'prep_samples': 27},
+            {'files': ['biom_table.biom'], 'artifact_id': 8,
+             'data_type': '18S', 'target_gene': 'not provided',
+             'name': 'noname', 'target_subfragment': [], 'parameters': {},
+             'algorithm': '', 'algorithm_az': '', 'platform': 'not provided',
+             'prep_samples': 0}]
         self.assertItemsEqual(obs, exp)
 
         # now let's test that the order given by the commands actually give the
@@ -1019,6 +1026,8 @@ class UtilTests(TestCase):
                 del obs[i]['timestamp']
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1) '
                                    '| Split libraries FASTQ')
+            exp[0]['algorithm_az'] = (
+                'PickclosedreferenceOTUsreferenceSplitlibrariesFASTQ')
             self.assertItemsEqual(obs, exp)
 
             # setting up database changes for also command output
@@ -1032,6 +1041,9 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom) | Split libraries FASTQ')
+            exp[0]['algorithm_az'] = (
+                'PickclosedreferenceOTUsreferenceBIOMstudyclosedreference'
+                'otutablebiomSplitlibrariesFASTQ')
             self.assertItemsEqual(obs, exp)
 
             # returning database as it was

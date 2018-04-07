@@ -101,7 +101,7 @@ class HeartbeatHandler(OauthBaseHandler):
 class ActiveStepHandler(OauthBaseHandler):
     @authenticate_oauth
     def post(self, job_id):
-        """Changes the current exectuion step of the given job
+        """Changes the current execution step of the given job
 
         Parameters
         ----------

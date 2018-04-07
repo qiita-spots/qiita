@@ -623,7 +623,7 @@ class TestEBISubmission(TestCase):
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
         with self.assertRaises(EBISubmissionError):
-            ebi_submission.generate_demultiplexed_fastq()
+            ebi_submission.generate_demultiplexed_fastq(rewrite_fastq=True)
 
         artifact = self.write_demux_files(PrepTemplate(1), 'WRONG-SEQS')
         ebi_submission = EBISubmission(artifact.id, 'ADD')
@@ -642,7 +642,11 @@ class TestEBISubmission(TestCase):
         # This is testing that only the samples with sequences are going to
         # be created
         ebi_submission = EBISubmission(artifact.id, 'ADD')
-        obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        # adding rewrite_fastq=True as it's possible to have duplicated ids
+        # and this will assure to get the right test
+        obs_demux_samples = ebi_submission.generate_demultiplexed_fastq(
+            rewrite_fastq=True)
+
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
         self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
