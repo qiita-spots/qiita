@@ -159,9 +159,10 @@
 {% if files %}
 <div class='row'>
   <div class='col-md-12'>
+    <b>Available files:</b>
     <button class="btn btn-default" data-toggle="collapse" data-target="#available-files-div">
       <span class="glyphicon glyphicon-eye-open"></span>
-      Available files:
+      Show/Hide
     </button>
     <div id="available-files-div" class="collapse {% if len(files) <= 10 %} in {% end %}" style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
       {% for f_id, f_name in files %}
