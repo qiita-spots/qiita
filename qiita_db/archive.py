@@ -129,7 +129,7 @@ class Archive(object):
                     ppms = pms['parameters']
                     pparams = ','.join(
                         ['%s: %s' % (k, v) for k, v in ppp.values.items()
-                         if list(v)[0] != 'artifact' and k in ppms])
+                         if list(str(v))[0] != 'artifact' and k in ppms])
                     if pparams:
                         palgorithm = "%s (%s)" % (palgorithm, pparams)
             algorithm = '%s | %s' % (cname, palgorithm)

@@ -1,7 +1,15 @@
-Redbiom
+.. _redbiom:
+
+.. index:: redbiom
+
+redbiom
 =======
 * Allows you to search through public studies to find comparable data to your own
 * Can search by: metadata, feature, or taxon
+
+For more information, advanced queries and generating
+`BIOM <http://biom-format.org/>`__ files go to the
+`redbiom github page <https://github.com/biocore/redbiom/blob/master/README.md>`__.
 
 Search Options
 --------------
@@ -49,5 +57,3 @@ Search Options
 
       * Find all samples in which the genera Escherichia is found: "g__Escherichia"
       * Find all samples in which the order Clostridiales is found: "o__Clostridiales"
-
-For more information go to the `Redbiom github page <https://github.com/biocore/redbiom>`__.

@@ -1370,9 +1370,6 @@ Controlled Vocabulary]]></comment>
 			<column name="study_abstract" type="text" jt="12" mandatory="y" />
 			<column name="vamps_id" type="varchar" jt="12" />
 			<column name="ebi_study_accession" type="varchar" jt="12" />
-			<column name="ebi_submission_status" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;not_submitted&#039;</defo>
-			</column>
 			<index name="pk_study" unique="PRIMARY_KEY" >
 				<column name="study_id" />
 			</index>

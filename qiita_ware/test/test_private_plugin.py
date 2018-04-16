@@ -7,18 +7,22 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os.path import join, dirname, abspath, exists
+from os.path import join, dirname, abspath, exists, isdir
 from os import close, remove
+from shutil import rmtree
 from tempfile import mkstemp
 from json import loads, dumps
+from tempfile import mkdtemp
+from h5py import File
 
 import pandas as pd
 import numpy.testing as npt
-from time import time
+from time import time, sleep
 
+from qiita_files.demux import to_hdf5
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import r_client
-from qiita_db.software import Software, Parameters, Command
+from qiita_db.software import Software, Parameters, Command, DefaultParameters
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
@@ -32,6 +36,7 @@ from qiita_db.logger import LogEntry
 from qiita_db.sql_connection import TRN
 from qiita_db.analysis import Analysis
 from qiita_ware.private_plugin import private_task
+from qiita_ware.test.test_ebi import FASTA_EXAMPLE
 
 
 class BaseTestPrivatePlugin(TestCase):
@@ -54,12 +59,16 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
             f.write("sample_name\tnew_col\n"
                     "1.SKD6.640190\tnew_vale")
 
-        self._clean_up_files = [self.fp]
+        self.temp_dir = mkdtemp()
+        self._clean_up_files = [self.fp, self.temp_dir]
 
     def tearDown(self):
-        for fp in self._clean_up_files:
-            if exists(fp):
-                remove(fp)
+        for f in self._clean_up_files:
+            if exists(f):
+                if isdir(f):
+                    rmtree(f)
+                else:
+                    remove(f)
 
         r_client.flushdb()
 
@@ -378,6 +387,44 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertEqual(job.status, 'success')
         self.assertEqual(c_job.status, 'error')
         self.assertIn('No such file or directory', c_job.log.msg)
+
+    def test_submit_to_EBI(self):
+        # setting up test
+        fna_fp = join(self.temp_dir, 'seqs.fna')
+        demux_fp = join(self.temp_dir, 'demux.seqs')
+        with open(fna_fp, 'w') as f:
+            f.write(FASTA_EXAMPLE)
+        with File(demux_fp, "w") as f:
+            to_hdf5(fna_fp, f)
+
+        pt = PrepTemplate(1)
+        params = Parameters.from_default_params(
+            DefaultParameters(1), {'input_data': pt.artifact.id})
+        artifact = Artifact.create(
+            [(demux_fp, 6)], "Demultiplexed", parents=[pt.artifact],
+            processing_parameters=params)
+
+        # submit job
+        job = self._create_job('submit_to_EBI', {
+            'artifact': artifact.id, 'submission_type': 'VALIDATE'})
+        job._set_status('in_construction')
+        job.submit()
+
+        # wait for the job to fail, and check that the status is submitting
+        checked_submitting = True
+        while job.status != 'error':
+            if checked_submitting:
+                self.assertEqual('submitting',
+                                 artifact.study.ebi_submission_status)
+                checked_submitting = False
+        # once it fails wait for a few to check status again
+        sleep(10)
+        exp = 'Some artifact submissions failed: %d' % artifact.id
+        obs = artifact.study.ebi_submission_status
+        self.assertEqual(obs, exp)
+
+        # wait for everything to finish to avoid DB deadlocks
+        sleep(5)
 
 
 @qiita_test_checker()

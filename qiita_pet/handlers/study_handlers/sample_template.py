@@ -309,7 +309,7 @@ def sample_template_overview_handler_get_request(study_id, user):
     # The following information should always be provided:
     # The files that have been uploaded to the system and can be a
     # sample template file
-    files = [f for _, f in get_files_from_uploads_folders(study_id)
+    files = [f for _, f, _ in get_files_from_uploads_folders(study_id)
              if f.endswith(('txt', 'tsv'))]
     # If there is a job associated with the sample information, the job id
     job = None

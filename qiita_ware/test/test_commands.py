@@ -7,7 +7,8 @@ from __future__ import division
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
+from os import environ
 from os.path import join
 from tempfile import mkdtemp
 import pandas as pd
@@ -16,7 +17,7 @@ from datetime import datetime
 from h5py import File
 from qiita_files.demux import to_hdf5
 
-from qiita_ware.exceptions import ComputeError
+from qiita_ware.exceptions import ComputeError, EBISubmissionError
 from qiita_ware.commands import submit_EBI
 from qiita_db.study import Study, StudyPerson
 from qiita_db.software import DefaultParameters, Parameters
@@ -134,24 +135,32 @@ class CommandsTests(TestCase):
         return ppd
 
     def test_submit_EBI_step_2_failure(self):
-        # see issue #406
-        # ppd = self.write_demux_files(PrepTemplate(1), False)
-        #
-        # with self.assertRaises(AttributeError):
-        #     submit_EBI(ppd.id, 'ADD', True)
-        pass
+        ppd = self.write_demux_files(PrepTemplate(1), False)
 
+        with self.assertRaises(EBISubmissionError):
+            submit_EBI(ppd.id, 'VALIDATE', True)
+
+    @skipIf(
+        environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_submit_EBI_parse_EBI_reply_failure(self):
         ppd = self.write_demux_files(PrepTemplate(1))
-        with self.assertRaises(ComputeError):
-            submit_EBI(ppd.id, 'ADD', True)
 
+        with self.assertRaises(ComputeError) as error:
+            submit_EBI(ppd.id, 'VALIDATE', True)
+        error = str(error.exception)
+        self.assertIn('EBI Submission failed! Log id:', error)
+        self.assertIn('The EBI submission failed:', error)
+        self.assertIn(
+            'Failed to validate run xml, error: Expected element', error)
+
+    @skipIf(
+        environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_full_submission(self):
-        # see issue #406
-        # ppd = self.generate_new_study_with_preprocessed_data()
-        #
-        # submit_EBI(ppd.id, 'ADD', True)
-        pass
+        artifact = self.generate_new_study_with_preprocessed_data()
+        self.assertEqual(
+            artifact.study.ebi_submission_status, 'not submitted')
+        submit_EBI(artifact.id, 'VALIDATE', True, test=True)
+        self.assertEqual(artifact.study.ebi_submission_status, 'submitted')
 
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
