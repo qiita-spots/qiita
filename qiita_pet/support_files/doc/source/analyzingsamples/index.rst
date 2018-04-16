@@ -369,9 +369,6 @@ Calculating Beta Group Significance
 .. figure::  beta_group_significance.png
    :align:   center
 
-Calculating Beta Group Significance
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 * **Calculate beta group significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
 
   * **Distance matrix** (required): Matrix of distances between pairs of samples
@@ -384,11 +381,11 @@ Calculating Beta Group Significance
 
   * **Number of permutations** (required): Number of permutations to be run when computing p-values
 
-.. figure::  beta_correlation.png
-   :align:   center
-
 Calculating Beta Correlation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure::  beta_correlation.png
+   :align:   center
 
 * **Calculate beta correlation**: Identifies a correlation between the distance matrix and a numeric sample metadata category
 
