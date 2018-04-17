@@ -54,11 +54,18 @@ Rarefying Features
 .. figure::  rarefy.png
    :align:   center
 
-* **Rarefy features** :ref:`[11]<reference11>` , :ref:`[12]<reference12>` : Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth
+* **Rarefy features**: Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth.
 
   *  **BIOM table** (required): Feature table containing the samples for which features should be rarefied
   *  **Parameter set**: Parameters at which the rarefication is run
   *  **Sampling depth** (required): Total frequency that each sample should be rarefied to, samples where sum of frequencies is less than sampling depth will not be included in resulting table
+
+Note that rarefaction has some advantages for beta-diversity analyses
+:ref:`[11]<reference11>`, but can have undesirable properties in tests of
+differential abundance :ref:`[12]<reference12>`. To analyze your data with
+alternative normalization strategies, you can easily download the raw biom
+tables (see :doc:`../tutorials/downloading`) and load them into an analysis
+pipeline such as `Phyloseq <https://bioconductor.org/packages/release/bioc/html/phyloseq.html>`__.
 
 Filtering Samples by Metadata
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
