@@ -54,11 +54,18 @@ Rarefying Features
 .. figure::  rarefy.png
    :align:   center
 
-* **Rarefy features** :ref:`[11]<reference11>` , :ref:`[12]<reference12>` : Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth
+* **Rarefy features**: Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth. 
 
   *  **BIOM table** (required): Feature table containing the samples for which features should be rarefied
   *  **Parameter set**: Parameters at which the rarefication is run
   *  **Sampling depth** (required): Total frequency that each sample should be rarefied to, samples where sum of frequencies is less than sampling depth will not be included in resulting table
+
+Note that rarefaction has some advantages for beta-diversity analyses
+:ref:`[11]<reference11>`, but can have undesireable properties in tests of
+differential abundance :ref:`[12]<reference12>`. To analyze your data with
+alternative normalization strategies, you can easily download the raw biom
+tables (see :doc:`../tutorials/downloading`) and load them into an analysis
+pipeline such as `Phyloseq <https://bioconductor.org/packages/release/bioc/html/phyloseq.html>`__.
 
 Filtering Samples by Metadata
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -369,9 +376,6 @@ Calculating Beta Group Significance
 .. figure::  beta_group_significance.png
    :align:   center
 
-Calculating Beta Group Significance
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 * **Calculate beta group significance**: Determines whether groups of samples are significantly different from one another using a permutation-based statistical test
 
   * **Distance matrix** (required): Matrix of distances between pairs of samples
@@ -384,11 +388,11 @@ Calculating Beta Group Significance
 
   * **Number of permutations** (required): Number of permutations to be run when computing p-values
 
-.. figure::  beta_correlation.png
-   :align:   center
-
 Calculating Beta Correlation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure::  beta_correlation.png
+   :align:   center
 
 * **Calculate beta correlation**: Identifies a correlation between the distance matrix and a numeric sample metadata category
 
