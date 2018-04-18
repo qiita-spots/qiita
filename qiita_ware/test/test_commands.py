@@ -17,7 +17,7 @@ from datetime import datetime
 from h5py import File
 from qiita_files.demux import to_hdf5
 
-from qiita_ware.exceptions import ComputeError, EBISubmissionError
+from qiita_ware.exceptions import ComputeError
 from qiita_ware.commands import submit_EBI
 from qiita_db.study import Study, StudyPerson
 from qiita_db.software import DefaultParameters, Parameters
