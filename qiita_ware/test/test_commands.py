@@ -135,9 +135,9 @@ class CommandsTests(TestCase):
         return ppd
 
     def test_submit_EBI_step_2_failure(self):
-        ppd = self.write_demux_files(PrepTemplate(1), False)
+        ppd = self.write_demux_files(PrepTemplate(1), True)
 
-        with self.assertRaises(EBISubmissionError):
+        with self.assertRaises(ComputeError):
             submit_EBI(ppd.id, 'VALIDATE', True)
 
     @skipIf(
@@ -150,8 +150,6 @@ class CommandsTests(TestCase):
         error = str(error.exception)
         self.assertIn('EBI Submission failed! Log id:', error)
         self.assertIn('The EBI submission failed:', error)
-        self.assertIn(
-            'Failed to validate run xml, error: Expected element', error)
 
     @skipIf(
         environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
