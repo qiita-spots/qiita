@@ -6,14 +6,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .oauth2 import OauthBaseHandler, authenticate_oauth
+from .oauth2 import OauthBaseHandler, authenticate_oauth2
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.archive import Archive
 from json import loads
 
 
 class APIArchiveObservations(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self):
         """Retrieves the archiving information
 
@@ -41,7 +41,7 @@ class APIArchiveObservations(OauthBaseHandler):
 
         self.write(response)
 
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def patch(self):
         """Updates / stores feature information in the archive.
 

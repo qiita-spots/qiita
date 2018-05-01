@@ -9,7 +9,7 @@
 from tornado.web import HTTPError
 
 import qiita_db as qdb
-from .oauth2 import OauthBaseHandler, authenticate_oauth
+from .oauth2 import OauthBaseHandler, authenticate_oauth2
 
 
 def _get_analysis(a_id):
@@ -43,7 +43,7 @@ def _get_analysis(a_id):
 
 
 class APIAnalysisMetadataHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, analysis_id):
         """Retrieves the analysis metadata
 
