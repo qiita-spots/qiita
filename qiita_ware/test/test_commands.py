@@ -17,7 +17,7 @@ from datetime import datetime
 from h5py import File
 from qiita_files.demux import to_hdf5
 
-from qiita_ware.exceptions import ComputeError, EBISubmissionError
+from qiita_ware.exceptions import ComputeError
 from qiita_ware.commands import submit_EBI
 from qiita_db.study import Study, StudyPerson
 from qiita_db.software import DefaultParameters, Parameters
@@ -134,12 +134,18 @@ class CommandsTests(TestCase):
 
         return ppd
 
-    def test_submit_EBI_step_2_failure(self):
-        ppd = self.write_demux_files(PrepTemplate(1), False)
 
-        with self.assertRaises(EBISubmissionError):
+@qiita_test_checker()
+class CommandsTestsA(CommandsTests):
+    def test_submit_EBI_step_2_failure(self):
+        ppd = self.write_demux_files(PrepTemplate(1), True)
+
+        with self.assertRaises(ComputeError):
             submit_EBI(ppd.id, 'VALIDATE', True)
 
+
+@qiita_test_checker()
+class CommandsTestsB(CommandsTests):
     @skipIf(
         environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_submit_EBI_parse_EBI_reply_failure(self):
@@ -153,6 +159,9 @@ class CommandsTests(TestCase):
         self.assertIn(
             'Failed to validate run xml, error: Expected element', error)
 
+
+@qiita_test_checker()
+class CommandsTestsC(CommandsTests):
     @skipIf(
         environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_full_submission(self):
