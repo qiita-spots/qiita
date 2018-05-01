@@ -12,8 +12,9 @@ from subprocess import Popen, PIPE
 from multiprocessing import Process
 from os.path import join
 from itertools import chain
-from collections import defaultdict
+from collections import defaultdict, Iterable
 from json import dumps, loads
+from time import sleep
 
 from future.utils import viewitems, viewvalues
 import networkx as nx
@@ -52,21 +53,23 @@ def _system_call(cmd):
     return stdout, stderr, return_value
 
 
-def _job_submitter(job, cmd):
+def _job_submitter(job_id, cmd):
     """Executes the commands `cmd` and updates the job in case of failure
 
     Parameters
     ----------
-    job : qiita_db.processing_job.ProcesingJob
-        The job that is executed by cmd
+    job_id : str
+        The job id that is executed by cmd
     cmd : str
         The command to execute the job
     """
     std_out, std_err, return_value = _system_call(cmd)
     if return_value != 0:
-        error = ("Error submitting job '%s':\nStd output:%s\nStd error:%s"
-                 % (job.id, std_out, std_err))
-        job.complete(False, error=error)
+        error = ("Error submitting job:\nStd output:%s\nStd error:%s"
+                 % (std_out, std_err))
+        # Forcing the creation of a new connection
+        qdb.sql_connection.create_new_transaction()
+        ProcessingJob(job_id).complete(False, error=error)
 
 
 class ProcessingJob(qdb.base.QiitaObject):
@@ -116,7 +119,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def create(cls, user, parameters):
+    def create(cls, user, parameters, force=False):
         """Creates a new job in the system
 
         Parameters
@@ -125,14 +128,73 @@ class ProcessingJob(qdb.base.QiitaObject):
             The user executing the job
         parameters : qiita_db.software.Parameters
             The parameters of the job being executed
+        force : bool
+            Force creation on duplicated parameters
 
         Returns
         -------
         qiita_db.processing_job.ProcessingJob
             The newly created job
+
+        Notes
+        -----
+        If force is True the job is gonna be created even if another job
+        exists with the same parameters
         """
-        with qdb.sql_connection.TRN:
+        TTRN = qdb.sql_connection.TRN
+        with TTRN:
             command = parameters.command
+
+            # check if a job with the same parameters already exists
+            sql = """SELECT processing_job_id, email, processing_job_status,
+                        COUNT(aopj.artifact_id)
+                     FROM qiita.processing_job
+                     LEFT JOIN qiita.processing_job_status
+                        USING (processing_job_status_id)
+                     LEFT JOIN qiita.artifact_output_processing_job aopj
+                        USING (processing_job_id)
+                     WHERE command_id = %s AND processing_job_status IN (
+                        'success', 'waiting', 'running', 'in_construction') {0}
+                     GROUP BY processing_job_id, email,
+                        processing_job_status"""
+
+            # we need to use ILIKE because of booleans as they can be
+            # false or False
+            params = []
+            for k, v in viewitems(parameters.values):
+                # this is necessary in case we have an Iterable as a value
+                # but that is not unicode or string
+                if isinstance(v, Iterable) and not isinstance(v, (str,
+                                                                  unicode)):
+                    for vv in v:
+                        params.extend([k, str(vv)])
+                else:
+                    params.extend([k, str(v)])
+
+            if params:
+                # divided by 2 as we have key-value pairs
+                len_params = len(params)/2
+                sql = sql.format(' AND ' + ' AND '.join(
+                    ["command_parameters->>%s ILIKE %s"] * len_params))
+                params = [command.id] + params
+                TTRN.add(sql, params)
+            else:
+                # the sql variable expects the list of parameters but if there
+                # is no param we need to replace the {0} with an empty string
+                TTRN.add(sql.format(""), [command.id])
+
+            # checking that if the job status is success, it has children
+            # [2] status, [3] children count
+            existing_jobs = [r for r in TTRN.execute_fetchindex()
+                             if r[2] != 'success' or r[3] > 0]
+            if existing_jobs and not force:
+                raise ValueError(
+                    'Cannot create job because the parameters are the same as '
+                    'jobs that are queued, running or already have '
+                    'succeeded:\n%s' % '\n'.join(
+                        ["%s: %s" % (jid, status)
+                         for jid, _, status, _ in existing_jobs]))
+
             sql = """INSERT INTO qiita.processing_job
                         (email, command_id, command_parameters,
                          processing_job_status_id)
@@ -142,8 +204,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                 "in_construction", "processing_job_status")
             sql_args = [user.id, command.id,
                         parameters.dump(), status]
-            qdb.sql_connection.TRN.add(sql, sql_args)
-            job_id = qdb.sql_connection.TRN.execute_fetchlast()
+            TTRN.add(sql, sql_args)
+            job_id = TTRN.execute_fetchlast()
 
             # Link the job with the input artifacts
             sql = """INSERT INTO qiita.artifact_processing_job
@@ -157,17 +219,16 @@ class ProcessingJob(qdb.base.QiitaObject):
                     # still doesn't exists because the current job is part
                     # of a workflow, so we can't link
                     if not isinstance(artifact_info, list):
-                        qdb.sql_connection.TRN.add(
-                            sql, [artifact_info, job_id])
+                        TTRN.add(sql, [artifact_info, job_id])
                     else:
                         pending[artifact_info[0]][pname] = artifact_info[1]
             if pending:
                 sql = """UPDATE qiita.processing_job
                          SET pending = %s
                          WHERE processing_job_id = %s"""
-                qdb.sql_connection.TRN.add(sql, [dumps(pending), job_id])
+                TTRN.add(sql, [dumps(pending), job_id])
 
-            qdb.sql_connection.TRN.execute()
+            TTRN.execute()
 
             return cls(job_id)
 
@@ -322,14 +383,19 @@ class ProcessingJob(qdb.base.QiitaObject):
         QiitaDBOperationNotPermittedError
             If the job is not in 'waiting' or 'in_construction' status
         """
-        status = self.status
-        if status not in {'in_construction', 'waiting'}:
-            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                "Can't submit job, not in 'in_construction' or "
-                "'waiting' status. Current status: %s" % status)
-        self._set_status('queued')
+        with qdb.sql_connection.TRN:
+            status = self.status
+            if status not in {'in_construction', 'waiting'}:
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Can't submit job, not in 'in_construction' or "
+                    "'waiting' status. Current status: %s" % status)
+            self._set_status('queued')
+            # At this point we are going to involve other processes. We need
+            # to commit the changes to the DB or the other processes will not
+            # see these changes
+            qdb.sql_connection.TRN.commit()
         cmd = self._generate_cmd()
-        p = Process(target=_job_submitter, args=(self, cmd))
+        p = Process(target=_job_submitter, args=(self.id, cmd))
         p.start()
 
     def release(self):
@@ -352,46 +418,107 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             a_info = qdb.sql_connection.TRN.execute_fetchlast()
 
-            atype = a_info['artifact_type']
-            filepaths = a_info['filepaths']
             provenance = loads(self.parameters.values['provenance'])
             job = ProcessingJob(provenance['job'])
-            parents = job.input_artifacts
-            params = job.parameters
+            if 'data_type' in a_info:
+                # This job is resulting from a private job
+                parents = None
+                params = None
+                cmd_out_id = None
+                name = None
+                data_type = a_info['data_type']
+                analysis = qdb.analysis.Analysis(
+                    job.parameters.values['analysis'])
+                a_info = a_info['artifact_data']
+            else:
+                # This job is resulting from a plugin job
+                parents = job.input_artifacts
+                params = job.parameters
+                cmd_out_id = provenance['cmd_out_id']
+                name = provenance['name']
+                analysis = None
+                data_type = None
 
             # Create the artifact
+            atype = a_info['artifact_type']
+            filepaths = a_info['filepaths']
             a = qdb.artifact.Artifact.create(
                 filepaths, atype, parents=parents,
-                processing_parameters=params)
+                processing_parameters=params,
+                analysis=analysis, data_type=data_type, name=name)
 
-            cmd_out_id = provenance['cmd_out_id']
-            mapping = {cmd_out_id: a.id}
             self._set_status('success')
+
+            mapping = {}
+            if cmd_out_id is not None:
+                mapping = {cmd_out_id: a.id}
 
             return mapping
 
     def release_validators(self):
         """Allows all the validator job spawned by this job to complete"""
         with qdb.sql_connection.TRN:
-            if self.command.software.type != 'artifact transformation':
+            if self.command.software.type not in ('artifact transformation',
+                                                  'private'):
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Only artifact transformation jobs can release validators")
+                    "Only artifact transformation and private jobs can "
+                    "release validators")
 
-            # Check if all the validators are ready by checking that there is
-            # no validator processing job whose status is not waiting
-            sql = """SELECT COUNT(1)
+            # Check if all the validators are completed. Validator jobs can be
+            # in two states when completed: 'waiting' in case of success
+            # or 'error' otherwise
+            sql = """SELECT pjv.validator_id
                      FROM qiita.processing_job_validator pjv
                         JOIN qiita.processing_job pj ON
                             pjv.validator_id = pj.processing_job_id
                         JOIN qiita.processing_job_status USING
                             (processing_job_status_id)
                      WHERE pjv.processing_job_id = %s
-                        AND processing_job_status != %s"""
-            qdb.sql_connection.TRN.add(sql, [self.id, 'waiting'])
-            remaining = qdb.sql_connection.TRN.execute_fetchlast()
+                        AND processing_job_status NOT IN %s"""
+            sql_args = [self.id, ('waiting', 'error')]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            validator_ids = qdb.sql_connection.TRN.execute_fetchindex()
 
-            if remaining == 0:
-                # All validators have completed
+            # Active polling - wait until all validator jobs are completed
+            while validator_ids:
+                jids = ', '.join([j[0] for j in validator_ids])
+                self.step = ("Validating outputs (%d remaining) via "
+                             "job(s) %s" % (len(validator_ids), jids))
+                sleep(10)
+                qdb.sql_connection.TRN.add(sql, sql_args)
+                validator_ids = qdb.sql_connection.TRN.execute_fetchindex()
+
+            # Check if any of the validators errored
+            sql = """SELECT validator_id
+                     FROM qiita.processing_job_validator pjv
+                        JOIN qiita.processing_job pj
+                            ON pjv.validator_id = pj.processing_job_id
+                        JOIN qiita.processing_job_status USING
+                            (processing_job_status_id)
+                        WHERE pjv.processing_job_id = %s AND
+                            processing_job_status = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id, 'error'])
+            errored = qdb.sql_connection.TRN.execute_fetchflatten()
+
+            if errored:
+                # At least one of the validators failed, Set the rest of the
+                # validators and the current job as failed
+                qdb.sql_connection.TRN.add(sql, [self.id, 'waiting'])
+                waiting = qdb.sql_connection.TRN.execute_fetchflatten()
+
+                common_error = "\n".join(
+                    ["Validator %s error message: %s"
+                     % (j, ProcessingJob(j).log.msg) for j in errored])
+
+                val_error = "%d sister validator jobs failed: %s" % (
+                    len(errored), common_error)
+                for j in waiting:
+                    ProcessingJob(j)._set_error(val_error)
+
+                self._set_error('%d validator jobs failed: %s'
+                                % (len(errored), common_error))
+            else:
+                # All validators have successfully completed
                 sql = """SELECT validator_id
                          FROM qiita.processing_job_validator
                          WHERE processing_job_id = %s"""
@@ -405,19 +532,18 @@ class ProcessingJob(qdb.base.QiitaObject):
                     vjob = ProcessingJob(jid)
                     mapping.update(vjob.release())
 
-                sql = """INSERT INTO
-                            qiita.artifact_output_processing_job
-                            (artifact_id, processing_job_id,
-                            command_output_id)
-                         VALUES (%s, %s, %s)"""
-                sql_args = [[aid, self.id, outid]
-                            for outid, aid in viewitems(mapping)]
-                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+                if mapping:
+                    sql = """INSERT INTO
+                                qiita.artifact_output_processing_job
+                                (artifact_id, processing_job_id,
+                                command_output_id)
+                             VALUES (%s, %s, %s)"""
+                    sql_args = [[aid, self.id, outid]
+                                for outid, aid in viewitems(mapping)]
+                    qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
-                self._update_and_launch_children(mapping)
+                    self._update_and_launch_children(mapping)
                 self._set_status('success')
-            else:
-                self.step = "Validating outputs (%d remaining)" % remaining
 
     def _complete_artifact_definition(self, artifact_data):
         """"Performs the needed steps to complete an artifact definition job
@@ -443,7 +569,9 @@ class ProcessingJob(qdb.base.QiitaObject):
             if job_params['provenance'] is not None:
                 # The artifact is a result from a previous job
                 provenance = loads(job_params['provenance'])
-                job = ProcessingJob(provenance['job'])
+                if provenance.get('data_type') is not None:
+                    artifact_data = {'data_type': provenance['data_type'],
+                                     'artifact_data': artifact_data}
 
                 sql = """UPDATE qiita.processing_job_validator
                          SET artifact_info = %s
@@ -453,13 +581,28 @@ class ProcessingJob(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.execute()
                 # Can't create the artifact until all validators are completed
                 self._set_status('waiting')
-                job.release_validators()
             else:
-                # The artifact is uploaded by the user
-                pt = qdb.metadata_template.prep_template.PrepTemplate(
-                    job_params['template'])
+                # The artifact is uploaded by the user or is the initial
+                # artifact of an analysis
+                if ('analysis' in job_params and
+                        job_params['analysis'] is not None):
+                    pt = None
+                    an = qdb.analysis.Analysis(job_params['analysis'])
+                    sql = """SELECT data_type
+                             FROM qiita.analysis_processing_job
+                             WHERE analysis_id = %s
+                                AND processing_job_id = %s"""
+                    qdb.sql_connection.TRN.add(sql, [an.id, self.id])
+                    data_type = qdb.sql_connection.TRN.execute_fetchlast()
+                else:
+                    pt = qdb.metadata_template.prep_template.PrepTemplate(
+                        job_params['template'])
+                    an = None
+                    data_type = None
+
                 qdb.artifact.Artifact.create(
-                    filepaths, atype, prep_template=pt)
+                    filepaths, atype, prep_template=pt, analysis=an,
+                    data_type=data_type, name=job_params['name'])
                 self._set_status('success')
 
     def _complete_artifact_transformation(self, artifacts_data):
@@ -485,6 +628,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         validator_jobs = []
         with qdb.sql_connection.TRN:
+            cmd_id = self.command.id
             for out_name, a_data in viewitems(artifacts_data):
                 # Correct the format of the filepaths parameter so we can
                 # create a validate job
@@ -505,11 +649,21 @@ class ProcessingJob(qdb.base.QiitaObject):
                 templates = set()
                 for artifact in self.input_artifacts:
                     templates.update(pt.id for pt in artifact.prep_templates)
+                template = None
+                analysis = None
                 if len(templates) > 1:
                     raise qdb.exceptions.QiitaDBError(
                         "Currently only single prep template "
                         "is allowed, found %d" % len(templates))
-                template = templates.pop()
+                elif len(templates) == 1:
+                    template = templates.pop()
+                else:
+                    # In this case we have 0 templates. What this means is that
+                    # this artifact is being generated in the analysis pipeline
+                    # All the artifacts included in the analysis pipeline
+                    # belong to the same analysis, so we can just ask the
+                    # first artifact for the analysis that it belongs to
+                    analysis = self.input_artifacts[0].analysis.id
 
                 # Once the validate job completes, it needs to know if it has
                 # been generated from a command (and how) or if it has been
@@ -518,31 +672,58 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # current job and how this artifact has been generated. This
                 # does not affect the plugins since they can ignore this
                 # parameter
-                cmd_out_id = qdb.util.convert_to_id(
-                    out_name, "command_output", "name")
+                sql = """SELECT command_output_id
+                         FROM qiita.command_output
+                         WHERE name = %s AND command_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [out_name, cmd_id])
+                cmd_out_id = qdb.sql_connection.TRN.execute_fetchlast()
+                naming_params = self.command.naming_order
+                if naming_params:
+                    params = self.parameters.values
+                    art_name = "%s %s" % (
+                        out_name, ' '.join([str(params[p])
+                                            for p in naming_params]))
+                else:
+                    art_name = out_name
+
                 provenance = {'job': self.id,
-                              'cmd_out_id': cmd_out_id}
+                              'cmd_out_id': cmd_out_id,
+                              'name': art_name}
 
                 # Get the validator command for the current artifact type and
                 # create a new job
                 cmd = qdb.software.Command.get_validator(atype)
+                values_dict = {
+                    'files': dumps(filepaths), 'artifact_type': atype,
+                    'template': template, 'provenance': dumps(provenance),
+                    'analysis': None}
+                if analysis is not None:
+                    values_dict['analysis'] = analysis
                 validate_params = qdb.software.Parameters.load(
-                    cmd, values_dict={'files': dumps(filepaths),
-                                      'artifact_type': atype,
-                                      'template': template,
-                                      'provenance': dumps(provenance)})
+                    cmd, values_dict=values_dict)
                 validator_jobs.append(
-                    ProcessingJob.create(self.user, validate_params))
+                    ProcessingJob.create(self.user, validate_params, True))
 
             # Change the current step of the job
-            self.step = "Validating outputs (%d remaining)" % len(
-                validator_jobs)
+
+            self.step = "Validating outputs (%d remaining) via job(s) %s" % (
+                len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
 
             # Link all the validator jobs with the current job
             self._set_validator_jobs(validator_jobs)
             # Submit all the validator jobs
             for j in validator_jobs:
                 j.submit()
+
+            # Submit the job that will release all the validators
+            plugin = qdb.software.Software.from_name_and_version(
+                'Qiita', 'alpha')
+            cmd = plugin.get_command('release_validators')
+            params = qdb.software.Parameters.load(
+                cmd, values_dict={'job': self.id})
+            job = ProcessingJob.create(self.user, params)
+        # Doing the submission outside of the transaction
+        job.submit()
 
     def _set_validator_jobs(self, validator_jobs):
         """Sets the validator jobs for the current job
@@ -598,15 +779,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                 else:
                     self._set_status('success')
             else:
-                if self.command.software.type == 'artifact definition':
-                    job_params = self.parameters.values
-                    if job_params.get('provenance') is not None:
-                        # This artifact definition job is a result of a command
-                        # run, if it fails, set up the status of the "parent"
-                        # job also as failed, and assign the sem error message
-                        provenance = loads(job_params['provenance'])
-                        job = ProcessingJob(provenance['job'])
-                        job._set_error(error)
                 self._set_error(error)
 
     @property
@@ -797,7 +969,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 params, pending = qdb.sql_connection.TRN.execute_fetchflatten()
                 for pname, out_name in viewitems(pending[self.id]):
                     a_id = new_map[out_name]
-                    params[pname] = a_id
+                    params[pname] = str(a_id)
                     del pending[self.id]
                     # Link the input artifact with the child job
                     qdb.sql_connection.TRN.add(sql_link, [a_id, c.id])
@@ -851,7 +1023,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 for aid, name in qdb.sql_connection.TRN.execute_fetchindex()}
 
     @property
-    def processing_job_worflow(self):
+    def processing_job_workflow(self):
         """The processing job worflow
 
         Returns
@@ -860,14 +1032,73 @@ class ProcessingJob(qdb.base.QiitaObject):
             The processing job workflow the job
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT processing_job_workflow_id
-                     FROM qiita.processing_job_workflow_root
+            # Retrieve the workflow root jobs
+            sql = """SELECT get_processing_workflow_roots
+                     FROM qiita.get_processing_workflow_roots(%s)"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+            if res:
+                sql = """SELECT processing_job_workflow_id
+                         FROM qiita.processing_job_workflow_root
+                         WHERE processing_job_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [res[0][0]])
+                r = qdb.sql_connection.TRN.execute_fetchindex()
+                return (qdb.processing_job.ProcessingWorkflow(r[0][0]) if r
+                        else None)
+            else:
+                return None
+
+    @property
+    def pending(self):
+        """A dictionary with the information about the predecessor jobs
+
+        Returns
+        -------
+        dict
+            A dict with {job_id: {parameter_name: output_name}}"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT pending
+                     FROM qiita.processing_job
                      WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            r = qdb.sql_connection.TRN.execute_fetchindex()
+            res = qdb.sql_connection.TRN.execute_fetchlast()
+            return res if res is not None else {}
 
-            return (qdb.processing_job.ProcessingWorkflow(r[0][0]) if r
-                    else None)
+    @property
+    def hidden(self):
+        """Whether the job is hidden or not
+
+        Returns
+        -------
+        bool
+            Whether the jobs is hidden or not
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT hidden
+                     FROM qiita.processing_job
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    def hide(self):
+        """Hides the job from the user
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the job is not in the error status
+        """
+        with qdb.sql_connection.TRN:
+            status = self.status
+            if status != 'error':
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    'Only jobs in error status can be hidden. Current status: '
+                    '%s' % status)
+            sql = """UPDATE qiita.processing_job
+                     SET hidden = %s
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [True, self.id])
+            qdb.sql_connection.TRN.execute()
 
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
@@ -896,7 +1127,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             The name of the workflow. Default: generated from user's name
         """
         with qdb.sql_connection.TRN:
-            # Insert the workflow in the processing_job_worflow table
+            # Insert the workflow in the processing_job_workflow table
             name = name if name else "%s's workflow" % user.info['name']
             sql = """INSERT INTO qiita.processing_job_workflow (email, name)
                      VALUES (%s, %s)
@@ -914,7 +1145,8 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
         return cls(w_id)
 
     @classmethod
-    def from_default_workflow(cls, user, dflt_wf, req_params, name=None):
+    def from_default_workflow(cls, user, dflt_wf, req_params, name=None,
+                              force=False):
         """Creates a new processing workflow from a default workflow
 
         Parameters
@@ -929,6 +1161,8 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             parameter name.
         name : str, optional
             Name of the workflow. Default: generated from user's name
+        force : bool
+            Force creation on duplicated parameters
 
         Returns
         -------
@@ -972,7 +1206,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 n: ProcessingJob.create(
                     user,
                     qdb.software.Parameters.from_default_params(
-                        p, req_params[c]))
+                        p, req_params[c]), force)
                 for n, (c, p) in viewitems(roots)}
             root_jobs = node_to_job.values()
 
@@ -1013,7 +1247,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 # the current job, so create it
                 new_job = ProcessingJob.create(
                     user, qdb.software.Parameters.from_default_params(
-                        dflt_params, job_req_params))
+                        dflt_params, job_req_params), force)
                 node_to_job[n] = new_job
 
                 # Create the parent-child links in the DB
@@ -1023,7 +1257,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             return cls._common_creation_steps(user, root_jobs, name)
 
     @classmethod
-    def from_scratch(cls, user, parameters, name=None):
+    def from_scratch(cls, user, parameters, name=None, force=False):
         """Creates a new processing workflow from scratch
 
         Parameters
@@ -1034,13 +1268,15 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             The parameters of the first job in the workflow
         name : str, optional
             Name of the workflow. Default: generated from user's name
+        force : bool
+            Force creation on duplicated parameters
 
         Returns
         -------
         qiita_db.processing_job.ProcessingWorkflow
             The newly created workflow
         """
-        job = ProcessingJob.create(user, parameters)
+        job = ProcessingJob.create(user, parameters, force)
         return cls._common_creation_steps(user, [job], name)
 
     @property
@@ -1134,13 +1370,22 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                      WHERE processing_job_workflow_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchflatten()
-            if len(res) != 1 or res[0] != 'in_construction':
+            # If the above SQL query returns a single element and the value
+            # is different from in construction, it means that all the jobs
+            # in the workflow are in the same status and it is not
+            # 'in_construction', hence raise the error. If the above SQL query
+            # returns more than value (len(res) > 1) it means that the workflow
+            # is no longer in construction cause some jobs have been submited
+            # for processing. Note that if the above query doesn't retrun any
+            # value, it means that no jobs are in the workflow and that means
+            # that the workflow is in construction.
+            if (len(res) == 1 and res[0] != 'in_construction') or len(res) > 1:
                 # The workflow is no longer in construction, raise an error
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                     "Workflow not in construction")
 
     def add(self, dflt_params, connections=None, req_params=None,
-            opt_params=None):
+            opt_params=None, force=False):
         """Adds a new job to the workflow
 
         Parameters
@@ -1159,6 +1404,8 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
         opt_params : dict of {str: object}, optional
             The optional parameters to change from the default set, keyed by
             parameter name. Default: None, use the values in `dflt_params`
+        force : bool
+            Force creation on duplicated parameters
 
         Raises
         ------
@@ -1180,7 +1427,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
 
                 new_job = ProcessingJob.create(
                     self.user, qdb.software.Parameters.from_default_params(
-                        dflt_params, req_params, opt_params=opt_params))
+                        dflt_params, req_params, opt_params=opt_params), force)
 
                 # SQL used to create the edges between jobs
                 sql = """INSERT INTO qiita.parent_processing_job
@@ -1194,7 +1441,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 # workflow, so it is a new root job
                 new_job = ProcessingJob.create(
                     self.user, qdb.software.Parameters.from_default_params(
-                        dflt_params, req_params, opt_params=opt_params))
+                        dflt_params, req_params, opt_params=opt_params), force)
                 sql = """INSERT INTO qiita.processing_job_workflow_root
                             (processing_job_workflow_id, processing_job_id)
                          VALUES (%s, %s)"""

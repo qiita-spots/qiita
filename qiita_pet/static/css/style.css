@@ -1,14 +1,21 @@
+/*
+  Original source https://stackoverflow.com/a/18529465
+  Link
+*/
+.navbar-default .navbar-nav > li > a {
+  font-size: 14px;
+  color: #EEE;
+}
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+  color: #CCC;
+}
+/* Link END */
+
 #qiita-main {
   position: relative;
   height: 100%;
   width: 100%;
-}
-#qiita-processing {
-  position: absolute;
-  height: 100%;
-  width: 0%;
-  right: 0;
-  top: 0;
 }
 #template-content{
   padding: 10px;
@@ -18,10 +25,20 @@
 
 td.more-info-processing-jobs{
   cursor: pointer;
-  background: url('../img//details_open.png') no-repeat center center;
+  background: url('../img/details_open.png') no-repeat center center;
 }
-tr.shown td.more-info-processing-jobs {
-    background: url('../img//details_close.png') no-repeat center center;
+tr.shown td.more-info-processing-jobs{
+  cursor: pointer;
+  background: url('../img/details_close.png') no-repeat center center;
+}
+
+div.details-control{
+  cursor: pointer;
+  background: url('../img/details_open.png') no-repeat center center;
+}
+tr.shown div.details-control{
+  cursor: pointer;
+  background: url('../img/details_close.png') no-repeat center center;
 }
 
 .blinking-message {
@@ -39,10 +56,15 @@ tr.shown td.more-info-processing-jobs {
   padding-bottom: 6px;
 }
 
-.dropdown:hover .dropdown-menu {
+.dropdown:hover .dropdown-menu{
     display: block;
  }
 
+/* hover is a pseudoclass and can't be controlled - use the class below to trigger
+the same behavior as the hover pseudoclass */
+.custom-dropdown-menu {
+    display: block;
+}
 
  .info-menu {
     word-wrap: break-word;
@@ -75,44 +97,4 @@ tr.shown td.more-info-processing-jobs {
   width:100%;
   height:300px;
   border: 1px solid #ccc;
-}
-
-/* Make the navbar collapse at medium size, not small.
-Fixes really ugly middle ground where menu stacking occurs
-adapted from http://stackoverflow.com/a/23298184 */
-@media (max-width: 991px) {
-    .navbar-header {
-        float: none;
-    }
-    .navbar-toggle {
-        display: block;
-    }
-    .navbar-collapse {
-        border-top: 1px solid transparent;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
-    }
-    .navbar-collapse.collapse {
-        display: none!important;
-    }
-    .navbar-nav {
-        float: none!important;
-        margin: 7.5px -15px;
-    }
-    .navbar-nav>li {
-        float: none;
-    }
-    .navbar-nav>li>a {
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-    .navbar-text {
-        float: none;
-        margin: 15px 0;
-    }
-    /* since 3.1.0 */     .navbar-collapse.collapse.in {
-         display: block!important;
-    }
-    .collapsing {
-        overflow: hidden!important;
-    }
 }

@@ -50,18 +50,16 @@ class TestStudyAPI(TestCase):
         obs = study_get_req(1, 'test@foo.bar')
         exp = {
             'status': 'success',
-            'message': '',
             'study_info': {
-                'mixs_compliant': True,
-                'metadata_complete': True,
-                'reprocess': False,
-                'emp_person_id': 2,
-                'number_samples_promised': 27,
-                'funding': None,
-                'vamps_id': None,
+                'mixs_compliant': True, 'metadata_complete': True, 'level': '',
+                'reprocess': False, 'owner': 'test@foo.bar', 'message': '',
+                'emp_person_id': 2, 'number_samples_promised': 27,
+                'funding': None, 'show_biom_download_button': True,
+                'publication_pid': ['123456', '7891011'], 'vamps_id': None,
                 'first_contact': datetime(2014, 5, 19, 16, 10),
-                'timeseries_type_id': 1,
-                'study_abstract':
+                'ebi_submission_status': 'submitted',
+                'show_raw_download_button': True, 'timeseries_type_id': 1,
+                'study_abstract': (
                     'This is a preliminary study to examine the microbiota '
                     'associated with the Cannabis plant. Soils samples from '
                     'the bulk soil, soil associated with the roots, and the '
@@ -71,32 +69,26 @@ class TestStudyAPI(TestCase):
                     'from plants that had been harvested in the summer. '
                     'Future studies will attempt to analyze the soils and '
                     'rhizospheres from the same location at different time '
-                    'points in the plant lifecycle.',
-                'status': 'private',
-                'spatial_series': False,
-                'study_description': 'Analysis of the Cannabis Plant '
-                                     'Microbiome',
-                'shared_with': ['shared@foo.bar'],
-                'lab_person': {'affiliation': 'knight lab',
-                               'name': 'LabDude',
-                               'email': 'lab_dude@foo.bar'},
-                'principal_investigator': {'affiliation': 'Wash U',
-                                           'name': 'PIDude',
-                                           'email': 'PI_dude@foo.bar'},
-                'study_alias': 'Cannabis Soils',
-                'study_id': 1,
+                    'points in the plant lifecycle.'),
+                'status': 'private', 'spatial_series': False,
+                'study_description': (
+                    'Analysis of the Cannabis Plant Microbiome'),
+                'shared_with': ['shared@foo.bar'], 'publication_doi': [
+                    '10.100/123456', '10.100/7891011'],
+                'has_access_to_raw_data': True, 'lab_person': {
+                    'affiliation': 'knight lab', 'name': 'LabDude',
+                    'email': 'lab_dude@foo.bar'},
+                'principal_investigator': {
+                    'affiliation': 'Wash U', 'name': 'PIDude',
+                    'email': 'PI_dude@foo.bar'},
+                'study_alias': 'Cannabis Soils', 'study_id': 1,
                 'most_recent_contact': datetime(2014, 5, 19, 16, 11),
-                'publication_doi': ['10.100/123456', '10.100/7891011'],
-                'publication_pid': ['123456', '7891011'],
-                'num_samples': 27,
-                'study_title': 'Identification of the Microbiomes for '
-                               'Cannabis Soils',
-                'number_samples_collected': 27,
-                'owner': 'test@foo.bar',
-                'ebi_submission_status': 'submitted',
-                'ebi_study_accession': 'EBI123456-BB'},
+                'ebi_study_accession': 'EBI123456-BB', 'num_samples': 27,
+                'study_title': (
+                    'Identification of the Microbiomes for Cannabis Soils'),
+                'number_samples_collected': 27},
+            'message': '',
             'editable': True}
-
         self.assertEqual(obs, exp)
 
         # Test with no lab person
@@ -115,8 +107,7 @@ class TestStudyAPI(TestCase):
         }
 
         new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study for test", [1],
-            info)
+            qdb.user.User('test@foo.bar'), "Some New Study for test", info)
 
         obs = study_get_req(new_study.id, 'test@foo.bar')
         exp = {
@@ -138,6 +129,8 @@ class TestStudyAPI(TestCase):
                 'study_description': 'DESC',
                 'shared_with': [],
                 'lab_person': None,
+                'study_alias': "FCM",
+                'owner': 'Dude',
                 'principal_investigator': {'affiliation': 'Wash U',
                                            'name': 'PIDude',
                                            'email': 'PI_dude@foo.bar'},
@@ -172,14 +165,14 @@ class TestStudyAPI(TestCase):
                    '18S': [{
                        'id': 1,
                        'status': 'private',
-                       'name': 'PREP 1 NAME',
+                       'name': 'Prep information 1',
                        'start_artifact_id': 1,
                        'start_artifact': 'FASTQ',
                        'youngest_artifact': 'BIOM - BIOM',
                        'ebi_experiment': 27}, {
                        'id': 2,
                        'status': 'private',
-                       'name': 'PREP 2 NAME',
+                       'name': 'Prep information 2',
                        'start_artifact': 'BIOM',
                        'youngest_artifact': 'BIOM - BIOM',
                        'ebi_experiment': 27,
@@ -198,21 +191,21 @@ class TestStudyAPI(TestCase):
                'info': {
                    '18S': [{'id': 1,
                             'status': 'private',
-                            'name': 'PREP 1 NAME',
+                            'name': 'Prep information 1',
                             'start_artifact_id': 1,
                             'start_artifact': 'FASTQ',
                             'youngest_artifact': 'BIOM - BIOM',
                             'ebi_experiment': 27},
                            {'id': 2,
                             'status': 'private',
-                            'name': 'PREP 2 NAME',
+                            'name': 'Prep information 2',
                             'start_artifact_id': 7,
                             'start_artifact': 'BIOM',
                             'youngest_artifact': 'BIOM - BIOM',
                             'ebi_experiment': 27}],
                    '16S': [{'id': pt.id,
                             'status': 'sandbox',
-                            'name': 'PREP %d NAME' % pt.id,
+                            'name': 'Prep information %d' % pt.id,
                             'start_artifact_id': None,
                             'start_artifact': None,
                             'youngest_artifact': None,
@@ -229,7 +222,7 @@ class TestStudyAPI(TestCase):
                'info': {
                    '18S': [{'id': 1,
                             'status': 'public',
-                            'name': 'PREP 1 NAME',
+                            'name': 'Prep information 1',
                             'start_artifact_id': 1,
                             'start_artifact': 'FASTQ',
                             'youngest_artifact': 'BIOM - BIOM',
@@ -264,7 +257,7 @@ class TestStudyAPI(TestCase):
             "lab_person_id": qdb.study.StudyPerson(1)
         }
         study = qdb.study.Study.create(
-            qdb.user.User(user_email), "Test EBI study", [1], info)
+            qdb.user.User(user_email), "Test EBI study", info)
 
         # (B)
         metadata_dict = {
@@ -331,7 +324,8 @@ class TestStudyAPI(TestCase):
         exp = {
             'info': {
                 '16S': [
-                    {'status': 'sandbox', 'name': 'PREP %d NAME' % pt.id,
+                    {'status': 'sandbox',
+                     'name': 'Prep information %d' % pt.id,
                      'start_artifact': None, 'youngest_artifact': None,
                      'ebi_experiment': False, 'id': pt.id,
                      'start_artifact_id': None}]
@@ -346,38 +340,6 @@ class TestStudyAPI(TestCase):
         obs = study_prep_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-    def test_study_delete_req(self):
-        info = {
-            "timeseries_type_id": 1,
-            "metadata_complete": True,
-            "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
-            "study_alias": "FCM",
-            "study_description": "DESC",
-            "study_abstract": "ABS",
-            "emp_person_id": qdb.study.StudyPerson(2),
-            "principal_investigator_id": qdb.study.StudyPerson(3),
-            "lab_person_id": qdb.study.StudyPerson(1)
-        }
-
-        new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study to delete", [1],
-            info)
-
-        study_delete_req(new_study.id, 'test@foo.bar')
-
-        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.study.Study(new_study.id)
-
-    def test_study_delete_req_error(self):
-        obs = study_delete_req(1, 'test@foo.bar')
-        exp = {'status': 'error',
-               'message': 'Unable to delete study: Study "Identification of '
-                          'the Microbiomes for Cannabis Soils" cannot be '
-                          'erased because it has a sample template'}
         self.assertEqual(obs, exp)
 
     def test_study_delete_req_no_access(self):
@@ -432,8 +394,7 @@ class TestStudyAPI(TestCase):
             "lab_person_id": qdb.study.StudyPerson(1)
         }
         new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study to get files", [1],
-            info)
+            qdb.user.User('test@foo.bar'), "Some New Study to get files", info)
 
         # check that you can't call a this function using two unrelated
         # study_id and prep_template_id
@@ -502,7 +463,7 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success', 'num_prefixes': 2, 'artifacts': [],
                'remaining': ['test_1.R1.fastq.gz', 'test_1.R2.fastq.gz',
                              'test_1.R3.fastq.gz', 'uploaded_file.txt'],
-               'message': '',
+               'message':  "Check these run_prefix:\n'test_1' has 3 matches.",
                'file_types': [('raw_forward_seqs', True,
                                ['test_2.R1.fastq.gz']),
                               ('raw_reverse_seqs', False,
@@ -534,7 +495,7 @@ class TestStudyAPI(TestCase):
         self.assertEqual(obs, exp)
 
         # check error
-        obs = study_get_tags_request('shared@foo.bar', 2)
+        obs = study_get_tags_request('shared@foo.bar', 2000)
         exp = {'message': 'Study does not exist', 'status': 'error'}
         self.assertEqual(obs, exp)
 
@@ -569,7 +530,7 @@ class TestStudyAPI(TestCase):
         self.assertEqual(obs, exp)
 
         obs = study_tags_patch_request(
-            'shared@foo.bar', 2, 'replace', '/tags', ['testA', 'testB'])
+            'shared@foo.bar', 2000, 'replace', '/tags', ['testA', 'testB'])
         exp = {'message': 'Study does not exist', 'status': 'error'}
         self.assertEqual(obs, exp)
 

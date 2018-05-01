@@ -1,3 +1,11 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from tornado.web import authenticated, HTTPError
 from future.utils import viewitems
 from wtforms import Form, StringField, validators
@@ -182,7 +190,7 @@ class UserMessagesHander(BaseHandler):
         elif action == "delete":
             self.current_user.delete_messages(messages)
         else:
-            raise HTTPError(400, "Unknown action: %s" % action)
+            raise HTTPError(400, reason="Unknown action: %s" % action)
 
         self.render("user_messages.html",
                     messages=self.current_user.messages())

@@ -253,8 +253,7 @@ class TestSampleTemplate(TestCase):
         }
         self.new_study = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'),
-            "Fried Chicken Microbiome %s" % time(), [1],
-            info)
+            "Fried Chicken Microbiome %s" % time(), info)
 
         self.metadata_dict = {
             'Sample1': {'physical_specimen_location': 'location1',
@@ -1085,9 +1084,7 @@ class TestSampleTemplate(TestCase):
 
     def test_create_already_prefixed_samples(self):
         """Creates a new SampleTemplate with the samples already prefixed"""
-        st = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.sample_template.SampleTemplate.create,
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata_prefixed, self.new_study)
         new_id = self.new_study.id
         # The returned object has the correct id
@@ -1320,7 +1317,7 @@ class TestSampleTemplate(TestCase):
         # change based on time and the same functionality is being tested
         # in data.py
         exp_id = self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.filepath")[0] + 1
+            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0] + 1
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
@@ -1733,8 +1730,8 @@ class TestSampleTemplate(TestCase):
         md_ext['TOT_NITRO'] = pd.Series(['val1', 'val2', 'val3', 'val4'],
                                         index=md_ext.index)
 
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend, md_ext)
-        st.update(md_ext)
+        npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend_and_update,
+                         md_ext)
         exp_sample_ids = {"%s.Sample1" % st.id, "%s.Sample2" % st.id,
                           "%s.Sample3" % st.id, "%s.Sample4" % st.id}
         self.assertEqual(st._get_sample_ids(), exp_sample_ids)

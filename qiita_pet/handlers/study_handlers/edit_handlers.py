@@ -163,10 +163,10 @@ class StudyEditHandler(BaseHandler):
             study = Study(int(study_id))
         except QiitaDBUnknownIDError:
             # Study not in database so fail nicely
-            raise HTTPError(404, "Study %s does not exist" % study_id)
+            raise HTTPError(404, reason="Study %s does not exist" % study_id)
 
         # We need to check if the user has access to the study
-        check_access(self.current_user, study)
+        check_access(self.current_user, study, raise_error=True)
         return study
 
     def _get_study_person_id(self, index, new_people_info):
@@ -280,8 +280,7 @@ class StudyEditHandler(BaseHandler):
         else:
             # create the study
             # TODO: Fix this EFO once ontology stuff from emily is added
-            the_study = Study.create(self.current_user, study_title,
-                                     efo=[1], info=info)
+            the_study = Study.create(self.current_user, study_title, info=info)
 
             msg = ('Study <a href="%s/study/description/%d">%s</a> '
                    'successfully created' %

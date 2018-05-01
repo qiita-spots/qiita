@@ -5,8 +5,74 @@
 Qiita REST API
 ==============
 
-The Qiita REST API is currently only for internal use and is composed of the
-following endpoints:
+The Qiita API system is composed by 2 modules.
+
+Qiita Plugin REST API
+---------------------
+
+This module allows new plugins to get access, create and update data within Qiita. Note that some of these
+endpoints are required to follow RFC6750 and pass a payload to the methods, the rest follow the general format
+for GET/POST. A payload has 3 main components: ``'success': True/False``, ``'step': <str>``, and ``'values': <dict>``;
+the important parts of the values are described in the Parameters column.
+
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+| Action | URI                                                                               | Parameters                              | Description                                         | Object Name                |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|POST    | ``/qiita_db/authenticate/``                                                       | ``grant_type : {'client', 'password'}``,| Authenticate given information as per RFC6750       | TokenAuthHandler           |
+|        |                                                                                   | ``client_id : str``                     |                                                     |                            |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|POST    | ``/qiita_db/jobs/<job_id>/heartbeat/``                                            |                                         | Update the heartbeat timestamp of the job           | HeartbeatHandler           |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|POST    | ``/qiita_db/jobs/<job_id>/step/``                                                 | ``payload['step']``                     | Changes the current execution step of the given job | ActiveStepHandler          |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|POST    | ``/qiita_db/jobs/<job_id>/complete/``                                             | ``payload['values']:`` ``{``            | Updates the job to one of the completed statuses:   | CompleteHandler            |
+|        |                                                                                   | ``'job_id': <job_id>,``                 | 'success', 'error'                                  |                            |
+|        |                                                                                   | ``'error': <str>,``                     |                                                     |                            |
+|        |                                                                                   | ``'artifacts': <artifact_ids>`` ``}``   |                                                     |                            |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|GET     | ``/qiita_db/jobs/<job_id>``                                                       |                                         | Get the job information                             | JobHandler                 |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|POST    | ``/qiita_db/artifacts/types/``                                                    | ``name: str``, ``description: str``,    | Creates a new artifact type                         | ArtifactTypeHandler        |
+|        |                                                                                   | ``can_be_submitted_to_ebi: bool``,      |                                                     |                            |
+|        |                                                                                   | ``can_be_submitted_to_vamps: bool``,    |                                                     |                            |
+|        |                                                                                   | ``is_user_uploadable: bool``,           |                                                     |                            |
+|        |                                                                                   | ``filepath_types: list (str, bool)``    |                                                     |                            |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|GET     | ``/qiita_db/artifacts/<artifact_id>/``                                            |                                         | Retrieves the artifact information                  | ArtifactHandler            |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|PATCH   | ``/qiita_db/artifacts/<artifact_id>/``                                            | ``op: operation``, ``path: path``,      | Retrieves the artifact information                  | ArtifactHandler            |
+|        |                                                                                   | ``value: value``                        |                                                     |                            |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|GET     | ``/qiita_db/prep_template/<prep_id>/data/``                                       |                                         | Retrieves the preparation information contents      | PrepTemplateDataHandler    |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|GET     | ``/qiita_db/prep_template/<prep_id>/``                                            |                                         | Retrieves the preparation template information      | PrepTemplateDBHandler      |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|GET     | ``/qiita_db/plugins/<plugin_name>/<version>/commands/<command_name>/activate/``   |                                         | Activates the command                               | CommandActivateHandler     |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|GET     | ``/qiita_db/plugins/<plugin_name>/<version>/commands/<command_name>/``            |                                         | Retrieve the command information                    | CommandHandler             |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|POST    | ``/qiita_db/plugins/<plugin_name>/<version>/commands/``                           | ``name: <str>``, ``description: <str>``,| Create new command for a plugin                     | CommandListHandler         |
+|        |                                                                                   | ``required_parameters: <dict>``,        |                                                     |                            |
+|        |                                                                                   | ``optional_parameters: <dict>``,        |                                                     |                            |
+|        |                                                                                   | ``outputs: <list>``,                    |                                                     |                            |
+|        |                                                                                   | ``default_parameter_sets: <list>``,     |                                                     |                            |
+|        |                                                                                   | ``analysis_only: <bool>``               |                                                     |                            |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|GET     | ``/qiita_db/plugins/<plugin_name>/<version>/``                                    |                                         | Retrieve the plugin information                     | PluginHandler              |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|GET     | ``/qiita_db/analysis/<analysis_id>/metadata/``                                    |                                         | Retrieves the analysis metadata                     | APIAnalysisMetadataHandler |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|POST    | ``/qiita_db/archive/observations/``                                               | ``job_id: <str>``, ``features: <list>`` | Retrieves the archiving information                 | APIArchiveObservations     |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+|PATCH   | ``/qiita_db/archive/observations/``                                               | ``path: <job_id>``,                     | Retrieves the archiving information                 | APIArchiveObservations     |
+|        |                                                                                   | ``req_value: <list>``                   |                                                     |                            |
++--------+-----------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------+----------------------------+
+
+
+Qiita Internal REST API
+-----------------------
+
+This is the currently internal but planned to be external (general users) API.
 
 +--------+-----------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Action | URI                                                       | Description                                                                                                                                              |
@@ -17,9 +83,11 @@ following endpoints:
 +--------+-----------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
 |PATCH   | ``/api/v1/study/<int>/samples``                           | Update sample metadata or add samples to the sample information.                                                                                         |
 +--------+-----------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
-|GET     | ``/api/v1/study/<int>/samples?categories=foo,bar``        | Get metadata categories foo and bar for all samples in the study.                                                                                        | 
+|GET     | ``/api/v1/study/<int>/samples?categories=foo,bar``        | Get metadata categories foo and bar for all samples in the study.                                                                                        |
 +--------+-----------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
 |GET     | ``/api/v1/study/<int>/status``                            | The status of a study (whether or not the study: is public, has sample information, sample information has warnings and a list of existing preparations. |
++--------+-----------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
+|GET     | ``/api/v1/person``                                        | Get list of persons.                                                                                                                                     |
 +--------+-----------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
 |GET     | ``/api/v1/person?name=foo&affiliation=bar``               | See if a person exists.                                                                                                                                  |
 +--------+-----------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+

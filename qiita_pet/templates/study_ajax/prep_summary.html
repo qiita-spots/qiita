@@ -1,85 +1,5 @@
 {% from qiita_core.qiita_settings import qiita_config %}
 <script type="text/javascript">
-  var network;
-
-  /*
-   * Function to draw a vis.Network
-   *
-   * @param nodes list of nodes
-   * @param edges list of edges
-   * @param target div name to draw the netword
-   * @param on_select_f callback function for the 'select' event in the network nodes
-   *
-   * This function creates a new instance of vis.Network and draws the graph
-   * in the target div
-   *
-   */
-  function draw_graph(nodes, edges, target) {
-    var container = document.getElementById(target);
-    container.innerHTML = "";
-
-    var nodes = new vis.DataSet(nodes);
-    var edges = new vis.DataSet(edges);
-    var data = {
-      nodes: nodes,
-      edges: edges
-    };
-    var options = {
-      nodes: {
-        shape: 'dot',
-        font: {
-            size: 16,
-            color: '#000000'
-        },
-        size: 13,
-        borderWidth: 2,
-      },
-      edges: {
-        color: 'grey'
-      },
-      layout: {
-        hierarchical: {
-          direction: "LR",
-          sortMethod: "directed",
-          levelSeparation: 260
-        }
-      },
-      interaction: {
-        dragNodes: false,
-        dragView: true,
-        zoomView: true,
-        selectConnectedEdges: true,
-        navigationButtons: true,
-        keyboard: true
-      },
-      groups: {
-        jobs: {
-          color: '#FF9152'
-        },
-        artifact: {
-          color: '#FFFFFF'
-        }
-      }
-    };
-
-    var network = new vis.Network(container, data, options);
-    network.on("click", function (properties) {
-      var ids = properties.nodes;
-      if (ids.length == 0) {
-        return
-      }
-      // [0] cause only users can only select 1 node
-      var clickedNode = nodes.get(ids)[0];
-
-      if (clickedNode.group == 'artifact') {
-        var artifact_id = +ids[0];
-        load_artifact_summary(artifact_id);
-      } else {
-        $("#prep-artifact-summary-div").html("");
-      }
-    });
-  }
-
   /*
    * Function to update the prep information contents
    *
@@ -215,56 +135,25 @@
     }
   }
 
-  /*
-   *
-   * Load the interface with the artifact graph
-   *
-   * This function executes an AJAX call to populate the graph-or-new-artifact-div
-   * with the interface showing the artifact graph attached to this prep information
-   *
-   */
-  function load_template_graph() {
-    show_loading("graph-or-new-artifact-div");
-    $.get("{% raw qiita_config.portal_dir %}/prep/graph/", {"prep_id": {{prep_id}} })
-      .done(function(data) {
-        var edges = [];
-        var nodes = [];
-
-        for(var i=0; i<data.edge_list.length; i++) {
-          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1], arrows:'to'});
-        }
-        // format more depth data
-        for(var i=0; i<data.node_labels.length; i++) {
-          nodes.push({id: data.node_labels[i][1], label: data.node_labels[i][2], group: data.node_labels[i][0]});
-        }
-
-        $("#graph-or-new-artifact-div").html(
-          "<div class='row'>" +
-            "<div class='col-md-12'>" +
-              "<h4><a class='btn btn-info' id='show-hide-btn' onclick='toggle_graphs();'>-</a><i> Files network</i></h4>" +
-              "<b>(Click nodes for more information, blue are jobs)</b>" +
-              "<br/>Check our data <a target='_blank' href='{% raw qiita_config.portal_dir %}/static/doc/html/processing-recommendations.html' onclick='return !window.open(this.href, \"Qiita processing recommendations\", \"width=800,height=500\")'>processing recommendations</a>." +
-            "</div>" +
-          "</div>" +
-          "<div class='row'><div class='col-md-12 graph' style='width:90%' id='graph-network-div'>" +
-          "</div>");
-        draw_graph(nodes, edges, "graph-network-div");
-      });
-  }
-
-  /*
+  /**
    *
    * Load the interface to add an artifact to the prep information
    *
-   * This function executes an AJAX call to populate the graph-or-new-artifact-div
+   * This function executes an AJAX call to populate the given target div
    * with the interface needed to add a new artifact to the prep information
    *
-   */
-  function load_new_artifact() {
-    show_loading("graph-or-new-artifact-div");
+   * @param target string The name of the target div
+   *
+   **/
+  function load_new_artifact(target, errors) {
+    show_loading(target);
+    if (errors !== undefined && errors !== "") {
+      bootstrapAlert(errors.split('\n').join('<br/>'), "danger");
+    }
+    // If it can be edited, show the page to upload a new artifact
     $.get("{% raw qiita_config.portal_dir %}/study/new_artifact/", {"study_id": {{study_id}}, "prep_template_id": {{prep_id}} })
       .done(function(data) {
-        $("#graph-or-new-artifact-div").html(data);
+        $("#" + target).html(data);
       });
   }
 
@@ -278,22 +167,6 @@
   function load_information_summary() {
     show_loading("prep-artifact-summary-div");
     $.get('{% raw qiita_config.portal_dir %}/study/description/prep_summary/', {'prep_id': {{prep_id}} })
-      .done(function ( data ) {
-        $("#prep-artifact-summary-div").html(data);
-      });
-  }
-
-  /*
-   * Load the artifact summary page
-   *
-   * @param artifact_id integer with the artifact id to load
-   *
-   * This function executes an AJAX call to populate the prep-artifact-summary-div
-   *
-   */
-  function load_artifact_summary(artifact_id) {
-    show_loading("prep-artifact-summary-div");
-    $.get('{% raw qiita_config.portal_dir %}/study/description/artifact_summary/', {'artifact_id': artifact_id})
       .done(function ( data ) {
         $("#prep-artifact-summary-div").html(data);
       });
@@ -345,6 +218,38 @@
     }
   }
 
+  /**
+   **/
+  function validate_new_prep_name() {
+    $("#update-prep-name-btn").prop('disabled', $("#new-prep-name").val().replace(/ /g,'') === "");
+  };
+
+  /**
+   *
+   * Function to update the name of a prep information
+   */
+  function change_prep_name() {
+    $.ajax({
+      url: '{% raw qiita_config.portal_dir %}/prep_template/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': '/{{prep_id}}/name', 'value': $('#new-prep-name').val()},
+      success: function(data) {
+        if(data.status == 'error') {
+          bootstrapAlert(data.message, "danger");
+        } else {
+          // Hide the modal to change the prep name
+          $("#update-prep-name").modal('hide');
+          // Update the name of the artifact in the GUI
+          $("#prep-name-span").text($('#new-prep-name').val());
+          // Reset the value in the modal to an empty string
+          $('#new-prep-name').val("");
+          // Update the data type menu so it shows the new name
+          populate_data_type_menu_div();
+        }
+      }
+    });
+  }
+
   $(document).ready(function () {
     if("{{investigation_type}}" !== "None") {
       // The prep information already has an investigation type
@@ -366,16 +271,12 @@
     }
 
     load_information_summary();
-    // If the template already have an artifact attached, load the
-    // artifact graph, otherwise load the page to add a new artifact
-    if ("{{artifact_attached}}" == "True") {
-      load_template_graph();
-    }
-    {% if editable %}
-    else {
-      load_new_artifact();
-    }
-    {% end %}
+
+    // Initialize the graph object. If the template already have an artifact
+    // attached, it will load the artifact graph, otherwise it will load the
+    // page to add a new artifact
+    newProcessingNetworkVue("#processing-graph-vue");
+
     // If the file-selector select changes, check if we need to show the update button
     $("#file-selector").change(function ( event ) {
       if ( $("#file-selector").val() === "" ) {
@@ -413,12 +314,23 @@
         }
     });
 
+    $('#processing-tab-btn').on('shown.bs.tab', function (e) {
+      processingNetwork.$refs.procGraph.resetZoom();
+    });
+
     {% if alert_type != 'success' and alert_message != '' %}
       bootstrapAlert(decodeURIComponent("{% raw alert_message %}").replace(/\+/g,' '), "{{alert_type}}");
     {% else %}
       $('#alert-message').alert('close');
     {% end %}
 
+    // Set the focus on the text input when the modal to change the artifact
+    // name is shown
+    $('#update-prep-name').on('shown.bs.modal', function() {
+      $('#new-prep-name').val($("#prep-name-span").text());
+      $('#new-prep-name').focus();
+      $('#new-prep-name').select();
+    });
 
   });
 </script>
@@ -427,9 +339,13 @@
 <div class="row">
   <div class="col-md-12">
     <h4>
-      {{name}} - ID {{prep_id}} ({{data_type}})
-      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
-      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_qiime}}"><span class="glyphicon glyphicon-download-alt"></span> QIIME map</a>
+      <span id="prep-name-span">{{name}}</span> - ID {{prep_id}} ({{data_type}})
+      <a class="btn btn-default" data-toggle="modal" data-target="#update-prep-name"><span class="glyphicon glyphicon-pencil"></span> Edit name</a>
+      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
+      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_qiime_id}}"><span class="glyphicon glyphicon-download-alt"></span> QIIME map</a>
+      {% if is_submitted_to_ebi %}
+        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_ebi_accessions/experiments/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> EBI experiment accessions</a>
+      {% end %}
       {% if editable %}
         <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}
@@ -437,71 +353,100 @@
   </div>
 </div>
 
-<!-- #samples and #columns -->
 <div class="row">
   <div class="col-md-12">
-    There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this preparation.</br>
-    {% if is_submitted_to_ebi %}
-      <b>EBI status: </b> Submitted
-    {% end %}
-  </div>
-</div>
+    <ul class="nav nav-pills">
+      <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
+      <li style="border: 1px solid #428bca; border-radius: 5px" class="active"><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn">Processing</a></li>
+    </ul>
 
-{% if editable %}
-  <!-- Update prep template -->
-  <div class="row">
-    <div class="col-md-12">
-      <b>Update information:</b>
-      <select id="file-selector">
-        <option value="">Choose file...</option>
-        {% for fp in files %}
-          <option value="{{fp}}">{{fp}}</option>
+    <div class="tab-content">
+      <div id="summary-tab-div" class="tab-pane fade">
+        <b>Number of samples: </b>{{num_samples}}</br>
+        <b>Number of columns: </b>{{num_columns}}</br>
+        {% if editable %}
+          <!-- Update prep template -->
+          <div class="row">
+            <div class="col-md-12">
+              <b>Update prep information:</b>
+              <select id="file-selector">
+                <option value="">Choose file...</option>
+                {% for fp in files %}
+                  <option value="{{fp}}">{{fp}}</option>
+                {% end %}
+              </select>
+              <div id="update-button-div" hidden>
+                <button class="btn btn-info btn-sm" onclick="update_prep_information();" hidden>Update</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Investigation type info -->
+          <div class="row">
+            <!-- Ena ontology selector -->
+            <div class="col-md-6">
+              <b>Select Investigation Type:</b> <small>Unsure? <a href="" target="_blank">Check</a></small>
+              <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
+                <option value=""></option>
+                {% for o in ontology['ENA'] %}
+                  <option value="{{o}}">{{o}}</option>
+                {% end %}
+              </select>
+            </div>
+            <div class="col-md-3">
+
+            </div>
+            <!-- user-defined selector -->
+            <div class="col-md-4" id="user-ena-info" hidden> User defined investigation type:
+              <select id="user-ontology" name="user-ontology" value="user-ontology">
+                <option value=""></option>
+                {% for o in ontology['User'] %}
+                  <option value="{{o}}">{{o}}</option>
+                {% end %}
+                <option value="New Type">New Type</option>
+              </select>
+            </div>
+            <!-- new user-defined input -->
+            <div class="col-md-4" id="new-ena-info" hidden> New user defined term:
+              <input type="textbox" id="new-ontology" name="new-ontology">
+              <button class="btn btn-info btn-sm" onclick="add_new_investigation_type_term_and_update();">Add</button>
+            </div>
+          </div>
         {% end %}
-      </select>
-      <div id="update-button-div" hidden>
-        <button class="btn btn-info btn-sm" onclick="update_prep_information();" hidden>Update</button>
+        {% if other_filepaths %}
+          <button class="btn btn-secondary" data-toggle="collapse" data-target="#other-filepaths"><b>Show older files</b></button>
+        {% end %}
+        <div id="other-filepaths" class="collapse">
+          <small>
+            {% raw '<br/>'.join(other_filepaths) %}
+          </small>
+        </div>
+        <div id="prep-artifact-summary-div" class="tab-pane fade in active">
+        </div>
+      </div>
+      <div id="processing-graph-vue" class="tab-pane fade in active">
+        <processing-graph ref="procGraph" v-bind:is-analysis-pipeline='false' v-bind:no-init-jobs-callback="load_new_artifact" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/prep_template/{{prep_id}}/graph/" jobs-endpoint="/prep_template/{{prep_id}}/jobs/"></processing-graph>
       </div>
     </div>
   </div>
-
-  <!-- Investigation type info -->
-  <div class="row">
-    <!-- Ena ontology selector -->
-    <div class="col-md-4">
-      <b>Select Investigation Type:</b>
-      <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
-        <option value=""></option>
-        {% for o in ontology['ENA'] %}
-          <option value="{{o}}">{{o}}</option>
-        {% end %}
-      </select>
-    </div>
-    <!-- user-defined selector -->
-    <div class="col-md-4" id="user-ena-info" hidden> User defined investigation type:
-      <select id="user-ontology" name="user-ontology" value="user-ontology">
-        <option value=""></option>
-        {% for o in ontology['User'] %}
-          <option value="{{o}}">{{o}}</option>
-        {% end %}
-        <option value="New Type">New Type</option>
-      </select>
-    </div>
-    <!-- new user-defined input -->
-    <div class="col-md-4" id="new-ena-info" hidden> New user defined term:
-      <input type="textbox" id="new-ontology" name="new-ontology">
-      <button class="btn btn-info btn-sm" onclick="add_new_investigation_type_term_and_update();">Add</button>
-    </div>
-  </div>
-{% end %}
-
-<!-- Files graph or add artifact -->
-<div class="row">
-  <div class="col-md-12" style="width:90%;" id="graph-or-new-artifact-div">
-  </div>
 </div>
 
-<!-- Prep information summary -->
-<div class="row">
-  <div class="col-md-10" id="prep-artifact-summary-div">
+
+<!-- Modal to update the prep name -->
+<div class="modal fade update-artifact-name" tabindex="-1" role="dialog" id="update-prep-name">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Updating prep information {{prep_id}} name</h3>
+      </div>
+      <div class="modal-body">
+        Introduce the new name:<br/>
+        <input type="text" name="new-prep-name" id="new-prep-name" onkeyup="validate_new_prep_name();">
+        <button id="update-prep-name-btn" class="btn btn-default" onclick="change_prep_name();" disabled>Update</button>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
   </div>
 </div>

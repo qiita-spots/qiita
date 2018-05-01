@@ -9,8 +9,6 @@
 from functools import partial
 from future import standard_library
 from json import loads
-from sys import exc_info
-import traceback
 
 import qiita_db as qdb
 
@@ -49,19 +47,13 @@ def load_study_from_cmd(owner, title, info):
     required_fields = ['timeseries_type_id', 'mixs_compliant',
                        'reprocess', 'study_alias',
                        'study_description', 'study_abstract',
-                       'metadata_complete', 'efo_ids',
-                       'principal_investigator']
+                       'metadata_complete', 'principal_investigator']
     optional_fields = ['funding', 'most_recent_contact', 'spatial_series',
                        'number_samples_collected', 'number_samples_promised',
                        'vamps_id', 'study_id']
     infodict = {}
     for value in required_fields:
         infodict[value] = get_required(value)
-
-    # this will eventually change to using the Experimental Factory Ontolgoy
-    # names
-    efo_ids = infodict.pop('efo_ids')
-    efo_ids = [x.strip() for x in efo_ids.split(',')]
 
     for value in optional_fields:
         optvalue = get_optional(value)
@@ -86,8 +78,7 @@ def load_study_from_cmd(owner, title, info):
         infodict['principal_investigator_id'] = qdb.study.StudyPerson.create(
             pi_name.strip(), pi_email.strip(), pi_affiliation.strip())
 
-        return qdb.study.Study.create(
-            qdb.user.User(owner), title, efo_ids, infodict)
+        return qdb.study.Study.create(qdb.user.User(owner), title, infodict)
 
 
 def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
@@ -195,45 +186,6 @@ def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
         prep_temp, qdb.study.Study(study_id), data_type)
 
 
-def load_parameters_from_cmd(name, fp, cmd_id):
-    """Add a new parameters entry on `table`
-
-    Parameters
-    ----------
-    fp : str
-        The filepath to the parameters file
-    cmd_id : int
-        The command to add the new default parameter set
-
-    Returns
-    -------
-    qiita_db.software.DefaultParameters
-        The newly parameter set object created
-
-    Raises
-    ------
-    ValueError
-        If the table does not exists on the DB
-        If the fp is not correctly formatted
-
-    Notes
-    -----
-    `fp` should be a tab-delimited text file following this format:
-        parameter_1<TAB>value
-        parameter_2<TAB>value
-        ...
-    """
-    cmd = qdb.software.Command(cmd_id)
-
-    try:
-        params = dict(tuple(l.strip().split('\t')) for l in open(fp, 'U'))
-    except ValueError:
-        raise ValueError("The format of the parameters files is not correct. "
-                         "The format is PARAMETER_NAME<tab>VALUE")
-
-    return qdb.software.DefaultParameters.create(name, cmd, **params)
-
-
 def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
     """Updates the artifact `artifact_id` with the given files
 
@@ -269,7 +221,7 @@ def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
         qdb.sql_connection.TRN.execute()
         qdb.util.move_filepaths_to_upload_folder(artifact.study.id, old_fps)
         fp_ids = qdb.util.insert_filepaths(
-            fps, artifact.id, artifact.artifact_type, "filepath")
+            fps, artifact.id, artifact.artifact_type)
         sql = """INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
                  VALUES (%s, %s)"""
         sql_args = [[artifact.id, fp_id] for fp_id in fp_ids]
@@ -277,27 +229,3 @@ def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
         qdb.sql_connection.TRN.execute()
 
     return artifact
-
-
-def complete_job_cmd(job_id, payload):
-    """Completes the given job
-
-    Parameters
-    ----------
-    job_id : str
-        The job id
-    payload : str
-        JSON string with the payload to complete the job
-    """
-    payload = loads(payload)
-    if payload['success']:
-        artifacts = payload['artifacts']
-        error = None
-    else:
-        artifacts = None
-        error = payload['error']
-    job = qdb.processing_job.ProcessingJob(job_id)
-    try:
-        job.complete(payload['success'], artifacts, error)
-    except:
-        job._set_error(traceback.format_exception(*exc_info()))

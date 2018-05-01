@@ -1,10 +1,15 @@
-from tornado.escape import url_escape, json_encode
-from tornado.web import HTTPError
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 
-from moi import r_client
+from tornado.escape import url_escape, json_encode
 
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.util import send_email, execute_as_transaction
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
@@ -20,7 +25,7 @@ class AuthCreateHandler(BaseHandler):
         try:
             error_message = self.get_argument("error")
         # Tornado can raise an Exception directly, not a defined type
-        except:
+        except Exception:
             error_message = ""
         self.render("create_user.html", error=error_message)
 
@@ -54,7 +59,7 @@ class AuthCreateHandler(BaseHandler):
                            "%s/static/qiita_data_terms_of_use.html"
                            % (url, info['user_verify_code'],
                               url_escape(username), url))
-            except:
+            except Exception:
                 msg = ("Unable to send verification email. Please contact the "
                        "qiita developers at <a href='mailto:qiita-help"
                        "@gmail.com'>qiita-help@gmail.com</a>")
@@ -100,9 +105,6 @@ class AuthLoginHandler(BaseHandler):
 
     @execute_as_transaction
     def post(self):
-        if r_client.get('maintenance') is not None:
-            raise HTTPError(503, "Site is down for maintenance")
-
         username = self.get_argument("username", "").strip().lower()
         passwd = self.get_argument("password", "")
         nextpage = self.get_argument("next", None)

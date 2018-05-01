@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+import click
+
+from qiita_ware.private_plugin import private_task
+
+
+@click.command()
+@click.argument('url', required=True)
+@click.argument('job_id', required=True)
+@click.argument('output_dir', required=True)
+def execute(url, job_id, output_dir):
+    """Executes the task given by job_id
+
+    The parameters url and output_dir are ignored, but they are added for
+    compatibility with the plugin system.
+    """
+    private_task(job_id)
+
+
+if __name__ == '__main__':
+    execute()

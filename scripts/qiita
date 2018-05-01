@@ -16,18 +16,17 @@ from os.path import join, abspath, dirname, basename
 from future.utils import viewitems
 from glob import glob
 from time import sleep
+from multiprocessing import active_children
 
 import click
 import tornado.httpserver
 import tornado.ioloop
 from psycopg2 import OperationalError
-from moi import r_client
 
 import qiita_db as qdb
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
-from qiita_ware.context import system_call, ComputeError
 
 
 try:
@@ -62,11 +61,11 @@ def webserver(build_docs):
         sphinx_fp = join(base, 'support_files/doc/')
         cmd = 'make -C %s html' % sphinx_fp
         print('Building documentation ...')
-        try:
-            system_call(cmd)
-        except ComputeError as e:
-            raise click.ClickException('Could not build documentation: %s' %
-                                       str(e))
+        stdout, stderr, rv = qdb.processing_job._system_call(cmd)
+        if rv != 0:
+            raise click.ClickException(
+                'Could not build documentation:\n'
+                'Std output:%s\nStd error:%s' % (stdout, stderr))
         else:
             print('Documentation successfully built')
 
@@ -91,21 +90,10 @@ def plugins():
     pass
 
 
-# The private group holds commands that should never be called by the user
-# since they are used internally by Qiita to be able to distribute compute
-@qiita.group()
-def private():
-    pass
-
-
 @ware.group()
 def ebi():
     pass
 
-
-@db.group()
-def portal():
-    pass
 
 # #############################################################################
 # DB COMMANDS
@@ -167,23 +155,6 @@ def load_artifact(fp, fp_type, artifact_type, prep_template, parents,
 
 
 @db.command()
-@click.option('--fp', required=True, type=click.Path(resolve_path=True,
-              readable=True, exists=True), multiple=True,
-              help='Path to the artifact files. This option can be used '
-              'multiple times if there are multiple artifact files.')
-@click.option('--fp_type', required=True, multiple=True, help='Describes the '
-              'contents of the file. Pass one fp_type per fp.',
-              type=click.Choice(qdb.util.get_filepath_types().keys()))
-@click.option('--artifact_id', required=True,
-              help="The artifact to update",
-              type=click.IntRange(1))
-def update_artifact(fp, fp_type, artifact_id):
-    """Updates an artifact from the database"""
-    artifact = qdb.commands.update_artifact_from_cmd(fp, fp_type, artifact_id)
-    click.echo("Artifact %s successfully updated" % artifact.id)
-
-
-@db.command()
 @click.argument('fp', required=True,
                 type=click.Path(resolve_path=True, readable=True, exists=True))
 @click.option('--study', required=True, type=int,
@@ -211,98 +182,12 @@ def load_prep_template(fp, study, data_type):
                % prep_template.id)
 
 
-@db.command()
-@click.option('--name', required=True, type=str,
-              help='The name of the new reference database')
-@click.option('--version', required=True, type=str,
-              help='The version of the reference database')
-@click.option('--seq_fp', required=True,
-              type=click.Path(resolve_path=True, readable=True, exists=True),
-              help="Path to the reference sequences file")
-@click.option('--tax_fp', required=False,
-              type=click.Path(resolve_path=True, readable=True, exists=True),
-              help="Path to the reference taxonomy file")
-@click.option('--tree_fp', required=False,
-              type=click.Path(resolve_path=True, readable=True, exists=True),
-              help="Path to the reference tree file")
-def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
-    """Loads a reference db to the database"""
-    reference = qdb.reference.Reference.create(
-        name, version, seq_fp, tax_fp, tree_fp)
-    click.echo("Reference db successfully added to the database with id %s"
-               % reference.id)
-
-
-@db.command()
-@click.argument('fp', required=True,
-                type=click.Path(resolve_path=True, readable=True, exists=True))
-@click.option('--cmd-id', required=True,
-              type=click.IntRange(1, None),
-              help='The command to add the parameter set')
-@click.option('--name', required=True, type=str,
-              help='The name of the parameters set')
-def load_parameters(fp, cmd_id, name):
-    """Loads a parameter set to the database"""
-    param = qdb.commands.load_parameters_from_cmd(name, fp, cmd_id)
-    click.echo("Parameters successfully added to the command %s with id %s"
-               % (cmd_id, param.id))
-
-
-# #############################################################################
-# PORTAL COMMANDS
-# #############################################################################
-
-
-@portal.command(name="add-analyses")
-@click.argument('portal', required=True,
-                type=click.Choice(qdb.portal.Portal.list_portals()))
-@click.argument('analyses', required=True, type=int, nargs=-1)
-def add_analysis(portal, analyses):
-    try:
-        qdb.portal.Portal(portal).add_analyses(analyses)
-    except qdb.exceptions.QiitaDBError as e:
-        raise click.BadOptionUsage("analyses", str(e))
-
-
-@portal.command(name="remove-analyses")
-@click.argument('portal', required=True,
-                type=click.Choice(qdb.portal.Portal.list_portals()))
-@click.argument('analyses', required=True, type=int, nargs=-1)
-def remove_analysis(portal, analyses):
-    try:
-        qdb.portal.Portal(portal).remove_analyses(analyses)
-    except qdb.exceptions.QiitaDBError as e:
-        raise click.BadOptionUsage("analyses", str(e))
-
-
-@portal.command(name="add-studies")
-@click.argument('portal', required=True,
-                type=click.Choice(qdb.portal.Portal.list_portals()))
-@click.argument('studies', required=True, type=int, nargs=-1)
-def add_study(portal, studies):
-    try:
-        qdb.portal.Portal(portal).add_studies(studies)
-    except qdb.exceptions.QiitaDBError as e:
-        raise click.BadOptionUsage("studies", str(e))
-
-
-@portal.command(name="remove-studies")
-@click.argument('portal', required=True,
-                type=click.Choice(qdb.portal.Portal.list_portals()))
-@click.argument('studies', required=True, type=int, nargs=-1)
-def remove_study(portal, studies):
-    try:
-        qdb.portal.Portal(portal).remove_studies(studies)
-    except qdb.exceptions.QiitaDBError as e:
-        raise click.BadOptionUsage("studies", str(e))
-
 # #############################################################################
 # EBI COMMANDS
 # #############################################################################
 
-
 @ebi.command()
-@click.option('--preprocessed_data_id', required=True, type=int)
+@click.option('--artifact-id', required=True, type=int)
 @click.option('--action', type=click.Choice(EBISubmission.valid_ebi_actions),
               default='submit', help='The generated XML files will specify '
               'this "action", which controls how the EBI servers handle the '
@@ -310,32 +195,17 @@ def remove_study(portal, studies):
 @click.option('--send/--no-send', default=False, help="Controls whether or "
               "not sequence files and metadata will actually be sent to EBI "
               "(default is to generate all the files, but not to send)")
-def submit(preprocessed_data_id, action, send):
-    _submit_EBI(preprocessed_data_id, action, send)
+def submit(artifact_id, action, send):
+    _submit_EBI(artifact_id, action, send)
 
 
 # #############################################################################
 # MAINTENANCE COMMANDS
 # #############################################################################
 
-
 @maintenance.command()
 @click.option('--time', required=True, type=int,
-              help='The amount of time to lock the site, in seconds')
-@click.option('--message', required=True, type=str,
-              help="Message to show users")
-def lock(message, time):
-    r_client.setex('maintenance', message, time)
-
-
-@maintenance.command()
-def unlock():
-    r_client.delete('maintenance')
-
-
-@maintenance.command()
-@click.option('--time', required=True, type=int,
-              help='The amount of time to show message, in seconds')
+              help='The amount of time to show message, in hours')
 @click.option('--message', required=True, type=str,
               help="Message to show users")
 @click.option('--banner', is_flag=True,
@@ -344,7 +214,7 @@ def sysmessage(message, time, banner):
     if banner:
         r_client.setex('sysmessage', message, time)
     else:
-        expires = datetime.now() + timedelta(seconds=time)
+        expires = datetime.now() + timedelta(seconds=(time * 60 * 60))
         qdb.util.add_system_message(message, expires)
 
 
@@ -356,15 +226,7 @@ def clear_sysmessage():
 
 @maintenance.command()
 def status():
-    maint_status = r_client.get('maintenance')
     sys_status = r_client.get('sysmessage')
-
-    if maint_status is None:
-        click.echo("Site is not in maintenance mode")
-    else:
-        click.echo("Site is in maintenance mode:")
-        click.echo(maint_status)
-        click.echo(r_client.ttl('maintenance'), "seconds remaining")
 
     if sys_status is None:
         click.echo("Site has no system message")
@@ -408,12 +270,9 @@ def log(n):
 @click.option('--master', is_flag=True,
               help="If set, update available plugins")
 def start(port, master):
-    # in order to use this command you need to have an IPython cluster running,
-    # for now this makes it so that you can use other sub-commands without
-    # having to do that. The solution will (perhaps) be to move this subcommand
-    # into an entirely different script.
     from qiita_pet.webserver import Application
     from tornado.options import options, parse_command_line
+    from tornado.ioloop import PeriodicCallback
 
     if master:
         # Deactivate all the plugins and only activate those that are currently
@@ -423,7 +282,9 @@ def start(port, master):
 
     # Create/repopulate the usernames key so we can do autocomplete for sharing
     r_client.delete('qiita-usernames')
-    r_client.zadd('qiita-usernames', **{u: 0 for u in qdb.user.User.iter()})
+    users = list(qdb.user.User.iter())
+    if users:
+        r_client.zadd('qiita-usernames', **{u: 0 for u in users})
 
     if qiita_config.log_dir:
         options.log_file_prefix = join(qiita_config.log_dir,
@@ -444,20 +305,39 @@ def start(port, master):
                 "--port." % port)
         else:
             raise
-
-    click.echo("Qiita started on port %d" % port)
+    base_url = qiita_config.base_url
+    click.echo("Qiita started on %s:%d " % (base_url, port))
     ioloop = tornado.ioloop.IOLoop.instance()
 
     if master:
         def callback_function():
-            for s in qdb.software.Software.iter_active():
+            active_software = list(qdb.software.Software.iter_active())
+            sdefinition = [s for s in active_software
+                           if s.type == 'artifact definition']
+            stransformation = [s for s in active_software
+                               if s.type == 'artifact transformation']
+            # registering definition artifacts
+            for s in sdefinition:
                 s.register_commands()
-                # Not sure why this sleep is needed, but when testing in the
-                # test environment, some of the plugins were not registered
-                # unless this sleep was added here
-                sleep(0.5)
+                # sleep is required as we don't want to saturate workers with
+                # lots of requests
+                sleep(1)
+            # sleep to make sure that all definitions are done
+            sleep(4)
+            for s in stransformation:
+                s.register_commands()
+                # sleep is required as we don't want to saturate workers with
+                # lots of requests
+                sleep(1)
 
         ioloop.add_timeout(ioloop.time() + 0.5, callback_function)
+
+    # Set a PeriodicCallback for cleaning up the threads
+    # To understand why this is working as expected, check the multiprocessing
+    # documentation https://docs.python.org/2/library/multiprocessing.html
+    # 1200000 == 20 min
+    PeriodicCallback(lambda: active_children(), 1200000).start()
+
     ioloop.start()
 
 # #############################################################################

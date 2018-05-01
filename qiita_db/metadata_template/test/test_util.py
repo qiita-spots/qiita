@@ -8,6 +8,7 @@
 
 from six import StringIO
 from unittest import TestCase, main
+import warnings
 
 import numpy.testing as npt
 import pandas as pd
@@ -36,11 +37,30 @@ class TestUtil(TestCase):
         }
         exp_df = pd.DataFrame.from_dict(exp_metadata_dict, orient='index',
                                         dtype=str)
-        qdb.metadata_template.util.prefix_sample_names_with_id(
-            self.metadata_map, 1)
+        with warnings.catch_warnings(record=True) as warn:
+            qdb.metadata_template.util.prefix_sample_names_with_id(
+                self.metadata_map, 1)
+            self.assertEqual(len(warn), 0)
         self.metadata_map.sort_index(inplace=True)
         exp_df.sort_index(inplace=True)
         assert_frame_equal(self.metadata_map, exp_df)
+
+        # test that it only prefixes the samples that are needed
+        metadata_dict = {
+            'Sample1': {'int_col': 1, 'float_col': 2.1, 'str_col': 'str1'},
+            '1.Sample2': {'int_col': 2, 'float_col': 3.1, 'str_col': '200'},
+            'Sample3': {'int_col': 3, 'float_col': 3, 'str_col': 'string30'},
+        }
+        metadata_map = pd.DataFrame.from_dict(
+            metadata_dict, orient='index', dtype=str)
+        with warnings.catch_warnings(record=True) as warn:
+            qdb.metadata_template.util.prefix_sample_names_with_id(
+                metadata_map, 1)
+            self.assertEqual(len(warn), 1)
+            self.assertEqual(str(warn[0].message), 'Some of the samples were '
+                             'already prefixed with the study id.')
+        metadata_map.sort_index(inplace=True)
+        assert_frame_equal(metadata_map, exp_df)
 
     def test_load_template_to_dataframe(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
@@ -61,9 +81,26 @@ class TestUtil(TestCase):
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_duplicate_cols(self):
+        LTTD = qdb.metadata_template.util.load_template_to_dataframe
+
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateHeaderError):
-            qdb.metadata_template.util.load_template_to_dataframe(
-                StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
+            LTTD(StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
+
+        # testing duplicated empty headers
+        test = (
+            "sample_name\tdescription\t   \t  \t\t \t\n"
+            "sample1\tsample1\t   \t    \t\t\n"
+            "sample2\tsample2\t\t\t\t  \t")
+        with self.assertRaises(ValueError):
+            LTTD(StringIO(test))
+
+        # testing empty columns
+        test = (
+            "sample_name\tdescription\tcol1\ttcol2\n"
+            "sample1\tsample1\t   \t    \n"
+            "sample2\tsample2\t  \t")
+        df = LTTD(StringIO(test))
+        self.assertEqual(df.columns.values, ['description'])
 
     def test_load_template_to_dataframe_scrubbing(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
@@ -147,11 +184,22 @@ class TestUtil(TestCase):
         exp.rename(columns={"str_column": "str_CoLumn"}, inplace=True)
         assert_frame_equal(obs, exp)
 
-    def test_load_template_to_dataframe_non_utf8(self):
+    def test_load_template_to_dataframe_non_utf8_error(self):
         bad = EXP_SAMPLE_TEMPLATE.replace('Test Sample 2', 'Test Sample\x962')
-        with self.assertRaises(qdb.exceptions.QiitaDBError):
+        with self.assertRaises(ValueError):
             qdb.metadata_template.util.load_template_to_dataframe(
                 StringIO(bad))
+
+    def test_load_template_to_dataframe_non_utf8(self):
+        replace = EXP_SAMPLE_TEMPLATE.replace(
+            'Test Sample 2', u'Test Sample\x962')
+        qdb.metadata_template.util.load_template_to_dataframe(
+            StringIO(replace))
+        # setting back
+        replace = EXP_SAMPLE_TEMPLATE.replace(
+            u'Test Sample\x962', 'Test Sample 2')
+        qdb.metadata_template.util.load_template_to_dataframe(
+            StringIO(replace))
 
     def test_load_template_to_dataframe_typechecking(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
@@ -387,20 +435,20 @@ EXP_SAMPLE_TEMPLATE_WHITESPACE = (
 
 EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\t"
+    "longitude\t   physical_location\trequired_sample_info_status"
+    "\tsample_type\tstr_column\n"
+    "   2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2  \t2014-05-29 12:24:51\t"
+    " 2.Sample2  \t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
     "\t\t\t\t\t\t\t\t\t\t\t\t\n"
-    "\t\t\t\t\t\t\t\t\t\t\t\t\n")
+    "\t\t\t\t\t\t\t\t\t\t   \t\t\n")
 
 EXP_ST_SPACES_EMPTY_COLUMN = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"

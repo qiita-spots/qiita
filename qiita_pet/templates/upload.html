@@ -8,10 +8,10 @@
       <br/><br/>
       Currently we can process (<b>{{extensions.replace(',',', ')}}</b>):
       <ul>
-        <li>fastq or fastq.gz (gziped fastq) for sequences. Note that zip files can not be processed</li>
-        <li>tab separated text files for sample and prep templates, the extension should be txt</li>
+        <li>fastq or fastq.gz (gzipped fastq) for sequences. Note that '.zip' files can not be processed.</li>
+        <li>tab separated text files for sample and prep templates, the extension should be txt.</li>
       </ul>
-      <a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">Go to study description</a>
+      <a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">&lt;&lt; Go to study description</a>
     </td>
   </tr>
 
@@ -32,17 +32,17 @@
             <td class="progress-text" nowrap="nowrap"></td>
             <td class="progress-pause" nowrap="nowrap">
               &nbsp;&nbsp;&nbsp;&nbsp;
-              <a href="#" onclick="uploader.resumable.upload(); return(false);" class="progress-resume-link"><span class="glyphicon glyphicon-play"></span></a>
-
-              <a href="#" onclick="uploader.resumable.pause(); return(false);" class="progress-pause-link"><span class="glyphicon glyphicon-pause"></span></a>
+              <a href="#" onclick="uploader.resumable.upload(); $('#uploader_status').html('~~ Uploading ~~'); return(false);" class="progress-resume-link"><span class="glyphicon glyphicon-play"></span></a>
+              <a href="#" onclick="uploader.resumable.pause(); $('#uploader_status').html('~~ Paused ~~'); return(false);" class="progress-pause-link"><span class="glyphicon glyphicon-pause"></span></a>
             </td>
           </tr>
           <tr>
             <td colspan="3">
               <div class="blinking-message">
+                <div id="uploader_status"></div>
                 Keep track of your upload or pause/resume it! <span class="glyphicon glyphicon-arrow-up"></span>
                 <br/>
-                <small>(you can even close your computer or change networks!)</small>
+                <small>Your upload won't be interrupted if you change networks or you close your computer, just make sure you don't leave this page. </small>
               </div>
             </td>
           <tr>
@@ -50,6 +50,8 @@
       </div>
 
       <hr>
+      <h3><u>Files</u></h3>
+      <br/>
       <form method="post" id="delete-files-form">
         <div class="uploader-list" style="display:none;">
         </div>
@@ -69,7 +71,7 @@
   </tr>
 </table>
 <div style='width:inherit;text-align:center;padding-top:30px'>
-  <small><a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">Go to study description</a></small>
+  <small><a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">&lt;&lt; Go to study description</a></small>
 </div>
 
 <!-- Upload required files and JS code -->
@@ -87,11 +89,12 @@
                                     $('.resumable-drop-metadata'), $('.progress-metadata'),
                                     $('.uploader-list'), $('.file-edit-container'),
                                     maxFileSize, "{{study_id}}", "{{extensions}}",
-                                    "{% raw qiita_config.portal_dir %}"));
+                                    "{% raw qiita_config.portal_dir %}", '{{is_admin}}'=='True',
+                                    '{% raw qiita_config.portal_dir %}/download_upload/{{study_id}}/'));
     })(jQuery);
 
-  {% for dirid, filename in files %}
-    uploader.addFile({ "dirid": "{{dirid}}", "fileName": "{{filename}}" });
+  {% for dirid, filename, size in files %}
+    uploader.addFile({ "dirid": "{{dirid}}", "fileName": "{{filename}}", "size": "{{size}}", "uploaded": "True" });
   {% end  %}
 </script>
 

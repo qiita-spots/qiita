@@ -10,7 +10,8 @@ from tornado.web import authenticated
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    prep_template_post_req, prep_template_patch_req, prep_template_delete_req)
+    prep_template_post_req, prep_template_patch_req, prep_template_delete_req,
+    prep_template_graph_get_req, prep_template_jobs_get_req)
 
 
 class PrepTemplateHandler(BaseHandler):
@@ -23,10 +24,11 @@ class PrepTemplateHandler(BaseHandler):
         user_ontology = self.get_argument('user-ontology', None)
         new_ontology = self.get_argument('new-ontology', None)
         prep_fp = self.get_argument('prep-file')
+        name = self.get_argument('name', None)
 
         response = prep_template_post_req(
             study_id, self.get_current_user().id, prep_fp, data_type,
-            ena_ontology, user_ontology, new_ontology)
+            ena_ontology, user_ontology, new_ontology, name=name)
 
         self.write(response)
 
@@ -52,3 +54,16 @@ class PrepTemplateHandler(BaseHandler):
         """Deletes a prep template from the system"""
         prep_id = self.get_argument('prep-template-id')
         self.write(prep_template_delete_req(prep_id, self.current_user.id))
+
+
+class PrepTemplateGraphHandler(BaseHandler):
+    @authenticated
+    def get(self, prep_id):
+        self.write(
+            prep_template_graph_get_req(prep_id, self.current_user.id))
+
+
+class PrepTemplateJobHandler(BaseHandler):
+    @authenticated
+    def get(self, prep_id):
+        self.write(prep_template_jobs_get_req(prep_id, self.current_user.id))

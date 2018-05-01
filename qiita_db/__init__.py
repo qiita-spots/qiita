@@ -12,11 +12,11 @@ import sql_connection
 import metadata_template
 import analysis
 import artifact
+import archive
 import commands
 import environment_manager
 import exceptions
 import investigation
-import job
 import logger
 import meta_util
 import ontology
@@ -30,8 +30,8 @@ import processing_job
 
 __version__ = "0.2.0-dev"
 
-__all__ = ["analysis", "artifact", "base", "commands", "environment_manager",
-           "exceptions", "investigation", "job", "logger", "meta_util",
-           "ontology", "portal", "reference", "search",
+__all__ = ["analysis", "artifact",  "archive", "base", "commands",
+           "environment_manager", "exceptions", "investigation", "logger",
+           "meta_util", "ontology", "portal", "reference", "search",
            "software", "sql_connection", "study", "user", "util",
            "metadata_template", "processing_job"]

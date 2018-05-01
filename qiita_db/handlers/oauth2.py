@@ -14,7 +14,7 @@ import functools
 from traceback import format_exception
 
 from tornado.web import RequestHandler
-from moi import r_client
+from qiita_core.qiita_settings import r_client
 
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)

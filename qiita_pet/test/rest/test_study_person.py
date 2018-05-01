@@ -15,6 +15,15 @@ from qiita_pet.test.rest.test_base import RESTHandlerTestCase
 
 
 class StudyPersonHandlerTests(RESTHandlerTestCase):
+    def test_get_list(self):
+        exp = [{'name': 'LabDude', 'affiliation': 'knight lab'},
+               {'name': 'empDude', 'affiliation': 'broad'},
+               {'name': 'PIDude', 'affiliation': 'Wash U'}]
+        response = self.get('/api/v1/person', headers=self.headers)
+        self.assertEqual(response.code, 200)
+        obs = json_decode(response.body)
+        self.assertItemsEqual(obs, exp)
+
     def test_exist(self):
         exp = {'email': 'lab_dude@foo.bar', 'phone': '121-222-3333',
                'address': '123 lab street', 'id': 1}
@@ -42,6 +51,11 @@ class StudyPersonHandlerTests(RESTHandlerTestCase):
 
     def test_get_invalid_query_string(self):
         response = self.get('/api/v1/person?name=LabDude',
+                            headers=self.headers)
+        self.assertEqual(response.code, 400)
+
+    def test_get_invalid_query_string_2(self):
+        response = self.get('/api/v1/person?affiliation=knight%20lab',
                             headers=self.headers)
         self.assertEqual(response.code, 400)
 

@@ -69,8 +69,7 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         }
 
         new_study = Study.create(User('test@foo.bar'),
-                                 "Some New Study for test jr", [1],
-                                 info)
+                                 "Some New Study for test jr", info)
 
         body = {'sampleid1': {'category_a': 'value_a'},
                 'sampleid2': {'category_b': 'value_b'}}
@@ -179,8 +178,7 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         }
 
         new_study = Study.create(User('test@foo.bar'),
-                                 "Some New Study for test", [1],
-                                 info)
+                                 "Some New Study for test", info)
 
         exp = []
         response = self.get('/api/v1/study/%d/samples' % new_study.id,
@@ -239,8 +237,7 @@ class StudySamplesInfoHandlerTests(RESTHandlerTestCase):
         }
 
         new_study = Study.create(User('test@foo.bar'),
-                                 "Some New Study for test", [1],
-                                 info)
+                                 "Some New Study for test", info)
         exp = {'number-of-samples': 0, 'categories': []}
         response = self.get('/api/v1/study/%d/samples/info' % new_study.id,
                             headers=self.headers)
@@ -327,8 +324,7 @@ class StudySamplesCategoriesHandlerTests(RESTHandlerTestCase):
         }
 
         new_study = Study.create(User('test@foo.bar'),
-                                 "Some New Study for test", [1],
-                                 info)
+                                 "Some New Study for test", info)
 
         exp = {'message': 'Study does not have sample information'}
         response = self.get('/api/v1/study/%d/samples/categories=foo' %

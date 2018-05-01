@@ -1,3 +1,11 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from tornado.web import authenticated, HTTPError
 
 from os.path import isdir, join, exists
@@ -23,13 +31,13 @@ class StudyUploadFileHandler(BaseHandler):
         """Simple function to avoid duplication of code"""
         study_id = int(study_id)
         study = Study(study_id)
-        check_access(self.current_user, study, no_public=True,
-                     raise_error=True)
+        user = self.current_user
+        check_access(user, study, no_public=True, raise_error=True)
 
         # getting the ontologies
         self.render('upload.html',
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id,
+                    study_id=study_id, is_admin=user.level == 'admin',
                     extensions=','.join(qiita_config.valid_upload_extension),
                     max_upload_size=qiita_config.max_upload_size,
                     files=get_files_from_uploads_folders(str(study_id)))
@@ -40,7 +48,7 @@ class StudyUploadFileHandler(BaseHandler):
         try:
             study = Study(int(study_id))
         except QiitaDBUnknownIDError:
-            raise HTTPError(404, "Study %s does not exist" % study_id)
+            raise HTTPError(404, reason="Study %s does not exist" % study_id)
         check_access(self.current_user, study, no_public=True,
                      raise_error=True)
         self.display_template(study_id, "")
@@ -51,7 +59,7 @@ class StudyUploadFileHandler(BaseHandler):
         try:
             study = Study(int(study_id))
         except QiitaDBUnknownIDError:
-            raise HTTPError(404, "Study %s does not exist" % study_id)
+            raise HTTPError(404, reason="Study %s does not exist" % study_id)
         check_access(self.current_user, study, no_public=True,
                      raise_error=True)
 
@@ -83,8 +91,8 @@ class UploadFileHandler(BaseHandler):
         """
         if not filename.endswith(tuple(qiita_config.valid_upload_extension)):
             self.set_status(415)
-            raise HTTPError(415, "User %s is trying to upload %s" %
-                                 (self.current_user, str(filename)))
+            raise HTTPError(415, reason="User %s is trying to upload %s" %
+                            (self.current_user, str(filename)))
 
     @authenticated
     @execute_as_transaction

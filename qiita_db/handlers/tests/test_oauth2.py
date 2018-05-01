@@ -8,7 +8,7 @@
 from unittest import main
 from json import loads
 
-from moi import r_client
+from qiita_core.qiita_settings import r_client
 
 from qiita_db.user import User
 from qiita_db.handlers.oauth2 import _check_oauth2_header, authenticate_oauth2

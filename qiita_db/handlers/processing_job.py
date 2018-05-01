@@ -7,11 +7,9 @@
 # -----------------------------------------------------------------------------
 
 from json import loads
-from multiprocessing import Process
 
 from tornado.web import HTTPError
 
-from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth2
 
@@ -42,32 +40,9 @@ def _get_job(job_id):
     try:
         job = qdb.processing_job.ProcessingJob(job_id)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating the job: %s' % str(e))
+        raise HTTPError(500, reason='Error instantiating the job: %s' % str(e))
 
     return job
-
-
-def _job_completer(job_id, payload):
-    """Completes a job
-
-    Parameters
-    ----------
-    job_id : str
-        The job to complete
-    payload : str
-        The JSON string with the parameters of the HTTP POST request that is
-        completing the job
-    """
-    import qiita_db as qdb
-    cmd = "%s '%s' %s %s '%s'" % (qiita_config.private_launcher,
-                                  qiita_config.qiita_env, 'complete_job',
-                                  job_id, payload)
-    std_out, std_err, return_value = qdb.processing_job._system_call(cmd)
-    if return_value != 0:
-        error = ("Can't submit private task 'complete job:\n"
-                 "Std output:%s\nStd error:%s'" % (std_out, std_err))
-        job = qdb.processing_job.ProcessingJob(job_id)
-        job.complete(False, error=error)
 
 
 class JobHandler(OauthBaseHandler):
@@ -118,7 +93,7 @@ class HeartbeatHandler(OauthBaseHandler):
             try:
                 job.update_heartbeat_state()
             except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
-                raise HTTPError(403, str(e))
+                raise HTTPError(403, reason=str(e))
 
         self.finish()
 
@@ -126,7 +101,7 @@ class HeartbeatHandler(OauthBaseHandler):
 class ActiveStepHandler(OauthBaseHandler):
     @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self, job_id):
-        """Changes the current exectuion step of the given job
+        """Changes the current execution step of the given job
 
         Parameters
         ----------
@@ -140,7 +115,7 @@ class ActiveStepHandler(OauthBaseHandler):
             try:
                 job.step = step
             except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
-                raise HTTPError(403, str(e))
+                raise HTTPError(403, reason=str(e))
 
         self.finish()
 
@@ -162,10 +137,14 @@ class CompleteHandler(OauthBaseHandler):
                 raise HTTPError(
                     403, "Can't complete job: not in a running state")
 
-            p = Process(target=_job_completer,
-                        args=(job_id, self.request.body))
-            p.start()
-            # safe_submit(job.user.email, _job_completer, job_id, payload)
+            qiita_plugin = qdb.software.Software.from_name_and_version(
+                'Qiita', 'alpha')
+            cmd = qiita_plugin.get_command('complete_job')
+            params = qdb.software.Parameters.load(
+                cmd, values_dict={'job_id': job_id,
+                                  'payload': self.request.body})
+            job = qdb.processing_job.ProcessingJob.create(job.user, params)
+            job.submit()
 
         self.finish()
 
@@ -184,7 +163,7 @@ class ProcessingJobAPItestHandler(OauthBaseHandler):
         params = qdb.software.Parameters.load(cmd, json_str=params_dict)
 
         job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User(user), params)
+            qdb.user.User(user), params, True)
 
         if status:
             job._set_status(status)

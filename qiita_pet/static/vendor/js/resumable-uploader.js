@@ -12,7 +12,7 @@
 
 (function(window, document, $, undefined)
  {
-   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id, valid_extensions, target_prefix) {
+   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id, valid_extensions, target_prefix, is_admin, url) {
      var $this = this;
      // Bootstrap parameters and clear HTML
      this.originalDocumentTitle = document.title;
@@ -73,9 +73,10 @@
        this.resumable.on('fileProgress', function(file){
            $this.setFileProgress(file.uniqueIdentifier, file.progress());
            $this.setProgress($this.resumable.progress());
-
            // Apply a thumbnail
            if(file.chunks.length>0 && file.chunks[0].status()=='success' && file.chunks[file.chunks.length-1].status()=='success'){
+             var alphaNumFileName = file.fileName.replace(/[^0-9a-z]/gi, '');
+             $('#file-icon-' + alphaNumFileName).removeClass('blinking-message glyphicon-circle-arrow-up').addClass('glyphicon-ok');
              $this.setFileThumbnail(file.uniqueIdentifier, target_prefix + '/api/photo/frame?time=10&study_id='+encodeURIComponent(this.study_id)+'&resumableIdentifier='+encodeURIComponent(file.uniqueIdentifier));
            }
          });
@@ -137,9 +138,19 @@
        }
 
        var listNode = $(document.createElement('div'));
-       listNode.html('<div class="row" class="checkbox"><label>' + fileName +
-                     ' &nbsp; <input type="checkbox" value="' + dirId + '-' +
-                     fileName + '" name="files_to_erase"></label></div>');
+       var alphaNumFileName = fileName.replace(/[^0-9a-z]/gi, '');
+       var iconClass = resumableFile.uploaded !== undefined ? 'glyphicon-ok' : 'blinking-message glyphicon-circle-arrow-up';
+       var html = '<div class="row" class="checkbox">' +
+                    '<label>' + fileName + '&nbsp;(' +  resumableFile.size + ')&nbsp; <input type="checkbox" value="' + dirId +
+                    '-' + fileName  + '" name="files_to_erase">&nbsp;</label>' +
+                    '<i id="file-icon-' + alphaNumFileName + '" class="glyphicon ' + iconClass + '"></i>';
+
+       if (is_admin) {
+         html = html + '&nbsp;<a href="' + url + fileName + '">download</a>';
+       }
+
+       html = html + '</div>';
+       listNode.html(html);
        this.uploaderList.append(listNode);
 
        var editNode = $(document.createElement('div'));
@@ -156,6 +167,7 @@
          var x = {};
          var editStatus = 'editing';
        }
+
        var file = {
          resumableFile:resumableFile,
          listNode:listNode,

@@ -43,7 +43,7 @@ def _get_plugin(name, version):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating plugin %s %s: %s'
+        raise HTTPError(500, reason='Error instantiating plugin %s %s: %s'
                         % (name, version, str(e)))
 
     return plugin
@@ -93,6 +93,15 @@ class PluginHandler(OauthBaseHandler):
 class CommandListHandler(OauthBaseHandler):
     @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self, name, version):
+        """Create new command for a plugin
+
+        Parameters
+        ----------
+        name : str
+            The name of the plugin
+        version : str
+            The version of the plugin
+        """
         with qdb.sql_connection.TRN:
             plugin = _get_plugin(name, version)
 
@@ -100,16 +109,36 @@ class CommandListHandler(OauthBaseHandler):
             cmd_desc = self.get_argument('description')
             req_params = loads(self.get_argument('required_parameters'))
             opt_params = loads(self.get_argument('optional_parameters'))
+
+            for p_name, vals in opt_params.items():
+                if vals[0].startswith('mchoice'):
+                    opt_params[p_name] = [vals[0], loads(vals[1])]
+                    if len(vals) == 2:
+                        opt_params[p_name] = [vals[0], loads(vals[1])]
+                    elif len(vals) == 4:
+                        opt_params[p_name] = [vals[0], loads(vals[1]), vals[2],
+                                              vals[3]]
+                    else:
+                        raise qdb.exceptions.QiitaDBError(
+                            "Malformed parameters dictionary, the format "
+                            "should be either {param_name: [parameter_type, "
+                            "default]} or {parameter_name: (parameter_type, "
+                            "default, name_order, check_biom_merge)}. Found: "
+                            "%s for parameter name %s"
+                            % (vals, p_name))
+
             outputs = self.get_argument('outputs', None)
             if outputs:
                 outputs = loads(outputs)
             dflt_param_set = loads(self.get_argument('default_parameter_sets'))
+            analysis_only = self.get_argument('analysis_only', False)
 
             parameters = req_params
             parameters.update(opt_params)
 
             cmd = qdb.software.Command.create(
-                plugin, cmd_name, cmd_desc, parameters, outputs)
+                plugin, cmd_name, cmd_desc, parameters, outputs,
+                analysis_only=analysis_only)
 
             if dflt_param_set is not None:
                 for name, vals in dflt_param_set.items():
@@ -147,8 +176,9 @@ def _get_command(plugin_name, plugin_version, cmd_name):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating cmd %s of plugin %s %s: %s'
-                        % (cmd_name, plugin_name, plugin_version, str(e)))
+        raise HTTPError(500, reason='Error instantiating cmd %s of plugin '
+                        '%s %s: %s' % (cmd_name, plugin_name,
+                                       plugin_version, str(e)))
 
     return cmd
 
@@ -221,4 +251,6 @@ class ReloadPluginAPItestHandler(OauthBaseHandler):
         for fp in conf_files:
             s = qdb.software.Software.from_file(fp, update=True)
             s.activate()
+            s.register_commands()
+
         self.finish()

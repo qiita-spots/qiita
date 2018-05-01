@@ -35,8 +35,7 @@ SAMPLE_TEMPLATE_COLUMNS = {
 PREP_TEMPLATE_COLUMNS = {
     # The following columns are required by EBI for submission
     'EBI': Restriction(
-        columns={'primer': str,
-                 'center_name': str,
+        columns={'center_name': str,
                  'platform': str,
                  'instrument_model': str,
                  'library_construction_protocol': str,
@@ -52,8 +51,7 @@ TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
 PREP_TEMPLATE_COLUMNS_TARGET_GENE = {
     # The following columns are required by QIIME to execute split libraries
     'demultiplex': Restriction(
-        columns={'barcode': str,
-                 'primer': str},
+        columns={'barcode': str},
         error_msg="Demultiplexing disabled."),
     # The following columns are required by Qiita to know how to execute split
     # libraries using QIIME over a study with multiple illumina lanes

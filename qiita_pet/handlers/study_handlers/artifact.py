@@ -14,9 +14,8 @@ from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
     artifact_graph_get_req, artifact_types_get_req, artifact_post_req,
-    artifact_status_put_req, artifact_get_req, artifact_delete_req,
-    artifact_summary_get_request, artifact_summary_post_request,
-    artifact_patch_request)
+    artifact_status_put_req, artifact_get_req, artifact_get_prep_req,
+    artifact_get_info)
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 
@@ -35,7 +34,9 @@ class NewArtifactHandler(BaseHandler):
     def get(self):
         study_id = self.get_argument("study_id")
         prep_id = self.get_argument("prep_template_id")
-        artifact_types = artifact_types_get_req()['types']
+        artifact_types = [(at, desc) for at, desc, _, _, is_user_uploadable in
+                          artifact_types_get_req()['types']
+                          if is_user_uploadable]
 
         self.render("study_ajax/add_artifact.html",
                     study_id=study_id, prep_id=prep_id,
@@ -60,49 +61,23 @@ class NewArtifactHandler(BaseHandler):
         self.write(artifact)
 
 
-class ArtifactSummaryAJAX(BaseHandler):
+class ArtifactGetSamples(BaseHandler):
     @authenticated
     def get(self):
-        artifact_id = self.get_argument('artifact_id')
-        user_id = self.current_user.id
-        res = artifact_summary_get_request(user_id, artifact_id)
-        res['artifact_id'] = artifact_id
-        res['user_id'] = user_id
-        self.render("study_ajax/artifact_summary.html", **res)
+        aids = map(int, self.request.arguments.get('ids[]', []))
 
-    @authenticated
-    def post(self):
-        artifact_id = self.get_argument('artifact_id')
-        res = artifact_summary_post_request(self.current_user.id, artifact_id)
-        self.write(res)
+        response = artifact_get_prep_req(self.current_user.id, aids)
+
+        self.write(response)
 
 
-class ArtifactAJAX(BaseHandler):
+class ArtifactGetInfo(BaseHandler):
     @authenticated
     def get(self):
-        artifact_id = to_int(self.get_argument('artifact_id'))
-        name = artifact_get_req(self.current_user.id, artifact_id)['name']
-        self.write(name)
+        aids = map(int, self.request.arguments.get('ids[]', []))
+        only_biom = self.get_argument('only_biom', 'True') == 'True'
 
-    @authenticated
-    def post(self):
-        artifact_id = to_int(self.get_argument('artifact_id'))
-        self.write(artifact_delete_req(artifact_id, self.current_user.id))
-
-    @authenticated
-    def patch(self):
-        """Patches a prep template in the system
-
-        Follows the JSON PATCH specification:
-        https://tools.ietf.org/html/rfc6902
-        """
-        req_op = self.get_argument('op')
-        req_path = self.get_argument('path')
-        req_value = self.get_argument('value', None)
-        req_from = self.get_argument('from', None)
-
-        response = artifact_patch_request(
-            self.current_user.id, req_op, req_path, req_value, req_from)
+        response = artifact_get_info(self.current_user.id, aids, only_biom)
 
         self.write(response)
 

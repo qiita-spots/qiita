@@ -17,8 +17,12 @@
   }
   // adding new column to cols, we need to add a Formatter
   function linkFormatter(row, cell, value, columnDef, dataContext) {
-    return "<a class=\"btn btn-danger\" onclick=\"delete_sample('" + value +
-           "');\"><span class=\"glyphicon glyphicon-trash\"></span></a>";
+    {% if user_can_edit %}
+    return "<button class=\"btn btn-danger st-interactive\" onclick=\"sampleTemplatePage.$refs.stElem.deleteSample('" + value +
+           "', " + row + ");\"><span class=\"glyphicon glyphicon-trash\"></span></button>";
+    {% else %}
+    return ""
+    {% end %}
   }
   cols.unshift({ name: "", field: "slick-grid-sample-delete", width: 60, formatter: linkFormatter })
   var grid = new Slick.Grid("#samples-div", table, cols, options);
@@ -60,12 +64,12 @@
    * current sample template
    *
    */
-  function delete_sample(sample_name) {
+  function delete_sample(sample_name, row_id) {
     if(confirm("Are you sure you want to delete '" + sample_name + "'?")) {
       $.ajax({
         url: '{% raw qiita_config.portal_dir %}/study/description/sample_template/',
         type: 'PATCH',
-        data: {'op': 'remove', 'path': '/{{study_id}}/samples/' + sample_name},
+        data: {'op': 'remove', 'path': '/{{study_id}}/' + row_id + '/samples/' + sample_name},
         success: function(data) {
           if(data.status == 'error') {
             bootstrapAlert(data.message, "danger");
@@ -77,14 +81,6 @@
       });
     }
   }
-
-  $(document).ready(function() {
-    {% if alert_type != 'success' and alert_message != '' %}
-      bootstrapAlert('{% raw alert_message %}', "{{alert_type}}");
-    {% else %}
-      $('#alert-message').alert('close');
-    {% end %}
-  });
 
 </script>
 

@@ -19,105 +19,6 @@ Classes
 
    SQLConnectionHandler
    Transaction
-
-Examples
---------
-
-* Querying
-
-In order to perform any query in the database you first need to import the
-`TRN` variable available in this module:
-
->>> from qiita_db.sql_connection import TRN
-
-The `TRN` variable is an instance of the `Transaction` object. All queries
-should be executed through this object to ensure atomicity. To perform any
-query you first need to add the query to the transaction and then execute the
-transaction:
-
->>> with TRN:
-...     TRN.add("SELECT 42")
-...     res = TRN.execute()
->>> res
-[[[42]]]
-
-The `execute` function returns the values of all the queries in the transaction
-object. This requires three layers of nesting: (1) the query (2) the result
-rows in a given query and (3) the result columns in a given row.
-
-* Data retrieval
-
-Multiple auxiliary functions exist for easy SQL result retrieval:
-
-Getting the first value of the last SQL query
->>> with TRN:
-...     TRN.add("SELECT 42")
-...     res = TRN.execute_fetchlast()
->>> res
-42
-
-Getting the results of the last SQL query
->>> with TRN:
-...     TRN.add("SELECT 42")
-...     res = TRN.execute_fetchindex()
->>> res
-[[42]]
-
-Getting the results of the specified SQL query
->>> with TRN:
-...     TRN.add("SELECT 42")
-...     TRN.add("SELECT 43")
-...     # The index 0 corresponds to the first query in the transaction
-...     res = TRN.execute_fetchindex(0)
->>> res
-[[42]]
-
-Getting the results of the last SQL query flattened
->>> with TRN:
-...     TRN.add("SELECT 42, 43, 44")
-...     res = TRN.execute_fetchflatten()
->>> res
-[42, 43, 44]
-
-Getting the results of the specified SQL query flattened
->>> with TRN:
-...     TRN.add("SELECT 42, 43, 44")
-...     TRN.add("SELECT 42")
-...     res = TRN.execute_fetchflatten(0)
->>> res
-[42, 43, 44]
-
-* Transactions
-
-Transaction blocks are created through the same `TRN` variable exported in this
-module. You can add as many SQL commands as you want and execute all of them at
-once, and it will return the results of all the SQL commands. `TRN` should be
-used as a context manager, and it autocommits the transaction once the last
-context is exited, as long as no error was generated inside the context, in
-which case a rollback is executed.
-
->>> with TRN:
-...     TRN.add("SELECT 42")
-...     TRN.add("SELECT 43")
-...     res = TRN.execute()  # The transaction is not committed here
->>> # The transaction committed here
->>> res
-[[[42]], [[43]]]
-
-You can have nested transactions and they will not commit until the first
-transaction (represented by entering to the context) is exited:
-
->>> with TRN:
-...     TRN.add("SELECT 42")
-...     with TRN:
-...         TRN.add("SELECT 43")
-...         res = TRN.execute()
-...     # The transaction is still not committed
-...     TRN.add("SELECT 44")
-...     res = TRN.execute()
->>> # The transactions committed here
->>> res
-[[[42]], [[43]], [[44]]]
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -133,7 +34,7 @@ from functools import partial, wraps
 from datetime import date, time, datetime
 
 from psycopg2 import (connect, ProgrammingError, Error as PostgresError,
-                      OperationalError)
+                      OperationalError, errorcodes)
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import (
     ISOLATION_LEVEL_AUTOCOMMIT, ISOLATION_LEVEL_READ_COMMITTED,
@@ -383,8 +284,8 @@ class SQLConnectionHandler(object):
                 yield cur
             except PostgresError as e:
                 self._connection.rollback()
-                raise ValueError("Error running SQL query: %s\nARGS: %s\n"
-                                 "Error: %s" % (sql, str(sql_args), e))
+                raise ValueError("Error running SQL: %s. MSG: %s\n" % (
+                    errorcodes.lookup(e.pgcode), e.message))
             else:
                 self._connection.commit()
 
@@ -645,10 +546,13 @@ class Transaction(object):
         ValueError
         """
         self.rollback()
-        raise ValueError(
-            "Error running SQL query:\n"
-            "Query: %s\nArguments: %s\nError: %s\n"
-            % (sql, str(sql_args), str(error)))
+
+        try:
+            ec_lu = errorcodes.lookup(error.pgcode)
+            raise ValueError(
+                "Error running SQL: %s. MSG: %s\n" % (ec_lu, error.message))
+        except (KeyError, AttributeError):
+            raise ValueError("Error running SQL query: %s" % error.message)
 
     @_checker
     def add(self, sql, sql_args=None, many=False):
@@ -882,11 +786,13 @@ class Transaction(object):
         # Reset the queries, the results and the index
         self._queries = []
         self._results = []
-        try:
-            self._connection.rollback()
-        except Exception:
-            self._connection.close()
-            raise
+
+        if self._connection is not None and self._connection.closed == 0:
+            try:
+                self._connection.rollback()
+            except Exception:
+                self._connection.close()
+                raise
         # Execute the post rollback functions
         self._funcs_executor(self._post_rollback_funcs, "rollback")
 
@@ -937,3 +843,12 @@ class Transaction(object):
 
 # Singleton pattern, create the transaction for the entire system
 TRN = Transaction()
+
+
+def create_new_transaction():
+    """Creates a new global transaction
+
+    This is needed when using multiprocessing
+    """
+    global TRN
+    TRN = Transaction()

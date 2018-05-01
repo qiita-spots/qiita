@@ -1,12 +1,19 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from __future__ import division
 
 from random import choice
 
-from moi import r_client
 from tornado.gen import coroutine, Task
 
 from qiita_core.util import execute_as_transaction
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_db.study import Study
 from .base_handlers import BaseHandler
 

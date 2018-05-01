@@ -1,0 +1,86 @@
+{% extends sitebase.html %}
+{% block head %}
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
+
+<script type="text/javascript">
+
+  $(document).ready(function(){
+    // Create the processing network view object
+    newProcessingNetworkVue("#analysis-graph-vue");
+
+    // Show the alert message, if any
+    {% if alert_msg %}
+      bootstrapAlert("{{alert_msg}}", "{{alert_type}}");
+    {% end %}
+
+    // starting share
+    init_sharing("{% raw qiita_config.portal_dir %}");
+    update_share();
+  });
+</script>
+<style>
+.graph {
+  width: 80%;
+  height: 400px;
+  border: 1px solid #ccc;
+}
+</style>
+{% end %}
+{% block content %}
+
+<div class="row">
+  <div class="col">
+    <form action="{% raw qiita_config.portal_dir %}/analysis/description/{{analysis_id}}/" method="post" id="make-public"><input name="analysis_id" value="{{analysis_id}}" type="hidden"></form>
+    <h2>
+      {{analysis_name}} - ID {{analysis_id}}
+      {% if analysis_is_public %}
+        <small><b>(Public)</b></small>
+      {% else %}
+        <small><b>(Private)</b></small>
+      {% end %}
+      <a class="btn btn-info" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"><span class=" glyphicon glyphicon-share"></span></a>
+      {% if analysis_mapping_id is not None %}
+        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{analysis_mapping_id}}"><span class="glyphicon glyphicon-download-alt"></span> Mapping file</a>
+      {% end %}
+      {% if not analysis_is_public %}
+        <a class="btn btn-default" onclick="if (confirm('Are you sure you want to make this analysis public?')) { $('#make-public').submit(); }"><span class="glyphicon glyphicon-globe"></span> Make analysis public</a>
+      {% end %}
+    </h2>
+    <h3>{{analysis_description}}</h3>
+    Shared with: <span id="shared_html_{{analysis_id}}"></span>
+  </div>
+</div>
+<div id='analysis-graph-vue'>
+  <processing-graph v-bind:is-analysis-pipeline='true' ref="procGraph" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/analysis/description/{{analysis_id}}/graph/" jobs-endpoint="/analysis/description/{{analysis_id}}/jobs/"></processing-graph>
+</div>
+<div class="row" id='processing-content-div'></div>
+
+
+ <!-- Modal used to share the analysis -->
+<div class="modal fade" id="share-analysis-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Modify Sharing Settings</h4>
+      </div>
+        <div class="modal-body">
+          <div>
+            <div class="form-group">
+              <label for="shares-select">Add/Remove Users</label>
+              <select multiple class="analysis" id="shares-select" data-share-url="{% raw qiita_config.portal_dir %}/analysis/sharing/" data-current-id={{analysis_id}} style="width:50%"></select>
+              <br>
+              <br>
+              Adding or removing email addresses automatically updates who the analysis is shared with. Once you click the `X` or give mouse focus to the analysis page you'll see your new sharing settings.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+    </div>
+  </div>
+</div>
+
+{% end %}

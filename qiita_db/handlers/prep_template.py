@@ -41,8 +41,8 @@ def _get_prep_template(pid):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating prep template %s: %s'
-                             % (pid, str(e)))
+        raise HTTPError(500, reason='Error instantiating prep template %s: %s'
+                        % (pid, str(e)))
 
     return pt
 
@@ -73,9 +73,10 @@ class PrepTemplateDBHandler(OauthBaseHandler):
             pt = _get_prep_template(prep_id)
             prep_files = [fp for _, fp in pt.get_filepaths()
                           if 'qiime' not in basename(fp)]
+            artifact = pt.artifact.id if pt.artifact is not None else None
             response = {
                 'data_type': pt.data_type(),
-                'artifact': pt.artifact.id,
+                'artifact': artifact,
                 'investigation_type': pt.investigation_type,
                 'study': pt.study_id,
                 'status': pt.status,

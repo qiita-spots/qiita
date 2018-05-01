@@ -21,10 +21,16 @@ class StudyIndexHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
         study = to_int(study_id)
+        level = self.get_argument('level', '')
+        message = self.get_argument('message', '')
 
         study_info = study_get_req(study, self.current_user.id)
         if study_info['status'] != 'success':
-            raise HTTPError(404, study_info['message'])
+            raise HTTPError(404, reason=study_info['message'])
+
+        if message != '' and level != '':
+            study_info['level'] = level
+            study_info['message'] = message
 
         self.render("study_base.html", **study_info)
 
@@ -62,6 +68,7 @@ class StudyBaseInfoAJAX(BaseHandler):
 
 
 class StudyDeleteAjax(BaseHandler):
+    @authenticated
     def post(self):
         study_id = self.get_argument('study_id')
         self.write(study_delete_req(int(study_id), self.current_user.id))
@@ -75,7 +82,7 @@ class DataTypesMenuAJAX(BaseHandler):
         prep_info = study_prep_get_req(study_id, self.current_user.id)
         # Make sure study exists
         if prep_info['status'] != 'success':
-            raise HTTPError(404, prep_info['message'])
+            raise HTTPError(404, reason=prep_info['message'])
 
         prep_info = prep_info['info']
 
@@ -120,7 +127,7 @@ class StudyTags(BaseHandler):
         study_id = to_int(study_id)
         req_op = self.get_argument('op')
         req_path = self.get_argument('path')
-        req_value = self.request.arguments.get('value[]', None)
+        req_value = self.request.arguments.get('value[]', [])
         req_form = self.get_argument('form', None)
 
         response = study_tags_patch_request(

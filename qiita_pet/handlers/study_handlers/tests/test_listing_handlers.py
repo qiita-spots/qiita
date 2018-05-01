@@ -9,10 +9,9 @@ from unittest import main
 from json import loads
 
 from mock import Mock
-from moi import r_client
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_db.artifact import Artifact
 from qiita_db.study import Study
 from qiita_db.user import User
@@ -21,32 +20,9 @@ from qiita_pet.handlers.study_handlers.listing_handlers import (
     _build_study_info)
 from qiita_pet.handlers.base_handlers import BaseHandler
 
-
-SAMPLES = ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
-           '1.SKB5.640181', '1.SKB6.640176', '1.SKB7.640196', '1.SKB8.640193',
-           '1.SKB9.640200', '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-           '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191',
-           '1.SKD8.640184', '1.SKD9.640182', '1.SKM1.640183', '1.SKM2.640199',
-           '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-           '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
 GPARAMS = {'similarity': 0.97, 'reference_name': 'Greengenes',
            'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000, 'threads': 1,
            'sortmerna_coverage': 0.97, 'reference_version': u'13_8'}
-PROC_DATA_INFO = [
-    {'data_type': u'18S', 'algorithm': 'QIIME (Pick closed-reference OTUs)',
-     'pid': 4, 'processed_date': '2012-10-02 17:30:00', 'params': GPARAMS,
-     'samples': SAMPLES},
-    {'data_type': '18S', 'algorithm': 'QIIME (Pick closed-reference OTUs)',
-     'pid': 5, 'processed_date': '2012-10-02 17:30:00', 'params': GPARAMS,
-     'samples': SAMPLES},
-    {'data_type': '16S', 'algorithm': 'QIIME (Pick closed-reference OTUs)',
-     'pid': 6, 'processed_date': '2012-10-02 17:30:00',
-     'params': {'similarity': 0.97, 'reference_name': u'Silva',
-                'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000,
-                'threads': 1, 'sortmerna_coverage': 0.97,
-                'reference_version': 'test'}, 'samples': SAMPLES},
-    {'processed_date': '2012-10-02 17:30:00', 'pid': 7, 'data_type': '16S',
-     'samples': SAMPLES}]
 
 
 class TestHelpers(TestHandlerBase):
@@ -55,6 +31,8 @@ class TestHelpers(TestHandlerBase):
 
         self.single_exp = {
             'study_id': 1,
+            'owner': 'Dude',
+            'study_alias': 'Cannabis Soils',
             'status': 'private',
             'study_abstract':
                 'This is a preliminary study to examine the microbiota '
@@ -78,14 +56,66 @@ class TestHelpers(TestHandlerBase):
             'publication_doi': ['10.100/123456', '10.100/7891011'],
             'publication_pid': ['123456', '7891011'],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
+            'artifact_biom_ids': [4, 5, 6, 7],
             'study_tags': None,
-            'proc_data_info': PROC_DATA_INFO
         }
         self.exp = [self.single_exp]
 
     def test_build_study_info(self):
+        for a in Study(1).artifacts():
+            a.visibility = 'private'
+
         obs = _build_study_info(User('test@foo.bar'), 'user')
         self.assertEqual(obs, self.exp)
+
+        obs = _build_study_info(User('test@foo.bar'), 'public')
+        self.assertEqual(obs, [])
+
+        obs = _build_study_info(User('demo@microbio.me'), 'public')
+        self.assertEqual(obs, [])
+
+        obs = _build_study_info(User('admin@foo.bar'), 'user')
+        self.assertEqual(obs, self.exp)
+
+        # make all the artifacts public - (1) the only study in the tests,
+        for a in Study(1).artifacts():
+            a.visibility = 'public'
+        self.exp[0]['status'] = 'public'
+
+        obs = _build_study_info(User('test@foo.bar'), 'user')
+        self.assertEqual(obs, self.exp)
+
+        obs = _build_study_info(User('test@foo.bar'), 'public')
+        self.assertEqual(obs, [])
+
+        obs = _build_study_info(User('demo@microbio.me'), 'public')
+        self.assertEqual(obs, self.exp)
+
+        obs = _build_study_info(User('admin@foo.bar'), 'user')
+        self.assertEqual(obs, [])
+
+        # make all the artifacts awaiting_approval - (1) the only study
+        # in the tests,
+        for a in Study(1).artifacts():
+            a.visibility = 'awaiting_approval'
+        self.exp[0]['status'] = 'awaiting_approval'
+
+        obs = _build_study_info(User('test@foo.bar'), 'user')
+        self.assertEqual(obs, self.exp)
+
+        obs = _build_study_info(User('test@foo.bar'), 'public')
+        self.assertEqual(obs, [])
+
+        obs = _build_study_info(User('demo@microbio.me'), 'public')
+        self.assertEqual(obs, [])
+
+        obs = _build_study_info(User('admin@foo.bar'), 'user')
+        self.assertEqual(obs, self.exp)
+
+        # awaiting_approval
+        # return to it's private status
+        for a in Study(1).artifacts():
+            a.visibility = 'private'
 
     def test_build_study_info_erros(self):
         with self.assertRaises(IncompetentQiitaDeveloperError):
@@ -108,9 +138,9 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'study_description': 'desc',
             'study_alias': 'alias',
             'study_abstract': 'abstract'}
-        Study.create(User('test@foo.bar'), "My study", efo=[1], info=info)
-        obs = _build_study_info(User('test@foo.bar'), 'user')
+        Study.create(User('test@foo.bar'), "My study", info=info)
 
+        obs = _build_study_info(User('test@foo.bar'), 'user')
         self.exp.append({
             'metadata_complete': False,
             'ebi_submission_status':
@@ -119,15 +149,16 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'publication_pid': [],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
             'status': 'sandbox',
-            'proc_data_info': [],
             'publication_doi': [],
             'study_abstract': 'abstract',
             'study_id': 2,
+            'owner': 'Dude',
+            'study_alias': 'alias',
             'ebi_study_accession': None,
             'study_title': 'My study',
             'study_tags': None,
+            'artifact_biom_ids': None,
             'number_samples_collected': 0})
-
         self.assertItemsEqual(obs, self.exp)
 
         # Now testing that admin also sees this study
@@ -232,7 +263,7 @@ class TestShareStudyAjax(TestHandlerBase):
             'study_alias': 'alias',
             'study_abstract': 'abstract'}
         u = User('shared@foo.bar')
-        s = Study.create(u, 'test_study', efo=[1], info=info)
+        s = Study.create(u, 'test_study', info=info)
         self.assertEqual(s.shared_with, [])
 
         args = {'selected': 'test@foo.bar', 'id': s.id}
@@ -254,10 +285,11 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                              ' (submitted)'),
                 'study_title': ('Identification of the Microbiomes for '
                                 'Cannabis Soils'),
-                'proc_data_info': PROC_DATA_INFO,
                 'metadata_complete': True,
                 'ebi_submission_status': 'submitted',
                 'study_id': 1,
+                'study_alias': 'Cannabis Soils',
+                'owner': 'Dude',
                 'ebi_study_accession': 'EBI123456-BB',
                 'shared': ('<a target="_blank" href="mailto:shared@foo.bar">'
                            'Shared</a>'),
@@ -282,6 +314,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                     'Future studies will attempt to analyze the soils and '
                     'rhizospheres from the same location at different time '
                     'points in the plant lifecycle.'),
+                'artifact_biom_ids': [4, 5, 6, 7],
                 'number_samples_collected': 27,
                 'study_tags': None}],
             'sEcho': 1021,

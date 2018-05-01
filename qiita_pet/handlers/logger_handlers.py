@@ -1,3 +1,11 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from __future__ import division
 
 from tornado.web import authenticated
@@ -11,8 +19,9 @@ from tornado.web import HTTPError
 class LogEntryViewerHandler(BaseHandler):
     def check_access(self):
         if self.current_user.level not in {'admin', 'dev'}:
-            raise HTTPError(405, "User %s doesn't have sufficient privileges "
-                            "to view error page" % self.current_user)
+            raise HTTPError(405, reason="User %s doesn't have sufficient "
+                            "privileges to view error page" %
+                            self.current_user)
 
     @authenticated
     @execute_as_transaction

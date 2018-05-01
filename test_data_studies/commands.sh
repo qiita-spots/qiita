@@ -47,31 +47,21 @@ for i in ${studies[@]}; do
     pt_id=`echo -e "${output}" | cut -d " " -f 10`
     echo "Ok"
 
-    # Loading raw data
-    echo "\tloading raw data... "
-    echo -e ">seq\nAAAA" > temp/seqs.fna
-    output="`qiita db load_artifact --fp temp/seqs.fna --fp_type raw_forward_seqs --artifact_type FASTQ --prep_template $pt_id`"
-    raw_id=`echo -e "${output}" | cut -d " " -f 2`
-    echo "Ok"
-
-    # Loading preprocessed data
-    echo "\tloading preprocessed data... "
-    echo -e ">seq\nAAAA" > temp/seqs.fna
-    output=`qiita db load_artifact --artifact_type FASTA_Sanger --dflt_params 1 --fp temp/ --fp_type preprocessed_fasta --parents ${raw_id}`
-    ppd_id=`echo -e "${output}" | cut -d " " -f 2`
-    echo "Ok"
-
     # Loading processed data
     echo "\tloading processed data... "
     cp $otu_table ${otu_table}_backup
-    output="`qiita db load_artifact --artifact_type BIOM --fp $otu_table --fp_type biom --dflt_params 2 --parents ${ppd_id}`"
+    output="`qiita db load_artifact --artifact_type BIOM --fp $otu_table --fp_type biom --prep_template $pt_id`"
     pd_id=`echo -e "${output}" | cut -d " " -f 2`
     mv ${otu_table}_backup $otu_table
     echo "Ok"
 
     # Making study public by making its processed data public
     echo "\tmaking study public... "
-    echo -e "from qiita_db.artifact import Artifact\nArtifact(${pd_id}).status = 'public'\n\n" | python
+    echo -e "from qiita_db.artifact import Artifact\nArtifact(${pd_id}).visibility = 'public'\n\n" | python
     echo "Ok"
     rm $conf_fp
 done
+
+# Making sure the studies/artifacts are public
+aids=`echo -e "from qiita_db.study import Study\nstudies = Study.get_by_status('public')\naids = [a.id for s in studies for a in s.artifacts()]\nprint(aids)" | python`
+if [ "$aids" != "[10, 11, 12]" ]; then echo "ERROR: artifacts not created: ", aids; exit 1; fi

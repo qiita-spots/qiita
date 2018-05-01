@@ -8,11 +8,13 @@
 
 from unittest import TestCase, main
 import numpy.testing as npt
+from tarfile import open as topen
+from os import remove
+from os.path import exists, join
 
 import pandas as pd
 
-from moi import r_client
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.util import qiita_test_checker
 
 import qiita_db as qdb
@@ -22,9 +24,13 @@ import qiita_db as qdb
 class MetaUtilTests(TestCase):
     def setUp(self):
         self.old_portal = qiita_config.portal
+        self.files_to_remove = []
 
     def tearDown(self):
         qiita_config.portal = self.old_portal
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
 
     def _set_artifact_private(self):
         self.conn_handler.execute(
@@ -39,7 +45,7 @@ class MetaUtilTests(TestCase):
 
         # shared has access to all study files and analysis files
         user = qdb.user.User('shared@foo.bar')
-        for i in [1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]:
+        for i in [1, 2, 3, 4, 5, 9, 12, 15, 16, 17, 18, 19, 20, 21]:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
 
@@ -48,13 +54,14 @@ class MetaUtilTests(TestCase):
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
-        for i in [13, 14, 15, 16]:
+
+        for i in [15, 16]:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
 
         # Now shared should not have access to any files
         qdb.analysis.Analysis(1).unshare(user)
-        for i in [1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]:
+        for i in [1, 2, 3, 4, 5, 9, 12, 15, 16, 17, 18, 19, 20, 21]:
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
 
@@ -79,7 +86,7 @@ class MetaUtilTests(TestCase):
             "lab_person_id": 1
         }
         study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Test study", [1], info)
+            qdb.user.User('test@foo.bar'), "Test study", info)
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
@@ -172,7 +179,7 @@ class MetaUtilTests(TestCase):
             'study_abstract': 'abstract'}
 
         study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), 'test_study_1', efo=[1], info=info)
+            qdb.user.User('test@foo.bar'), 'test_study_1', info=info)
         qdb.portal.Portal('EMP').add_studies([study.id])
 
         md = {
@@ -226,6 +233,164 @@ class MetaUtilTests(TestCase):
         for k, exp, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
             self.assertEqual(f(redis_key), exp)
+
+    def test_generate_biom_and_metadata_release(self):
+        level = 'private'
+        qdb.meta_util.generate_biom_and_metadata_release(level)
+        portal = qiita_config.portal
+        working_dir = qiita_config.working_dir
+
+        vals = [
+            ('filepath', r_client.get),
+            ('md5sum', r_client.get),
+            ('time', r_client.get)]
+        # we are storing the [0] filepath, [1] md5sum and [2] time but we are
+        # only going to check the filepath contents so ignoring the others
+        tgz = vals[0][1]('%s:release:%s:%s' % (portal, level, vals[0][0]))
+        tgz = join(working_dir, tgz)
+
+        self.files_to_remove.extend([tgz])
+
+        tmp = topen(tgz, "r:gz")
+        tgz_obs = [ti.name for ti in tmp]
+        tmp.close()
+        # files names might change due to updates and patches so just check
+        # that the prefix exists.
+        fn = 'processed_data/1_study_1001_closed_reference_otu_table.biom'
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # yes, this file is there twice
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # let's check the next biom
+        fn = ('processed_data/1_study_1001_closed_reference_otu_table_Silva.'
+              'biom')
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # now let's check prep info files based on their suffix, just take
+        # the first one and check/rm the occurances of that file
+        fn_prep = [f for f in tgz_obs
+                   if f.startswith('templates/1_prep_1_')][0]
+        # 3 times
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        fn_sample = [f for f in tgz_obs if f.startswith('templates/1_')][0]
+        # 3 times
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        # now we should only have the text file
+        txt = tgz_obs.pop()
+        # now it should be empty
+        self.assertEqual(tgz_obs, [])
+
+        tmp = topen(tgz, "r:gz")
+        fhd = tmp.extractfile(txt)
+        txt_obs = fhd.readlines()
+        tmp.close()
+        txt_exp = [
+            'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
+            '%s\t%s\t4\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep),
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
+            '%s\t%s\t5\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep),
+            'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
+            'm\t%s\t%s\t6\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep)]
+        self.assertEqual(txt_obs, txt_exp)
+
+        # whatever the configuration was, we will change to settings so we can
+        # test the other option when dealing with the end '/'
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT base_data_dir FROM settings")
+            obdr = qdb.sql_connection.TRN.execute_fetchlast()
+            if obdr[-1] == '/':
+                bdr = obdr[:-1]
+            else:
+                bdr = obdr + '/'
+
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET base_data_dir = '%s'" % bdr)
+            bdr = qdb.sql_connection.TRN.execute()
+
+        qdb.meta_util.generate_biom_and_metadata_release(level)
+        # we are storing the [0] filepath, [1] md5sum and [2] time but we are
+        # only going to check the filepath contents so ignoring the others
+        tgz = vals[0][1]('%s:release:%s:%s' % (portal, level, vals[0][0]))
+        tgz = join(working_dir, tgz)
+
+        tmp = topen(tgz, "r:gz")
+        tgz_obs = [ti.name for ti in tmp]
+        tmp.close()
+        # files names might change due to updates and patches so just check
+        # that the prefix exists.
+        fn = 'processed_data/1_study_1001_closed_reference_otu_table.biom'
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # yes, this file is there twice
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # let's check the next biom
+        fn = ('processed_data/1_study_1001_closed_reference_otu_table_Silva.'
+              'biom')
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # now let's check prep info files based on their suffix, just take
+        # the first one and check/rm the occurances of that file
+        fn_prep = [f for f in tgz_obs
+                   if f.startswith('templates/1_prep_1_')][0]
+        # 3 times
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        fn_sample = [f for f in tgz_obs if f.startswith('templates/1_')][0]
+        # 3 times
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        # now we should only have the text file
+        txt = tgz_obs.pop()
+        # now it should be empty
+        self.assertEqual(tgz_obs, [])
+
+        tmp = topen(tgz, "r:gz")
+        fhd = tmp.extractfile(txt)
+        txt_obs = fhd.readlines()
+        tmp.close()
+        txt_exp = [
+            'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
+            '%s\t%s\t4\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep),
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
+            '%s\t%s\t5\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep),
+            'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
+            'm\t%s\t%s\t6\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep)]
+        self.assertEqual(txt_obs, txt_exp)
+
+        # returning configuration
+        with qdb.sql_connection.TRN:
+                    qdb.sql_connection.TRN.add(
+                        "UPDATE settings SET base_data_dir = '%s'" % obdr)
+                    bdr = qdb.sql_connection.TRN.execute()
 
 
 EXP_LAT_LONG = (

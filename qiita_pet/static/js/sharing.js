@@ -25,7 +25,6 @@ function init_sharing(portal) {
 }
 
 function modify_sharing(id) {
-  var shared_list;
   $('#shares-select').attr('data-current-id', id);
   $.get($('#shares-select').attr('data-share-url'), {id: id})
     .done(function(data) {

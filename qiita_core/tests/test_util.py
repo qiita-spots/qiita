@@ -12,7 +12,8 @@ from unittest import TestCase, main
 
 from qiita_core.util import (
     send_email, qiita_test_checker, execute_as_transaction, get_qiita_version,
-    is_test_environment)
+    is_test_environment, get_release_info)
+from qiita_db.meta_util import generate_biom_and_metadata_release
 import qiita_db as qdb
 
 
@@ -63,6 +64,21 @@ class UtilTests(TestCase):
         exp_version, exp_sha = get_qiita_version()
         # testing just the version
         self.assertEqual(exp_version, qdb.__version__)
+
+    def test_get_release_info(self):
+        # making sure there is a release
+        generate_biom_and_metadata_release('private')
+        # just checking that is not empty cause the MD5 will change on every
+        # run
+        md5sum, filepath, timestamp = get_release_info('private')
+        self.assertNotEqual(md5sum, '')
+        self.assertNotEqual(filepath, '')
+        self.assertNotEqual(timestamp, '')
+
+        md5sum, filepath, timestamp = get_release_info('public')
+        self.assertEqual(md5sum, '')
+        self.assertEqual(filepath, '')
+        self.assertEqual(timestamp, '')
 
 
 if __name__ == '__main__':

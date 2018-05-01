@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+
 import warnings
 from json import dumps
 from copy import deepcopy
@@ -23,8 +24,8 @@ class PortalEditBase(BaseHandler):
 
     def check_admin(self):
         if self.current_user.level != "admin":
-            raise HTTPError(403, "%s does not have access to portal editing!" %
-                            self.current_user.id)
+            raise HTTPError(403, reason="%s does not have access to portal "
+                            "editing!" % self.current_user.id)
 
     @execute_as_transaction
     def get_info(self, portal="QIITA"):
@@ -65,8 +66,8 @@ class StudyPortalHandler(PortalEditBase):
 
         try:
             portal = Portal(portal)
-        except:
-            raise HTTPError(400, "Not valid portal: %s" % portal)
+        except Exception:
+            raise HTTPError(400, reason="Not valid portal: %s" % portal)
         try:
             with warnings.catch_warnings(record=True) as warns:
                 if action == "Add":
@@ -74,7 +75,7 @@ class StudyPortalHandler(PortalEditBase):
                 elif action == "Remove":
                     portal.remove_studies(studies)
                 else:
-                    raise HTTPError(400, "Unknown action: %s" % action)
+                    raise HTTPError(400, reason="Unknown action: %s" % action)
         except QiitaDBError as e:
                 self.write(action.upper() + " ERROR:<br/>" + str(e))
                 return

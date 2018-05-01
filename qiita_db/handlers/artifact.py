@@ -39,8 +39,8 @@ def _get_artifact(a_id):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, 'Error instantiating artifact %s: %s'
-                             % (a_id, str(e)))
+        raise HTTPError(500, reason='Error instantiating artifact %s: %s'
+                        % (a_id, str(e)))
 
     return artifact
 
@@ -79,6 +79,8 @@ class ArtifactHandler(OauthBaseHandler):
         """
         with qdb.sql_connection.TRN:
             artifact = _get_artifact(artifact_id)
+            study = artifact.study
+            analysis = artifact.analysis
             response = {
                 'name': artifact.name,
                 'timestamp': str(artifact.timestamp),
@@ -89,7 +91,8 @@ class ArtifactHandler(OauthBaseHandler):
                 'can_be_submitted_to_vamps':
                     artifact.can_be_submitted_to_vamps,
                 'prep_information': [p.id for p in artifact.prep_templates],
-                'study': artifact.study.id}
+                'study': study.id if study else None,
+                'analysis': analysis.id if analysis else None}
             params = artifact.processing_parameters
             response['processing_parameters'] = (
                 params.values if params is not None else None)
@@ -125,16 +128,25 @@ class ArtifactHandler(OauthBaseHandler):
         if req_op == 'add':
             req_path = [v for v in req_path.split('/') if v]
             if len(req_path) != 1 or req_path[0] != 'html_summary':
-                raise HTTPError(400, 'Incorrect path parameter value')
+                raise HTTPError(400, reason='Incorrect path parameter value')
             else:
                 artifact = _get_artifact(artifact_id)
+
                 try:
-                    artifact.html_summary_fp = req_value
+                    html_data = loads(req_value)
+                    html_fp = html_data['html']
+                    html_dir = html_data['dir']
+                except ValueError:
+                    html_fp = req_value
+                    html_dir = None
+
+                try:
+                    artifact.set_html_summary(html_fp, html_dir)
                 except Exception as e:
-                    raise HTTPError(500, str(e))
+                    raise HTTPError(500, reason=str(e))
         else:
-            raise HTTPError(400, 'Operation "%s" not supported. Current '
-                                 'supported operations: add' % req_op)
+            raise HTTPError(400, reason='Operation "%s" not supported. '
+                            'Current supported operations: add' % req_op)
 
         self.finish()
 
@@ -166,15 +178,21 @@ class ArtifactAPItestHandler(OauthBaseHandler):
         """
         filepaths = loads(self.get_argument('filepaths'))
         artifact_type = self.get_argument('type')
-        prep_template = self.get_argument('prep')
+        prep_template = self.get_argument('prep', None)
+        analysis = self.get_argument('analysis', None)
         name = self.get_argument('name', None)
+        dtype = self.get_argument('data_type', None)
 
-        if prep_template:
+        if prep_template is not None:
             prep_template = qdb.metadata_template.prep_template.PrepTemplate(
                 prep_template)
+            dtype = None
+        if analysis is not None:
+            analysis = qdb.analysis.Analysis(analysis)
 
         a = qdb.artifact.Artifact.create(
-            filepaths, artifact_type, name=name, prep_template=prep_template)
+            filepaths, artifact_type, name=name, prep_template=prep_template,
+            analysis=analysis, data_type=dtype)
 
         self.write({'artifact': a.id})
 
@@ -194,6 +212,8 @@ class ArtifactTypeHandler(OauthBaseHandler):
             Whether the artifact type can be submitted to EBI or not
         can_be_submitted_to_vamps : bool
             Whether the artifact type can be submitted to VAMPS or not
+        is_user_uploadable : bool
+            Whether the artifact type can be raw: direct upload to qiita
         filepath_types : list of (str, bool)
             The list filepath types that the new artifact type supports, and
             if they're required or not in an artifact instance of this type
@@ -202,10 +222,11 @@ class ArtifactTypeHandler(OauthBaseHandler):
         a_desc = self.get_argument('description')
         ebi = self.get_argument('can_be_submitted_to_ebi')
         vamps = self.get_argument('can_be_submitted_to_vamps')
+        raw = self.get_argument('is_user_uploadable')
         fp_types = loads(self.get_argument('filepath_types'))
 
         try:
-            qdb.artifact.Artifact.create_type(a_type, a_desc, ebi, vamps,
+            qdb.artifact.Artifact.create_type(a_type, a_desc, ebi, vamps, raw,
                                               fp_types)
         except qdb.exceptions.QiitaDBDuplicateError:
             # Ignoring this error as we want this endpoint in the rest api

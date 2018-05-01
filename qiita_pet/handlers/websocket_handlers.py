@@ -1,3 +1,11 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 # adapted from
 # https://github.com/leporo/tornado-redis/blob/master/demos/websockets
 from json import loads, dumps
@@ -9,7 +17,7 @@ from tornado.websocket import WebSocketHandler
 from tornado.gen import engine, Task
 from future.utils import viewvalues
 
-from moi import r_client
+from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.artifact import Artifact
 from qiita_core.util import execute_as_transaction
@@ -34,6 +42,12 @@ class MessageHandler(WebSocketHandler):
             raise ValueError("No user associated with the websocket!")
         else:
             return user.strip('" ')
+
+    # Open allows for any number arguments, unlike what pylint thinks.
+    # pylint: disable=W0221
+    @authenticated
+    def open(self):
+        self.write_message('hello')
 
     @authenticated
     def on_message(self, msg):
@@ -89,8 +103,8 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
 
         if 'remove_sample' in msginfo:
             data = msginfo['remove_sample']
-            artifacts = [Artifact(_id) for _id in data['proc_data']]
-            default.remove_samples(artifacts, data['samples'])
+            artifact = Artifact(data['proc_data'])
+            default.remove_samples([artifact], data['samples'])
         elif 'remove_pd' in msginfo:
             data = msginfo['remove_pd']
             default.remove_samples([Artifact(data['proc_data'])])
@@ -99,6 +113,13 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
             artifacts = [Artifact(_id) for _id in data['pids']]
             default.remove_samples(artifacts)
         self.write_message(msg)
+
+    # Open allows for any number arguments, unlike what pylint thinks.
+    # pylint: disable=W0221
+    @authenticated
+    @execute_as_transaction
+    def open(self):
+        self.write_message('hello')
 
 
 class SelectSamplesHandler(WebSocketHandler, BaseHandler):

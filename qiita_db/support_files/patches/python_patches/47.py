@@ -1,3 +1,11 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from qiita_db.study import Study
 
 
@@ -11,7 +19,7 @@ class ForRecursion(object):
         for a in artifact.children:
             try:
                 a.visibility = status
-            except:
+            except Exception:
                 # print so we know which changes failed and we can deal by hand
                 print "failed aid: %d, status %s" % (artifact.id, status)
                 return

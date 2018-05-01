@@ -1,6 +1,12 @@
-from unittest import main
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 
-from moi import r_client
+from unittest import main
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
@@ -24,24 +30,6 @@ class TestUserProfileHandler(TestHandlerBase):
         }
         response = self.post('/profile/', post_args)
         self.assertEqual(response.code, 200)
-
-    def test_post_select_samples(self):
-        # just making sure that the key is not set in redis
-        r_client.delete('maintenance')
-        response = self.get('/auth/reset/')
-        self.assertEqual(response.code, 200)
-        self.assertIn(('<label for="newpass2" class="col-sm-2 '
-                       'control-label">Repeat New Password'
-                       '</label>'), response.body)
-
-        # not displaying due to maintenance
-        r_client.set('maintenance', 'This is my error message')
-        response = self.get('/auth/reset/')
-        self.assertEqual(response.code, 200)
-        self.assertNotIn(('<label for="newpass2" class="col-sm-2 '
-                          'control-label">Repeat New Password'
-                          '</label>'), response.body)
-        r_client.delete('maintenance')
 
     def test_post_profile(self):
         post_args = {

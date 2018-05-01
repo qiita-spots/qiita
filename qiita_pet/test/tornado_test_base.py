@@ -1,15 +1,25 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from mock import Mock
 try:
     from urllib import urlencode
 except ImportError:  # py3
     from urllib.parse import urlencode
 
-from tornado.testing import AsyncHTTPTestCase
+from tornado.testing import AsyncHTTPTestCase, bind_unused_port
 from tornado.escape import json_encode
+from tornado.websocket import websocket_connect
 from qiita_pet.webserver import Application
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.environment_manager import clean_test_environment
 from qiita_db.user import User
+from qiita_core.qiita_settings import r_client
 
 
 class TestHandlerBase(AsyncHTTPTestCase):
@@ -24,6 +34,7 @@ class TestHandlerBase(AsyncHTTPTestCase):
     @classmethod
     def tearDownClass(cls):
         clean_test_environment()
+        r_client.flushdb()
 
     # helpers from http://www.peterbe.com/plog/tricks-asynchttpclient-tornado
     def get(self, url, data=None, headers=None, doseq=True):
@@ -70,3 +81,16 @@ class TestHandlerBase(AsyncHTTPTestCase):
         self.http_client.fetch(self.get_url(url), self.stop, method=method,
                                body=data, headers=headers)
         return self.wait(timeout=15)
+
+
+# adapted from: https://gist.github.com/crodjer/1e9989ab30fdc32db926
+class TestHandlerWebSocketBase(TestHandlerBase):
+    def setUp(self):
+        super(TestHandlerWebSocketBase, self).setUp()
+        socket, self.port = bind_unused_port()
+        self.http_server.add_socket(socket)
+
+    def _mk_connection(self):
+        return websocket_connect(
+            'ws://localhost:{}/analysis/selected/socket/'.format(self.port)
+        )

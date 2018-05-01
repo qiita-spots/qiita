@@ -57,26 +57,33 @@ $(document).ready(function () {
   });
 });
 </script>
-<form action="{% raw qiita_config.portal_dir %}/prep_template/" method="POST" id="create-prep-form">
+<h3>Add a new preparation file: <small>(* Required fields)</small></h3>
 
-  <div class="row">
-    <div class="col-md-12">
-      <b>Select file: *</b>
-      <span id="prep-span">
-        <select name="prep-file" id="prep-file" required>
-          <option value="">Choose file...</option>
-          {% for file in prep_files %}
-            <option value="{{file}}">{{file}}</option>
-          {% end %}
-        </select>
-      </span>
+<form action="{% raw qiita_config.portal_dir %}/prep_template/" method="POST" id="create-prep-form">
+  <!-- New user defined -->
+  <div class="row form-group">
+    <label class="col-sm-2 col-form-label">Name:</label>
+    <div class="col-sm-3">
+      <input type="textbox" id="name" name="name" class="form-control">
     </div>
   </div>
-
-  <div class="row">
-    <div class="col-md-12">
-      <b>Select data type: *</b>
-      <select id="data-type-select" name="data-type" value="data-type" required>
+  <!-- File selection -->
+  <div class="row form-group">
+    <label class="col-sm-2 col-form-label">Select file: *</label>
+    <div class="col-sm-3">
+      <select name="prep-file" id="prep-file" class="form-control" required>
+        <option value="">Choose file...</option>
+        {% for file in prep_files %}
+          <option value="{{file}}">{{file}}</option>
+        {% end %}
+      </select>
+    </div>
+  </div>
+  <!-- Data type selection -->
+  <div class="row form-group">
+    <label class="col-sm-2 col-form-label">Select data type: *</label>
+    <div class="col-sm-3">
+      <select id="data-type-select" name="data-type" value="data-type" class="form-control" required>
         <option value="">Choose data type... </option>
         {% for t in data_types %}
           <option value="{{t}}">{{t}}</option>
@@ -84,20 +91,26 @@ $(document).ready(function () {
       </select>
     </div>
   </div>
-
-  <div class="row">
-    <div class="col-md-4">
-      <b>Select Investigation Type:</b>
-      <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
+  <!-- Investigation type selection -->
+  <div class="row form-group">
+    <label class="col-sm-2 col-form-label">Select Investigation Type:</label>
+    <div class="col-sm-3">
+      <select id="ena-ontology" name="ena-ontology" value="ena-ontology" class="form-control">
         <option value=""></option>
         {% for o in ontology['ENA'] %}
           <option value="{{o}}">{{o}}</option>
         {% end %}
       </select>
     </div>
-
-    <div class="col-md-4" id="user-ena-info"> User defined investigation type:
-      <select id="user-ontology" name="user-ontology" value="user-ontology">
+    <div class="col-sm-3">
+      Not sure what to select? <a href="" target="_blank">Check</a>
+    </div>
+  </div>
+  <!-- User defined investigation type selection -->
+  <div class="row form-group" id="user-ena-info">
+    <label class="col-sm-2 col-form-label">User defined investigation type:</label>
+    <div class="col-sm-3">
+      <select id="user-ontology" name="user-ontology" value="user-ontology" class="form-control">
         <option value=""></option>
         {% for o in ontology['User'] %}
           <option value="{{o}}">{{o}}</option>
@@ -105,16 +118,12 @@ $(document).ready(function () {
         <option value="New Type">New Type</option>
       </select>
     </div>
-
-    <div class="col-md-4" id="new-ena-info">New user defined term:
-      <input type="textbox" id="new-ontology" name="new-ontology">
-    </div>
-
   </div>
-
-  <div class="row">
-    <div class="col-md-12">
-      <i>* Required fields</i>
+  <!-- New user defined -->
+  <div class="row form-group" id="new-ena-info">
+    <label class="col-sm-2 col-form-label">New user defined term:</label>
+    <div class="col-sm-3">
+      <input type="textbox" id="new-ontology" name="new-ontology" class="form-control">
     </div>
   </div>
 

@@ -15,23 +15,26 @@ from .vamps_handlers import VAMPSHandler
 from .base import (StudyIndexHandler, StudyBaseInfoAJAX, StudyDeleteAjax,
                    DataTypesMenuAJAX, StudyFilesAJAX, StudyGetTags, StudyTags)
 from .prep_template import (
-    PrepTemplateGraphAJAX, PrepTemplateAJAX, PrepFilesHandler,
+    PrepTemplateAJAX, PrepFilesHandler,
     NewPrepTemplateAjax, PrepTemplateSummaryAJAX)
-from .processing import (ProcessArtifactHandler, ListCommandsHandler,
-                         ListOptionsHandler, WorkflowHandler,
-                         WorkflowRunHandler, JobAJAX)
+from .processing import (ListCommandsHandler, ListOptionsHandler,
+                         WorkflowHandler, WorkflowRunHandler, JobAJAX)
 from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
-                       ArtifactAdminAJAX, ArtifactAJAX, ArtifactSummaryAJAX)
-from .sample_template import SampleTemplateAJAX, SampleAJAX
+                       ArtifactAdminAJAX, ArtifactGetSamples, ArtifactGetInfo)
+from .sample_template import (
+    SampleTemplateHandler, SampleTemplateOverviewHandler,
+    SampleTemplateSummaryHandler, SampleAJAX)
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'StudyEditHandler', 'CreateStudyAJAX', 'EBISubmitHandler',
-           'VAMPSHandler', 'SearchStudiesAJAX', 'PrepTemplateGraphAJAX',
-           'ArtifactGraphAJAX', 'ArtifactAdminAJAX', 'StudyIndexHandler',
-           'StudyBaseInfoAJAX', 'SampleTemplateAJAX', 'PrepTemplateAJAX',
-           'NewArtifactHandler', 'PrepFilesHandler', 'ProcessArtifactHandler',
+           'VAMPSHandler', 'SearchStudiesAJAX', 'ArtifactGraphAJAX',
+           'ArtifactAdminAJAX', 'StudyIndexHandler', 'StudyBaseInfoAJAX',
+           'SampleTemplateHandler', 'SampleTemplateOverviewHandler',
+           'SampleTemplateSummaryHandler',
+           'PrepTemplateAJAX', 'NewArtifactHandler', 'PrepFilesHandler',
            'ListCommandsHandler', 'ListOptionsHandler', 'SampleAJAX',
-           'StudyDeleteAjax', 'ArtifactAJAX', 'NewPrepTemplateAjax',
+           'StudyDeleteAjax', 'NewPrepTemplateAjax',
            'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX',
-           'ArtifactSummaryAJAX', 'WorkflowHandler', 'WorkflowRunHandler',
-           'JobAJAX', 'AutocompleteHandler', 'StudyGetTags', 'StudyTags']
+           'WorkflowHandler', 'WorkflowRunHandler',
+           'JobAJAX', 'AutocompleteHandler', 'StudyGetTags', 'StudyTags',
+           'ArtifactGetSamples', 'ArtifactGetInfo']

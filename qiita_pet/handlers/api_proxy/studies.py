@@ -7,16 +7,24 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import defaultdict
+from json import dumps, loads
 
 from future.utils import viewitems
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import r_client
 from qiita_db.user import User
 from qiita_db.study import Study
 from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.processing_job import ProcessingJob
+from qiita_db.software import Software, Parameters
 from qiita_db.util import (supported_filepath_types,
                            get_files_from_uploads_folders)
 from qiita_pet.handlers.api_proxy.util import check_access
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
+
+
+STUDY_KEY_FORMAT = 'study_%s'
 
 
 def data_types_get_req():
@@ -35,8 +43,7 @@ def data_types_get_req():
     """
     return {'status': 'success',
             'message': '',
-            'data_types': Study.all_data_types()
-            }
+            'data_types': Study.all_data_types()}
 
 
 def study_get_req(study_id, user_id):
@@ -100,6 +107,37 @@ def study_get_req(study_id, user_id):
     samples = study.sample_template
     study_info['num_samples'] = 0 if samples is None else len(list(samples))
     study_info['owner'] = study.owner.id
+    # Study.has_access no_public=True, will return True only if the user_id is
+    # the owner of the study or if the study is shared with the user_id
+    study_info['has_access_to_raw_data'] = study.has_access(
+        User(user_id), True)
+
+    study_info['show_biom_download_button'] = 'BIOM' in [
+        a.artifact_type for a in study.artifacts()]
+    study_info['show_raw_download_button'] = any([
+        True for pt in study.prep_templates() if pt.artifact is not None])
+
+    # getting study processing status from redis
+    processing = False
+    study_info['level'] = ''
+    study_info['message'] = ''
+    job_info = r_client.get(STUDY_KEY_FORMAT % study_id)
+    if job_info:
+        job_info = defaultdict(lambda: '', loads(job_info))
+        job_id = job_info['job_id']
+        job = ProcessingJob(job_id)
+        job_status = job.status
+        processing = job_status not in ('success', 'error')
+        if processing:
+            study_info['level'] = 'info'
+            study_info['message'] = 'This study is currently being processed'
+        elif job_status == 'error':
+            study_info['level'] = 'danger'
+            study_info['message'] = job.log.msg.replace('\n', '</br>')
+        else:
+            study_info['level'] = job_info['alert_type']
+            study_info['message'] = job_info['alert_msg'].replace(
+                '\n', '</br>')
 
     return {'status': 'success',
             'message': '',
@@ -107,6 +145,7 @@ def study_get_req(study_id, user_id):
             'editable': study.can_edit(User(user_id))}
 
 
+@execute_as_transaction
 def study_delete_req(study_id, user_id):
     """Delete a given study
 
@@ -128,17 +167,17 @@ def study_delete_req(study_id, user_id):
     if access_error:
         return access_error
 
-    status = 'success'
-    try:
-        Study.delete(int(study_id))
-        msg = ''
-    except Exception as e:
-        status = 'error'
-        msg = 'Unable to delete study: %s' % str(e)
-    return {
-        'status': status,
-        'message': msg
-    }
+    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+    cmd = qiita_plugin.get_command('delete_study')
+    params = Parameters.load(cmd, values_dict={'study': study_id})
+    job = ProcessingJob.create(User(user_id), params, True)
+    # Store the job id attaching it to the sample template id
+    r_client.set(STUDY_KEY_FORMAT % study_id,
+                 dumps({'job_id': job.id}))
+
+    job.submit()
+
+    return {'status': 'success', 'message': ''}
 
 
 def study_prep_get_req(study_id, user_id):
@@ -170,7 +209,7 @@ def study_prep_get_req(study_id, user_id):
                 continue
             start_artifact = prep.artifact
             info = {
-                'name': 'PREP %d NAME' % prep.id,
+                'name': prep.name,
                 'id': prep.id,
                 'status': prep.status,
             }
@@ -233,15 +272,15 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     supp_file_types = supported_filepath_types(artifact_type)
     selected = []
     remaining = []
+    message = []
 
-    uploaded = get_files_from_uploads_folders(study_id)
     pt = PrepTemplate(prep_template_id)
-
     if pt.study_id != study_id:
         raise IncompetentQiitaDeveloperError(
             "The requested prep id (%d) doesn't belong to the study "
             "(%d)" % (pt.study_id, study_id))
 
+    uploaded = get_files_from_uploads_folders(study_id)
     pt = pt.to_dataframe()
     ftypes_if = (ft.startswith('raw_') for ft, _ in supp_file_types
                  if ft != 'raw_sff')
@@ -252,10 +291,16 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
         # 10003
         prep_prefixes = sorted(prep_prefixes, key=len, reverse=True)
         # group files by prefix
-        sfiles = {p: [f for _, f in uploaded if f.startswith(p)]
-                  for p in prep_prefixes}
+        sfiles = defaultdict(list)
+        for p in prep_prefixes:
+            to_remove = []
+            for fid, f, _ in uploaded:
+                if f.startswith(p):
+                    sfiles[p].append(f)
+                    to_remove.append((fid, f))
+            uploaded = [x for x in uploaded if x not in to_remove]
         inuse = [y for x in sfiles.values() for y in x]
-        remaining.extend([f for _, f in uploaded if f not in inuse])
+        remaining.extend([f for _, f, _ in uploaded if f not in inuse])
         supp_file_types_len = len(supp_file_types)
 
         for k, v in viewitems(sfiles):
@@ -265,12 +310,13 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
             # the selected group
             if len_files > supp_file_types_len:
                 remaining.extend(v)
+                message.append("'%s' has %d matches." % (k, len_files))
             else:
                 v.sort()
                 selected.append(v)
     else:
         num_prefixes = 0
-        remaining = [f for _, f in uploaded]
+        remaining = [f for _, f, _ in uploaded]
 
     # get file_types, format: filetype, required, list of files
     file_types = [(t, req, [x[i] for x in selected if i+1 <= len(x)])
@@ -290,8 +336,11 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
             artifact_options.append(
                 (a.id, "%s - %s (%d)" % (study_label, a.name, a.id)))
 
+    message = ('' if not message
+               else '\n'.join(['Check these run_prefix:'] + message))
+
     return {'status': 'success',
-            'message': '',
+            'message': message,
             'remaining': sorted(remaining),
             'file_types': file_types,
             'num_prefixes': num_prefixes,

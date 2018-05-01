@@ -15,10 +15,6 @@ Classes
    :toctree: generated/
 
    User
-
-Examples
---------
-TODO
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -356,9 +352,8 @@ class User(qdb.base.QiitaObject):
                     qdb.sql_connection.TRN.add(sql)
 
                     an_sql = """INSERT INTO qiita.analysis
-                                    (email, name, description, dflt,
-                                     analysis_status_id)
-                                VALUES (%s, %s, %s, %s, 1)
+                                    (email, name, description, dflt)
+                                VALUES (%s, %s, %s, %s)
                                 RETURNING analysis_id"""
                     ap_sql = """INSERT INTO qiita.analysis_portal
                                     (analysis_id, portal_type_id)
@@ -727,13 +722,17 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql)
             qdb.sql_connection.TRN.execute()
 
-    def jobs(self, ignore_status=['success']):
+    def jobs(self, limit=30, ignore_status=['success'], show_hidden=False):
         """Return jobs created by the user
 
         Parameters
         ----------
-        ignore_status, list of str
+        limit : int, optional
+            max number of rows to return
+        ignore_status: list of str, optional
             don't retieve jobs that have one of these status
+        show_hidden: bool, optional
+            If true, return all jobs, including the hidden ones
 
         Returns
         -------
@@ -749,10 +748,13 @@ class User(qdb.base.QiitaObject):
                   """
 
             if ignore_status:
-                sql_info = [self._id, tuple(ignore_status)]
+                sql_info = [self._id, tuple(ignore_status), limit]
                 sql += "    AND processing_job_status NOT IN %s"
             else:
-                sql_info = [self._id]
+                sql_info = [self._id, limit]
+
+            if not show_hidden:
+                sql += ' AND hidden = false'
 
             sql += """
                      ORDER BY CASE processing_job_status
@@ -762,7 +764,7 @@ class User(qdb.base.QiitaObject):
                             WHEN 'waiting' THEN 4
                             WHEN 'error' THEN 5
                             WHEN 'success' THEN 6
-                        END, heartbeat DESC"""
+                        END, heartbeat DESC LIMIT %s"""
 
             qdb.sql_connection.TRN.add(sql, sql_info)
             return [qdb.processing_job.ProcessingJob(p[0])

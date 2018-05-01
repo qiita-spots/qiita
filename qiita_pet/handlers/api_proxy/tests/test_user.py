@@ -33,21 +33,7 @@ class TestSUserAPI(TestCase):
         exp = {
             'status': 'success',
             'message': '',
-            'jobs': [
-                {'id': 'd19f76ee-274e-4c1b-b3a2-a12d73507c55',
-                 'status': 'error',
-                 'heartbeat': '2015-11-22 21:30:00',
-                 'params': {
-                    'reference': 1,
-                    'similarity': 0.97,
-                    'sortmerna_e_value': 1,
-                    'sortmerna_max_pos': 10000,
-                    'input_data': 2,
-                    'threads': 1,
-                    'sortmerna_coverage': 0.97},
-                 'name': 'Pick closed-reference OTUs',
-                 'step': 'generating demux file',
-                 'processing_job_workflow_id': ''}]}
+            'jobs': []}
         self.assertEqual(obs, exp)
 
 

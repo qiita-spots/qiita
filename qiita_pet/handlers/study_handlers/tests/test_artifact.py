@@ -123,21 +123,69 @@ class NewArtifactHandlerTests(TestHandlerBase):
             'import-artifact': ''}
         response = self.post('/study/new_artifact/', args)
         self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body),
+                         {'status': 'success', 'message': ''})
 
         # make sure new artifact created
         wait_for_prep_information_job(self.prep.id)
 
 
-class ArtifactAJAXTests(TestHandlerBase):
-
-    def test_delete_artifact(self):
-        response = self.post('/artifact/',
-                             {'artifact_id': 2})
+class ArtifactGetSamplesTest(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/artifact/samples/', {'ids[]': [4, 5]})
         self.assertEqual(response.code, 200)
-        # This is needed so the clean up works - this is a distributed system
-        # so we need to make sure that all processes are done before we reset
-        # the test database
-        wait_for_prep_information_job(1)
+        exp = (
+            {"status": "success", "msg": "",
+             "data":
+                {"4": ["1.SKB2.640194", "1.SKM4.640180", "1.SKB3.640195",
+                       "1.SKB6.640176", "1.SKD6.640190", "1.SKM6.640187",
+                       "1.SKD9.640182", "1.SKM8.640201", "1.SKM2.640199",
+                       "1.SKD2.640178", "1.SKB7.640196", "1.SKD4.640185",
+                       "1.SKB8.640193", "1.SKM3.640197", "1.SKD5.640186",
+                       "1.SKB1.640202", "1.SKM1.640183", "1.SKD1.640179",
+                       "1.SKD3.640198", "1.SKB5.640181", "1.SKB4.640189",
+                       "1.SKB9.640200", "1.SKM9.640192", "1.SKD8.640184",
+                       "1.SKM5.640177", "1.SKM7.640188", "1.SKD7.640191"],
+                 "5": ["1.SKB2.640194", "1.SKM4.640180", "1.SKB3.640195",
+                       "1.SKB6.640176", "1.SKD6.640190", "1.SKM6.640187",
+                       "1.SKD9.640182", "1.SKM8.640201", "1.SKM2.640199",
+                       "1.SKD2.640178", "1.SKB7.640196", "1.SKD4.640185",
+                       "1.SKB8.640193", "1.SKM3.640197", "1.SKD5.640186",
+                       "1.SKB1.640202", "1.SKM1.640183", "1.SKD1.640179",
+                       "1.SKD3.640198", "1.SKB5.640181", "1.SKB4.640189",
+                       "1.SKB9.640200", "1.SKM9.640192", "1.SKD8.640184",
+                       "1.SKM5.640177", "1.SKM7.640188", "1.SKD7.640191"]}})
+        self.assertEqual(loads(response.body), exp)
+
+
+class ArtifactGetInfoTest(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/artifact/info/', {'ids[]': [6, 7]})
+        self.assertEqual(response.code, 200)
+        data = [
+            {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
+             'target_subfragment': ['V4'], 'artifact_id': 6,
+             'data_type': '16S', 'timestamp': u'2012-10-02 17:30:00',
+             'platform': 'Illumina',
+             'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
+             'prep_samples': 27,
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'parameters': {
+                 'reference': u'2', 'similarity': '0.97',
+                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+                 'threads': '1', 'sortmerna_coverage': '0.97'},
+             'target_gene': '16S rRNA', 'name': 'BIOM'},
+            {'files': [], 'target_subfragment': ['V4'], 'artifact_id': 7,
+             'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
+             'platform': 'Illumina', 'algorithm_az': '', 'prep_samples': 27,
+             'algorithm': '', 'parameters': {}, 'target_gene': '16S rRNA',
+             'name': 'BIOM'}]
+        exp = {'status': 'success', 'msg': '', 'data': data}
+        obs = loads(response.body)
+        self.assertItemsEqual(obs.keys(), exp.keys())
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['msg'], exp['msg'])
+        self.assertItemsEqual(obs['data'], exp['data'])
 
 
 class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):

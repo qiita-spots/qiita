@@ -13,8 +13,10 @@ from collections import defaultdict
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 from pyparsing import ParseException
-from moi import r_client
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.study import Study
@@ -22,9 +24,6 @@ from qiita_db.search import QiitaStudySearch
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import (add_message, generate_study_list)
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.util import execute_as_transaction
-from qiita_core.qiita_settings import qiita_config
 from qiita_pet.util import EBI_LINKIFIER
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import (
@@ -59,7 +58,6 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
     -----
     Both study_proc and proc_samples must be passed, or neither passed.
     """
-    build_samples = False
     # Logic check to make sure both needed parts passed
     if study_proc is not None and proc_samples is None:
         raise IncompetentQiitaDeveloperError(
@@ -67,19 +65,19 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
     elif proc_samples is not None and study_proc is None:
         raise IncompetentQiitaDeveloperError(
             'Must pass study_proc when proc_samples given')
-    elif study_proc is None:
-        build_samples = True
 
     # get list of studies for table
+    user_study_set = user.user_studies.union(user.shared_studies)
     if search_type == 'user':
-        user_study_set = user.user_studies.union(user.shared_studies)
         if user.level == 'admin':
             user_study_set = (user_study_set |
                               Study.get_by_status('sandbox') |
-                              Study.get_by_status('private'))
-        study_set = user_study_set - Study.get_by_status('public')
+                              Study.get_by_status('private') |
+                              Study.get_by_status('awaiting_approval') -
+                              Study.get_by_status('public'))
+        study_set = user_study_set
     elif search_type == 'public':
-        study_set = Study.get_by_status('public')
+        study_set = Study.get_by_status('public') - user_study_set
     else:
         raise ValueError('Not a valid search type')
     if study_proc is not None:
@@ -88,7 +86,7 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
         # No studies left so no need to continue
         return []
 
-    return generate_study_list([s.id for s in study_set], build_samples,
+    return generate_study_list([s.id for s in study_set],
                                public_only=(search_type == 'public'))
 
 
@@ -109,7 +107,8 @@ class StudyApprovalList(BaseHandler):
     def get(self):
         user = self.current_user
         if user.level != 'admin':
-            raise HTTPError(403, 'User %s is not admin' % self.current_user)
+            raise HTTPError(403,
+                            reason='User %s is not admin' % self.current_user)
 
         studies = defaultdict(list)
         for artifact in Artifact.iter_by_visibility('awaiting_approval'):
@@ -184,9 +183,9 @@ class SearchStudiesAJAX(BaseHandler):
         echo = int(self.get_argument('sEcho'))
 
         if user != self.current_user.id:
-            raise HTTPError(403, 'Unauthorized search!')
+            raise HTTPError(403, reason='Unauthorized search!')
         if search_type not in ['user', 'public']:
-            raise HTTPError(400, 'Not a valid search type')
+            raise HTTPError(400, reason='Not a valid search type')
         if query:
             # Search for samples matching the query
             search = QiitaStudySearch()

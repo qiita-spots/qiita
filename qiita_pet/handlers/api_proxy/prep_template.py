@@ -10,15 +10,14 @@ import warnings
 from os import remove
 from os.path import basename
 from json import loads, dumps
+from collections import defaultdict
 
 from natsort import natsorted
-from moi import r_client
 
 from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
-from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import (
-    update_prep_template, delete_sample_or_column)
+from qiita_pet.util import get_network_nodes_edges
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
@@ -26,6 +25,7 @@ from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.processing_job import ProcessingJob
+from qiita_db.software import Software, Parameters
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
@@ -63,7 +63,7 @@ def new_prep_template_get_req(study_id):
         The list of available data types
         The investigation type ontology information
     """
-    prep_files = [f for _, f in get_files_from_uploads_folders(study_id)
+    prep_files = [f for _, f, _ in get_files_from_uploads_folders(study_id)
                   if f.endswith(('.txt', '.tsv'))]
     data_types = sorted(Study.all_data_types())
 
@@ -105,56 +105,33 @@ def prep_template_ajax_get_req(user_id, prep_id):
         attached
         - study_id: int, the study id of the template
     """
-    # Currently there is no name attribute, but it will be soon
-    name = "Prep information %d" % prep_id
     pt = PrepTemplate(prep_id)
+    name = pt.name
 
+    # Initialize variables here
+    processing = False
+    alert_type = ''
+    alert_msg = ''
     job_info = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
     if job_info:
-        job_info = loads(job_info)
+        job_info = defaultdict(lambda: '', loads(job_info))
         job_id = job_info['job_id']
-        if job_id:
-            if job_info['is_qiita_job']:
-                job = ProcessingJob(job_id)
-                processing = job.status in ('queued', 'running')
-                success = job.status == 'success'
-                alert_type = 'info' if processing or success else 'danger'
-                alert_msg = (job.log.msg.replace('\n', '</br>')
-                             if job.log is not None else "")
-            else:
-                redis_info = loads(r_client.get(job_id))
-                processing = redis_info['status_msg'] == 'Running'
-                success = redis_info['status_msg'] == 'Success'
-                if redis_info['return'] is not None:
-                    alert_type = redis_info['return']['status']
-                    alert_msg = redis_info['return']['message'].replace(
-                        '\n', '</br>')
-                else:
-                    alert_type = 'info'
-                    alert_msg = ''
-
-            if processing:
-                alert_type = 'info'
-                alert_msg = 'This prep template is currently being updated'
-            elif success:
-                payload = {'job_id': None,
-                           'status': alert_type,
-                           'message': alert_msg,
-                           'is_qiita_job': job_info['is_qiita_job']}
-                r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
-                             dumps(payload))
+        job = ProcessingJob(job_id)
+        job_status = job.status
+        processing = job_status not in ('success', 'error')
+        if processing:
+            alert_type = 'info'
+            alert_msg = 'This prep template is currently being updated'
+        elif job_status == 'error':
+            alert_type = 'danger'
+            alert_msg = job.log.msg.replace('\n', '</br>')
         else:
-            processing = False
-            alert_type = job_info['status']
-            alert_msg = job_info['message'].replace('\n', '</br>')
-    else:
-        processing = False
-        alert_type = ''
-        alert_msg = ''
+            alert_type = job_info['alert_type']
+            alert_msg = job_info['alert_msg'].replace('\n', '</br>')
 
     artifact_attached = pt.artifact is not None
     study_id = pt.study_id
-    files = [f for _, f in get_files_from_uploads_folders(study_id)
+    files = [f for _, f, _ in get_files_from_uploads_folders(study_id)
              if f.endswith(('.txt', '.tsv'))]
 
     # The call to list is needed because keys is an iterator
@@ -162,17 +139,19 @@ def prep_template_ajax_get_req(user_id, prep_id):
     num_columns = len(pt.categories())
     investigation_type = pt.investigation_type
 
-    # Retrieve the information to download the prep template and QIIME
-    # mapping file. See issue https://github.com/biocore/qiita/issues/1675
-    download_prep = []
-    download_qiime = []
+    download_prep_id = None
+    download_qiime_id = None
+    other_filepaths = []
     for fp_id, fp in pt.get_filepaths():
-        if 'qiime' in basename(fp):
-            download_qiime.append(fp_id)
+        fp = basename(fp)
+        if 'qiime' in fp:
+            if download_qiime_id is None:
+                download_qiime_id = fp_id
         else:
-            download_prep.append(fp_id)
-    download_prep = download_prep[0]
-    download_qiime = download_qiime[0]
+            if download_prep_id is None:
+                download_prep_id = fp_id
+            else:
+                other_filepaths.append(fp)
 
     ontology = _get_ENA_ontology()
 
@@ -182,8 +161,9 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'message': '',
             'name': name,
             'files': files,
-            'download_prep': download_prep,
-            'download_qiime': download_qiime,
+            'download_prep_id': download_prep_id,
+            'download_qiime_id': download_qiime_id,
+            'other_filepaths': other_filepaths,
             'num_samples': num_samples,
             'num_columns': num_columns,
             'investigation_type': investigation_type,
@@ -332,7 +312,7 @@ def prep_template_summary_get_req(prep_id, user_id):
 def prep_template_post_req(study_id, user_id, prep_template, data_type,
                            investigation_type=None,
                            user_defined_investigation_type=None,
-                           new_investigation_type=None):
+                           new_investigation_type=None, name=None):
     """Adds a prep template to the system
 
     Parameters
@@ -351,6 +331,8 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
         Existing user added investigation type to attach to the prep template
     new_investigation_type: str, optional
         Investigation type to add to the system
+    name : str, optional
+        The name of the new prep template
 
     Returns
     -------
@@ -377,12 +359,14 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     msg = ''
     status = 'success'
     prep = None
+    if name:
+        name = name if name.strip() else None
     try:
         with warnings.catch_warnings(record=True) as warns:
             # deleting previous uploads and inserting new one
             prep = PrepTemplate.create(
                 load_template_to_dataframe(fp_rpt), Study(study_id), data_type,
-                investigation_type=investigation_type)
+                investigation_type=investigation_type, name=name)
             remove(fp_rpt)
 
             # join all the warning messages into one. Note that this info
@@ -453,9 +437,17 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             if fp['status'] != 'success':
                 return fp
             fp = fp['file']
-            job_id = safe_submit(user_id, update_prep_template, prep_id, fp)
+            qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+            cmd = qiita_plugin.get_command('update_prep_template')
+            params = Parameters.load(
+                cmd, values_dict={'prep_template': prep_id, 'template_fp': fp})
+            job = ProcessingJob.create(User(user_id), params, True)
+
             r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
-                         dumps({'job_id': job_id, 'is_qiita_job': False}))
+                         dumps({'job_id': job.id}))
+            job.submit()
+        elif attribute == 'name':
+            prep.name = req_value.strip()
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',
@@ -480,12 +472,18 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         if access_error:
             return access_error
 
-        # Offload the deletion of the column to the cluster
-        job_id = safe_submit(user_id, delete_sample_or_column, PrepTemplate,
-                             prep_id, attribute, attr_id)
+        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+        cmd = qiita_plugin.get_command('delete_sample_or_column')
+        params = Parameters.load(
+            cmd, values_dict={'obj_class': 'PrepTemplate',
+                              'obj_id': prep_id,
+                              'sample_or_col': attribute,
+                              'name': attr_id})
+        job = ProcessingJob.create(User(user_id), params, True)
         # Store the job id attaching it to the sample template id
         r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
-                     dumps({'job_id': job_id, 'is_qiita_job': False}))
+                     dumps({'job_id': job.id}))
+        job.submit()
         return {'status': 'success', 'message': '', 'row_id': row_id}
     else:
         return {'status': 'error',
@@ -556,7 +554,7 @@ def prep_template_delete_req(prep_id, user_id):
     try:
         PrepTemplate.delete(prep.id)
     except Exception as e:
-        msg = ("Couldn't remove prep template: %s" % str(e))
+        msg = str(e)
         status = 'error'
 
     return {'status': status,
@@ -632,32 +630,53 @@ def prep_template_graph_get_req(prep_id, user_id):
     # doesn't have full access to the study
     full_access = Study(prep.study_id).can_edit(User(user_id))
 
-    G = prep.artifact.descendants_with_jobs
+    artifact = prep.artifact
 
-    # n[0] is the data type: job/artifact
-    # n[1] is the object
-    node_labels = []
-    for n in G.nodes():
-        if n[0] == 'job':
-            name = n[1].command.name
-        elif n[0] == 'artifact':
-            if full_access or n[1].visibility == 'public':
-                name = '%s - %s' % (n[1].name, n[1].artifact_type)
-            else:
-                continue
-        node_labels.append((n[0], n[1].id, name))
+    if artifact is None:
+        return {'edges': [], 'nodes': [],
+                'status': 'success', 'message': ''}
 
-    return {'edge_list': [(n[1].id, m[1].id) for n, m in G.edges()],
-            'node_labels': node_labels,
+    G = artifact.descendants_with_jobs
+
+    nodes, edges, wf_id = get_network_nodes_edges(G, full_access)
+
+    return {'edges': edges,
+            'nodes': nodes,
+            'workflow': wf_id,
             'status': 'success',
             'message': ''}
 
-    G = prep.artifact.descendants
-    node_ids = [id_ for id_, label in node_labels]
-    edge_list = [(n.id, m.id) for n, m in G.edges()
-                 if n.id in node_ids and m.id in node_ids]
 
-    return {'status': 'success',
-            'message': '',
-            'edge_list': edge_list,
-            'node_labels': node_labels}
+def prep_template_jobs_get_req(prep_id, user_id):
+    """Returns graph of all artifacts created from the prep base artifact
+
+    Parameters
+    ----------
+    prep_id : int
+        Prep template ID to get graph for
+    user_id : str
+        User making the request
+
+    Returns
+    -------
+    dict with the jobs information
+
+    Notes
+    -----
+    Nodes are identified by the corresponding Artifact ID.
+    """
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
+
+    job_info = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
+    result = {}
+    if job_info:
+        job_info = defaultdict(lambda: '', loads(job_info))
+        job_id = job_info['job_id']
+        job = ProcessingJob(job_id)
+        result[job.id] = {'status': job.status, 'step': job.step,
+                          'error': job.log.msg if job.log else ""}
+
+    return result

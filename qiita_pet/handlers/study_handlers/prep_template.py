@@ -17,8 +17,8 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import (get_files_from_uploads_folders, get_mountpoint,
                            supported_filepath_types)
 from qiita_pet.handlers.api_proxy import (
-    prep_template_ajax_get_req, prep_template_graph_get_req,
-    new_prep_template_get_req, prep_template_summary_get_req)
+    prep_template_ajax_get_req, new_prep_template_get_req,
+    prep_template_summary_get_req)
 
 
 class NewPrepTemplateAjax(BaseHandler):
@@ -33,13 +33,6 @@ class NewPrepTemplateAjax(BaseHandler):
                     study_id=study_id)
 
 
-class PrepTemplateGraphAJAX(BaseHandler):
-    @authenticated
-    def get(self):
-        prep = to_int(self.get_argument('prep_id'))
-        self.write(prep_template_graph_get_req(prep, self.current_user.id))
-
-
 class PrepTemplateSummaryAJAX(BaseHandler):
     @authenticated
     def get(self):
@@ -48,7 +41,8 @@ class PrepTemplateSummaryAJAX(BaseHandler):
         res = prep_template_summary_get_req(prep_id, self.current_user.id)
 
         self.render('study_ajax/prep_summary_table.html', pid=prep_id,
-                    stats=res['summary'], editable=res['editable'])
+                    stats=res['summary'], editable=res['editable'],
+                    num_samples=res['num_samples'])
 
 
 class PrepTemplateAJAX(BaseHandler):
@@ -96,7 +90,7 @@ class PrepFilesHandler(BaseHandler):
                         not_selected.append(filename)
         else:
             per_prefix = False
-            not_selected = [f for _, f in uploaded]
+            not_selected = [f for _, f, _ in uploaded]
 
         # Write out if this prep template supports per-prefix files, and the
         # as well as pre-selected and remaining files

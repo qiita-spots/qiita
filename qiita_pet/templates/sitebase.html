@@ -1,23 +1,18 @@
-{% from moi import r_client %}
-{% from qiita_core.qiita_settings import qiita_config %}
-{% from qiita_core.util import get_qiita_version %}
+{% from qiita_core.qiita_settings import qiita_config, r_client %}
+{% from qiita_core.util import get_qiita_version, get_release_info %}
 {% from qiita_pet import allowed_min_browser_versions %}
 {% from qiita_pet.portal import portal_styling %}
-{% set maintenance = r_client.get('maintenance') %}
 {% set sysmessage = r_client.get('sysmessage') %}
 {% set user = current_user %}
 {% set qiita_version, qiita_sha = get_qiita_version() %}
+{% set public_md5, _, public_timestamp = get_release_info() %}
 
 {% set level = globals().get('level', '') %}
 {% if level not in {'danger', 'success', 'info', 'warning'} %}
     {% set level = 'info' %}
 {% end %}
 {% set message = globals().get('message', '') %}
-{% if maintenance is not None %}
-  {# maintenance mode takes precedence #}
-  {% set level = 'danger' %}
-  {% set message = maintenance %}
-{% elif sysmessage is not None %}
+{% if sysmessage is not None %}
   {# since this is a systemwide message, allow regular messages as well #}
   {% set message = sysmessage + "<br />" + str(message) %}
 {% end %}
@@ -31,9 +26,12 @@
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery-ui.theme.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap-theme.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap-toggle.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/chosen.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/css/style.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/vis-network.min.css" type="text/css">
     {% if portal_styling.custom_css %}
     <style type="text/css">
       {% raw portal_styling.custom_css %}
@@ -42,14 +40,58 @@
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery-2.1.0.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery-ui.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/bootstrap.min.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/bootstrap-toggle.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/chosen.jquery.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.min.js" type="text/javascript"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.plugin.natural.js" type="text/javascript"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/vue.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/js/qiita.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.min.js"></script>
+    <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/networkVue.js"></script>
+    <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sampleTemplateVue.js"></script>
 
     <link rel="shortcut icon" href="{% raw qiita_config.portal_dir %}/static/img/favicon.ico">
 
     <script>
+      $(window).resize(function () {
+        $('body').css('padding-top', $('#navigation-bar').height()+10);
+      });
+
+      $(window).load(function () {
+        $('body').css('padding-top', $('#navigation-bar').height()+10);
+      });
+
+      function updateSelectedSamplesMenu (callback) {
+        $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
+          $("#dflt-study-count").text(result.studies);
+          $("#dflt-pd-count").text(result.processed_data);
+          $("#dflt-samp-count").text(result.samples);
+
+          if (callback !== undefined) {
+            callback();
+          }
+        });
+      }
+
+
+      /**
+       *
+       * Function to show the loading gif in a given div
+       *
+       * @param div_name string with the name of the div to populate with the loading gif
+       *
+       * This function replaces the content of the given div with the
+       * gif to show that the section of page is loading
+       *
+       */
+      function show_loading(div_name, show_text = false) {
+        var text = "<img src='{% raw qiita_config.portal_dir %}/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>";
+        if (show_text) {
+          text += '<br/><center><b>This task might take a long time (up to 5 minutes), please do not close this page.</center></b>';
+        }
+        $("#" + div_name).html(text);
+      }
+
       function overlay_check() {
         // from http://stackoverflow.com/q/5916900/379593
         var ua=navigator.userAgent,tem,M=ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
@@ -93,91 +135,6 @@
         }
       }
 
-      /*
-       * Remove a job from the workflow
-       *
-       * @param job_id str The id of the job to be removed
-       *
-       * This function executes an AJAX call to remove the given job from the
-       * current workflow and updates the graph accordingly
-       *
-       */
-      function remove_job(job_id, workflow_id = undefined) {
-        var update_graph = false;
-        if (workflow_id === undefined) {
-          workflow_id = $("#graph-network-div").attr("data-wf-id");
-          update_graph = true;
-        }
-        if(confirm("Are you sure you want to delete the job " + job_id + "? All jobs depending on this job will also be removed.")) {
-          $.ajax({
-            url: '{% raw qiita_config.portal_dir %}/study/process/workflow/',
-            type: 'PATCH',
-            data: {'op': 'remove', 'path': '/' + workflow_id + '/' + job_id},
-            success: function(data) {
-              if(data.status == 'error') {
-                bootstrapAlert(data.message, "danger");
-              }
-              else {
-                if (update_graph) {
-                  remove_job_node_from_graph(job_id);
-                  var job_count = nodes.get({filter: function(item) {
-                    return item.group == "job";
-                  }}).length;
-                  $("#graph-network-div").attr("data-wf-job-count", job_count);
-                  if (job_count == 0) {
-                    $('#run-btn').prop('disabled', true);
-                  }
-                  $("#processing-info-div").empty();
-                } else {
-                  processing_jobs_vue.update_processing_job_data();
-                  bootstrapAlert("Job deleted", "success", 10000);
-                }
-              }
-            }
-          });
-        }
-      }
-
-      /*
-       * Remove a job node from the network visualization
-       *
-       * @param job_id str The id of the job
-       *
-       * This function removes the given job and its children from the
-       * network visualization
-       *
-       */
-      function remove_job_node_from_graph(job_id) {
-        var queue = [job_id];
-        var edge_list = edges.get();
-        var current;
-        var edge;
-        while(queue.length !== 0) {
-          current = queue.pop();
-          for(var i in edge_list) {
-            edge = edge_list[i];
-            if(edge.from == current) {
-              if($.inArray(edge.to, queue) == -1) {
-                queue.push(edge.to);
-              }
-              edges.remove(edge.id);
-            }
-          }
-          nodes.remove(current);
-        }
-        var edges_to_remove = edges.get(
-          {filter: function(item) {
-            return item.to == job_id;
-          }});
-        var edge_ids = [];
-        $(edges_to_remove).each(function(i){
-          edge_ids.push(edges_to_remove[i].id);
-        });
-
-        edges.remove(edge_ids);
-        processing_network.redraw();
-      }
-
       $(document).ready(function() {
         $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
             if(parseInt(result.studies) > 0) {
@@ -186,11 +143,7 @@
         });
         // Load default analysis summary data when displayed in menu
         $("#dflt-sel-info").mouseover(function() {
-          $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
-            $("#dflt-study-count").text(result.studies);
-            $("#dflt-pd-count").text(result.processed_data);
-            $("#dflt-samp-count").text(result.samples);
-          });
+          updateSelectedSamplesMenu();
         });
 
         $("#analysis-drop-down").mouseover(function() {
@@ -204,6 +157,12 @@
               $("#selected_samples_link").attr('href', '#');
             }
           });
+        });
+
+        $('#qiita_download_accept').click(function(e){
+          e.preventDefault();
+          $('.qiita_pet_download_confirm').modal('hide');
+          window.location.href = '{% raw qiita_config.portal_dir %}/release/download/public';
         });
 
         // Based on http://codepen.io/willvincent/pen/LbeKKW
@@ -342,23 +301,25 @@
         mounted() {
           let vm = this;
           setInterval(function (){
-            // the div is hidden
-            if ($("#qiita-main").width() != $("#qiita-main").parent().width()) {
+            // if modal is shown, https://stackoverflow.com/a/3282893
+            if (($('#qiita-processing').data('bs.modal') || {}).isShown){
               vm.update_processing_job_data();
             }
           }, 30000);
         }
       });
+
+      $('#qiita-processing').on('shown.bs.modal', processing_jobs_vue.update_processing_job_data);
     });
 
     </script>
     {% block head %}{% end %}
   </head>
 
-  <body style="padding-top: 0px; height: 100%" onload='overlay_check();'>
+  <body style="padding-top: 70px; height: 100%" onload='overlay_check();'>
 
     <div id="qiita-main" class="qiita-main">
-      <div id="navigation-bar" class="navbar navbar-inverse navbar-static-top navbar-custom" role="navigation">
+      <div id="navigation-bar" class="navbar navbar-default navbar-inverse navbar-fixed-top">
         <div class="container-fluid">
           <div class="navbar-header">
             <!-- button that appears if the window is re-sized to a smaller size -->
@@ -385,7 +346,7 @@
                 <ul class="dropdown-menu">
                   <li><a href="{% raw qiita_config.portal_dir %}/study/list/">Create new analysis</a>
                   <li id="selected_samples_menu"><a id="selected_samples_link" href="{% raw qiita_config.portal_dir %}/analysis/selected/">Create From Selected Samples</a></li>
-                  <li><a href="{% raw qiita_config.portal_dir %}/analysis/show/">See Previous Analyses</a></li>
+                  <li><a href="{% raw qiita_config.portal_dir %}/analysis/list/">See Previous Analyses</a></li>
                 </ul>
               </li>
               <li class="dropdown">
@@ -433,6 +394,8 @@
                 {% set unread =  len(current_user.unread_messages) %}
                 <a href="{% raw qiita_config.portal_dir %}/user/messages/"><span class="glyphicon glyphicon-envelope"></span> {% if unread > 0 %}<span style="color:red">({{unread}})</span>{% end %}</a>
                 <ul class="dropdown-menu info-menu" style="padding: 5px">
+                  <li class="dropdown-header"><b>INBOX</b></li>
+                  <li role="separator" class="divider"></li>
                 {% if user_messages %}
                   {% for _, um, ts, read, _ in user_messages %}
                     <li class="truncated" {% if read %}style="color:gray;"{% end %}>{%raw um %}<br /><span style="font-size:60%;{% if read %}color:gray;{% end %}">{{ts}}</span></li>
@@ -444,18 +407,23 @@
               </li>
               <li class="dropdown">
                 <a href="{% raw qiita_config.portal_dir %}/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span></a>
-                <ul class="dropdown-menu" style="padding: 5px">
-                  <li> <span id="dflt-study-count"></span> Studies</li>
+                <ul class="dropdown-menu" style="padding: 5px" id='selected-samples-dropdown-menu'>
+                  <li class="dropdown-header"><b>SELECTED SAMPLES</b></li>
+                  <li role="separator" class="divider"></li>
+                  <li><span id="dflt-study-count"></span> Studies</li>
                   <li><span id="dflt-pd-count"></span> Processed Data</li>
                   <li><span id="dflt-samp-count"></span> Samples</li>
                 </ul>
               </li>
               <li class="dropdown">
-                <a href="#" onClick="show_hide_process_list()" id="dflt-sel-info"><span class="glyphicon glyphicon-tasks"></span></a>
+                <a href="#" data-toggle='modal' data-target='#qiita-processing' id="dflt-sel-info"><span class="glyphicon glyphicon-tasks"></span></a>
+                <ul class="dropdown-menu" style="padding: 5px">
+                  <li class="dropdown-header"><b>JOBS</b></li>
+                </ul>
               </li>
             </ul>
             <!-- otherwise show the login form -->
-            {% elif  maintenance is None %}
+            {% else %}
             <ul class="nav navbar-nav">
               <li>
                 <a href="{% raw qiita_config.portal_dir %}/auth/forgot/">Forgot Password</a>
@@ -479,6 +447,9 @@
               <li class="dropdown">
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle">More Info<b class="caret"></b></a>
                 <ul class="dropdown-menu">
+                  <li>
+                    <a href="http://cmi-workshop.readthedocs.io/en/latest/">Tutorial</a>
+                  </li>
                   <li>
                     <a href="{% raw qiita_config.portal_dir %}/static/doc/html/index.html">Help</a>
                   </li>
@@ -510,9 +481,50 @@
                 <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
               </li>
             </ul>
+            <ul class="nav navbar-nav">
+              <li>
+                <a href="{% raw qiita_config.portal_dir %}/redbiom/">Redbiom</a>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
+              <!-- downloads -->
+              <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Downloads<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a type="button" data-toggle="modal" data-target=".qiita_pet_download_confirm">
+                      Public BIOM and metadata files
+                      <small>
+                        <br/><b>MD5:</b> {{public_md5}}
+                        <br/><b>Last update:</b> {{public_timestamp}}
+                      </small>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
           </div> <!--/.navbar-collapse -->
         </div>
       </div> <!--/.main nav-bar -->
+
+      <div class="modal fade qiita_pet_download_confirm" tabindex="-1" role="dialog" aria-labelledby="Confirm download">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title">File really big.</h4>
+            </div>
+            <div class="modal-body">
+              <p>The file you're trying to download is really big. Would you like to proceed?</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+              <button type="button" class="btn btn-success" id="qiita_download_accept">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       {% if message != '' %}
           {% if level not in {'danger', 'success', 'info', 'warning'} %}
@@ -555,15 +567,28 @@
       </div>
     </div>
 
-    <div id="qiita-processing" class="pre-scrollable" style="max-height: 100%">
-      <div id="processing-jobs-table" style="padding: 5px 5px;">
-        <h3>
-            Processing Jobs <br/>
-            <small>(skipping successful jobs)</small>
-        </h3>
-        Search: <input v-model="search">
-        <hr>
-        <data-table-processing-jobs :jobs="filteredJobs"></data-table-processing-jobs>
+    <!-- the jobs list is shown as a modal view -->
+    <div id="qiita-processing" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Active Jobs</h4>
+            <h6 class="modal-title">succesful jobs are not shown</h6>
+          </div>
+
+          <div id='processing-jobs-table' class="modal-body">
+              Search: <input v-model="search">
+              <hr>
+              <data-table-processing-jobs :jobs="filteredJobs"></data-table-processing-jobs>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+
       </div>
     </div>
 

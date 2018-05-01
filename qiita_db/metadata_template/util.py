@@ -7,14 +7,13 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from collections import defaultdict
 from future.utils import PY3, viewitems
 from six import StringIO
+from collections import defaultdict
 
 import pandas as pd
 import numpy as np
 import warnings
-from skbio.io.util import open_file
 from skbio.util import find_duplicates
 
 import qiita_db as qdb
@@ -35,29 +34,25 @@ def prefix_sample_names_with_id(md_template, study_id):
     study_id : int
         The study to which the metadata belongs to
     """
-    # Get all the prefixes of the index, defined as any string before a '.'
-    prefixes = {idx.split('.', 1)[0] for idx in md_template.index}
-    # If the samples have been already prefixed with the study id, the prefixes
-    # set will contain only one element and it will be the str representation
-    # of the study id
-    if len(prefixes) == 1 and prefixes.pop() == str(study_id):
-        # The samples were already prefixed with the study id
-        warnings.warn("Sample names were already prefixed with the study id.",
-                      qdb.exceptions.QiitaDBWarning)
-    else:
-        # Create a new pandas series in which all the values are the study_id
-        # and it is indexed as the metadata template
-        study_ids = pd.Series([str(study_id)] * len(md_template.index),
-                              index=md_template.index)
-        # Create a new column on the metadata template that includes the
-        # metadata template indexes prefixed with the study id
-        md_template['sample_name_with_id'] = (study_ids + '.' +
-                                              md_template.index.values)
-        md_template.index = md_template.sample_name_with_id
-        del md_template['sample_name_with_id']
-        # The original metadata template had the index column unnamed - remove
-        # the name of the index for consistency
-        md_template.index.name = None
+    # loop over the samples and prefix those that aren't prefixed
+    md_template['qiita_sample_name_with_id'] = pd.Series(
+        [idx if idx.split('.', 1)[0] == str(study_id)
+         else '%d.%s' % (study_id, idx)
+         for idx in md_template.index], index=md_template.index)
+
+    # get the rows that are gonna change
+    changes = len(md_template.index[
+        md_template['qiita_sample_name_with_id'] != md_template.index])
+    if changes != 0 and changes != len(md_template.index):
+        warnings.warn(
+            "Some of the samples were already prefixed with the study id.",
+            qdb.exceptions.QiitaDBWarning)
+
+    md_template.index = md_template.qiita_sample_name_with_id
+    del md_template['qiita_sample_name_with_id']
+    # The original metadata template had the index column unnamed -> remove
+    # the name of the index for consistency
+    md_template.index.name = None
 
 
 def load_template_to_dataframe(fn, index='sample_name'):
@@ -102,8 +97,27 @@ def load_template_to_dataframe(fn, index='sample_name'):
     """
     # Load in file lines
     holdfile = None
-    with open_file(fn, mode='U') as f:
+    with qdb.util.open_file(fn, mode='U') as f:
+        errors = defaultdict(list)
         holdfile = f.readlines()
+        # here we are checking for non UTF-8 chars
+        for row, line in enumerate(holdfile):
+            for col, block in enumerate(line.split('\t')):
+                try:
+                    tblock = block.encode('utf-8')
+                except UnicodeDecodeError:
+                    tblock = unicode(block, errors='replace')
+                    tblock = tblock.replace(u'\ufffd', '&#128062;')
+                    errors[tblock].append('(%d, %d)' % (row, col))
+        if bool(errors):
+            raise ValueError(
+                "There are invalid (non UTF-8) characters in your information "
+                "file. The offending fields and their location (row, column) "
+                "are listed below, invalid characters are represented using "
+                "&#128062;: %s" % '; '.join(
+                    ['"%s" = %s' % (k, ', '.join(v))
+                     for k, v in viewitems(errors)]))
+
     if not holdfile:
         raise ValueError('Empty file passed!')
 
@@ -130,14 +144,18 @@ def load_template_to_dataframe(fn, index='sample_name'):
                 for c in cols]
 
             # while we are here, let's check for duplicate columns headers
-            if len(set(newcols)) != len(newcols):
+            ncols = set(newcols)
+            if len(ncols) != len(newcols):
+                if '' in ncols:
+                    raise ValueError(
+                        'Your file has empty columns headers.')
                 raise qdb.exceptions.QiitaDBDuplicateHeaderError(
                     find_duplicates(newcols))
         else:
             # .strip will remove odd chars, newlines, tabs and multiple
             # spaces but we need to read a new line at the end of the
             # line(+'\n')
-            newcols = [d.strip(" \r\x0b\x0c\n") for d in cols]
+            newcols = [d.strip(" \r\n") for d in cols]
 
         holdfile[pos] = '\t'.join(newcols) + '\n'
 
@@ -149,34 +167,21 @@ def load_template_to_dataframe(fn, index='sample_name'):
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
-    try:
-        template = pd.read_csv(
-            StringIO(''.join(holdfile)),
-            sep='\t',
-            dtype=str,
-            encoding='utf-8',
-            infer_datetime_format=False,
-            keep_default_na=False,
-            index_col=False,
-            comment='\t',
-            converters={index: lambda x: str(x).strip()})
-        # remove newlines and tabs from fields
-        template.replace(to_replace='[\t\n\r\x0b\x0c]+', value='',
-                         regex=True, inplace=True)
-    except UnicodeDecodeError:
-        # Find row number and col number for utf-8 encoding errors
-        headers = holdfile[0].strip().split('\t')
-        errors = defaultdict(list)
-        for row, line in enumerate(holdfile, 1):
-            for col, cell in enumerate(line.split('\t')):
-                try:
-                    cell.encode('utf-8')
-                except UnicodeError:
-                    errors[headers[col]].append(row)
-        lines = ['%s: row(s) %s' % (header, ', '.join(map(str, rows)))
-                 for header, rows in viewitems(errors)]
-        raise qdb.exceptions.QiitaDBError(
-            'Non UTF-8 characters found in columns:\n' + '\n'.join(lines))
+    template = pd.read_csv(
+        StringIO(''.join(holdfile)),
+        sep='\t',
+        dtype=str,
+        encoding='utf-8',
+        infer_datetime_format=False,
+        keep_default_na=False,
+        index_col=False,
+        comment='\t',
+        converters={index: lambda x: str(x).strip()})
+    # remove newlines and tabs from fields
+    template.replace(to_replace='[\t\n\r\x0b\x0c]+', value='',
+                     regex=True, inplace=True)
+    # removing columns with empty values
+    template.dropna(axis='columns', how='all', inplace=True)
 
     initial_columns = set(template.columns)
 
@@ -268,7 +273,10 @@ def validate_invalid_column_names(column_names):
     forbidden_values = {
         # https://github.com/biocore/qiita/issues/2026
         'sampleid',
-        # https://github.com/biocore/qiita/issues/1866
+        # https://github.com/biocore/qiita/issues/
+        # Note that this are actually remove/ignored in the function that
+        # calls this function: base_metadata_template._clean_validate_template.
+        # However, leaving here to avoid any possible issues.
         'qiita_study_id',
         'qiita_prep_id'
     }
@@ -329,7 +337,7 @@ def looks_like_qiime_mapping_file(fp):
     some other different column.
     """
     first_line = None
-    with open_file(fp, mode='U') as f:
+    with qdb.util.open_file(fp, mode='U') as f:
         first_line = f.readline()
     if not first_line:
         return False

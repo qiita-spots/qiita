@@ -9,7 +9,7 @@
 from json import loads
 from time import sleep
 
-from moi import r_client
+from qiita_core.qiita_settings import r_client
 
 from qiita_db.processing_job import ProcessingJob
 
@@ -38,14 +38,7 @@ def wait_for_prep_information_job(prep_id, raise_if_none=True):
     if res is not None:
         payload = loads(res)
         job_id = payload['job_id']
-        if payload['is_qiita_job']:
-            wait_for_processing_job(job_id)
-        else:
-            redis_info = loads(r_client.get(job_id))
-            while redis_info['status_msg'] == 'Running':
-                sleep(0.05)
-                redis_info = loads(r_client.get(job_id))
-        sleep(0.05)
+        wait_for_processing_job(job_id)
 
 
 def wait_for_processing_job(job_id):
@@ -58,5 +51,5 @@ def wait_for_processing_job(job_id):
     """
     job = ProcessingJob(job_id)
     while job.status not in ('success', 'error'):
-        sleep(0.05)
-    sleep(0.5)
+        sleep(0.8)
+    sleep(0.8)
