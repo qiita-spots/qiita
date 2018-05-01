@@ -138,7 +138,7 @@ class CommandsTests(TestCase):
 @qiita_test_checker()
 class CommandsTestsA(CommandsTests):
     def test_submit_EBI_step_2_failure(self):
-        ppd = self.write_demux_files(PrepTemplate(1), False)
+        ppd = self.write_demux_files(PrepTemplate(1), True)
 
         with self.assertRaises(ComputeError):
             submit_EBI(ppd.id, 'VALIDATE', True)
