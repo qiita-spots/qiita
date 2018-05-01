@@ -134,18 +134,12 @@ class CommandsTests(TestCase):
 
         return ppd
 
-
-@qiita_test_checker()
-class CommandsTestsA(CommandsTests):
     def test_submit_EBI_step_2_failure(self):
         ppd = self.write_demux_files(PrepTemplate(1), True)
 
         with self.assertRaises(ComputeError):
             submit_EBI(ppd.id, 'VALIDATE', True)
 
-
-@qiita_test_checker()
-class CommandsTestsB(CommandsTests):
     @skipIf(
         environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_submit_EBI_parse_EBI_reply_failure(self):
@@ -156,12 +150,7 @@ class CommandsTestsB(CommandsTests):
         error = str(error.exception)
         self.assertIn('EBI Submission failed! Log id:', error)
         self.assertIn('The EBI submission failed:', error)
-        self.assertIn(
-            'Failed to validate run xml, error: Expected element', error)
 
-
-@qiita_test_checker()
-class CommandsTestsC(CommandsTests):
     @skipIf(
         environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_full_submission(self):
