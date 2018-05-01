@@ -54,7 +54,7 @@ Rarefying Features
 .. figure::  rarefy.png
    :align:   center
 
-* **Rarefy features**: Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth.
+* **Rarefy features** :ref:`[11]<reference11>` , :ref:`[12]<reference12>` : Subsample frequencies from all samples without replacement so that the sum of frequencies in each sample is equal to the sampling-depth
 
   *  **BIOM table** (required): Feature table containing the samples for which features should be rarefied
   *  **Parameter set**: Parameters at which the rarefication is run
