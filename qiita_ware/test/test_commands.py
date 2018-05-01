@@ -13,12 +13,14 @@ from os.path import join
 from tempfile import mkdtemp
 import pandas as pd
 from datetime import datetime
+from shutil import rmtree
 
 from h5py import File
 from qiita_files.demux import to_hdf5
 
 from qiita_ware.exceptions import ComputeError
 from qiita_ware.commands import submit_EBI
+from qiita_db.util import get_mountpoint
 from qiita_db.study import Study, StudyPerson
 from qiita_db.software import DefaultParameters, Parameters
 from qiita_db.artifact import Artifact
@@ -34,6 +36,7 @@ class CommandsTests(TestCase):
         self.files_to_remove = []
         self.temp_dir = mkdtemp()
         self.files_to_remove.append(self.temp_dir)
+        _, self.base_fp = get_mountpoint("preprocessed_data")[0]
 
     def write_demux_files(self, prep_template, generate_hdf5=True):
         """Writes a demux test file to avoid duplication of code"""
@@ -136,20 +139,26 @@ class CommandsTests(TestCase):
 
     def test_submit_EBI_step_2_failure(self):
         ppd = self.write_demux_files(PrepTemplate(1), True)
+        pid = ppd.id
 
         with self.assertRaises(ComputeError):
-            submit_EBI(ppd.id, 'VALIDATE', True)
+            submit_EBI(pid, 'VALIDATE', True)
+
+        rmtree(join(self.base_fp, '%d_ebi_submission' % pid), True)
 
     @skipIf(
         environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
     def test_submit_EBI_parse_EBI_reply_failure(self):
         ppd = self.write_demux_files(PrepTemplate(1))
+        pid = ppd.id
 
         with self.assertRaises(ComputeError) as error:
-            submit_EBI(ppd.id, 'VALIDATE', True)
+            submit_EBI(pid, 'VALIDATE', True)
         error = str(error.exception)
         self.assertIn('EBI Submission failed! Log id:', error)
         self.assertIn('The EBI submission failed:', error)
+
+        rmtree(join(self.base_fp, '%d_ebi_submission' % pid), True)
 
     @skipIf(
         environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
@@ -157,8 +166,11 @@ class CommandsTests(TestCase):
         artifact = self.generate_new_study_with_preprocessed_data()
         self.assertEqual(
             artifact.study.ebi_submission_status, 'not submitted')
-        submit_EBI(artifact.id, 'VALIDATE', True, test=True)
+        aid = artifact.id
+        submit_EBI(aid, 'VALIDATE', True, test=True)
         self.assertEqual(artifact.study.ebi_submission_status, 'submitted')
+
+        rmtree(join(self.base_fp, '%d_ebi_submission' % aid), True)
 
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
