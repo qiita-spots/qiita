@@ -56,7 +56,7 @@ class AuthCreateHandler(BaseHandler):
                            "click the following link to verify email address: "
                            "%s/auth/verify/%s?email=%s\n\nBy clicking you are "
                            "accepting our term and conditions: "
-                           "%s/static/qiita_data_terms_of_use.html"
+                           "%s/iframe/?iframe=qiita-terms"
                            % (url, info['user_verify_code'],
                               url_escape(username), url))
             except Exception:

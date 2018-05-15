@@ -145,6 +145,7 @@ class ConfigurationManager(object):
         self._get_ebi(config)
         self._get_vamps(config)
         self._get_portal(config)
+        self._iframe(config)
 
     def _get_main(self, config):
         """Get the configuration of the main section"""
@@ -286,3 +287,6 @@ class ConfigurationManager(object):
                 self.portal_dir = self.portal_dir[:-1]
         else:
             self.portal_dir = ""
+
+    def _iframe(self, config):
+        self.iframe_qiimp = config.get('iframe', 'QIIMP')

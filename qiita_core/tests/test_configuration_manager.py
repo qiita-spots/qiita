@@ -105,6 +105,9 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.portal, "QIITA")
         self.assertEqual(obs.portal_dir, "/portal")
 
+        # iframe section
+        self.assertEqual(obs.iframe_qiimp, "http://localhost:8898/")
+
     def test_init_error(self):
         with open(self.conf_fp, 'w') as f:
             f.write("\n")
@@ -347,6 +350,10 @@ PORTAL_DIR = /portal
 
 # Full path to portal styling config file
 PORTAL_FP = /tmp/portal.cfg
+
+# ----------------------------- iframes settings ---------------------------
+[iframe]
+QIIMP = http://localhost:8898/
 """
 
 if __name__ == '__main__':

@@ -1,0 +1,14 @@
+{% extends sitebase.html %}
+{% block content %}
+
+{% if iframe == 'qiita-terms' %}
+  <iframe style="margin: 0; padding: 0; width: 100%; height: 400px;" src="{% raw qiita_config.portal_dir %}/static/qiita_data_terms_of_use.html"></iframe>
+{% elif iframe == 'qiimp' %}
+  <iframe style="margin: 0; padding: 0; width: 100%; height: 400px;" src="{{qiita_config.iframe_qiimp}}"></iframe>
+{% else %}
+  <b>No content</b>
+{% end %}
+
+
+
+{% end %}
