@@ -7,9 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import RequestHandler
-from tornado.gen import coroutine
 
-from qiita_core.util import execute_as_transaction
 from qiita_db.logger import LogEntry
 from qiita_db.user import User
 from qiita_pet.util import convert_text_html
@@ -83,8 +81,6 @@ class MainHandler(BaseHandler):
 
 class IFrame(BaseHandler):
     '''Open one of the IFrame pages'''
-    @coroutine
-    @execute_as_transaction
     def get(self):
         msg = self.get_argument('message', '')
         msg = convert_text_html(msg)
