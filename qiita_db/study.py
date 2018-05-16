@@ -872,7 +872,7 @@ class Study(qdb.base.QiitaObject):
             jobs = defaultdict(dict)
             for info in qdb.sql_connection.TRN.execute_fetchindex():
                 jid, aid, js, cbste, era = info
-                if not cbste or era:
+                if not cbste or era != [None]:
                     continue
                 jobs[js][aid] = jid
 
