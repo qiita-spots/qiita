@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from os.path import join, abspath, dirname, basename
 from future.utils import viewitems
 from glob import glob
-from time import sleep
+from time import sleep, ctime
 from multiprocessing import active_children
 
 import click
@@ -306,7 +306,7 @@ def start(port, master):
         else:
             raise
     base_url = qiita_config.base_url
-    click.echo("Qiita started on %s:%d " % (base_url, port))
+    click.echo("Qiita started on %s:%d @ %s" % (base_url, port, ctime()))
     ioloop = tornado.ioloop.IOLoop.instance()
 
     if master:
