@@ -18,6 +18,7 @@ from qiita_core.qiita_settings import r_client
 from qiita_ware.commands import submit_VAMPS, submit_EBI
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
+from qiita_ware.exceptions import EBISubmissionError
 
 
 def build_analysis_files(job):
@@ -98,6 +99,14 @@ def submit_to_EBI(job):
         param_vals = job.parameters.values
         artifact_id = int(param_vals['artifact'])
         submission_type = param_vals['submission_type']
+        artifact = qdb.artifact.Artifact(artifact_id)
+
+        for info in artifact.study._ebi_submission_jobs():
+            jid, aid, js, cbste, era = info
+            if js in ('running', 'queued') and jid != job.id:
+                error_msg = ("Cannot perform parallel EBI submission for "
+                             "the same study. Current job running: %s" % js)
+                raise EBISubmissionError(error_msg)
         submit_EBI(artifact_id, submission_type, True)
         job._set_status('success')
 

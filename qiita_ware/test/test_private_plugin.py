@@ -418,10 +418,12 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
                                  artifact.study.ebi_submission_status)
                 checked_submitting = False
         # once it fails wait for a few to check status again
-        sleep(10)
+        sleep(5)
         exp = 'Some artifact submissions failed: %d' % artifact.id
         obs = artifact.study.ebi_submission_status
         self.assertEqual(obs, exp)
+        # make sure that the error is correct
+        self.assertIn('"this-should-fail_ppdid_10:1.SKM2.640199"', job.log.msg)
 
         # wait for everything to finish to avoid DB deadlocks
         sleep(5)

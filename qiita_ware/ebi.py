@@ -147,13 +147,6 @@ class EBISubmission(object):
             LogEntry.create('Runtime', error_msg)
             raise EBISubmissionError(error_msg)
 
-        status = self.study.ebi_submission_status
-        if status in self.valid_ebi_submission_states:
-            error_msg = ("Cannot perform parallel EBI submission for the same "
-                         "study. Current status of the study: %s" % status)
-            LogEntry.create('Runtime', error_msg)
-            raise EBISubmissionError(error_msg)
-
         self.artifact_id = artifact_id
         self.study_title = self.study.title
         self.study_abstract = self.study.info['study_abstract']
