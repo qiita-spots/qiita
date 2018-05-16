@@ -850,20 +850,30 @@ class Study(qdb.base.QiitaObject):
                 'Qiita', 'alpha')
             cmd = plugin.get_command('submit_to_EBI')
 
-            sql = """SELECT processing_job_id, command_parameters->>'artifact',
-                        processing_job_status
-                     FROM qiita.processing_job
+            sql = """SELECT processing_job_id,
+                        pj.command_parameters->>'artifact' as aid,
+                        processing_job_status, can_be_submitted_to_ebi,
+                        array_agg(ebi_run_accession)
+                     FROM qiita.processing_job pj
                      LEFT JOIN qiita.processing_job_status
                         USING (processing_job_status_id)
-                     WHERE command_parameters->>'artifact' IN (
+                     LEFT JOIN qiita.artifact ON (
+                        artifact_id = (
+                            pj.command_parameters->>'artifact')::INT)
+                     LEFT JOIN qiita.ebi_run_accession era USING (artifact_id)
+                     LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE pj.command_parameters->>'artifact' IN (
                         SELECT artifact_id::text
-                        FROM qiita.study_artifact
-                        WHERE study_id = {0}) AND command_id = {1}""".format(
-                            self._id, cmd.id)
+                        FROM qiita.study_artifact WHERE study_id = {0})
+                        AND pj.command_id = {1}
+                     GROUP BY processing_job_id, aid, processing_job_status,
+                        can_be_submitted_to_ebi""".format(self._id, cmd.id)
             qdb.sql_connection.TRN.add(sql)
             jobs = defaultdict(dict)
             for info in qdb.sql_connection.TRN.execute_fetchindex():
-                jid, aid, js = info
+                jid, aid, js, cbste, era = info
+                if not cbste or era:
+                    continue
                 jobs[js][aid] = jid
 
             if 'queued' in jobs or 'running' in jobs:
