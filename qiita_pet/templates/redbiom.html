@@ -111,7 +111,7 @@
         var artifact_biom_ids = row.data().artifact_biom_ids;
         var artifact_biom_ids_keys = []
         $.each(artifact_biom_ids, function(e){ artifact_biom_ids_keys.push(e) });
-        $.get('/artifact/info/', {ids: artifact_biom_ids_keys })
+        $.post('/artifact/info/', {ids: artifact_biom_ids_keys })
           .done(function ( data ) {
             if (data['status']=='success') {
               $('td', row.child()).html(format_biom_rows(data.data, row.index(), true, samples=artifact_biom_ids)).show();

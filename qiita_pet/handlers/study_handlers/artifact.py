@@ -73,7 +73,7 @@ class ArtifactGetSamples(BaseHandler):
 
 class ArtifactGetInfo(BaseHandler):
     @authenticated
-    def get(self):
+    def post(self):
         aids = map(int, self.request.arguments.get('ids[]', []))
         only_biom = self.get_argument('only_biom', 'True') == 'True'
 
