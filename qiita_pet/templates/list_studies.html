@@ -205,7 +205,7 @@ $(document).ready(function() {
         // modified from: https://jsfiddle.net/8rejaL88/2/
         tr.addClass('shown');
         row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
-        $.get('/artifact/info/', {ids: row.data().artifact_biom_ids})
+        $.post('/artifact/info/', {ids: row.data().artifact_biom_ids})
           .done(function ( data ) {
             if (data['status']=='success') {
               $('td', row.child()).html(format_biom_rows(data.data, row.index())).show();
@@ -228,7 +228,7 @@ $(document).ready(function() {
         // modified from: https://jsfiddle.net/8rejaL88/2/
         tr.addClass('shown');
         row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
-        $.get('/artifact/info/', {ids: row.data().artifact_biom_ids})
+        $.post('/artifact/info/', {ids: row.data().artifact_biom_ids})
           .done(function ( data ) {
             if (data['status']=='success') {
               $('td', row.child()).html(format_biom_rows(data.data, row.index())).show();

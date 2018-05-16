@@ -159,8 +159,8 @@ class ArtifactGetSamplesTest(TestHandlerBase):
 
 
 class ArtifactGetInfoTest(TestHandlerBase):
-    def test_get(self):
-        response = self.get('/artifact/info/', {'ids[]': [6, 7]})
+    def test_post(self):
+        response = self.post('/artifact/info/', {'ids[]': [6, 7]})
         self.assertEqual(response.code, 200)
         data = [
             {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
