@@ -8,9 +8,13 @@
       <br/><br/>
       Currently we can process (<b>{{extensions.replace(',',', ')}}</b>):
       <ul>
-        <li>fastq or fastq.gz (gzipped fastq) for sequences. Note that '.zip' files can not be processed.</li>
-        <li>Note that '.fasta' and '.fna' files require '.qual' files for submission </li>
-        <li>tab separated text files for sample and prep templates, the extension should be txt.</li>
+        <li>.fastq, .fastq.gz (gzipped fastq), .fna with .qual, .fasta with .qual, ,sff for sequences. </li/
+          <ul>
+            <li>Note that '.zip' files can not be processed.</li>
+            <li>Note that '.fasta' and '.fna' files require '.qual' files for submission. </li>
+          </ul/
+        <li>.txt (tab separated), .tsv, and .xlsx for metadata. </li>
+        <li>.biom for feature tables. </li>
       </ul>
       <a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">&lt;&lt; Go to study description</a>
     </td>

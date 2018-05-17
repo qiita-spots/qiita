@@ -139,9 +139,14 @@ Upload Sample Information
 
   * Drag your sample info file into the box to upload your files
   * Your uploaded samples will appear under the "Files" section
-  * You can currently upload biom tables and .fastq , .fastq.gz, .txt, .tsv, .sff, .fasta, .fna, and .qual files
+  * You can currently upload
 
-    * *Note: You must include .qual files for the submission of .fasta and .fna files*
+    * Sequencing data in the following formats: .fastq, .fast.qz, .fna with .qual, .fasta with .qual, and .sff
+
+      * *Note: You must include .qual files for the submission of .fasta and .fna files*
+
+    * Metadata in the following formats: .txt (tab-separated), .tsv, and .xlsx
+    * Feature tables in the following format: .biom
 
   * **Delete selected files**: Delete a file with the selected boxes
   * **Go to study description**: Link to the study description page
