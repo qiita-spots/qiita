@@ -44,7 +44,7 @@
         <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{analysis_mapping_id}}"><span class="glyphicon glyphicon-download-alt"></span> Mapping file</a>
       {% end %}
       {% if not analysis_is_public %}
-        <a class="btn btn-default" onclick="if (confirm('Are you sure you want to make this analysis public? Note that this will not allow you to delete your analysis later.')) { if$('#make-public').submit(); }"><span class="glyphicon glyphicon-globe"></span> Make analysis public</a>
+        <a class="btn btn-default" onclick="if (confirm('Are you sure you want to make this analysis public? Note that this will not allow you to delete your analysis later.')) { $('#make-public').submit(); }"><span class="glyphicon glyphicon-globe"></span> Make analysis public</a>
       {% end %}
     </h2>
     <h3>{{analysis_description}}</h3>
