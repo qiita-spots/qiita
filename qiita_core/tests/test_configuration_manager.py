@@ -353,7 +353,7 @@ PORTAL_FP = /tmp/portal.cfg
 
 # ----------------------------- iframes settings ---------------------------
 [iframe]
-QIIMP = http://localhost:8898/
+QIIMP = https://localhost:8898/
 """
 
 if __name__ == '__main__':
