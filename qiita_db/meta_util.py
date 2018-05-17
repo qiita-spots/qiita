@@ -267,6 +267,7 @@ def update_redis_stats():
     plt.grid()
     ax = plt.gca()
     ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(sizeof_fmt))
+    plt.xticks(rotation=90)
     plt.xlabel('Date')
     plt.ylabel('Storage space per data type')
 
