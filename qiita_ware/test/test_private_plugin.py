@@ -8,7 +8,8 @@
 
 from unittest import TestCase, main
 from os.path import join, dirname, abspath, exists, isdir
-from os import close, remove
+from os import close, remove, environ
+
 from shutil import rmtree
 from tempfile import mkstemp
 from json import loads, dumps
@@ -422,9 +423,11 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         exp = 'Some artifact submissions failed: %d' % artifact.id
         obs = artifact.study.ebi_submission_status
         self.assertEqual(obs, exp)
-        # make sure that the error is correct
-        self.assertIn('"this-should-fail_ppdid_10:1.SKM2.640199"', job.log.msg)
-
+        # make sure that the error is correct, we have 2 options
+        if environ.get('ASPERA_SCP_PASS', '') != '':
+            self.assertIn('1.SKM2.640199', job.log.msg)
+        else:
+            self.assertIn('ASCP Error:', job.log.msg)
         # wait for everything to finish to avoid DB deadlocks
         sleep(5)
 
