@@ -173,7 +173,7 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs_at, "danger")
         self.assertEqual(obs_am, "Some</br>error")
 
-    def test_sample_template_summary_get_req_no_template(self):
+    def test_sample_template_columns_get_req_no_template(self):
         # Test sample template not existing
         obs = sample_template_get_req(self.new_study.id, 'test@foo.bar')
         exp = {'status': 'error',
