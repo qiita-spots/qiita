@@ -144,7 +144,7 @@ Upload Sample Information
 
     * *Note that '.zip' files can not be processed.*
     * *Note that '.fasta' and '.fna' files require '.qual' files for submission.*
-    * *Note that '.txt. files must be tab separated and require the extension .txt.*
+    * *Note that '.txt.' files must be tab separated and require the extension .txt.*
 
   * **Delete selected files**: Delete a file with the selected boxes
   * **Go to study description**: Link to the study description page
