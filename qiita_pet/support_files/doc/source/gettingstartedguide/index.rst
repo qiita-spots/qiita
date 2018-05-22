@@ -140,7 +140,7 @@ Upload Sample Information
   * Drag your sample info file into the box to upload your files
   * Your uploaded samples will appear under the "Files" section
   * You can currently upload biom tables, .fastq files, .fastq.gz files, among others.
-  For a full list check the upload page of any study.
+  * For a full list check the upload page of any study.
 
     * *Note that '.zip' files can not be processed.*
     * *Note that '.fasta' and '.fna' files require '.qual' files for submission.*
