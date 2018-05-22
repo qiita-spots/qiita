@@ -17,7 +17,8 @@ from uuid import uuid4
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import is_test_environment
-from qiita_pet.handlers.base_handlers import (MainHandler, NoPageHandler)
+from qiita_pet.handlers.base_handlers import (
+    MainHandler, NoPageHandler, IFrame)
 from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
 from qiita_pet.handlers.user_handlers import (
@@ -178,6 +179,7 @@ class Application(tornado.web.Application):
             (r"/release/download/(.*)", DownloadRelease),
             (r"/vamps/(.*)", VAMPSHandler),
             (r"/redbiom/(.*)", RedbiomPublicSearch),
+            (r"/iframe/", IFrame),
             # Plugin handlers - the order matters here so do not change
             # qiita_db/jobs/(.*) should go after any of the
             # qiita_db/jobs/(.*)/XXXX because otherwise it will match the
