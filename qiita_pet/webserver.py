@@ -29,7 +29,7 @@ from qiita_pet.handlers.analysis_handlers import (
     AnalysisJobsHandler, ShareAnalysisAJAX)
 from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateHandler,
-    SampleTemplateOverviewHandler, SampleTemplateSummaryHandler,
+    SampleTemplateOverviewHandler, SampleTemplateColumnsHandler,
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
     VAMPSHandler, StudyTags, StudyGetTags,
@@ -153,8 +153,8 @@ class Application(tornado.web.Application):
             # Same reasoning as below. /study/description/(.*) should be last.
             (r"/study/description/sample_template/overview/",
              SampleTemplateOverviewHandler),
-            (r"/study/description/sample_template/summary/",
-             SampleTemplateSummaryHandler),
+            (r"/study/description/sample_template/columns/",
+             SampleTemplateColumnsHandler),
             (r"/study/description/sample_template/", SampleTemplateHandler),
             (r"/study/description/sample_summary/", SampleAJAX),
             (r"/study/description/prep_summary/", PrepTemplateSummaryAJAX),

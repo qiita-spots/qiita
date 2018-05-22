@@ -23,14 +23,14 @@ from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
                        ArtifactAdminAJAX, ArtifactGetSamples, ArtifactGetInfo)
 from .sample_template import (
     SampleTemplateHandler, SampleTemplateOverviewHandler,
-    SampleTemplateSummaryHandler, SampleAJAX)
+    SampleTemplateColumnsHandler, SampleAJAX)
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'StudyEditHandler', 'CreateStudyAJAX', 'EBISubmitHandler',
            'VAMPSHandler', 'SearchStudiesAJAX', 'ArtifactGraphAJAX',
            'ArtifactAdminAJAX', 'StudyIndexHandler', 'StudyBaseInfoAJAX',
            'SampleTemplateHandler', 'SampleTemplateOverviewHandler',
-           'SampleTemplateSummaryHandler',
+           'SampleTemplateColumnsHandler',
            'PrepTemplateAJAX', 'NewArtifactHandler', 'PrepFilesHandler',
            'ListCommandsHandler', 'ListOptionsHandler', 'SampleAJAX',
            'StudyDeleteAjax', 'NewPrepTemplateAjax',

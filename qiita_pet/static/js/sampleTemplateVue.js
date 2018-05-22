@@ -1,5 +1,37 @@
 var sampleTemplatePage = null;
 
+function get_column_summary(portal, column, numSamples){
+  var row = $('.' + column + 'collapsed');
+
+  if (row.is(":hidden")) {
+    var cell = $(row.children()[0]);
+    cell.html('<img src="' + portal + '/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/>');
+    $.get(portal + '/study/description/sample_template/columns/', {study_id: 1, column: column}, function(data) {
+      cell.html('');
+      var values = data['values'];
+      var uniques = $.unique($.extend(true, [], data['values']));
+      var table = $('<table>').addClass('table').appendTo(cell);
+      if (uniques.length === 1) {
+        var tr = $('<tr>').appendTo(table);
+        var td = $('<td>').append(uniques[0] + ' is repeated in all rows.').appendTo(tr);
+      } else if (uniques.length === numSamples) {
+        var tr = $('<tr>').appendTo(table);
+        var td = $('<td>').append('All the values in this category are different').appendTo(tr);
+      } else {
+        var counts = {};
+        for (u of uniques) { counts[u] = 0; }
+        for (v of values) { counts[v]++; }
+        for (u of uniques) {
+          var tr = $('<tr>').appendTo(table);
+          var td = $('<td>').append(u).appendTo(tr);
+          var td = $('<td>').append(counts[u]).appendTo(tr);
+        }
+      }
+      // cell.html(table.html())
+    })
+  }
+}
+
 Vue.component('sample-template-page', {
   template: '<div id="sample-template-main-div">' +
               // Title div
@@ -219,17 +251,16 @@ Vue.component('sample-template-page', {
       // (and interact with it) without having to wait for this information to
       // show up - also the creation of the table occurs now in client side
       // rather than in server side.
-      $.get(vm.portal + '/study/description/sample_template/summary/', {study_id: vm.studyId}, function(data) {
+      $.get(vm.portal + '/study/description/sample_template/columns/', {study_id: vm.studyId}, function(data) {
         var catValues, $tr, $td, rowIdx, collapsedId, $trVal, $div, $btn;
         $div = $('<div>').addClass('panel panel-default').appendTo('#sample-info-tab');
         $('<div>').addClass('panel-heading').appendTo($div).append('Information summary');
         var $table = $('<table>').addClass('table').appendTo($div);
-        var categories = Object.keys(data);
+        var categories = data['values'];
         categories.sort(function(a, b){return a[0].localeCompare(b[0], 'en', {'sensitivity': 'base'});});
 
         rowIdx = 0;
         for (var cat of categories) {
-          catValues = data[cat];
           $tr = $('<tr>').attr('id', 'col-row-' + rowIdx).appendTo($table);
           if (vm.editable && vm.userCanEdit) {
             $td = $('<td>').appendTo($tr);
@@ -240,24 +271,15 @@ Vue.component('sample-template-page', {
             });
           }
           rowIdx += 1;
-          $td = $('<td>').attr('colspan', '2').appendTo($tr);
+          // $td = $('<td>').attr('colspan', '2').appendTo($tr);
+          $td = $('<td>').appendTo($tr);
           $('<b>').append(cat + ': ').appendTo($td);
-          if (catValues.length === 1) {
-            $('<tt>').append(catValues[0][0]).appendTo($td);
-            $td.append(' is repeated in all rows');
-          } else if (catValues.length === vm.numSamples) {
-            $td.append('All the values in this category are different');
-          } else {
-            $td.append('&nbsp;&nbsp;&nbsp;&nbsp;');
-            collapsedId = cat + 'collapsed';
-            $('<button>').addClass('btn btn-default').attr('data-toggle', 'collapse').attr('data-target', '.' + collapsedId).append('Values').appendTo($td);
-            for (var value of catValues) {
-              $trVal = $('<tr>').addClass('collapse').addClass(collapsedId).appendTo($table);
-              $('<td>').append('&nbsp;').appendTo($trVal);
-              $('<td>').append(value[0]).appendTo($trVal);
-              $('<td>').append(value[1]).appendTo($trVal);
-            }
-          }
+          $td.append('&nbsp;&nbsp;&nbsp;&nbsp;');
+          collapsedId = cat + 'collapsed';
+          fcall = 'get_column_summary("' + vm.portal + '", "' + cat + '", ' + vm.numSamples + ')';
+          $bt = $('<button>').addClass('btn btn-default').attr('onclick', fcall).attr('data-toggle', 'collapse').attr('data-target', '.' + collapsedId).append('Values').appendTo($td);
+          $trVal = $('<tr>').addClass('collapse').addClass(collapsedId).appendTo($table);
+          $('<td>').attr('colspan', '3').append('&nbsp;').appendTo($trVal);
         }
 
         // Scroll to the desired row
