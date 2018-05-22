@@ -201,6 +201,10 @@
                 row.push('')
                 row.push(item.heartbeat);
                 row.push(item.name);
+                if (item.status == 'error') {
+                  item.status += '&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm hide-job-from-procesing-jobs" id="' +
+                    item.id + '"><span class="glyphicon glyphicon-trash"></span></a>';
+                }
                 row.push(item.status);
                 row.push(item.step);
                 row.push(item.id);
@@ -250,6 +254,24 @@
               tr.addClass('shown');
             }
           });
+
+          $('#processing-jobs-datatables').on('click', 'a.hide-job-from-procesing-jobs', function () {
+            var jid = this.id;
+            if (confirm('Are you sure you want to hide `' + jid + '`?')){
+
+              $.ajax({
+                url: '{% raw qiita_config.portal_dir %}/study/process/job/',
+                type: 'PATCH',
+                data: {'op': 'remove', 'path': jid},
+                success: function(data) {
+                  processing_jobs_vue.update_processing_job_data();
+                },
+                error: function(object, status, error_msg) {
+                  bootstrapAlert("Error while hiding `" + jid + "` artifact visiblity: " + error_msg, "danger");
+                }
+              });
+            }
+          });
         }
       });
 
@@ -296,7 +318,7 @@
                 }
               }
             });
-          }
+          },
         },
         mounted() {
           let vm = this;
