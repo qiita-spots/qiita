@@ -266,7 +266,9 @@ Vue.component('sample-template-page', {
             $btn = $('<button>').addClass('btn btn-danger st-interactive').appendTo($td).attr('data-column', cat).attr('data-row-id', rowIdx);
             $('<span>').addClass('glyphicon glyphicon-trash').appendTo($btn);
             $btn.on('click', function () {
-              vm.deleteColumn($(this).attr('data-column'), $(this).attr('data-row-id'));
+              if (confirm('Are you sure you want to delete `' + $(this).attr('data-column') + '`?')) {
+                vm.deleteColumn($(this).attr('data-column'), $(this).attr('data-row-id'));
+              }
             });
           }
           rowIdx += 1;
