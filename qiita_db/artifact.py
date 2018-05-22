@@ -788,6 +788,15 @@ class Artifact(qdb.base.QiitaObject):
             True if the artifact can be submitted to EBI. False otherwise.
         """
         with qdb.sql_connection.TRN:
+            # we should always return False if this artifact is not directly
+            # attached to the prep_template or is the second after. In other
+            # words has more that one processing step behind it
+            fine_to_send = []
+            fine_to_send.extend([pt.artifact for pt in self.prep_templates])
+            fine_to_send.extend([c for a in fine_to_send for c in a.children])
+            if self not in fine_to_send:
+                return False
+
             sql = """SELECT can_be_submitted_to_ebi
                      FROM qiita.artifact_type
                         JOIN qiita.artifact USING (artifact_type_id)
