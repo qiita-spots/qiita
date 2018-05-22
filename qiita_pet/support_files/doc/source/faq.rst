@@ -78,3 +78,16 @@ you unzip version you can run: `unzip -v`.
 To update your unzip for most operating systems you can simply use your regular package
 admin program. However, for Mac we suggest using
 `this version of unzip <ftp://ftp.microbio.me/pub/qiita/unzip>`__.
+
+How to solve BIOM name errors?
+------------------------------
+
+When uploading a BIOM table, you may get an error like: **"The sample ids in the BIOM
+table do not match the ones in the prep information. Please, provide the column "run_prefix"
+in the prep information to map the existing sample ids to the prep information sample ids."**.
+This issue arises if your sample names in your BIOM table do not match with the sample names
+in your preparation information file.
+
+To correct this issue, simply add a column to your preparation information file named
+"run_prefix". In this column, add the sample names from your BIOM table that matches the sample
+names listed in the sample_name column in your preparation information file.
