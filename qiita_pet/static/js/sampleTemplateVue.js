@@ -21,7 +21,7 @@ function get_column_summary(portal, column, numSamples){
         var counts = {};
         for (let u of uniques) { counts[u] = 0; }
         for (let v of values) { counts[v]++; }
-        for (let of uniques) {
+        for (let u of uniques) {
           var tr = $('<tr>').appendTo(table);
           var td = $('<td>').append(u).appendTo(tr);
           var td = $('<td>').append(counts[u]).appendTo(tr);
