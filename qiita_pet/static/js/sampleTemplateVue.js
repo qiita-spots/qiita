@@ -19,15 +19,14 @@ function get_column_summary(portal, column, numSamples){
         var td = $('<td>').append('All the values in this category are different').appendTo(tr);
       } else {
         var counts = {};
-        for (u of uniques) { counts[u] = 0; }
-        for (v of values) { counts[v]++; }
-        for (u of uniques) {
+        for (let u of uniques) { counts[u] = 0; }
+        for (let v of values) { counts[v]++; }
+        for (let of uniques) {
           var tr = $('<tr>').appendTo(table);
           var td = $('<td>').append(u).appendTo(tr);
           var td = $('<td>').append(counts[u]).appendTo(tr);
         }
       }
-      // cell.html(table.html())
     })
   }
 }
@@ -271,7 +270,6 @@ Vue.component('sample-template-page', {
             });
           }
           rowIdx += 1;
-          // $td = $('<td>').attr('colspan', '2').appendTo($tr);
           $td = $('<td>').appendTo($tr);
           $('<b>').append(cat + ': ').appendTo($td);
           $td.append('&nbsp;&nbsp;&nbsp;&nbsp;');
