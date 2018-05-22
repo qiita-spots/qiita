@@ -8,8 +8,9 @@
       <br/><br/>
       Currently we can process (<b>{{extensions.replace(',',', ')}}</b>):
       <ul>
-        <li>fastq or fastq.gz (gzipped fastq) for sequences. Note that '.zip' files can not be processed.</li>
-        <li>tab separated text files for sample and prep templates, the extension should be txt.</li>
+        <li>Note that '.zip' files can not be processed.</li>
+        <li>Note that '.fasta' and '.fna' files require '.qual' files for submission </li>
+        <li>Note that '.txt.' files must be tab separated and require the extension .txt.</li>
       </ul>
       <a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">&lt;&lt; Go to study description</a>
     </td>
