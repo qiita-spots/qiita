@@ -11,6 +11,7 @@ from tempfile import mkstemp, mkdtemp
 from datetime import datetime
 from os import close, remove
 from os.path import exists, join, basename
+from shutil import copyfile
 from functools import partial
 from json import dumps
 
@@ -811,6 +812,11 @@ class ArtifactTests(TestCase):
         qdb.artifact.Artifact.delete(obs.id)
 
     def test_create_processed(self):
+        # make a copy of files for the can_be_submitted_to_ebi tests
+        lcopy = self.fp3 + '.fna'
+        self._clean_up_files.append(lcopy)
+        copyfile(self.fp3, lcopy)
+
         exp_params = qdb.software.Parameters.from_default_params(
             qdb.software.DefaultParameters(1), {'input_data': 1})
         before = datetime.now()
@@ -841,6 +847,15 @@ class ArtifactTests(TestCase):
         self.assertEqual(obs.study, qdb.study.Study(1))
         self.assertFalse(exists(self.filepaths_processed[0][0]))
         self.assertIsNone(obs.analysis)
+
+        # let's create another demultiplexed on top of the previous one to
+        # test can_be_submitted_to_ebi
+        exp_params = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': obs.id})
+        new = qdb.artifact.Artifact.create(
+            [(lcopy, 4)], "Demultiplexed", parents=[obs],
+            processing_parameters=exp_params)
+        self.assertFalse(new.can_be_submitted_to_ebi)
 
     def test_create_copy_files(self):
         exp_params = qdb.software.Parameters.from_default_params(
