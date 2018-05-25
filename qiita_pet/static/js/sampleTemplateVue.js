@@ -1,12 +1,12 @@
 var sampleTemplatePage = null;
 
-function get_column_summary(portal, column, numSamples){
+function get_column_summary(study_id, portal, column, numSamples){
   var row = $('.' + column + 'collapsed');
 
   if (row.is(":hidden")) {
     var cell = $(row.children()[0]);
     cell.html('<img src="' + portal + '/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/>');
-    $.get(portal + '/study/description/sample_template/columns/', {study_id: vm.studyId, column: column}, function(data) {
+    $.get(portal + '/study/description/sample_template/columns/', {study_id: study_id, column: column}, function(data) {
       cell.html('');
       var values = data['values'];
       var uniques = $.unique($.extend(true, [], data['values']));
@@ -276,7 +276,7 @@ Vue.component('sample-template-page', {
           $('<b>').append(cat + ': ').appendTo($td);
           $td.append('&nbsp;&nbsp;&nbsp;&nbsp;');
           collapsedId = cat + 'collapsed';
-          fcall = 'get_column_summary("' + vm.portal + '", "' + cat + '", ' + vm.numSamples + ')';
+          fcall = 'get_column_summary(' + vm.studyId + ', "' + vm.portal + '", "' + cat + '", ' + vm.numSamples + ')';
           $bt = $('<button>').addClass('btn btn-default').attr('onclick', fcall).attr('data-toggle', 'collapse').attr('data-target', '.' + collapsedId).append('Values').appendTo($td);
           $trVal = $('<tr>').addClass('collapse').addClass(collapsedId).appendTo($table);
           $('<td>').attr('colspan', '3').append('&nbsp;').appendTo($trVal);
