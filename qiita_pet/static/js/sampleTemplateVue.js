@@ -6,7 +6,7 @@ function get_column_summary(portal, column, numSamples){
   if (row.is(":hidden")) {
     var cell = $(row.children()[0]);
     cell.html('<img src="' + portal + '/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/>');
-    $.get(portal + '/study/description/sample_template/columns/', {study_id: 1, column: column}, function(data) {
+    $.get(portal + '/study/description/sample_template/columns/', {study_id: vm.studyId, column: column}, function(data) {
       cell.html('');
       var values = data['values'];
       var uniques = $.unique($.extend(true, [], data['values']));
