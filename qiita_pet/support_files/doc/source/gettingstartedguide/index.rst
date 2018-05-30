@@ -89,8 +89,8 @@ EBI-ENA NULL values vocabulary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For all public studies including those being submitted to EBI, no blanks are allowed in the sample information.
-We support the following null values: *not applicable*, *missing: not collected*, *missing: not provided*,
-*missing: restricted access*.
+We support the following null values: *not applicable*, *not collected*, *not provided*,
+*restricted access*.
 
 For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
 
@@ -139,6 +139,13 @@ Upload Sample Information
 
   * Drag your sample info file into the box to upload your files
   * Your uploaded samples will appear under the "Files" section
+  * You can currently upload biom tables, .fastq files, .fastq.gz files, among others.
+  * For a full list check the upload page of any study.
+
+    * *Note that '.zip' files can not be processed.*
+    * *Note that '.fasta' and '.fna' files require '.qual' files for submission.*
+    * *Note that '.txt.' files must be tab separated and require the extension .txt.*
+
   * **Delete selected files**: Delete a file with the selected boxes
   * **Go to study description**: Link to the study description page
 

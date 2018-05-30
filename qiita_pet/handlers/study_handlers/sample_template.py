@@ -10,7 +10,6 @@ from os.path import basename
 from json import loads, dumps
 
 from tornado.web import authenticated, HTTPError
-from natsort import natsorted
 
 from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -365,22 +364,22 @@ class SampleTemplateOverviewHandler(BaseHandler):
                 study_id, self.current_user))
 
 
-def sample_template_summary_get_req(study_id, user):
-    """Returns a summary of the sample template metadata columns
+def sample_template_columns_get_req(study_id, column, user):
+    """Returns the columns of the sample template
 
     Parameters
     ----------
     study_id: int
         The study to retrieve the sample information summary
+    column: str
+        The column of interest, if None send all columns
     user: qiita_db.user
         The user performing the request
 
     Returns
     -------
-    dict of {str: object}
-        Keys are metadata categories and the values are list of tuples. Each
-        tuple is an observed value in the category and the number of times
-        it's seen.
+    list of str
+        The result of the search
 
     Raises
     ------
@@ -391,31 +390,25 @@ def sample_template_summary_get_req(study_id, user):
     # template exists
     sample_template_checks(study_id, user, check_exists=True)
 
-    st = SampleTemplate(study_id)
-    df = st.to_dataframe()
+    if column is None:
+        reply = SampleTemplate(study_id).categories()
+    else:
+        reply = SampleTemplate(study_id).get_category(column).values()
 
-    # Drop the study_id column if it exists
-    if 'study_id' in df.columns:
-        df.drop('study_id', axis=1, inplace=True)
-
-    res = {}
-    for column in df.columns:
-        counts = df[column].value_counts()
-        res[str(column)] = [(str(key), counts[key])
-                            for key in natsorted(
-                                counts.index,
-                                key=lambda x: unicode(x, errors='ignore'))]
-
-    return res
+    return reply
 
 
-class SampleTemplateSummaryHandler(BaseHandler):
+class SampleTemplateColumnsHandler(BaseHandler):
     @authenticated
     def get(self):
         """Send formatted summary page of sample template"""
-        study_id = int(self.get_argument('study_id'))
-        self.write(
-            sample_template_summary_get_req(study_id, self.current_user))
+        sid = int(self.get_argument('study_id'))
+        column = self.get_argument('column', None)
+
+        reply = sample_template_columns_get_req(sid, column, self.current_user)
+
+        # we reply with {'values': reply} because tornado expectes a dict
+        self.write({'values': reply})
 
 
 def _build_sample_summary(study_id, user_id):

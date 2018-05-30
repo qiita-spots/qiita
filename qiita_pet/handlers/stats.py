@@ -62,7 +62,8 @@ class StatsHandler(BaseHandler):
                     number_studies=stats['number_studies'],
                     number_of_samples=stats['number_of_samples'],
                     num_users=stats['num_users'],
-                    lat_longs=eval(stats['lat_longs']),
+                    lat_longs=eval(
+                        stats['lat_longs']) if stats['lat_longs'] else [],
                     num_studies_ebi=stats['num_studies_ebi'],
                     num_samples_ebi=stats['num_samples_ebi'],
                     number_samples_ebi_prep=stats['number_samples_ebi_prep'],

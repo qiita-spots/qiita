@@ -65,7 +65,7 @@
           // modified from: https://jsfiddle.net/8rejaL88/2/
           tr.addClass('shown');
           row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
-          $.get('/artifact/info/', {ids: JSON.parse(row.data()[0]), only_biom: 'False' })
+          $.post('/artifact/info/', {ids: JSON.parse(row.data()[0]), only_biom: 'False' })
             .done(function ( data ) {
               if (data['status']=='success') {
                 $('td', row.child()).html(format_biom_rows(data.data, row.index(), for_study_list=false)).show();
@@ -90,7 +90,7 @@
           // modified from: https://jsfiddle.net/8rejaL88/2/
           tr.addClass('shown');
           row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
-          $.get('/artifact/info/', {ids: JSON.parse(row.data()[0]), only_biom: 'False' })
+          $.post('/artifact/info/', {ids: JSON.parse(row.data()[0]), only_biom: 'False' })
             .done(function ( data ) {
               if (data['status']=='success') {
                 $('td', row.child()).html(format_biom_rows(data.data, row.index(), for_study_list=false)).show();
