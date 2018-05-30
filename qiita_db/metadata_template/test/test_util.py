@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from six import StringIO
+from inspect import currentframe, getfile
+from os.path import dirname, abspath, join
 from unittest import TestCase, main
 import warnings
 
@@ -67,6 +69,14 @@ class TestUtil(TestCase):
             StringIO(EXP_SAMPLE_TEMPLATE))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_xlsx(self):
+        # test loading a qiimp file
+        fp = join(dirname(abspath(getfile(currentframe()))),
+                  'support_files', 'a_qiimp_wb.xlsx')
+        obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
+        exp = pd.DataFrame.from_dict(EXP_QIIMP, dtype=str)
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_qiime_map(self):
@@ -843,6 +853,33 @@ EXP_PREP_TEMPLATE = (
     'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 1\n'
     '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
     'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 2\n')
+
+EXP_QIIMP = {
+    'asfaewf': {
+        'sample': 'f',
+        'oijnmk': 'f',
+        ('No more than 1000 samples can be entered in this worksheet.  If you '
+         'need to submit metadata for >1000 samples, please contact CMI '
+         'directly.'): ''},
+    'pheno': {
+        'sample': 'med',
+        'oijnmk': 'missing: not provided',
+        ('No more than 1000 samples can be entered in this worksheet.  If you '
+         'need to submit metadata for >1000 samples, please contact CMI '
+         'directly.'): ''},
+    'bawer': {
+        'sample': 'a',
+        'oijnmk': 'b',
+        ('No more than 1000 samples can be entered in this worksheet.  If you '
+         'need to submit metadata for >1000 samples, please contact CMI '
+         'directly.'): ''},
+    'aelrjg': {
+        'sample': 'asfe',
+        'oijnmk': 'asfs',
+        ('No more than 1000 samples can be entered in this worksheet.  If you '
+         'need to submit metadata for >1000 samples, please contact CMI '
+         'directly.'): ''}
+}
 
 if __name__ == '__main__':
     main()
