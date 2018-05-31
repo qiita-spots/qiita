@@ -1739,16 +1739,26 @@ def _get_filehandle(filepath_or, *args, **kwargs):
             sheetnames = wb.sheetnames
             # let's check if Qiimp, they must be in same order
             first_cell_index = 0
+            is_qiimp_wb = False
             if sheetnames == ["Metadata", "Validation", "Data Dictionary",
                               "metadata_schema", "metadata_form",
                               "Instructions"]:
                 first_cell_index = 1
+                is_qiimp_wb = True
             first_sheet = wb[sheetnames[0]]
             cell_range = range(first_cell_index, first_sheet.max_column)
             _, fp = mkstemp(suffix='.txt')
             with open(fp, 'w') as fh:
                 cfh = csv_writer(fh, delimiter='\t')
                 for r in first_sheet.rows:
+                    if is_qiimp_wb:
+                        # check contents of first column; if they are a zero
+                        # (not a valid QIIMP sample_id) or a "No more than
+                        # max samples" message, there are no more valid rows,
+                        # so don't examine any more rows.
+                        fcv = str(r[cell_range[0]].value)
+                        if fcv == "0" or fcv.startswith("No more than"):
+                            break
                     cfh.writerow([r[x].value for x in cell_range])
             fh, own_fh = open(fp, *args, **kwargs), True
         else:

@@ -72,11 +72,28 @@ class TestUtil(TestCase):
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_xlsx(self):
+        mfp = join(dirname(abspath(getfile(currentframe()))), 'support_files')
+
         # test loading a qiimp file
-        fp = join(dirname(abspath(getfile(currentframe()))),
-                  'support_files', 'a_qiimp_wb.xlsx')
+        fp = join(mfp, 'a_qiimp_wb.xlsx')
         obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
         exp = pd.DataFrame.from_dict(EXP_QIIMP, dtype=str)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+        # test loading an empty qiimp file
+        fp = join(mfp, 'empty_qiimp_wb.xlsx')
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError) as error:
+            qdb.metadata_template.util.load_template_to_dataframe(fp)
+        self.assertEqual(
+            str(error.exception), "The 'sample_name' column is missing from "
+            "your template, this file cannot be parsed.")
+
+        # test loading non qiimp file
+        fp = join(mfp, 'not_a_qiimp_wb.xlsx')
+        obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
+        exp = pd.DataFrame.from_dict(EXP_NOT_QIIMP, dtype=str)
+        exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_qiime_map(self):
@@ -855,30 +872,17 @@ EXP_PREP_TEMPLATE = (
     'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 2\n')
 
 EXP_QIIMP = {
-    'asfaewf': {
-        'sample': 'f',
-        'oijnmk': 'f',
-        ('No more than 1000 samples can be entered in this worksheet.  If you '
-         'need to submit metadata for >1000 samples, please contact CMI '
-         'directly.'): ''},
-    'pheno': {
-        'sample': 'med',
-        'oijnmk': 'missing: not provided',
-        ('No more than 1000 samples can be entered in this worksheet.  If you '
-         'need to submit metadata for >1000 samples, please contact CMI '
-         'directly.'): ''},
-    'bawer': {
-        'sample': 'a',
-        'oijnmk': 'b',
-        ('No more than 1000 samples can be entered in this worksheet.  If you '
-         'need to submit metadata for >1000 samples, please contact CMI '
-         'directly.'): ''},
-    'aelrjg': {
-        'sample': 'asfe',
-        'oijnmk': 'asfs',
-        ('No more than 1000 samples can be entered in this worksheet.  If you '
-         'need to submit metadata for >1000 samples, please contact CMI '
-         'directly.'): ''}
+    'asfaewf': {'sample': 'f', 'oijnmk': 'f'},
+    'pheno': {'sample': 'med', 'oijnmk': 'missing: not provided'},
+    'bawer': {'sample': 'a', 'oijnmk': 'b'},
+    'aelrjg': {'sample': 'asfe', 'oijnmk': 'asfs'}
+}
+
+EXP_NOT_QIIMP = {
+    'myownidea': {
+        'sample5': 'I skipped some',
+        'sample1': 'sampleoneinfo',
+        'sample2': 'sampletwoinfo'}
 }
 
 if __name__ == '__main__':
