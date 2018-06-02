@@ -83,11 +83,9 @@ class TestUtil(TestCase):
 
         # test loading an empty qiimp file
         fp = join(mfp, 'empty_qiimp_wb.xlsx')
-        with self.assertRaises(qdb.exceptions.QiitaDBColumnError) as error:
+        with self.assertRaises(ValueError) as error:
             qdb.metadata_template.util.load_template_to_dataframe(fp)
-        self.assertEqual(
-            str(error.exception), "The 'sample_name' column is missing from "
-            "your template, this file cannot be parsed.")
+        self.assertEqual(str(error.exception), "The template is empty")
 
         # test loading non qiimp file
         fp = join(mfp, 'not_a_qiimp_wb.xlsx')
