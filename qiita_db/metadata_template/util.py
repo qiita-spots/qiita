@@ -182,6 +182,8 @@ def load_template_to_dataframe(fn, index='sample_name'):
                      regex=True, inplace=True)
     # removing columns with empty values
     template.dropna(axis='columns', how='all', inplace=True)
+    if template.empty:
+        raise ValueError("The template is empty")
 
     initial_columns = set(template.columns)
 
