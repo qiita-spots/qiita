@@ -1727,8 +1727,13 @@ def _is_string_or_bytes(s):
 
 
 def _get_filehandle(filepath_or, *args, **kwargs):
-    """Open file if `filepath_or` looks like a string/unicode/bytes, else
+    """Open file if `filepath_or` looks like a string/unicode/bytes/Excel, else
     pass through.
+
+    Notes
+    -----
+    If Excel, the code will write a temporary txt file with the contents. Also,
+    it will check if the file is a Qiimp file or a regular Excel file.
     """
     if _is_string_or_bytes(filepath_or):
         if h5py.is_hdf5(filepath_or):
