@@ -22,5 +22,17 @@ class TestNoPageHandler(TestHandlerBase):
         self.assertEqual(response.code, 404)
 
 
+class TestIFrame(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/iframe/')
+        self.assertEqual(response.code, 200)
+        self.assertIn("<b>No content</b>", response.body)
+
+        response = self.get('/iframe/?iframe=qiita-terms')
+        self.assertEqual(response.code, 200)
+        self.assertIn('src="/static/qiita_data_terms_of_use.html"',
+                      response.body)
+
+
 if __name__ == "__main__":
     main()

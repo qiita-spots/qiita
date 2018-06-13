@@ -40,16 +40,15 @@
       {% else %}
         <small><b>(Private)</b></small>
       {% end %}
-      <a class="btn btn-info" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"><span class=" glyphicon glyphicon-share"></span></a>
       {% if analysis_mapping_id is not None %}
         <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{analysis_mapping_id}}"><span class="glyphicon glyphicon-download-alt"></span> Mapping file</a>
       {% end %}
       {% if not analysis_is_public %}
-        <a class="btn btn-default" onclick="if (confirm('Are you sure you want to make this analysis public?')) { $('#make-public').submit(); }"><span class="glyphicon glyphicon-globe"></span> Make analysis public</a>
+        <a class="btn btn-default" onclick="if (confirm('Are you sure you want to make this analysis public? Note that this will not allow you to delete your analysis later.')) { $('#make-public').submit(); }"><span class="glyphicon glyphicon-globe"></span> Make analysis public</a>
       {% end %}
     </h2>
     <h3>{{analysis_description}}</h3>
-    Shared with: <span id="shared_html_{{analysis_id}}"></span>
+    <a class="btn btn-info" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"><span class=" glyphicon glyphicon-share"></span></a> Shared with: <span id="shared_html_{{analysis_id}}"></span>
   </div>
 </div>
 <div id='analysis-graph-vue'>

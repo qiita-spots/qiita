@@ -593,6 +593,27 @@ class TestStudy(TestCase):
 
     def test_ebi_submission_status(self):
         self.assertEqual(self.study.ebi_submission_status, 'submitted')
+
+        # let's test that even with a failed job nothing changes
+        # add a failed job for an artifact (2) that can be submitted
+        user = qdb.user.User('test@foo.bar')
+        qp = qdb.software.Software.from_name_and_version('Qiita', 'alpha')
+        cmd = qp.get_command('submit_to_EBI')
+        params = qdb.software.Parameters.load(cmd, values_dict={
+            'artifact': 2, 'submission_type': 'ADD'})
+        job = qdb.processing_job.ProcessingJob.create(user, params, True)
+        job._set_error('Killed by Admin')
+        # and just to be careful add a failed job for an artifact (1) that
+        # cannot be submitted
+        qp = qdb.software.Software.from_name_and_version('Qiita', 'alpha')
+        cmd = qp.get_command('submit_to_EBI')
+        params = qdb.software.Parameters.load(cmd, values_dict={
+            'artifact': 1, 'submission_type': 'ADD'})
+        job = qdb.processing_job.ProcessingJob.create(user, params, True)
+        job._set_error('Killed by Admin')
+        # should still return submited
+        self.assertEqual(self.study.ebi_submission_status, 'submitted')
+
         new = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'),
             'NOT Identification of the Microbiomes for Cannabis Soils 5',

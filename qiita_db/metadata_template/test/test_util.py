@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from six import StringIO
+from inspect import currentframe, getfile
+from os.path import dirname, abspath, join
 from unittest import TestCase, main
 import warnings
 
@@ -66,6 +68,29 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_xlsx(self):
+        mfp = join(dirname(abspath(getfile(currentframe()))), 'support_files')
+
+        # test loading a qiimp file
+        fp = join(mfp, 'a_qiimp_wb.xlsx')
+        obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
+        exp = pd.DataFrame.from_dict(EXP_QIIMP, dtype=str)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+        # test loading an empty qiimp file
+        fp = join(mfp, 'empty_qiimp_wb.xlsx')
+        with self.assertRaises(ValueError) as error:
+            qdb.metadata_template.util.load_template_to_dataframe(fp)
+        self.assertEqual(str(error.exception), "The template is empty")
+
+        # test loading non qiimp file
+        fp = join(mfp, 'not_a_qiimp_wb.xlsx')
+        obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
+        exp = pd.DataFrame.from_dict(EXP_NOT_QIIMP, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -843,6 +868,20 @@ EXP_PREP_TEMPLATE = (
     'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 1\n'
     '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
     'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 2\n')
+
+EXP_QIIMP = {
+    'asfaewf': {'sample': 'f', 'oijnmk': 'f'},
+    'pheno': {'sample': 'med', 'oijnmk': 'missing: not provided'},
+    'bawer': {'sample': 'a', 'oijnmk': 'b'},
+    'aelrjg': {'sample': 'asfe', 'oijnmk': 'asfs'}
+}
+
+EXP_NOT_QIIMP = {
+    'myownidea': {
+        'sample5': 'I skipped some',
+        'sample1': 'sampleoneinfo',
+        'sample2': 'sampletwoinfo'}
+}
 
 if __name__ == '__main__':
     main()
