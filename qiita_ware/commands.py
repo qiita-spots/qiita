@@ -53,12 +53,18 @@ def submit_EBI(artifact_id, action, send, test=False):
     ebi_submission.generate_xml_files()
 
     if send:
+        # getting aspera's password
+        old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
+        if old_ascp_pass == '':
+            environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
+        ascp_passwd = environ['ASPERA_SCP_PASS']
+        environ['ASPERA_SCP_PASS'] = old_ascp_pass
+        LogEntry.create('Runtime',
+                        ('Submission of sequences of pre_processed_id: '
+                         '%d completed successfully' % artifact_id))
+
         # step 4: sending sequences
         if action != 'MODIFY':
-            old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
-            if old_ascp_pass == '':
-                environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
-
             LogEntry.create('Runtime',
                             ("Submitting sequences for pre_processed_id: "
                              "%d" % artifact_id))
@@ -70,12 +76,6 @@ def submit_EBI(artifact_id, action, send, test=False):
                     raise ComputeError(error_msg)
                 open(ebi_submission.ascp_reply, 'a').write(
                     'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
-
-            ascp_passwd = environ['ASPERA_SCP_PASS']
-            environ['ASPERA_SCP_PASS'] = old_ascp_pass
-            LogEntry.create('Runtime',
-                            ('Submission of sequences of pre_processed_id: '
-                             '%d completed successfully' % artifact_id))
 
         # step 5: sending xml and parsing answer
         xmls_cmds = ebi_submission.generate_curl_command(

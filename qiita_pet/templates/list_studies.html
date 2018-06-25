@@ -58,6 +58,7 @@ $(document).ready(function() {
   $('#user-studies-table').dataTable({
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
+      "sDom": '<"top">rti<"bottom"p>',
       "columns": [
         { "orderable": false, "data": "artifact_biom_ids" },
         { "data": "study_title" },
