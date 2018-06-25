@@ -51,6 +51,9 @@ from functools import partial
 from os.path import join, basename, isdir, exists
 from os import walk, remove, listdir, makedirs, rename
 from shutil import move, rmtree, copy as shutil_copy
+from openpyxl import load_workbook
+from tempfile import mkstemp
+from csv import writer as csv_writer
 from json import dumps
 from datetime import datetime
 from itertools import chain
@@ -1724,12 +1727,45 @@ def _is_string_or_bytes(s):
 
 
 def _get_filehandle(filepath_or, *args, **kwargs):
-    """Open file if `filepath_or` looks like a string/unicode/bytes, else
+    """Open file if `filepath_or` looks like a string/unicode/bytes/Excel, else
     pass through.
+
+    Notes
+    -----
+    If Excel, the code will write a temporary txt file with the contents. Also,
+    it will check if the file is a Qiimp file or a regular Excel file.
     """
     if _is_string_or_bytes(filepath_or):
         if h5py.is_hdf5(filepath_or):
             fh, own_fh = h5py.File(filepath_or, *args, **kwargs), True
+        elif filepath_or.endswith('.xlsx'):
+            # due to extension, let's assume Excel file
+            wb = load_workbook(filename=filepath_or, data_only=True)
+            sheetnames = wb.sheetnames
+            # let's check if Qiimp, they must be in same order
+            first_cell_index = 0
+            is_qiimp_wb = False
+            if sheetnames == ["Metadata", "Validation", "Data Dictionary",
+                              "metadata_schema", "metadata_form",
+                              "Instructions"]:
+                first_cell_index = 1
+                is_qiimp_wb = True
+            first_sheet = wb[sheetnames[0]]
+            cell_range = range(first_cell_index, first_sheet.max_column)
+            _, fp = mkstemp(suffix='.txt')
+            with open(fp, 'w') as fh:
+                cfh = csv_writer(fh, delimiter='\t')
+                for r in first_sheet.rows:
+                    if is_qiimp_wb:
+                        # check contents of first column; if they are a zero
+                        # (not a valid QIIMP sample_id) or a "No more than
+                        # max samples" message, there are no more valid rows,
+                        # so don't examine any more rows.
+                        fcv = str(r[cell_range[0]].value)
+                        if fcv == "0" or fcv.startswith("No more than"):
+                            break
+                    cfh.writerow([r[x].value for x in cell_range])
+            fh, own_fh = open(fp, *args, **kwargs), True
         else:
             fh, own_fh = open(filepath_or, *args, **kwargs), True
     else:
