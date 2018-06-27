@@ -72,6 +72,7 @@ def submit_EBI(artifact_id, action, send, test=False):
                 if rv != 0:
                     error_msg = ("ASCP Error:\nStd output:%s\nStd error:%s" % (
                         stdout, stderr))
+                    environ['ASPERA_SCP_PASS'] = old_ascp_pass
                     raise ComputeError(error_msg)
                 open(ebi_submission.ascp_reply, 'a').write(
                     'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
