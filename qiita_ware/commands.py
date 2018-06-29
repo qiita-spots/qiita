@@ -70,8 +70,10 @@ def submit_EBI(artifact_id, action, send, test=False):
             for cmd in ebi_submission.generate_send_sequences_cmd():
                 stdout, stderr, rv = system_call(cmd)
                 if rv != 0:
-                    error_msg = ("ASCP Error:\nStd output:%s\nStd error:%s" % (
-                        stdout, stderr))
+                    error_msg = (
+                        "ASCP Error:\nCommand:%s | Password %s\nStd output: "
+                        "%s\nStd error:%s" % (cmd, environ['ASPERA_SCP_PASS'],
+                                              stdout, stderr))
                     environ['ASPERA_SCP_PASS'] = old_ascp_pass
                     raise ComputeError(error_msg)
                 open(ebi_submission.ascp_reply, 'a').write(
