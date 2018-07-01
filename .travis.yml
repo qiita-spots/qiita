@@ -4,7 +4,6 @@ sudo: false
 env:
   global:
     - PYTHON_VERSION=3.5
-    - secure: "ZRCSJe2u1T7LtcKmy0jy8L1IdX4KIgwM79vm8/ZAjq4bfcNDjJu3mBsFy0sPx4A91abfZeG2vgp0D3/sWfrXzRvxcXv983lhvfgc0UL3ZOuCwl8cpNreH75AC+Z2zjohrq9wNmZQNCYd89xmkybzY9tS0d6UAFrh4Dh39FiYtDU="
   matrix:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
@@ -70,6 +69,7 @@ script:
   - qiita pet webserver --no-build-docs start &
   - sleep 5
   - QIITA_PID=$!
+  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then openssl aes-256-cbc -K $encrypted_bcdc06e5ae76_key -iv $encrypted_bcdc06e5ae76_iv -in qiita_core/support_files/config_test.cfg.enc -out qiita_core/support_files/config_test.cfg -d ; fi
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE
   - kill $QIITA_PID
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
