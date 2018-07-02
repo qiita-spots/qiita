@@ -52,6 +52,17 @@
 
       <hr>
       <h3><u>Files</u></h3>
+      <table align="center" border="0">
+        <tr>
+          <td>
+            <button type="button" class="btn btn-light" onclick="$('input[name*=\'files_to_erase\']').prop('checked', true);">Select All</button>
+          </td>
+          <td width="30px">&nbsp;</td>
+          <td>
+            <button type="button" class="btn btn-light" onclick="$('input[name*=\'files_to_erase\']').removeAttr('checked');">Select None</button>
+          </td>
+        </tr>
+      </table>
       <br/>
       <form method="post" id="delete-files-form">
         <div class="uploader-list" style="display:none;">
