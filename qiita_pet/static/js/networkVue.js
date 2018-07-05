@@ -76,7 +76,7 @@ Vue.component('processing-graph', {
                   '</div>' +
                   '<div class="row">' +
                     '<div class="col-md-12">' +
-                      '<b>Click on the graph to navigate through it. Click circles for more information. This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a></b>' +
+                      '<b>Click on the graph to navigate through it. Click circles for more information. This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a><br/><span id="sphere-explanation"></span></b>' +
                     '</div>' +
                   '</div>' +
                 '</div>' +
@@ -1076,6 +1076,7 @@ Vue.component('processing-graph', {
       'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}},
       'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}},
       'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}}};
+
     show_loading('processing-network-div');
     $("#processing-network-div").hide();
 
@@ -1086,6 +1087,12 @@ Vue.component('processing-graph', {
       vm.countdownPoll = 15;
       vm.update_job_status();
     });
+
+    var sphere_explanation = [];
+    for (sphere_name in vm.colorScheme) {
+      sphere_explanation.push('<td style="padding: 5px; background-color:' + vm.colorScheme[sphere_name]['background'] + ';"><small>' + sphere_name + '</small></td>');
+    }
+    $('#sphere-explanation').html('<table style="border-spacing: 3px;border-collapse: separate;"><tr><td><small>Sphere color reference:</small><td>' + sphere_explanation.join('') + '</tr></table>');
 
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available
