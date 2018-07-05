@@ -5,6 +5,7 @@ Version 062018
 
 * We haven't updated the ChangeLog for a while (since circa 2015). Anyway, we will ask developers to add an entry for any new features in Qiita.
 * Now you can select or unselect all files in the upload folder.
+* Added circle color explanation in the processing network
 
 Version 0.2.0-dev
 -----------------

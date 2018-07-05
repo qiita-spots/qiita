@@ -76,7 +76,7 @@ Vue.component('processing-graph', {
                   '</div>' +
                   '<div class="row">' +
                     '<div class="col-md-12">' +
-                      '<b>Click on the graph to navigate through it. Click circles for more information. This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a><br/><span id="sphere-explanation"></span></b>' +
+                      '<b>Click on the graph to navigate through it. Click circles for more information. This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a><br/><span id="circle-explanation"></span></b>' +
                     '</div>' +
                   '</div>' +
                 '</div>' +
@@ -1088,11 +1088,11 @@ Vue.component('processing-graph', {
       vm.update_job_status();
     });
 
-    var sphere_explanation = [];
-    for (sphere_name in vm.colorScheme) {
-      sphere_explanation.push('<td style="padding: 5px; background-color:' + vm.colorScheme[sphere_name]['background'] + ';"><small>' + sphere_name + '</small></td>');
+    var circle_explanation = [];
+    for (circle_name in vm.colorScheme) {
+      circle_explanation.push('<td style="padding: 5px; background-color:' + vm.colorScheme[circle_name]['background'] + ';"><small>' + circle_name + '</small></td>');
     }
-    $('#sphere-explanation').html('<table style="border-spacing: 3px;border-collapse: separate;"><tr><td><small>Sphere color reference:</small><td>' + sphere_explanation.join('') + '</tr></table>');
+    $('#circle-explanation').html('<table style="border-spacing: 3px;border-collapse: separate;"><tr><td><small>Circle color reference:</small><td>' + circle_explanation.join('') + '</tr></table>');
 
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available
