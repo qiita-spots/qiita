@@ -1,5 +1,12 @@
 var sampleTemplatePage = null;
 
+// taken from https://stackoverflow.com/a/19963011
+function unique(array) {
+    return $.grep(array, function(el, index) {
+        return index == $.inArray(el, array);
+    });
+}
+
 function get_column_summary(study_id, portal, column, numSamples){
   var row = $('.' + column + 'collapsed');
 
@@ -9,7 +16,7 @@ function get_column_summary(study_id, portal, column, numSamples){
     $.get(portal + '/study/description/sample_template/columns/', {study_id: study_id, column: column}, function(data) {
       cell.html('');
       var values = data['values'];
-      var uniques = $.unique($.extend(true, [], data['values']));
+      var uniques = unique(values);
       var table = $('<table>').addClass('table').appendTo(cell);
       if (uniques.length === 1) {
         var tr = $('<tr>').appendTo(table);

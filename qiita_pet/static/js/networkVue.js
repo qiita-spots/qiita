@@ -1088,11 +1088,28 @@ Vue.component('processing-graph', {
       vm.update_job_status();
     });
 
-    var circle_explanation = [];
+    var circle_statuses = [];
+    var circle_types = [];
     for (circle_name in vm.colorScheme) {
-      circle_explanation.push('<td style="padding: 5px; background-color:' + vm.colorScheme[circle_name]['background'] + ';"><small>' + circle_name + '</small></td>');
+      var text = '<td style="padding: 5px; background-color:' + vm.colorScheme[circle_name]['background'] +
+        ';"><small>' + circle_name + '</small></td>';
+      if (circle_name === 'artifact' || circle_name === 'type'){
+        circle_types.push(text);
+      } else {
+        circle_statuses.push(text);
+      }
     }
-    $('#circle-explanation').html('<table style="border-spacing: 3px;border-collapse: separate;"><tr><td><small>Circle color reference:</small><td>' + circle_explanation.join('') + '</tr></table>');
+    var full_text = '<table style="border-spacing: 3px;border-collapse: separate;">' +
+      '<tr>' +
+        '<td><small>Circle status:</small></td>' +
+        '<td>' + circle_statuses.join('') + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<td><small>Circle types:</small>' +
+        '<td>' + circle_types.join('') + '</td>' +
+      '</tr>' +
+    '</table>';
+    $('#circle-explanation').html(full_text);
 
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available
