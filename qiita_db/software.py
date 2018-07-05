@@ -628,7 +628,9 @@ class Command(qdb.base.QiitaObject):
 
         Returns
         -------
-        dict of {'parameters': [list of str], 'outputs': [list of str]}
+        dict of {'parameters': [list of str],
+                 'outputs': [list of str]
+                 'ignore_parent_command': bool}
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT parameter_name
@@ -643,7 +645,16 @@ class Command(qdb.base.QiitaObject):
                      ORDER BY name"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             outputs = qdb.sql_connection.TRN.execute_fetchflatten()
-            return {'parameters': params, 'outputs': outputs}
+
+            sql = """SELECT ignore_parent_command
+                     FROM qiita.software_command
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            ipc = qdb.sql_connection.TRN.execute_fetchlast()
+
+            return {'parameters': params,
+                    'outputs': outputs,
+                    'ignore_parent_command': ipc}
 
 
 class Software(qdb.base.QiitaObject):
