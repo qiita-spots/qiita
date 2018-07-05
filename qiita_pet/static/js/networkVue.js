@@ -1090,7 +1090,7 @@ Vue.component('processing-graph', {
 
     var circle_statuses = [];
     var circle_types = [];
-    for (circle_name in vm.colorScheme) {
+    for (var circle_name in vm.colorScheme) {
       var text = '<td style="padding: 5px; background-color:' + vm.colorScheme[circle_name]['background'] +
         ';"><small>' + circle_name + '</small></td>';
       if (circle_name === 'artifact' || circle_name === 'type'){
