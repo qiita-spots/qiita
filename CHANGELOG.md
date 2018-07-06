@@ -5,9 +5,11 @@ Version 062018
 
 * We haven't updated the ChangeLog for a while (since circa 2015). Anyway, we will ask developers to add an entry for any new features in Qiita.
 * Now you can select or unselect all files in the upload folder.
-* Added circle color explanation in the processing network
-* Fixed error in the sample info category summary (https://github.com/biocore/qiita/issues/2610)
-* Adding qiita_db.processing_job.ProcessingJob.get_validator_jobs to remove duplicated code
+* Added circle color explanation in the processing network.
+* Fixed error in the sample info category summary (https://github.com/biocore/qiita/issues/2610).
+* Qiimp has been added to the Qiita GUI.
+* We added the qt-shogun plugin.
+* Adding qiita_db.processing_job.ProcessingJob.get_validator_jobs to remove duplicated code.
 
 Version 0.2.0-dev
 -----------------
