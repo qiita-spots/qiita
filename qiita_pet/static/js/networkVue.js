@@ -76,7 +76,7 @@ Vue.component('processing-graph', {
                   '</div>' +
                   '<div class="row">' +
                     '<div class="col-md-12">' +
-                      '<b>Click on the graph to navigate through it. Click circles for more information. This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a></b>' +
+                      '<b>Click on the graph to navigate through it. Click circles for more information. This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a><br/><span id="circle-explanation"></span></b>' +
                     '</div>' +
                   '</div>' +
                 '</div>' +
@@ -1076,6 +1076,7 @@ Vue.component('processing-graph', {
       'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}},
       'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}},
       'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}}};
+
     show_loading('processing-network-div');
     $("#processing-network-div").hide();
 
@@ -1086,6 +1087,29 @@ Vue.component('processing-graph', {
       vm.countdownPoll = 15;
       vm.update_job_status();
     });
+
+    var circle_statuses = [];
+    var circle_types = [];
+    for (var circle_name in vm.colorScheme) {
+      var text = '<td style="padding: 5px; background-color:' + vm.colorScheme[circle_name]['background'] +
+        ';"><small>' + circle_name + '</small></td>';
+      if (circle_name === 'artifact' || circle_name === 'type'){
+        circle_types.push(text);
+      } else {
+        circle_statuses.push(text);
+      }
+    }
+    var full_text = '<table style="border-spacing: 3px;border-collapse: separate;">' +
+      '<tr>' +
+        '<td><small>Circle status:</small></td>' +
+        '<td>' + circle_statuses.join('') + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<td><small>Circle types:</small>' +
+        '<td>' + circle_types.join('') + '</td>' +
+      '</tr>' +
+    '</table>';
+    $('#circle-explanation').html(full_text);
 
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available
