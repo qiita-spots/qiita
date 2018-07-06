@@ -467,7 +467,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             # Check if all the validators are completed. Validator jobs can be
             # in two states when completed: 'waiting' in case of success
             # or 'error' otherwise
-            validator_ids = [j.id for j in self.get_validator_jobs
+            validator_ids = [j.id for j in self.validator_jobs
                              if j.status not in ['waiting', 'error']]
 
             # Active polling - wait until all validator jobs are completed
@@ -476,16 +476,16 @@ class ProcessingJob(qdb.base.QiitaObject):
                 self.step = ("Validating outputs (%d remaining) via "
                              "job(s) %s" % (len(validator_ids), jids))
                 sleep(10)
-                validator_ids = [j.id for j in self.get_validator_jobs
+                validator_ids = [j.id for j in self.validator_jobs
                                  if j.status not in ['waiting', 'error']]
 
             # Check if any of the validators errored
-            errored = [j for j in self.get_validator_jobs
+            errored = [j for j in self.validator_jobs
                        if j.status == 'error']
             if errored:
                 # At least one of the validators failed, Set the rest of the
                 # validators and the current job as failed
-                waiting = [j.id for j in self.get_validator_jobs
+                waiting = [j.id for j in self.validator_jobs
                            if j.status == 'waiting']
 
                 common_error = "\n".join(
@@ -505,7 +505,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # to create the artifacts. Note that if any artifact creation
                 # fails, the rollback operation will make sure that the
                 # previously created artifacts are not in there
-                for vjob in self.get_validator_jobs:
+                for vjob in self.validator_jobs:
                     mapping.update(vjob.release())
 
                 if mapping:
@@ -908,7 +908,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 yield ProcessingJob(jid)
 
     @property
-    def get_validator_jobs(self):
+    def validator_jobs(self):
         """The validators of this job
 
         Returns

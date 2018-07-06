@@ -91,7 +91,7 @@ def qiita_recover_jobs():
         jobs_with_validators = []
         for j in jids_to_recover:
             job = ProcessingJob(j)
-            validators = job.get_validator_jobs
+            validators = job.validator_jobs
             if not validators:
                 jobs_with_validators.append(j)
                 continue

@@ -9,7 +9,7 @@ Version 062018
 * Fixed error in the sample info category summary (https://github.com/biocore/qiita/issues/2610).
 * Qiimp has been added to the Qiita GUI.
 * We added the qt-shogun plugin.
-* Adding qiita_db.processing_job.ProcessingJob.get_validator_jobs to remove duplicated code.
+* Adding qiita_db.processing_job.ProcessingJob.validator_jobs to remove duplicated code.
 
 Version 0.2.0-dev
 -----------------
