@@ -467,17 +467,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             # Check if all the validators are completed. Validator jobs can be
             # in two states when completed: 'waiting' in case of success
             # or 'error' otherwise
-            sql = """SELECT pjv.validator_id
-                     FROM qiita.processing_job_validator pjv
-                        JOIN qiita.processing_job pj ON
-                            pjv.validator_id = pj.processing_job_id
-                        JOIN qiita.processing_job_status USING
-                            (processing_job_status_id)
-                     WHERE pjv.processing_job_id = %s
-                        AND processing_job_status NOT IN %s"""
-            sql_args = [self.id, ('waiting', 'error')]
-            qdb.sql_connection.TRN.add(sql, sql_args)
-            validator_ids = qdb.sql_connection.TRN.execute_fetchindex()
+            validator_ids = [j.id for j in self.validator_jobs
+                             if j.status not in ['waiting', 'error']]
 
             # Active polling - wait until all validator jobs are completed
             while validator_ids:
@@ -485,30 +476,21 @@ class ProcessingJob(qdb.base.QiitaObject):
                 self.step = ("Validating outputs (%d remaining) via "
                              "job(s) %s" % (len(validator_ids), jids))
                 sleep(10)
-                qdb.sql_connection.TRN.add(sql, sql_args)
-                validator_ids = qdb.sql_connection.TRN.execute_fetchindex()
+                validator_ids = [j.id for j in self.validator_jobs
+                                 if j.status not in ['waiting', 'error']]
 
             # Check if any of the validators errored
-            sql = """SELECT validator_id
-                     FROM qiita.processing_job_validator pjv
-                        JOIN qiita.processing_job pj
-                            ON pjv.validator_id = pj.processing_job_id
-                        JOIN qiita.processing_job_status USING
-                            (processing_job_status_id)
-                        WHERE pjv.processing_job_id = %s AND
-                            processing_job_status = %s"""
-            qdb.sql_connection.TRN.add(sql, [self.id, 'error'])
-            errored = qdb.sql_connection.TRN.execute_fetchflatten()
-
+            errored = [j for j in self.validator_jobs
+                       if j.status == 'error']
             if errored:
                 # At least one of the validators failed, Set the rest of the
                 # validators and the current job as failed
-                qdb.sql_connection.TRN.add(sql, [self.id, 'waiting'])
-                waiting = qdb.sql_connection.TRN.execute_fetchflatten()
+                waiting = [j.id for j in self.validator_jobs
+                           if j.status == 'waiting']
 
                 common_error = "\n".join(
-                    ["Validator %s error message: %s"
-                     % (j, ProcessingJob(j).log.msg) for j in errored])
+                    ["Validator %s error message: %s" % (j.id, j.log.msg)
+                     for j in errored])
 
                 val_error = "%d sister validator jobs failed: %s" % (
                     len(errored), common_error)
@@ -518,18 +500,12 @@ class ProcessingJob(qdb.base.QiitaObject):
                 self._set_error('%d validator jobs failed: %s'
                                 % (len(errored), common_error))
             else:
-                # All validators have successfully completed
-                sql = """SELECT validator_id
-                         FROM qiita.processing_job_validator
-                         WHERE processing_job_id = %s"""
-                qdb.sql_connection.TRN.add(sql, [self.id])
                 mapping = {}
                 # Loop through all validator jobs and release them, allowing
                 # to create the artifacts. Note that if any artifact creation
                 # fails, the rollback operation will make sure that the
                 # previously created artifacts are not in there
-                for jid in qdb.sql_connection.TRN.execute_fetchflatten():
-                    vjob = ProcessingJob(jid)
+                for vjob in self.validator_jobs:
                     mapping.update(vjob.release())
 
                 if mapping:
@@ -927,6 +903,27 @@ class ProcessingJob(qdb.base.QiitaObject):
             sql = """SELECT child_id
                      FROM qiita.parent_processing_job
                      WHERE parent_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            for jid in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield ProcessingJob(jid)
+
+    @property
+    def validator_jobs(self):
+        """The validators of this job
+
+        Returns
+        -------
+        generator of qiita_db.processing_job.ProcessingJob
+            The validators of this job
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT validator_id
+                     FROM qiita.processing_job_validator pjv
+                     JOIN qiita.processing_job pj
+                         ON pjv.validator_id = pj.processing_job_id
+                     JOIN qiita.processing_job_status USING (
+                        processing_job_status_id)
+                     WHERE pjv.processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             for jid in qdb.sql_connection.TRN.execute_fetchflatten():
                 yield ProcessingJob(jid)
