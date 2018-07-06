@@ -1661,17 +1661,20 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     if eparams:
                         cname = "%s (%s)" % (cname, ', '.join(eparams))
 
-                    palgorithm = 'N/A'
-                    if pcid is not None:
-                        palgorithm = pname
-                        ms = commands[pcid]['merging_scheme']
-                        if ms['parameters']:
-                            pparams = pparams[0]
-                            params = ','.join(['%s: %s' % (k, pparams[k])
-                                               for k in ms['parameters']])
-                            palgorithm = "%s (%s)" % (palgorithm, params)
+                    if ms['ignore_parent_command']:
+                        algorithm = cname
+                    else:
+                        palgorithm = 'N/A'
+                        if pcid is not None:
+                            palgorithm = pname
+                            ms = commands[pcid]['merging_scheme']
+                            if ms['parameters']:
+                                pparams = pparams[0]
+                                params = ','.join(['%s: %s' % (k, pparams[k])
+                                                   for k in ms['parameters']])
+                                palgorithm = "%s (%s)" % (palgorithm, params)
 
-                    algorithm = '%s | %s' % (cname, palgorithm)
+                        algorithm = '%s | %s' % (cname, palgorithm)
                     if algorithm not in algorithm_az:
                         algorithm_az[algorithm] = regex.sub('', algorithm)
 

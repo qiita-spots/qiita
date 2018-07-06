@@ -69,7 +69,7 @@ script:
   - qiita pet webserver --no-build-docs start &
   - sleep 5
   - QIITA_PID=$!
-  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then openssl aes-256-cbc -K $encrypted_bcdc06e5ae76_key -iv $encrypted_bcdc06e5ae76_iv -in qiita_core/support_files/config_test.cfg.enc -out qiita_core/support_files/config_test.cfg -d ; fi
+  - if [ ${TRAVIS_BRANCH} == "master" ]; then openssl aes-256-cbc -K $encrypted_bcdc06e5ae76_key -iv $encrypted_bcdc06e5ae76_iv -in qiita_core/support_files/config_test.cfg.enc -out qiita_core/support_files/config_test.cfg -d ; fi
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE
   - kill $QIITA_PID
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi

@@ -492,11 +492,12 @@ class ProcessingJobTest(TestCase):
         job.complete(True, artifacts_data=artifacts_data)
         self._wait_for_job(job)
         # Retrieve the job that is performing the validation:
-        val_job = qdb.processing_job.ProcessingJob(job.step.rsplit(" ", 1)[-1])
+        validators = list(job.validator_jobs)
+        self.assertEqual(len(validators), 1)
         # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(
-            loads(val_job.parameters.values['provenance'])['name'],
+            loads(validators[0].parameters.values['provenance'])['name'],
             "demultiplexed")
 
         # To test that the naming of the output artifact is based on the
@@ -544,11 +545,12 @@ class ProcessingJobTest(TestCase):
         self._wait_for_job(job)
 
         # Retrieve the job that is performing the validation:
-        val_job = qdb.processing_job.ProcessingJob(job.step.rsplit(" ", 1)[-1])
+        validators = list(job.validator_jobs)
+        self.assertEqual(len(validators), 1)
         # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(
-            loads(val_job.parameters.values['provenance'])['name'],
+            loads(validators[0].parameters.values['provenance'])['name'],
             "demultiplexed golay_12 1.5")
 
     def test_complete_failure(self):
