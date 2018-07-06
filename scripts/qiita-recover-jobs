@@ -31,7 +31,8 @@ def _retrieve_queue_jobs():
                   # just retriving 'qiita' and ignoring [] (ipython workers)
                   if 'qiita' in line and '[]' not in line and
                   # and private jobs
-                  'private' not in line]
+                  'private' not in line and
+                  'STDIN' not in line]
     qiita_jids = []
     for qj in qiita_jobs:
         # to retrieve info about the jobs we need to use the fullname, so
@@ -53,11 +54,6 @@ def qiita_recover_jobs():
              USING (processing_job_status_id)
              WHERE processing_job_status = %s"""
 
-    sql_validators = """SELECT processing_job_id, array_agg(validator_id)
-                        FROM qiita.processing_job_validator
-                        WHERE processing_job_id in %s
-                        GROUP BY processing_job_id"""
-
     # Step 1: recover jobs that are in queue status
     with TRN:
         recover_type = 'queued'
@@ -77,20 +73,35 @@ def qiita_recover_jobs():
         qiita_jids = _retrieve_queue_jobs()
         jids_to_recover = jids - qiita_jids
 
-        # 3.1, and 3.2: checking which jobs have validators, and recover them
+        # first start validators that are not running
+        validate = [j for j in jids_to_recover
+                    if ProcessingJob(j).command.name == 'Validate']
+        _submit_jobs(validate, recover_type + '/validate')
 
-        TRN.add(sql_validators, [tuple(jids_to_recover)])
-        jids_validator = TRN.execute_fetchindex()
+        # then the release validator
+        release_validators = [
+            j for j in jids_to_recover
+            if ProcessingJob(j).command.name == 'release_validators']
+        _submit_jobs(release_validators, recover_type + '/release_validators')
+
+        jids_to_recover = (jids_to_recover - set(validate) -
+                           set(release_validators))
+
+        # 3.1, and 3.2: checking which jobs have validators, and recover them
         jobs_with_validators = []
-        for j, validators in jids_validator:
-            validators = validators[1:-1].split(',')
-            # we append the main job as it shouldn't be touch
-            # and all their validators
-            jobs_with_validators.append(j)
-            jobs_with_validators.extend(validators)
+        for j in jids_to_recover:
             job = ProcessingJob(j)
-            status = set([ProcessingJob(v).status
-                          for v in validators if v not in qiita_jids])
+            validators = job.get_validator_jobs
+            if not validators:
+                jobs_with_validators.append(j)
+                continue
+            else:
+                # adding validators to jobs_with_validators to ignore them
+                # in the next code of block
+                for vj in validators:
+                    jobs_with_validators.append(vj.id)
+            status = set([v.status for v in validators
+                          if v.id not in qiita_jids])
             # if there are no status, that means that the validators weren't
             # created and we should rerun from scratch (Step 4)
             if not bool(status):

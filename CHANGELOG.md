@@ -7,6 +7,7 @@ Version 062018
 * Now you can select or unselect all files in the upload folder.
 * Added circle color explanation in the processing network
 * Fixed error in the sample info category summary (https://github.com/biocore/qiita/issues/2610)
+* Adding qiita_db.processing_job.ProcessingJob.get_validator_jobs to remove duplicated code
 
 Version 0.2.0-dev
 -----------------
