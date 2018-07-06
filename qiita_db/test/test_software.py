@@ -313,7 +313,9 @@ class CommandTests(TestCase):
         self.assertEqual(obs.optional_parameters, exp_optional)
         self.assertFalse(obs.analysis_only)
         self.assertEqual(obs.naming_order, [])
-        self.assertEqual(obs.merging_scheme, {'parameters': [], 'outputs': []})
+        self.assertEqual(obs.merging_scheme,
+                         {'parameters': [], 'outputs': [],
+                          'ignore_parent_command': False})
 
         obs = qdb.software.Command.create(
             self.software, "Test Command 2", "This is a command for testing",
@@ -324,7 +326,9 @@ class CommandTests(TestCase):
         self.assertEqual(obs.optional_parameters, exp_optional)
         self.assertTrue(obs.analysis_only)
         self.assertEqual(obs.naming_order, [])
-        self.assertEqual(obs.merging_scheme, {'parameters': [], 'outputs': []})
+        self.assertEqual(obs.merging_scheme,
+                         {'parameters': [], 'outputs': [],
+                          'ignore_parent_command': False})
 
         # Test that the internal parameters in "Validate"
         # are created automatically
@@ -353,7 +357,9 @@ class CommandTests(TestCase):
         self.assertEqual(obs.optional_parameters, exp_optional)
         self.assertFalse(obs.analysis_only)
         self.assertEqual(obs.naming_order, [])
-        self.assertEqual(obs.merging_scheme, {'parameters': [], 'outputs': []})
+        self.assertEqual(obs.merging_scheme,
+                         {'parameters': [], 'outputs': [],
+                          'ignore_parent_command': False})
 
         # Test that the naming and merge information is provided
         parameters = {
@@ -378,7 +384,8 @@ class CommandTests(TestCase):
         self.assertEqual(obs.naming_order,
                          ['opt_int_param', 'opt_choice_param'])
         exp = {'parameters': ['opt_choice_param', 'opt_int_param'],
-               'outputs': ['out1']}
+               'outputs': ['out1'],
+               'ignore_parent_command': False}
         self.assertEqual(obs.merging_scheme, exp)
 
     def test_activate(self):
