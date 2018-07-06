@@ -63,6 +63,31 @@ class ArchiveTest(TestCase):
         obs = qdb.archive.Archive.retrieve_feature_values('Nothing')
         self.assertEqual(obs, exp)
 
+    def test_get_merging_scheme_from_job(self):
+        exp = 'Split libraries FASTQ | N/A'
+        obs = qdb.archive.Archive.get_merging_scheme_from_job(
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'))
+        self.assertEqual(obs, exp)
+
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software_command
+                     SET ignore_parent_command = True"""
+            qdb.sql_connection.TRN.add(sql)
+            qdb.sql_connection.TRN.execute()
+
+            exp = 'Split libraries FASTQ'
+            obs = qdb.archive.Archive.get_merging_scheme_from_job(
+                qdb.processing_job.ProcessingJob(
+                    '6d368e16-2242-4cf8-87b4-a5dc40bb890b'))
+            self.assertEqual(obs, exp)
+
+            # returning to previous state
+            sql = """UPDATE qiita.software_command
+                     SET ignore_parent_command = False"""
+            qdb.sql_connection.TRN.add(sql)
+            qdb.sql_connection.TRN.execute()
+
 
 if __name__ == '__main__':
     main()

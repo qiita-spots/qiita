@@ -116,7 +116,8 @@ class CommandListHandlerTests(OauthTestingBase):
         self.assertEqual(obs.name, 'New analysis command')
         self.assertTrue(obs.analysis_only)
         self.assertEqual(obs.merging_scheme,
-                         {'parameters': ['param4'], 'outputs': []})
+                         {'parameters': ['param4'], 'outputs': [],
+                          'ignore_parent_command': False})
 
 
 class CommandHandlerTests(OauthTestingBase):
