@@ -58,7 +58,6 @@ def submit_EBI(artifact_id, action, send, test=False):
         if old_ascp_pass == '':
             environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
         ascp_passwd = environ['ASPERA_SCP_PASS']
-        environ['ASPERA_SCP_PASS'] = old_ascp_pass
         LogEntry.create('Runtime',
                         ('Submission of sequences of pre_processed_id: '
                          '%d completed successfully' % artifact_id))
@@ -73,9 +72,11 @@ def submit_EBI(artifact_id, action, send, test=False):
                 if rv != 0:
                     error_msg = ("ASCP Error:\nStd output:%s\nStd error:%s" % (
                         stdout, stderr))
+                    environ['ASPERA_SCP_PASS'] = old_ascp_pass
                     raise ComputeError(error_msg)
                 open(ebi_submission.ascp_reply, 'a').write(
                     'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
+        environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
         # step 5: sending xml and parsing answer
         xmls_cmds = ebi_submission.generate_curl_command(

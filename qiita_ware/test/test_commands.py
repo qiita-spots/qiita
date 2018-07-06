@@ -8,7 +8,6 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main, skipIf
-from os import environ
 from os.path import join
 from tempfile import mkdtemp
 import pandas as pd
@@ -28,6 +27,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.user import User
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import qiita_config
 
 
 @qiita_test_checker()
@@ -147,7 +147,7 @@ class CommandsTests(TestCase):
         rmtree(join(self.base_fp, '%d_ebi_submission' % pid), True)
 
     @skipIf(
-        environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
+        qiita_config.ebi_seq_xfer_pass == '', 'skip: ascp not configured')
     def test_submit_EBI_parse_EBI_reply_failure(self):
         ppd = self.write_demux_files(PrepTemplate(1))
         pid = ppd.id
@@ -161,7 +161,7 @@ class CommandsTests(TestCase):
         rmtree(join(self.base_fp, '%d_ebi_submission' % pid), True)
 
     @skipIf(
-        environ.get('ASPERA_SCP_PASS', '') == '', 'skip: ascp not configured')
+        qiita_config.ebi_seq_xfer_pass == '', 'skip: ascp not configured')
     def test_full_submission(self):
         artifact = self.generate_new_study_with_preprocessed_data()
         self.assertEqual(
