@@ -1,8 +1,8 @@
 :orphan:
 
-#.. _prepare-templates:
+.. _prepare-templates:
 
-#.. index:: prepare-templates
+.. index:: prepare-templates
 
 Templates
 =========

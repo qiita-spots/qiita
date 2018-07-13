@@ -1,7 +1,13 @@
 .. role:: red
 
-EBI submission via Qiita
+EBI Submission via Qiita
 ========================
+
+  1.  Upload sample information and preparation information with their required fields for amplicon sequencing
+  2.  Link appropriate sequence files
+  3.  Run split libraries, trimming, then deblur or closed reference commands
+
+*  Note: when using closed reference make sure you're using Greengenes for 16S  :ref:`[7]<reference7>`, Silva for 18S  :ref:`[8]<reference8>`  , and UNITE for ITS  :ref:`[9]<reference9>`
 
 Qiita allows users to deposit their study, sample, experiment and sequence data to the
 `European Nucleotide Archive (ENA) <https://www.ebi.ac.uk/ena>`__, which is the permanent data
