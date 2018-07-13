@@ -121,18 +121,21 @@ class Archive(object):
             # [0] getting the atributes from the first parent
             ppp = job.input_artifacts[0].processing_parameters
             pcmd = None if ppp is None else ppp.command
-            palgorithm = 'N/A'
-            if pcmd is not None:
-                pms = pcmd.merging_scheme
-                palgorithm = pcmd.name
-                if pms['parameters']:
-                    ppms = pms['parameters']
-                    pparams = ','.join(
-                        ['%s: %s' % (k, v) for k, v in ppp.values.items()
-                         if list(str(v))[0] != 'artifact' and k in ppms])
-                    if pparams:
-                        palgorithm = "%s (%s)" % (palgorithm, pparams)
-            algorithm = '%s | %s' % (cname, palgorithm)
+            if ms['ignore_parent_command']:
+                algorithm = cname
+            else:
+                palgorithm = 'N/A'
+                if pcmd is not None:
+                    pms = pcmd.merging_scheme
+                    palgorithm = pcmd.name
+                    if pms['parameters']:
+                        ppms = pms['parameters']
+                        pparams = ','.join(
+                            ['%s: %s' % (k, v) for k, v in ppp.values.items()
+                             if list(str(v))[0] != 'artifact' and k in ppms])
+                        if pparams:
+                            palgorithm = "%s (%s)" % (palgorithm, pparams)
+                algorithm = '%s | %s' % (cname, palgorithm)
 
             return algorithm
 
