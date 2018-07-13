@@ -72,7 +72,7 @@ script:
   - qiita pet webserver --no-build-docs start &
   - sleep 5
   - QIITA_PID=$!
-  - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE
+  - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
   - kill $QIITA_PID
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then all-qiita-cron-job; fi
