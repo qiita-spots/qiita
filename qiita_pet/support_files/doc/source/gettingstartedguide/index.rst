@@ -79,6 +79,8 @@ Editing a Study
 Creating and Working With Sample information
 --------------------------------------------
 
+*  The Qiimp tab located at the top of the page is a useful tool for creating Qiita and EBI compatible metadata spreadsheets.
+
 Example files
 ~~~~~~~~~~~~~
 

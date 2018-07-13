@@ -27,6 +27,7 @@ Looking for information about getting started? Please see the document here:
    :maxdepth: 2
 
    gettingstartedguide/index.rst
+   Qiimp.rst
 
 Looking for information about how to process your data? Please see the document here:
 
@@ -38,7 +39,7 @@ Looking for information about how to process your data? Please see the document 
 Looking for information about submitting your files to EBI? Please see the document here:
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 0
 
    europeanbioinformaticsinstitute.rst
 
