@@ -6,25 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from unittest import main, TestCase
+from unittest import main
 from json import loads
 
-from tornado.web import HTTPError
-
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
-import qiita_db as qdb
-from qiita_db.handlers.user import _get_user_info
-
-
-class UtilTests(TestCase):
-    def test_get_user_info(self):
-        obs = _get_user_info('shared@foo.bar')
-        exp = qdb.user.User('shared@foo.bar')
-        self.assertEqual(obs, exp)
-
-        # It does not exist
-        with self.assertRaises(HTTPError):
-            _get_user_info('no-exists@foo.bar')
 
 
 class UserInfoDBHandlerTests(OauthTestingBase):
