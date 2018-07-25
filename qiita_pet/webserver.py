@@ -59,6 +59,7 @@ from qiita_db.handlers.processing_job import (
 from qiita_db.handlers.artifact import (
     ArtifactHandler, ArtifactAPItestHandler, ArtifactTypeHandler)
 from qiita_db.handlers.sample_information import SampleInfoDBHandler
+from qiita_db.handlers.user import UserInfoDBHandler
 from qiita_db.handlers.prep_template import (
     PrepTemplateDataHandler, PrepTemplateAPItestHandler,
     PrepTemplateDBHandler)
@@ -193,6 +194,7 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)", JobHandler),
             (r"/qiita_db/artifacts/types/", ArtifactTypeHandler),
             (r"/qiita_db/artifacts/(.*)/", ArtifactHandler),
+            (r"/qiita_db/user/(.*)/data/", UserInfoDBHandler),
             (r"/qiita_db/sample_information/(.*)/data/", SampleInfoDBHandler),
             (r"/qiita_db/prep_template/(.*)/data/", PrepTemplateDataHandler),
             (r"/qiita_db/prep_template/(.*)/", PrepTemplateDBHandler),

@@ -28,8 +28,8 @@ def _get_sample_info(sid):
     Raises
     ------
     HTTPError
-        If the prep template does not exist, with error code 404
-        If there is a problem instantiating the template, with error code 500
+        If the sample information does not exist, with error code 404
+        If there is a problem instantiating, with error code 500
     """
     try:
         sid = int(sid)
@@ -56,14 +56,7 @@ class SampleInfoDBHandler(OauthBaseHandler):
         Returns
         -------
         dict
-            The prep information:
-            'data_type': prep info data type
-            'artifact': artifact attached to the given prep
-            'investigation_type': prep info investigation type
-            'study': study that the prep info belongs to
-            'status': prep info status
-            'qiime-map': the path to the qiime mapping file
-            'prep-file': the path to the prep info file
+            The contents of the sample information keyed by sample id
         """
         with qdb.sql_connection.TRN:
             st = _get_sample_info(study_id)
