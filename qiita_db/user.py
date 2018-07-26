@@ -340,6 +340,17 @@ class User(qdb.base.QiitaObject):
         return self._id
 
     @property
+    def password(self):
+        """The password of the user"""
+        with qdb.sql_connection.TRN:
+            # pull password out of database
+            sql = "SELECT password FROM qiita.{0} WHERE email = %s".format(
+                self._table)
+            qdb.sql_connection.TRN.add(sql, [self.email])
+
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
     def level(self):
         """The level of privileges of the user"""
         with qdb.sql_connection.TRN:
