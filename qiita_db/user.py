@@ -94,15 +94,15 @@ class User(qdb.base.QiitaObject):
         Returns
         -------
         generator
-            Yields a user ID (email) for each user in the database,
+            Yields a user ID (email) and name for each user in the database,
             in order of ascending ID
         """
         with qdb.sql_connection.TRN:
-            sql = """select email from qiita.{}""".format(cls._table)
+            sql = """select email, name from qiita.{}""".format(cls._table)
             qdb.sql_connection.TRN.add(sql)
             # Using [-1] to get the results of the last SQL query
             for result in qdb.sql_connection.TRN.execute_fetchindex():
-                yield result[0]
+                yield result
 
     @classmethod
     def login(cls, email, password):
