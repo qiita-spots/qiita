@@ -993,8 +993,10 @@ class UtilTests(TestCase):
         PREP(1).artifact.visibility = 'public'
         _avoid_duplicated_tests(True)
 
-        # deleting the new study study
+        # deleting the new study study and returning artifact status
         qdb.study.Study.delete(new_study.id)
+        PREP(1).artifact.visibility = 'private'
+        PREP(2).artifact.visibility = 'private'
 
     def test_generate_study_list_errors(self):
         with self.assertRaises(ValueError):
