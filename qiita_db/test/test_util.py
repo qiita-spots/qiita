@@ -906,6 +906,9 @@ class UtilTests(TestCase):
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4])
         self.assertEqual(obs_info, exp_info)
 
+        # deleting the old study
+        qdb.study.Study.delete(new_study.id)
+
     def test_generate_study_list_without_artifacts(self):
         # creating a new study to make sure that empty studies are also
         # returned
@@ -953,7 +956,7 @@ class UtilTests(TestCase):
             [1, 2, 3, 4], 'EMP')
         self.assertEqual(obs_info, [])
 
-        # resetting to private and deleting the old study
+        # deleting the old study
         qdb.study.Study.delete(new_study.id)
 
     def test_get_artifacts_information(self):
