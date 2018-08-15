@@ -997,7 +997,7 @@ class UtilTests(TestCase):
                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
                 'threads': '1', 'sortmerna_coverage': '0.97'},
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-             'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
+             'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
              'platform': 'Illumina', 'prep_samples': 27},
             {'files': [], 'artifact_id': 7, 'data_type': '16S',
              'target_gene': '16S rRNA', 'name': 'BIOM',
@@ -1026,8 +1026,7 @@ class UtilTests(TestCase):
                 del obs[i]['timestamp']
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1) '
                                    '| Split libraries FASTQ')
-            exp[0]['algorithm_az'] = (
-                'PickclosedreferenceOTUsreferenceSplitlibrariesFASTQ')
+            exp[0]['algorithm_az'] = '33fed1b35728417d7ba4139b8f817d44'
             self.assertItemsEqual(obs, exp)
 
             # setting up database changes for also command output
@@ -1041,9 +1040,7 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom) | Split libraries FASTQ')
-            exp[0]['algorithm_az'] = (
-                'PickclosedreferenceOTUsreferenceBIOMstudyclosedreference'
-                'otutablebiomSplitlibrariesFASTQ')
+            exp[0]['algorithm_az'] = 'de5b794a2cacd428f36fea86df196bfd'
             self.assertItemsEqual(obs, exp)
 
             # let's test that we ignore the parent_info
@@ -1057,9 +1054,7 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom)')
-            exp[0]['algorithm_az'] = (
-                'PickclosedreferenceOTUsreferenceBIOMstudyclosedreference'
-                'otutablebiom')
+            exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
             self.assertItemsEqual(obs, exp)
 
             # returning database as it was

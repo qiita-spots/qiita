@@ -62,7 +62,7 @@ from future.builtins import bytes, str
 import h5py
 from humanize import naturalsize
 from os.path import getsize
-import re
+import hashlib
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
@@ -1621,7 +1621,6 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             ts = {}
             ps = {}
             algorithm_az = {'': ''}
-            regex = re.compile('[^a-zA-Z]')
             PT = qdb.metadata_template.prep_template.PrepTemplate
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
@@ -1676,7 +1675,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
                         algorithm = '%s | %s' % (cname, palgorithm)
                     if algorithm not in algorithm_az:
-                        algorithm_az[algorithm] = regex.sub('', algorithm)
+                        algorithm_az[algorithm] = hashlib.md5(
+                            algorithm).hexdigest()
 
                 if target is None:
                     target = []
