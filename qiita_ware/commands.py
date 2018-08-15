@@ -6,12 +6,16 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import join, isdir
+from os.path import basename, isdir, join
 from shutil import rmtree
 from tarfile import open as taropen
 from tempfile import mkdtemp
 from os import environ
 from traceback import format_exc
+from paramiko import AutoAddPolicy, RSAKey, SSHClient
+from scp import SCPClient
+from urlparse import urlparse
+from functools import partial
 
 from qiita_db.artifact import Artifact
 from qiita_db.logger import LogEntry
@@ -19,6 +23,130 @@ from qiita_db.processing_job import _system_call as system_call
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import ComputeError, EBISubmissionError
+
+
+def _ssh_session(p_url, private_key):
+    """Initializes an SSH session
+
+    Parameters
+    ----------
+    URL : urlparse object
+        a parsed url
+    private_key : str
+        Path to the private key used to authenticate connection
+
+    Returns
+    -------
+    paramiko.SSHClient
+        the SSH session
+    """
+    scheme = p_url.scheme
+    hostname = p_url.hostname
+    port = p_url.port
+    username = p_url.username
+
+    if scheme == 'scp' or scheme == 'sftp':
+
+        # if port not specified, use default 22 as port
+        if not port:
+            port = 22
+
+        # step 1: both schemes requires an SSH connection
+        ssh = SSHClient()
+        ssh.set_missing_host_key_policy(AutoAddPolicy)
+
+        # step 2: connect to fileserver
+        key = RSAKey.from_private_key_file(private_key)
+        ssh.connect(hostname, port=port, username=username,
+                    pkey=key, look_for_keys=False)
+        return ssh
+
+
+def _list_valid_files(ssh, directory):
+    """Gets a list of valid study files from ssh session
+
+    Parameters
+    ----------
+    ssh : paramiko.SSHClient
+        An initializeed ssh session
+    dir : the directory to search for files
+
+    Returns
+    -------
+    list of str
+        list of valid study files (basenames)
+    """
+
+    valid_file_extensions = tuple(qiita_config.valid_upload_extension)
+    sftp = ssh.open_sftp()
+    files = sftp.listdir(directory)
+
+    valid_files = [f for f in files if f.endswith(valid_file_extensions)]
+    sftp.close()
+    return valid_files
+
+
+def list_remote(URL, private_key):
+    """Retrieve a valid study files from a remote directory
+
+    Parameters
+    ----------
+    URL : str
+        The url to the remote directory
+    private_key : str
+        Path to the private key used to authenticate connection
+
+    Returns
+    -------
+    list of str
+        list of files that are valid study files
+    """
+    p_url = urlparse(URL)
+    directory = p_url.path
+    ssh = _ssh_session(p_url, private_key)
+    valid_files = _list_valid_files(ssh, directory)
+    ssh.close()
+    return valid_files
+
+
+def download_remote(URL, private_key, destination):
+    """Add study files by specifying a remote directory to download from
+
+    Parameters
+    ----------
+    URL : str
+        The url to the remote directory
+    destination : str
+        The path to the study upload folder
+    private_key : str
+        Path to the private key used to authenticate connection
+    """
+
+    # step 1: initialize connection and list valid files
+    p_url = urlparse(URL)
+    ssh = _ssh_session(p_url, private_key)
+
+    directory = p_url.path
+    valid_files = _list_valid_files(ssh, directory)
+    file_paths = [join(directory, f) for f in valid_files]
+
+    # step 2: download files
+    scheme = p_url.scheme
+    if scheme == 'scp':
+        scp = SCPClient(ssh.get_transport())
+        for f in file_paths:
+            download = partial(scp.get,
+                               local_path=join(destination, basename(f)))
+            download(f)
+    elif scheme == 'sftp':
+        sftp = ssh.open_sftp()
+        for f in file_paths:
+            download = partial(sftp.get,
+                               localpath=join(destination, basename(f)))
+            download(f)
+
+    # step 3: close the connection
+    ssh.close()
 
 
 def submit_EBI(artifact_id, action, send, test=False):

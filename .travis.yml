@@ -1,6 +1,6 @@
 dist: precise
 language: python
-sudo: false
+sudo: true
 env:
   global:
     - PYTHON_VERSION=3.5
@@ -50,6 +50,8 @@ install:
   - export REDBIOM_HOST=http://127.0.0.1:7379
   - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins/BIOM\ type_2.1.4\ -\ Qiime2.conf
   - touch ~/.bash_profile
+  - ssh-keygen -t rsa -C "ssh test key" -f $PWD/qiita_ware/test/test_data/test_key -P ""
+  - mv $PWD/qiita_ware/test/test_data/test_key.pub ~/.ssh/
   # Install the biom plugin so we can run the analysis tests
   - wget https://data.qiime2.org/distro/core/qiime2-2017.12-py35-linux-conda.yml
   - travis_retry conda env create -q -n qtp-biom --file qiime2-2017.12-py35-linux-conda.yml

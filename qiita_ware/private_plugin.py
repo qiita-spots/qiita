@@ -15,7 +15,8 @@ import warnings
 
 import qiita_db as qdb
 from qiita_core.qiita_settings import r_client
-from qiita_ware.commands import submit_VAMPS, submit_EBI
+from qiita_ware.commands import (download_remote, list_remote,
+                                 submit_VAMPS, submit_EBI)
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
 from qiita_ware.exceptions import EBISubmissionError
@@ -376,6 +377,45 @@ def delete_analysis(job):
         job._set_status('success')
 
 
+def list_remote_files(job):
+    """Lists valid study files on a remote server
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        url = job.parameters.values['url']
+        private_key = job.parameters.values['private_key']
+        try:
+            list_remote(url, private_key)
+        except Exception:
+            job._set_error(traceback.format_exception(*exc_info()))
+        else:
+            job._set_status('success')
+
+
+def download_remote_files(job):
+    """Downloads valid study files from a remote server
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        url = job.parameters.values['url']
+        destination = job.parameters.values['destination']
+        private_key = job.parameters.values['private_key']
+        try:
+            download_remote(url, private_key, destination)
+        except Exception:
+            job._set_error(traceback.format_exception(*exc_info()))
+        else:
+            job._set_status('success')
+
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
              'submit_to_VAMPS': submit_to_VAMPS,
@@ -389,11 +429,13 @@ TASK_DICT = {'build_analysis_files': build_analysis_files,
              'delete_sample_or_column': delete_sample_or_column,
              'delete_study': delete_study,
              'complete_job': complete_job,
-             'delete_analysis': delete_analysis}
+             'delete_analysis': delete_analysis,
+             'list_remote_files': list_remote_files,
+             'download_remote_files': download_remote_files}
 
 
 def private_task(job_id):
-    """Complets a Qiita private task
+    """Completes a Qiita private task
 
     Parameters
     ----------
