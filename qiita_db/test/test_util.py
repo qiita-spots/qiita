@@ -903,19 +903,10 @@ class UtilTests(TestCase):
              'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
              'study_alias': 'TST', 'study_tags': None,
              'number_samples_collected': 0}]
-        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
+        obs_info = qdb.util.generate_study_list([1, 2, 3, 4])
         self.assertEqual(obs_info, exp_info)
 
-        qdb.artifact.Artifact(4).visibility = 'public'
-        exp_info[0]['status'] = 'public'
-        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
-        self.assertEqual(obs_info, exp_info)
-
-        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
-        self.assertEqual(obs_info, exp_info)
-
-        # resetting to private and deleting the old study
-        qdb.artifact.Artifact(4).visibility = 'private'
+        # deleting the old study
         qdb.study.Study.delete(new_study.id)
 
     def test_generate_study_list_without_artifacts(self):
@@ -958,26 +949,14 @@ class UtilTests(TestCase):
              'study_abstract': 'Some abstract goes here',
              'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
              'study_alias': 'TST', 'number_samples_collected': 0}]
-        obs_info = qdb.util.generate_study_list_without_artifacts(
-            [1, 2, 3, 4], True)
-        self.assertEqual(obs_info, exp_info)
-
-        qdb.artifact.Artifact(4).visibility = 'public'
-        exp_info[0]['status'] = 'public'
-        obs_info = qdb.util.generate_study_list_without_artifacts(
-            [1, 2, 3, 4], True)
+        obs_info = qdb.util.generate_study_list_without_artifacts([1, 2, 3, 4])
         self.assertEqual(obs_info, exp_info)
 
         obs_info = qdb.util.generate_study_list_without_artifacts(
-            [1, 2, 3, 4], False)
-        self.assertEqual(obs_info, exp_info)
-
-        obs_info = qdb.util.generate_study_list_without_artifacts(
-            [1, 2, 3, 4], False, 'EMP')
+            [1, 2, 3, 4], 'EMP')
         self.assertEqual(obs_info, [])
 
-        # resetting to private and deleting the old study
-        qdb.artifact.Artifact(4).visibility = 'private'
+        # deleting the old study
         qdb.study.Study.delete(new_study.id)
 
     def test_get_artifacts_information(self):

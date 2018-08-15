@@ -19,8 +19,8 @@ var admin_tags = [];
 var user_tags = [];
 var tag_selected = [];
 $(document).ready(function() {
-  var user_studies_ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&search_type=user&sEcho=" + Math.floor(Math.random()*1001);
-  var studies_ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&search_type=public&sEcho=" + Math.floor(Math.random()*1001);
+  var user_studies_ajaxURL = "{% raw qiita_config.portal_dir %}/study/list_studies/?&user={{current_user.id}}&visibility=user&sEcho=" + Math.floor(Math.random()*1001);
+  var studies_ajaxURL = "{% raw qiita_config.portal_dir %}/study/list_studies/?&user={{current_user.id}}&visibility=public&sEcho=" + Math.floor(Math.random()*1001);
 
   init_sharing("{% raw qiita_config.portal_dir %}");
 

@@ -99,7 +99,7 @@ class RedbiomPublicSearch(BaseHandler):
                     studies = study_artifacts.keys()
                     if studies:
                         results = generate_study_list_without_artifacts(
-                            studies, True)
+                            studies)
                         # inserting the artifact_biom_ids to the results
                         for i in range(len(results)):
                             results[i]['artifact_biom_ids'] = study_artifacts[
