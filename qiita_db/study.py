@@ -116,7 +116,7 @@ class Study(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchflatten()
 
     @classmethod
-    def get_by_status(cls, status):
+    def get_ids_by_status(cls, status):
         """Returns study id for all Studies with given status
 
         Parameters
@@ -138,7 +138,7 @@ class Study(qdb.base.QiitaObject):
                         JOIN qiita.portal_type USING (portal_type_id)
                       WHERE visibility = %s AND portal = %s"""
             qdb.sql_connection.TRN.add(sql, [status, qiita_config.portal])
-            studies = set(qdb.sql_connection.TRN.execute_fetchflatten())
+            sids = set(qdb.sql_connection.TRN.execute_fetchflatten())
             # If status is sandbox, all the studies that are not present in the
             # study_artifact table are also sandbox
             if status == 'sandbox':
@@ -150,10 +150,26 @@ class Study(qdb.base.QiitaObject):
                                 SELECT study_id
                                 FROM qiita.study_artifact)"""
                 qdb.sql_connection.TRN.add(sql, [qiita_config.portal])
-                studies = studies.union(
+                sids = sids.union(
                     qdb.sql_connection.TRN.execute_fetchflatten())
 
-            return set(cls(sid) for sid in studies)
+            return sids
+
+    @classmethod
+    def get_by_status(cls, status):
+        """Returns study id for all Studies with given status
+
+        Parameters
+        ----------
+        status : str
+            Status setting to search for
+
+        Returns
+        -------
+        set of qiita_db.study.Study
+            All studies in the database that match the given status
+        """
+        return set(cls(sid) for sid in cls.get_ids_by_status(status))
 
     @classmethod
     def get_info(cls, study_ids=None, info_cols=None):

@@ -31,7 +31,7 @@ from qiita_pet.handlers.analysis_handlers import (
 from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateHandler,
     SampleTemplateOverviewHandler, SampleTemplateColumnsHandler,
-    StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
+    StudyEditHandler, ListStudiesHandler, ListStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
     VAMPSHandler, StudyTags, StudyGetTags,
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
@@ -133,7 +133,7 @@ class Application(tornado.web.Application):
             (r"/study/process/workflow/", WorkflowHandler),
             (r"/study/process/job/", JobAJAX),
             (r"/study/list/socket/", SelectSamplesHandler),
-            (r"/study/search/(.*)", SearchStudiesAJAX),
+            (r"/study/list_studies/(.*)", ListStudiesAJAX),
             (r"/study/new_artifact/", NewArtifactHandler),
             (r"/study/files/", StudyFilesAJAX),
             (r"/study/sharing/", ShareStudyAJAX),
