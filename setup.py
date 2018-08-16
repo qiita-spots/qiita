@@ -109,7 +109,7 @@ setup(name='qiita-spots',
                         'scikit-bio == 0.4.2', 'wtforms == 2.0.1', 'openpyxl',
                         'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
                         'gitpython', 'qiita-files', 'redbiom==0.1.0-dev',
-                        'sphinx_rtd_theme', 'paramiko'],
+                        'sphinx_rtd_theme', 'paramiko', 'scp'],
       dependency_links=[
         'https://github.com/qiita-spots/qiita-files/archive/master.zip#'
         'egg=qiita-files-0.1.0-dev',
