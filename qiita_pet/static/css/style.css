@@ -6,6 +6,7 @@
   font-size: 14px;
   color: #EEE;
 }
+
 .navbar-default .navbar-nav > li > a:hover,
 .navbar-default .navbar-nav > li > a:focus {
   color: #CCC;
@@ -46,8 +47,8 @@ tr.shown div.details-control{
 }
 
 @keyframes blinker {
-  50% { opacity: 0.3; background: #CCC;}
-  100% { opacity: 1.0; background: #FFF;}
+  50% { opacity: 0.3; background: #CCC; }
+  100% { opacity: 1.0; background: #FFF; }
 }
 
 /* table in the study description that holds the investigation type elements */
@@ -66,12 +67,12 @@ the same behavior as the hover pseudoclass */
     display: block;
 }
 
- .info-menu {
-    word-wrap: break-word;
-    white-space: normal;
- }
+.info-menu {
+  word-wrap: break-word;
+  white-space: normal;
+}
 
- .info-menu > li > a {
+.info-menu > li > a {
   display: inline;
   color:#428bca;
   padding:0px;
@@ -82,16 +83,17 @@ the same behavior as the hover pseudoclass */
   width:300px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
 
- .topfloat{
-    position: fixed;
-    padding-top: 5px;
-    height:55px;
-    top:50px;
-    z-index:6;
-    background:white;
-    width:100%;
-  }
+.topfloat{
+  position: fixed;
+  padding-top: 5px;
+  height:55px;
+  top:50px;
+  z-index:6;
+  background:white;
+  width:100%;
+}
 
 .graph {
   width:100%;
