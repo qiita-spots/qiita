@@ -1369,7 +1369,6 @@ def generate_study_list(user, visibility):
                 WHERE email=qiita.study.email) AS owner
     """
 
-    sids = []
     visibility_sql = ''
     sids = set(s.id for s in user.user_studies.union(user.shared_studies))
     if visibility == 'user':
@@ -1382,7 +1381,7 @@ def generate_study_list(user, visibility):
         sids = qdb.study.Study.get_ids_by_status('public') - sids
         visibility_sql = "visibility = 'public' AND"
     else:
-        raise ValueError('Not a valida visibility: %s' % visibility)
+        raise ValueError('Not a valid visibility: %s' % visibility)
 
     sql = """
         SELECT metadata_complete, study_abstract, study_id, study_alias,

@@ -921,7 +921,7 @@ class UtilTests(TestCase):
         exp2 = [snew_info]
         exp_both = [sinfo, snew_info]
 
-        # let's make sure that everything is private for stiudy 1
+        # let's make sure that everything is private for study 1
         for a in STUDY(1).artifacts():
             a.visibility = 'private'
 
