@@ -12,17 +12,12 @@ from collections import defaultdict
 
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
-from pyparsing import ParseException
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.study import Study
-from qiita_db.search import QiitaStudySearch
-from qiita_db.logger import LogEntry
-from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import (add_message, generate_study_list)
 from qiita_pet.util import EBI_LINKIFIER
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -32,43 +27,25 @@ from qiita_pet.handlers.util import (
 
 
 @execute_as_transaction
-def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
+def _build_study_info(user, visibility):
     """Builds list of dicts for studies table, with all HTML formatted
 
     Parameters
     ----------
     user : User object
         logged in user
-    search_type : choice, ['user', 'public']
+    visibility : choice, ['user', 'public']
         what kind of search to perform
-    study_proc : dict of lists, optional
-        Dictionary keyed on study_id that lists all processed data associated
-        with that study. Required if proc_samples given.
-    proc_samples : dict of lists, optional
-        Dictionary keyed on proc_data_id that lists all samples associated with
-        that processed data. Required if study_proc given.
 
     Returns
     -------
     infolist: list of dict of lists and dicts
         study and processed data info for JSON serialiation for datatables
         Each dict in the list is a single study, and contains the text
-
-    Notes
-    -----
-    Both study_proc and proc_samples must be passed, or neither passed.
     """
-    # Logic check to make sure both needed parts passed
-    if study_proc is not None and proc_samples is None:
-        raise IncompetentQiitaDeveloperError(
-            'Must pass proc_samples when study_proc given')
-    elif proc_samples is not None and study_proc is None:
-        raise IncompetentQiitaDeveloperError(
-            'Must pass study_proc when proc_samples given')
-
     # get list of studies for table
     user_study_set = user.user_studies.union(user.shared_studies)
-    if search_type == 'user':
+    if visibility == 'user':
         if user.level == 'admin':
             user_study_set = (user_study_set |
                               Study.get_by_status('sandbox') |
@@ -76,18 +53,17 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
                               Study.get_by_status('awaiting_approval') -
                               Study.get_by_status('public'))
         study_set = user_study_set
-    elif search_type == 'public':
+    elif visibility == 'public':
         study_set = Study.get_by_status('public') - user_study_set
     else:
         raise ValueError('Not a valid search type')
-    if study_proc is not None:
-        study_set = study_set.intersection(study_proc)
-    if not study_set:
-        # No studies left so no need to continue
-        return []
 
-    return generate_study_list([s.id for s in study_set],
-                               public_only=(search_type == 'public'))
+    if not study_set:
+        study_list = []
+    else:
+        study_list = generate_study_list([s.id for s in study_set])
+
+    return study_list
 
 
 class ListStudiesHandler(BaseHandler):
@@ -173,51 +149,20 @@ class ShareStudyAJAX(BaseHandler):
         self.write(dumps({'users': users, 'links': links}))
 
 
-class SearchStudiesAJAX(BaseHandler):
+class ListStudiesAJAX(BaseHandler):
     @authenticated
     @execute_as_transaction
     def get(self, ignore):
         user = self.get_argument('user')
-        query = self.get_argument('query')
-        search_type = self.get_argument('search_type')
+        visibility = self.get_argument('visibility')
         echo = int(self.get_argument('sEcho'))
 
         if user != self.current_user.id:
             raise HTTPError(403, reason='Unauthorized search!')
-        if search_type not in ['user', 'public']:
-            raise HTTPError(400, reason='Not a valid search type')
-        if query:
-            # Search for samples matching the query
-            search = QiitaStudySearch()
-            try:
-                search(query, self.current_user)
-                study_proc, proc_samples, _ = search.filter_by_processed_data()
-            except ParseException:
-                self.clear()
-                self.set_status(400)
-                self.write('Malformed search query. Please read "search help" '
-                           'and try again.')
-                return
-            except QiitaDBIncompatibleDatatypeError as e:
-                self.clear()
-                self.set_status(400)
-                searchmsg = ''.join(e)
-                self.write(searchmsg)
-                return
-            except Exception as e:
-                # catch any other error as generic server error
-                self.clear()
-                self.set_status(500)
-                self.write("Server error during search. Please try again "
-                           "later")
-                LogEntry.create('Runtime', str(e),
-                                info={'User': self.current_user.id,
-                                      'query': query})
-                return
-        else:
-            study_proc = proc_samples = None
-        info = _build_study_info(self.current_user, search_type, study_proc,
-                                 proc_samples)
+        if visibility not in ['user', 'public']:
+            raise HTTPError(400, reason='Not a valid visibility')
+
+        info = _build_study_info(self.current_user, visibility)
         # linkifying data
         len_info = len(info)
         for i in range(len_info):

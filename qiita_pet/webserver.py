@@ -31,7 +31,7 @@ from qiita_pet.handlers.analysis_handlers import (
 from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateHandler,
     SampleTemplateOverviewHandler, SampleTemplateColumnsHandler,
-    StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
+    StudyEditHandler, ListStudiesHandler, ListStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
     VAMPSHandler, StudyTags, StudyGetTags,
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
@@ -58,6 +58,8 @@ from qiita_db.handlers.processing_job import (
     ProcessingJobAPItestHandler)
 from qiita_db.handlers.artifact import (
     ArtifactHandler, ArtifactAPItestHandler, ArtifactTypeHandler)
+from qiita_db.handlers.sample_information import SampleInfoDBHandler
+from qiita_db.handlers.user import UserInfoDBHandler
 from qiita_db.handlers.prep_template import (
     PrepTemplateDataHandler, PrepTemplateAPItestHandler,
     PrepTemplateDBHandler)
@@ -131,7 +133,7 @@ class Application(tornado.web.Application):
             (r"/study/process/workflow/", WorkflowHandler),
             (r"/study/process/job/", JobAJAX),
             (r"/study/list/socket/", SelectSamplesHandler),
-            (r"/study/search/(.*)", SearchStudiesAJAX),
+            (r"/study/list_studies/(.*)", ListStudiesAJAX),
             (r"/study/new_artifact/", NewArtifactHandler),
             (r"/study/files/", StudyFilesAJAX),
             (r"/study/sharing/", ShareStudyAJAX),
@@ -192,6 +194,8 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)", JobHandler),
             (r"/qiita_db/artifacts/types/", ArtifactTypeHandler),
             (r"/qiita_db/artifacts/(.*)/", ArtifactHandler),
+            (r"/qiita_db/user/(.*)/data/", UserInfoDBHandler),
+            (r"/qiita_db/sample_information/(.*)/data/", SampleInfoDBHandler),
             (r"/qiita_db/prep_template/(.*)/data/", PrepTemplateDataHandler),
             (r"/qiita_db/prep_template/(.*)/", PrepTemplateDBHandler),
             (r"/qiita_db/references/(.*)/", ReferenceHandler),

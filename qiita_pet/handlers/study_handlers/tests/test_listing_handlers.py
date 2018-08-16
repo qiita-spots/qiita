@@ -10,7 +10,6 @@ from json import loads
 
 from mock import Mock
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_db.artifact import Artifact
 from qiita_db.study import Study
@@ -118,10 +117,6 @@ class TestHelpers(TestHandlerBase):
             a.visibility = 'private'
 
     def test_build_study_info_erros(self):
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            _build_study_info(User('test@foo.bar'), 'user', study_proc={})
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            _build_study_info(User('test@foo.bar'), 'user', proc_samples={})
         with self.assertRaises(ValueError):
             _build_study_info(User('test@foo.bar'), 'wrong')
 
@@ -272,10 +267,10 @@ class TestShareStudyAjax(TestHandlerBase):
         self.assertEqual(s.shared_with, [])
 
 
-class TestSearchStudiesAJAX(TestHandlerBase):
+class TestListStudiesAJAX(TestHandlerBase):
 
     def setUp(self):
-        super(TestSearchStudiesAJAX, self).setUp()
+        super(TestListStudiesAJAX, self).setUp()
         self.json = {
             'iTotalRecords': 1,
             'aaData': [{
@@ -326,70 +321,8 @@ class TestSearchStudiesAJAX(TestHandlerBase):
         self.portal = qiita_config.portal
 
     def tearDown(self):
-        super(TestSearchStudiesAJAX, self).tearDown()
+        super(TestListStudiesAJAX, self).tearDown()
         qiita_config.portal = self.portal
-
-    def test_get(self):
-        response = self.get('/study/search/', {
-            'user': 'test@foo.bar',
-            'search_type': 'user',
-            'query': '',
-            'sEcho': '1021'
-            })
-        self.assertEqual(response.code, 200)
-
-        # make sure responds properly
-        self.assertEqual(loads(response.body), self.json)
-
-        response = self.get('/study/search/', {
-            'user': 'test@foo.bar',
-            'search_type': 'user',
-            'query': 'ph > 50',
-            'sEcho': '1021'
-            })
-        self.assertEqual(response.code, 200)
-        # make sure responds properly
-        self.assertEqual(loads(response.body), self.empty)
-
-    def test_get_failure_malformed_query(self):
-        response = self.get('/study/search/', {
-            'user': 'test@foo.bar',
-            'search_type': 'user',
-            'query': 'ph',
-            'sEcho': '1021'
-            })
-        self.assertEqual(response.code, 400)
-        # make sure responds properly
-        self.assertEqual(response.body, 'Malformed search query. '
-                         'Please read "search help" and try again.')
-
-        response = self.get('/study/search/', {
-            'user': 'FAKE@foo.bar',
-            'search_type': 'user',
-            'query': 'ph',
-            'sEcho': '1021'
-            })
-        self.assertEqual(response.code, 403)
-
-    def test_get_failure_no_valid_search_type(self):
-        response = self.get('/study/search/', {
-            'user': 'test@foo.bar',
-            'search_type': 'wrong',
-            'query': 'ph',
-            'sEcho': '1021'
-            })
-        self.assertEqual(response.code, 400)
-
-    def test_get_emp_portal(self):
-        qiita_config.portal = "EMP"
-        response = self.get('/study/search/', {
-            'user': 'test@foo.bar',
-            'search_type': 'user',
-            'query': '',
-            'sEcho': '1021'
-            })
-        self.assertEqual(response.code, 200)
-        self.assertEqual(loads(response.body), self.empty)
 
 
 if __name__ == "__main__":

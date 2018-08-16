@@ -1315,15 +1315,13 @@ def supported_filepath_types(artifact_type):
         return qdb.sql_connection.TRN.execute_fetchindex()
 
 
-def generate_study_list(study_ids, public_only=False):
+def generate_study_list(study_ids):
     """Get general study information
 
     Parameters
     ----------
     study_ids : list of ints
         The study ids to look for. Non-existing ids will be ignored
-    public_only : bool, optional
-        If true, return only public BIOM artifacts. Default: false.
 
     Returns
     -------
@@ -1443,16 +1441,13 @@ def generate_study_list(study_ids, public_only=False):
     return infolist
 
 
-def generate_study_list_without_artifacts(study_ids, public_only=False,
-                                          portal=None):
+def generate_study_list_without_artifacts(study_ids, portal=None):
     """Get general study information without artifacts
 
     Parameters
     ----------
     study_ids : list of ints
         The study ids to look for. Non-existing ids will be ignored
-    public_only : bool, optional
-        If true, return only public BIOM artifacts. Default: false.
     portal : str
         Portal to use, if None take it from configuration. Mainly for tests.
 

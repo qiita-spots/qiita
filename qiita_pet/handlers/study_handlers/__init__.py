@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from .listing_handlers import (ListStudiesHandler, StudyApprovalList,
-                               ShareStudyAJAX, SearchStudiesAJAX,
+                               ShareStudyAJAX, ListStudiesAJAX,
                                AutocompleteHandler)
 from .edit_handlers import StudyEditHandler, CreateStudyAJAX
 from .ebi_handlers import EBISubmitHandler
@@ -27,7 +27,7 @@ from .sample_template import (
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'StudyEditHandler', 'CreateStudyAJAX', 'EBISubmitHandler',
-           'VAMPSHandler', 'SearchStudiesAJAX', 'ArtifactGraphAJAX',
+           'VAMPSHandler', 'ListStudiesAJAX', 'ArtifactGraphAJAX',
            'ArtifactAdminAJAX', 'StudyIndexHandler', 'StudyBaseInfoAJAX',
            'SampleTemplateHandler', 'SampleTemplateOverviewHandler',
            'SampleTemplateColumnsHandler',
