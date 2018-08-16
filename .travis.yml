@@ -1,6 +1,6 @@
 dist: precise
 language: python
-sudo: true
+sudo: false
 env:
   global:
     - PYTHON_VERSION=3.5
