@@ -34,7 +34,7 @@ class ListStudiesHandler(BaseHandler):
         self.render('list_studies.html', message=message, msg_level=msg_level)
 
     def _get_all_emails(self, callback):
-        callback(list(User.iter()))
+        callback([email for email, name in User.iter()])
 
 
 class StudyApprovalList(BaseHandler):

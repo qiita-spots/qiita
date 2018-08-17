@@ -30,6 +30,23 @@ class UserInfoDBHandler(OauthBaseHandler):
             user = _get_instance(qdb.user.User, email,
                                  'Error instantiating user')
             response = {'data': {'email': email, 'level': user.level,
-                                 'password': user.password}}
+                                 'password': user.password,
+                                 'name': user.info['name']}}
+
+            self.write(response)
+
+
+class UsersListDBHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def get(self):
+        """Retrieves the Users basic information
+
+        Returns
+        -------
+        list of dict
+            The user information as a dict
+        """
+        with qdb.sql_connection.TRN:
+            response = {'data': [dict(d) for d in qdb.user.User.iter()]}
 
             self.write(response)

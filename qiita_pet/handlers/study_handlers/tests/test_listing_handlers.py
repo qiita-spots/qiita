@@ -45,7 +45,7 @@ class TestAutocompleteHandler(TestHandlerBase):
 
     def test_get(self):
         # Create the usernames key so we can do autocomplete
-        r_client.zadd('qiita-usernames', **{u: 0 for u in User.iter()})
+        r_client.zadd('qiita-usernames', **{e: 0 for e, n in User.iter()})
         response = self.get(self.base_url % 't')
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body),
