@@ -24,7 +24,6 @@ The latests tutorials can be found in: `CMI Qiita/GNPS workshop pages <http://cm
 Looking for information about getting started? Please see the document here:
 
 .. toctree::
-   :maxdepth: 2
 
    gettingstartedguide/index.rst
    qiimp.rst
@@ -32,35 +31,30 @@ Looking for information about getting started? Please see the document here:
 Looking for information about how to process your data? Please see the document here:
 
 .. toctree::
-   :maxdepth: 2
 
    processingdata/index.rst
 
 Looking for information about submitting your files to EBI? Please see the document here:
 
 .. toctree::
-   :maxdepth: 1
 
    europeanbioinformaticsinstitute.rst
 
 Looking for comparable studies? Please see the document here:
 
 .. toctree::
-   :maxdepth: 1
 
    redbiom.rst
 
 Looking for information about analyzing your data? Please see the document here:
 
 .. toctree::
-   :maxdepth: 3
 
    analyzingsamples/index.rst
 
 Looking for available guides? Please see these documents:
 
 .. toctree::
-   :maxdepth: 1
 
    tutorials/index.rst
    faq.rst
@@ -72,7 +66,6 @@ Looking for available guides? Please see these documents:
 If you intend to deploy or develop Qiita we recommend that you have a look at the following documents:
 
 .. toctree::
-   :maxdepth: 1
 
    qiita-philosophy/index.rst
    admin/index.rst

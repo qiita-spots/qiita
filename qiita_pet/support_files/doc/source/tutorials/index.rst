@@ -7,7 +7,6 @@ This is not a tutorial section, for tutorials please visit the
 The following is a full list of the available guides:
 
 .. toctree::
-   :maxdepth: 2
 
    sharing
    no-raw-sequences

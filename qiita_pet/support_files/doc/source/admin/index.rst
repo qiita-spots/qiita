@@ -4,7 +4,6 @@ Administrator Tutorials
 The following is a full list of the available admin tutorials:
 
 .. toctree::
-   :maxdepth: 2
 
    portals
 
