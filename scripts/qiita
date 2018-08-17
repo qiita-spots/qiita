@@ -282,7 +282,7 @@ def start(port, master):
 
     # Create/repopulate the usernames key so we can do autocomplete for sharing
     r_client.delete('qiita-usernames')
-    users = list(qdb.user.User.iter())
+    users = [email for email, name in qdb.user.User.iter()]
     if users:
         r_client.zadd('qiita-usernames', **{u: 0 for u in users})
 
