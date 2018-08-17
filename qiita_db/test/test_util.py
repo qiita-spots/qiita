@@ -1129,6 +1129,22 @@ class UtilTests(TestCase):
             exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
             self.assertItemsEqual(obs, exp)
 
+            # let's test that we ignore the parent_info
+            qdb.sql_connection.TRN.add("""UPDATE qiita.software_command
+                                          SET ignore_parent_command = True""")
+            qdb.sql_connection.TRN.execute()
+            obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
+            # not testing timestamp
+            for i in range(len(obs)):
+                del obs[i]['timestamp']
+            exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
+                                   'BIOM: 1_study_1001_closed_reference_'
+                                   'otu_table.biom)')
+            exp[0]['algorithm_az'] = (
+                'PickclosedreferenceOTUsreferenceBIOMstudyclosedreference'
+                'otutablebiom')
+            self.assertItemsEqual(obs, exp)
+
             # returning database as it was
             qdb.sql_connection.TRN.add(
                 "UPDATE qiita.command_output SET check_biom_merge = False")

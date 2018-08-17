@@ -66,11 +66,13 @@ before_script:
 script:
   # Some of the tests rely on the plugin system to complete successfuly.
   # Thus, we need a qiita webserver running to be able to execute the tests.
+  - if [ ${TRAVIS_BRANCH} == "master" ] && [ ${TRAVIS_PULL_REQUEST} == "false" ]; then ./travis_ebi_setup.sh ; fi
+  - export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
+  - ls $QIITA_CONFIG_FP
   - qiita pet webserver --no-build-docs start &
   - sleep 5
   - QIITA_PID=$!
-  - if [ ${TRAVIS_BRANCH} == "master" ]; then openssl aes-256-cbc -K $encrypted_bcdc06e5ae76_key -iv $encrypted_bcdc06e5ae76_iv -in qiita_core/support_files/config_test.cfg.enc -out qiita_core/support_files/config_test.cfg -d ; fi
-  - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE
+  - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
   - kill $QIITA_PID
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then all-qiita-cron-job; fi

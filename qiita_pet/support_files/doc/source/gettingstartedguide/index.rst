@@ -79,11 +79,13 @@ Editing a Study
 Creating and Working With Sample information
 --------------------------------------------
 
+*  The :doc:`../qiimp` tab located at the top of the page is a useful tool for creating Qiita and EBI compatible metadata spreadsheets.
+
 Example files
 ~~~~~~~~~~~~~
 
 You can download an example sample information file from
-`here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__
+`here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__.
 
 EBI-ENA NULL values vocabulary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
