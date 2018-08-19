@@ -52,6 +52,7 @@ install:
   - touch ~/.bash_profile
   - ssh-keygen -t rsa -C "ssh test key" -f $PWD/qiita_ware/test/test_data/test_key -P ""
   - mv $PWD/qiita_ware/test/test_data/test_key.pub ~/.ssh/
+  - scp localhost:$PWD/qiita_ware/test/test_data/test_key.pub $PWD/qiita_ware/test/test_data/test_key_copy.pub
   # Install the biom plugin so we can run the analysis tests
   - wget https://data.qiime2.org/distro/core/qiime2-2017.12-py35-linux-conda.yml
   - travis_retry conda env create -q -n qtp-biom --file qiime2-2017.12-py35-linux-conda.yml
