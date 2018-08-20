@@ -1140,9 +1140,7 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom)')
-            exp[0]['algorithm_az'] = (
-                'PickclosedreferenceOTUsreferenceBIOMstudyclosedreference'
-                'otutablebiom')
+            exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
             self.assertItemsEqual(obs, exp)
 
             # returning database as it was
