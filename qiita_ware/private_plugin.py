@@ -261,7 +261,7 @@ def delete_sample_or_column(job):
         obj_class = param_vals['obj_class']
         obj_id = param_vals['obj_id']
         sample_or_col = param_vals['sample_or_col']
-        name = param_vals['name']
+        name = param_vals['name'].split(',')
 
         if obj_class == 'SampleTemplate':
             constructor = qdb.metadata_template.sample_template.SampleTemplate
@@ -273,6 +273,7 @@ def delete_sample_or_column(job):
 
         if sample_or_col == 'columns':
             del_func = constructor(obj_id).delete_column
+            name = name[0]
         elif sample_or_col == 'samples':
             del_func = constructor(obj_id).delete_sample
         else:

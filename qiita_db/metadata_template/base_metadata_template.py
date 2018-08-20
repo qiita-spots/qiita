@@ -604,30 +604,33 @@ class MetadataTemplate(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql)
             return qdb.sql_connection.TRN.execute_fetchflatten()
 
-    def _common_delete_sample_steps(self, sample_name):
+    def _common_delete_sample_steps(self, sample_names):
         r"""Executes the common delete sample steps
 
         Parameters
         ----------
-        sample_name : str
-            The sample name to be erased
+        sample_names : list of str
+            The sample names to be erased
 
         Raises
         ------
         QiitaDBUnknownIDError
-            If the `sample_name` doesn't exist
+            If the `sample_names` doesn't exist
         """
-        if sample_name not in self.keys():
-            raise qdb.exceptions.QiitaDBUnknownIDError(sample_name, self._id)
+        keys = self.keys()
+        missing = [sn for sn in sample_names if sn not in keys]
+        if missing:
+            raise qdb.exceptions.QiitaDBUnknownIDError(missing, self._id)
 
         with qdb.sql_connection.TRN:
-            sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'.format(
-                self._table_name(self._id))
-            qdb.sql_connection.TRN.add(sql, [sample_name])
+            for sn in sample_names:
+                sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'.format(
+                    self._table_name(self._id))
+                qdb.sql_connection.TRN.add(sql, [sn])
 
-            sql = "DELETE FROM qiita.{0} WHERE sample_id=%s AND {1}=%s".format(
-                self._table, self._id_column)
-            qdb.sql_connection.TRN.add(sql, [sample_name, self.id])
+                sql = "DELETE FROM qiita.{0} WHERE sample_id=%s AND {1}=%s".format(
+                    self._table, self._id_column)
+                qdb.sql_connection.TRN.add(sql, [sn, self.id])
 
             qdb.sql_connection.TRN.execute()
 

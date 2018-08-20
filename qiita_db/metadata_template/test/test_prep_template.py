@@ -1486,7 +1486,7 @@ class TestPrepTemplate(TestCase):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
         sample_id = '%s.SKB8.640193' % self.test_study.id
-        pt.delete_sample(sample_id)
+        pt.delete_sample([sample_id])
         self.assertNotIn(sample_id, pt)
 
         pt1 = qdb.metadata_template.prep_template.PrepTemplate(1)
@@ -1494,11 +1494,11 @@ class TestPrepTemplate(TestCase):
 
         # testing errors
         with self.assertRaises(QE.QiitaDBUnknownIDError):
-            pt.delete_sample('not.existing.sample')
+            pt.delete_sample(['not.existing.sample'])
 
         pt = qdb.metadata_template.prep_template.PrepTemplate(2)
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
-            pt.delete_sample('1.SKM5.640177')
+            pt.delete_sample(['1.SKM5.640177'])
 
     def test_name_setter(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)

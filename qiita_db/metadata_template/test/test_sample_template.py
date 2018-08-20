@@ -2177,15 +2177,15 @@ class TestSampleTemplate(TestCase):
         md_ext = pd.DataFrame.from_dict(md_dict, orient='index', dtype=str)
         npt.assert_warns(QE.QiitaDBWarning, st.extend, md_ext)
 
-        st.delete_sample('1.Sample4')
+        st.delete_sample(['1.Sample4'])
         self.assertNotIn('1.Sample4', st.keys())
 
         # testing errors
         with self.assertRaises(QE.QiitaDBUnknownIDError):
-            st.delete_sample('not.existing.sample')
+            st.delete_sample(['not.existing.sample'])
 
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
-            st.delete_sample('1.SKM5.640177')
+            st.delete_sample(['1.SKM5.640177'])
 
 
 EXP_SAMPLE_TEMPLATE = (

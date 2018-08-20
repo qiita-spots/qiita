@@ -16,9 +16,14 @@
         rows[$(this).prop('value')]['sample-delete'] = checked;
     });
   }
+  function toggleCheckbox(element){
+    var checked = element.checked ? 'checked' : '';
+    var row = $(element).prop('value');
+    rows[row]["sample-delete"] = checked;
+  }
   function linkFormatter(row, cell, value, columnDef, dataContext) {
     {% if user_can_edit %}
-      return "<input type='checkbox' class='sample-delete' value='" + row + "' name='" + rows[row]['sample'] + "' onchange='rows[" + row + "][\"sample-delete\"]=\"checked\"'>";
+      return "<input type='checkbox' class='sample-delete' value='" + row + "' name='" + rows[row]['sample'] + "' onchange='toggleCheckbox(this)' " + rows[row]['sample-delete'] + ">";
     {% else %}
       return ""
     {% end %}
@@ -39,7 +44,6 @@
   grid = new Slick.Grid("#samples-div", rows, columns, options);
   grid.onSort.subscribe(function(e, args){
 		var field = args.sortCol.field;
-    console.log(args)
 		rows.sort(function(a, b){
 			var result =
 				a[field] > b[field] ? 1 :

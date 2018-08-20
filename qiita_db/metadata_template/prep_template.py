@@ -689,13 +689,13 @@ class PrepTemplate(MetadataTemplate):
             is_submitted = qdb.sql_connection.TRN.execute_fetchlast()
         return is_submitted
 
-    def delete_sample(self, sample_name):
-        """Delete `sample_name` from prep information file
+    def delete_sample(self, sample_names):
+        """Delete `sample_names` from prep information file
 
         Parameters
         ----------
-        sample_name : str
-            The sample name to be deleted
+        sample_name : list of str
+            The sample names to be deleted
 
         Raises
         ------
@@ -707,7 +707,7 @@ class PrepTemplate(MetadataTemplate):
                 "Prep info file '%d' has files attached, you cannot delete "
                 "samples." % (self._id))
 
-        self._common_delete_sample_steps(sample_name)
+        self._common_delete_sample_steps(sample_names)
 
     @property
     def name(self):
