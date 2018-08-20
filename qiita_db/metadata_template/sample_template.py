@@ -179,7 +179,7 @@ class SampleTemplate(MetadataTemplate):
         pts = {pt.id: [sn for sn in sample_names if pt.get(sn) is not None]
                for pt in qdb.study.Study(self.study_id).prep_templates()}
         if any(pts.values()):
-            sids = ', '.join([vv for v in pts.values() for vv in v])
+            sids = ', '.join({vv for v in pts.values() for vv in v})
             pts = ', '.join(map(str, pts.keys()))
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 "'%s' has been linked in a prep template(s): %s" % (sids, pts))
