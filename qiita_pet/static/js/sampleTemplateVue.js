@@ -206,21 +206,32 @@ Vue.component('sample-template-page', {
      * @param rowId int The row number where this sample was placed
      *
      **/
-    deleteSample: function(sample, rowId) {
+    deleteSamples: function(samples) {
       let vm = this;
-      $.ajax({
-        url: vm.portal + '/study/description/sample_template/',
-        type: 'PATCH',
-        data: {'op': 'remove', 'path': vm.studyId + '/samples/' + sample},
-        success: function(data) {
-          vm.rowId = rowId;
-          vm.rowType = 'sample';
-          vm.startJobCheckInterval(data['job']);
-        },
-        error: function (object, status, error_msg) {
-          bootstrapAlert("Error deleting sample: " + error_msg, "danger")
+      var total_samples = samples.length;
+      if (total_samples == 0){
+        alert('No samples selected!');
+      } else {
+        if (confirm('Are you sure you want to delete ' + total_samples + ' samples?')) {
+          var sample_names = [];
+          samples.each(function(){
+            sample_names.push($(this).prop('name'));
+          });
+          $.ajax({
+            url: vm.portal + '/study/description/sample_template/',
+            type: 'PATCH',
+            data: {'op': 'remove', 'path': vm.studyId + '/samples/' + sample_names},
+            success: function(data) {
+              vm.rowId = 0;
+              vm.rowType = 'sample';
+              vm.startJobCheckInterval(data['job']);
+            },
+            error: function (object, status, error_msg) {
+              bootstrapAlert("Error deleting sample: " + error_msg, "danger")
+            }
+          });
         }
-      });
+      }
     },
 
     /**

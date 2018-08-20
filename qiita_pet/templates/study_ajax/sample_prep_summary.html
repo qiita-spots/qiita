@@ -3,36 +3,60 @@
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/slick.core.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/slick.grid.js"></script>
 <script type="text/javascript">
-  var True = true;
-  var False = false;
-  var table = {% raw table %};
-  var cols = {% raw cols %};
-  var options = { enableCellNavigation: false, rowHeight: 40 };
-  var currentSortCol = 'sample';
-
-  // ==> adding the delete column to the grid
-  // adding new column to the table - using sample name as value
-  for(var i=0;i<table.length;i++) {
-    table[i]['slick-grid-sample-delete'] = table[i]['sample'];
+  var column_width_factor = 10;
+  var rows = {% raw rows.values() %};
+  // setting up checkboxes
+  for(var i=0;i<rows.length;i++) {
+    rows[i]['sample-delete'] = '';
   }
-  // adding new column to cols, we need to add a Formatter
+  function toggleCheckboxes(element){
+    var checked = element.checked ? 'checked' : '';
+    $('.sample-delete').each(function(){
+        $(this).prop('checked', element.checked);
+        rows[$(this).prop('value')]['sample-delete'] = checked;
+    });
+  }
   function linkFormatter(row, cell, value, columnDef, dataContext) {
     {% if user_can_edit %}
-    return "<button class=\"btn btn-danger st-interactive\" onclick=\"sampleTemplatePage.$refs.stElem.deleteSample('" + value +
-           "', " + row + ");\"><span class=\"glyphicon glyphicon-trash\"></span></button>";
+      return "<input type='checkbox' class='sample-delete' value='" + row + "' name='" + rows[row]['sample'] + "' onchange='rows[" + row + "][\"sample-delete\"]=\"checked\"'>";
     {% else %}
-    return ""
+      return ""
     {% end %}
   }
-  cols.unshift({ name: "", field: "slick-grid-sample-delete", width: 60, formatter: linkFormatter })
-  var grid = new Slick.Grid("#samples-div", table, cols, options);
+  var columns = [
+      { 'name': '<input type="checkbox" onchange="toggleCheckboxes(this)">',
+        'field': 'sample-delete', 'id': 'sample-delete', width: 69, sortable: false, formatter: linkFormatter },
+      { 'name': 'sample_name', 'field': 'sample', 'id': 'sample_name', width: 200, sortable: true },
+      {% for k, v in columns.viewitems() %}
+        { 'name': '{% raw v %}', 'field': '{% raw k %}', 'id': '{% raw k %}', 'width': {{ len(v) }}*column_width_factor, 'sortable': true },
+      {% end %}
+  ];
+  var options = {
+    enableCellNavigation: true,
+    enableColumnReorder: false,
+    rowHeight: 30
+  }
+  grid = new Slick.Grid("#samples-div", rows, columns, options);
+  grid.onSort.subscribe(function(e, args){
+		var field = args.sortCol.field;
+    console.log(args)
+		rows.sort(function(a, b){
+			var result =
+				a[field] > b[field] ? 1 :
+				a[field] < b[field] ? -1 :
+				0;
+			return args.sortAsc ? result : -result;
+		});
+		grid.invalidate();
+    grid.render();
+	});
 
   function add_meta() {
-    var meta_val = $("#meta_col").val();
-    $.post("{% raw qiita_config.portal_dir %}/study/description/sample_summary/", {study_id: {{study_id}}, meta_col: meta_val })
+    var metadata_category = $("#metadata_category").val();
+    $.post("{% raw qiita_config.portal_dir %}/study/description/sample_summary/", {study_id: {{study_id}}, meta_col: metadata_category })
       .done( function ( data ) {
         if(data.status == "success"){
-          addColumn(meta_val, data.values);
+          addColumn(metadata_category, data.values);
         }
         else {
           bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
@@ -41,15 +65,13 @@
   }
 
   function addColumn(header, values) {
-    //add column data
-    for(var i=0;i<table.length;i++) {
-      var sample = table[i]['sample'];
-      table[i][header] = values[sample];
+    for(var i=0;i<rows.length;i++) {
+      var sample = rows[i]['sample'];
+      rows[i][header] = values[sample];
     }
-
-    //add new column header
     var columns = grid.getColumns();
-    columns.push({id: header, name: header, field: header, width: 240, sortable: false});
+    columns.push({'id': header, 'name': header, 'field': header,
+                  'width': header.length*column_width_factor, 'sortable': true })
     grid.setColumns(columns);
     grid.invalidateAllRows();
     grid.render();
@@ -116,7 +138,8 @@
     padding:4px
   }
   .slick-header-column-sorted {
-    font-style:italic
+    font-style:italic;
+    font-size: 12px;
   }
   .slick-sort-indicator {
     display:inline-block;
@@ -210,7 +233,7 @@
     position:absolute;
     border:2px dashed #000
   }
-  .slick-row.ui-widget-content, .slick-cell {
+  .slick-row.ui-widget-content, .slick-cell, .slick-header-column {
     font-size: 14px;
   }
 </style>
@@ -219,13 +242,16 @@
   <table style='width:100%'>
     <tr>
       <td>
-        <h3>Sample Summary</h3>
+        <h3>Sample Summary</h3><br/>
+        <button class="btn btn-danger st-interactive" onclick="sampleTemplatePage.$refs.stElem.deleteSamples($('.sample-delete:checkbox:checked'));">
+            <span class="glyphicon glyphicon-trash"></span> Delete Selected
+        </button>
       </td>
       <td style="text-align: right">
         Add sample column information to table
-        <select id="meta_col" name="meta_col">
+        <select id="metadata_category" name="metadata_category">
           <option value=""></option>
-          {% for col in meta_available %}
+          {% for col in categories %}
             <option value="{{col}}">{{col}}</option>
           {% end %}
         </select>

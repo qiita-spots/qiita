@@ -412,7 +412,7 @@ class SampleTemplateColumnsHandler(BaseHandler):
 
 
 def _build_sample_summary(study_id, user_id):
-    """Builds the initial table of samples associated with prep templates
+    """Builds the row obect for SlickGrid
 
     Parameters
     ----------
@@ -423,51 +423,39 @@ def _build_sample_summary(study_id, user_id):
 
     Returns
     -------
-    columns : list of dict
-        SlickGrid formatted list of columns
-    samples_table : list of dict
-        SlickGrid formatted table information
+    columns : dicts
+        keys represent fields and values names for the columns in SlickGrid
+    rows : list of dicts
+        [ {field_1: 'value', ...}, ...]
     """
     # Load all samples available into dictionary and set
-    samps_table = {s: {'sample': s} for s in
-                   sample_template_samples_get_req(
+    rows = {s: {'sample': s} for s in sample_template_samples_get_req(
         study_id, user_id)['samples']}
-    all_samps = set(samps_table.keys())
-    columns = [{"id": "sample", "name": "Sample", "field": "sample",
-                "width": 240, "sortable": False}]
+    samples = rows.keys()
     # Add one column per prep template highlighting what samples exist
     preps = study_prep_get_req(study_id, user_id)["info"]
-    for dt in preps:
-        for prep in preps[dt]:
-            col_field = "prep%d" % prep["id"]
-            col_name = "%s - %d" % (prep["name"], prep["id"])
-            columns.append({"id": col_field,
-                            "name": col_name,
-                            "field": col_field,
-                            "sortable": False,
-                            "width": 240})
-
+    columns = {}
+    for preptype in preps:
+        for prep in preps[preptype]:
+            field = "prep%d" % prep["id"]
+            name = "%s (%d)" % (prep["name"], prep["id"])
+            columns[field] = name
             prep_samples = prep_template_samples_get_req(
                 prep['id'], user_id)['samples']
-            # Empty cell for samples not in the prep template
-            for s in all_samps.difference(prep_samples):
-                samps_table[s][col_field] = ""
-            # X in cell for samples in the prep template
-            for s in all_samps.intersection(prep_samples):
-                samps_table[s][col_field] = "X"
+            for s in samples:
+                rows[s][field] = 'X' if s in prep_samples else ''
 
-    return columns, samps_table.values()
+    return columns, rows
 
 
 class SampleAJAX(BaseHandler):
     @authenticated
     def get(self):
         """Show the sample summary page"""
-        study_id = self.get_argument('study_id')
+        study_id = int(self.get_argument('study_id'))
+        email = self.current_user.id
 
-        res = sample_template_meta_cats_get_req(
-            int(study_id), self.current_user.id)
-
+        res = sample_template_meta_cats_get_req(study_id, email)
         if res['status'] == 'error':
             if 'does not exist' in res['message']:
                 raise HTTPError(404, reason=res['message'])
@@ -475,14 +463,15 @@ class SampleAJAX(BaseHandler):
                 raise HTTPError(403, reason=res['message'])
             else:
                 raise HTTPError(500, reason=res['message'])
+        categories = res['categories']
 
-        meta_cats = res['categories']
-        cols, samps_table = _build_sample_summary(study_id,
-                                                  self.current_user.id)
+        columns, rows = _build_sample_summary(study_id, email)
+
         _, alert_type, alert_msg = get_sample_template_processing_status(
             study_id)
+
         self.render('study_ajax/sample_prep_summary.html',
-                    table=samps_table, cols=cols, meta_available=meta_cats,
+                    rows=rows, columns=columns, categories=categories,
                     study_id=study_id, alert_type=alert_type,
                     alert_message=alert_msg,
                     user_can_edit=Study(study_id).can_edit(self.current_user))
