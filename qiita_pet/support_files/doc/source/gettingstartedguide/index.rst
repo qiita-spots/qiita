@@ -235,6 +235,9 @@ data type prepared will have a separate *preparation information file* that
 will describe the sequencing technology or analytical chemistry used to
 generate that data set.
 
+To increase the chance of successful meta-analyses we suggest following the
+`Earth Microbiome Protocols and Standards <http://www.earthmicrobiome.org/protocols-and-standards/>`__.
+
 Please note that while *sample information* and *preparation information files*
 are similar to a `QIIME metadata file
 <http://qiime.org/documentation/file_formats.html#metadata-mapping-files>`__,
