@@ -9,7 +9,6 @@
 from __future__ import division
 from os.path import join
 from time import strftime
-from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 

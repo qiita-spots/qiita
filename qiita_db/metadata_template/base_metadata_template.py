@@ -623,15 +623,13 @@ class MetadataTemplate(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBUnknownIDError(missing, self._id)
 
         with qdb.sql_connection.TRN:
+            base_sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'
+            sql1 = base_sql.format(self._table_name(self._id))
+            sql2 = '{0} AND {1}=%s'.format(
+                base_sql.format(self._table), self._id_column)
             for sn in sample_names:
-                sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'.format(
-                    self._table_name(self._id))
-                qdb.sql_connection.TRN.add(sql, [sn])
-
-                sql = "DELETE FROM qiita.{0} WHERE sample_id=%s AND {1}=%s".format(
-                    self._table, self._id_column)
-                qdb.sql_connection.TRN.add(sql, [sn, self.id])
-
+                qdb.sql_connection.TRN.add(sql1, [sn])
+                qdb.sql_connection.TRN.add(sql2, [sn, self.id])
             qdb.sql_connection.TRN.execute()
 
             self.generate_files()
