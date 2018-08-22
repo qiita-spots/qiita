@@ -26,46 +26,6 @@ from qiita_pet.handlers.util import (
     get_shared_links)
 
 
-@execute_as_transaction
-def _build_study_info(user, visibility):
-    """Builds list of dicts for studies table, with all HTML formatted
-
-    Parameters
-    ----------
-    user : User object
-        logged in user
-    visibility : choice, ['user', 'public']
-        what kind of search to perform
-
-    Returns
-    -------
-    infolist: list of dict of lists and dicts
-        study and processed data info for JSON serialiation for datatables
-        Each dict in the list is a single study, and contains the text
-    """
-    # get list of studies for table
-    user_study_set = user.user_studies.union(user.shared_studies)
-    if visibility == 'user':
-        if user.level == 'admin':
-            user_study_set = (user_study_set |
-                              Study.get_by_status('sandbox') |
-                              Study.get_by_status('private') |
-                              Study.get_by_status('awaiting_approval') -
-                              Study.get_by_status('public'))
-        study_set = user_study_set
-    elif visibility == 'public':
-        study_set = Study.get_by_status('public') - user_study_set
-    else:
-        raise ValueError('Not a valid search type')
-
-    if not study_set:
-        study_list = []
-    else:
-        study_list = generate_study_list([s.id for s in study_set])
-
-    return study_list
-
-
 class ListStudiesHandler(BaseHandler):
     @authenticated
     @coroutine
@@ -74,7 +34,7 @@ class ListStudiesHandler(BaseHandler):
         self.render('list_studies.html', message=message, msg_level=msg_level)
 
     def _get_all_emails(self, callback):
-        callback(list(User.iter()))
+        callback([email for email, name in User.iter()])
 
 
 class StudyApprovalList(BaseHandler):
@@ -162,7 +122,7 @@ class ListStudiesAJAX(BaseHandler):
         if visibility not in ['user', 'public']:
             raise HTTPError(400, reason='Not a valid visibility')
 
-        info = _build_study_info(self.current_user, visibility)
+        info = generate_study_list(self.current_user, visibility)
         # linkifying data
         len_info = len(info)
         for i in range(len_info):

@@ -62,7 +62,7 @@ from future.builtins import bytes, str
 import h5py
 from humanize import naturalsize
 from os.path import getsize
-import re
+import hashlib
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
@@ -1315,13 +1315,15 @@ def supported_filepath_types(artifact_type):
         return qdb.sql_connection.TRN.execute_fetchindex()
 
 
-def generate_study_list(study_ids):
+def generate_study_list(user, visibility):
     """Get general study information
 
     Parameters
     ----------
-    study_ids : list of ints
-        The study ids to look for. Non-existing ids will be ignored
+    user : qiita_db.user.User
+        The user of which we are requesting studies from
+    visibility : string
+        The visibility to get studies {'public', 'user'}
 
     Returns
     -------
@@ -1366,78 +1368,96 @@ def generate_study_list(study_ids):
             (SELECT name FROM qiita.qiita_user
                 WHERE email=qiita.study.email) AS owner
     """
-    with qdb.sql_connection.TRN:
-        sql = """
-            SELECT metadata_complete, study_abstract, study_id, study_alias,
-                study_title, ebi_study_accession,
-                qiita.study_person.name AS pi_name,
-                qiita.study_person.email AS pi_email,
-                (SELECT COUNT(sample_id) FROM qiita.study_sample
-                    WHERE study_id=qiita.study.study_id)
-                    AS number_samples_collected,
-                (SELECT array_agg(artifact_id ORDER BY artifact_id)
-                    FROM qiita.study_artifact
-                    LEFT JOIN qiita.artifact USING (artifact_id)
-                    LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                    WHERE artifact_type='BIOM' AND
-                        study_id = qiita.study.study_id) AS artifact_biom_ids,
-                (SELECT array_agg(row_to_json((publication, is_doi), true))
-                    FROM qiita.study_publication
-                    WHERE study_id=qiita.study.study_id) AS publications,
-                (SELECT array_agg(name ORDER BY email) FROM qiita.study_users
-                    LEFT JOIN qiita.qiita_user USING (email)
-                    WHERE study_id=qiita.study.study_id) AS shared_with_name,
-                (SELECT array_agg(email ORDER BY email) FROM qiita.study_users
-                    LEFT JOIN qiita.qiita_user USING (email)
-                    WHERE study_id=qiita.study.study_id) AS shared_with_email,
-                (SELECT array_agg(study_tag) FROM qiita.per_study_tags
-                    WHERE study_id=qiita.study.study_id) AS study_tags,
-                (SELECT name FROM qiita.qiita_user
-                    WHERE email=qiita.study.email) AS owner
-                FROM qiita.study
-                LEFT JOIN qiita.study_person ON (
-                    study_person_id=principal_investigator_id)
-                WHERE study_id IN %s
-                ORDER BY study_id"""
-        qdb.sql_connection.TRN.add(sql, [tuple(study_ids)])
-        infolist = []
-        for info in qdb.sql_connection.TRN.execute_fetchindex():
-            info = dict(info)
 
-            # publication info
-            info['publication_doi'] = []
-            info['publication_pid'] = []
-            if info['publications'] is not None:
-                for p in info['publications']:
-                    # f1-2 are the default names given
-                    pub = p['f1']
-                    is_doi = p['f2']
-                    if is_doi:
-                        info['publication_doi'].append(pub)
-                    else:
-                        info['publication_pid'].append(pub)
-            del info['publications']
+    visibility_sql = ''
+    sids = set(s.id for s in user.user_studies.union(user.shared_studies))
+    if visibility == 'user':
+        if user.level == 'admin':
+            sids = (sids |
+                    qdb.study.Study.get_ids_by_status('sandbox') |
+                    qdb.study.Study.get_ids_by_status('private') |
+                    qdb.study.Study.get_ids_by_status('awaiting_approval'))
+    elif visibility == 'public':
+        sids = qdb.study.Study.get_ids_by_status('public') - sids
+        visibility_sql = "visibility = 'public' AND"
+    else:
+        raise ValueError('Not a valid visibility: %s' % visibility)
 
-            # pi info
-            info["pi"] = (info['pi_email'], info['pi_name'])
-            del info["pi_email"]
-            del info["pi_name"]
+    sql = """
+        SELECT metadata_complete, study_abstract, study_id, study_alias,
+            study_title, ebi_study_accession,
+            qiita.study_person.name AS pi_name,
+            qiita.study_person.email AS pi_email,
+            (SELECT COUNT(sample_id) FROM qiita.study_sample
+                WHERE study_id=qiita.study.study_id)
+                AS number_samples_collected,
+            (SELECT array_agg(artifact_id ORDER BY artifact_id)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.visibility USING (visibility_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                WHERE artifact_type='BIOM' AND {0}
+                    study_id = qiita.study.study_id) AS artifact_biom_ids,
+            (SELECT array_agg(row_to_json((publication, is_doi), true))
+                FROM qiita.study_publication
+                WHERE study_id=qiita.study.study_id) AS publications,
+            (SELECT array_agg(name ORDER BY email) FROM qiita.study_users
+                LEFT JOIN qiita.qiita_user USING (email)
+                WHERE study_id=qiita.study.study_id) AS shared_with_name,
+            (SELECT array_agg(email ORDER BY email) FROM qiita.study_users
+                LEFT JOIN qiita.qiita_user USING (email)
+                WHERE study_id=qiita.study.study_id) AS shared_with_email,
+            (SELECT array_agg(study_tag) FROM qiita.per_study_tags
+                WHERE study_id=qiita.study.study_id) AS study_tags,
+            (SELECT name FROM qiita.qiita_user
+                WHERE email=qiita.study.email) AS owner
+            FROM qiita.study
+            LEFT JOIN qiita.study_person ON (
+                study_person_id=principal_investigator_id)
+            WHERE study_id IN %s
+            ORDER BY study_id""".format(visibility_sql)
 
-            # shared with
-            info['shared'] = []
-            if info['shared_with_name'] and info['shared_with_email']:
-                for name, email in zip(info['shared_with_name'],
-                                       info['shared_with_email']):
-                    if not name:
-                        name = email
-                    info['shared'].append((email, name))
-            del info["shared_with_name"]
-            del info["shared_with_email"]
+    infolist = []
+    if sids:
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql, [tuple(sids)])
+            for info in qdb.sql_connection.TRN.execute_fetchindex():
+                info = dict(info)
 
-            study = qdb.study.Study(info['study_id'])
-            info['status'] = study.status
-            info['ebi_submission_status'] = study.ebi_submission_status
-            infolist.append(info)
+                # publication info
+                info['publication_doi'] = []
+                info['publication_pid'] = []
+                if info['publications'] is not None:
+                    for p in info['publications']:
+                        # f1-2 are the default names given
+                        pub = p['f1']
+                        is_doi = p['f2']
+                        if is_doi:
+                            info['publication_doi'].append(pub)
+                        else:
+                            info['publication_pid'].append(pub)
+                del info['publications']
+
+                # pi info
+                info["pi"] = (info['pi_email'], info['pi_name'])
+                del info["pi_email"]
+                del info["pi_name"]
+
+                # shared with
+                info['shared'] = []
+                if info['shared_with_name'] and info['shared_with_email']:
+                    for name, email in zip(info['shared_with_name'],
+                                           info['shared_with_email']):
+                        if not name:
+                            name = email
+                        info['shared'].append((email, name))
+                del info["shared_with_name"]
+                del info["shared_with_email"]
+
+                study = qdb.study.Study(info['study_id'])
+                info['status'] = study.status
+                info['ebi_submission_status'] = study.ebi_submission_status
+                infolist.append(info)
     return infolist
 
 
@@ -1616,7 +1636,6 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             ts = {}
             ps = {}
             algorithm_az = {'': ''}
-            regex = re.compile('[^a-zA-Z]')
             PT = qdb.metadata_template.prep_template.PrepTemplate
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
@@ -1671,7 +1690,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
                         algorithm = '%s | %s' % (cname, palgorithm)
                     if algorithm not in algorithm_az:
-                        algorithm_az[algorithm] = regex.sub('', algorithm)
+                        algorithm_az[algorithm] = hashlib.md5(
+                            algorithm).hexdigest()
 
                 if target is None:
                     target = []

@@ -53,3 +53,11 @@ Finding Samples Based On Their Metadata
 For help on doing complex searches for samples go to :doc:`../redbiom`. Redbiom
 helps users find samples based on their metadata, a specific taxon or feature
 of interest via a simple Qiita GUI or the command line (more powerful).
+
+Moving Your Analysis From Qiita to QIIME2
+-----------------------------------------
+
+After downloading your Qiita data, you can continue your analysis in QIIME2.
+For information on transfering your data, visit the
+`Transferring Qiita Artifacts to QIIME2 <https://forum.qiime2.org/t/transferring-qiita-artifacts-to-qiime2/4790>`__
+QIIME2 community tutorial page.

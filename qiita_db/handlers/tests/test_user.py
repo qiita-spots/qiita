@@ -34,7 +34,27 @@ class UserInfoDBHandlerTests(OauthTestingBase):
         # and that one of the key's info is correct
         obs = obs['data']
         exp = {"password": "$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJk"
-               "UM8nXG9Efe", "email": "shared@foo.bar", "level": "user"}
+               "UM8nXG9Efe", "email": "shared@foo.bar", "level": "user",
+               "name": "Shared"}
+        self.assertEqual(obs, exp)
+
+
+class UsersListDBHandlerTests(OauthTestingBase):
+    def test_get_no_header(self):
+        obs = self.get('/qiita_db/users/')
+        self.assertEqual(obs.code, 400)
+
+    def test_get(self):
+        obs = self.get('/qiita_db/users/',
+                       headers=self.header)
+        self.assertEqual(obs.code, 200)
+
+        obs = loads(obs.body)
+        exp = {'data': [
+            {'email': 'test@foo.bar', 'name': 'Dude'},
+            {'email': 'shared@foo.bar', 'name': 'Shared'},
+            {'email': 'admin@foo.bar', 'name': 'Admin'},
+            {'email': 'demo@microbio.me', 'name': 'Demo'}]}
         self.assertEqual(obs, exp)
 
 
