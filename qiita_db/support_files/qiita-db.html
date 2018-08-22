@@ -496,7 +496,7 @@ table {
 	artifact_type_filepath_type references filepath_type ( filepath_type_id )</title>
 </path>
 <text x='1267' y='760' transform='rotate(0 1267,760)' title='Foreign Key fk_artifact_type_filepath_type_0
-	artifact_type_filepath_type references filepath_type ( filepath_type_id )' style='fill:#a1a0a0;'>filepath_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1680 765 L 1807,765 Q 1815,765 1815,757 L 1815,600' >
+	artifact_type_filepath_type references filepath_type ( filepath_type_id )' style='fill:#a1a0a0;'>filepath_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1680 765 L 1807,765 Q 1815,765 1815,757 L 1815,615' >
 	<title>Foreign Key fk_study_artifact_study
 	study_artifact references study ( study_id )</title>
 </path>
@@ -521,7 +521,7 @@ table {
 	software references software_type ( software_type_id )</title>
 </path>
 <text x='2527' y='970' transform='rotate(0 2527,970)' title='Foreign Key fk_software_software_type
-	software references software_type ( software_type_id )' style='fill:#a1a0a0;'>software_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1860 705 L 1860,600' >
+	software references software_type ( software_type_id )' style='fill:#a1a0a0;'>software_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1860 705 L 1860,615' >
 	<title>Foreign Key fk_study_publication_study
 	study_publication references study ( study_id )</title>
 </path>
@@ -616,11 +616,11 @@ table {
 	prep_template_filepath references prep_template ( prep_template_id )</title>
 </path>
 <text x='1162' y='475' transform='rotate(0 1162,475)' title='Foreign Key fk_prep_template_id
-	prep_template_filepath references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 615 L 1792,615 Q 1800,615 1800,607 L 1800,600' >
+	prep_template_filepath references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 630 L 1792,630 Q 1800,630 1800,622 L 1800,615' >
 	<title>Foreign Key fk_study_id
 	sample_template_filepath references study ( study_id )</title>
 </path>
-<text x='1192' y='610' transform='rotate(0 1192,610)' title='Foreign Key fk_study_id
+<text x='1192' y='625' transform='rotate(0 1192,625)' title='Foreign Key fk_study_id
 	sample_template_filepath references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 645 L 982,645 Q 975,645 975,652 L 975,832 Q 975,840 967,840 L 795,840' >
 	<title>Foreign Key fk_filepath_id
 	sample_template_filepath references filepath ( filepath_id )</title>
@@ -636,32 +636,7 @@ table {
 	study_environmental_package references environmental_package ( environmental_package_name )</title>
 </path>
 <text x='2188' y='120' transform='rotate(90 2188,120)' title='Foreign Key fk_study_environmental_package_0
-	study_environmental_package references environmental_package ( environmental_package_name )' style='fill:#a1a0a0;'>environmental_package_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1770 390 L 735,390' >
-	<title>Foreign Key fk_study_user
-	study references qiita_user ( email )</title>
-</path>
-<text x='1744' y='385' transform='rotate(0 1744,385)' title='Foreign Key fk_study_user
-	study references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1965 285 L 2017,285 Q 2025,285 2025,277 L 2025,270' >
-	<title>Foreign Key fk_study_study_emp_person
-	study references study_person ( emp_person_id -> study_person_id )</title>
-</path>
-<text x='1972' y='280' transform='rotate(0 1972,280)' title='Foreign Key fk_study_study_emp_person
-	study references study_person ( emp_person_id -> study_person_id )' style='fill:#a1a0a0;'>emp_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1965 300 L 2032,300 Q 2040,300 2040,292 L 2040,270' >
-	<title>Foreign Key fk_study_study_lab_person
-	study references study_person ( lab_person_id -> study_person_id )</title>
-</path>
-<text x='1972' y='295' transform='rotate(0 1972,295)' title='Foreign Key fk_study_study_lab_person
-	study references study_person ( lab_person_id -> study_person_id )' style='fill:#a1a0a0;'>lab_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1965 315 L 2047,315 Q 2055,315 2055,307 L 2055,270' >
-	<title>Foreign Key fk_study_study_pi_person
-	study references study_person ( principal_investigator_id -> study_person_id )</title>
-</path>
-<text x='1972' y='310' transform='rotate(0 1972,310)' title='Foreign Key fk_study_study_pi_person
-	study references study_person ( principal_investigator_id -> study_person_id )' style='fill:#a1a0a0;'>principal_investigator_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1965 540 L 1995,540' >
-	<title>Foreign Key fk_study_timeseries_type
-	study references timeseries_type ( timeseries_type_id )</title>
-</path>
-<text x='1972' y='535' transform='rotate(0 1972,535)' title='Foreign Key fk_study_timeseries_type
-	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2130 450 L 1965,450' >
+	study_environmental_package references environmental_package ( environmental_package_name )' style='fill:#a1a0a0;'>environmental_package_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2130 450 L 1965,450' >
 	<title>Foreign Key fk_per_study_tags_study
 	per_study_tags references study ( study_id )</title>
 </path>
@@ -726,22 +701,7 @@ table {
 	artifact_output_processing_job references command_output ( command_output_id )</title>
 </path>
 <text x='1616' y='1435' transform='rotate(0 1616,1435)' title='Foreign Key fk_artifact_output_processing_job_1
-	artifact_output_processing_job references command_output ( command_output_id )' style='fill:#a1a0a0;'>command_output_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2115 1155 L 2122,1155 Q 2130,1155 2130,1147 L 2130,697 Q 2130,690 2122,690 L 727,690 Q 720,690 720,682 L 720,525' >
-	<title>Foreign Key fk_processing_job_qiita_user
-	processing_job references qiita_user ( email )</title>
-</path>
-<text x='2122' y='1150' transform='rotate(0 2122,1150)' title='Foreign Key fk_processing_job_qiita_user
-	processing_job references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2115 1245 L 2145,1245' >
-	<title>Foreign Key fk_processing_job
-	processing_job references software_command ( command_id )</title>
-</path>
-<text x='2122' y='1240' transform='rotate(0 2122,1240)' title='Foreign Key fk_processing_job
-	processing_job references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1980 1335 L 1980,1402 Q 1980,1410 1972,1410 L 1942,1410 Q 1935,1410 1935,1417 L 1935,1515' >
-	<title>Foreign Key fk_processing_job_status
-	processing_job references processing_job_status ( processing_job_status_id )</title>
-</path>
-<text x='1993' y='1335' transform='rotate(90 1993,1335)' title='Foreign Key fk_processing_job_status
-	processing_job references processing_job_status ( processing_job_status_id )' style='fill:#a1a0a0;'>processing_job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1950 990 L 1927,990 Q 1920,990 1920,982 L 1920,967 Q 1920,960 1912,960 L 1590,960' >
+	artifact_output_processing_job references command_output ( command_output_id )' style='fill:#a1a0a0;'>command_output_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1950 990 L 1927,990 Q 1920,990 1920,982 L 1920,967 Q 1920,960 1912,960 L 1590,960' >
 	<title>Foreign Key fk_software_artifact_type
 	software_artifact_type references artifact_type ( artifact_type_id )</title>
 </path>
@@ -861,7 +821,47 @@ table {
 	processing_job_validator references processing_job ( processing_job_id )</title>
 </path>
 <text x='2048' y='1405' transform='rotate(0 2048,1405)' title='Foreign Key fk_processing_job_validator
-	processing_job_validator references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><!-- ============= Table 'column_controlled_vocabularies' ============= -->
+	processing_job_validator references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2115 1155 L 2122,1155 Q 2130,1155 2130,1147 L 2130,697 Q 2130,690 2122,690 L 727,690 Q 720,690 720,682 L 720,525' >
+	<title>Foreign Key fk_processing_job_qiita_user
+	processing_job references qiita_user ( email )</title>
+</path>
+<text x='2122' y='1150' transform='rotate(0 2122,1150)' title='Foreign Key fk_processing_job_qiita_user
+	processing_job references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2115 1245 L 2145,1245' >
+	<title>Foreign Key fk_processing_job
+	processing_job references software_command ( command_id )</title>
+</path>
+<text x='2122' y='1240' transform='rotate(0 2122,1240)' title='Foreign Key fk_processing_job
+	processing_job references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1980 1335 L 1980,1402 Q 1980,1410 1972,1410 L 1942,1410 Q 1935,1410 1935,1417 L 1935,1515' >
+	<title>Foreign Key fk_processing_job_status
+	processing_job references processing_job_status ( processing_job_status_id )</title>
+</path>
+<text x='1993' y='1335' transform='rotate(90 1993,1335)' title='Foreign Key fk_processing_job_status
+	processing_job references processing_job_status ( processing_job_status_id )' style='fill:#a1a0a0;'>processing_job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1770 390 L 735,390' >
+	<title>Foreign Key fk_study_user
+	study references qiita_user ( email )</title>
+</path>
+<text x='1744' y='385' transform='rotate(0 1744,385)' title='Foreign Key fk_study_user
+	study references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1965 285 L 2017,285 Q 2025,285 2025,277 L 2025,270' >
+	<title>Foreign Key fk_study_study_emp_person
+	study references study_person ( emp_person_id -> study_person_id )</title>
+</path>
+<text x='1972' y='280' transform='rotate(0 1972,280)' title='Foreign Key fk_study_study_emp_person
+	study references study_person ( emp_person_id -> study_person_id )' style='fill:#a1a0a0;'>emp_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1965 300 L 2032,300 Q 2040,300 2040,292 L 2040,270' >
+	<title>Foreign Key fk_study_study_lab_person
+	study references study_person ( lab_person_id -> study_person_id )</title>
+</path>
+<text x='1972' y='295' transform='rotate(0 1972,295)' title='Foreign Key fk_study_study_lab_person
+	study references study_person ( lab_person_id -> study_person_id )' style='fill:#a1a0a0;'>lab_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1965 315 L 2047,315 Q 2055,315 2055,307 L 2055,270' >
+	<title>Foreign Key fk_study_study_pi_person
+	study references study_person ( principal_investigator_id -> study_person_id )</title>
+</path>
+<text x='1972' y='310' transform='rotate(0 1972,310)' title='Foreign Key fk_study_study_pi_person
+	study references study_person ( principal_investigator_id -> study_person_id )' style='fill:#a1a0a0;'>principal_investigator_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1965 540 L 1995,540' >
+	<title>Foreign Key fk_study_timeseries_type
+	study references timeseries_type ( timeseries_type_id )</title>
+</path>
+<text x='1972' y='535' transform='rotate(0 1972,535)' title='Foreign Key fk_study_timeseries_type
+	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><!-- ============= Table 'column_controlled_vocabularies' ============= -->
 <rect class='table' x='270' y='1208' width='195' height='75' rx='7' ry='7' />
 <path d='M 270.50 1234.50 L 270.50 1215.50 Q 270.50 1208.50 277.50 1208.50 L 457.50 1208.50 Q 464.50 1208.50 464.50 1215.50 L 464.50 1234.50 L270.50 1234.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#column_controlled_vocabularies'><text x='280' y='1222' class='tableTitle'>column_controlled_vocabularies</text><title>Table qiita.column_controlled_vocabularies
@@ -1509,58 +1509,6 @@ The institution with which this person is affiliated</title></a>
   <a xlink:href='#study_person.address'><text x='2028' y='232'>address</text><title>address varchar&#040;100&#041;</title></a>
   <a xlink:href='#study_person.phone'><text x='2028' y='247'>phone</text><title>phone varchar</title></a>
 
-<!-- ============= Table 'study' ============= -->
-<rect class='table' x='1785' y='233' width='180' height='360' rx='7' ry='7' />
-<path d='M 1785.50 259.50 L 1785.50 240.50 Q 1785.50 233.50 1792.50 233.50 L 1957.50 233.50 Q 1964.50 233.50 1964.50 240.50 L 1964.50 259.50 L1785.50 259.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#study'><text x='1860' y='247' class='tableTitle'>study</text><title>Table qiita.study</title></a>
-  <use id='nn' x='1787' y='267' xlink:href='#nn'/><a xlink:href='#study.study_id'><use id='pk' x='1787' y='266' xlink:href='#pk'/><title>Primary Key  ( study_id ) </title></a>
-<a xlink:href='#study.study_id'><text x='1803' y='277'>study_id</text><title>study_id bigserial not null
-Unique name for study</title></a>
-<a xlink:href='#study.study_id'><use id='ref' x='1953' y='266' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
-Referred by per_study_tags ( study_id ) 
-Referred by sample_template_filepath ( study_id ) 
-Referred by study_artifact ( study_id ) 
-Referred by study_environmental_package ( study_id ) 
-Referred by study_portal ( study_id ) 
-Referred by study_prep_template ( study_id ) 
-Referred by study_publication ( study_id ) 
-Referred by study_sample ( study_id ) 
-Referred by study_users ( study_id ) </title></a>
-  <use id='nn' x='1787' y='282' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1787' y='281' xlink:href='#idx'/><title>Index  ( email ) </title></a>
-<a xlink:href='#study.email'><text x='1803' y='292'>email</text><title>email varchar not null
-Email of study owner</title></a>
-<a xlink:href='#study.email'><use id='fk' x='1953' y='281' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
-  <a xlink:href='#study.emp_person_id'><use id='idx' x='1787' y='296' xlink:href='#idx'/><title>Index  ( emp_person_id ) </title></a>
-<a xlink:href='#study.emp_person_id'><text x='1803' y='307'>emp_person_id</text><title>emp_person_id bigint</title></a>
-<a xlink:href='#study.emp_person_id'><use id='fk' x='1953' y='296' xlink:href='#fk'/><title>References study_person ( emp_person_id -> study_person_id ) </title></a>
-  <use id='nn' x='1787' y='312' xlink:href='#nn'/><a xlink:href='#study.first_contact'><text x='1803' y='322'>first_contact</text><title>first_contact timestamp not null default current&#095;timestamp</title></a>
-  <a xlink:href='#study.funding'><text x='1803' y='337'>funding</text><title>funding varchar</title></a>
-  <use id='nn' x='1787' y='342' xlink:href='#nn'/><a xlink:href='#study.timeseries_type_id'><use id='idx' x='1787' y='341' xlink:href='#idx'/><title>Index  ( timeseries_type_id ) </title></a>
-<a xlink:href='#study.timeseries_type_id'><text x='1803' y='352'>timeseries_type_id</text><title>timeseries_type_id bigint not null
-What type of timeseries this study is &#040;or is not&#041;
-Controlled Vocabulary</title></a>
-<a xlink:href='#study.timeseries_type_id'><use id='fk' x='1953' y='341' xlink:href='#fk'/><title>References timeseries_type ( timeseries_type_id ) </title></a>
-  <a xlink:href='#study.lab_person_id'><use id='idx' x='1787' y='356' xlink:href='#idx'/><title>Index  ( lab_person_id ) </title></a>
-<a xlink:href='#study.lab_person_id'><text x='1803' y='367'>lab_person_id</text><title>lab_person_id bigint</title></a>
-<a xlink:href='#study.lab_person_id'><use id='fk' x='1953' y='356' xlink:href='#fk'/><title>References study_person ( lab_person_id -> study_person_id ) </title></a>
-  <use id='nn' x='1787' y='372' xlink:href='#nn'/><a xlink:href='#study.metadata_complete'><text x='1803' y='382'>metadata_complete</text><title>metadata_complete bool not null</title></a>
-  <use id='nn' x='1787' y='387' xlink:href='#nn'/><a xlink:href='#study.mixs_compliant'><text x='1803' y='397'>mixs_compliant</text><title>mixs_compliant bool not null</title></a>
-  <a xlink:href='#study.most_recent_contact'><text x='1803' y='412'>most_recent_contact</text><title>most_recent_contact timestamp</title></a>
-  <a xlink:href='#study.number_samples_collected'><text x='1803' y='427'>number_samples_collected</text><title>number_samples_collected integer</title></a>
-  <a xlink:href='#study.number_samples_promised'><text x='1803' y='442'>number_samples_promised</text><title>number_samples_promised integer</title></a>
-  <use id='nn' x='1787' y='447' xlink:href='#nn'/><a xlink:href='#study.principal_investigator_id'><use id='idx' x='1787' y='446' xlink:href='#idx'/><title>Index  ( principal_investigator_id ) </title></a>
-<a xlink:href='#study.principal_investigator_id'><text x='1803' y='457'>principal_investigator_id</text><title>principal_investigator_id bigint not null</title></a>
-<a xlink:href='#study.principal_investigator_id'><use id='fk' x='1953' y='446' xlink:href='#fk'/><title>References study_person ( principal_investigator_id -> study_person_id ) </title></a>
-  <use id='nn' x='1787' y='462' xlink:href='#nn'/><a xlink:href='#study.reprocess'><text x='1803' y='472'>reprocess</text><title>reprocess bool not null</title></a>
-  <a xlink:href='#study.spatial_series'><text x='1803' y='487'>spatial_series</text><title>spatial_series bool</title></a>
-  <use id='nn' x='1787' y='492' xlink:href='#nn'/><a xlink:href='#study.study_title'><use id='unq' x='1787' y='491' xlink:href='#unq'/><title>Unique Index  ( study_title ) </title></a>
-<a xlink:href='#study.study_title'><text x='1803' y='502'>study_title</text><title>study_title varchar not null</title></a>
-  <use id='nn' x='1787' y='507' xlink:href='#nn'/><a xlink:href='#study.study_alias'><text x='1803' y='517'>study_alias</text><title>study_alias varchar not null</title></a>
-  <use id='nn' x='1787' y='522' xlink:href='#nn'/><a xlink:href='#study.study_description'><text x='1803' y='532'>study_description</text><title>study_description text not null</title></a>
-  <use id='nn' x='1787' y='537' xlink:href='#nn'/><a xlink:href='#study.study_abstract'><text x='1803' y='547'>study_abstract</text><title>study_abstract text not null</title></a>
-  <a xlink:href='#study.vamps_id'><text x='1803' y='562'>vamps_id</text><title>vamps_id varchar</title></a>
-  <a xlink:href='#study.ebi_study_accession'><text x='1803' y='577'>ebi_study_accession</text><title>ebi_study_accession varchar</title></a>
-
 <!-- ============= Table 'per_study_tags' ============= -->
 <rect class='table' x='2145' y='443' width='105' height='75' rx='7' ry='7' />
 <path d='M 2145.50 469.50 L 2145.50 450.50 Q 2145.50 443.50 2152.50 443.50 L 2242.50 443.50 Q 2249.50 443.50 2249.50 450.50 L 2249.50 469.50 L2145.50 469.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
@@ -1670,45 +1618,6 @@ Referred by default_workflow_edge_connections ( parent_output_id -> command_outp
   <use id='nn' x='1742' y='1482' xlink:href='#nn'/><a xlink:href='#artifact_output_processing_job.command_output_id'><use id='idx' x='1742' y='1481' xlink:href='#idx'/><title>Index  ( command_output_id ) </title></a>
 <a xlink:href='#artifact_output_processing_job.command_output_id'><text x='1758' y='1492'>command_output_id</text><title>command_output_id bigint not null</title></a>
 <a xlink:href='#artifact_output_processing_job.command_output_id'><use id='fk' x='1908' y='1481' xlink:href='#fk'/><title>References command_output ( command_output_id ) </title></a>
-
-<!-- ============= Table 'processing_job' ============= -->
-<rect class='table' x='1935' y='1133' width='180' height='195' rx='7' ry='7' />
-<path d='M 1935.50 1159.50 L 1935.50 1140.50 Q 1935.50 1133.50 1942.50 1133.50 L 2107.50 1133.50 Q 2114.50 1133.50 2114.50 1140.50 L 2114.50 1159.50 L1935.50 1159.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
-<a xlink:href='#processing_job'><text x='1983' y='1147' class='tableTitle'>processing_job</text><title>Table qiita.processing_job</title></a>
-  <use id='nn' x='1937' y='1167' xlink:href='#nn'/><a xlink:href='#processing_job.processing_job_id'><use id='pk' x='1937' y='1166' xlink:href='#pk'/><title>Primary Key  ( processing_job_id ) </title></a>
-<a xlink:href='#processing_job.processing_job_id'><text x='1953' y='1177'>processing_job_id</text><title>processing_job_id bigserial not null
-Using bigserial in DBSchema &#045; however in the postgres DB this column is of type UUID&#046;</title></a>
-<a xlink:href='#processing_job.processing_job_id'><use id='ref' x='2103' y='1166' xlink:href='#ref'/><title>Referred by analysis_processing_job ( processing_job_id ) 
-Referred by artifact_output_processing_job ( processing_job_id ) 
-Referred by artifact_processing_job ( processing_job_id ) 
-Referred by parent_processing_job ( parent_id -> processing_job_id ) 
-Referred by parent_processing_job ( child_id -> processing_job_id ) 
-Referred by prep_template_processing_job ( processing_job_id ) 
-Referred by processing_job_validator ( processing_job_id ) 
-Referred by processing_job_validator ( validator_id -> processing_job_id ) 
-Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
-  <use id='nn' x='1937' y='1182' xlink:href='#nn'/><a xlink:href='#processing_job.email'><use id='idx' x='1937' y='1181' xlink:href='#idx'/><title>Index  ( email ) </title></a>
-<a xlink:href='#processing_job.email'><text x='1953' y='1192'>email</text><title>email varchar not null
-The user that launched the job</title></a>
-<a xlink:href='#processing_job.email'><use id='fk' x='2103' y='1181' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
-  <use id='nn' x='1937' y='1197' xlink:href='#nn'/><a xlink:href='#processing_job.command_id'><use id='idx' x='1937' y='1196' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
-<a xlink:href='#processing_job.command_id'><text x='1953' y='1207'>command_id</text><title>command_id bigint not null
-The command launched</title></a>
-<a xlink:href='#processing_job.command_id'><use id='fk' x='2103' y='1196' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
-  <use id='nn' x='1937' y='1212' xlink:href='#nn'/><a xlink:href='#processing_job.command_parameters'><text x='1953' y='1222'>command_parameters</text><title>command_parameters varchar not null
-The parameters used in the command in JSON format</title></a>
-  <use id='nn' x='1937' y='1227' xlink:href='#nn'/><a xlink:href='#processing_job.processing_job_status_id'><use id='idx' x='1937' y='1226' xlink:href='#idx'/><title>Index  ( processing_job_status_id ) </title></a>
-<a xlink:href='#processing_job.processing_job_status_id'><text x='1953' y='1237'>processing_job_status_id</text><title>processing_job_status_id bigint not null</title></a>
-<a xlink:href='#processing_job.processing_job_status_id'><use id='fk' x='2103' y='1226' xlink:href='#fk'/><title>References processing_job_status ( processing_job_status_id ) </title></a>
-  <a xlink:href='#processing_job.logging_id'><use id='idx' x='1937' y='1241' xlink:href='#idx'/><title>Index  ( logging_id ) </title></a>
-<a xlink:href='#processing_job.logging_id'><text x='1953' y='1252'>logging_id</text><title>logging_id bigint
-In case of failure&#044; point to the log entry that holds more information about the error</title></a>
-<a xlink:href='#processing_job.logging_id'><use id='fk' x='2103' y='1241' xlink:href='#fk'/><title>References logging ( logging_id ) </title></a>
-  <a xlink:href='#processing_job.heartbeat'><text x='1953' y='1267'>heartbeat</text><title>heartbeat timestamp
-The last heartbeat received by this job</title></a>
-  <a xlink:href='#processing_job.step'><text x='1953' y='1282'>step</text><title>step varchar</title></a>
-  <a xlink:href='#processing_job.pending'><text x='1953' y='1297'>pending</text><title>pending varchar</title></a>
-  <use id='nn' x='1937' y='1302' xlink:href='#nn'/><a xlink:href='#processing_job.hidden'><text x='1953' y='1312'>hidden</text><title>hidden bool not null default &#039;False&#039;</title></a>
 
 <!-- ============= Table 'software_artifact_type' ============= -->
 <rect class='table' x='1965' y='983' width='135' height='75' rx='7' ry='7' />
@@ -2035,6 +1944,99 @@ Referred by processing_job ( command_id ) </title></a>
 <a xlink:href='#processing_job_validator.validator_id'><text x='2178' y='1462'>validator_id</text><title>validator_id bigint not null</title></a>
 <a xlink:href='#processing_job_validator.validator_id'><use id='fk' x='2298' y='1451' xlink:href='#fk'/><title>References processing_job ( validator_id -> processing_job_id ) </title></a>
   <a xlink:href='#processing_job_validator.artifact_info'><text x='2178' y='1477'>artifact_info</text><title>artifact_info varchar</title></a>
+
+<!-- ============= Table 'processing_job' ============= -->
+<rect class='table' x='1935' y='1133' width='180' height='195' rx='7' ry='7' />
+<path d='M 1935.50 1159.50 L 1935.50 1140.50 Q 1935.50 1133.50 1942.50 1133.50 L 2107.50 1133.50 Q 2114.50 1133.50 2114.50 1140.50 L 2114.50 1159.50 L1935.50 1159.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#processing_job'><text x='1983' y='1147' class='tableTitle'>processing_job</text><title>Table qiita.processing_job</title></a>
+  <use id='nn' x='1937' y='1167' xlink:href='#nn'/><a xlink:href='#processing_job.processing_job_id'><use id='pk' x='1937' y='1166' xlink:href='#pk'/><title>Primary Key  ( processing_job_id ) </title></a>
+<a xlink:href='#processing_job.processing_job_id'><text x='1953' y='1177'>processing_job_id</text><title>processing_job_id bigserial not null
+Using bigserial in DBSchema &#045; however in the postgres DB this column is of type UUID&#046;</title></a>
+<a xlink:href='#processing_job.processing_job_id'><use id='ref' x='2103' y='1166' xlink:href='#ref'/><title>Referred by analysis_processing_job ( processing_job_id ) 
+Referred by artifact_output_processing_job ( processing_job_id ) 
+Referred by artifact_processing_job ( processing_job_id ) 
+Referred by parent_processing_job ( parent_id -> processing_job_id ) 
+Referred by parent_processing_job ( child_id -> processing_job_id ) 
+Referred by prep_template_processing_job ( processing_job_id ) 
+Referred by processing_job_validator ( processing_job_id ) 
+Referred by processing_job_validator ( validator_id -> processing_job_id ) 
+Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
+  <use id='nn' x='1937' y='1182' xlink:href='#nn'/><a xlink:href='#processing_job.email'><use id='idx' x='1937' y='1181' xlink:href='#idx'/><title>Index  ( email ) </title></a>
+<a xlink:href='#processing_job.email'><text x='1953' y='1192'>email</text><title>email varchar not null
+The user that launched the job</title></a>
+<a xlink:href='#processing_job.email'><use id='fk' x='2103' y='1181' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+  <use id='nn' x='1937' y='1197' xlink:href='#nn'/><a xlink:href='#processing_job.command_id'><use id='idx' x='1937' y='1196' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
+<a xlink:href='#processing_job.command_id'><text x='1953' y='1207'>command_id</text><title>command_id bigint not null
+The command launched</title></a>
+<a xlink:href='#processing_job.command_id'><use id='fk' x='2103' y='1196' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <use id='nn' x='1937' y='1212' xlink:href='#nn'/><a xlink:href='#processing_job.command_parameters'><text x='1953' y='1222'>command_parameters</text><title>command_parameters varchar not null
+The parameters used in the command in JSON format</title></a>
+  <use id='nn' x='1937' y='1227' xlink:href='#nn'/><a xlink:href='#processing_job.processing_job_status_id'><use id='idx' x='1937' y='1226' xlink:href='#idx'/><title>Index  ( processing_job_status_id ) </title></a>
+<a xlink:href='#processing_job.processing_job_status_id'><text x='1953' y='1237'>processing_job_status_id</text><title>processing_job_status_id bigint not null</title></a>
+<a xlink:href='#processing_job.processing_job_status_id'><use id='fk' x='2103' y='1226' xlink:href='#fk'/><title>References processing_job_status ( processing_job_status_id ) </title></a>
+  <a xlink:href='#processing_job.logging_id'><use id='idx' x='1937' y='1241' xlink:href='#idx'/><title>Index  ( logging_id ) </title></a>
+<a xlink:href='#processing_job.logging_id'><text x='1953' y='1252'>logging_id</text><title>logging_id bigint
+In case of failure&#044; point to the log entry that holds more information about the error</title></a>
+<a xlink:href='#processing_job.logging_id'><use id='fk' x='2103' y='1241' xlink:href='#fk'/><title>References logging ( logging_id ) </title></a>
+  <a xlink:href='#processing_job.heartbeat'><text x='1953' y='1267'>heartbeat</text><title>heartbeat timestamp
+The last heartbeat received by this job</title></a>
+  <a xlink:href='#processing_job.step'><text x='1953' y='1282'>step</text><title>step varchar</title></a>
+  <a xlink:href='#processing_job.pending'><text x='1953' y='1297'>pending</text><title>pending varchar</title></a>
+  <use id='nn' x='1937' y='1302' xlink:href='#nn'/><a xlink:href='#processing_job.hidden'><text x='1953' y='1312'>hidden</text><title>hidden bool not null default &#039;False&#039;</title></a>
+
+<!-- ============= Table 'study' ============= -->
+<rect class='table' x='1785' y='233' width='180' height='375' rx='7' ry='7' />
+<path d='M 1785.50 259.50 L 1785.50 240.50 Q 1785.50 233.50 1792.50 233.50 L 1957.50 233.50 Q 1964.50 233.50 1964.50 240.50 L 1964.50 259.50 L1785.50 259.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#study'><text x='1860' y='247' class='tableTitle'>study</text><title>Table qiita.study</title></a>
+  <use id='nn' x='1787' y='267' xlink:href='#nn'/><a xlink:href='#study.study_id'><use id='pk' x='1787' y='266' xlink:href='#pk'/><title>Primary Key  ( study_id ) </title></a>
+<a xlink:href='#study.study_id'><text x='1803' y='277'>study_id</text><title>study_id bigserial not null
+Unique name for study</title></a>
+<a xlink:href='#study.study_id'><use id='ref' x='1953' y='266' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
+Referred by per_study_tags ( study_id ) 
+Referred by sample_template_filepath ( study_id ) 
+Referred by study_artifact ( study_id ) 
+Referred by study_environmental_package ( study_id ) 
+Referred by study_portal ( study_id ) 
+Referred by study_prep_template ( study_id ) 
+Referred by study_publication ( study_id ) 
+Referred by study_sample ( study_id ) 
+Referred by study_users ( study_id ) </title></a>
+  <use id='nn' x='1787' y='282' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1787' y='281' xlink:href='#idx'/><title>Index  ( email ) </title></a>
+<a xlink:href='#study.email'><text x='1803' y='292'>email</text><title>email varchar not null
+Email of study owner</title></a>
+<a xlink:href='#study.email'><use id='fk' x='1953' y='281' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+  <a xlink:href='#study.emp_person_id'><use id='idx' x='1787' y='296' xlink:href='#idx'/><title>Index  ( emp_person_id ) </title></a>
+<a xlink:href='#study.emp_person_id'><text x='1803' y='307'>emp_person_id</text><title>emp_person_id bigint</title></a>
+<a xlink:href='#study.emp_person_id'><use id='fk' x='1953' y='296' xlink:href='#fk'/><title>References study_person ( emp_person_id -> study_person_id ) </title></a>
+  <use id='nn' x='1787' y='312' xlink:href='#nn'/><a xlink:href='#study.first_contact'><text x='1803' y='322'>first_contact</text><title>first_contact timestamp not null default current&#095;timestamp</title></a>
+  <a xlink:href='#study.funding'><text x='1803' y='337'>funding</text><title>funding varchar</title></a>
+  <use id='nn' x='1787' y='342' xlink:href='#nn'/><a xlink:href='#study.timeseries_type_id'><use id='idx' x='1787' y='341' xlink:href='#idx'/><title>Index  ( timeseries_type_id ) </title></a>
+<a xlink:href='#study.timeseries_type_id'><text x='1803' y='352'>timeseries_type_id</text><title>timeseries_type_id bigint not null
+What type of timeseries this study is &#040;or is not&#041;
+Controlled Vocabulary</title></a>
+<a xlink:href='#study.timeseries_type_id'><use id='fk' x='1953' y='341' xlink:href='#fk'/><title>References timeseries_type ( timeseries_type_id ) </title></a>
+  <a xlink:href='#study.lab_person_id'><use id='idx' x='1787' y='356' xlink:href='#idx'/><title>Index  ( lab_person_id ) </title></a>
+<a xlink:href='#study.lab_person_id'><text x='1803' y='367'>lab_person_id</text><title>lab_person_id bigint</title></a>
+<a xlink:href='#study.lab_person_id'><use id='fk' x='1953' y='356' xlink:href='#fk'/><title>References study_person ( lab_person_id -> study_person_id ) </title></a>
+  <use id='nn' x='1787' y='372' xlink:href='#nn'/><a xlink:href='#study.metadata_complete'><text x='1803' y='382'>metadata_complete</text><title>metadata_complete bool not null</title></a>
+  <use id='nn' x='1787' y='387' xlink:href='#nn'/><a xlink:href='#study.mixs_compliant'><text x='1803' y='397'>mixs_compliant</text><title>mixs_compliant bool not null</title></a>
+  <a xlink:href='#study.most_recent_contact'><text x='1803' y='412'>most_recent_contact</text><title>most_recent_contact timestamp</title></a>
+  <a xlink:href='#study.number_samples_collected'><text x='1803' y='427'>number_samples_collected</text><title>number_samples_collected integer</title></a>
+  <a xlink:href='#study.number_samples_promised'><text x='1803' y='442'>number_samples_promised</text><title>number_samples_promised integer</title></a>
+  <use id='nn' x='1787' y='447' xlink:href='#nn'/><a xlink:href='#study.principal_investigator_id'><use id='idx' x='1787' y='446' xlink:href='#idx'/><title>Index  ( principal_investigator_id ) </title></a>
+<a xlink:href='#study.principal_investigator_id'><text x='1803' y='457'>principal_investigator_id</text><title>principal_investigator_id bigint not null</title></a>
+<a xlink:href='#study.principal_investigator_id'><use id='fk' x='1953' y='446' xlink:href='#fk'/><title>References study_person ( principal_investigator_id -> study_person_id ) </title></a>
+  <use id='nn' x='1787' y='462' xlink:href='#nn'/><a xlink:href='#study.reprocess'><text x='1803' y='472'>reprocess</text><title>reprocess bool not null</title></a>
+  <a xlink:href='#study.spatial_series'><text x='1803' y='487'>spatial_series</text><title>spatial_series bool</title></a>
+  <use id='nn' x='1787' y='492' xlink:href='#nn'/><a xlink:href='#study.study_title'><use id='unq' x='1787' y='491' xlink:href='#unq'/><title>Unique Index  ( study_title ) </title></a>
+<a xlink:href='#study.study_title'><text x='1803' y='502'>study_title</text><title>study_title varchar not null</title></a>
+  <use id='nn' x='1787' y='507' xlink:href='#nn'/><a xlink:href='#study.study_alias'><text x='1803' y='517'>study_alias</text><title>study_alias varchar not null</title></a>
+  <use id='nn' x='1787' y='522' xlink:href='#nn'/><a xlink:href='#study.study_description'><text x='1803' y='532'>study_description</text><title>study_description text not null</title></a>
+  <use id='nn' x='1787' y='537' xlink:href='#nn'/><a xlink:href='#study.study_abstract'><text x='1803' y='547'>study_abstract</text><title>study_abstract text not null</title></a>
+  <a xlink:href='#study.vamps_id'><text x='1803' y='562'>vamps_id</text><title>vamps_id varchar</title></a>
+  <a xlink:href='#study.ebi_study_accession'><text x='1803' y='577'>ebi_study_accession</text><title>ebi_study_accession varchar</title></a>
+  <a xlink:href='#study.specimen_id_column'><text x='1803' y='592'>specimen_id_column</text><title>specimen_id_column varchar&#040;256&#041;
+The name of the column that describes the specimen identifiers &#040;such as what is written on the tubes&#041;&#046;</title></a>
 
 </g></svg>
 
@@ -4234,197 +4236,6 @@ Referred by processing_job ( command_id ) </title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study'>Table study</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='study.study_id'>study&#095;id</a></td>
-		<td> bigserial   </td>
-		<td> Unique name for study </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.email'>email</a></td>
-		<td> varchar   </td>
-		<td> Email of study owner </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='study.emp_person_id'>emp&#095;person&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.first_contact'>first&#095;contact</a></td>
-		<td> timestamp   DEFO current_timestamp </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='study.funding'>funding</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
-		<td> bigint   </td>
-		<td> What type of timeseries this study is &#040;or is not&#041;
-Controlled Vocabulary </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='study.lab_person_id'>lab&#095;person&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.metadata_complete'>metadata&#095;complete</a></td>
-		<td> bool   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.mixs_compliant'>mixs&#095;compliant</a></td>
-		<td> bool   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='study.most_recent_contact'>most&#095;recent&#095;contact</a></td>
-		<td> timestamp   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='study.number_samples_collected'>number&#095;samples&#095;collected</a></td>
-		<td> integer   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='study.number_samples_promised'>number&#095;samples&#095;promised</a></td>
-		<td> integer   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.principal_investigator_id'>principal&#095;investigator&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.reprocess'>reprocess</a></td>
-		<td> bool   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='study.spatial_series'>spatial&#095;series</a></td>
-		<td> bool   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.study_title'>study&#095;title</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.study_alias'>study&#095;alias</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.study_description'>study&#095;description</a></td>
-		<td> text   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='study.study_abstract'>study&#095;abstract</a></td>
-		<td> text   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='study.vamps_id'>vamps&#095;id</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='study.ebi_study_accession'>ebi&#095;study&#095;accession</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study</td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study</td>
-		<td> ON email</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;1</td>
-		<td> ON emp&#095;person&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;2</td>
-		<td> ON lab&#095;person&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;3</td>
-		<td> ON principal&#095;investigator&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;4</td>
-		<td> ON timeseries&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>U</td><td>unique&#095;study&#095;title</td>
-		<td> ON study&#095;title</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_study_user</td>
-		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_study_study_emp_person</td>
-		<td > ( emp&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_study_study_lab_person</td>
-		<td > ( lab&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_study_study_pi_person</td>
-		<td > ( principal&#095;investigator&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_study_timeseries_type</td>
-		<td > ( timeseries&#095;type&#095;id ) ref <a href='#timeseries&#095;type'>timeseries&#095;type</a> (timeseries&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='4'><a name='per_study_tags'>Table per_study_tags</a></th></tr>
 </thead>
 <tbody>
@@ -4828,117 +4639,6 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>&nbsp;</td><td>fk_artifact_output_processing_job_1</td>
 		<td > ( command&#095;output&#095;id ) ref <a href='#command&#095;output'>command&#095;output</a> (command&#095;output&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='processing_job'>Table processing_job</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> bigserial   </td>
-		<td> Using bigserial in DBSchema &#045; however in the postgres DB this column is of type UUID&#046; </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='processing_job.email'>email</a></td>
-		<td> varchar   </td>
-		<td> The user that launched the job </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='processing_job.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
-		<td> The command launched </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='processing_job.command_parameters'>command&#095;parameters</a></td>
-		<td> varchar   </td>
-		<td> The parameters used in the command in JSON format </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='processing_job.processing_job_status_id'>processing&#095;job&#095;status&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='processing_job.logging_id'>logging&#095;id</a></td>
-		<td> bigint   </td>
-		<td> In case of failure&#044; point to the log entry that holds more information about the error </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='processing_job.heartbeat'>heartbeat</a></td>
-		<td> timestamp   </td>
-		<td> The last heartbeat received by this job </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='processing_job.step'>step</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='processing_job.pending'>pending</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='processing_job.hidden'>hidden</a></td>
-		<td> bool   DEFO 'False' </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;processing&#095;job</td>
-		<td> ON processing&#095;job&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job</td>
-		<td> ON email</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job</td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;0</td>
-		<td> ON processing&#095;job&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;1</td>
-		<td> ON logging&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_qiita_user</td>
-		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_processing_job</td>
-		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_status</td>
-		<td > ( processing&#095;job&#095;status&#095;id ) ref <a href='#processing&#095;job&#095;status'>processing&#095;job&#095;status</a> (processing&#095;job&#095;status&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_processing_job_logging</td>
-		<td > ( logging&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -6157,6 +5857,314 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>&nbsp;</td><td>fk_processing_job_validator_0</td>
 		<td > ( validator&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='processing_job'>Table processing_job</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
+		<td> bigserial   </td>
+		<td> Using bigserial in DBSchema &#045; however in the postgres DB this column is of type UUID&#046; </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='processing_job.email'>email</a></td>
+		<td> varchar   </td>
+		<td> The user that launched the job </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='processing_job.command_id'>command&#095;id</a></td>
+		<td> bigint   </td>
+		<td> The command launched </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='processing_job.command_parameters'>command&#095;parameters</a></td>
+		<td> varchar   </td>
+		<td> The parameters used in the command in JSON format </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='processing_job.processing_job_status_id'>processing&#095;job&#095;status&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='processing_job.logging_id'>logging&#095;id</a></td>
+		<td> bigint   </td>
+		<td> In case of failure&#044; point to the log entry that holds more information about the error </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='processing_job.heartbeat'>heartbeat</a></td>
+		<td> timestamp   </td>
+		<td> The last heartbeat received by this job </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='processing_job.step'>step</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='processing_job.pending'>pending</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='processing_job.hidden'>hidden</a></td>
+		<td> bool   DEFO 'False' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;processing&#095;job</td>
+		<td> ON processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job</td>
+		<td> ON email</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job</td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;0</td>
+		<td> ON processing&#095;job&#095;status&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;processing&#095;job&#095;1</td>
+		<td> ON logging&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_processing_job_qiita_user</td>
+		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_processing_job</td>
+		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_processing_job_status</td>
+		<td > ( processing&#095;job&#095;status&#095;id ) ref <a href='#processing&#095;job&#095;status'>processing&#095;job&#095;status</a> (processing&#095;job&#095;status&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_processing_job_logging</td>
+		<td > ( logging&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='study'>Table study</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='study.study_id'>study&#095;id</a></td>
+		<td> bigserial   </td>
+		<td> Unique name for study </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.email'>email</a></td>
+		<td> varchar   </td>
+		<td> Email of study owner </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='study.emp_person_id'>emp&#095;person&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.first_contact'>first&#095;contact</a></td>
+		<td> timestamp   DEFO current_timestamp </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='study.funding'>funding</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
+		<td> bigint   </td>
+		<td> What type of timeseries this study is &#040;or is not&#041;
+Controlled Vocabulary </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='study.lab_person_id'>lab&#095;person&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.metadata_complete'>metadata&#095;complete</a></td>
+		<td> bool   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.mixs_compliant'>mixs&#095;compliant</a></td>
+		<td> bool   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='study.most_recent_contact'>most&#095;recent&#095;contact</a></td>
+		<td> timestamp   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='study.number_samples_collected'>number&#095;samples&#095;collected</a></td>
+		<td> integer   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='study.number_samples_promised'>number&#095;samples&#095;promised</a></td>
+		<td> integer   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.principal_investigator_id'>principal&#095;investigator&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.reprocess'>reprocess</a></td>
+		<td> bool   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='study.spatial_series'>spatial&#095;series</a></td>
+		<td> bool   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.study_title'>study&#095;title</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.study_alias'>study&#095;alias</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.study_description'>study&#095;description</a></td>
+		<td> text   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='study.study_abstract'>study&#095;abstract</a></td>
+		<td> text   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='study.vamps_id'>vamps&#095;id</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='study.ebi_study_accession'>ebi&#095;study&#095;accession</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='study.specimen_id_column'>specimen&#095;id&#095;column</a></td>
+		<td> varchar&#040; 256 &#041;   </td>
+		<td> The name of the column that describes the specimen identifiers &#040;such as what is written on the tubes&#041;&#046; </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;study</td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;study</td>
+		<td> ON email</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;1</td>
+		<td> ON emp&#095;person&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;2</td>
+		<td> ON lab&#095;person&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;3</td>
+		<td> ON principal&#095;investigator&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;4</td>
+		<td> ON timeseries&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>U</td><td>unique&#095;study&#095;title</td>
+		<td> ON study&#095;title</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_study_user</td>
+		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_study_study_emp_person</td>
+		<td > ( emp&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_study_study_lab_person</td>
+		<td > ( lab&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_study_study_pi_person</td>
+		<td > ( principal&#095;investigator&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_study_timeseries_type</td>
+		<td > ( timeseries&#095;type&#095;id ) ref <a href='#timeseries&#095;type'>timeseries&#095;type</a> (timeseries&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
