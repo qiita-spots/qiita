@@ -311,7 +311,7 @@ def start(port, master):
 
     if master:
         def callback_function():
-            active_software = list(qdb.software.Software.iter_active())
+            active_software = list(qdb.software.Software.iter())
             sdefinition = [s for s in active_software
                            if s.type == 'artifact definition']
             stransformation = [s for s in active_software
