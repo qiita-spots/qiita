@@ -273,6 +273,7 @@ def delete_sample_or_column(job):
 
         if sample_or_col == 'columns':
             del_func = constructor(obj_id).delete_column
+            name = name[0]
         elif sample_or_col == 'samples':
             del_func = constructor(obj_id).delete_samples
         else:
