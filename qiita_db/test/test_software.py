@@ -397,14 +397,8 @@ class CommandTests(TestCase):
 
 
 @qiita_test_checker()
-class SoftwareTests(TestCase):
-    def setUp(self):
-        self._clean_up_files = []
-
-    def tearDown(self):
-        for f in self._clean_up_files:
-            if exists(f):
-                remove(f)
+class SoftwareTestsIter(TestCase):
+    # different class to assure integrity of database
 
     def test_iter(self):
         s1 = qdb.software.Software(1)
@@ -430,6 +424,17 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs, [s1, s2, s3])
         obs = list(qdb.software.Software.iter(False))
         self.assertEqual(obs, [s1, s2, s3, s4])
+
+
+@qiita_test_checker()
+class SoftwareTests(TestCase):
+    def setUp(self):
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for f in self._clean_up_files:
+            if exists(f):
+                remove(f)
 
     def test_from_name_and_version(self):
         obs = qdb.software.Software.from_name_and_version('QIIME', '1.9.1')
