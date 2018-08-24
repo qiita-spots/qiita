@@ -875,6 +875,29 @@ class TestStudy(TestCase):
         self.assertEqual(study.tags, [])
         self.assertEqual(message, '')
 
+    def test_specimen_id_column_get_set(self):
+        self.assertEqual(self.study.specimen_id_column, None)
+        self.study.specimen_id_column = 'anonymized_name'
+        self.assertEqual(self.study.specimen_id_column, 'anonymized_name')
+
+    def test_specimen_id_column_not_unique(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            self.study.specimen_id_column = 'dna_extracted'
+
+    def test_specimen_id_column_doesnt_exist(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBLookupError):
+            self.study.specimen_id_column = 'foo'
+
+    def test_specimen_id_column_no_sample_information(self):
+        empty = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'), "Fried duck microbiome",
+            self.info)
+        with self.assertRaises(qdb.exceptions.QiitaDBLookupError):
+            empty.specimen_id_column = 'foo'
+
+        # cleaning up the created study
+        qdb.study.Study.delete(empty._id)
+
 
 if __name__ == "__main__":
     main()
