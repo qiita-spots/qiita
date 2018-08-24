@@ -412,7 +412,7 @@ class SampleTemplateColumnsHandler(BaseHandler):
 
 
 def _build_sample_summary(study_id, user_id):
-    """Builds the row obect for SlickGrid
+    """Builds the row object for SlickGrid
 
     Parameters
     ----------

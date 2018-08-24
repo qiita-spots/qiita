@@ -209,7 +209,7 @@ Vue.component('sample-template-page', {
     deleteSamples: function(samples) {
       let vm = this;
       var total_samples = samples.length;
-      if (total_samples == 0){
+      if (total_samples === 0){
         alert('No samples selected!');
       } else {
         if (confirm('Are you sure you want to delete ' + total_samples + ' samples?')) {

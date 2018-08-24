@@ -90,7 +90,7 @@
    * current sample template
    *
    */
-  function delete_sample(sample_name, row_id) {
+  function delete_samples(sample_name, row_id) {
     if(confirm("Are you sure you want to delete '" + sample_name + "'?")) {
       $.ajax({
         url: '{% raw qiita_config.portal_dir %}/study/description/sample_template/',

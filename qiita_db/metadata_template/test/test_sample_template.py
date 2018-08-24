@@ -2159,7 +2159,7 @@ class TestSampleTemplate(TestCase):
         st.delete_column('dna_extracted')
         self.assertNotIn('dna_extracted', st.categories())
 
-    def test_delete_sample(self):
+    def test_delete_samples(self):
         QE = qdb.exceptions
         st = qdb.metadata_template.sample_template.SampleTemplate(1)
         md_dict = {
@@ -2173,19 +2173,45 @@ class TestSampleTemplate(TestCase):
                         'latitude': '42.42',
                         'longitude': '41.41',
                         'taxon_id': '9606',
+                        'scientific_name': 'homo sapiens'},
+            'Sample5': {'physical_specimen_location': 'location1',
+                        'physical_specimen_remaining': 'true',
+                        'dna_extracted': 'true',
+                        'sample_type': 'type1',
+                        'collection_timestamp': '2014-05-29 12:24:15',
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 4',
+                        'latitude': '42.42',
+                        'longitude': '41.41',
+                        'taxon_id': '9606',
+                        'scientific_name': 'homo sapiens'},
+            'Sample6': {'physical_specimen_location': 'location1',
+                        'physical_specimen_remaining': 'true',
+                        'dna_extracted': 'true',
+                        'sample_type': 'type1',
+                        'collection_timestamp': '2014-05-29 12:24:15',
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 4',
+                        'latitude': '42.42',
+                        'longitude': '41.41',
+                        'taxon_id': '9606',
                         'scientific_name': 'homo sapiens'}}
         md_ext = pd.DataFrame.from_dict(md_dict, orient='index', dtype=str)
         npt.assert_warns(QE.QiitaDBWarning, st.extend, md_ext)
-
-        st.delete_sample(['1.Sample4'])
+        st.delete_samples(['1.Sample4'])
         self.assertNotIn('1.Sample4', st.keys())
+        self.assertIn('1.Sample5', st.keys())
+        self.assertIn('1.Sample6', st.keys())
+        st.delete_samples(['1.Sample5', '1.Sample6'])
+        self.assertNotIn('1.Sample5', st.keys())
+        self.assertNotIn('1.Sample6', st.keys())
 
         # testing errors
         with self.assertRaises(QE.QiitaDBUnknownIDError):
-            st.delete_sample(['not.existing.sample'])
+            st.delete_samples(['not.existing.sample'])
 
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
-            st.delete_sample(['1.SKM5.640177'])
+            st.delete_samples(['1.SKM5.640177'])
 
 
 EXP_SAMPLE_TEMPLATE = (

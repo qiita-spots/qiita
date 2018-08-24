@@ -615,14 +615,19 @@ class MetadataTemplate(qdb.base.QiitaObject):
         Raises
         ------
         QiitaDBUnknownIDError
-            If the `sample_names` doesn't exist
+            If any of the `sample_names` don't exist
         """
         keys = self.keys()
         missing = [sn for sn in sample_names if sn not in keys]
         if missing:
-            raise qdb.exceptions.QiitaDBUnknownIDError(missing, self._id)
+            raise qdb.exceptions.QiitaDBUnknownIDError(
+                ', '.join(missing), self._id)
 
         with qdb.sql_connection.TRN:
+            # to simplify the sql strings, we are creating a base_sql, which
+            # will be used to create sql1 and sql2. sql1 will delete the
+            # sample_names from the main table ([sample | prep]_[id]), then
+            # sql2 will delete the sample_names from [study | prep]_sample
             base_sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'
             sql1 = base_sql.format(self._table_name(self._id))
             sql2 = '{0} AND {1}=%s'.format(

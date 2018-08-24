@@ -689,7 +689,7 @@ class PrepTemplate(MetadataTemplate):
             is_submitted = qdb.sql_connection.TRN.execute_fetchlast()
         return is_submitted
 
-    def delete_sample(self, sample_names):
+    def delete_samples(self, sample_names):
         """Delete `sample_names` from prep information file
 
         Parameters

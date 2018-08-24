@@ -1480,25 +1480,36 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QE.QiitaDBColumnError):
             pt.delete_column('ph')
 
-    def test_delete_sample(self):
+    def test_delete_samples(self):
         QE = qdb.exceptions
+        sid = self.test_study.id
 
-        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+        ptA = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
-        sample_id = '%s.SKB8.640193' % self.test_study.id
-        pt.delete_sample([sample_id])
-        self.assertNotIn(sample_id, pt)
+        ptB = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
+        sample1 = '%s.SKB8.640193' % sid
+        sample2 = '%s.SKD8.640184' % sid
+        sample3 = '%s.SKB7.640196' % sid
+        ptA.delete_samples([sample1])
+        self.assertNotIn(sample1, ptA)
+        self.assertIn(sample2, ptA)
+        self.assertIn(sample3, ptA)
+        ptB.delete_samples([sample2, sample3])
+        self.assertIn(sample1, ptB)
+        self.assertNotIn(sample2, ptB)
+        self.assertNotIn(sample3, ptB)
 
-        pt1 = qdb.metadata_template.prep_template.PrepTemplate(1)
-        self.assertIn(sample_id, pt1)
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        self.assertIn(sample1, pt)
 
         # testing errors
         with self.assertRaises(QE.QiitaDBUnknownIDError):
-            pt.delete_sample(['not.existing.sample'])
+            ptA.delete_samples(['not.existing.sample'])
 
         pt = qdb.metadata_template.prep_template.PrepTemplate(2)
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
-            pt.delete_sample(['1.SKM5.640177'])
+            pt.delete_samples(['1.SKM5.640177'])
 
     def test_name_setter(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)

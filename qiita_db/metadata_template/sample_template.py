@@ -162,12 +162,12 @@ class SampleTemplate(MetadataTemplate):
         """
         return qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS
 
-    def delete_sample(self, sample_names):
+    def delete_samples(self, sample_names):
         """Delete `sample_names` from sample information file
 
         Parameters
         ----------
-        sample_names : array of strings
+        sample_names : list of strings
             The sample name to be deleted
 
         Raises
@@ -181,7 +181,8 @@ class SampleTemplate(MetadataTemplate):
             sids = ', '.join({vv for v in pts.values() for vv in v})
             pts = ', '.join(map(str, pts.keys()))
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                "'%s' has been linked in a prep template(s): %s" % (sids, pts))
+                "'%s' cannot be deleted as they have been found in a prep "
+                "information file: '%s'" % (sids, pts))
 
         self._common_delete_sample_steps(sample_names)
 
