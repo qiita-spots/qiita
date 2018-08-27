@@ -489,6 +489,7 @@ Vue.component('sample-template-page', {
         vm.oldFiles = data['old_files'];
         vm.numSamples = data['num_samples'];
         vm.numColumns = data['num_columns'];
+        vm.uniqueColumns = data['unique_columns'];
 
         // Populate the sample-template-contents
         $('#title-h3').empty();

@@ -275,7 +275,9 @@ class TestHelpers(TestHandlerBase):
                'download_id': 22,
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
-               'num_columns': 30}
+               'num_columns': 30,
+               'unique_columns': ['longitude', 'host_subject_id',
+                                  'anonymized_name']}
         self.assertEqual(obs, exp)
 
         # Test sample template doesn't exist
@@ -292,7 +294,8 @@ class TestHelpers(TestHandlerBase):
                'download_id': None,
                'old_files': [],
                'num_samples': 0,
-               'num_columns': 0}
+               'num_columns': 0,
+               'unique_columns': []}
         self.assertEqual(obs, exp)
 
     def test_sample_template_columns_get_req(self):
@@ -448,7 +451,9 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                'download_id': 22,
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
-               'num_columns': 30}
+               'num_columns': 30,
+               'unique_columns': ['longitude', 'host_subject_id',
+                                  'anonymized_name']}
         self.assertEqual(obs, exp)
 
 

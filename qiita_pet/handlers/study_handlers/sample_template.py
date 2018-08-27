@@ -322,6 +322,7 @@ def sample_template_overview_handler_get_request(study_id, user):
     old_files = []
     num_samples = 0
     num_cols = 0
+    unique_cols = []
     if exists:
         # If it exists we need to provide:
         # The id of the sample template file so the user can download it and
@@ -339,6 +340,7 @@ def sample_template_overview_handler_get_request(study_id, user):
         num_samples = sum(1 for _ in st.keys())
         # The number of columns
         num_cols = len(st.categories())
+        unique_cols = list(st.unique_columns())
     else:
         # It doesn't exist, we also need to provide the data_types in case
         # the user uploads a QIIME mapping file
@@ -352,7 +354,8 @@ def sample_template_overview_handler_get_request(study_id, user):
             'download_id': st_fp_id,
             'old_files': old_files,
             'num_samples': num_samples,
-            'num_columns': num_cols}
+            'num_columns': num_cols,
+            'unique_columns': unique_cols}
 
 
 class SampleTemplateOverviewHandler(BaseHandler):
