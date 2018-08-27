@@ -2188,7 +2188,6 @@ class TestSampleTemplate(TestCase):
             st.delete_sample('1.SKM5.640177')
 
     def test_unique(self):
-        self.maxDiff = None
         st = qdb.metadata_template.sample_template.SampleTemplate(1)
         observed = st.unique_columns()
         expected = {'anonymized_name', 'host_subject_id', 'longitude'}
