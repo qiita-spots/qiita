@@ -446,6 +446,10 @@ Vue.component('sample-template-page', {
         vm.uniqueColumns.forEach(function(opt) {
           $('<option>').attr('value', opt).append(opt).appendTo($select);
         });
+        if (vm.specimenIDColumn) {
+          $('#specimen-id-select').val(vm.specimenIDColumn);
+        }
+
         // Add the button to trigger the update
         $col = $('<div>').addClass('col-sm-1').attr('id', 'update-specimen-id-btn-div').appendTo($row).hide();
         $('<button>').addClass('btn btn-success form-control').append('Update').appendTo($col).on('click', vm.updateSpecimenIDColumn);
@@ -536,6 +540,7 @@ Vue.component('sample-template-page', {
         vm.numSamples = data['num_samples'];
         vm.numColumns = data['num_columns'];
         vm.uniqueColumns = data['unique_columns'];
+        vm.specimenIDColumn = data['specimen_id_column'];
 
         // Populate the sample-template-contents
         $('#title-h3').empty();
