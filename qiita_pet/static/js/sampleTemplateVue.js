@@ -174,6 +174,28 @@ Vue.component('sample-template-page', {
     },
 
     /**
+     * Callback to update the specimen_id_column via a patch request
+     */
+    updateSpecimenIDColumn: function() {
+      let vm = this;
+      $.ajax({
+        url: vm.portal + '/study/' + vm.studyId,
+        contentType: "application/json",
+        method: 'PATCH',
+        dataType: 'json',
+        data: JSON.stringify({'op': 'replace',
+                              'path': '/specimen_id_column',
+                              'value': $('#specimen-id-select').val()}),
+        success: function(data) {
+          bootstrapAlert(data.message, data.status === 'error' ? 'danger' : 'success', 10000);
+        },
+        error: function (object, status, error_msg) {
+          bootstrapAlert("Error updating specimen id column: " + error_msg, "danger")
+        }
+      });
+    },
+
+    /**
      *
      * Performs a call to the server API to delete a column from the sample template
      *
@@ -391,8 +413,9 @@ Vue.component('sample-template-page', {
       $tab.append('<label>Number of samples:</label> ' + vm.numSamples + '</br>')
       // Add the number of columns
       $tab.append('<label>Number of columns:</label> ' + vm.numColumns + '</br>')
-      // Add the select to update the sample information
+
       if (vm.userCanEdit) {
+        // Add the select to update the sample information
         $row = $('<div>').attr('id', 'update-st-div').addClass('row form-group').appendTo($tab);
         $('<label>').addClass('col-sm-2 col-form-label').append('Update sample information:').appendTo($row);
         $col = $('<div>').addClass('col-sm-3').appendTo($row);
@@ -409,6 +432,29 @@ Vue.component('sample-template-page', {
             $('#update-btn-div').hide()
           } else {
             $('#update-btn-div').show()
+          }
+        });
+
+        // add a dropdown menu to select the tube identifier column
+        $row = $('<div>').attr('id', 'update-specimen-id-div').addClass('row form-group').appendTo($tab);
+        $('<label>').addClass('col-sm-2 col-form-label').append('Select a column for the tube identifier:').appendTo($row);
+        $col = $('<div>').addClass('col-sm-3').appendTo($row);
+        $select = $('<select>').attr('id', 'specimen-id-select').addClass('form-control').appendTo($col);
+
+        /* FIXME: change this to be populated by default */
+        $('<option>').attr('value', "").append('Select a category ...').appendTo($select);
+        vm.uniqueColumns.forEach(function(opt) {
+          $('<option>').attr('value', opt).append(opt).appendTo($select);
+        });
+        // Add the button to trigger the update
+        $col = $('<div>').addClass('col-sm-1').attr('id', 'update-specimen-id-btn-div').appendTo($row).hide();
+        $('<button>').addClass('btn btn-success form-control').append('Update').appendTo($col).on('click', vm.updateSpecimenIDColumn);
+
+        $select.on('change', function() {
+          if (this.value === "") {
+            $('#update-specimen-id-btn-div').hide()
+          } else {
+            $('#update-specimen-id-btn-div').show()
           }
         });
       }
