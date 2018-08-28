@@ -16,6 +16,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
 from qiita_db.user import User
 from qiita_db.study import Study
+from qiita_db.exceptions import QiitaDBColumnError, QiitaDBLookupError
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.software import Software, Parameters
@@ -392,9 +393,9 @@ def study_get_tags_request(user_id, study_id):
             'tags': study.tags}
 
 
-def study_tags_patch_request(user_id, study_id,
-                             req_op, req_path, req_value=None, req_from=None):
-    """Modifies an attribute of the artifact
+def study_patch_request(user_id, study_id,
+                        req_op, req_path, req_value=None, req_from=None):
+    """Modifies an attribute of the study object
 
     Parameters
     ----------
@@ -436,6 +437,15 @@ def study_tags_patch_request(user_id, study_id,
             message = study.update_tags(User(user_id), req_value)
             return {'status': 'success',
                     'message': message}
+        elif attribute == 'specimen_id_column':
+            try:
+                study.specimen_id_column = req_value
+                return {'status': 'success',
+                        'message': 'Successfully updated specimen id column'}
+            except (QiitaDBLookupError, QiitaDBColumnError) as e:
+                return {'status': 'error',
+                        'message': str(e)}
+
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',
