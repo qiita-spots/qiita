@@ -402,7 +402,7 @@ Vue.component('sample-template-page', {
           $('<option>').attr('value', opt).append(opt).appendTo($select);
         }
         // Add the button to trigger the update
-        $col = $('<div>').addClass('col-sm-1').attr('id', 'update-btn-div').appendTo($row).hide();
+        $col = $('<div>').addClass('col-sm-2').attr('id', 'update-btn-div').appendTo($row).hide();
         $('<button>').addClass('btn btn-success form-control').append('Update').appendTo($col).on('click', vm.updateSampleTemplate);
         $('#file-select').on('change', function() {
           if (this.value === "") {
