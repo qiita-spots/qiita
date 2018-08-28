@@ -651,7 +651,7 @@ class Study(qdb.base.QiitaObject):
         Parameters
         ----------
         value : str
-            The name of the column with the specimen identifiers
+            The name of the column with the specimen identifiers.
 
         Raises
         ------
@@ -666,15 +666,18 @@ class Study(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBLookupError("Study does not have a "
                                                     "sample information.")
 
-        if value not in st.categories():
-            raise qdb.exceptions.QiitaDBLookupError("Category is not present "
-                                                    "in the sample "
-                                                    "information.")
+        if value is not None:
+            if value not in st.categories():
+                raise qdb.exceptions.QiitaDBLookupError("Category '%s' is not "
+                                                        "present in the sample"
+                                                        " information."
+                                                        % value)
 
-        observed_values = st.get_category(value)
-        if len(observed_values) != len(set(observed_values.values())):
-            raise qdb.exceptions.QiitaDBColumnError("The category does not "
-                                                    "contain unique values.")
+            observed_values = st.get_category(value)
+            if len(observed_values) != len(set(observed_values.values())):
+                raise qdb.exceptions.QiitaDBColumnError("The category does not"
+                                                        " contain unique "
+                                                        "values.")
 
         with qdb.sql_connection.TRN:
             # Set the new ones

@@ -879,6 +879,8 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.specimen_id_column, None)
         self.study.specimen_id_column = 'anonymized_name'
         self.assertEqual(self.study.specimen_id_column, 'anonymized_name')
+        self.study.specimen_id_column = None
+        self.assertEqual(self.study.specimen_id_column, None)
 
     def test_specimen_id_column_not_unique(self):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
