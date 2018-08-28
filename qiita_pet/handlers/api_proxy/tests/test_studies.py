@@ -71,6 +71,7 @@ class TestStudyAPI(TestCase):
                     'rhizospheres from the same location at different time '
                     'points in the plant lifecycle.'),
                 'status': 'private', 'spatial_series': False,
+                'specimen_id_column': None,
                 'study_description': (
                     'Analysis of the Cannabis Plant Microbiome'),
                 'shared_with': ['shared@foo.bar'], 'publication_doi': [
