@@ -441,7 +441,6 @@ Vue.component('sample-template-page', {
         $col = $('<div>').addClass('col-sm-3').appendTo($row);
         $select = $('<select>').attr('id', 'specimen-id-select').addClass('form-control').appendTo($col);
 
-        /* FIXME: change this to be populated by default */
         $('<option>').attr('value', "").append('Select a category ...').appendTo($select);
         vm.uniqueColumns.forEach(function(opt) {
           $('<option>').attr('value', opt).append(opt).appendTo($select);
