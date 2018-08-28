@@ -14,43 +14,37 @@ $(document).ready(function() {
 
 {% block content %}
   {% if software %}
-    <table class="table-bordered" width="100%">
+    <h3>Available plugins</h3>
+    <table class="table-bordered" width="50%">
       <thead>
         <tr>
           <th>Software</th>
-          <th>Active</th>
           <th>Commands</th>
         </tr>
       </thead>
       <tbody>
       {% for s in software %}
         <tr>
-          <td>{{s.name}}, {{s.version}}</td>
           <td>
             {% if s.active %}
               <span class="glyphicon glyphicon-thumbs-up" style="color:green"></span>
             {% else %}
               <span class="glyphicon glyphicon-thumbs-down" style="color:red"></span>
             {% end %}
+            {{s.name}}, {{s.version}}
           </td>
           <td>
             <table class="display table-bordered table-hover" width="100%">
-              <thead>
-                <tr>
-                  <th>Command</th>
-                  <th>Active</th>
-                </tr>
-              </thead>
               <tbody>
                 {% for c in s.commands %}
                   <tr>
-                    <td>{{c.name}}</td>
                     <td>
                       {% if c.active %}
                         <span class="glyphicon glyphicon-thumbs-up" style="color:green"></span>
                       {% else %}
                         <span class="glyphicon glyphicon-thumbs-down" style="color:red"></span>
                       {% end %}
+                      {{c.name}}
                     </td>
                   </tr>
                 {% end %}
@@ -63,7 +57,7 @@ $(document).ready(function() {
     </table>
   {% else %}
       <div id="jumbotron" class="jumbotron">
-          <h1><span class="glyphicon glyphicon-thumbs-down"></span> There is no plugin software in this system </h1>
+          <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no plugins in this system. </h1>
       </div>
   {% end %}
 {% end %}
