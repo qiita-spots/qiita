@@ -694,7 +694,7 @@ class PrepTemplate(MetadataTemplate):
 
         Parameters
         ----------
-        sample_name : list of str
+        sample_names : list of str
             The sample names to be deleted
 
         Raises
