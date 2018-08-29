@@ -9,7 +9,6 @@
 from __future__ import division
 from os.path import join
 from time import strftime
-from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
@@ -163,12 +162,12 @@ class SampleTemplate(MetadataTemplate):
         """
         return qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS
 
-    def delete_sample(self, sample_name):
-        """Delete `sample_name` from sample information file
+    def delete_samples(self, sample_names):
+        """Delete `sample_names` from sample information file
 
         Parameters
         ----------
-        sample_name : str
+        sample_names : list of strings
             The sample name to be deleted
 
         Raises
@@ -176,15 +175,16 @@ class SampleTemplate(MetadataTemplate):
         QiitaDBOperationNotPermittedError
             If the `sample_name` has been used in a prep info file
         """
-        pts = {pt.id: pt.get(sample_name) is not None
+        pts = {pt.id: [sn for sn in sample_names if pt.get(sn) is not None]
                for pt in qdb.study.Study(self.study_id).prep_templates()}
         if any(pts.values()):
-            pts = ', '.join([str(k) for k, v in viewitems(pts) if v])
+            sids = ', '.join({vv for v in pts.values() for vv in v})
+            pts = ', '.join(map(str, pts.keys()))
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                "'%s' has been linked in a prep template(s): %s" % (
-                    sample_name, pts))
+                "'%s' cannot be deleted as they have been found in a prep "
+                "information file: '%s'" % (sids, pts))
 
-        self._common_delete_sample_steps(sample_name)
+        self._common_delete_sample_steps(sample_names)
 
     def can_be_updated(self, **kwargs):
         """Whether the template can be updated or not

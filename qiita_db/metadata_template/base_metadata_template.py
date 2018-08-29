@@ -604,31 +604,37 @@ class MetadataTemplate(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql)
             return qdb.sql_connection.TRN.execute_fetchflatten()
 
-    def _common_delete_sample_steps(self, sample_name):
+    def _common_delete_sample_steps(self, sample_names):
         r"""Executes the common delete sample steps
 
         Parameters
         ----------
-        sample_name : str
-            The sample name to be erased
+        sample_names : list of str
+            The sample names to be erased
 
         Raises
         ------
         QiitaDBUnknownIDError
-            If the `sample_name` doesn't exist
+            If any of the `sample_names` don't exist
         """
-        if sample_name not in self.keys():
-            raise qdb.exceptions.QiitaDBUnknownIDError(sample_name, self._id)
+        keys = self.keys()
+        missing = [sn for sn in sample_names if sn not in keys]
+        if missing:
+            raise qdb.exceptions.QiitaDBUnknownIDError(
+                ', '.join(missing), self._id)
 
         with qdb.sql_connection.TRN:
-            sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'.format(
-                self._table_name(self._id))
-            qdb.sql_connection.TRN.add(sql, [sample_name])
-
-            sql = "DELETE FROM qiita.{0} WHERE sample_id=%s AND {1}=%s".format(
-                self._table, self._id_column)
-            qdb.sql_connection.TRN.add(sql, [sample_name, self.id])
-
+            # to simplify the sql strings, we are creating a base_sql, which
+            # will be used to create sql1 and sql2. sql1 will delete the
+            # sample_names from the main table ([sample | prep]_[id]), then
+            # sql2 will delete the sample_names from [study | prep]_sample
+            base_sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'
+            sql1 = base_sql.format(self._table_name(self._id))
+            sql2 = '{0} AND {1}=%s'.format(
+                base_sql.format(self._table), self._id_column)
+            for sn in sample_names:
+                qdb.sql_connection.TRN.add(sql1, [sn])
+                qdb.sql_connection.TRN.add(sql2, [sn, self.id])
             qdb.sql_connection.TRN.execute()
 
             self.generate_files()
