@@ -150,7 +150,8 @@ class TestStudy(TestCase):
                               "gut microbiome",
             "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
-            "lab_person_id": qdb.study.StudyPerson(1)
+            "lab_person_id": qdb.study.StudyPerson(1),
+            'specimen_id_column': None
         }
 
         self.infoexp = {
@@ -166,7 +167,8 @@ class TestStudy(TestCase):
                               "gut microbiome",
             "emp_person_id": 2,
             "principal_investigator": qdb.study.StudyPerson(3),
-            "lab_person": qdb.study.StudyPerson(1)
+            "lab_person": qdb.study.StudyPerson(1),
+            'specimen_id_column': None
         }
 
         self.existingexp = {
@@ -196,6 +198,7 @@ class TestStudy(TestCase):
             'study_alias': 'Cannabis Soils',
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person': qdb.study.StudyPerson(1),
+            'specimen_id_column': None,
             'number_samples_collected': 27}
 
     def tearDown(self):
@@ -245,7 +248,8 @@ class TestStudy(TestCase):
             'study_title': 'Identification of the Microbiomes for Cannabis '
             'Soils', 'number_samples_collected': 27,
             'ebi_submission_status': 'submitted',
-            'ebi_study_accession': 'EBI123456-BB'}
+            'ebi_study_accession': 'EBI123456-BB',
+            'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
         # Test get specific keys for single study
@@ -425,7 +429,8 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
-               'number_samples_collected': 25}
+               'number_samples_collected': 25,
+               'specimen_id_column': None}
         self.assertEqual(obs_info, exp)
         # Check the timestamp separately, since it is set by the database
         # to the microsecond, and we can't predict it a priori
@@ -498,7 +503,8 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
-               'number_samples_collected': 25}
+               'number_samples_collected': 25,
+               'specimen_id_column': None}
         self.assertEqual(obs.info, exp)
         self.assertEqual(obs.shared_with, [])
         self.assertEqual(obs.publications, [])
