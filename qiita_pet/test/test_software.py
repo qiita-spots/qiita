@@ -9,18 +9,21 @@
 from unittest import main
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
+from mock import Mock
 
-class TestLogEntryViewerHandler(TestHandlerBase):
+from qiita_db.user import User
+from qiita_pet.handlers.base_handlers import BaseHandler
+
+
+class TestSoftware(TestHandlerBase):
     def test_get(self):
-        response = self.get('/admin/error/')
+        response = self.get('/admin/software/')
         self.assertEqual(response.code, 403)
 
-    def test_post(self):
-        response = self.post('/admin/error/', {'numrecords': -5})
-        self.assertEqual(response.code, 403)
-
-        response = self.post('/admin/error/', {'numrecords': 20})
-        self.assertEqual(response.code, 403)
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
+        response = self.get('/admin/software/')
+        self.assertEqual(response.code, 200)
+        self.assertNotEqual(response.body, "")
 
 
 if __name__ == "__main__":
