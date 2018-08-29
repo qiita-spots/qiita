@@ -18,7 +18,7 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 class TestSoftware(TestHandlerBase):
     def test_get(self):
         response = self.get('/admin/software/')
-        self.assertEqual(response.code, 405)
+        self.assertEqual(response.code, 403)
 
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
         response = self.get('/admin/software/')
