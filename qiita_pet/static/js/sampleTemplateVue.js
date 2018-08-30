@@ -476,7 +476,7 @@ Vue.component('sample-template-page', {
         }
 
         // Add the button to trigger the update
-        $col = $('<div>').addClass('col-sm-1').attr('id', 'update-specimen-id-btn-div').appendTo($row).hide();
+        $col = $('<div>').addClass('col-sm-2').attr('id', 'update-specimen-id-btn-div').appendTo($row).hide();
         $('<button>').addClass('btn btn-success form-control').append('Update').appendTo($col).on('click', vm.updateSpecimenIDColumn);
 
         $select.on('change', function() {
