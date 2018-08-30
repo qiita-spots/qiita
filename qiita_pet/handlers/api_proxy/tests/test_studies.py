@@ -20,7 +20,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.studies import (
     data_types_get_req, study_get_req, study_prep_get_req, study_delete_req,
-    study_tags_request, study_get_tags_request, study_tags_patch_request,
+    study_tags_request, study_get_tags_request, study_patch_request,
     study_files_get_req)
 
 
@@ -71,6 +71,7 @@ class TestStudyAPI(TestCase):
                     'rhizospheres from the same location at different time '
                     'points in the plant lifecycle.'),
                 'status': 'private', 'spatial_series': False,
+                'specimen_id_column': None,
                 'study_description': (
                     'Analysis of the Cannabis Plant Microbiome'),
                 'shared_with': ['shared@foo.bar'], 'publication_doi': [
@@ -499,7 +500,7 @@ class TestStudyAPI(TestCase):
         exp = {'message': 'Study does not exist', 'status': 'error'}
         self.assertEqual(obs, exp)
 
-    def test_study_tags_patch_request(self):
+    def test_study_patch_request_tags(self):
         # adding test for study_tags_request here as it makes sense to check
         # that the tags were added
         obs = study_tags_request()
@@ -507,7 +508,7 @@ class TestStudyAPI(TestCase):
                'tags': {'admin': [], 'user': []}}
         self.assertEqual(obs, exp)
 
-        obs = study_tags_patch_request(
+        obs = study_patch_request(
             'shared@foo.bar', 1, 'replace', '/tags', ['testA', 'testB'])
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(obs, exp)
@@ -517,27 +518,60 @@ class TestStudyAPI(TestCase):
                'tags': {'admin': [], 'user': ['testA', 'testB']}}
         self.assertEqual(obs, exp)
 
+        obs = study_patch_request(
+            'shared@foo.bar', 2000, 'replace', '/tags', ['testA', 'testB'])
+        exp = {'message': 'Study does not exist', 'status': 'error'}
+        self.assertEqual(obs, exp)
+
+    def test_study_patch_request_errors(self):
         # check errors
-        obs = study_tags_patch_request(
+        obs = study_patch_request(
             'shared@foo.bar', 1, 'no-exists', '/tags', ['testA', 'testB'])
         exp = {'message': ('Operation "no-exists" not supported. Current '
                'supported operations: replace'), 'status': 'error'}
         self.assertEqual(obs, exp)
 
-        obs = study_tags_patch_request(
+        obs = study_patch_request(
             'shared@foo.bar', 1, 'replace', '/tags/na', ['testA', 'testB'])
         exp = {'message': 'Incorrect path parameter', 'status': 'error'}
         self.assertEqual(obs, exp)
 
-        obs = study_tags_patch_request(
-            'shared@foo.bar', 2000, 'replace', '/tags', ['testA', 'testB'])
-        exp = {'message': 'Study does not exist', 'status': 'error'}
-        self.assertEqual(obs, exp)
-
-        obs = study_tags_patch_request(
+        obs = study_patch_request(
             'shared@foo.bar', 1, 'replace', '/na')
         exp = {'message': ('Attribute "na" not found. Please, check the '
                            'path parameter'), 'status': 'error'}
+        self.assertEqual(obs, exp)
+
+    def test_study_patch_request_specimen_id(self):
+        obs = study_patch_request('shared@foo.bar', 1,
+                                  'replace', '/specimen_id_column',
+                                  'anonymized_name')
+        exp = {'status': 'success', 'message': 'Successfully updated '
+                                               'specimen id column'}
+        self.assertEqual(obs, exp)
+
+        obs = study_patch_request('shared@foo.bar', 1,
+                                  'replace', '/specimen_id_column',
+                                  'host_subject_id')
+        exp = {'status': 'success', 'message': 'Successfully updated '
+                                               'specimen id column'}
+        self.assertEqual(obs, exp)
+
+        qdb.study.Study(1).specimen_id_column = None
+
+    def test_study_patch_request_specimen_id_errors(self):
+        obs = study_patch_request('shared@foo.bar', 1,
+                                  'replace', '/specimen_id_column',
+                                  'taxon_id')
+        exp = {'status': 'error', 'message': 'The category does not contain'
+               ' unique values.'}
+        self.assertEqual(obs, exp)
+
+        obs = study_patch_request('shared@foo.bar', 1,
+                                  'replace', '/specimen_id_column',
+                                  'bleep_bloop')
+        exp = {'status': 'error', 'message': "Category 'bleep_bloop' is not"
+               " present in the sample information."}
         self.assertEqual(obs, exp)
 
 

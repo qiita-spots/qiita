@@ -2159,6 +2159,19 @@ class TestSampleTemplate(TestCase):
         st.delete_column('dna_extracted')
         self.assertNotIn('dna_extracted', st.categories())
 
+    def test_delete_column_specimen_id(self):
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
+        self.new_study.specimen_id_column = 'latitude'
+
+        with self.assertRaisesRegexp(
+                qdb.exceptions.QiitaDBOperationNotPermittedError,
+                '"latitude" cannot be deleted, this column is currently '
+                'selected as the tube identifier \(specimen_id_column\)'):
+            st.delete_column('latitude')
+
+        self.new_study.specimen_id_column = None
+
     def test_delete_samples(self):
         QE = qdb.exceptions
         st = qdb.metadata_template.sample_template.SampleTemplate(1)

@@ -75,12 +75,13 @@
   function tags_patch() {
     var study_tags = $("#studyTags").tagit("assignedTags");
     $.ajax({
-      url: "{% raw qiita_config.portal_dir %}/study/tags/{{study_info['study_id']}}",
-      type: 'PATCH',
-      data: {'op': 'replace',
-             'path': '/tags',
-             'value': study_tags
-           },
+      url: "{% raw qiita_config.portal_dir %}/study/{{study_info['study_id']}}",
+      method: 'PATCH',
+      dataType: 'json',
+      contentType: "application/json",
+      data: JSON.stringify({'op': 'replace',
+                            'path': '/tags',
+                            'value': study_tags}),
       success: function(data) {
         if(data.status == 'error') {
           bootstrapAlert(data.message, "danger");

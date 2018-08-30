@@ -174,6 +174,34 @@ Vue.component('sample-template-page', {
     },
 
     /**
+     * Callback to update the specimen_id_column via a patch request
+     */
+    updateSpecimenIDColumn: function() {
+      let vm = this, value = $('#specimen-id-select').val();
+
+      // change the empty value to null so that Python understands it as None
+      if (value === '') {
+        value = null;
+      }
+
+      $.ajax({
+        url: vm.portal + '/study/' + vm.studyId,
+        contentType: "application/json",
+        method: 'PATCH',
+        dataType: 'json',
+        data: JSON.stringify({'op': 'replace',
+                              'path': '/specimen_id_column',
+                              'value': value}),
+        success: function(data) {
+          bootstrapAlert(data.message, data.status === 'error' ? 'danger' : 'success', 10000);
+        },
+        error: function (object, status, error_msg) {
+          bootstrapAlert("Error updating specimen id column: " + error_msg, "danger")
+        }
+      });
+    },
+
+    /**
      *
      * Performs a call to the server API to delete a column from the sample template
      *
@@ -402,8 +430,9 @@ Vue.component('sample-template-page', {
       $tab.append('<label>Number of samples:</label> ' + vm.numSamples + '</br>')
       // Add the number of columns
       $tab.append('<label>Number of columns:</label> ' + vm.numColumns + '</br>')
-      // Add the select to update the sample information
+
       if (vm.userCanEdit) {
+        // Add the select to update the sample information
         $row = $('<div>').attr('id', 'update-st-div').addClass('row form-group').appendTo($tab);
         $('<label>').addClass('col-sm-2 col-form-label').append('Update sample information:').appendTo($row);
         $col = $('<div>').addClass('col-sm-3').appendTo($row);
@@ -421,6 +450,37 @@ Vue.component('sample-template-page', {
           } else {
             $('#update-btn-div').show()
           }
+        });
+
+        // add a dropdown menu to select the tube identifier column
+        $row = $('<div>').attr('id', 'update-specimen-id-div').addClass('row form-group').appendTo($tab);
+
+        // tube identifier's label with a help badge
+        $('<label>')
+          .addClass('col-sm-2 col-form-label')
+          .append('Column for the tube identifier:&nbsp;')
+          .appendTo($row)
+          .append($('<span>?</span>')
+                    .addClass('badge')
+                    .css('cursor', 'help')
+                    .attr('title', 'A unique column that identifies the tubes for the study. Only for use with external LIMS software.'));
+        $col = $('<div>').addClass('col-sm-3').appendTo($row);
+        $select = $('<select>').attr('id', 'specimen-id-select').addClass('form-control').appendTo($col);
+
+        $('<option>').attr('value', '').append('None (not available)').appendTo($select);
+        vm.columns.sort().forEach(function(opt) {
+          $('<option>').attr('value', opt).append(opt).appendTo($select);
+        });
+        if (vm.specimenIDColumn) {
+          $('#specimen-id-select').val(vm.specimenIDColumn);
+        }
+
+        // Add the button to trigger the update
+        $col = $('<div>').addClass('col-sm-2').attr('id', 'update-specimen-id-btn-div').appendTo($row).hide();
+        $('<button>').addClass('btn btn-success form-control').append('Update').appendTo($col).on('click', vm.updateSpecimenIDColumn);
+
+        $select.on('change', function() {
+          $('#update-specimen-id-btn-div').show();
         });
       }
 
@@ -500,6 +560,8 @@ Vue.component('sample-template-page', {
         vm.oldFiles = data['old_files'];
         vm.numSamples = data['num_samples'];
         vm.numColumns = data['num_columns'];
+        vm.columns = data['columns'];
+        vm.specimenIDColumn = data['specimen_id_column'];
 
         // Populate the sample-template-contents
         $('#title-h3').empty();
