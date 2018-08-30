@@ -1508,13 +1508,6 @@ class TestPrepTemplate(TestCase):
         pt.name = 'Prep information 1'
         self.assertEqual(pt.name, 'Prep information 1')
 
-    def test_unique(self):
-        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
-        observed = pt.unique_columns()
-        expected = {'barcode'}
-
-        self.assertEqual(observed, expected)
-
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'

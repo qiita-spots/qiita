@@ -276,8 +276,17 @@ class TestHelpers(TestHandlerBase):
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
                'num_columns': 30,
-               'unique_columns': ['longitude', 'host_subject_id',
-                                  'anonymized_name'],
+               'columns': ['season_environment', 'assigned_from_geo',
+                           'texture', 'taxon_id', 'depth', 'host_taxid',
+                           'common_name', 'water_content_soil', 'elevation',
+                           'temp', 'tot_nitro', 'samp_salinity', 'altitude',
+                           'env_biome', 'country', 'ph', 'anonymized_name',
+                           'tot_org_carb', 'description_duplicate',
+                           'env_feature', 'physical_specimen_location',
+                           'physical_specimen_remaining', 'dna_extracted',
+                           'sample_type', 'collection_timestamp',
+                           'host_subject_id', 'description', 'latitude',
+                           'longitude', 'scientific_name'],
                'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
@@ -296,7 +305,7 @@ class TestHelpers(TestHandlerBase):
                'old_files': [],
                'num_samples': 0,
                'num_columns': 0,
-               'unique_columns': [],
+               'columns': [],
                'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
@@ -454,8 +463,17 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
                'num_columns': 30,
-               'unique_columns': ['longitude', 'host_subject_id',
-                                  'anonymized_name'],
+               'columns': ['season_environment', 'assigned_from_geo',
+                           'texture', 'taxon_id', 'depth', 'host_taxid',
+                           'common_name', 'water_content_soil', 'elevation',
+                           'temp', 'tot_nitro', 'samp_salinity', 'altitude',
+                           'env_biome', 'country', 'ph', 'anonymized_name',
+                           'tot_org_carb', 'description_duplicate',
+                           'env_feature', 'physical_specimen_location',
+                           'physical_specimen_remaining', 'dna_extracted',
+                           'sample_type', 'collection_timestamp',
+                           'host_subject_id', 'description', 'latitude',
+                           'longitude', 'scientific_name'],
                'specimen_id_column': None}
         self.assertEqual(obs, exp)
 

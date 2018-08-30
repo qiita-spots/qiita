@@ -322,7 +322,7 @@ def sample_template_overview_handler_get_request(study_id, user):
     old_files = []
     num_samples = 0
     num_cols = 0
-    unique_cols = []
+    columns = []
     specimen_id_column = None
     if exists:
         # If it exists we need to provide:
@@ -339,9 +339,9 @@ def sample_template_overview_handler_get_request(study_id, user):
         # the number of samples. Doing len(list(st.keys())) creates a list
         # that we are not using
         num_samples = sum(1 for _ in st.keys())
+        columns = st.categories()
         # The number of columns
-        num_cols = len(st.categories())
-        unique_cols = list(st.unique_columns())
+        num_cols = len(columns)
         specimen_id_column = Study(study_id).specimen_id_column
     else:
         # It doesn't exist, we also need to provide the data_types in case
@@ -357,7 +357,7 @@ def sample_template_overview_handler_get_request(study_id, user):
             'old_files': old_files,
             'num_samples': num_samples,
             'num_columns': num_cols,
-            'unique_columns': unique_cols,
+            'columns': columns,
             'specimen_id_column': specimen_id_column}
 
 

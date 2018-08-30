@@ -442,7 +442,7 @@ Vue.component('sample-template-page', {
         $select = $('<select>').attr('id', 'specimen-id-select').addClass('form-control').appendTo($col);
 
         $('<option>').attr('value', "").append('Select a category ...').appendTo($select);
-        vm.uniqueColumns.forEach(function(opt) {
+        vm.columns.forEach(function(opt) {
           $('<option>').attr('value', opt).append(opt).appendTo($select);
         });
         if (vm.specimenIDColumn) {
@@ -538,7 +538,7 @@ Vue.component('sample-template-page', {
         vm.oldFiles = data['old_files'];
         vm.numSamples = data['num_samples'];
         vm.numColumns = data['num_columns'];
-        vm.uniqueColumns = data['unique_columns'];
+        vm.columns = data['columns'];
         vm.specimenIDColumn = data['specimen_id_column'];
 
         // Populate the sample-template-contents

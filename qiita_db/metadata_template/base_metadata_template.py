@@ -1527,17 +1527,3 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 "columns:\n\t%s.\nSee the Templates tutorial for a description"
                 " of these fields." % ";\n\t".join(warning_msg),
                 qdb.exceptions.QiitaDBWarning)
-
-    def unique_columns(self):
-        """Get the unique columns in a template object
-
-        Returns
-        -------
-        set of str
-            Returns a set of the columns that are unique in a template object.
-        """
-
-        df = self.to_dataframe()
-
-        n = len(df)
-        return {k for k, v in df.nunique().items() if v == n}

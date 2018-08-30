@@ -2200,13 +2200,6 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
             st.delete_sample('1.SKM5.640177')
 
-    def test_unique(self):
-        st = qdb.metadata_template.sample_template.SampleTemplate(1)
-        observed = st.unique_columns()
-        expected = {'anonymized_name', 'host_subject_id', 'longitude'}
-
-        self.assertEqual(observed, expected)
-
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted\t"
