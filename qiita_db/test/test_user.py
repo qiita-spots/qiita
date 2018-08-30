@@ -327,10 +327,13 @@ class UserTest(TestCase):
         self.assertEqual(self.conn_handler.execute_fetchone(sql)[0], 2)
 
     def _check_pass(self, user, passwd):
-        obspass = self.conn_handler.execute_fetchone(
-            "SELECT password FROM qiita.qiita_user WHERE email = %s",
-            (user.id, ))[0]
-        self.assertEqual(qdb.util.hash_password(passwd, obspass), obspass)
+        self.assertEqual(qdb.util.hash_password(passwd, user.password),
+                         user.password)
+
+    def test_password(self):
+        user = qdb.user.User('shared@foo.bar')
+        self.assertEqual(user.password, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHy'
+                         'IJjjgaG6dxuRJkUM8nXG9Efe')
 
     def test_change_pass(self):
         user = qdb.user.User.create('testchangepass@test.bar', 'password')

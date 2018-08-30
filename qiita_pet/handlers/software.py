@@ -8,34 +8,24 @@
 
 from __future__ import division
 
-from tornado.web import authenticated
-
-from .base_handlers import BaseHandler
-from qiita_db.logger import LogEntry
-from qiita_core.util import execute_as_transaction
+from tornado.gen import coroutine
 from tornado.web import HTTPError
 
+from qiita_core.util import execute_as_transaction
+from qiita_db.software import Software
+from .base_handlers import BaseHandler
 
-class LogEntryViewerHandler(BaseHandler):
+
+class SoftwareHandler(BaseHandler):
     def check_access(self):
         if self.current_user.level not in {'admin', 'dev'}:
             raise HTTPError(403, reason="User %s doesn't have sufficient "
                             "privileges to view error page" %
                             self.current_user.email)
 
-    @authenticated
+    @coroutine
     @execute_as_transaction
     def get(self):
         self.check_access()
-        logentries = LogEntry.newest_records()
-        self.render("error_log.html", logentries=logentries)
-
-    @authenticated
-    @execute_as_transaction
-    def post(self):
-        self.check_access()
-        numentries = int(self.get_argument("numrecords"))
-        if numentries <= 0:
-            numentries = 100
-        logentries = LogEntry.newest_records(numentries)
-        self.render("error_log.html", logentries=logentries)
+        software = Software.iter(False)
+        self.render("software.html", software=software)

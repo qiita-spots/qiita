@@ -4,7 +4,6 @@ Developer Tutorials
 The following is a full list of the available developer tutorials
 
 .. toctree::
-    :maxdepth: 2
 
     plugins
     rest
