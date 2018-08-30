@@ -468,7 +468,7 @@ Vue.component('sample-template-page', {
         $select = $('<select>').attr('id', 'specimen-id-select').addClass('form-control').appendTo($col);
 
         $('<option>').attr('value', '').append('None (not available)').appendTo($select);
-        vm.columns.forEach(function(opt) {
+        vm.columns.sort().forEach(function(opt) {
           $('<option>').attr('value', opt).append(opt).appendTo($select);
         });
         if (vm.specimenIDColumn) {
