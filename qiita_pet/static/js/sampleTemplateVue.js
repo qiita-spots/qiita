@@ -463,7 +463,7 @@ Vue.component('sample-template-page', {
           .append($('<span>?</span>')
                     .addClass('badge')
                     .css('cursor', 'help')
-                    .attr('title', 'A unique column that identifies the tubes for the study. Only for use with LabMan.'));
+                    .attr('title', 'A unique column that identifies the tubes for the study. Only for use with external LIMS software.'));
         $col = $('<div>').addClass('col-sm-3').appendTo($row);
         $select = $('<select>').attr('id', 'specimen-id-select').addClass('form-control').appendTo($col);
 
