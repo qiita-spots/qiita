@@ -8,13 +8,14 @@
 from __future__ import division
 
 from tornado.web import authenticated, HTTPError
+from tornado.escape import json_decode
 
 from qiita_pet.util import EBI_LINKIFIER
 from qiita_pet.handlers.util import to_int, doi_linkifier, pubmed_linkifier
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
     study_prep_get_req, study_get_req, study_delete_req, study_tags_request,
-    study_tags_patch_request, study_get_tags_request, study_files_get_req)
+    study_patch_request, study_get_tags_request, study_files_get_req)
 
 
 class StudyIndexHandler(BaseHandler):
@@ -117,20 +118,23 @@ class StudyTags(BaseHandler):
         response = study_get_tags_request(self.current_user.id, study_id)
         self.write(response)
 
+
+class Study(BaseHandler):
     @authenticated
     def patch(self, study_id):
-        """Patches a prep template in the system
+        """Patches a study in the system
 
         Follows the JSON PATCH specification:
         https://tools.ietf.org/html/rfc6902
         """
         study_id = to_int(study_id)
-        req_op = self.get_argument('op')
-        req_path = self.get_argument('path')
-        req_value = self.request.arguments.get('value[]', [])
-        req_form = self.get_argument('form', None)
+        data = json_decode(self.request.body)
 
-        response = study_tags_patch_request(
-            self.current_user.id, study_id, req_op, req_path,
-            req_value, req_form)
+        req_op = data.get('op')
+        req_path = data.get('path')
+        req_value = data.get('value')
+        req_from = data.get('from', None)
+
+        response = study_patch_request(self.current_user.id, study_id,
+                                       req_op, req_path, req_value, req_from)
         self.write(response)

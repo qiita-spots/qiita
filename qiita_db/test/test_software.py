@@ -397,6 +397,36 @@ class CommandTests(TestCase):
 
 
 @qiita_test_checker()
+class SoftwareTestsIter(TestCase):
+    # different class to assure integrity of database
+
+    def test_iter(self):
+        s1 = qdb.software.Software(1)
+        s2 = qdb.software.Software(2)
+        s3 = qdb.software.Software(3)
+        s4 = qdb.software.Software(4)
+
+        qdb.software.Software.deactivate_all()
+        obs = list(qdb.software.Software.iter())
+        self.assertEqual(obs, [])
+        obs = list(qdb.software.Software.iter(False))
+        self.assertEqual(obs, [s1, s2, s3, s4])
+
+        s2.activate()
+        obs = list(qdb.software.Software.iter())
+        self.assertEqual(obs, [s2])
+        obs = list(qdb.software.Software.iter(False))
+        self.assertEqual(obs, [s1, s2, s3, s4])
+
+        s1.activate()
+        s3.activate()
+        obs = list(qdb.software.Software.iter())
+        self.assertEqual(obs, [s1, s2, s3])
+        obs = list(qdb.software.Software.iter(False))
+        self.assertEqual(obs, [s1, s2, s3, s4])
+
+
+@qiita_test_checker()
 class SoftwareTests(TestCase):
     def setUp(self):
         self._clean_up_files = []
@@ -405,23 +435,6 @@ class SoftwareTests(TestCase):
         for f in self._clean_up_files:
             if exists(f):
                 remove(f)
-
-    def test_iter_active(self):
-        qdb.software.Software.deactivate_all()
-        obs = list(qdb.software.Software.iter_active())
-        self.assertEqual(obs, [])
-
-        s2 = qdb.software.Software(2)
-        s2.activate()
-        obs = list(qdb.software.Software.iter_active())
-        self.assertEqual(obs, [s2])
-
-        s1 = qdb.software.Software(1)
-        s3 = qdb.software.Software(3)
-        s1.activate()
-        s3.activate()
-        obs = list(qdb.software.Software.iter_active())
-        self.assertEqual(obs, [s1, s2, s3])
 
     def test_from_name_and_version(self):
         obs = qdb.software.Software.from_name_and_version('QIIME', '1.9.1')
