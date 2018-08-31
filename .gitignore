@@ -61,5 +61,5 @@ qiita_pet/static/doc/
 # webdis log
 webdis.log
 
-# test keys should generated in travis
+# test keys should be generated in travis
 qiita_ware/test/test_data/test_key

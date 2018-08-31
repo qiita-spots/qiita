@@ -604,31 +604,37 @@ class MetadataTemplate(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql)
             return qdb.sql_connection.TRN.execute_fetchflatten()
 
-    def _common_delete_sample_steps(self, sample_name):
+    def _common_delete_sample_steps(self, sample_names):
         r"""Executes the common delete sample steps
 
         Parameters
         ----------
-        sample_name : str
-            The sample name to be erased
+        sample_names : list of str
+            The sample names to be erased
 
         Raises
         ------
         QiitaDBUnknownIDError
-            If the `sample_name` doesn't exist
+            If any of the `sample_names` don't exist
         """
-        if sample_name not in self.keys():
-            raise qdb.exceptions.QiitaDBUnknownIDError(sample_name, self._id)
+        keys = self.keys()
+        missing = [sn for sn in sample_names if sn not in keys]
+        if missing:
+            raise qdb.exceptions.QiitaDBUnknownIDError(
+                ', '.join(missing), self._id)
 
         with qdb.sql_connection.TRN:
-            sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'.format(
-                self._table_name(self._id))
-            qdb.sql_connection.TRN.add(sql, [sample_name])
-
-            sql = "DELETE FROM qiita.{0} WHERE sample_id=%s AND {1}=%s".format(
-                self._table, self._id_column)
-            qdb.sql_connection.TRN.add(sql, [sample_name, self.id])
-
+            # to simplify the sql strings, we are creating a base_sql, which
+            # will be used to create sql1 and sql2. sql1 will delete the
+            # sample_names from the main table ([sample | prep]_[id]), then
+            # sql2 will delete the sample_names from [study | prep]_sample
+            base_sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'
+            sql1 = base_sql.format(self._table_name(self._id))
+            sql2 = '{0} AND {1}=%s'.format(
+                base_sql.format(self._table), self._id_column)
+            for sn in sample_names:
+                qdb.sql_connection.TRN.add(sql1, [sn])
+                qdb.sql_connection.TRN.add(sql2, [sn, self.id])
             qdb.sql_connection.TRN.execute()
 
             self.generate_files()
@@ -647,6 +653,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             If the `column_name` doesn't exist
         QiitaDBOperationNotPermittedError
             If a the info file can't be updated
+            If the column_name is selected as a specimen_id_column in the
+            study.
         """
         if column_name not in self.categories():
             raise qdb.exceptions.QiitaDBColumnError(
@@ -654,6 +662,15 @@ class MetadataTemplate(qdb.base.QiitaObject):
         if not self.can_be_updated(columns={column_name}):
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 '%s cannot be deleted' % column_name)
+
+        # if a tube identifier column is selected disallow its deletion
+        specimen_id_column = qdb.study.Study(self.study_id).specimen_id_column
+        if specimen_id_column == column_name:
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    '"%s" cannot be deleted, this column is currently selected'
+                    ' as the tube identifier (specimen_id_column)' %
+                    column_name)
+
         with qdb.sql_connection.TRN:
             sql = 'ALTER TABLE qiita.%s%d DROP COLUMN %s' % (
                 self._table_prefix, self._id, column_name)

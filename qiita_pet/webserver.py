@@ -33,7 +33,7 @@ from qiita_pet.handlers.study_handlers import (
     SampleTemplateOverviewHandler, SampleTemplateColumnsHandler,
     StudyEditHandler, ListStudiesHandler, ListStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
-    VAMPSHandler, StudyTags, StudyGetTags,
+    VAMPSHandler, Study, StudyTags, StudyGetTags,
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX, StudyDeleteAjax,
     ArtifactAdminAJAX, NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
@@ -53,6 +53,7 @@ from qiita_pet.handlers.download import (
 from qiita_pet.handlers.prep_template import (
     PrepTemplateHandler, PrepTemplateGraphHandler, PrepTemplateJobHandler)
 from qiita_pet.handlers.ontology import OntologyHandler
+from qiita_pet.handlers.software import SoftwareHandler
 from qiita_db.handlers.processing_job import (
     JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
     ProcessingJobAPItestHandler)
@@ -122,6 +123,7 @@ class Application(tornado.web.Application):
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
             (r"/admin/artifact/", ArtifactAdminAJAX),
+            (r"/admin/software/", SoftwareHandler),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
             # Study handlers
             (r"/study/create/", StudyEditHandler),
@@ -141,6 +143,7 @@ class Application(tornado.web.Application):
             (r"/study/new_prep_template/", NewPrepTemplateAjax),
             (r"/study/tags/(.*)", StudyTags),
             (r"/study/get_tags/", StudyGetTags),
+            (r"/study/([0-9]+)$", Study),
             # Artifact handlers
             (r"/artifact/graph/", ArtifactGraphAJAX),
             (r"/artifact/(.*)/summary/", ArtifactSummaryAJAX),

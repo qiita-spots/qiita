@@ -30,7 +30,7 @@ def _ssh_session(p_url, private_key):
 
     Parameters
     ----------
-    URL : urlparse object
+    p_url : urlparse object
         a parsed url
     private_key : str
         Path to the private key used to authenticate connection
@@ -48,10 +48,10 @@ def _ssh_session(p_url, private_key):
     if scheme == 'scp' or scheme == 'sftp':
 
         # if port not specified, use default 22 as port
-        if not port:
+        if port is None:
             port = 22
 
-        # step 1: both schemes requires an SSH connection
+        # step 1: both schemes require an SSH connection
         ssh = SSHClient()
         ssh.set_missing_host_key_policy(AutoAddPolicy)
 
@@ -60,6 +60,9 @@ def _ssh_session(p_url, private_key):
         ssh.connect(hostname, port=port, username=username,
                     pkey=key, look_for_keys=False)
         return ssh
+    else:
+        raise ValueError(
+            'Not valid scheme. Valid options are ssh and scp.')
 
 
 def _list_valid_files(ssh, directory):
@@ -69,7 +72,8 @@ def _list_valid_files(ssh, directory):
     ----------
     ssh : paramiko.SSHClient
         An initializeed ssh session
-    dir : the directory to search for files
+    directory : str
+        the directory to search for files
 
     Returns
     -------
@@ -87,7 +91,7 @@ def _list_valid_files(ssh, directory):
 
 
 def list_remote(URL, private_key):
-    """Retrieve a valid study files from a remote directory
+    """Retrieve valid study files from a remote directory
 
     Parameters
     ----------
@@ -100,6 +104,11 @@ def list_remote(URL, private_key):
     -------
     list of str
         list of files that are valid study files
+
+    Notes
+    -----
+    Only the allowed extensions described by the config file
+    will be listed.
     """
     p_url = urlparse(URL)
     directory = p_url.path
@@ -116,10 +125,10 @@ def download_remote(URL, private_key, destination):
     ----------
     URL : str
         The url to the remote directory
-    destination : str
-        The path to the study upload folder
     private_key : str
         Path to the private key used to authenticate connection
+    destination : str
+        The path to the study upload folder
     """
 
     # step 1: initialize connection and list valid files
@@ -133,17 +142,13 @@ def download_remote(URL, private_key, destination):
     # step 2: download files
     scheme = p_url.scheme
     if scheme == 'scp':
-        scp = SCPClient(ssh.get_transport())
-        for f in file_paths:
-            download = partial(scp.get,
-                               local_path=join(destination, basename(f)))
-            download(f)
+        client = SCPClient(ssh.get_transport())
     elif scheme == 'sftp':
-        sftp = ssh.open_sftp()
-        for f in file_paths:
-            download = partial(sftp.get,
-                               localpath=join(destination, basename(f)))
-            download(f)
+        client = ssh.open_sftp()
+    for f in file_paths:
+        download = partial(client.get,
+                           localpath=join(destination, basename(f)))
+        download(f)
 
     # step 3: close the connection
     ssh.close()

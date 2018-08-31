@@ -682,13 +682,24 @@ class Software(qdb.base.QiitaObject):
     _table = "software"
 
     @classmethod
-    def iter_active(cls):
-        """Iterates over all active software"""
+    def iter(cls, active=True):
+        """Iterates over all active software
+
+        Parameters
+        ----------
+        active : bool, optional
+            If True will only return active software
+
+        Returns
+        -------
+        list of qiita_db.software.Software
+            The software objects
+        """
+        sql = """SELECT software_id
+                 FROM qiita.software {0}
+                 ORDER BY software_id""".format(
+                    'WHERE active = True' if active else '')
         with qdb.sql_connection.TRN:
-            sql = """SELECT software_id
-                     FROM qiita.software
-                     WHERE active = True
-                     ORDER BY software_id"""
             qdb.sql_connection.TRN.add(sql)
             for s_id in qdb.sql_connection.TRN.execute_fetchflatten():
                 yield cls(s_id)
