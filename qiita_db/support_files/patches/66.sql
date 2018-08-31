@@ -1,3 +1,7 @@
+-- August 6, 2018
+
+SELECT 42;
+
 -- August 22, 2018
 -- add specimen_id_column to study table (needed to plate samples in labman)
 
