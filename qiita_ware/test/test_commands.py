@@ -8,17 +8,20 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main, skipIf
-from os.path import join
+from os.path import join, basename
 from tempfile import mkdtemp
 import pandas as pd
 from datetime import datetime
 from shutil import rmtree
+from os import path
+from glob import glob
+from paramiko.ssh_exception import AuthenticationException
 
 from h5py import File
 from qiita_files.demux import to_hdf5
 
 from qiita_ware.exceptions import ComputeError
-from qiita_ware.commands import submit_EBI
+from qiita_ware.commands import submit_EBI, list_remote, download_remote
 from qiita_db.util import get_mountpoint
 from qiita_db.study import Study, StudyPerson
 from qiita_db.software import DefaultParameters, Parameters
@@ -31,6 +34,67 @@ from qiita_core.qiita_settings import qiita_config
 
 
 @qiita_test_checker()
+class SSHTests(TestCase):
+    def setUp(self):
+        self.self_dir_path = path.dirname(path.abspath(__file__))
+        self.remote_dir_path = join(self.self_dir_path,
+                                    'test_data/test_remote_dir/')
+        self.test_ssh_key = join(self.self_dir_path, 'test_data/test_key')
+        self.test_wrong_key = join(self.self_dir_path, 'test_data/random_key')
+        self.temp_local_dir = mkdtemp()
+
+    def tearDown(self):
+        rmtree(self.temp_local_dir)
+
+    def test_list_scp_wrong_key(self):
+        """Tests remote file listing using a wrong private key and scp"""
+        with self.assertRaises(AuthenticationException):
+            list_remote('scp://localhost:'+self.remote_dir_path,
+                        self.test_wrong_key)
+
+    def test_list_scp_nonexist_key(self):
+        """Tests remote file listing using a missing private key and scp"""
+        with self.assertRaises(IOError):
+            list_remote('scp://localhost:'+self.remote_dir_path,
+                        join(self.self_dir_path, 'nokey'))
+
+    def test_list_scp(self):
+        """Tests remote file listing using private key and scp"""
+        read_file_list = list_remote('scp://localhost:'+self.remote_dir_path,
+                                     self.test_ssh_key)
+        remote_filename_list = [basename(f) for f in
+                                glob(join(self.remote_dir_path, '*'))]
+        self.assertEqual(remote_filename_list, read_file_list)
+
+    def test_list_sftp(self):
+        """Tests remote file listing using private key and sftp"""
+        read_file_list = list_remote('sftp://localhost:'+self.remote_dir_path,
+                                     self.test_ssh_key)
+        remote_filename_list = [basename(f) for f in
+                                glob(join(self.remote_dir_path, '*'))]
+        self.assertEqual(remote_filename_list, read_file_list)
+
+    def test_download_scp(self):
+        """Tests remote file listing using private key and scp"""
+        download_remote('scp://localhost:'+self.remote_dir_path,
+                        self.test_ssh_key, self.temp_local_dir)
+        remote_filename_list = [basename(f) for f in
+                                glob(join(self.remote_dir_path, '*'))]
+        local_filename_list = [basename(f) for f in
+                               glob(join(self.temp_local_dir, '*'))]
+        self.assertEqual(remote_filename_list, local_filename_list)
+
+    def test_download_sftp(self):
+        """Tests remote file listing using private key and sftp"""
+        download_remote('sftp://localhost:'+self.remote_dir_path,
+                        self.test_ssh_key, self.temp_local_dir)
+        remote_filename_list = [basename(f) for f in
+                                glob(join(self.remote_dir_path, '*'))]
+        local_filename_list = [basename(f) for f in
+                               glob(join(self.temp_local_dir, '*'))]
+        self.assertEqual(remote_filename_list, local_filename_list)
+
+
 class CommandsTests(TestCase):
     def setUp(self):
         self.files_to_remove = []

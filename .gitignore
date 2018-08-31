@@ -46,7 +46,7 @@ config.py
 *~
 
 # don't show the data on git status
-qiita_db/support_files/test_data
+qiita_db/support_files/test_data/
 
 # ignoring redis files
 dump.rdb
@@ -60,3 +60,6 @@ qiita_pet/static/doc/
 
 # webdis log
 webdis.log
+
+# test keys should generated in travis
+qiita_ware/test/test_data/test_key

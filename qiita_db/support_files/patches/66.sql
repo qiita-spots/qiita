@@ -4,4 +4,3 @@
 ALTER TABLE qiita.study ADD specimen_id_column varchar(256);
 
 COMMENT ON COLUMN qiita.study.specimen_id_column IS 'The name of the column that describes the specimen identifiers (such as what is written on the tubes).';
-
