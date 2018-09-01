@@ -32,7 +32,9 @@ $(document).ready(function() {
       var title = $(this).val();
       // removing any duplicated whitespaces
       title = title.replace(/ +(?= )/g, '');
-      // removing wite spaces from the front of the text
+      //remove all utf-8 encoded characters that are not also printable ASCII characters.
+      title = title.replace(/[^\x20-\x7E]+/g, "");
+      // removing white spaces from the front of the text
       $(this).val(title.trimLeft());
     });
     $("#create_study").validate({
@@ -156,8 +158,11 @@ function cancel_edition(){
     {% if form_item.label.text == 'Environmental Packages' %}
         {% set kwargs['size'] = len(form_item.choices) %}
         {% set additional_info = 'You can select multiple entries by control-clicking (mac: command-clicking)' %}
-    {% elif form_item.label.text == 'Principan Investigator'%}
+    {% elif form_item.label.text == 'Principal Investigator'%}
         {% set kwargs['class_'] = kwargs['class_'] + ' chzn-select' %}
+    {% elif form_item.label.text == 'Study Title'%}
+        {% set additional_info = 'Study titles may only contain ASCII characters' %}
+
     {% end %}
   <tr>
     <td width="20%">{% raw form_item.label %} <br /> <small>{{additional_info}}</small></td>
