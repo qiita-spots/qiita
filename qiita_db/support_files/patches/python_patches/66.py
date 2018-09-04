@@ -9,6 +9,6 @@ from re import sub
 studies = Study.get_by_status('public')
 
 for study in studies:
-    title = study.title
-    new_title = sub(r'[^\x20-\x7E]+', '', title)
-    study.title = new_title
+    new_title = sub(r'[^\x20-\x7E]+', '', study.title)
+    if new_title != study.title:
+        study.title = new_title
