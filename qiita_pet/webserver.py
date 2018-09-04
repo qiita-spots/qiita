@@ -33,7 +33,7 @@ from qiita_pet.handlers.study_handlers import (
     SampleTemplateOverviewHandler, SampleTemplateColumnsHandler,
     StudyEditHandler, ListStudiesHandler, ListStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
-    VAMPSHandler, StudyTags, StudyGetTags,
+    VAMPSHandler, Study, StudyTags, StudyGetTags,
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX, StudyDeleteAjax,
     ArtifactAdminAJAX, NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
@@ -143,6 +143,7 @@ class Application(tornado.web.Application):
             (r"/study/new_prep_template/", NewPrepTemplateAjax),
             (r"/study/tags/(.*)", StudyTags),
             (r"/study/get_tags/", StudyGetTags),
+            (r"/study/([0-9]+)$", Study),
             # Artifact handlers
             (r"/artifact/graph/", ArtifactGraphAJAX),
             (r"/artifact/(.*)/summary/", ArtifactSummaryAJAX),
