@@ -22,7 +22,7 @@ Creating a sample information template on our website using `Qiimp<https://qiita
 `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__ under "MetaData Template" and "Prep Template".
 
 Without these, **Qiita Admins** will not be able to submit your data to EBI. If you want to submit your data or need
-help send an email to `qiita.help@gmail.com <qiita.help@gmail.com>`__. Help will include advice on additional fields to add to ensure MiXs compliance.
+help send an email to `qiita.help@gmail.com <qiita.help@gmail.com>`__ and please include your study ID. Help will include advice on additional fields to add to ensure MiXs compliance.
 
 Note that submissions are time consuming and need full collaboration from the user.
 :red:`Do not wait until the last minute to request help.` In general, the best
