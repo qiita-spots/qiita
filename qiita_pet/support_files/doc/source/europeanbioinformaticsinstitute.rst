@@ -77,13 +77,13 @@ Required Prep Information Fields for EBI submission
 To successfully submit your data to EBI, you will also need to include a minimal number of columns in your preparation information depending on your data type:
 
 Amplicon Sequencing Data (16S, 18S, ITS, etc.)
-sample_name, barcode, linkerprimer ( use primer for older 454), experiment_design_description, library, library_construction_protocol, linker, platform, run_center, run_date, run_prefix, pcr_primers, sequencing_meth, target_gene, target_subfragment,	center_name, center_project_name, instrument_model, runid
+sample_name, barcode, linkerprimer ( use primer for older 454), experiment_design_description, library, library_construction_protocol, linker, platform, run_center, run_date, run_prefix, pcr_primers, sequencing_meth, target_gene, target_subfragment, center_name, center_project_name, instrument_model, runid
 
 Metagenomic Sequencing Data (WGS, WGMS,"shotgun", etc.)
-sample_name, experiment_design_description, library_construction_protocol, platform, run_center, run_date, run_prefix, sequencing_meth, center_name,	center_project_name, instrument_model, run_id, forward_read, reverse_read, sample_plate, sample_well,	i7_index_id (Illumina only), index	i5_index_id (Illumina only), index2, sample_project, well_description
+sample_name, experiment_design_description, library_construction_protocol, platform, run_center, run_date, run_prefix, sequencing_meth, center_name,	center_project_name, instrument_model, run_id, forward_read, reverse_read, sample_plate, sample_well,	i7_index_id (Illumina only), index, i5_index_id (Illumina only), index2, sample_project, well_description
 
 Metabolomics Data:
-sample_name, experiment_design_description, run_center, run_date, run_prefix, extraction_solvent, center_name,	center_project_name, sample_plate, sample_well, well_description
+sample_name, experiment_design_description, run_center, run_date, run_prefix, extraction_solvent, center_name, center_project_name, sample_plate, sample_well, well_description
 
 For descriptions of these fields, you can view the required columns listed on the preparation information spread sheet under "Prep Template" on the `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__.
 
