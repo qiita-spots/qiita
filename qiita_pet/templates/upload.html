@@ -1,5 +1,102 @@
 {% extends sitebase.html %}
+
+{% block head %}
+
+<script type="text/javascript">
+  function validate_file() {
+    var ssh_key = $("#ssh-key")[0].files[0];
+    if (ssh_key.size > 2000) {
+      alert("Your input file is too large to be a valid key, please try again.");
+      $("#ssh-key").val("");
+    }
+  }
+
+  function validate_form() {
+    // modified from https://gist.github.com/dperini/729294#gistcomment-15527
+    var re_weburl = new RegExp(
+        // protocol identifier
+        "(?:(?:scp?|sftp)://)" +
+        // user:pass authentication
+        "(?:\\S+(?::\\S*)?@)?" +
+        "(?:" +
+        // IP address exclusion
+        // private & local networks
+        "(?!(?:10|127)(?:\\.\\d{1,3}){3})" +
+        "(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})" +
+        "(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})" +
+        // IP address dotted notation octets
+        // excludes loopback network 0.0.0.0
+        // excludes reserved space >= 224.0.0.0
+        // excludes network & broacast addresses
+        // (first & last IP address of each class)
+        "(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])" +
+        "(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}" +
+        "(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))" +
+        "|" +
+        // host name
+        "(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)" +
+        // domain name
+        "(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*" +
+        // TLD identifier
+        "(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))" +
+        // sorry, ignore TLD ending with dot
+        // "\\.?" +
+        ")" +
+        // port number
+        "(?::\\d{2,5})?" +
+        // resource path, excluding a trailing punctuation mark
+        "(?:[/?#](?:\\S*[^\\s!\"'()*,-.:;<>?\\[\\]_`{|}~]|))?"
+        , "gi"
+    );
+    var valid_protocol = false;
+    var url = $("#inputURL").val();
+    var ssh_key = $("#ssh-key")[0].files[0];
+
+    if (url === '' || ssh_key === '' || ssh_key === undefined){
+      alert("URL and SSH key can't be empty")
+    } else {
+      if(re_weburl.test(url)) {
+        valid_protocol = true;
+      } else {
+        alert('Not a valid URL: ' + url);
+      }
+    }
+    return valid_protocol;
+  }
+
+  function connect_to_remote_server(method) {
+    $('#remote-request-type').val(method);
+    var formData = new FormData($('#remote-form')[0]);
+    if (validate_form()) {
+      $.ajax({
+        url:'{% raw qiita_config.portal_dir %}/study/upload/remote/' + {{study_id}},
+        type:'POST',
+        data:formData,
+        contentType:false,
+        processData:false,
+        cache:false,
+        success: function(data) {
+          window.location.reload(1);
+        },
+        error: function (object, status, error_msg) {
+          bootstrapAlert("Error: " + error_msg, "danger")
+        }
+      });
+    }
+  }
+
+  {% if level == 'info' and 'Retrieving remote files:' in  message %}
+    setTimeout(function(){
+      window.location.reload(1);
+    }, 5000);
+  {% end %}
+</script>
+
+{% end %}
+
 {% block content %}
+
+{% if (level != 'info' and 'Retrieving remote files:' not in message) or not message %}
 
 <div class="container">
 
@@ -28,7 +125,7 @@
             </a>
           </h4>
         </div>
-        <div id="collapseOne" class="panel-collapse collapse">
+        <div id="collapseOne" class="panel-collapse collapse {%if not remote_files and not remote_url %} in {% end %}">
           <div class="row" align="center">
             <b>Upload files locally (max file size: {% if max_upload_size/1000==0 %} {{max_upload_size}} GB{% else %} {{max_upload_size/1000.0}} TB{% end %})</b>
           </div>
@@ -68,34 +165,65 @@
         <div class="panel-heading">
           <h4 class="panel-title">
             <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-              Upload via Remote Server
+              Upload via Remote Server (BETA)
             </a>
           </h4>
         </div>
-        <div id="collapseTwo" class="panel-collapse collapse">
+        <div id="collapseTwo" class="panel-collapse collapse {%if remote_files and remote_url %} in {% end %}">
           <div class="container">
+            {%if remote_files and remote_url %}
+              <div class="row">
+                <button class="btn btn-default" data-toggle="collapse" data-target="#remote-files">
+                  <span class="glyphicon glyphicon-eye-open"></span>
+                  Files
+                </button> in {{remote_url}}
+                <div id="remote-files" class="collapse in" style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
+                  {{', '.join(remote_files)}}
+                </div>
+              </div>
+              <br/>
+            {% end %}
             <div class="row">
-              <b>Steps:</b>
-              <ol>
-                <li>Prepare study files by storing them in one folder on your fileserver.</li>
-                <li>Configure login keys by following instructions <a href="tempurl">here</a>.</li>
-                <li>Enter the URL to the remote directory. We currently support sftp and scp.</li>
-                <li>Press 'List Files' to test the connection and verify the list of study files.</li>
-                <li>If the connection is made and files are correct, press 'Transfer Files' to initiate the transfer.</li>
-              </ol>
+              <button class="btn btn-default" data-toggle="collapse" data-target="#remote-file-instructions">
+                <span class="glyphicon glyphicon-eye-open"></span>
+                Instructions
+              </button>
+              <div id="remote-file-instructions" class="collapse" style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
+                <ol>
+                  <li>Currenlty we only support ftp and scp.</li>
+                  <li>Prepare study files by storing them in one folder on your fileserver.</li>
+                  <li>Generate a new key by running: <code>ssh-keygen -t rsa -C "ssh test key" -f ~/.ssh/qiita-key -P ""</code> in your remote server.</li>
+                  <li>Obtain your new generated <code>qiita-key</code> and use it in the Key option</li>
+                  <li>Press 'List Files' to test the connection and verify the list of study files.</li>
+                  <li>If the connection is made and files are correct, press 'Transfer Files' to initiate the transfer.</li>
+                </ol>
+              </div>
+              <br/><br/>
             </div>
             <div class="row">
-              <form class="form-horizontal">
+              <form class="form-horizontal" name="remote-form" id="remote-form" enctype="multipart/form-data">
+                <input type="hidden" id="remote-request-type" name="remote-request-type">
                 <div class="form-group">
-                  <label for="inputURL" class="col-md-1 control-label">URL</label>
-                  <div class="col-md-9">
-                    <input type="email" class="form-control" id="inputURL" placeholder="scp://user@university.edu:/folder/">
+                  <label class="col-md-1 control-label">URL</label>
+                  <div class="col-md-6">
+                    <input type="text" class="form-control" name="inputURL" id="inputURL" placeholder="scp://user@server.com/folders/">
                   </div>
-                  <button type="button" class="btn btn-default col-md-1" onclick="">List Files</button>
+                  <label for="inputURL" class="col-md-1 control-label">Key</label>
+                  <div class="col-md-2">
+                      <input type="file" name="ssh-key" id="ssh-key" onchange="validate_file();">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-md-2"></div>
+                  <div class="col-md-1">
+                    <button type="button" class="btn btn-default" onclick="connect_to_remote_server('list');">List Files</button>
+                  </div>
+                  <div class="col-md-1">
+                    <button type="button" class="btn btn-default" onclick="connect_to_remote_server('transfer');">Transfer Files</button>
+                  </div>
                 </div>
               </form>
           </div>
-          <button type="button" class="btn btn-default" onclick="">Transfer Files</button>
           </div>
         </div>
       </div>
@@ -163,4 +291,5 @@
   {% end  %}
 </script>
 
+{% end %}
 {% end %}

@@ -44,7 +44,8 @@ from qiita_pet.handlers.artifact_handlers import (
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
-from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
+from qiita_pet.handlers.upload import (
+    UploadFileHandler, StudyUploadFileHandler, StudyUploadViaRemote)
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import (
     DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease,
@@ -169,6 +170,7 @@ class Application(tornado.web.Application):
             (r"/study/description/data_type_menu/", DataTypesMenuAJAX),
             (r"/study/description/(.*)", StudyIndexHandler),
             (r"/study/delete/", StudyDeleteAjax),
+            (r"/study/upload/remote/(.*)", StudyUploadViaRemote),
             (r"/study/upload/(.*)", StudyUploadFileHandler),
             (r"/upload/", UploadFileHandler),
             (r"/check_study/", CreateStudyAJAX),

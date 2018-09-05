@@ -153,7 +153,8 @@ with TRN:
 
     # Create the 'list_remote_files' command
     parameters = {'url': ['string', None],
-                  'private_key': ['string', None]}
+                  'private_key': ['string', None],
+                  'study_id': ['integer', None]}
     create_command(qiita_plugin, "list_remote_files",
                    "retrieves list of valid study files from remote dir",
                    parameters)
