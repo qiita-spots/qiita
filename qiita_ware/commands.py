@@ -42,7 +42,11 @@ def _ssh_session(p_url, private_key):
     """
     scheme = p_url.scheme
     hostname = p_url.hostname
-    port = p_url.port
+    # if port is '' Python 2.7.6 will raise an error
+    try:
+        port = p_url.port
+    except Exception:
+        port = 22
     username = p_url.username
 
     if scheme == 'scp' or scheme == 'sftp':
@@ -141,14 +145,19 @@ def download_remote(URL, private_key, destination):
 
     # step 2: download files
     scheme = p_url.scheme
+    # note that scp/sftp's code seems similar but the local_path/localpath
+    # variable is different within the for loop
     if scheme == 'scp':
-        client = SCPClient(ssh.get_transport())
+        scp = SCPClient(ssh.get_transport())
+        for f in file_paths:
+            download = partial(
+                scp.get, local_path=join(destination, basename(f)))
+            download(f)
     elif scheme == 'sftp':
-        client = ssh.open_sftp()
-    for f in file_paths:
-        download = partial(client.get,
-                           localpath=join(destination, basename(f)))
-        download(f)
+        sftp = ssh.open_sftp()
+        for f in file_paths:
+            download = partial(
+                sftp.get, localpath=join(destination, basename(f)))
 
     # step 3: close the connection
     ssh.close()

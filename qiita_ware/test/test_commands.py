@@ -42,9 +42,16 @@ class SSHTests(TestCase):
         self.test_ssh_key = join(self.self_dir_path, 'test_data/test_key')
         self.test_wrong_key = join(self.self_dir_path, 'test_data/random_key')
         self.temp_local_dir = mkdtemp()
+        self.exp_files = ['test_0.fastq.gz', 'test_1.txt']
 
     def tearDown(self):
         rmtree(self.temp_local_dir)
+
+    def _get_valid_files(self, folder):
+        files = []
+        for x in qiita_config.valid_upload_extension:
+            files.extend([basename(f) for f in glob(join(folder, '*.%s' % x))])
+        return files
 
     def test_list_scp_wrong_key(self):
         """Tests remote file listing using a wrong private key and scp"""
@@ -62,37 +69,28 @@ class SSHTests(TestCase):
         """Tests remote file listing using private key and scp"""
         read_file_list = list_remote('scp://localhost:'+self.remote_dir_path,
                                      self.test_ssh_key)
-        remote_filename_list = [basename(f) for f in
-                                glob(join(self.remote_dir_path, '*'))]
-        self.assertEqual(remote_filename_list, read_file_list)
+        self.assertEqual(read_file_list, self.exp_files)
 
     def test_list_sftp(self):
         """Tests remote file listing using private key and sftp"""
         read_file_list = list_remote('sftp://localhost:'+self.remote_dir_path,
                                      self.test_ssh_key)
-        remote_filename_list = [basename(f) for f in
-                                glob(join(self.remote_dir_path, '*'))]
-        self.assertEqual(remote_filename_list, read_file_list)
+        self.assertEqual(read_file_list, self.exp_files)
 
     def test_download_scp(self):
         """Tests remote file listing using private key and scp"""
         download_remote('scp://localhost:'+self.remote_dir_path,
                         self.test_ssh_key, self.temp_local_dir)
-        remote_filename_list = [basename(f) for f in
-                                glob(join(self.remote_dir_path, '*'))]
-        local_filename_list = [basename(f) for f in
-                               glob(join(self.temp_local_dir, '*'))]
-        self.assertEqual(remote_filename_list, local_filename_list)
+        remote_filename_list = self._get_valid_files(self.remote_dir_path)
+        self.assertEqual(remote_filename_list, self.exp_files)
 
     def test_download_sftp(self):
         """Tests remote file listing using private key and sftp"""
+        print self.remote_dir_path, self.temp_local_dir
         download_remote('sftp://localhost:'+self.remote_dir_path,
                         self.test_ssh_key, self.temp_local_dir)
-        remote_filename_list = [basename(f) for f in
-                                glob(join(self.remote_dir_path, '*'))]
-        local_filename_list = [basename(f) for f in
-                               glob(join(self.temp_local_dir, '*'))]
-        self.assertEqual(remote_filename_list, local_filename_list)
+        remote_filename_list = self._get_valid_files(self.remote_dir_path)
+        self.assertEqual(remote_filename_list, self.exp_files)
 
 
 class CommandsTests(TestCase):
