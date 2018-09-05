@@ -42,7 +42,11 @@ def _ssh_session(p_url, private_key):
     """
     scheme = p_url.scheme
     hostname = p_url.hostname
-    port = p_url.port
+    # if port is '' Python 2.7.6 will raise an error
+    try:
+        port = p_url.port
+    except Exception:
+        port = 22
     username = p_url.username
 
     if scheme == 'scp' or scheme == 'sftp':
