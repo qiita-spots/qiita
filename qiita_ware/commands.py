@@ -150,9 +150,10 @@ def download_remote(URL, private_key, destination):
     elif scheme == 'sftp':
         client = ssh.open_sftp()
     for f in file_paths:
-        download = partial(client.get,
-                           localpath=join(destination, basename(f)))
-        download(f)
+        if 'scp':
+            client.get(local_path=join(destination, basename(f)))
+        elif scheme == 'sftp':
+            client.get(localpath=join(destination, basename(f)))
 
     # step 3: close the connection
     ssh.close()
