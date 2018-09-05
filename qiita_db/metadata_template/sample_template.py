@@ -154,7 +154,7 @@ class SampleTemplate(MetadataTemplate):
 
     @property
     def columns_restrictions(self):
-        """Gets the dictionary of colums required
+        """Gets the dictionary of columns required
 
         Returns
         -------
