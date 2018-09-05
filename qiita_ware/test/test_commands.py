@@ -46,7 +46,7 @@ class SSHTests(TestCase):
     def tearDown(self):
         rmtree(self.temp_local_dir)
 
-    def _get_valid_files(folder):
+    def _get_valid_files(self, folder):
         files = []
         for x in qiita_config.valid_upload_extension:
             files.extend([basename(f) for f in glob.glob('*.%s' % x)])
