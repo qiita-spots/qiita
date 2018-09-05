@@ -15,6 +15,7 @@ from traceback import format_exc
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from scp import SCPClient
 from urlparse import urlparse
+from functools import partial
 
 from qiita_db.artifact import Artifact
 from qiita_db.logger import LogEntry
@@ -144,12 +145,19 @@ def download_remote(URL, private_key, destination):
 
     # step 2: download files
     scheme = p_url.scheme
+    # note that scp/sftp's code seems similar but the local_path/localpath
+    # variable is different within the for loop
     if scheme == 'scp':
-        client = SCPClient(ssh.get_transport())
+        scp = SCPClient(ssh.get_transport())
+        for f in file_paths:
+            download = partial(
+                scp.get, local_path=join(destination, basename(f)))
+            download(f)
     elif scheme == 'sftp':
-        client = ssh.open_sftp()
-    for f in file_paths:
-        client.get(join(destination, basename(f)), f)
+        sftp = ssh.open_sftp()
+        for f in file_paths:
+            download = partial(
+                sftp.get, localpath=join(destination, basename(f)))
 
     # step 3: close the connection
     ssh.close()
