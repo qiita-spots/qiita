@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 from unittest import main
 
+from tornado.escape import json_decode
+
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 
@@ -67,24 +69,48 @@ class TestStudyTags(OauthTestingBase):
         response = self.get('/study/tags/bla')
         self.assertEqual(response.code, 400)
 
-    def test_patch(self):
+
+class TestStudy(OauthTestingBase):
+    def test_patch_tags(self):
         arguments = {'op': 'replace', 'path': '/tags',
-                     'value[]': "['testA', 'testB']"}
-        obs = self.patch('/study/tags/1', headers=self.header, data=arguments)
+                     'value': ['testA', 'testB']}
+        obs = self.patch('/study/1', headers=self.header,
+                         data=arguments, asjson=True)
 
         self.assertEqual(obs.code, 200)
         self.assertEqual(obs.body, '{"status": "success", "message": ""}')
+
         # checking the tags were added
         response = self.get('/study/tags/1')
-        exp = ('{"status": "success", "message": "", "tags": '
-               '["[\'testA\', \'testB\']"]}')
+        exp = ({"status": "success", "message": "",
+                "tags": ['testA', 'testB']})
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, exp)
+        self.assertEqual(json_decode(response.body), exp)
 
+    def test_patch_tags_not_found(self):
         arguments = {'op': 'replace', 'path': '/tags',
-                     'value[]': "['testA', 'testB']"}
-        obs = self.patch('/study/tags/b', headers=self.header, data=arguments)
-        self.assertEqual(obs.code, 400)
+                     'value': ['testA', 'testB']}
+        obs = self.patch('/study/100000000000', headers=self.header,
+                         data=arguments, asjson=True)
+        self.assertEqual(json_decode(obs.body), {'status': 'error', 'message':
+                         'Study does not exist'})
+        self.assertEqual(obs.code, 200)
+
+    def test_patch_not_allowed(self):
+        arguments = {'op': 'replace', 'path': '/tags',
+                     'value': ['testA', 'testB']}
+        obs = self.patch('/study/b', headers=self.header,
+                         data=arguments, asjson=True)
+        self.assertEqual(obs.code, 405)
+
+    def test_patch_specimen_id_column(self):
+        data = {'op': 'replace', 'path': '/specimen_id_column',
+                'value': "anonymized_name"}
+        obs = self.patch('/study/1', headers=self.header,
+                         data=data, asjson=True)
+        self.assertEqual(obs.code, 200)
+        self.assertEqual(json_decode(obs.body), {"status": "success",
+                         "message": "Successfully updated specimen id column"})
 
 
 if __name__ == "__main__":

@@ -167,7 +167,7 @@ class ArtifactGetInfoTest(TestHandlerBase):
              'target_subfragment': ['V4'], 'artifact_id': 6,
              'data_type': '16S', 'timestamp': u'2012-10-02 17:30:00',
              'platform': 'Illumina',
-             'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
+             'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
              'prep_samples': 27,
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
              'parameters': {

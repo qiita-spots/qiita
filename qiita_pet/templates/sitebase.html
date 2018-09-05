@@ -384,6 +384,7 @@
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>
                 <ul class="dropdown-menu">
                   {% if qiita_config.portal == "QIITA" %}
+                  <li><a href="{% raw qiita_config.portal_dir %}/admin/software/">Available Software</a></li>
                   <li><a href="{% raw qiita_config.portal_dir %}/admin/error/">View Errors</a></li>
                   <li><a href="{% raw qiita_config.portal_dir %}/admin/approval/">View Studies awaiting approval</a></li>
                   <li><a href="{% raw qiita_config.portal_dir %}/admin/portals/studies/">Edit study portal connections</a></li>
@@ -470,16 +471,19 @@
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle">More Info<b class="caret"></b></a>
                 <ul class="dropdown-menu">
                   <li>
-                    <a href="http://cmi-workshop.readthedocs.io/en/latest/">Tutorial</a>
-                  </li>
-                  <li>
-                    <a href="{% raw qiita_config.portal_dir %}/static/doc/html/index.html">Help</a>
-                  </li>
-                  <li>
                     <a href="{% raw qiita_config.portal_dir %}/stats/">Stats</a>
                   </li>
                   <li>
                     <a href="http://github.com/biocore/qiita">GitHub</a>
+                  </li>
+                  <li>
+                    <a type="button" data-toggle="modal" data-target=".qiita_pet_download_confirm">
+                      Download public BIOM and metadata files
+                      <small>
+                        <br/><b>MD5:</b> {{public_md5}}
+                        <br/><b>Last update:</b> {{public_timestamp}}
+                      </small>
+                    </a>
                   </li>
                   <li role="separator" class="divider"></li>
                   <li>
@@ -516,16 +520,13 @@
             <ul class="nav navbar-nav">
               <!-- downloads -->
               <li class="dropdown">
-                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Downloads<b class="caret"></b></a>
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Help<b class="caret"></b></a>
                 <ul class="dropdown-menu">
                   <li>
-                    <a type="button" data-toggle="modal" data-target=".qiita_pet_download_confirm">
-                      Public BIOM and metadata files
-                      <small>
-                        <br/><b>MD5:</b> {{public_md5}}
-                        <br/><b>Last update:</b> {{public_timestamp}}
-                      </small>
-                    </a>
+                    <a href="http://cmi-workshop.readthedocs.io/en/latest/">Tutorial</a>
+                  </li>
+                  <li>
+                    <a href="{% raw qiita_config.portal_dir %}/static/doc/html/index.html">Help</a>
                   </li>
                 </ul>
               </li>
@@ -574,7 +575,7 @@
       <div id="footer" style="font-size: 12px; text-align: center; z-index: 1000;">
         Thank you for using Qiita. For citations point to <a href="http://qiita.microbio.me">http://qiita.microbio.me</a>.
         <br/>
-        Questions? <a href="mailto:qiita.help@gmail.com">qiita.help@gmail.com</a>
+        Questions? <a href="mailto:qiita.help@gmail.com">qiita.help@gmail.com</a>; don't forget to add your study or analysis id.
         <br/>
         Read our <a href="{% raw qiita_config.portal_dir %}/iframe/?iframe=qiita-terms">terms and conditions</a>.
       </div>
