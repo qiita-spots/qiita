@@ -158,6 +158,7 @@ def download_remote(URL, private_key, destination):
         for f in file_paths:
             download = partial(
                 sftp.get, localpath=join(destination, basename(f)))
+            download(f)
 
     # step 3: close the connection
     ssh.close()

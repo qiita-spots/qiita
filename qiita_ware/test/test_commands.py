@@ -76,15 +76,15 @@ class SSHTests(TestCase):
     def test_download_scp(self):
         download_remote('scp://localhost:'+self.remote_dir_path,
                         self.test_ssh_key, self.temp_local_dir)
-        remote_filename_list = self._get_valid_files(self.remote_dir_path)
-        self.assertEqual(remote_filename_list, self.exp_files)
+        local_files = self._get_valid_files(self.temp_local_dir)
+        self.assertEqual(local_files, self.exp_files)
 
     def test_download_sftp(self):
         print self.remote_dir_path, self.temp_local_dir
         download_remote('sftp://localhost:'+self.remote_dir_path,
                         self.test_ssh_key, self.temp_local_dir)
-        remote_filename_list = self._get_valid_files(self.remote_dir_path)
-        self.assertEqual(remote_filename_list, self.exp_files)
+        local_files = self._get_valid_files(self.temp_local_dir)
+        self.assertEqual(local_files, self.exp_files)
 
 
 class CommandsTests(TestCase):
