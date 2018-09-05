@@ -49,7 +49,7 @@ class SSHTests(TestCase):
     def _get_valid_files(self, folder):
         files = []
         for x in qiita_config.valid_upload_extension:
-            files.extend([basename(f) for f in glob.glob('*.%s' % x)])
+            files.extend([basename(f) for f in glob('*.%s' % x)])
         return files
 
     def test_list_scp_wrong_key(self):
