@@ -54,43 +54,37 @@ class SSHTests(TestCase):
         return files
 
     def test_list_scp_wrong_key(self):
-        """Tests remote file listing using a wrong private key and scp"""
         with self.assertRaises(AuthenticationException):
             list_remote('scp://localhost:'+self.remote_dir_path,
                         self.test_wrong_key)
 
     def test_list_scp_nonexist_key(self):
-        """Tests remote file listing using a missing private key and scp"""
         with self.assertRaises(IOError):
             list_remote('scp://localhost:'+self.remote_dir_path,
                         join(self.self_dir_path, 'nokey'))
 
     def test_list_scp(self):
-        """Tests remote file listing using private key and scp"""
         read_file_list = list_remote('scp://localhost:'+self.remote_dir_path,
                                      self.test_ssh_key)
         self.assertEqual(read_file_list, self.exp_files)
 
     def test_list_sftp(self):
-        """Tests remote file listing using private key and sftp"""
         read_file_list = list_remote('sftp://localhost:'+self.remote_dir_path,
                                      self.test_ssh_key)
         self.assertEqual(read_file_list, self.exp_files)
 
     def test_download_scp(self):
-        """Tests remote file listing using private key and scp"""
         download_remote('scp://localhost:'+self.remote_dir_path,
                         self.test_ssh_key, self.temp_local_dir)
-        remote_filename_list = self._get_valid_files(self.remote_dir_path)
-        self.assertEqual(remote_filename_list, self.exp_files)
+        local_files = self._get_valid_files(self.temp_local_dir)
+        self.assertEqual(local_files, self.exp_files)
 
     def test_download_sftp(self):
-        """Tests remote file listing using private key and sftp"""
         print self.remote_dir_path, self.temp_local_dir
         download_remote('sftp://localhost:'+self.remote_dir_path,
                         self.test_ssh_key, self.temp_local_dir)
-        remote_filename_list = self._get_valid_files(self.remote_dir_path)
-        self.assertEqual(remote_filename_list, self.exp_files)
+        local_files = self._get_valid_files(self.temp_local_dir)
+        self.assertEqual(local_files, self.exp_files)
 
 
 class CommandsTests(TestCase):
