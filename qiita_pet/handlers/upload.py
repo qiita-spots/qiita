@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import authenticated, HTTPError
-from tornado.escape import json_decode
 
 from os.path import isdir, join, exists
 from os import makedirs, remove
@@ -116,6 +115,7 @@ class StudyUploadFileHandler(BaseHandler):
 
         self.display_template(study_id, "")
 
+
 class StudyUploadViaRemote(BaseHandler):
     @authenticated
     @execute_as_transaction
@@ -123,12 +123,15 @@ class StudyUploadViaRemote(BaseHandler):
         method = self.get_argument('remote-request-type')
         url = self.get_argument('inputURL')
         ssh_key = self.request.files['ssh-key'][0]['body']
+        status = 'success'
+        message = ''
 
         try:
             study = Study(int(study_id))
         except QiitaDBUnknownIDError:
             raise HTTPError(404, reason="Study %s does not exist" % study_id)
-        check_access(self.current_user, study, no_public=True, raise_error=True)
+        check_access(
+            self.current_user, study, no_public=True, raise_error=True)
 
         _, upload_folder = get_mountpoint("uploads")[0]
         upload_folder = join(upload_folder, study_id)
@@ -138,7 +141,7 @@ class StudyUploadViaRemote(BaseHandler):
             f.write(ssh_key)
 
         qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-        if method  == 'list':
+        if method == 'list':
             cmd = qiita_plugin.get_command('list_remote_files')
             params = Parameters.load(cmd, values_dict={
                 'url': url, 'private_key': ssh_key_fp, 'study_id': study_id})
@@ -148,12 +151,17 @@ class StudyUploadViaRemote(BaseHandler):
                 'url': url, 'private_key': ssh_key_fp,
                 'destination': upload_folder})
         else:
-            return {'status': 'error', 'message': 'Not a valid operation/method'}
-        job = ProcessingJob.create(self.current_user, params, True)
-        job.submit()
+            status = 'error'
+            message = 'Not a valid method'
 
-        r_client.set(UPLOAD_STUDY_FORMAT % study_id, dumps({'job_id': job.id}))
-        self.write({'status': 'success', 'message': ''})
+        if status == 'success':
+            job = ProcessingJob.create(self.current_user, params, True)
+            job.submit()
+            r_client.set(
+                UPLOAD_STUDY_FORMAT % study_id, dumps({'job_id': job.id}))
+
+        self.write({'status': status, 'message': message})
+
 
 class UploadFileHandler(BaseHandler):
     # """ main upload class
