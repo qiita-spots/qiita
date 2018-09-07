@@ -39,7 +39,9 @@ def start(env_script, start_script, url, job_id, job_dir):
     fh = open(fp, 'w').write("\n".join(lines))
 
     qsub_cmd = ("qsub -l nodes=1:ppn=5 %s -o %s/qsub-output.txt "
-                "-e %s/qsub-error.txt -l epilogue=/home/qiita/qiita-epilogue.sh" % (fp, job_dir, job_dir))
+                "-e %s/qsub-error.txt -l "
+                "epilogue=/home/qiita/qiita-epilogue.sh" % (fp, job_dir, 
+                                                            job_dir))
     proc = Popen(qsub_cmd, shell=True)
     if proc.returncode and proc.returncode != 0:
         raise ValueError("Error launching the plugin.")

@@ -40,7 +40,8 @@ def start(qiita_env, command, arguments):
     # We need to source it so the env_script are available
     lines = [' '.join(cmd)]
     datestr = datetime.now().strftime("%Y%m%d_%I%M%S.%f")
-    dirpath = mkdtemp(prefix=datestr, dir='/projects/qiita_data/working_dir/private-jobs/')
+    dirpath = mkdtemp(prefix=datestr, 
+                      dir='/projects/qiita_data/working_dir/private-jobs/')
     fp = join(dirpath, 'private.qsub')
     with open(fp, 'w') as f:
         f.write(PBSFILE % (dirpath, dirpath, "\n".join(lines)))
