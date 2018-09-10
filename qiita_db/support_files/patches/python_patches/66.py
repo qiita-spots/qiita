@@ -12,7 +12,8 @@ from re import sub
 # characters, it becomes important to remove them from study titles, as
 # they are used as metadata/identifiers when creating new analyses.
 
-#insert new status_types into list, or replace w/a call to an appropriate method.
+# insert new status_types into list, or replace w/a call to an appropriate
+# method.
 status_types = ['awaiting_approval', 'sandbox', 'private', 'public']
 
 for status_type in status_types:
@@ -20,6 +21,7 @@ for status_type in status_types:
         new_title = sub(r'[^\x20-\x7E]+', '', study.title)
         if new_title != study.title:
             study.title = new_title
+
 
 # August 6, 2018
 # Create parameters for the ssh/scp remote file upload commands
