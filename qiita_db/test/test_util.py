@@ -1062,23 +1062,24 @@ class UtilTests(TestCase):
 
         exp = [
             {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'artifact_id': 4, 'data_type': '18S', 'target_gene': '16S rRNA',
-             'name': 'BIOM', 'target_subfragment': ['V4'],
-             'parameters': {
+             'artifact_id': 4, 'data_type': '18S', 'active': False,
+             'target_gene': '16S rRNA', 'name': 'BIOM',
+             'target_subfragment': ['V4'], 'parameters': {
                 'reference': '1', 'similarity': '0.97',
                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
                 'threads': '1', 'sortmerna_coverage': '0.97'},
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'platform': 'Illumina',
              'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
-             'platform': 'Illumina', 'prep_samples': 27},
-            {'files': [], 'artifact_id': 7, 'data_type': '16S',
+             'prep_samples': 27},
+            {'files': [], 'artifact_id': 7, 'data_type': '16S', 'active': True,
              'target_gene': '16S rRNA', 'name': 'BIOM',
              'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
-             'algorithm_az': '', 'platform': 'Illumina', 'prep_samples': 27},
+             'platform': 'Illumina', 'algorithm_az': '', 'prep_samples': 27},
             {'files': ['biom_table.biom'], 'artifact_id': 8,
-             'data_type': '18S', 'target_gene': 'not provided',
+             'data_type': '18S', 'active': True, 'target_gene': 'not provided',
              'name': 'noname', 'target_subfragment': [], 'parameters': {},
-             'algorithm': '', 'algorithm_az': '', 'platform': 'not provided',
+             'algorithm': '', 'platform': 'not provided', 'algorithm_az': '',
              'prep_samples': 0}]
         self.assertItemsEqual(obs, exp)
 

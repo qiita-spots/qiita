@@ -1067,15 +1067,17 @@ Vue.component('processing-graph', {
     vm.countdownPoll = 15;
     $('#countdown-span').html(vm.countdownPoll);
     vm.colorScheme = {
-      'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}},
-      'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}},
-      'error': {border: '#ff3333', background: '#ff5b5b', highlight: {border: '#ff3333', background: '#ff8484'}},
-      'in_construction': {border: '#634a00', background: '#e59400', highlight: {border: '#634a00', background: '#efbe66'}},
-      'queued': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}},
-      'waiting': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}},
-      'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}},
-      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}},
-      'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}}};
+      'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}, 'color': '#333333'},
+      'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}, 'color': '#333333'},
+      'error': {border: '#ff3333', background: '#ff5b5b', highlight: {border: '#ff3333', background: '#ff8484'}, 'color': '#333333'},
+      'in_construction': {border: '#634a00', background: '#e59400', highlight: {border: '#634a00', background: '#efbe66'}, 'color': '#333333'},
+      'queued': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333'},
+      'waiting': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333'},
+      'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}, 'color': '#333333'},
+      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}, 'color': '#333333'},
+      'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}, 'color': '#333333'},
+      'deprecated': {border: '#000000', background: '#000000', highlight: {border: '#000000', background: '#333333'}, 'color': '#ffffff'}
+    };
 
     show_loading('processing-network-div');
     $("#processing-network-div").hide();
@@ -1091,9 +1093,10 @@ Vue.component('processing-graph', {
     var circle_statuses = [];
     var circle_types = [];
     for (var circle_name in vm.colorScheme) {
-      var text = '<td style="padding: 5px; background-color:' + vm.colorScheme[circle_name]['background'] +
+      var text = '<td style="padding: 5px; color:' + vm.colorScheme[circle_name]['color'] +
+        '; background-color:' + vm.colorScheme[circle_name]['background'] +
         ';"><small>' + circle_name + '</small></td>';
-      if (circle_name === 'artifact' || circle_name === 'type'){
+      if (circle_name === 'artifact' || circle_name === 'type' || circle_name === 'deprecated'){
         circle_types.push(text);
       } else {
         circle_statuses.push(text);

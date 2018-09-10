@@ -111,6 +111,11 @@
 <div class='row'>
   <div class='col-md-12'>
     <h4>
+      {% if processing_info and not processing_info['software_active'] %}
+        <div class="alert alert-warning" role="alert">
+          Warning, this artifact is deprecated!
+        </div>
+      {% end %}
       <i id='summary-title'>{{name}}</i><i> (ID: {{artifact_id}}) Visibility: {{visibility}}</i>
       {% if editable %}
         <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit name</a>

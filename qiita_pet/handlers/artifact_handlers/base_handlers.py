@@ -196,7 +196,8 @@ def artifact_summary_get_request(user, artifact_id):
             'command': cmd.name,
             'software': sw.name,
             'software_version': sw.version,
-            'processing_parameters': proc_params.values
+            'processing_parameters': proc_params.values,
+            'software_active': sw.active
             }
     else:
         processing_info = {}
