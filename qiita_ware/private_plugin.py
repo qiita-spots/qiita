@@ -389,12 +389,18 @@ def list_remote_files(job):
     with qdb.sql_connection.TRN:
         url = job.parameters.values['url']
         private_key = job.parameters.values['private_key']
+        study_id = job.parameters.values['study_id']
         try:
-            list_remote(url, private_key)
+            files = list_remote(url, private_key)
+            r_client.set("upload_study_%s" % study_id,
+                         dumps({'job_id': job.id, 'url': url, 'files': files}))
         except Exception:
             job._set_error(traceback.format_exception(*exc_info()))
         else:
             job._set_status('success')
+        finally:
+            # making sure to always delete the key so Qiita never keeps it
+            remove(private_key)
 
 
 def download_remote_files(job):

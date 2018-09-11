@@ -10,18 +10,25 @@ from tornado.web import authenticated, HTTPError
 
 from os.path import isdir, join, exists
 from os import makedirs, remove
+from json import loads, dumps
 
+from collections import defaultdict
 from shutil import rmtree, move
 
 from .util import check_access
 from .base_handlers import BaseHandler
 
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.util import execute_as_transaction
 from qiita_db.util import (get_files_from_uploads_folders,
                            get_mountpoint, move_upload_files_to_trash)
 from qiita_db.study import Study
+from qiita_db.processing_job import ProcessingJob
+from qiita_db.software import Software, Parameters
 from qiita_db.exceptions import QiitaDBUnknownIDError
+
+
+UPLOAD_STUDY_FORMAT = 'upload_study_%s'
 
 
 class StudyUploadFileHandler(BaseHandler):
@@ -32,14 +39,45 @@ class StudyUploadFileHandler(BaseHandler):
         study_id = int(study_id)
         study = Study(study_id)
         user = self.current_user
+        level = 'info'
+        message = ''
+        remote_url = ''
+        remote_files = []
         check_access(user, study, no_public=True, raise_error=True)
+
+        job_info = r_client.get(UPLOAD_STUDY_FORMAT % study_id)
+        if job_info:
+            job_info = defaultdict(lambda: '', loads(job_info))
+            job_id = job_info['job_id']
+            job = ProcessingJob(job_id)
+            job_status = job.status
+            processing = job_status not in ('success', 'error')
+            url = job.parameters.values['url']
+            if processing:
+                if job.command.name == 'list_remote_files':
+                    message = 'Retrieving remote files: listing %s' % url
+                else:
+                    message = 'Retrieving remote files: download %s' % url
+            elif job_status == 'error':
+                level = 'danger'
+                message = job.log.msg.replace('\n', '</br>')
+                # making errors nicer for users
+                if 'No such file' in message:
+                    message = 'URL not valid: <i>%s</i>, please review.' % url
+            else:
+                remote_url = job_info['url']
+                remote_files = job_info['files']
+                level = job_info['alert_type']
+                message = job_info['alert_msg'].replace('\n', '</br>')
 
         # getting the ontologies
         self.render('upload.html',
                     study_title=study.title, study_info=study.info,
                     study_id=study_id, is_admin=user.level == 'admin',
                     extensions=','.join(qiita_config.valid_upload_extension),
-                    max_upload_size=qiita_config.max_upload_size,
+                    max_upload_size=qiita_config.max_upload_size, level=level,
+                    message=message, remote_url=remote_url,
+                    remote_files=remote_files,
                     files=get_files_from_uploads_folders(str(study_id)))
 
     @authenticated
@@ -76,6 +114,53 @@ class StudyUploadFileHandler(BaseHandler):
         move_upload_files_to_trash(study.id, files_to_move)
 
         self.display_template(study_id, "")
+
+
+class StudyUploadViaRemote(BaseHandler):
+    @authenticated
+    @execute_as_transaction
+    def post(self, study_id):
+        method = self.get_argument('remote-request-type')
+        url = self.get_argument('inputURL')
+        ssh_key = self.request.files['ssh-key'][0]['body']
+        status = 'success'
+        message = ''
+
+        try:
+            study = Study(int(study_id))
+        except QiitaDBUnknownIDError:
+            raise HTTPError(404, reason="Study %s does not exist" % study_id)
+        check_access(
+            self.current_user, study, no_public=True, raise_error=True)
+
+        _, upload_folder = get_mountpoint("uploads")[0]
+        upload_folder = join(upload_folder, study_id)
+        ssh_key_fp = join(upload_folder, '.key.txt')
+
+        with open(ssh_key_fp, 'w') as f:
+            f.write(ssh_key)
+
+        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+        if method == 'list':
+            cmd = qiita_plugin.get_command('list_remote_files')
+            params = Parameters.load(cmd, values_dict={
+                'url': url, 'private_key': ssh_key_fp, 'study_id': study_id})
+        elif method == 'transfer':
+            cmd = qiita_plugin.get_command('download_remote_files')
+            params = Parameters.load(cmd, values_dict={
+                'url': url, 'private_key': ssh_key_fp,
+                'destination': upload_folder})
+        else:
+            status = 'error'
+            message = 'Not a valid method'
+
+        if status == 'success':
+            job = ProcessingJob.create(self.current_user, params, True)
+            job.submit()
+            r_client.set(
+                UPLOAD_STUDY_FORMAT % study_id, dumps({'job_id': job.id}))
+
+        self.write({'status': status, 'message': message})
 
 
 class UploadFileHandler(BaseHandler):

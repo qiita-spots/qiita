@@ -6,22 +6,6 @@ from qiita_db.util import convert_to_id
 from qiita_db.study import Study
 from re import sub
 
-# August 31, 2018
-# Strip any UTF-8 characters that are not also printable ASCII characters
-# from study titles. As some analysis packages cannot interpret UTF-8
-# characters, it becomes important to remove them from study titles, as
-# they are used as metadata/identifiers when creating new analyses.
-
-# insert new status_types into list, or replace w/a call to an appropriate
-# method.
-status_types = ['awaiting_approval', 'sandbox', 'private', 'public']
-
-for status_type in status_types:
-    for study in Study.get_by_status(status_type):
-        new_title = sub(r'[^\x20-\x7E]+', '', study.title)
-        if new_title != study.title:
-            study.title = new_title
-
 
 # August 6, 2018
 # Create parameters for the ssh/scp remote file upload commands
@@ -168,7 +152,8 @@ with TRN:
 
     # Create the 'list_remote_files' command
     parameters = {'url': ['string', None],
-                  'private_key': ['string', None]}
+                  'private_key': ['string', None],
+                  'study_id': ['integer', None]}
     create_command(qiita_plugin, "list_remote_files",
                    "retrieves list of valid study files from remote dir",
                    parameters)
@@ -179,3 +164,20 @@ with TRN:
                   'private_key': ['string', None]}
     create_command(qiita_plugin, "download_remote_files",
                    "downloads valid study files from remote dir", parameters)
+
+
+# August 31, 2018
+# Strip any UTF-8 characters that are not also printable ASCII characters
+# from study titles. As some analysis packages cannot interpret UTF-8
+# characters, it becomes important to remove them from study titles, as
+# they are used as metadata/identifiers when creating new analyses.
+
+# insert new status_types into list, or replace w/a call to an appropriate
+# method.
+status_types = ['awaiting_approval', 'sandbox', 'private', 'public']
+
+for status_type in status_types:
+    for study in Study.get_by_status(status_type):
+        new_title = sub(r'[^\x20-\x7E]+', '', study.title)
+        if new_title != study.title:
+            study.title = new_title

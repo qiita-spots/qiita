@@ -1,90 +1,271 @@
 {% extends sitebase.html %}
+
+{% block head %}
+
+<script type="text/javascript">
+  function validate_file() {
+    var ssh_key = $("#ssh-key")[0].files[0];
+    if (ssh_key.size > 2000) {
+      alert("Your input file is too large to be a valid key, please try again.");
+      $("#ssh-key").val("");
+    }
+  }
+
+  function validate_form() {
+    // modified from https://gist.github.com/dperini/729294#gistcomment-15527
+    var re_weburl = new RegExp(
+        // protocol identifier
+        "(?:(?:scp?|sftp)://)" +
+        // user:pass authentication
+        "(?:\\S+(?::\\S*)?@)?" +
+        "(?:" +
+        // IP address exclusion
+        // private & local networks
+        "(?!(?:10|127)(?:\\.\\d{1,3}){3})" +
+        "(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})" +
+        "(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})" +
+        // IP address dotted notation octets
+        // excludes loopback network 0.0.0.0
+        // excludes reserved space >= 224.0.0.0
+        // excludes network & broacast addresses
+        // (first & last IP address of each class)
+        "(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])" +
+        "(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}" +
+        "(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))" +
+        "|" +
+        // host name
+        "(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)" +
+        // domain name
+        "(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*" +
+        // TLD identifier
+        "(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))" +
+        // sorry, ignore TLD ending with dot
+        // "\\.?" +
+        ")" +
+        // port number
+        "(?::\\d{2,5})?" +
+        // resource path, excluding a trailing punctuation mark
+        "(?:[/?#](?:\\S*[^\\s!\"'()*,-.:;<>?\\[\\]_`{|}~]|))?"
+        , "gi"
+    );
+    var valid_protocol = false;
+    var url = $("#inputURL").val();
+    var ssh_key = $("#ssh-key")[0].files[0];
+
+    if (url === '' || ssh_key === '' || ssh_key === undefined){
+      alert("URL and SSH key can't be empty")
+    } else {
+      if(re_weburl.test(url)) {
+        valid_protocol = true;
+      } else {
+        alert('Not a valid URL: ' + url);
+      }
+    }
+    return valid_protocol;
+  }
+
+  function connect_to_remote_server(method) {
+    $('#remote-request-type').val(method);
+    var formData = new FormData($('#remote-form')[0]);
+    if (validate_form()) {
+      $.ajax({
+        url:'{% raw qiita_config.portal_dir %}/study/upload/remote/' + {{study_id}},
+        type:'POST',
+        data:formData,
+        contentType:false,
+        processData:false,
+        cache:false,
+        success: function(data) {
+          window.location.reload(1);
+        },
+        error: function (object, status, error_msg) {
+          bootstrapAlert("Error: " + error_msg, "danger")
+        }
+      });
+    }
+  }
+
+  {% if level == 'info' and 'Retrieving remote files:' in  message %}
+    setTimeout(function(){
+      window.location.reload(1);
+    }, 5000);
+  {% end %}
+</script>
+
+{% end %}
+
 {% block content %}
 
-<table border="0" style="vertical-align: middle; text-align:center; align:center; height: 150px; width: 100%;">
-  <tr>
-    <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
-      <b>Uploading files for: {{study_title}} ({{study_info['study_alias']}})</b>
-      <br/><br/>
-      Currently we can process (<b>{{extensions.replace(',',', ')}}</b>):
-      <ul>
-        <li>Note that '.zip' files can not be processed.</li>
-        <li>Note that '.fasta' and '.fna' files require '.qual' files for submission.</li>
-        <li>Note that '.txt.' files must be tab separated and require the extension .txt.</li>
-      </ul>
-      <a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">&lt;&lt; Go to study description</a>
-    </td>
-  </tr>
+{% if (level != 'info' and 'Retrieving remote files:' not in message) or not message %}
 
-  <tr>
-    <td style="vertical-align: middle; text-align:center; width: 50%;" colspan="2"><b>Upload files (max file size: {% if max_upload_size/1000==0 %} {{max_upload_size}} GB {% else %} {{max_upload_size/1000.0}} TB {% end %})</b></td>
-  </tr>
+<div class="container">
 
-  <tr>
-    <td style="vertical-align: top; text-align:center; " colspan="2">
-      <div style="height: 150px; width: 100%; background-color:lightgrey; border: 2px solid; border-radius: 25px;" class="resumable-drop-metadata" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
-        <p style="vertical-align: middle;">Drop files here to upload or <a class="resumable-browse-metadata"><u>select from your computer</u></a></p>
-      </div>
+  <div class="row">
+    <b>Uploading files for: {{study_title}} ({{study_info['study_alias']}})</b>
+    <br/><br/>
+    Currently we can process (<b>{{extensions.replace(',',', ')}}</b>):
+    <ul>
+      <li>Note that '.zip' files can not be processed.</li>
+      <li>Note that '.fasta' and '.fna' files require '.qual' files for submission.</li>
+      <li>Note that '.txt.' files must be tab separated and require the extension .txt.</li>
+    </ul>
+  </div>
 
-      <div class="progress-metadata" style="display:none;">
-        <table>
-          <tr>
-            <td width="100%"><div class="progress-container"><div class="progress-bar"></div></div></td>
-            <td class="progress-text" nowrap="nowrap"></td>
-            <td class="progress-pause" nowrap="nowrap">
-              &nbsp;&nbsp;&nbsp;&nbsp;
-              <a href="#" onclick="uploader.resumable.upload(); $('#uploader_status').html('~~ Uploading ~~'); return(false);" class="progress-resume-link"><span class="glyphicon glyphicon-play"></span></a>
-              <a href="#" onclick="uploader.resumable.pause(); $('#uploader_status').html('~~ Paused ~~'); return(false);" class="progress-pause-link"><span class="glyphicon glyphicon-pause"></span></a>
-            </td>
-          </tr>
-          <tr>
-            <td colspan="3">
-              <div class="blinking-message">
-                <div id="uploader_status"></div>
-                Keep track of your upload or pause/resume it! <span class="glyphicon glyphicon-arrow-up"></span>
-                <br/>
-                <small>Your upload won't be interrupted if you change networks or you close your computer, just make sure you don't leave this page. </small>
-              </div>
-            </td>
-          <tr>
-        </table>
-      </div>
+  <div class="row" align="center">
+    <a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">&lt;&lt; Go to study description</a>
+  </div>
 
-      <hr>
-      <h3><u>Files</u></h3>
-      <table align="center" border="0">
-        <tr>
-          <td>
-            <button type="button" class="btn btn-light" onclick="$('input[name*=\'files_to_erase\']').prop('checked', true);">Select All</button>
-          </td>
-          <td width="30px">&nbsp;</td>
-          <td>
-            <button type="button" class="btn btn-light" onclick="$('input[name*=\'files_to_erase\']').removeAttr('checked');">Unselect All</button>
-          </td>
-        </tr>
-      </table>
-      <br/>
-      <form method="post" id="delete-files-form">
-        <div class="uploader-list" style="display:none;">
+  <div class="row">
+    <div class="panel-group" id="accordion">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+              Upload via Local Machine
+            </a>
+          </h4>
         </div>
-      </form>
+        <div id="collapseOne" class="panel-collapse collapse {%if not remote_files and not remote_url %} in {% end %}">
+          <div class="row" align="center">
+            <b>Upload files locally (max file size: {% if max_upload_size/1000==0 %} {{max_upload_size}} GB{% else %} {{max_upload_size/1000.0}} TB{% end %})</b>
+          </div>
 
-      <div class="file-edit-container" style="display:none;">
+          <div style="height: 150px; width: 100%; background-color:lightgrey; border: 2px solid; border-radius: 25px;" class="resumable-drop-metadata" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
+            <div align="center">
+              <p style="vertical-align: middle;">Drop files here to upload or <a class="resumable-browse-metadata"><u>select from your computer</u></a></p>
+            </div>
+          </div>
+
+            <div class="progress-metadata" style="display:none;">
+              <table>
+                <tr>
+                  <td width="100%"><div class="progress-container"><div class="progress-bar"></div></div></td>
+                  <td class="progress-text" nowrap="nowrap"></td>
+                  <td class="progress-pause" nowrap="nowrap">
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <a href="#" onclick="uploader.resumable.upload(); $('#uploader_status').html('~~ Uploading ~~'); return(false);" class="progress-resume-link"><span class="glyphicon glyphicon-play"></span></a>
+                    <a href="#" onclick="uploader.resumable.pause(); $('#uploader_status').html('~~ Paused ~~'); return(false);" class="progress-pause-link"><span class="glyphicon glyphicon-pause"></span></a>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="3">
+                    <div class="blinking-message">
+                      <div id="uploader_status"></div>
+                      Keep track of your upload or pause/resume it! <span class="glyphicon glyphicon-arrow-up"></span>
+                      <br/>
+                      <small>Your upload won't be interrupted if you change networks or you close your computer, just make sure you don't leave this page. </small>
+                    </div>
+                  </td>
+                <tr>
+              </table>
+            </div>
+        </div>
       </div>
-    </td>
-  </tr>
-  <tr><td>&nbsp;</td></tr>
-  <tr>
-    <td>
-      <button type="button" class="btn btn-danger" onclick="if(confirm('Are you sure you want to delete the selected files? You can not undo this action')) { $('#delete-files-form').submit() }">
-          <span class="glyphicon glyphicon-trash"></span> Delete selected files
-      </button>
-    </td>
-  </tr>
-</table>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+              Upload via Remote Server (BETA)
+            </a>
+          </h4>
+        </div>
+        <div id="collapseTwo" class="panel-collapse collapse {%if remote_files and remote_url %} in {% end %}">
+          <div class="container">
+            {%if remote_files and remote_url %}
+              <div class="row">
+                <button class="btn btn-default" data-toggle="collapse" data-target="#remote-files">
+                  <span class="glyphicon glyphicon-eye-open"></span>
+                  Files
+                </button> in {{remote_url}}
+                <div id="remote-files" class="collapse in" style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
+                  {{', '.join(remote_files)}}
+                </div>
+              </div>
+              <br/>
+            {% end %}
+            <div class="row">
+              <button class="btn btn-default" data-toggle="collapse" data-target="#remote-file-instructions">
+                <span class="glyphicon glyphicon-eye-open"></span>
+                Instructions
+              </button>
+              <div id="remote-file-instructions" class="collapse" style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
+                <ol>
+                  <li>Currenlty we only support ftp and scp.</li>
+                  <li>Prepare study files by storing them in one folder on your fileserver.</li>
+                  <li>Generate a new key by running: <code>ssh-keygen -t rsa -C "ssh test key" -f ~/.ssh/qiita-key -P ""</code> in your remote server.</li>
+                  <li>Obtain your new generated <code>qiita-key</code> and use it in the Key option</li>
+                  <li>Press 'List Files' to test the connection and verify the list of study files.</li>
+                  <li>If the connection is made and files are correct, press 'Transfer Files' to initiate the transfer.</li>
+                </ol>
+              </div>
+              <br/><br/>
+            </div>
+            <div class="row">
+              <form class="form-horizontal" name="remote-form" id="remote-form" enctype="multipart/form-data">
+                <input type="hidden" id="remote-request-type" name="remote-request-type">
+                <div class="form-group">
+                  <label class="col-md-1 control-label">URL</label>
+                  <div class="col-md-6">
+                    <input type="text" class="form-control" name="inputURL" id="inputURL" placeholder="scp://user@server.com/folders/">
+                  </div>
+                  <label for="inputURL" class="col-md-1 control-label">Key</label>
+                  <div class="col-md-2">
+                      <input type="file" name="ssh-key" id="ssh-key" onchange="validate_file();">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-md-2"></div>
+                  <div class="col-md-1">
+                    <button type="button" class="btn btn-default" onclick="connect_to_remote_server('list');">List Files</button>
+                  </div>
+                  <div class="col-md-1">
+                    <button type="button" class="btn btn-default" onclick="connect_to_remote_server('transfer');">Transfer Files</button>
+                  </div>
+                </div>
+              </form>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+  <div class="row" align="center">
+    <h3><u>Files</u></h3>
+    <table align="center" border="0">
+      <tr>
+        <td>
+          <button type="button" class="btn btn-default" onclick="$('input[name*=\'files_to_erase\']').prop('checked', true);">Select All</button>
+        </td>
+        <td width="30px">&nbsp;</td>
+        <td>
+          <button type="button" class="btn btn-default" onclick="$('input[name*=\'files_to_erase\']').removeAttr('checked');">Unselect All</button>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="row", align="center">
+    <form method="post" id="delete-files-form">
+      <div class="uploader-list" style="display:none;">
+      </div>
+    </form>
+    <div class="file-edit-container" style="display:none;">
+    </div>
+    &nbsp;
+    <button type="button" class="btn btn-danger" onclick="if(confirm('Are you sure you want to delete the selected files? You can not undo this action')) { $('#delete-files-form').submit() }">
+      <span class="glyphicon glyphicon-trash"></span> Delete selected files
+    </button>
+  </div>
+</div>
+
+
 <div style='width:inherit;text-align:center;padding-top:30px'>
   <small><a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">&lt;&lt; Go to study description</a></small>
 </div>
+
+
 
 <!-- Upload required files and JS code -->
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/resumable.js"></script>
@@ -110,4 +291,5 @@
   {% end  %}
 </script>
 
+{% end %}
 {% end %}
