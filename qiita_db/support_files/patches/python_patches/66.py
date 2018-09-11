@@ -9,7 +9,6 @@ from re import sub
 
 # August 6, 2018
 # Create parameters for the ssh/scp remote file upload commands
-
 # Copied from patch 58.py. Couldn't import due to how patching system works
 def create_command(software, name, description, parameters, outputs=None,
                    analysis_only=False):
@@ -172,9 +171,13 @@ with TRN:
 # from study titles. As some analysis packages cannot interpret UTF-8
 # characters, it becomes important to remove them from study titles, as
 # they are used as metadata/identifiers when creating new analyses.
-studies = Study.get_by_status('public')
 
-for study in studies:
-    new_title = sub(r'[^\x20-\x7E]+', '', study.title)
-    if new_title != study.title:
-        study.title = new_title
+# insert new status_types into list, or replace w/a call to an appropriate
+# method.
+status_types = ['awaiting_approval', 'sandbox', 'private', 'public']
+
+for status_type in status_types:
+    for study in Study.get_by_status(status_type):
+        new_title = sub(r'[^\x20-\x7E]+', '', study.title)
+        if new_title != study.title:
+            study.title = new_title
