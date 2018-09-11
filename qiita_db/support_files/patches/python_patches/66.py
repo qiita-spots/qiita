@@ -21,6 +21,8 @@ def create_command(software, name, description, parameters, outputs=None,
     sql_param_values = []
     sql_artifact_params = []
     for pname, vals in parameters.items():
+        # vals should always have 2 elements as it should be:
+        # param_name: [parameter_type, default]
         if len(vals) != 2:
             raise QiitaDBError(
                 "Malformed parameters dictionary, the format should be "
