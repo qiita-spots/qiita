@@ -1628,9 +1628,11 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             commands = {}
             qdb.sql_connection.TRN.add(sql_params)
             for cid, params in qdb.sql_connection.TRN.execute_fetchindex():
+                cmd = qdb.software.Command(cid)
                 commands[cid] = {
                     'params': params,
-                    'merging_scheme': qdb.software.Command(cid).merging_scheme}
+                    'merging_scheme': cmd.merging_scheme,
+                    'deprecated': cmd.software.deprecated}
 
             # now let's get the actual artifacts
             ts = {}
@@ -1664,8 +1666,10 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
                 # generating algorithm, by default is ''
                 algorithm = ''
+                deprecated = True
                 if cid is not None:
                     ms = commands[cid]['merging_scheme']
+                    deprecated = commands[cid]['deprecated']
                     eparams = []
                     if ms['parameters']:
                         eparams.append(','.join(['%s: %s' % (k, aparams[k])
@@ -1733,6 +1737,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     'parameters': aparams,
                     'algorithm': algorithm,
                     'algorithm_az': algorithm_az[algorithm],
+                    'deprecated': deprecated,
                     'files': filepaths})
 
             return results

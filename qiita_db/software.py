@@ -1170,6 +1170,37 @@ class Software(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
+    def deprecated(self):
+        """Returns if the software is deprecated or not
+
+        Returns
+        -------
+        bool
+            Whether the software is deprecated or not
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT deprecated
+                     FROM qiita.software
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @deprecated.setter
+    def deprecated(self, deprecate):
+        """Changes deprecated of the software
+
+        Parameters
+        ----------
+        deprecate : bool
+            New software deprecate value
+        """
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software SET deprecated = %s
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [deprecate, self._id])
+            qdb.sql_connection.TRN.execute()
+
+    @property
     def active(self):
         """Returns if the software is active or not
 
