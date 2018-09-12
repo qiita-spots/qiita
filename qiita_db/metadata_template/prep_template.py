@@ -91,7 +91,13 @@ class PrepTemplate(MetadataTemplate):
     _id_column = "prep_template_id"
     _sample_cls = PrepSample
     _filepath_table = 'prep_template_filepath'
-    _forbidden_words = ['sampleid', 'qiita_study_id', 'qiita_prep_id']   
+    #This has been explicitly redefined here for clarity, even though
+    #PrepTemplate does not differ at this point from the base MetadataTemplate
+    #class.
+    _forbidden_words = {
+                        'sampleid',
+                        'qiita_study_id',
+                        'qiita_prep_id'}   
 
     @classmethod
     def create(cls, md_template, study, data_type, investigation_type=None,
@@ -141,7 +147,7 @@ class PrepTemplate(MetadataTemplate):
                 pt_cols = deepcopy(PREP_TEMPLATE_COLUMNS)
                 pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
-            md_template = cls._clean_validate_template(md_template, study.id, cls._forbidden_words)
+            md_template = cls._clean_validate_template(md_template, study.id)
             _check_duplicated_columns(list(md_template.columns),
                                       study.sample_template.categories())
 

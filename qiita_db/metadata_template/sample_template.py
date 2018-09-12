@@ -59,7 +59,16 @@ class SampleTemplate(MetadataTemplate):
     _id_column = "study_id"
     _sample_cls = Sample
     _filepath_table = 'sample_template_filepath'
-    _forbidden_words = ['barcodesequence', 'linkerprimersequence', 'barcode', 'linker', 'primer', 'run_prefix', 'sampleid', 'qiita_study_id', 'qiita_prep_id'] 
+    _forbidden_words = {
+                        'barcodesequence',
+                        'linkerprimersequence',
+                        'barcode',
+                        'linker',
+                        'primer',
+                        'run_prefix',
+                        'sampleid',
+                        'qiita_study_id',
+                        'qiita_prep_id'} 
 
     @classmethod
     def create(cls, md_template, study):
@@ -81,7 +90,7 @@ class SampleTemplate(MetadataTemplate):
                     cls.__name__, 'id: %d' % study.id)
 
             # Clean and validate the metadata template given
-            md_template = cls._clean_validate_template(md_template, study.id, cls._forbidden_words)
+            md_template = cls._clean_validate_template(md_template, study.id)
 
             cls._common_creation_steps(md_template, study.id)
 

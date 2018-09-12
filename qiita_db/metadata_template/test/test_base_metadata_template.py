@@ -34,7 +34,6 @@ class TestMetadataTemplateReadOnly(TestCase):
     """Tests the MetadataTemplate base class"""
     def setUp(self):
         self.study = qdb.study.Study(1)
-        self.forbidden_words = ['sampleid', 'qiita_study_id', 'qiita_prep_id']
 
     def test_init(self):
         """Init raises an error because it's not called from a subclass"""
@@ -66,7 +65,7 @@ class TestMetadataTemplateReadOnly(TestCase):
         """_clean_validate_template raises an error from base class"""
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            MT._clean_validate_template(None, 1, self.forbidden_words)
+            MT._clean_validate_template(None, 1)
 
 
 if __name__ == '__main__':

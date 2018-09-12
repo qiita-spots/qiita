@@ -466,7 +466,6 @@ class TestSampleTemplate(TestCase):
             }
         self.metadata_dict_updated_column_error = pd.DataFrame.from_dict(
             metadata_dict_updated_column_error, orient='index', dtype=str)
-        self.forbidden_words = ['sampleid', 'qiita_study_id', 'qiita_prep_id']
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -712,7 +711,7 @@ class TestSampleTemplate(TestCase):
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
         ST = qdb.metadata_template.sample_template.SampleTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            ST._clean_validate_template(self.metadata, 2, self.forbidden_words)
+            ST._clean_validate_template(self.metadata, 2)
 
     def test_clean_validate_template_error_duplicate_cols(self):
         """Raises an error if there are duplicated columns in the template"""
@@ -721,14 +720,14 @@ class TestSampleTemplate(TestCase):
 
         ST = qdb.metadata_template.sample_template.SampleTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateHeaderError):
-            ST._clean_validate_template(self.metadata, 2, self.forbidden_words)
+            ST._clean_validate_template(self.metadata, 2)
 
     def test_clean_validate_template_error_duplicate_samples(self):
         """Raises an error if there are duplicated samples in the template"""
         self.metadata.index = ['sample.1', 'sample.1', 'sample.3']
         ST = qdb.metadata_template.sample_template.SampleTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateSamplesError):
-            ST._clean_validate_template(self.metadata, 2, self.forbidden_words)
+            ST._clean_validate_template(self.metadata, 2)
 
     def test_clean_validate_template_columns(self):
         metadata_dict = {
@@ -745,7 +744,7 @@ class TestSampleTemplate(TestCase):
                                           dtype=str)
         ST = qdb.metadata_template.sample_template.SampleTemplate
         obs = ST._clean_validate_template(
-            metadata, 2, self.forbidden_words, current_columns=
+            metadata, 2, current_columns=
             qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
@@ -767,7 +766,7 @@ class TestSampleTemplate(TestCase):
     def test_clean_validate_template(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         obs = ST._clean_validate_template(
-            self.metadata, 2, self.forbidden_words, current_columns=
+            self.metadata, 2, current_columns=
             qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
@@ -818,13 +817,13 @@ class TestSampleTemplate(TestCase):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         self.metadata.rename(columns={'taxon_id': 'select'}, inplace=True)
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            ST._clean_validate_template(self.metadata, 2, self.forbidden_words)
+            ST._clean_validate_template(self.metadata, 2)
 
     def test_clean_validate_template_no_invalid_chars(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         self.metadata.rename(columns={'taxon_id': 'taxon id'}, inplace=True)
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            ST._clean_validate_template(self.metadata, 2, self.forbidden_words)
+            ST._clean_validate_template(self.metadata, 2)
 
     def test_get_category(self):
         pt = qdb.metadata_template.sample_template.SampleTemplate(1)
@@ -2025,7 +2024,7 @@ class TestSampleTemplate(TestCase):
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
         ST = qdb.metadata_template.sample_template.SampleTemplate
-        obs = ST._clean_validate_template(metadata, 2, self.forbidden_words)
+        obs = ST._clean_validate_template(metadata, 2)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
                           'physical_specimen_remaining': 'true',
