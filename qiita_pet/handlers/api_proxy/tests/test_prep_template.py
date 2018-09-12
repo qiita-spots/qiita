@@ -306,17 +306,17 @@ class TestPrepAPI(TestCase):
             obs['nodes'])
         self.assertIn(
             ('artifact', 'Demultiplexed', 2,
-             'Demultiplexed 1\n(Demultiplexed)', 'deprecated'),
+             'Demultiplexed 1\n(Demultiplexed)', 'artifact'),
             obs['nodes'])
         self.assertIn(
             ('artifact', 'Demultiplexed', 3,
-             'Demultiplexed 2\n(Demultiplexed)', 'deprecated'),
+             'Demultiplexed 2\n(Demultiplexed)', 'artifact'),
             obs['nodes'])
-        self.assertIn(('artifact', 'BIOM', 4, 'BIOM\n(BIOM)', 'deprecated'),
+        self.assertIn(('artifact', 'BIOM', 4, 'BIOM\n(BIOM)', 'artifact'),
                       obs['nodes'])
-        self.assertIn(('artifact', 'BIOM', 5, 'BIOM\n(BIOM)', 'deprecated'),
+        self.assertIn(('artifact', 'BIOM', 5, 'BIOM\n(BIOM)', 'artifact'),
                       obs['nodes'])
-        self.assertIn(('artifact', 'BIOM', 6, 'BIOM\n(BIOM)', 'deprecated'),
+        self.assertIn(('artifact', 'BIOM', 6, 'BIOM\n(BIOM)', 'artifact'),
                       obs['nodes'])
         self.assertEqual(3, len([n for dt, _, _, n, _ in obs['nodes']
                                  if n == 'Pick closed-reference OTUs' and
@@ -346,9 +346,9 @@ class TestPrepAPI(TestCase):
             obs['nodes'])
         self.assertIn(
             ('artifact', 'Demultiplexed', 2,
-             'Demultiplexed 1\n(Demultiplexed)', 'deprecated'),
+             'Demultiplexed 1\n(Demultiplexed)', 'artifact'),
             obs['nodes'])
-        self.assertIn(('artifact', 'BIOM', 4, 'BIOM\n(BIOM)', 'deprecated'),
+        self.assertIn(('artifact', 'BIOM', 4, 'BIOM\n(BIOM)', 'artifact'),
                       obs['nodes'])
         self.assertEqual(3, len([n for dt, _, _, n, _ in obs['nodes']
                                  if n == 'Pick closed-reference OTUs' and

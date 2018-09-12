@@ -671,7 +671,7 @@ class DBUtilTests(TestCase):
         exp = {'filepath_id': 1L, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
                'filepath_type': 'raw_forward_seqs', 'checksum': '852952723',
                'data_type': 'raw_data', 'mountpoint': 'raw_data',
-               'subdirectory': False, 'deprecated': False}
+               'subdirectory': False, 'active': True}
         self.assertEqual(obs, exp)
 
     def test_filepath_id_to_rel_path(self):
