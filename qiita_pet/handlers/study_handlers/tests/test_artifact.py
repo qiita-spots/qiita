@@ -168,7 +168,7 @@ class ArtifactGetInfoTest(TestHandlerBase):
              'data_type': '16S', 'timestamp': u'2012-10-02 17:30:00',
              'platform': 'Illumina',
              'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
-             'prep_samples': 27, 'active': False,
+             'prep_samples': 27, 'deprecated': False,
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
              'parameters': {
               'reference': '2', 'similarity': '0.97', 'sortmerna_e_value': '1',
@@ -178,7 +178,7 @@ class ArtifactGetInfoTest(TestHandlerBase):
             {'files': [], 'target_subfragment': ['V4'], 'artifact_id': 7,
              'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
              'platform': 'Illumina', 'algorithm_az': '', 'prep_samples': 27,
-             'active': True, 'algorithm': '', 'parameters': {},
+             'deprecated': True, 'algorithm': '', 'parameters': {},
              'target_gene': '16S rRNA', u'name': u'BIOM'}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         obs = loads(response.body)

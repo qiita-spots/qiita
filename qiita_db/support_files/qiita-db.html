@@ -516,12 +516,7 @@ table {
 	prep_template_processing_job references processing_job ( processing_job_id )</title>
 </path>
 <text x='1912' y='1045' transform='rotate(0 1912,1045)' title='Foreign Key fk_prep_template_processing_job_0
-	prep_template_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2520 975 L 2595,975' >
-	<title>Foreign Key fk_software_software_type
-	software references software_type ( software_type_id )</title>
-</path>
-<text x='2527' y='970' transform='rotate(0 2527,970)' title='Foreign Key fk_software_software_type
-	software references software_type ( software_type_id )' style='fill:#a1a0a0;'>software_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1860 705 L 1860,615' >
+	prep_template_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1860 705 L 1860,615' >
 	<title>Foreign Key fk_study_publication_study
 	study_publication references study ( study_id )</title>
 </path>
@@ -811,7 +806,7 @@ table {
 	term references ontology ( ontology_id )</title>
 </path>
 <text x='643' y='1450' transform='rotate(0 643,1450)' title='Foreign Key fk_term_ontology
-	term references ontology ( ontology_id )' style='fill:#a1a0a0;'>ontology_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2325 1275 L 2347,1275 Q 2355,1275 2355,1267 L 2355,1102 Q 2355,1095 2362,1095 L 2370,1095' >
+	term references ontology ( ontology_id )' style='fill:#a1a0a0;'>ontology_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2325 1275 L 2347,1275 Q 2355,1275 2355,1267 L 2355,1117 Q 2355,1110 2362,1110 L 2370,1110' >
 	<title>Foreign Key fk_soft_command_software
 	software_command references software ( software_id )</title>
 </path>
@@ -861,7 +856,12 @@ table {
 	study references timeseries_type ( timeseries_type_id )</title>
 </path>
 <text x='1972' y='535' transform='rotate(0 1972,535)' title='Foreign Key fk_study_timeseries_type
-	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><!-- ============= Table 'column_controlled_vocabularies' ============= -->
+	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2520 975 L 2595,975' >
+	<title>Foreign Key fk_software_software_type
+	software references software_type ( software_type_id )</title>
+</path>
+<text x='2527' y='970' transform='rotate(0 2527,970)' title='Foreign Key fk_software_software_type
+	software references software_type ( software_type_id )' style='fill:#a1a0a0;'>software_type_id</text><!-- ============= Table 'column_controlled_vocabularies' ============= -->
 <rect class='table' x='270' y='1208' width='195' height='75' rx='7' ry='7' />
 <path d='M 270.50 1234.50 L 270.50 1215.50 Q 270.50 1208.50 277.50 1208.50 L 457.50 1208.50 Q 464.50 1208.50 464.50 1215.50 L 464.50 1234.50 L270.50 1234.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#column_controlled_vocabularies'><text x='280' y='1222' class='tableTitle'>column_controlled_vocabularies</text><title>Table qiita.column_controlled_vocabularies
@@ -1241,27 +1241,6 @@ Referred by filepath ( filepath_type_id ) </title></a>
 <a xlink:href='#software_type.software_type_id'><use id='ref' x='2718' y='986' xlink:href='#ref'/><title>Referred by software ( software_type_id ) </title></a>
   <use id='nn' x='2612' y='1002' xlink:href='#nn'/><a xlink:href='#software_type.software_type'><text x='2628' y='1012'>software_type</text><title>software_type varchar not null</title></a>
   <use id='nn' x='2612' y='1017' xlink:href='#nn'/><a xlink:href='#software_type.description'><text x='2628' y='1027'>description</text><title>description varchar not null</title></a>
-
-<!-- ============= Table 'software' ============= -->
-<rect class='table' x='2385' y='953' width='135' height='165' rx='7' ry='7' />
-<path d='M 2385.50 979.50 L 2385.50 960.50 Q 2385.50 953.50 2392.50 953.50 L 2512.50 953.50 Q 2519.50 953.50 2519.50 960.50 L 2519.50 979.50 L2385.50 979.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
-<a xlink:href='#software'><text x='2429' y='967' class='tableTitle'>software</text><title>Table qiita.software</title></a>
-  <use id='nn' x='2387' y='987' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='2387' y='986' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
-<a xlink:href='#software.software_id'><text x='2403' y='997'>software_id</text><title>software_id bigserial not null</title></a>
-<a xlink:href='#software.software_id'><use id='ref' x='2508' y='986' xlink:href='#ref'/><title>Referred by default_workflow ( software_id ) 
-Referred by oauth_software ( software_id ) 
-Referred by software_artifact_type ( software_id ) 
-Referred by software_command ( software_id ) 
-Referred by software_publication ( software_id ) </title></a>
-  <use id='nn' x='2387' y='1002' xlink:href='#nn'/><a xlink:href='#software.name'><text x='2403' y='1012'>name</text><title>name varchar not null</title></a>
-  <use id='nn' x='2387' y='1017' xlink:href='#nn'/><a xlink:href='#software.version'><text x='2403' y='1027'>version</text><title>version varchar not null</title></a>
-  <use id='nn' x='2387' y='1032' xlink:href='#nn'/><a xlink:href='#software.description'><text x='2403' y='1042'>description</text><title>description varchar not null</title></a>
-  <use id='nn' x='2387' y='1047' xlink:href='#nn'/><a xlink:href='#software.environment_script'><text x='2403' y='1057'>environment_script</text><title>environment_script varchar not null</title></a>
-  <use id='nn' x='2387' y='1062' xlink:href='#nn'/><a xlink:href='#software.start_script'><text x='2403' y='1072'>start_script</text><title>start_script varchar not null</title></a>
-  <use id='nn' x='2387' y='1077' xlink:href='#nn'/><a xlink:href='#software.software_type_id'><use id='idx' x='2387' y='1076' xlink:href='#idx'/><title>Index  ( software_type_id ) </title></a>
-<a xlink:href='#software.software_type_id'><text x='2403' y='1087'>software_type_id</text><title>software_type_id bigint not null</title></a>
-<a xlink:href='#software.software_type_id'><use id='fk' x='2508' y='1076' xlink:href='#fk'/><title>References software_type ( software_type_id ) </title></a>
-  <use id='nn' x='2387' y='1092' xlink:href='#nn'/><a xlink:href='#software.active'><text x='2403' y='1102'>active</text><title>active bool not null default &#039;True&#039;</title></a>
 
 <!-- ============= Table 'study_publication' ============= -->
 <rect class='table' x='1845' y='713' width='120' height='90' rx='7' ry='7' />
@@ -2037,6 +2016,28 @@ Controlled Vocabulary</title></a>
   <a xlink:href='#study.ebi_study_accession'><text x='1803' y='577'>ebi_study_accession</text><title>ebi_study_accession varchar</title></a>
   <a xlink:href='#study.specimen_id_column'><text x='1803' y='592'>specimen_id_column</text><title>specimen_id_column varchar&#040;256&#041;
 The name of the column that describes the specimen identifiers &#040;such as what is written on the tubes&#041;&#046;</title></a>
+
+<!-- ============= Table 'software' ============= -->
+<rect class='table' x='2385' y='953' width='135' height='180' rx='7' ry='7' />
+<path d='M 2385.50 979.50 L 2385.50 960.50 Q 2385.50 953.50 2392.50 953.50 L 2512.50 953.50 Q 2519.50 953.50 2519.50 960.50 L 2519.50 979.50 L2385.50 979.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#software'><text x='2429' y='967' class='tableTitle'>software</text><title>Table qiita.software</title></a>
+  <use id='nn' x='2387' y='987' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='2387' y='986' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
+<a xlink:href='#software.software_id'><text x='2403' y='997'>software_id</text><title>software_id bigserial not null</title></a>
+<a xlink:href='#software.software_id'><use id='ref' x='2508' y='986' xlink:href='#ref'/><title>Referred by default_workflow ( software_id ) 
+Referred by oauth_software ( software_id ) 
+Referred by software_artifact_type ( software_id ) 
+Referred by software_command ( software_id ) 
+Referred by software_publication ( software_id ) </title></a>
+  <use id='nn' x='2387' y='1002' xlink:href='#nn'/><a xlink:href='#software.name'><text x='2403' y='1012'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2387' y='1017' xlink:href='#nn'/><a xlink:href='#software.version'><text x='2403' y='1027'>version</text><title>version varchar not null</title></a>
+  <use id='nn' x='2387' y='1032' xlink:href='#nn'/><a xlink:href='#software.description'><text x='2403' y='1042'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='2387' y='1047' xlink:href='#nn'/><a xlink:href='#software.environment_script'><text x='2403' y='1057'>environment_script</text><title>environment_script varchar not null</title></a>
+  <use id='nn' x='2387' y='1062' xlink:href='#nn'/><a xlink:href='#software.start_script'><text x='2403' y='1072'>start_script</text><title>start_script varchar not null</title></a>
+  <use id='nn' x='2387' y='1077' xlink:href='#nn'/><a xlink:href='#software.software_type_id'><use id='idx' x='2387' y='1076' xlink:href='#idx'/><title>Index  ( software_type_id ) </title></a>
+<a xlink:href='#software.software_type_id'><text x='2403' y='1087'>software_type_id</text><title>software_type_id bigint not null</title></a>
+<a xlink:href='#software.software_type_id'><use id='fk' x='2508' y='1076' xlink:href='#fk'/><title>References software_type ( software_type_id ) </title></a>
+  <use id='nn' x='2387' y='1092' xlink:href='#nn'/><a xlink:href='#software.active'><text x='2403' y='1102'>active</text><title>active bool not null default &#039;True&#039;</title></a>
+  <a xlink:href='#software.deprecated'><text x='2403' y='1117'>deprecated</text><title>deprecated bool default False</title></a>
 
 </g></svg>
 
@@ -3342,78 +3343,6 @@ The name of the column that describes the specimen identifiers &#040;such as wha
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;software&#095;type</td>
 		<td> ON software&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='software'>Table software</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='software.software_id'>software&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='software.name'>name</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='software.version'>version</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='software.description'>description</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='software.environment_script'>environment&#095;script</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='software.start_script'>start&#095;script</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='software.software_type_id'>software&#095;type&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='software.active'>active</a></td>
-		<td> bool   DEFO 'True' </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;software</td>
-		<td> ON software&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;software</td>
-		<td> ON software&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_software_software_type</td>
-		<td > ( software&#095;type&#095;id ) ref <a href='#software&#095;type'>software&#095;type</a> (software&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -6165,6 +6094,84 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>&nbsp;</td><td>fk_study_timeseries_type</td>
 		<td > ( timeseries&#095;type&#095;id ) ref <a href='#timeseries&#095;type'>timeseries&#095;type</a> (timeseries&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='software'>Table software</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='software.software_id'>software&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.name'>name</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.version'>version</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.description'>description</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.environment_script'>environment&#095;script</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.start_script'>start&#095;script</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.software_type_id'>software&#095;type&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.active'>active</a></td>
+		<td> bool   DEFO 'True' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='software.deprecated'>deprecated</a></td>
+		<td> bool   DEFO False </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;software</td>
+		<td> ON software&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;software</td>
+		<td> ON software&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_software_software_type</td>
+		<td > ( software&#095;type&#095;id ) ref <a href='#software&#095;type'>software&#095;type</a> (software&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>

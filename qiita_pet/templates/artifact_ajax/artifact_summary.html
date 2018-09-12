@@ -113,7 +113,7 @@
     <h4>
       {% if processing_info and not processing_info['software_active'] %}
         <div class="alert alert-warning" role="alert">
-          Warning, this artifact is deprecated!
+          Warning, the software that generated this artifact is deprecated as a new version is available.
         </div>
       {% end %}
       <i id='summary-title'>{{name}}</i><i> (ID: {{artifact_id}}) Visibility: {{visibility}}</i>

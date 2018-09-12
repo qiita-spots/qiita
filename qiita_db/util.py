@@ -1632,7 +1632,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 commands[cid] = {
                     'params': params,
                     'merging_scheme': cmd.merging_scheme,
-                    'active': cmd.software.active}
+                    'deprecated': cmd.software.deprecated}
 
             # now let's get the actual artifacts
             ts = {}
@@ -1666,10 +1666,10 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
                 # generating algorithm, by default is ''
                 algorithm = ''
-                active = True
+                deprecated = True
                 if cid is not None:
                     ms = commands[cid]['merging_scheme']
-                    active = commands[cid]['active']
+                    deprecated = commands[cid]['deprecated']
                     eparams = []
                     if ms['parameters']:
                         eparams.append(','.join(['%s: %s' % (k, aparams[k])
@@ -1737,7 +1737,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     'parameters': aparams,
                     'algorithm': algorithm,
                     'algorithm_az': algorithm_az[algorithm],
-                    'active': active,
+                    'deprecated': deprecated,
                     'files': filepaths})
 
             return results

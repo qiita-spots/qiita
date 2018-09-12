@@ -314,8 +314,8 @@ function format_biom_rows(data, row, for_study_list = true, samples = null) {
 
   // grouping by processing_method, data_type and parameters
   $.each(data, function (idx, info) {
-    // ignore the artifacts that were generated with software that is not active
-    if (info['active']) {
+    // ignore the artifacts that were generated with software that is deprecated
+    if (info['deprecated']) {
       if (typeof info !== 'string' && !(info instanceof String)) {
         var algorithm = info.algorithm;
         if (!(algorithm in processing_method)) {

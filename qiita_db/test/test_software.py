@@ -750,6 +750,19 @@ class SoftwareTests(TestCase):
         obs.activate()
         self.assertTrue(obs.active)
 
+    def test_deprecated(self):
+        tester = qdb.software.Software(1)
+        self.assertFalse(tester.deprecated)
+
+        tester.deprecated = True
+        self.assertTrue(tester.deprecated)
+
+        tester.deprecated = False
+        self.assertFalse(tester.deprecated)
+
+        with self.assertRaises(ValueError):
+            tester.deprecated = 'error!'
+
 
 @qiita_test_checker()
 class DefaultParametersTests(TestCase):
