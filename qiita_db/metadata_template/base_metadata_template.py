@@ -540,6 +540,10 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
         pgsql_reserved = cls._identify_pgsql_reserved_words_in_column_names(current_headers)
         invalid = cls._identify_column_names_with_invalid_characters(current_headers)
+
+        f = open('/tmp/foobar.log', 'w+')
+        f.write('%s\n' % current_headers)
+        f.close()
         forbidden = cls._identify_forbidden_words_in_column_names(current_headers)
     
         error = []
@@ -1593,6 +1597,10 @@ class MetadataTemplate(qdb.base.QiitaObject):
         ----------
         .. [1] postgresql SQL-SYNTAX-IDENTIFIERS: https://goo.gl/EF0cUV.
         """
+        f = open('/tmp/charlie.log', 'w')
+        f.write('column names: %s\n' % column_names)
+        f.write('forbidden_words in scope here: %s\n' % cls._forbidden_words)
+        f.close()
         return set(cls._forbidden_words) & set(column_names)
 
     @classmethod
