@@ -36,7 +36,7 @@ Methods
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.utils import viewitems
+from future.utils import PY3, viewitems
 from future.builtins import zip
 from itertools import chain
 from copy import deepcopy
@@ -49,6 +49,11 @@ import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
+
+if PY3:
+    from string import ascii_letters as letters, digits
+else:
+    from string import letters, digits
 
 
 class BaseSample(qdb.base.QiitaObject):
@@ -434,6 +439,16 @@ class MetadataTemplate(qdb.base.QiitaObject):
     _table_prefix = None
     _id_column = None
     _sample_cls = None
+    _forbidden_words = { 
+        # https://github.com/biocore/qiita/issues/2026
+        'sampleid',
+        # https://github.com/biocore/qiita/issues/
+        # Note that this are actually remove/ignored in the function that
+        # calls this function: base_metadata_template._clean_validate_template.
+        # However, leaving here to avoid any possible issues.
+        'qiita_study_id',
+        'qiita_prep_id'
+    }
 
     def _check_id(self, id_):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
@@ -469,6 +484,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
     @classmethod
     def _clean_validate_template(cls, md_template, study_id,
+                                 forbidden_words=cls._forbidden_words,
                                  current_columns=None):
         """Takes care of all validation and cleaning of metadata templates
 
@@ -480,6 +496,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             The study to which the metadata template belongs to.
         current_columns : iterable of str, optional
             The current list of metadata columns
+        forbidden_words : use either the template's built-in list of forbidden words, or override with your own.
 
         Returns
         -------
@@ -493,6 +510,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
         QiitaDBWarning
             If there are missing columns required for some functionality
         """
+
+        #TODO Fold this error in with the others
         cls._check_subclass()
         invalid_ids = qdb.metadata_template.util.get_invalid_sample_names(
             md_template.index)
@@ -502,6 +521,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 "characters (only alphanumeric characters or periods are "
                 "allowed): %s." % ", ".join(invalid_ids))
 
+        #TODO Fold this error in with the others
         if len(set(md_template.index)) != len(md_template.index):
             raise qdb.exceptions.QiitaDBDuplicateSamplesError(
                 find_duplicates(md_template.index))
@@ -522,14 +542,38 @@ class MetadataTemplate(qdb.base.QiitaObject):
         # validating pgsql reserved words not to be column headers
         current_headers = set(md_template.columns.values)
 
-        qdb.metadata_template.util.validate_invalid_column_names(
-            current_headers)
+        # testing for specific column names that are not included in the other
+        # tests.
+
+        pgsql_reserved = cls.identify_pgsql_reserved_words_in_column_names(current_headers)
+        invalid = cls.identify_column_names_with_invalid_characters(current_headers)
+        forbidden = cls.identify_forbidden_words_in_column_names(current_headers, forbidden_words)
+    
+        error = []
+        if pgsql_reserved:
+            error.append(
+                "The following column names in the template contain PgSQL "
+                "reserved words: %s." % ", ".join(pgsql_reserved))
+        if invalid:
+            error.append(
+                "The following column names in the template contain invalid "
+                "chars: %s." % ", ".join(invalid))
+        if forbidden:
+            error.append(
+                "The following column names in the template contain invalid "
+                "values: %s." % ", ".join(forbidden))
+    
+        if error:
+            raise qdb.exceptions.QiitaDBColumnError(
+                "%s\nYou need to modify them." % '\n'.join(error))
 
         # Prefix the sample names with the study_id
+        #TODO See if this method raises exceptions as well, and what they might be
         qdb.metadata_template.util.prefix_sample_names_with_id(md_template,
                                                                study_id)
 
         # Check that we don't have duplicate columns
+        #TODO: Fold this error in with the others
         if len(set(md_template.columns)) != len(md_template.columns):
             raise qdb.exceptions.QiitaDBDuplicateHeaderError(
                 find_duplicates(md_template.columns))
@@ -1145,7 +1189,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             md_template = self._clean_validate_template(
-                md_template, self.study_id, current_columns=self.categories())
+                md_template, self.study_id, self._forbidden_words, current_columns=self.categories())
             self._common_extend_steps(md_template)
             self.validate(self.columns_restrictions)
             self.generate_files()
@@ -1287,7 +1331,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             # Clean and validate the metadata template given
             new_map = self._clean_validate_template(
-                md_template, self.study_id, current_columns=self.categories())
+                md_template, self.study_id, self._forbidden_words, current_columns=self.categories())
             self._update(new_map)
             self.validate(self.columns_restrictions)
             self.generate_files()
@@ -1307,7 +1351,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             md_template = self._clean_validate_template(
-                md_template, self.study_id, current_columns=self.categories())
+                md_template, self.study_id, self._forbidden_words, current_columns=self.categories())
             self._common_extend_steps(md_template)
             self._update(md_template)
             self.validate(self.columns_restrictions)
@@ -1533,3 +1577,74 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 "columns:\n\t%s.\nSee the Templates tutorial for a description"
                 " of these fields." % ";\n\t".join(warning_msg),
                 qdb.exceptions.QiitaDBWarning)
+
+    @classmethod
+    def identify_forbidden_words_in_column_names(cls, column_names, forbidden_words):
+        """Validate a list of column names and raise an error if any 
+    
+        Parameters
+        ----------
+        column_names : iterable
+            Iterable containing the column names to check.
+    
+        Raises
+        ------
+        QiitaDBColumnError
+            If column_name is in get_pgsql_reserved_words or contains invalid
+            chars or is within the forbidden_words
+    
+        References
+        ----------
+        .. [1] postgresql SQL-SYNTAX-IDENTIFIERS: https://goo.gl/EF0cUV.
+        """
+        return set(forbidden_words) & set(column_names)
+
+    @classmethod
+    def identify_pgsql_reserved_words_in_column_names(cls, column_names):
+        """Validate a list of column names and raise an error if any 
+    
+        Parameters
+        ----------
+        column_names : iterable
+            Iterable containing the column names to check.
+    
+        Raises
+        ------
+        QiitaDBColumnError
+            If column_name is in get_pgsql_reserved_words or contains invalid
+            chars or is within the forbidden_words
+    
+        References
+        ----------
+        .. [1] postgresql SQL-SYNTAX-IDENTIFIERS: https://goo.gl/EF0cUV.
+        """
+        return (qdb.metadata_template.util.get_pgsql_reserved_words() & set(column_names))
+
+    @classmethod
+    def identify_column_names_with_invalid_characters(cls, column_names):
+        """Validate a list of column names and raise an error if any 
+    
+        Parameters
+        ----------
+        column_names : iterable
+            Iterable containing the column names to check.
+    
+        Raises
+        ------
+        QiitaDBColumnError
+            If column_name is in get_pgsql_reserved_words or contains invalid
+            chars or is within the forbidden_words
+    
+        References
+        ----------
+        .. [1] postgresql SQL-SYNTAX-IDENTIFIERS: https://goo.gl/EF0cUV.
+        """
+        valid_initial_char = letters
+        valid_rest = set(letters+digits+'_')
+        invalid = []
+        for s in column_names:
+            if s[0] not in valid_initial_char:
+                invalid.append(s)
+            elif set(s) - valid_rest:
+                invalid.append(s)
+        return invalid

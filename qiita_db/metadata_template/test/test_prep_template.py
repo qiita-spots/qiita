@@ -383,6 +383,8 @@ class TestPrepTemplate(TestCase):
             '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'}
 
         self._clean_up_files = []
+        self.forbidden_words = ['sampleid', 'qiita_study_id', 'qiita_prep_id']
+
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -670,7 +672,7 @@ class TestPrepTemplate(TestCase):
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
         PT = qdb.metadata_template.prep_template.PrepTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            PT._clean_validate_template(self.metadata, 2)
+            PT._clean_validate_template(self.metadata, 2, self.forbidden_words)
 
     def test_clean_validate_template_error_duplicate_cols(self):
         """Raises an error if there are duplicated columns in the template"""
@@ -678,18 +680,18 @@ class TestPrepTemplate(TestCase):
                                                 index=self.metadata.index)
         PT = qdb.metadata_template.prep_template.PrepTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateHeaderError):
-            PT._clean_validate_template(self.metadata, 2)
+            PT._clean_validate_template(self.metadata, 2, self.forbidden_words)
 
     def test_clean_validate_template_error_duplicate_samples(self):
         """Raises an error if there are duplicated samples in the templates"""
         self.metadata.index = ['sample.1', 'sample.1', 'sample.3']
         PT = qdb.metadata_template.prep_template.PrepTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateSamplesError):
-            PT._clean_validate_template(self.metadata, 2)
+            PT._clean_validate_template(self.metadata, 2, self.forbidden_words)
 
     def test_clean_validate_template(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
-        obs = PT._clean_validate_template(self.metadata, 2)
+        obs = PT._clean_validate_template(self.metadata, 2, self.forbidden_words)
         metadata_dict = {
             '2.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
@@ -1444,7 +1446,7 @@ class TestPrepTemplate(TestCase):
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
         PT = qdb.metadata_template.prep_template.PrepTemplate
-        obs = PT._clean_validate_template(metadata, 2)
+        obs = PT._clean_validate_template(metadata, 2, self.forbidden_words)
 
         metadata_dict = {
             '2.SKB8.640193': {'center_name': 'ANL',
