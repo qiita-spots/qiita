@@ -16,6 +16,8 @@ Version 092018
 * Plugin software now have a new column deprecated to highlight artifacts that were generated with outdated software.
 * EBI-ENA submissions was improved by only scanning the samples in the prep information file vs. all samples in the study.
 * We now check that the sample information file does not contain regular prep info file columns and that the prep does not have QIIME specific mapping file columns.
+* The qtp-target-gene has been updated to support multiple SFF files
+* The qp-deblur was updated to use deblur-1.1.0
 
 Version 062018
 --------------
