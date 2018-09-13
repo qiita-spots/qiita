@@ -202,11 +202,7 @@ class EBISubmission(object):
         get_output_fp = partial(join, self.full_ebi_dir)
         nvp = []
         nvim = []
-        for k, v in viewitems(self.sample_template):
-            if k not in self.prep_template:
-                continue
-            sample_prep = self.prep_template[k]
-
+        for k, sample_prep in viewitems(self.prep_template):
             # validating required fields
             if ('platform' not in sample_prep or
                     sample_prep['platform'] is None):
@@ -224,7 +220,7 @@ class EBISubmission(object):
                         if im not in self.valid_platforms[platform]:
                             nvim.append(k)
 
-            self.samples[k] = v
+            self.samples[k] = self.sample_template.get(sample_prep.id)
             self.samples_prep[k] = sample_prep
             self.sample_demux_fps[k] = get_output_fp("%s.fastq.gz" % k)
 
