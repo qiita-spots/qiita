@@ -71,19 +71,32 @@ class TestMetadataTemplateReadOnly(TestCase):
         """_identify_forbidden_words_in_column_names returns forbidden words
         """
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
-        #tests filtering for sample_id, when it is not the first element
-        #verifies all forbidden elements for base class are returned
-        #verifies a forbidden word in sub-class will not be returned
-        #verifies normal column names are not returned
-        results = MT._identify_forbidden_words_in_column_names(['just_fine3', 'sampleid', 'alice', 'linkerprimersequence', 'bob', 'qiita_study_id', 'qiita_prep_id', 'eve'])
-        self.assertTrue(set(results), {'qiita_prep_id', 'qiita_study_id', 'sampleid'})
+        # tests filtering for sample_id, when it is not the first element
+        # verifies all forbidden elements for base class are returned
+        # verifies a forbidden word in sub-class will not be returned
+        # verifies normal column names are not returned
+        results = MT._identify_forbidden_words_in_column_names([
+            'just_fine3',
+            'sampleid',
+            'alice',
+            'linkerprimersequence',
+            'bob',
+            'qiita_study_id',
+            'qiita_prep_id',
+            'eve'])
+        self.assertTrue(set(results), {'qiita_prep_id',
+                                       'qiita_study_id',
+                                       'sampleid'})
 
     def test_identify_pgsql_reserved_words(self):
         """_identify_pgsql_reserved_words_in_column_names returns words
         matching the database's current list of reserved words.
         """
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
-        results = MT._identify_pgsql_reserved_words_in_column_names(['select', 'column', 'just_fine1'])
+        results = MT._identify_pgsql_reserved_words_in_column_names([
+            'select',
+            'column',
+            'just_fine1'])
         self.assertTrue(set(results), {'column', 'select'})
 
     def test_identify_invalid_characters(self):
@@ -91,8 +104,22 @@ class TestMetadataTemplateReadOnly(TestCase):
         containing invalid characters.
         """
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
-        results = MT._identify_column_names_with_invalid_characters(['tax on', 'bla.', '.', 'sampleid', 'sample_id', '{', 'this|is', '4column', 'just_fine2'])
-        self.assertTrue(set(results) == {'tax on', 'bla.', '.', '{', 'this|is', '4column'})
+        results = MT._identify_column_names_with_invalid_characters([
+            'tax on',
+            'bla.',
+            '.',
+            'sampleid',
+            'sample_id',
+            '{',
+            'this|is',
+            '4column',
+            'just_fine2'])
+        self.assertTrue(set(results) == {'tax on',
+                                         'bla.',
+                                         '.',
+                                         '{',
+                                         'this|is',
+                                         '4column'})
 
 
 if __name__ == '__main__':

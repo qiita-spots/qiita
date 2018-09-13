@@ -68,7 +68,7 @@ class SampleTemplate(MetadataTemplate):
                         'run_prefix',
                         'sampleid',
                         'qiita_study_id',
-                        'qiita_prep_id'} 
+                        'qiita_prep_id'}
 
     @classmethod
     def create(cls, md_template, study):

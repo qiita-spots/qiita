@@ -22,6 +22,8 @@ from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 
+from qiita_db.metadata_template.constants import SAMPLE_TEMPLATE_COLUMNS
+
 
 @qiita_test_checker()
 class TestSample(TestCase):
@@ -204,7 +206,7 @@ class TestSample(TestCase):
         """that it returns SAMPLE_TEMPLATE_COLUMNS"""
         self.assertEqual(
             self.sample_template.columns_restrictions,
-            qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            SAMPLE_TEMPLATE_COLUMNS)
 
     def test_can_be_updated(self):
         """test if the template can be updated"""
@@ -744,8 +746,9 @@ class TestSampleTemplate(TestCase):
                                           dtype=str)
         ST = qdb.metadata_template.sample_template.SampleTemplate
         obs = ST._clean_validate_template(
-            metadata, 2, current_columns=
-            qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            metadata,
+            2,
+            current_columns=SAMPLE_TEMPLATE_COLUMNS)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
                           'physical_specimen_remaining': 'true',
@@ -766,8 +769,9 @@ class TestSampleTemplate(TestCase):
     def test_clean_validate_template(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         obs = ST._clean_validate_template(
-            self.metadata, 2, current_columns=
-            qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            self.metadata,
+            2,
+            current_columns=SAMPLE_TEMPLATE_COLUMNS)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
                           'physical_specimen_remaining': 'true',
@@ -822,6 +826,61 @@ class TestSampleTemplate(TestCase):
     def test_clean_validate_template_no_invalid_chars(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         self.metadata.rename(columns={'taxon_id': 'taxon id'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_invalid_chars2(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'bla.'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_invalid_chars3(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'this|is'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_forbidden_words(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'sampleid'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    '''
+    Commenting these two out for now. There is legacy code in
+    _clean_validate_template that automatically removes internally generated
+    columns qiita_study_id and qiita_prep_id before validating. Need to
+    revisit this and see how existing code might break when removing the
+    'remover'.
+
+    def test_clean_validate_template_no_forbidden_words2(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'qiita_study_id'},
+                             inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_forbidden_words3(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'qiita_prep_id'},
+                             inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+    '''
+
+    def test_clean_validate_template_no_forbidden_words4(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        # A word forbidden only in SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'linkerprimersequence'},
+                             inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_forbidden_words5(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        # A word forbidden only in SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'barcode'}, inplace=True)
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             ST._clean_validate_template(self.metadata, 2)
 
@@ -1886,7 +1945,7 @@ class TestSampleTemplate(TestCase):
 
     def test_check_restrictions(self):
         obs = self.tester.check_restrictions(
-            [qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS['EBI']])
+            [SAMPLE_TEMPLATE_COLUMNS['EBI']])
         self.assertEqual(obs, set([]))
 
     def test_ebi_sample_accessions(self):
@@ -2049,7 +2108,7 @@ class TestSampleTemplate(TestCase):
             qdb.metadata_template.sample_template.SampleTemplate.create,
             self.metadata, self.new_study)
         obs = st.check_restrictions(
-            [qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS['EBI']])
+            [SAMPLE_TEMPLATE_COLUMNS['EBI']])
         self.assertEqual(obs, {'collection_timestamp'})
 
     def test_validate_errors(self):
