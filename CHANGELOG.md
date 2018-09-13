@@ -1,5 +1,22 @@
 # Qiita changelog
 
+Version 092018
+--------------
+
+* Study listing performance was improve and now public studies are only shown once for Admins.
+* The study listing page used to show all artifacts for public studies, even the private ones, now we show based on their permissions.
+* Users now can allow access from Qiita to copy (scp/sftp) their files from their own servers.
+* Sample deletion from the sample information file now is done in bulk.
+* The Sample-Prep Summary now can be sorted.
+* Admins now have a page to check the status of the plugins.
+* We now support unique tube identifies for samples, helpful for connections with LIMS systems.
+* Resorted the top menus so they are clearer for new users.
+* Study titles cannot have special, non UTF-8, chars.
+* The password check and reset has been fixed.
+* Plugin software now have a new column deprecated to highlight artifacts that were generated with outdated software.
+* EBI-ENA submissions was improved by only scanning the samples in the prep information file vs. all samples in the study.
+* We now check that the sample information file does not contain regular prep info file columns and that the prep does not have QIIME specific mapping file columns.
+
 Version 062018
 --------------
 
