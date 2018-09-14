@@ -523,12 +523,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
 
-        # Droping/Ignoring internal generated columns:
-        # A legacy feature of _clean_validate_template() is that it silently
-        # removes these columns before validating. It would be better to make
-        # this optional. These two keywords are also in forbidden words lists.
-        # Hence, it's possible to write unit test code that provides these
-        # words to this method and yet fails to raise an Error.
+        # drop these columns in the result
         if 'qiita_study_id' in md_template.columns:
             del md_template['qiita_study_id']
         if 'qiita_prep_id' in md_template.columns:
