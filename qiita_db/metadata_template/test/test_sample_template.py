@@ -22,7 +22,8 @@ from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 
-from qiita_db.metadata_template.constants import SAMPLE_TEMPLATE_COLUMNS
+
+STC = qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS
 
 
 @qiita_test_checker()
@@ -203,10 +204,10 @@ class TestSample(TestCase):
         self.assertTrue(self.tester.get('Not_a_Category') is None)
 
     def test_columns_restrictions(self):
-        """that it returns SAMPLE_TEMPLATE_COLUMNS"""
+        """that it returns STC"""
         self.assertEqual(
             self.sample_template.columns_restrictions,
-            SAMPLE_TEMPLATE_COLUMNS)
+            STC)
 
     def test_can_be_updated(self):
         """test if the template can be updated"""
@@ -748,7 +749,7 @@ class TestSampleTemplate(TestCase):
         obs = ST._clean_validate_template(
             metadata,
             2,
-            current_columns=SAMPLE_TEMPLATE_COLUMNS)
+            current_columns=STC)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
                           'physical_specimen_remaining': 'true',
@@ -771,7 +772,7 @@ class TestSampleTemplate(TestCase):
         obs = ST._clean_validate_template(
             self.metadata,
             2,
-            current_columns=SAMPLE_TEMPLATE_COLUMNS)
+            current_columns=STC)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
                           'physical_specimen_remaining': 'true',
@@ -1945,7 +1946,7 @@ class TestSampleTemplate(TestCase):
 
     def test_check_restrictions(self):
         obs = self.tester.check_restrictions(
-            [SAMPLE_TEMPLATE_COLUMNS['EBI']])
+            [STC['EBI']])
         self.assertEqual(obs, set([]))
 
     def test_ebi_sample_accessions(self):
@@ -2108,7 +2109,7 @@ class TestSampleTemplate(TestCase):
             qdb.metadata_template.sample_template.SampleTemplate.create,
             self.metadata, self.new_study)
         obs = st.check_restrictions(
-            [SAMPLE_TEMPLATE_COLUMNS['EBI']])
+            [STC['EBI']])
         self.assertEqual(obs, {'collection_timestamp'})
 
     def test_validate_errors(self):

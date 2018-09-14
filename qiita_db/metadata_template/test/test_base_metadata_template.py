@@ -68,8 +68,6 @@ class TestMetadataTemplateReadOnly(TestCase):
             MT._clean_validate_template(None, 1)
 
     def test_identify_forbidden_words(self):
-        """_identify_forbidden_words_in_column_names returns forbidden words
-        """
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
         # tests filtering for sample_id, when it is not the first element
         # verifies all forbidden elements for base class are returned
@@ -89,9 +87,6 @@ class TestMetadataTemplateReadOnly(TestCase):
                                        'sampleid'})
 
     def test_identify_pgsql_reserved_words(self):
-        """_identify_pgsql_reserved_words_in_column_names returns words
-        matching the database's current list of reserved words.
-        """
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
         results = MT._identify_pgsql_reserved_words_in_column_names([
             'select',
@@ -100,9 +95,6 @@ class TestMetadataTemplateReadOnly(TestCase):
         self.assertTrue(set(results), {'column', 'select'})
 
     def test_identify_invalid_characters(self):
-        """_identify_column_names_with_invalid_characters returns words
-        containing invalid characters.
-        """
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
         results = MT._identify_column_names_with_invalid_characters([
             'tax on',

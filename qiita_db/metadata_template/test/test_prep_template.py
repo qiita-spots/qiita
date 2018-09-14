@@ -764,7 +764,6 @@ class TestPrepTemplate(TestCase):
     '''
 
     def test_clean_validate_template_no_forbidden_words4(self):
-        """Raises error on false-positive detection of forbidden word"""
         PT = qdb.metadata_template.prep_template.PrepTemplate
         self.metadata.rename(columns={'center_name': 'linkerprimersequence'},
                              inplace=True)
@@ -773,7 +772,6 @@ class TestPrepTemplate(TestCase):
             PT._clean_validate_template(self.metadata, 2)
         except qdb.exceptions.QiitaDBColumnError:
             raised = True
-
         self.assertFalse(raised, "Exception raised")
 
     def test_clean_validate_template_no_pgsql_reserved_words(self):
