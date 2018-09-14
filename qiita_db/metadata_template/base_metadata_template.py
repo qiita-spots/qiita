@@ -436,11 +436,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
     _table_prefix = None
     _id_column = None
     _sample_cls = None
-    _forbidden_words = {
-        'sampleid',
-        'qiita_study_id',
-        'qiita_prep_id'
-    }
+    # forbidden_words not defined for base class. Please redefine for
+    # sub-classes.
+    _forbidden_words = {}
 
     def _check_id(self, id_):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
