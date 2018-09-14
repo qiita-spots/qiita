@@ -491,12 +491,15 @@ class MetadataTemplate(qdb.base.QiitaObject):
         Returns
         -------
         md_template : DataFrame
-            Cleaned copy of the input md_template
+            Cleaned deep-copy of the input md_template:
+                Removes 'qiita_study_id' and 'qiita_prep_id' columns,
+                if present.
 
         Raises
         ------
         QiitaDBColumnError
-            If the sample names in md_template contains invalid names
+            If the column names in md_template contains invalid characers,
+            forbidden words, or PostgreSQL-reserved words.
         QiitaDBWarning
             If there are missing columns required for some functionality
         """
