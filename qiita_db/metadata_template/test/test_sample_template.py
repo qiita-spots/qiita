@@ -885,6 +885,16 @@ class TestSampleTemplate(TestCase):
                                        'qiita_study_id',
                                        'sampleid'})
 
+    def test_silent_drop(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'qiita_prep_id'},
+                             inplace=True)
+        results = list(ST._clean_validate_template(
+                       self.metadata, 2).columns.values)
+        if 'qiitq_prep_id' in results:
+            self.assertFalse(True)
+        self.assertTrue(True)
+
     def test_get_category(self):
         pt = qdb.metadata_template.sample_template.SampleTemplate(1)
         obs = pt.get_category('latitude')
