@@ -91,9 +91,6 @@ class PrepTemplate(MetadataTemplate):
     _id_column = "prep_template_id"
     _sample_cls = PrepSample
     _filepath_table = 'prep_template_filepath'
-    # This has been explicitly redefined here for clarity, even though
-    # PrepTemplate does not differ at this point from the base MetadataTemplate
-    # class.
     _forbidden_words = {
                         'sampleid',
                         'qiita_study_id',
