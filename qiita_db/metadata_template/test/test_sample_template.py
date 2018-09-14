@@ -863,9 +863,9 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             ST._clean_validate_template(self.metadata, 2)
 
-    #this test migrated to SampleTemplate, from MetadataTemplate, to test
-    #_identify_forbidden_words_in_column_names() with a usable list of
-    #forbidden words.
+    # this test migrated to SampleTemplate, from MetadataTemplate, to test
+    # _identify_forbidden_words_in_column_names() with a usable list of
+    # forbidden words.
     def test_identify_forbidden_words_in_column_names(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         # tests filtering for sample_id, when it is not the first element
