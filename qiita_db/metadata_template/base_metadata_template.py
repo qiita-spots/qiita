@@ -50,10 +50,7 @@ import warnings
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 
-if PY3:
-    from string import ascii_letters as letters, digits
-else:
-    from string import letters, digits
+from string import letters, digits
 
 
 class BaseSample(qdb.base.QiitaObject):
