@@ -848,29 +848,7 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             ST._clean_validate_template(self.metadata, 2)
 
-    '''
-    Commenting these two out for now. There is legacy code in
-    _clean_validate_template that automatically removes internally generated
-    columns qiita_study_id and qiita_prep_id before validating. Need to
-    revisit this and see how existing code might break when removing the
-    'remover'.
-
     def test_clean_validate_template_no_forbidden_words2(self):
-        ST = qdb.metadata_template.sample_template.SampleTemplate
-        self.metadata.rename(columns={'taxon_id': 'qiita_study_id'},
-                             inplace=True)
-        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            ST._clean_validate_template(self.metadata, 2)
-
-    def test_clean_validate_template_no_forbidden_words3(self):
-        ST = qdb.metadata_template.sample_template.SampleTemplate
-        self.metadata.rename(columns={'taxon_id': 'qiita_prep_id'},
-                             inplace=True)
-        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            ST._clean_validate_template(self.metadata, 2)
-    '''
-
-    def test_clean_validate_template_no_forbidden_words4(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         # A word forbidden only in SampleTemplate
         self.metadata.rename(columns={'taxon_id': 'linkerprimersequence'},
@@ -878,12 +856,34 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             ST._clean_validate_template(self.metadata, 2)
 
-    def test_clean_validate_template_no_forbidden_words5(self):
+    def test_clean_validate_template_no_forbidden_words3(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         # A word forbidden only in SampleTemplate
         self.metadata.rename(columns={'taxon_id': 'barcode'}, inplace=True)
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             ST._clean_validate_template(self.metadata, 2)
+
+    #this test migrated to SampleTemplate, from MetadataTemplate, to test
+    #_identify_forbidden_words_in_column_names() with a usable list of
+    #forbidden words.
+    def test_identify_forbidden_words_in_column_names(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        # tests filtering for sample_id, when it is not the first element
+        # verifies all forbidden elements for base class are returned
+        # verifies a forbidden word in sub-class will not be returned
+        # verifies normal column names are not returned
+        results = ST._identify_forbidden_words_in_column_names([
+            'just_fine3',
+            'sampleid',
+            'alice',
+            'linkerprimersequence',
+            'bob',
+            'qiita_study_id',
+            'qiita_prep_id',
+            'eve'])
+        self.assertTrue(set(results), {'qiita_prep_id',
+                                       'qiita_study_id',
+                                       'sampleid'})
 
     def test_get_category(self):
         pt = qdb.metadata_template.sample_template.SampleTemplate(1)

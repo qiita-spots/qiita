@@ -67,25 +67,6 @@ class TestMetadataTemplateReadOnly(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MT._clean_validate_template(None, 1)
 
-    def test_identify_forbidden_words(self):
-        MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
-        # tests filtering for sample_id, when it is not the first element
-        # verifies all forbidden elements for base class are returned
-        # verifies a forbidden word in sub-class will not be returned
-        # verifies normal column names are not returned
-        results = MT._identify_forbidden_words_in_column_names([
-            'just_fine3',
-            'sampleid',
-            'alice',
-            'linkerprimersequence',
-            'bob',
-            'qiita_study_id',
-            'qiita_prep_id',
-            'eve'])
-        self.assertTrue(set(results), {'qiita_prep_id',
-                                       'qiita_study_id',
-                                       'sampleid'})
-
     def test_identify_pgsql_reserved_words(self):
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
         results = MT._identify_pgsql_reserved_words_in_column_names([
