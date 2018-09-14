@@ -36,7 +36,7 @@ Methods
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.utils import PY3, viewitems
+from future.utils import viewitems
 from future.builtins import zip
 from itertools import chain
 from copy import deepcopy
