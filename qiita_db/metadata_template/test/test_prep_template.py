@@ -741,7 +741,7 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             PT._clean_validate_template(self.metadata, 2)
 
-    def test_clean_validate_template_no_forbidden_words4(self):
+    def test_clean_validate_template_no_forbidden_words2(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
         self.metadata.rename(columns={'center_name': 'linkerprimersequence'},
                              inplace=True)

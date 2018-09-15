@@ -87,7 +87,7 @@ class TestMetadataTemplateReadOnly(TestCase):
             'this|is',
             '4column',
             'just_fine2'])
-        self.assertTrue(set(results) == {'tax on',
+        self.assertItemsEqual(set(results) == {'tax on',
                                          'bla.',
                                          '.',
                                          '{',
