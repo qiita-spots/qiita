@@ -496,7 +496,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         Raises
         ------
         QiitaDBColumnError
-            If the column names in md_template contains invalid characers,
+            If the column names in md_template contains invalid characters,
             forbidden words, or PostgreSQL-reserved words.
         QiitaDBWarning
             If there are missing columns required for some functionality
