@@ -88,11 +88,11 @@ class TestMetadataTemplateReadOnly(TestCase):
             '4column',
             'just_fine2'])
         self.assertItemsEqual(set(results) == {'tax on',
-                                         'bla.',
-                                         '.',
-                                         '{',
-                                         'this|is',
-                                         '4column'})
+                                               'bla.',
+                                               '.',
+                                               '{',
+                                               'this|is',
+                                               '4column'})
 
 
 if __name__ == '__main__':
