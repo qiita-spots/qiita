@@ -91,6 +91,10 @@ class PrepTemplate(MetadataTemplate):
     _id_column = "prep_template_id"
     _sample_cls = PrepSample
     _filepath_table = 'prep_template_filepath'
+    _forbidden_words = {
+                        'sampleid',
+                        'qiita_study_id',
+                        'qiita_prep_id'}
 
     @classmethod
     def create(cls, md_template, study, data_type, investigation_type=None,

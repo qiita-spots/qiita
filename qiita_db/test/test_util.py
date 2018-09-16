@@ -387,9 +387,9 @@ class DBUtilTests(TestCase):
 
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
-                            'primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcode': 'GTCCGCAAGTTA',
-                            'run_prefix': "s_G1_L001_sequences",
+                            'amzn_primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'bartab': 'GTCCGCAAGTTA',
+                            'frd_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
