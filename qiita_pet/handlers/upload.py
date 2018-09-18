@@ -137,6 +137,9 @@ class StudyUploadViaRemote(BaseHandler):
         upload_folder = join(upload_folder, study_id)
         ssh_key_fp = join(upload_folder, '.key.txt')
 
+        if not isdir(upload_folder):
+            makedirs(upload_folder)
+
         with open(ssh_key_fp, 'w') as f:
             f.write(ssh_key)
 
