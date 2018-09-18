@@ -909,7 +909,7 @@ class UtilTests(TestCase):
         snew_info = {
             'status': 'sandbox', 'study_title': 'test_study_1',
             'metadata_complete': True, 'publication_pid': [],
-            'artifact_biom_ids': None,
+            'artifact_biom_ids': [],
             'ebi_submission_status': 'not submitted',
             'study_id': new_study.id, 'ebi_study_accession': None,
             'owner': 'Shared', 'shared': [],
@@ -1074,13 +1074,13 @@ class UtilTests(TestCase):
            {'files': [], 'artifact_id': 7, 'data_type': '16S',
             'target_gene': '16S rRNA', 'name': 'BIOM',
             'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
-            'deprecated': True, 'platform': 'Illumina', 'algorithm_az': '',
+            'deprecated': False, 'platform': 'Illumina', 'algorithm_az': '',
             'prep_samples': 27},
            {'files': ['biom_table.biom'], 'artifact_id': 8, 'data_type': '18S',
             'target_gene': 'not provided', 'name': 'noname',
             'target_subfragment': [], 'parameters': {}, 'algorithm': '',
-            'deprecated': True, 'platform': 'not provided', 'algorithm_az': '',
-            'prep_samples': 0}]
+            'deprecated': False, 'platform': 'not provided',
+            'algorithm_az': '', 'prep_samples': 0}]
         self.assertItemsEqual(obs, exp)
 
         # now let's test that the order given by the commands actually give the

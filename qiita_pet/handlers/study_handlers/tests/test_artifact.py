@@ -178,7 +178,7 @@ class ArtifactGetInfoTest(TestHandlerBase):
             {'files': [], 'target_subfragment': ['V4'], 'artifact_id': 7,
              'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
              'platform': 'Illumina', 'algorithm_az': '', 'prep_samples': 27,
-             'deprecated': True, 'algorithm': '', 'parameters': {},
+             'deprecated': False, 'algorithm': '', 'parameters': {},
              'target_gene': '16S rRNA', u'name': u'BIOM'}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         obs = loads(response.body)
