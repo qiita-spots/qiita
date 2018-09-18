@@ -251,7 +251,7 @@ class TestArtifactAPI(TestCase):
           {'files': [], 'artifact_id': 7, 'data_type': '16S',
            'timestamp': '2012-10-02 17:30:00', 'target_gene': '16S rRNA',
            'name': 'BIOM', 'target_subfragment': ['V4'], 'parameters': {},
-           'algorithm': '', 'deprecated': True, 'platform': 'Illumina',
+           'algorithm': '', 'deprecated': False, 'platform': 'Illumina',
            'algorithm_az': '', 'prep_samples': 27}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         self.assertItemsEqual(obs.keys(), exp.keys())
