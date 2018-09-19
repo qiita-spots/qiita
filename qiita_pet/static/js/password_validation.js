@@ -22,8 +22,8 @@ function dualpass_validator() {
       username:{required:true,email: true},
       email:{required:true, email: true},
       oldpass:{required:true},
-      newpass:{required:true, minlength: 8, validate_password_is_ascii:'sel'},
-      newpass2:{required:true, minlength: 8, validate_password_is_ascii:'sel', equalTo: "#newpass"},
+      newpass:{required:true, validate_password_is_ascii:'sel', minlength: 8},
+      newpass2:{required:true, validate_password_is_ascii:'sel', equalTo: "#newpass", minlength: 8},
     },
 
     messages:{
