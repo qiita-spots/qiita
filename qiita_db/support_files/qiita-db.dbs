@@ -1259,6 +1259,9 @@
 			<column name="active" type="bool" jt="-7" mandatory="y" >
 				<defo>&#039;True&#039;</defo>
 			</column>
+			<column name="deprecated" type="bool" jt="-7" >
+				<defo>False</defo>
+			</column>
 			<index name="pk_software" unique="PRIMARY_KEY" >
 				<column name="software_id" />
 			</index>
@@ -1373,6 +1376,9 @@ Controlled Vocabulary]]></comment>
 			<column name="study_abstract" type="text" jt="12" mandatory="y" />
 			<column name="vamps_id" type="varchar" jt="12" />
 			<column name="ebi_study_accession" type="varchar" jt="12" />
+			<column name="specimen_id_column" type="varchar" length="256" jt="12" >
+				<comment><![CDATA[The name of the column that describes the specimen identifiers (such as what is written on the tubes).]]></comment>
+			</column>
 			<index name="pk_study" unique="PRIMARY_KEY" >
 				<column name="study_id" />
 			</index>
@@ -1673,7 +1679,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_artifact" color="b2cdf7" x="1590" y="750" />
 		<entity schema="qiita" name="prep_template_processing_job" color="b2cdf7" x="1725" y="990" />
 		<entity schema="qiita" name="software_type" color="b2cdf7" x="2610" y="960" />
-		<entity schema="qiita" name="software" color="b2cdf7" x="2385" y="960" />
 		<entity schema="qiita" name="study_publication" color="b2cdf7" x="1845" y="720" />
 		<entity schema="qiita" name="investigation_study" color="c0d4f3" x="2025" y="360" />
 		<entity schema="qiita" name="investigation" color="c0d4f3" x="2250" y="315" />
@@ -1691,7 +1696,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_environmental_package" color="b2cdf7" x="2085" y="45" />
 		<entity schema="qiita" name="environmental_package" color="b2cdf7" x="2160" y="180" />
 		<entity schema="qiita" name="study_person" color="c0d4f3" x="2010" y="135" />
-		<entity schema="qiita" name="study" color="d0def5" x="1785" y="240" />
 		<entity schema="qiita" name="per_study_tags" color="b2cdf7" x="2145" y="450" />
 		<entity schema="qiita" name="study_tags" color="b2cdf7" x="2295" y="480" />
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="2010" y="540" />
@@ -1725,6 +1729,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="software_command" color="b2cdf7" x="2160" y="1245" />
 		<entity schema="qiita" name="processing_job_validator" color="b2cdf7" x="2160" y="1410" />
 		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1935" y="1140" />
+		<entity schema="qiita" name="study" color="d0def5" x="1785" y="240" />
+		<entity schema="qiita" name="software" color="b2cdf7" x="2385" y="960" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />

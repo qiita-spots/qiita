@@ -387,9 +387,9 @@ class DBUtilTests(TestCase):
 
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
-                            'primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcode': 'GTCCGCAAGTTA',
-                            'run_prefix': "s_G1_L001_sequences",
+                            'amzn_primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'bartab': 'GTCCGCAAGTTA',
+                            'frd_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
@@ -858,6 +858,11 @@ class UtilTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_generate_study_list(self):
+        USER = qdb.user.User
+        STUDY = qdb.study.Study
+        PREP = qdb.metadata_template.prep_template.PrepTemplate
+        UTIL = qdb.util
+
         # creating a new study to make sure that empty studies are also
         # returned
         info = {"timeseries_type_id": 1, "metadata_complete": True,
@@ -868,55 +873,134 @@ class UtilTests(TestCase):
                 "emp_person_id": qdb.study.StudyPerson(1),
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
-        new_study = qdb.study.Study.create(
-            qdb.user.User('shared@foo.bar'), 'test_study_1', info=info)
+        new_study = STUDY.create(
+            USER('shared@foo.bar'), 'test_study_1', info=info)
 
-        exp_info = [
-            {'status': 'private', 'study_title': (
-                'Identification of the Microbiomes for Cannabis Soils'),
-             'metadata_complete': True, 'publication_pid': [
-                '123456', '7891011'], 'artifact_biom_ids': [4, 5, 6, 7],
-             'ebi_submission_status': 'submitted', 'study_id': 1,
-             'ebi_study_accession': 'EBI123456-BB', 'owner': 'Dude',
-             'shared': [('shared@foo.bar', 'Shared')],
-             'study_abstract': (
+        sinfo = {
+            'study_id': 1,
+            'owner': 'Dude',
+            'study_alias': 'Cannabis Soils',
+            'status': 'private',
+            'study_abstract':
                 'This is a preliminary study to examine the microbiota '
-                'associated with the Cannabis plant. Soils samples from '
-                'the bulk soil, soil associated with the roots, and the '
-                'rhizosphere were extracted and the DNA sequenced. Roots '
-                'from three independent plants of different strains were '
-                'examined. These roots were obtained November 11, 2011 from '
-                'plants that had been harvested in the summer. Future studies '
-                'will attempt to analyze the soils and rhizospheres from the '
-                'same location at different time points in the plant '
-                'lifecycle.'), 'pi': ('PI_dude@foo.bar', 'PIDude'),
-             'publication_doi': ['10.100/123456', '10.100/7891011'],
-             'study_alias': 'Cannabis Soils', 'study_tags': None,
-             'number_samples_collected': 27},
-            {'status': 'sandbox', 'study_title': 'test_study_1',
-             'metadata_complete': True, 'publication_pid': [],
-             'artifact_biom_ids': None,
-             'ebi_submission_status': 'not submitted',
-             'study_id': new_study.id, 'ebi_study_accession': None,
-             'owner': 'Shared', 'shared': [],
-             'study_abstract': 'Some abstract goes here',
-             'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
-             'study_alias': 'TST', 'study_tags': None,
-             'number_samples_collected': 0}]
-        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
-        self.assertEqual(obs_info, exp_info)
+                'associated with the Cannabis plant. Soils samples '
+                'from the bulk soil, soil associated with the roots, '
+                'and the rhizosphere were extracted and the DNA '
+                'sequenced. Roots from three independent plants of '
+                'different strains were examined. These roots were '
+                'obtained November 11, 2011 from plants that had been '
+                'harvested in the summer. Future studies will attempt '
+                'to analyze the soils and rhizospheres from the same '
+                'location at different time points in the plant '
+                'lifecycle.',
+            'metadata_complete': True,
+            'ebi_study_accession': 'EBI123456-BB',
+            'ebi_submission_status': 'submitted',
+            'study_title':
+                'Identification of the Microbiomes for Cannabis Soils',
+            'number_samples_collected': 27,
+            'shared': [('shared@foo.bar', 'Shared')],
+            'publication_doi': ['10.100/123456', '10.100/7891011'],
+            'publication_pid': ['123456', '7891011'],
+            'pi': ('PI_dude@foo.bar', 'PIDude'),
+            'artifact_biom_ids': [4, 5, 6, 7],
+            'study_tags': None,
+        }
+        snew_info = {
+            'status': 'sandbox', 'study_title': 'test_study_1',
+            'metadata_complete': True, 'publication_pid': [],
+            'artifact_biom_ids': [],
+            'ebi_submission_status': 'not submitted',
+            'study_id': new_study.id, 'ebi_study_accession': None,
+            'owner': 'Shared', 'shared': [],
+            'study_abstract': 'Some abstract goes here',
+            'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
+            'study_alias': 'TST', 'study_tags': None,
+            'number_samples_collected': 0}
+        exp1 = [sinfo]
+        exp2 = [snew_info]
+        exp_both = [sinfo, snew_info]
 
-        qdb.artifact.Artifact(4).visibility = 'public'
-        exp_info[0]['status'] = 'public'
-        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
-        self.assertEqual(obs_info, exp_info)
+        # let's make sure that everything is private for study 1
+        for a in STUDY(1).artifacts():
+            a.visibility = 'private'
 
-        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
-        self.assertEqual(obs_info, exp_info)
+        # owner of study
+        obs = UTIL.generate_study_list(USER('test@foo.bar'), 'user')
+        self.assertEqual(obs, exp1)
+        # shared with
+        obs = UTIL.generate_study_list(USER('shared@foo.bar'), 'user')
+        self.assertEqual(obs, exp_both)
+        # admin
+        obs = UTIL.generate_study_list(USER('admin@foo.bar'), 'user')
+        self.assertEqual(obs, exp_both)
+        # no access/hidden
+        obs = UTIL.generate_study_list(USER('demo@microbio.me'), 'user')
+        self.assertEqual(obs, [])
+        # public - none for everyone
+        obs = UTIL.generate_study_list(USER('test@foo.bar'), 'public')
+        self.assertEqual(obs, [])
+        obs = UTIL.generate_study_list(USER('shared@foo.bar'), 'public')
+        self.assertEqual(obs, [])
+        obs = UTIL.generate_study_list(USER('admin@foo.bar'), 'public')
+        self.assertEqual(obs, [])
+        obs = UTIL.generate_study_list(USER('demo@microbio.me'), 'public')
+        self.assertEqual(obs, [])
 
-        # resetting to private and deleting the old study
-        qdb.artifact.Artifact(4).visibility = 'private'
+        def _avoid_duplicated_tests(all_artifacts=False):
+            # nothing should shange for owner, shared
+            obs = UTIL.generate_study_list(USER('test@foo.bar'), 'user')
+            self.assertEqual(obs, exp1)
+            obs = UTIL.generate_study_list(USER('shared@foo.bar'), 'user')
+            self.assertEqual(obs, exp_both)
+            # for admin it should be shown in public and user cause there are
+            # 2 preps and only one is public
+            obs = UTIL.generate_study_list(USER('admin@foo.bar'), 'user')
+            if not all_artifacts:
+                self.assertEqual(obs, exp_both)
+            else:
+                self.assertEqual(obs, exp2)
+            obs = UTIL.generate_study_list(USER('demo@microbio.me'), 'user')
+            self.assertEqual(obs, [])
+            # for the public query, everything should be same for owner, share
+            # and admin but demo should now see it as public but with limited
+            # artifacts
+            obs = UTIL.generate_study_list(USER('test@foo.bar'), 'public')
+            self.assertEqual(obs, [])
+            obs = UTIL.generate_study_list(USER('shared@foo.bar'), 'public')
+            self.assertEqual(obs, [])
+            obs = UTIL.generate_study_list(USER('admin@foo.bar'), 'public')
+            if not all_artifacts:
+                exp1[0]['artifact_biom_ids'] = [7]
+            self.assertEqual(obs, exp1)
+            obs = UTIL.generate_study_list(USER('demo@microbio.me'), 'public')
+            self.assertEqual(obs, exp1)
+
+            # returning artifacts
+            exp1[0]['artifact_biom_ids'] = [4, 5, 6, 7]
+
+        # make artifacts of prep 2 public
+        PREP(2).artifact.visibility = 'public'
+        exp1[0]['status'] = 'public'
+        exp_both[0]['status'] = 'public'
+        _avoid_duplicated_tests()
+
+        # make artifacts of prep 1 awaiting_approval
+        PREP(1).artifact.visibility = 'awaiting_approval'
+        _avoid_duplicated_tests()
+
+        # making all studies public
+        PREP(1).artifact.visibility = 'public'
+        _avoid_duplicated_tests(True)
+
+        # deleting the new study study and returning artifact status
         qdb.study.Study.delete(new_study.id)
+        PREP(1).artifact.visibility = 'private'
+        PREP(2).artifact.visibility = 'private'
+
+    def test_generate_study_list_errors(self):
+        with self.assertRaises(ValueError):
+            qdb.util.generate_study_list(qdb.user.User('test@foo.bar'), 'bad')
 
     def test_generate_study_list_without_artifacts(self):
         # creating a new study to make sure that empty studies are also
@@ -958,26 +1042,14 @@ class UtilTests(TestCase):
              'study_abstract': 'Some abstract goes here',
              'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
              'study_alias': 'TST', 'number_samples_collected': 0}]
-        obs_info = qdb.util.generate_study_list_without_artifacts(
-            [1, 2, 3, 4], True)
-        self.assertEqual(obs_info, exp_info)
-
-        qdb.artifact.Artifact(4).visibility = 'public'
-        exp_info[0]['status'] = 'public'
-        obs_info = qdb.util.generate_study_list_without_artifacts(
-            [1, 2, 3, 4], True)
+        obs_info = qdb.util.generate_study_list_without_artifacts([1, 2, 3, 4])
         self.assertEqual(obs_info, exp_info)
 
         obs_info = qdb.util.generate_study_list_without_artifacts(
-            [1, 2, 3, 4], False)
-        self.assertEqual(obs_info, exp_info)
-
-        obs_info = qdb.util.generate_study_list_without_artifacts(
-            [1, 2, 3, 4], False, 'EMP')
+            [1, 2, 3, 4], 'EMP')
         self.assertEqual(obs_info, [])
 
-        # resetting to private and deleting the old study
-        qdb.artifact.Artifact(4).visibility = 'private'
+        # deleting the old study
         qdb.study.Study.delete(new_study.id)
 
     def test_get_artifacts_information(self):
@@ -989,25 +1061,26 @@ class UtilTests(TestCase):
             del obs[i]['timestamp']
 
         exp = [
-            {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'artifact_id': 4, 'data_type': '18S', 'target_gene': '16S rRNA',
-             'name': 'BIOM', 'target_subfragment': ['V4'],
-             'parameters': {
-                'reference': '1', 'similarity': '0.97',
-                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                'threads': '1', 'sortmerna_coverage': '0.97'},
-             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-             'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
-             'platform': 'Illumina', 'prep_samples': 27},
-            {'files': [], 'artifact_id': 7, 'data_type': '16S',
-             'target_gene': '16S rRNA', 'name': 'BIOM',
-             'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
-             'algorithm_az': '', 'platform': 'Illumina', 'prep_samples': 27},
-            {'files': ['biom_table.biom'], 'artifact_id': 8,
-             'data_type': '18S', 'target_gene': 'not provided',
-             'name': 'noname', 'target_subfragment': [], 'parameters': {},
-             'algorithm': '', 'algorithm_az': '', 'platform': 'not provided',
-             'prep_samples': 0}]
+           {'files': ['1_study_1001_closed_reference_otu_table.biom'],
+            'artifact_id': 4, 'data_type': '18S', 'target_gene': '16S rRNA',
+            'name': 'BIOM', 'target_subfragment': ['V4'], 'parameters': {
+             'reference': '1', 'similarity': '0.97',
+             'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+             'threads': '1', 'sortmerna_coverage': '0.97'},
+            'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+            'deprecated': False, 'platform': 'Illumina',
+            'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
+            'prep_samples': 27},
+           {'files': [], 'artifact_id': 7, 'data_type': '16S',
+            'target_gene': '16S rRNA', 'name': 'BIOM',
+            'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
+            'deprecated': False, 'platform': 'Illumina', 'algorithm_az': '',
+            'prep_samples': 27},
+           {'files': ['biom_table.biom'], 'artifact_id': 8, 'data_type': '18S',
+            'target_gene': 'not provided', 'name': 'noname',
+            'target_subfragment': [], 'parameters': {}, 'algorithm': '',
+            'deprecated': False, 'platform': 'not provided',
+            'algorithm_az': '', 'prep_samples': 0}]
         self.assertItemsEqual(obs, exp)
 
         # now let's test that the order given by the commands actually give the
@@ -1026,8 +1099,7 @@ class UtilTests(TestCase):
                 del obs[i]['timestamp']
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1) '
                                    '| Split libraries FASTQ')
-            exp[0]['algorithm_az'] = (
-                'PickclosedreferenceOTUsreferenceSplitlibrariesFASTQ')
+            exp[0]['algorithm_az'] = '33fed1b35728417d7ba4139b8f817d44'
             self.assertItemsEqual(obs, exp)
 
             # setting up database changes for also command output
@@ -1041,9 +1113,7 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom) | Split libraries FASTQ')
-            exp[0]['algorithm_az'] = (
-                'PickclosedreferenceOTUsreferenceBIOMstudyclosedreference'
-                'otutablebiomSplitlibrariesFASTQ')
+            exp[0]['algorithm_az'] = 'de5b794a2cacd428f36fea86df196bfd'
             self.assertItemsEqual(obs, exp)
 
             # let's test that we ignore the parent_info
@@ -1057,9 +1127,21 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom)')
-            exp[0]['algorithm_az'] = (
-                'PickclosedreferenceOTUsreferenceBIOMstudyclosedreference'
-                'otutablebiom')
+            exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
+            self.assertItemsEqual(obs, exp)
+
+            # let's test that we ignore the parent_info
+            qdb.sql_connection.TRN.add("""UPDATE qiita.software_command
+                                          SET ignore_parent_command = True""")
+            qdb.sql_connection.TRN.execute()
+            obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
+            # not testing timestamp
+            for i in range(len(obs)):
+                del obs[i]['timestamp']
+            exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1, '
+                                   'BIOM: 1_study_1001_closed_reference_'
+                                   'otu_table.biom)')
+            exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
             self.assertItemsEqual(obs, exp)
 
             # returning database as it was

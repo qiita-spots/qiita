@@ -67,6 +67,33 @@ class TestMetadataTemplateReadOnly(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MT._clean_validate_template(None, 1)
 
+    def test_identify_pgsql_reserved_words(self):
+        MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
+        results = MT._identify_pgsql_reserved_words_in_column_names([
+            'select',
+            'column',
+            'just_fine1'])
+        self.assertItemsEqual(set(results), {'column', 'select'})
+
+    def test_identify_invalid_characters(self):
+        MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
+        results = MT._identify_column_names_with_invalid_characters([
+            'tax on',
+            'bla.',
+            '.',
+            'sampleid',
+            'sample_id',
+            '{',
+            'this|is',
+            '4column',
+            'just_fine2'])
+        self.assertItemsEqual(set(results), {'tax on',
+                                             'bla.',
+                                             '.',
+                                             '{',
+                                             'this|is',
+                                             '4column'})
+
 
 if __name__ == '__main__':
     main()

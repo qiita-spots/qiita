@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+from subprocess import Popen
+from os import makedirs
+from os.path import join, exists
+
+import click
+
+
+@click.command()
+@click.argument('env_script', required=True)
+@click.argument('start_script', required=True)
+@click.argument('url', required=True)
+@click.argument('job_id', required=True)
+@click.argument('job_dir', required=True)
+def start(env_script, start_script, url, job_id, job_dir):
+    """Starts the plugin environment"""
+    main_cmd = [start_script, url, job_id, job_dir]
+
+    # generating file contents to be used with qsub
+    lines = []
+    lines.append("echo $PBS_JOBID")
+    lines.append("source ~/.bash_profile")
+    lines.append(env_script)
+    lines.append(' '.join(main_cmd))
+
+    # writting the file to be used with qsub
+    if not exists(job_dir):
+        makedirs(job_dir)
+    fp = join(job_dir, '%s.txt' % job_id)
+    open(fp, 'w').write("\n".join(lines))
+
+    qsub_cmd = ("qsub -l nodes=1:ppn=5 %s -o %s/qsub-output.txt "
+                "-e %s/qsub-error.txt -l "
+                "epilogue=/home/qiita/qiita-epilogue.sh" % (fp, job_dir,
+                                                            job_dir))
+    proc = Popen(qsub_cmd, shell=True)
+    if proc.returncode and proc.returncode != 0:
+        raise ValueError("Error launching the plugin.")
+
+
+if __name__ == '__main__':
+    start()

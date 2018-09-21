@@ -162,7 +162,6 @@ Deblur Quality Filtering
 Looking for information about debluring? Please see the document here:
 
 .. toctree::
-   :maxdepth: 1
 
    deblur_quality.rst
 
@@ -206,6 +205,5 @@ Processing Recommendations
 Looking for information about processing data? Please see the document here:
 
 .. toctree::
-   :maxdepth: 1
 
    processing-recommendations.rst

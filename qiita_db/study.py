@@ -59,6 +59,7 @@ class Study(qdb.base.QiitaObject):
     status
     title
     owner
+    specimen_id_column
 
     Methods
     -------
@@ -116,7 +117,7 @@ class Study(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchflatten()
 
     @classmethod
-    def get_by_status(cls, status):
+    def get_ids_by_status(cls, status):
         """Returns study id for all Studies with given status
 
         Parameters
@@ -138,7 +139,7 @@ class Study(qdb.base.QiitaObject):
                         JOIN qiita.portal_type USING (portal_type_id)
                       WHERE visibility = %s AND portal = %s"""
             qdb.sql_connection.TRN.add(sql, [status, qiita_config.portal])
-            studies = set(qdb.sql_connection.TRN.execute_fetchflatten())
+            sids = set(qdb.sql_connection.TRN.execute_fetchflatten())
             # If status is sandbox, all the studies that are not present in the
             # study_artifact table are also sandbox
             if status == 'sandbox':
@@ -150,10 +151,26 @@ class Study(qdb.base.QiitaObject):
                                 SELECT study_id
                                 FROM qiita.study_artifact)"""
                 qdb.sql_connection.TRN.add(sql, [qiita_config.portal])
-                studies = studies.union(
+                sids = sids.union(
                     qdb.sql_connection.TRN.execute_fetchflatten())
 
-            return set(cls(sid) for sid in studies)
+            return sids
+
+    @classmethod
+    def get_by_status(cls, status):
+        """Returns study id for all Studies with given status
+
+        Parameters
+        ----------
+        status : str
+            Status setting to search for
+
+        Returns
+        -------
+        set of qiita_db.study.Study
+            All studies in the database that match the given status
+        """
+        return set(cls(sid) for sid in cls.get_ids_by_status(status))
 
     @classmethod
     def get_info(cls, study_ids=None, info_cols=None):
@@ -625,6 +642,65 @@ class Study(qdb.base.QiitaObject):
                      VALUES (%s, %s, %s)"""
             sql_args = [[self._id, pub, is_doi] for pub, is_doi in values]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
+
+    @property
+    def specimen_id_column(self):
+        """Returns the specimen identifier column
+
+        Returns
+        -------
+        str
+            The name of the specimen id column
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT specimen_id_column
+                     FROM qiita.study
+                     WHERE study_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @specimen_id_column.setter
+    def specimen_id_column(self, value):
+        """Sets the specimen identifier column
+
+        Parameters
+        ----------
+        value : str
+            The name of the column with the specimen identifiers.
+
+        Raises
+        ------
+        QiitaDBLookupError
+            If value is not in the sample information for this study.
+            If the study does not have sample information.
+        QiitaDBColumnError
+            Category is not unique.
+        """
+        st = self.sample_template
+        if st is None:
+            raise qdb.exceptions.QiitaDBLookupError("Study does not have a "
+                                                    "sample information.")
+
+        if value is not None:
+            if value not in st.categories():
+                raise qdb.exceptions.QiitaDBLookupError("Category '%s' is not "
+                                                        "present in the sample"
+                                                        " information."
+                                                        % value)
+
+            observed_values = st.get_category(value)
+            if len(observed_values) != len(set(observed_values.values())):
+                raise qdb.exceptions.QiitaDBColumnError("The category does not"
+                                                        " contain unique "
+                                                        "values.")
+
+        with qdb.sql_connection.TRN:
+            # Set the new ones
+            sql = """UPDATE qiita.study SET
+                     specimen_id_column = %s
+                     WHERE study_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [value, self._id])
             qdb.sql_connection.TRN.execute()
 
     @property

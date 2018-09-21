@@ -91,6 +91,10 @@ class PrepTemplate(MetadataTemplate):
     _id_column = "prep_template_id"
     _sample_cls = PrepSample
     _filepath_table = 'prep_template_filepath'
+    _forbidden_words = {
+                        'sampleid',
+                        'qiita_study_id',
+                        'qiita_prep_id'}
 
     @classmethod
     def create(cls, md_template, study, data_type, investigation_type=None,
@@ -689,13 +693,13 @@ class PrepTemplate(MetadataTemplate):
             is_submitted = qdb.sql_connection.TRN.execute_fetchlast()
         return is_submitted
 
-    def delete_sample(self, sample_name):
-        """Delete `sample_name` from prep information file
+    def delete_samples(self, sample_names):
+        """Delete `sample_names` from prep information file
 
         Parameters
         ----------
-        sample_name : str
-            The sample name to be deleted
+        sample_names : list of str
+            The sample names to be deleted
 
         Raises
         ------
@@ -707,7 +711,7 @@ class PrepTemplate(MetadataTemplate):
                 "Prep info file '%d' has files attached, you cannot delete "
                 "samples." % (self._id))
 
-        self._common_delete_sample_steps(sample_name)
+        self._common_delete_sample_steps(sample_names)
 
     @property
     def name(self):

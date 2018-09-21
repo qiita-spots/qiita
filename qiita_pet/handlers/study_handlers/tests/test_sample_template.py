@@ -275,7 +275,19 @@ class TestHelpers(TestHandlerBase):
                'download_id': 22,
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
-               'num_columns': 30}
+               'num_columns': 30,
+               'columns': ['season_environment', 'assigned_from_geo',
+                           'texture', 'taxon_id', 'depth', 'host_taxid',
+                           'common_name', 'water_content_soil', 'elevation',
+                           'temp', 'tot_nitro', 'samp_salinity', 'altitude',
+                           'env_biome', 'country', 'ph', 'anonymized_name',
+                           'tot_org_carb', 'description_duplicate',
+                           'env_feature', 'physical_specimen_location',
+                           'physical_specimen_remaining', 'dna_extracted',
+                           'sample_type', 'collection_timestamp',
+                           'host_subject_id', 'description', 'latitude',
+                           'longitude', 'scientific_name'],
+               'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
         # Test sample template doesn't exist
@@ -292,7 +304,9 @@ class TestHelpers(TestHandlerBase):
                'download_id': None,
                'old_files': [],
                'num_samples': 0,
-               'num_columns': 0}
+               'num_columns': 0,
+               'columns': [],
+               'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
     def test_sample_template_columns_get_req(self):
@@ -340,43 +354,67 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_build_sample_summary(self):
-        cols, table = _build_sample_summary(1, 'test@foo.bar')
-        # Make sure header filled properly
-        cols_exp = [{'field': 'sample', 'width': 240, 'sortable': False,
-                     'id': 'sample', 'name': 'Sample'},
-                    {'field': 'prep1', 'width': 240, 'sortable': False,
-                     'id': 'prep1', 'name': 'Prep information 1 - 1'},
-                    {'field': 'prep2', 'width': 240, 'sortable': False,
-                     'id': 'prep2', 'name': 'Prep information 2 - 2'}]
+        cols, rows = _build_sample_summary(1, 'test@foo.bar')
+        cols_exp = {
+            'prep2': 'Prep information 2 (2)',
+            'prep1': 'Prep information 1 (1)'}
+        rows_exp = {
+            '1.SKB2.640194': {
+                'sample': '1.SKB2.640194', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKM4.640180': {
+                'sample': '1.SKM4.640180', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKB3.640195': {
+                'sample': '1.SKB3.640195', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKB6.640176': {
+                'sample': '1.SKB6.640176', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKD6.640190': {
+                'sample': '1.SKD6.640190', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKM6.640187': {
+                'sample': '1.SKM6.640187', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKD9.640182': {
+                'sample': '1.SKD9.640182', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKM8.640201': {
+                'sample': '1.SKM8.640201', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKM2.640199': {
+                'sample': '1.SKM2.640199', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKD2.640178': {
+                'sample': '1.SKD2.640178', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKB7.640196': {
+                'sample': '1.SKB7.640196', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKD4.640185': {
+                'sample': '1.SKD4.640185', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKB8.640193': {
+                'sample': '1.SKB8.640193', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKM3.640197': {
+                'sample': '1.SKM3.640197', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKD5.640186': {
+                'sample': '1.SKD5.640186', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKB1.640202': {
+                'sample': '1.SKB1.640202', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKM1.640183': {
+                'sample': '1.SKM1.640183', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKD1.640179': {
+                'sample': '1.SKD1.640179', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKD3.640198': {
+                'sample': '1.SKD3.640198', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKB5.640181': {
+                'sample': '1.SKB5.640181', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKB4.640189': {
+                'sample': '1.SKB4.640189', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKB9.640200': {
+                'sample': '1.SKB9.640200', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKM9.640192': {
+                'sample': '1.SKM9.640192', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKD8.640184': {
+                'sample': '1.SKD8.640184', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKM5.640177': {
+                'sample': '1.SKM5.640177', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKM7.640188': {
+                'sample': '1.SKM7.640188', 'prep2': 'X', 'prep1': 'X'},
+            '1.SKD7.640191': {
+                'sample': '1.SKD7.640191', 'prep2': 'X', 'prep1': 'X'}}
         self.assertEqual(cols, cols_exp)
-        table_exp = [{'sample': '1.SKB2.640194', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKM4.640180', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKB3.640195', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKB6.640176', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKD6.640190', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKM6.640187', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKD9.640182', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKM8.640201', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKM2.640199', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKD2.640178', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKB7.640196', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKD4.640185', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKB8.640193', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKM3.640197', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKD5.640186', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKB1.640202', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKM1.640183', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKD1.640179', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKD3.640198', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKB5.640181', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKB4.640189', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKB9.640200', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKM9.640192', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKD8.640184', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKM5.640177', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKM7.640188', 'prep2': 'X', 'prep1': 'X'},
-                     {'sample': '1.SKD7.640191', 'prep2': 'X', 'prep1': 'X'}]
-        self.assertEqual(table, table_exp)
+        self.assertEqual(rows, rows_exp)
 
 
 class TestSampleTemplateHandler(TestHandlerBase):
@@ -448,7 +486,19 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                'download_id': 22,
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
-               'num_columns': 30}
+               'num_columns': 30,
+               'columns': ['season_environment', 'assigned_from_geo',
+                           'texture', 'taxon_id', 'depth', 'host_taxid',
+                           'common_name', 'water_content_soil', 'elevation',
+                           'temp', 'tot_nitro', 'samp_salinity', 'altitude',
+                           'env_biome', 'country', 'ph', 'anonymized_name',
+                           'tot_org_carb', 'description_duplicate',
+                           'env_feature', 'physical_specimen_location',
+                           'physical_specimen_remaining', 'dna_extracted',
+                           'sample_type', 'collection_timestamp',
+                           'host_subject_id', 'description', 'latitude',
+                           'longitude', 'scientific_name'],
+               'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
 

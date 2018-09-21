@@ -22,7 +22,6 @@ import meta_util
 import ontology
 import portal
 import reference
-import search
 import software
 import study
 import user
@@ -32,6 +31,6 @@ __version__ = "0.2.0-dev"
 
 __all__ = ["analysis", "artifact",  "archive", "base", "commands",
            "environment_manager", "exceptions", "investigation", "logger",
-           "meta_util", "ontology", "portal", "reference", "search",
+           "meta_util", "ontology", "portal", "reference",
            "software", "sql_connection", "study", "user", "util",
            "metadata_template", "processing_job"]

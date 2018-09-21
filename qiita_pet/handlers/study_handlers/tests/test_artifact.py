@@ -167,19 +167,19 @@ class ArtifactGetInfoTest(TestHandlerBase):
              'target_subfragment': ['V4'], 'artifact_id': 6,
              'data_type': '16S', 'timestamp': u'2012-10-02 17:30:00',
              'platform': 'Illumina',
-             'algorithm_az': 'PickclosedreferenceOTUsSplitlibrariesFASTQ',
-             'prep_samples': 27,
+             'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
+             'prep_samples': 27, 'deprecated': False,
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
              'parameters': {
-                 'reference': u'2', 'similarity': '0.97',
-                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                 'threads': '1', 'sortmerna_coverage': '0.97'},
+              'reference': '2', 'similarity': '0.97', 'sortmerna_e_value': '1',
+              'sortmerna_max_pos': '10000', 'threads': '1',
+              'sortmerna_coverage': '0.97'},
              'target_gene': '16S rRNA', 'name': 'BIOM'},
             {'files': [], 'target_subfragment': ['V4'], 'artifact_id': 7,
              'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
              'platform': 'Illumina', 'algorithm_az': '', 'prep_samples': 27,
-             'algorithm': '', 'parameters': {}, 'target_gene': '16S rRNA',
-             'name': 'BIOM'}]
+             'deprecated': False, 'algorithm': '', 'parameters': {},
+             'target_gene': '16S rRNA', u'name': u'BIOM'}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         obs = loads(response.body)
         self.assertItemsEqual(obs.keys(), exp.keys())

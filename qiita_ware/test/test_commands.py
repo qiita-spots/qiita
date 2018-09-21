@@ -8,17 +8,20 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main, skipIf
-from os.path import join
+from os.path import join, basename
 from tempfile import mkdtemp
 import pandas as pd
 from datetime import datetime
 from shutil import rmtree
+from os import path
+from glob import glob
+from paramiko.ssh_exception import AuthenticationException
 
 from h5py import File
 from qiita_files.demux import to_hdf5
 
 from qiita_ware.exceptions import ComputeError
-from qiita_ware.commands import submit_EBI
+from qiita_ware.commands import submit_EBI, list_remote, download_remote
 from qiita_db.util import get_mountpoint
 from qiita_db.study import Study, StudyPerson
 from qiita_db.software import DefaultParameters, Parameters
@@ -31,6 +34,59 @@ from qiita_core.qiita_settings import qiita_config
 
 
 @qiita_test_checker()
+class SSHTests(TestCase):
+    def setUp(self):
+        self.self_dir_path = path.dirname(path.abspath(__file__))
+        self.remote_dir_path = join(self.self_dir_path,
+                                    'test_data/test_remote_dir/')
+        self.test_ssh_key = join(self.self_dir_path, 'test_data/test_key')
+        self.test_wrong_key = join(self.self_dir_path, 'test_data/random_key')
+        self.temp_local_dir = mkdtemp()
+        self.exp_files = ['test_0.fastq.gz', 'test_1.txt']
+
+    def tearDown(self):
+        rmtree(self.temp_local_dir)
+
+    def _get_valid_files(self, folder):
+        files = []
+        for x in qiita_config.valid_upload_extension:
+            files.extend([basename(f) for f in glob(join(folder, '*.%s' % x))])
+        return files
+
+    def test_list_scp_wrong_key(self):
+        with self.assertRaises(AuthenticationException):
+            list_remote('scp://localhost:'+self.remote_dir_path,
+                        self.test_wrong_key)
+
+    def test_list_scp_nonexist_key(self):
+        with self.assertRaises(IOError):
+            list_remote('scp://localhost:'+self.remote_dir_path,
+                        join(self.self_dir_path, 'nokey'))
+
+    def test_list_scp(self):
+        read_file_list = list_remote('scp://localhost:'+self.remote_dir_path,
+                                     self.test_ssh_key)
+        self.assertEqual(read_file_list, self.exp_files)
+
+    def test_list_sftp(self):
+        read_file_list = list_remote('sftp://localhost:'+self.remote_dir_path,
+                                     self.test_ssh_key)
+        self.assertEqual(read_file_list, self.exp_files)
+
+    def test_download_scp(self):
+        download_remote('scp://localhost:'+self.remote_dir_path,
+                        self.test_ssh_key, self.temp_local_dir)
+        local_files = self._get_valid_files(self.temp_local_dir)
+        self.assertEqual(local_files, self.exp_files)
+
+    def test_download_sftp(self):
+        print self.remote_dir_path, self.temp_local_dir
+        download_remote('sftp://localhost:'+self.remote_dir_path,
+                        self.test_ssh_key, self.temp_local_dir)
+        local_files = self._get_valid_files(self.temp_local_dir)
+        self.assertEqual(local_files, self.exp_files)
+
+
 class CommandsTests(TestCase):
     def setUp(self):
         self.files_to_remove = []

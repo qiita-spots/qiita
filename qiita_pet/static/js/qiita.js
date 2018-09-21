@@ -314,17 +314,20 @@ function format_biom_rows(data, row, for_study_list = true, samples = null) {
 
   // grouping by processing_method, data_type and parameters
   $.each(data, function (idx, info) {
-    if (typeof info !== 'string' && !(info instanceof String)) {
-      var algorithm = info.algorithm;
-      if (!(algorithm in processing_method)) {
-        processing_method[algorithm] = {};
-      }
+    // ignore the artifacts that were generated with software that is deprecated
+    if (!info['deprecated']) {
+      if (typeof info !== 'string' && !(info instanceof String)) {
+        var algorithm = info.algorithm;
+        if (!(algorithm in processing_method)) {
+          processing_method[algorithm] = {};
+        }
 
-      var data_type = info.data_type + ' (' + info.target_subfragment.join(', ') + ')';
-      if (!(data_type in processing_method[algorithm])) {
-        processing_method[algorithm][data_type] = [];
+        var data_type = info.data_type + ' (' + info.target_subfragment.join(', ') + ')';
+        if (!(data_type in processing_method[algorithm])) {
+          processing_method[algorithm][data_type] = [];
+        }
+        processing_method[algorithm][data_type].push(info);
       }
-      processing_method[algorithm][data_type].push(info);
     }
   });
 
