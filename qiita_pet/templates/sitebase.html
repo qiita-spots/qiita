@@ -466,6 +466,30 @@
             </form>
             {% end %}
             <ul class="nav navbar-nav">
+              <li>
+                <a href="{% raw qiita_config.portal_dir %}/redbiom/">redbiom</a>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
+              <li>
+                <a href="{% raw qiita_config.portal_dir %}/iframe/?iframe=qiimp">Qiimp</a>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
+              <!-- downloads -->
+              <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Help<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="http://cmi-workshop.readthedocs.io/en/latest/">Tutorial</a>
+                  </li>
+                  <li>
+                    <a href="{% raw qiita_config.portal_dir %}/static/doc/html/index.html">Help</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
               <!-- generic elements -->
               <li class="dropdown">
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle">More Info<b class="caret"></b></a>
@@ -475,6 +499,9 @@
                   </li>
                   <li>
                     <a href="http://github.com/biocore/qiita">GitHub</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
                   </li>
                   <li>
                     <a type="button" data-toggle="modal" data-target=".qiita_pet_download_confirm">
@@ -499,35 +526,6 @@
                     </a>
                   </li>
 
-                </ul>
-              </li>
-            </ul>
-            <ul class="nav navbar-nav">
-              <li>
-                <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
-              </li>
-            </ul>
-            <ul class="nav navbar-nav">
-              <li>
-                <a href="{% raw qiita_config.portal_dir %}/redbiom/">redbiom</a>
-              </li>
-            </ul>
-            <ul class="nav navbar-nav">
-              <li>
-                <a href="{% raw qiita_config.portal_dir %}/iframe/?iframe=qiimp">Qiimp</a>
-              </li>
-            </ul>
-            <ul class="nav navbar-nav">
-              <!-- downloads -->
-              <li class="dropdown">
-                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Help<b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                  <li>
-                    <a href="http://cmi-workshop.readthedocs.io/en/latest/">Tutorial</a>
-                  </li>
-                  <li>
-                    <a href="{% raw qiita_config.portal_dir %}/static/doc/html/index.html">Help</a>
-                  </li>
                 </ul>
               </li>
             </ul>
