@@ -1,6 +1,29 @@
 Frequently Asked Questions
 ==========================
 
+Qiita data disclaimer
+---------------------
+
+Qiita is a research tool, and as such, is hosted on research computing resources
+maintained by the Knight Lab at the University of California San Diego.
+
+Data privacy is a key aspect of our operations, and is strictly adhered to at
+every step of the workflow. We are committed to protecting any and all
+information (including sequence data) submitted to Qiita. For example, your data
+is sandboxed by default upon upload, and remains private at the discretion of the
+Owner (i.e., you are the Owner) of the study.
+
+Authorizations and access associated with any given study is maintained and
+controlled by the Owner of the study; importantly, this means that sharing
+rights of a study within Qiita is determined solely by the Owner.
+
+Sample IDs, and any associated metadata must be de-identified prior to submission
+to Qiita. This is a requirement of our
+`Terms of Use <https://qiita.ucsd.edu/iframe/?iframe=qiita-terms>`__.
+
+A study within Qiita, and its associated sequence and metadata, can be
+permanently deleted by the Owner as long as it is not public.
+
 What kind of data can I upload to Qiita for processing?
 -------------------------------------------------------
 
