@@ -31,7 +31,11 @@ $(document).ready(function() {
             {% else %}
               <span class="glyphicon glyphicon-thumbs-down" style="color:red"></span>
             {% end %}
-            {{s.name}}, {{s.version}}
+            ID {{s.id}}: {{s.name}}, {{s.version}}
+            {% if s.deprecated %}
+              </br></br>
+              <span class="glyphicon glyphicon-hand-down" style="color:red">Deprecated</span>
+            {% end %}
           </td>
           <td>
             <table class="display table-bordered table-hover" width="100%">
@@ -44,7 +48,7 @@ $(document).ready(function() {
                       {% else %}
                         <span class="glyphicon glyphicon-thumbs-down" style="color:red"></span>
                       {% end %}
-                      {{c.name}}
+                      ID {{c.id}}: {{c.name}}
                     </td>
                   </tr>
                 {% end %}

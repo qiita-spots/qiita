@@ -387,9 +387,9 @@ class DBUtilTests(TestCase):
 
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
-                            'primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcode': 'GTCCGCAAGTTA',
-                            'run_prefix': "s_G1_L001_sequences",
+                            'amzn_primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'bartab': 'GTCCGCAAGTTA',
+                            'frd_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
@@ -909,7 +909,7 @@ class UtilTests(TestCase):
         snew_info = {
             'status': 'sandbox', 'study_title': 'test_study_1',
             'metadata_complete': True, 'publication_pid': [],
-            'artifact_biom_ids': None,
+            'artifact_biom_ids': [],
             'ebi_submission_status': 'not submitted',
             'study_id': new_study.id, 'ebi_study_accession': None,
             'owner': 'Shared', 'shared': [],
@@ -1061,25 +1061,26 @@ class UtilTests(TestCase):
             del obs[i]['timestamp']
 
         exp = [
-            {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'artifact_id': 4, 'data_type': '18S', 'target_gene': '16S rRNA',
-             'name': 'BIOM', 'target_subfragment': ['V4'],
-             'parameters': {
-                'reference': '1', 'similarity': '0.97',
-                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                'threads': '1', 'sortmerna_coverage': '0.97'},
-             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-             'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
-             'platform': 'Illumina', 'prep_samples': 27},
-            {'files': [], 'artifact_id': 7, 'data_type': '16S',
-             'target_gene': '16S rRNA', 'name': 'BIOM',
-             'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
-             'algorithm_az': '', 'platform': 'Illumina', 'prep_samples': 27},
-            {'files': ['biom_table.biom'], 'artifact_id': 8,
-             'data_type': '18S', 'target_gene': 'not provided',
-             'name': 'noname', 'target_subfragment': [], 'parameters': {},
-             'algorithm': '', 'algorithm_az': '', 'platform': 'not provided',
-             'prep_samples': 0}]
+           {'files': ['1_study_1001_closed_reference_otu_table.biom'],
+            'artifact_id': 4, 'data_type': '18S', 'target_gene': '16S rRNA',
+            'name': 'BIOM', 'target_subfragment': ['V4'], 'parameters': {
+             'reference': '1', 'similarity': '0.97',
+             'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+             'threads': '1', 'sortmerna_coverage': '0.97'},
+            'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+            'deprecated': False, 'platform': 'Illumina',
+            'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
+            'prep_samples': 27},
+           {'files': [], 'artifact_id': 7, 'data_type': '16S',
+            'target_gene': '16S rRNA', 'name': 'BIOM',
+            'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
+            'deprecated': False, 'platform': 'Illumina', 'algorithm_az': '',
+            'prep_samples': 27},
+           {'files': ['biom_table.biom'], 'artifact_id': 8, 'data_type': '18S',
+            'target_gene': 'not provided', 'name': 'noname',
+            'target_subfragment': [], 'parameters': {}, 'algorithm': '',
+            'deprecated': False, 'platform': 'not provided',
+            'algorithm_az': '', 'prep_samples': 0}]
         self.assertItemsEqual(obs, exp)
 
         # now let's test that the order given by the commands actually give the

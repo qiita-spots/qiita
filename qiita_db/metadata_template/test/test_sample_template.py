@@ -23,6 +23,9 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 
 
+STC = qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS
+
+
 @qiita_test_checker()
 class TestSample(TestCase):
     def setUp(self):
@@ -201,10 +204,10 @@ class TestSample(TestCase):
         self.assertTrue(self.tester.get('Not_a_Category') is None)
 
     def test_columns_restrictions(self):
-        """that it returns SAMPLE_TEMPLATE_COLUMNS"""
+        """that it returns STC"""
         self.assertEqual(
             self.sample_template.columns_restrictions,
-            qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            STC)
 
     def test_can_be_updated(self):
         """test if the template can be updated"""
@@ -744,8 +747,9 @@ class TestSampleTemplate(TestCase):
                                           dtype=str)
         ST = qdb.metadata_template.sample_template.SampleTemplate
         obs = ST._clean_validate_template(
-            metadata, 2,
-            qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            metadata,
+            2,
+            current_columns=STC)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
                           'physical_specimen_remaining': 'true',
@@ -766,8 +770,9 @@ class TestSampleTemplate(TestCase):
     def test_clean_validate_template(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         obs = ST._clean_validate_template(
-            self.metadata, 2,
-            qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            self.metadata,
+            2,
+            current_columns=STC)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
                           'physical_specimen_remaining': 'true',
@@ -824,6 +829,69 @@ class TestSampleTemplate(TestCase):
         self.metadata.rename(columns={'taxon_id': 'taxon id'}, inplace=True)
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             ST._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_invalid_chars2(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'bla.'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_invalid_chars3(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'this|is'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_forbidden_words(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'sampleid'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_forbidden_words2(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        # A word forbidden only in SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'linkerprimersequence'},
+                             inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_forbidden_words3(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        # A word forbidden only in SampleTemplate
+        self.metadata.rename(columns={'taxon_id': 'barcode'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            ST._clean_validate_template(self.metadata, 2)
+
+    # this test migrated to SampleTemplate, from MetadataTemplate, to test
+    # _identify_forbidden_words_in_column_names() with a usable list of
+    # forbidden words.
+    def test_identify_forbidden_words_in_column_names(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        # tests filtering for sample_id, when it is not the first element
+        # verifies all forbidden elements for base class are returned
+        # verifies a forbidden word in sub-class will not be returned
+        # verifies normal column names are not returned
+        results = ST._identify_forbidden_words_in_column_names([
+            'just_fine3',
+            'sampleid',
+            'alice',
+            'linkerprimersequence',
+            'bob',
+            'qiita_study_id',
+            'qiita_prep_id',
+            'eve'])
+        self.assertEqual(set(results),
+                         {'qiita_prep_id',
+                          'qiita_study_id',
+                          'linkerprimersequence',
+                          'sampleid'})
+
+    def test_silent_drop(self):
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.assertNotIn('qiitq_prep_id',
+                         (ST._clean_validate_template(self.metadata,
+                                                      2)).columns.tolist())
 
     def test_get_category(self):
         pt = qdb.metadata_template.sample_template.SampleTemplate(1)
@@ -1886,7 +1954,7 @@ class TestSampleTemplate(TestCase):
 
     def test_check_restrictions(self):
         obs = self.tester.check_restrictions(
-            [qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS['EBI']])
+            [STC['EBI']])
         self.assertEqual(obs, set([]))
 
     def test_ebi_sample_accessions(self):
@@ -2049,7 +2117,7 @@ class TestSampleTemplate(TestCase):
             qdb.metadata_template.sample_template.SampleTemplate.create,
             self.metadata, self.new_study)
         obs = st.check_restrictions(
-            [qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS['EBI']])
+            [STC['EBI']])
         self.assertEqual(obs, {'collection_timestamp'})
 
     def test_validate_errors(self):

@@ -59,6 +59,16 @@ class SampleTemplate(MetadataTemplate):
     _id_column = "study_id"
     _sample_cls = Sample
     _filepath_table = 'sample_template_filepath'
+    _forbidden_words = {
+                        'barcodesequence',
+                        'linkerprimersequence',
+                        'barcode',
+                        'linker',
+                        'primer',
+                        'run_prefix',
+                        'sampleid',
+                        'qiita_study_id',
+                        'qiita_prep_id'}
 
     @classmethod
     def create(cls, md_template, study):
@@ -153,7 +163,7 @@ class SampleTemplate(MetadataTemplate):
 
     @property
     def columns_restrictions(self):
-        """Gets the dictionary of colums required
+        """Gets the dictionary of columns required
 
         Returns
         -------

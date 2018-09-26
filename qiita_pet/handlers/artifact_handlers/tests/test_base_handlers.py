@@ -227,17 +227,17 @@ class TestBaseHandlersUtils(TestCase):
                            'btn-sm" href="/vamps/2"><span class="glyphicon '
                            'glyphicon-export"></span> Submit to VAMPS</a>'),
                'processing_info': {
-                    'command': 'Split libraries FASTQ',
-                    'software': 'QIIME',
-                    'software_version': '1.9.1',
-                    'processing_parameters': {
-                        'max_barcode_errors': '1.5', 'sequence_max_n': '0',
-                        'max_bad_run_length': '3', 'phred_offset': u'auto',
-                        'rev_comp': 'False', 'phred_quality_threshold': '3',
-                        'input_data': '1', 'rev_comp_barcode': 'False',
-                        'rev_comp_mapping_barcodes': 'False',
-                        'min_per_read_length_fraction': '0.75',
-                        'barcode_type': u'golay_12'}},
+                 'software_active': False, 'software_deprecated': False,
+                 'command': 'Split libraries FASTQ',
+                 'processing_parameters': {
+                   'max_barcode_errors': '1.5', 'sequence_max_n': '0',
+                   'max_bad_run_length': '3', 'phred_offset': 'auto',
+                   'rev_comp': 'False', 'phred_quality_threshold': '3',
+                   'input_data': '1', 'rev_comp_barcode': 'False',
+                   'rev_comp_mapping_barcodes': 'False',
+                   'min_per_read_length_fraction': '0.75',
+                   'barcode_type': 'golay_12'},
+                 'software_version': '1.9.1', 'software': 'QIIME'},
                'files': exp_files,
                'is_from_analysis': False,
                'summary': None,

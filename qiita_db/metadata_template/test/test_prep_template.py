@@ -735,6 +735,41 @@ class TestPrepTemplate(TestCase):
         exp.sort_index(axis=1, inplace=True)
         assert_frame_equal(obs, exp)
 
+    def test_clean_validate_template_no_forbidden_words1(self):
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        self.metadata.rename(columns={'center_name': 'sampleid'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            PT._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_forbidden_words2(self):
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        self.metadata.rename(columns={'center_name': 'linkerprimersequence'},
+                             inplace=True)
+        raised = False
+        try:
+            PT._clean_validate_template(self.metadata, 2)
+        except qdb.exceptions.QiitaDBColumnError:
+            raised = True
+        self.assertFalse(raised, "Exception raised")
+
+    def test_clean_validate_template_no_pgsql_reserved_words(self):
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        self.metadata.rename(columns={'center_name': 'select'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            PT._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_invalid_chars(self):
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        self.metadata.rename(columns={'center_name': 'taxon id'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            PT._clean_validate_template(self.metadata, 2)
+
+    def test_clean_validate_template_no_invalid_chars2(self):
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        self.metadata.rename(columns={'center_name': 'bla.'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            PT._clean_validate_template(self.metadata, 2)
+
     def test_get_category(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
         obs = pt.get_category('primer')

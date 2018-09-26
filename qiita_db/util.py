@@ -1342,13 +1342,18 @@ def generate_study_list(user, visibility):
             (SELECT COUNT(sample_id) FROM qiita.study_sample
                 WHERE study_id=qiita.study.study_id)
                 AS number_samples_collected]
-    - all the BIOM artifact_ids sorted by artifact_id that belong to the study
-            (SELECT array_agg(artifact_id ORDER BY artifact_id)
+    - all the BIOM artifact_ids sorted by artifact_id that belong to the study,
+      including their software deprecated value
+            (SELECT array_agg(row_to_json((artifact_id, qs.deprecated), true)
+                              ORDER BY artifact_id)
                 FROM qiita.study_artifact
                 LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.visibility USING (visibility_id)
                 LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                WHERE artifact_type='BIOM' AND
-                study_id = qiita.study.study_id) AS artifact_biom_ids,
+                LEFT JOIN qiita.software_command USING (command_id)
+                LEFT JOIN qiita.software qs USING (software_id)
+                WHERE artifact_type='BIOM' AND {0}
+                    study_id = qiita.study.study_id) AS aids_with_deprecation,
     - all the publications that belong to the study
             (SELECT array_agg((publication, is_doi)))
                 FROM qiita.study_publication
@@ -1391,13 +1396,16 @@ def generate_study_list(user, visibility):
             (SELECT COUNT(sample_id) FROM qiita.study_sample
                 WHERE study_id=qiita.study.study_id)
                 AS number_samples_collected,
-            (SELECT array_agg(artifact_id ORDER BY artifact_id)
+            (SELECT array_agg(row_to_json((artifact_id, qs.deprecated), true)
+                              ORDER BY artifact_id)
                 FROM qiita.study_artifact
                 LEFT JOIN qiita.artifact USING (artifact_id)
                 LEFT JOIN qiita.visibility USING (visibility_id)
                 LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                LEFT JOIN qiita.software_command USING (command_id)
+                LEFT JOIN qiita.software qs USING (software_id)
                 WHERE artifact_type='BIOM' AND {0}
-                    study_id = qiita.study.study_id) AS artifact_biom_ids,
+                    study_id = qiita.study.study_id) AS aids_with_deprecation,
             (SELECT array_agg(row_to_json((publication, is_doi), true))
                 FROM qiita.study_publication
                 WHERE study_id=qiita.study.study_id) AS publications,
@@ -1423,13 +1431,21 @@ def generate_study_list(user, visibility):
             qdb.sql_connection.TRN.add(sql, [tuple(sids)])
             for info in qdb.sql_connection.TRN.execute_fetchindex():
                 info = dict(info)
+                # cleaning aids_with_deprecation
+                info['artifact_biom_ids'] = []
+                if info['aids_with_deprecation'] is not None:
+                    for x in info['aids_with_deprecation']:
+                        # f1-2 are the default names given by pgsql
+                        if not x['f2']:
+                            info['artifact_biom_ids'].append(x['f1'])
+                del info['aids_with_deprecation']
 
                 # publication info
                 info['publication_doi'] = []
                 info['publication_pid'] = []
                 if info['publications'] is not None:
                     for p in info['publications']:
-                        # f1-2 are the default names given
+                        # f1-2 are the default names given by pgsql
                         pub = p['f1']
                         is_doi = p['f2']
                         if is_doi:
@@ -1628,9 +1644,11 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             commands = {}
             qdb.sql_connection.TRN.add(sql_params)
             for cid, params in qdb.sql_connection.TRN.execute_fetchindex():
+                cmd = qdb.software.Command(cid)
                 commands[cid] = {
                     'params': params,
-                    'merging_scheme': qdb.software.Command(cid).merging_scheme}
+                    'merging_scheme': cmd.merging_scheme,
+                    'deprecated': cmd.software.deprecated}
 
             # now let's get the actual artifacts
             ts = {}
@@ -1664,8 +1682,12 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
                 # generating algorithm, by default is ''
                 algorithm = ''
+                # set to False because if there is no cid, it means that it
+                # was a direct upload
+                deprecated = False
                 if cid is not None:
                     ms = commands[cid]['merging_scheme']
+                    deprecated = commands[cid]['deprecated']
                     eparams = []
                     if ms['parameters']:
                         eparams.append(','.join(['%s: %s' % (k, aparams[k])
@@ -1733,6 +1755,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     'parameters': aparams,
                     'algorithm': algorithm,
                     'algorithm_az': algorithm_az[algorithm],
+                    'deprecated': deprecated,
                     'files': filepaths})
 
             return results
