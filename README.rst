@@ -42,8 +42,8 @@ Current features
   support deletions.
 * Change the status of a study: Sandboxed -> Private -> Public.
 * Long term sequence data deposition to the European Nucleotide Archive (ENA),
-  part of the European Bioinformatics Institute (EBI).
-* Search over existing studies (see known issues).
+  part of the European Bioinformatics Institute (EBI) for Private Studies.
+* Search over existing studies.
 * Generate basic visualizations with the available studies and datasets.
 
 Accepted raw files
