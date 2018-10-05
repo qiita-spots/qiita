@@ -137,8 +137,8 @@ class TestAnalysis(TestCase):
                          where command_id = %s""" % cmd_id
                 qdb.sql_connection.TRN.add(sql, [cmd_id])
                 r = qdb.sql_connection.TRN.execute()
-                #TODO: make use of this information
-                #print(str(r))
+                # TODO: make use of this information
+                print(str(r))
 
         return new
 
