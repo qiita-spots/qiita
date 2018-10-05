@@ -27,7 +27,7 @@ install:
     'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate qiita
   - pip install -U pip
-  - pip install sphinx sphinx-bootstrap-theme nose-timer codecov
+  - pip install sphinx sphinx-bootstrap-theme nose-timer codecov 'Click==6.7'
   - 'echo "backend: Agg" > matplotlibrc'
   - git clone https://github.com/nicolasff/webdis
   - pushd webdis
