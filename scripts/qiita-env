@@ -11,7 +11,7 @@
 import click
 
 import qiita_db as qdb
-from qiita_core.environment_manager import test as _test, TEST_RUNNERS
+from qiita_core.environment_manager import test as Qtest, TEST_RUNNERS
 from qiita_core.configuration_manager import ConfigurationManager
 
 _CONFIG = ConfigurationManager()
@@ -91,7 +91,7 @@ def test(runner):
 
     Tests are performed both on localhost and ipengines.
     """
-    _test(runner)
+    Qtest(runner)
 
 
 @env.command(name="create-portal")

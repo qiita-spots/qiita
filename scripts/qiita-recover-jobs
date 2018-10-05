@@ -16,7 +16,7 @@ from time import sleep
 SLEEP_TIME = 2
 
 
-def _submit_jobs(jids_to_recover, recover_type):
+def Qsubmit_jobs(jids_to_recover, recover_type):
     len_jids_to_recover = len(jids_to_recover) - 1
     for i, j in enumerate(jids_to_recover):
         print 'recovering %s: %d/%d' % (recover_type, len_jids_to_recover, i)
@@ -26,7 +26,7 @@ def _submit_jobs(jids_to_recover, recover_type):
         sleep(SLEEP_TIME)
 
 
-def _retrieve_queue_jobs():
+def Qretrieve_queue_jobs():
     qiita_jobs = [line.split()[0] for line in check_output("qstat").split("\n")
                   # just retriving 'qiita' and ignoring [] (ipython workers)
                   if 'qiita' in line and '[]' not in line and
@@ -59,9 +59,9 @@ def qiita_recover_jobs():
         recover_type = 'queued'
         TRN.add(sql, [recover_type])
         jids = set(TRN.execute_fetchflatten())
-        jids_to_recover = jids - _retrieve_queue_jobs()
+        jids_to_recover = jids - Qretrieve_queue_jobs()
 
-        _submit_jobs(jids_to_recover, recover_type)
+        Qsubmit_jobs(jids_to_recover, recover_type)
 
     # Step 2: recover jobs that are running, note that there are several steps
     #         to recover this group: 2.1. check if they have validators,
@@ -70,19 +70,19 @@ def qiita_recover_jobs():
         recover_type = 'running'
         TRN.add(sql, [recover_type])
         jids = set(TRN.execute_fetchflatten())
-        qiita_jids = _retrieve_queue_jobs()
+        qiita_jids = Qretrieve_queue_jobs()
         jids_to_recover = jids - qiita_jids
 
         # first start validators that are not running
         validate = [j for j in jids_to_recover
                     if ProcessingJob(j).command.name == 'Validate']
-        _submit_jobs(validate, recover_type + '/validate')
+        Qsubmit_jobs(validate, recover_type + '/validate')
 
         # then the release validator
         release_validators = [
             j for j in jids_to_recover
             if ProcessingJob(j).command.name == 'release_validators']
-        _submit_jobs(release_validators, recover_type + '/release_validators')
+        Qsubmit_jobs(release_validators, recover_type + '/release_validators')
 
         jids_to_recover = (jids_to_recover - set(validate) -
                            set(release_validators))
@@ -122,15 +122,15 @@ def qiita_recover_jobs():
                     print "ERROR, releasing %s validators" % j
                 sleep(SLEEP_TIME)
             elif status == 'running':
-                _submit_jobs(validators, recover_type + ' validator, running')
+                Qsubmit_jobs(validators, recover_type + ' validator, running')
             elif status == 'error':
                 # in this case is the same process than before but we need
                 # to split the set in_construction and submit in 2 steps,
-                # however, we can still submit via _submit_jobs
+                # however, we can still submit via Qsubmit_jobs
                 for v in validators:
                     vjob = ProcessingJob(v)
                     vjob._set_status('in_construction')
-                _submit_jobs(validators, recover_type + ' validator, error')
+                Qsubmit_jobs(validators, recover_type + ' validator, error')
             else:
                 print ("Check the status of this job %s : %s and validators"
                        "%s." % (j, status, validators))
@@ -147,7 +147,7 @@ def qiita_recover_jobs():
             job.release_validators()
             sleep(SLEEP_TIME)
         elif 'running' == status:
-            _submit_jobs([j], 'main_job, running')
+            Qsubmit_jobs([j], 'main_job, running')
 
 
 if __name__ == '__main__':
