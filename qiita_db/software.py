@@ -27,6 +27,18 @@ class Command(qdb.base.QiitaObject):
 
     Attributes
     ----------
+    active
+    addtl_processing_cmd
+    analysis_only
+    default_parameter_sets
+    description
+    merging_scheme
+    name
+    naming_order
+    optional_parameters
+    outputs
+    parameters
+    required_parameters
     software
     name
     description
@@ -35,7 +47,16 @@ class Command(qdb.base.QiitaObject):
 
     Methods
     -------
+    _check_id
+    activate
+
+    Class Methods
+    -------------
     create
+    exists
+    get_commands_by_input_type(cls, artifact_types, active_only=True,
+    get_html_generator(cls, artifact_type):
+    get_validator(cls, artifact_type):
 
     See Also
     --------
@@ -440,6 +461,22 @@ class Command(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT name
+                     FROM qiita.software_command
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def addtl_processing_cmd(self):
+        """Additional processing commands required for merging
+
+        Returns
+        -------
+        str
+            Returns the additional processing command for merging
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT addtl_processing_cmd
                      FROM qiita.software_command
                      WHERE command_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])

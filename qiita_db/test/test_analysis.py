@@ -70,15 +70,20 @@ class TestAnalysis(TestCase):
                 print j.log.msg
 
     def _create_analyses_with_samples(self, user='demo@microbio.me',
-                                      merge=False):
+                                      merge=False,
+                                      addtl_processing_cmd=False):
         """Aux function to create an analysis with samples
 
         Parameters
         ----------
         user : qiita_db.user.User, optional
-            The user email to attach the analysis. Default: demo@microbio.me
+            The user email to attach to the analysis. Default: demo@microbio.me
         merge : bool, optional
             Merge duplicated ids or not
+        addtl_processing_cmd : bool, optional
+            Specifies whether or not additional processes need to be applied
+            during the merging of BIOMs. Currently fixed to regenerate
+            phylogenic trees.
 
         Returns
         -------
@@ -91,15 +96,54 @@ class TestAnalysis(TestCase):
         """
         user = qdb.user.User(user)
         dflt_analysis = user.default_analysis
+        aid = 4
+        if addtl_processing_cmd:
+            cmd_id = qdb.artifact.Artifact(aid).processing_parameters.command
+            cmd_id = cmd_id.id
+            # update reverts post test, likely due to a lack of a commit.
+            with qdb.sql_connection.TRN:
+                sql = """UPDATE qiita.software_command
+                         SET addtl_processing_cmd = 'ls'
+                         WHERE command_id = %s""" % cmd_id
+                qdb.sql_connection.TRN.add(sql, [cmd_id])
+                qdb.sql_connection.TRN.execute()
         dflt_analysis.add_samples(
-            {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                 '1.SKM9.640192', '1.SKM4.640180']})
+            {aid: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                   '1.SKM9.640192', '1.SKM4.640180']})
         new = qdb.analysis.Analysis.create(
             user, "newAnalysis", "A New Analysis", from_default=True,
             merge_duplicated_sample_ids=merge)
 
         self._wait_for_jobs(new)
+
+        with qdb.sql_connection.TRN:
+            sql = """select *
+                     from qiita.software_command
+                     where command_id = %s""" % cmd_id
+            qdb.sql_connection.TRN.add(sql, [cmd_id])
+            r = qdb.sql_connection.TRN.execute()
+            print(str(r))
+
         return new
+
+    def _post_create_analysis_cleanup(self, aid, user='demo@microbio.me'):
+        """Aux function to revert updates made in _create_analyses_with_samples
+
+
+        Parameters
+        ----------
+        user : qiita_db.user.User, optional
+            The user email to attach the analysis. Default: demo@microbio.me
+        """
+        # TODO: make aid a class level property or something.
+
+        cmd_id = qdb.artifact.Artifact(aid).processing_parameters.command.id
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software_command
+                     SET addtl_processing_cmd = NULL
+                     WHERE command_id = %s""" % cmd_id
+            qdb.sql_connection.TRN.add(sql, [cmd_id])
+            qdb.sql_connection.TRN.execute()
 
     def test_lock_samples(self):
         dflt = qdb.user.User('demo@microbio.me').default_analysis
@@ -510,6 +554,31 @@ class TestAnalysis(TestCase):
         # now that the samples have been prefixed
         exp = ['1.SKM9.640192', '1.SKM4.640180', '1.SKD8.640184',
                '1.SKB8.640193', '1.SKB7.640196']
+        self.assertItemsEqual(biom_ids, exp)
+
+    def test_build_files_addtl_processing_cmd(self):
+        analysis = self._create_analyses_with_samples(
+            addtl_processing_cmd=True)
+        biom_tables = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, analysis.build_files, False)
+
+        # testing that the generated files have the same sample ids
+        biom_fp = biom_tables[0][1]
+        biom_ids = load_table(biom_fp).ids(axis='sample')
+        mapping_fp = qdb.util.get_filepath_information(
+            analysis.mapping_file)['fullpath']
+        mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
+            mapping_fp, index='#SampleID').index
+
+        self.assertItemsEqual(biom_ids, mf_ids)
+
+        # now that the samples have been prefixed
+        exp = ['1.SKM9.640192', '1.SKM4.640180', '1.SKD8.640184',
+               '1.SKB8.640193', '1.SKB7.640196']
+
+        # possibly redundant. updates don't appear to be commited
+        analysis = self._post_create_analysis_cleanup(4)
+
         self.assertItemsEqual(biom_ids, exp)
 
     def test_build_files_merge_duplicated_sample_ids(self):
