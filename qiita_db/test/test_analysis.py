@@ -93,13 +93,29 @@ class TestAnalysis(TestCase):
         -----
         Replicates the samples contained in Analysis(1) at the moment of
         creation of this function (September 15, 2016)
-        """
+
         user = qdb.user.User(user)
         dflt_analysis = user.default_analysis
+        dflt_analysis.add_samples(
+            {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                 '1.SKM9.640192', '1.SKM4.640180']})
+        new = qdb.analysis.Analysis.create(
+            user, "newAnalysis", "A New Analysis", from_default=True,
+            merge_duplicated_sample_ids=merge)
+
+        self._wait_for_jobs(new)
+        return new
+        """
+        user = qdb.user.User(user)
         aid = 4
+        dflt_analysis = user.default_analysis
+        dflt_analysis.add_samples(
+            {aid: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                   '1.SKM9.640192', '1.SKM4.640180']})
+
         if addtl_processing_cmd:
-            cmd_id = qdb.artifact.Artifact(aid).processing_parameters.command
-            cmd_id = cmd_id.id
+            tmp = qdb.artifact.Artifact(aid).processing_parameters.command
+            cmd_id = tmp.id
             # update reverts post test, likely due to a lack of a commit.
             with qdb.sql_connection.TRN:
                 sql = """UPDATE qiita.software_command
@@ -107,22 +123,22 @@ class TestAnalysis(TestCase):
                          WHERE command_id = %s""" % cmd_id
                 qdb.sql_connection.TRN.add(sql, [cmd_id])
                 qdb.sql_connection.TRN.execute()
-        dflt_analysis.add_samples(
-            {aid: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                   '1.SKM9.640192', '1.SKM4.640180']})
+
         new = qdb.analysis.Analysis.create(
             user, "newAnalysis", "A New Analysis", from_default=True,
             merge_duplicated_sample_ids=merge)
 
         self._wait_for_jobs(new)
 
-        with qdb.sql_connection.TRN:
-            sql = """select *
-                     from qiita.software_command
-                     where command_id = %s""" % cmd_id
-            qdb.sql_connection.TRN.add(sql, [cmd_id])
-            r = qdb.sql_connection.TRN.execute()
-            print(str(r))
+        if addtl_processing_cmd:
+            with qdb.sql_connection.TRN:
+                sql = """select *
+                         from qiita.software_command
+                         where command_id = %s""" % cmd_id
+                qdb.sql_connection.TRN.add(sql, [cmd_id])
+                r = qdb.sql_connection.TRN.execute()
+                #TODO: make use of this information
+                #print(str(r))
 
         return new
 
