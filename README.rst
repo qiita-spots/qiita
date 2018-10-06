@@ -46,6 +46,8 @@ Current features
   * Metagenoic/Shotgun data: we support Shogun processing. Note that this data
     is suitable for download and further down analyses but we don't recommend
     analysis within Qiita.
+  * biom files can be added as new preparation templates for downstream
+    analyses; however, this cannot be made public.
 
 * Basic downstream analyses using Qiime2.
 * Basic study search in the study listing page.
