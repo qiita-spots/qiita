@@ -1911,7 +1911,8 @@ Referred by processing_job ( command_id ) </title></a>
   <use id='nn' x='2162' y='1332' xlink:href='#nn'/><a xlink:href='#software_command.active'><text x='2178' y='1342'>active</text><title>active bool not null default &#039;True&#039;</title></a>
   <use id='nn' x='2162' y='1347' xlink:href='#nn'/><a xlink:href='#software_command.is_analysis'><text x='2178' y='1357'>is_analysis</text><title>is_analysis bool not null default &#039;False&#039;</title></a>
   <use id='nn' x='2162' y='1362' xlink:href='#nn'/><a xlink:href='#software_command.ignore_parent_command'><text x='2178' y='1372'>ignore_parent_command</text><title>ignore_parent_command bool not null default false</title></a>
-  <use id='nn' x='2162' y='1377' xlink:href='#nn'/><a xlink:href='#software_command.addtl_processing_cmd'><text x='2178' y='1387'>addtl_processing_cmd</text><title>addtl_processing_cmd varchar</title></a>
+  <use id='nn' x='2162' y='1377' xlink:href='#nn'/><a xlink:href='#software_command.addtl_processing_cmd'><text x='2178' y='1387'>addtl_processing_cmd</text><title>addtl_processing_cmd varchar
+Store information on additional processes to merge BIOMs, if any.</title></a>
 
 <!-- ============= Table 'processing_job_validator' ============= -->
 <rect class='table' x='2160' y='1403' width='150' height='90' rx='7' ry='7' />
@@ -5727,7 +5728,7 @@ Referred by software_publication ( software_id ) </title></a>
 		<td>*</td>
 		<td><a name='software_command.addtl_processing_cmd'>addtl&#095;processing&#095;cmd</a></td>
 		<td> varchar   </td>
-		<td>  </td>
+		<td>Store information on additional processes to merge BIOMs, if any.</td>
 	</tr>
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;soft&#095;command</td>
