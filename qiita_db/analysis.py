@@ -879,6 +879,11 @@ class Analysis(qdb.base.QiitaObject):
             biom_files = self._build_biom_tables(
                 grouped_samples, rename_dup_samples)
 
+            # if values for addtl_processing_cmd were found, return them as
+            # well, if only to allow for testing.
+            if addtl_processing_cmd:
+                return (biom_files, addtl_processing_cmd)
+
             return biom_files
 
     def _build_biom_tables(self, grouped_samples, rename_dup_samples=False):
