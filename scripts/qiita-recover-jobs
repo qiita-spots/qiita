@@ -67,6 +67,7 @@ def _get_jids_to_recover(recover_type):
         print 'Total %s: %d' % (recover_type, len(jids_to_recover))
         return jids_to_recover
 
+
 def _flush_queues(recover_type):
     # README: in theory we should be able to submit all recover_type jobs
     # one after the other but in reality that's not possible. The issue
