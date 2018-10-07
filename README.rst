@@ -34,9 +34,9 @@ Current features
 * Full study management: Create, delete, update samples in the sample and
   multiple preparation information files.
 * Upload files via direct drag & drop from the web interface or via scp
-  from any server that allows this connections.
+  from any server that allows these connections.
 * Study privacy management: Sandboxed -> Private -> Public.
-* Easy long term sequence data deposition to the European Nucleotide Archive (ENA),
+* Easy long-term sequence data deposition to the European Nucleotide Archive (ENA),
   part of the European Bioinformatics Institute (EBI) for private and public
   studies.
 * Raw data processing for:

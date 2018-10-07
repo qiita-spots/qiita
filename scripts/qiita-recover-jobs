@@ -70,8 +70,8 @@ def _get_jids_to_recover(recover_type):
 def _flush_queues(recover_type):
     # README: in theory we should be able to submit all recover_type jobs
     # one after the other but in reality that's not possible. The issue
-    # is that a job is going to stay as running/waiting until is completed
-    # thus, we need to run complete_job first, wait for everything to finish,
+    # is that a job is going to stay as running/waiting until is completed.
+    # Thus, we need to run complete_job first, wait for everything to finish,
     # then continue with validate, then release_validators, and
     # finally everything else. Note that is suggested to wait for the
     # full recovery type to finish before moving to the next one
