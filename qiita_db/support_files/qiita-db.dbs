@@ -1307,6 +1307,7 @@
 			<column name="ignore_parent_command" type="bool" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
+			<column name="addtl_processing_cmd" type="varchar" jt="12" />
 			<index name="pk_soft_command" unique="PRIMARY_KEY" >
 				<column name="command_id" />
 			</index>
