@@ -26,7 +26,7 @@ from psycopg2 import OperationalError
 import qiita_db as qdb
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_ware.ebi import EBISubmission
-from qiita_ware.commands import submit_EBI as Qsubmit_EBI
+from qiita_ware.commands import submit_EBI as _submit_EBI
 
 
 try:
@@ -196,7 +196,7 @@ def load_prep_template(fp, study, data_type):
               "not sequence files and metadata will actually be sent to EBI "
               "(default is to generate all the files, but not to send)")
 def submit(artifact_id, action, send):
-    Qsubmit_EBI(artifact_id, action, send)
+    _submit_EBI(artifact_id, action, send)
 
 
 # #############################################################################
@@ -278,7 +278,7 @@ def start(port, master):
         # Deactivate all the plugins and only activate those that are currently
         # available in the config file folder
         qdb.software.Software.deactivate_all()
-        Qactivate_or_update_plugins()
+        _activate_or_update_plugins()
 
     # Create/repopulate the usernames key so we can do autocomplete for sharing
     r_client.delete('qiita-usernames')
@@ -345,7 +345,7 @@ def start(port, master):
 # #############################################################################
 
 
-def Qactivate_or_update_plugins(update=False):
+def _activate_or_update_plugins(update=False):
     """Activates/updates the plugins
 
     Parameters
@@ -368,7 +368,7 @@ def Qactivate_or_update_plugins(update=False):
 @plugins.command()
 def update():
     """Updates the plugins in the database"""
-    Qactivate_or_update_plugins(update=True)
+    _activate_or_update_plugins(update=True)
 
 
 if __name__ == '__main__':
