@@ -76,7 +76,7 @@ class TestAnalysis(TestCase):
         Parameters
         ----------
         user : qiita_db.user.User, optional
-            The user email to attach the analysis. Default: demo@microbio.me
+            The user email to attach to the analysis. Default: demo@microbio.me
         merge : bool, optional
             Merge duplicated ids or not
 
@@ -91,14 +91,17 @@ class TestAnalysis(TestCase):
         """
         user = qdb.user.User(user)
         dflt_analysis = user.default_analysis
+
         dflt_analysis.add_samples(
             {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
                  '1.SKM9.640192', '1.SKM4.640180']})
+
         new = qdb.analysis.Analysis.create(
             user, "newAnalysis", "A New Analysis", from_default=True,
             merge_duplicated_sample_ids=merge)
 
         self._wait_for_jobs(new)
+
         return new
 
     def test_lock_samples(self):
@@ -511,6 +514,39 @@ class TestAnalysis(TestCase):
         exp = ['1.SKM9.640192', '1.SKM4.640180', '1.SKD8.640184',
                '1.SKB8.640193', '1.SKB7.640196']
         self.assertItemsEqual(biom_ids, exp)
+
+    def test_build_files_addtl_processing_cmd(self):
+        tmp = qdb.artifact.Artifact(4).processing_parameters.command
+        cmd_id = tmp.id
+
+        # set a known artifact's additional processing command
+        # to a known value. Then test for it.
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software_command
+                     SET addtl_processing_cmd = 'ls'
+                     WHERE command_id = %s""" % cmd_id
+            qdb.sql_connection.TRN.add(sql, [cmd_id])
+            qdb.sql_connection.TRN.execute()
+
+        analysis = self._create_analyses_with_samples()
+        results = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, analysis.build_files, False)
+
+        # if build_files used additional processing commands, it will
+        # return a tuple, where the second element is a dictionary of
+        # the commands used.
+        # biom_tables = results[0]
+        addtl_processing_cmds = results[1]
+        for k in addtl_processing_cmds:
+            self.assertItemsEqual('ls', addtl_processing_cmds[k])
+
+        # cleanup (assume command was NULL previously)
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software_command
+                     SET addtl_processing_cmd = NULL
+                     WHERE command_id = %s""" % cmd_id
+            qdb.sql_connection.TRN.add(sql, [cmd_id])
+            qdb.sql_connection.TRN.execute()
 
     def test_build_files_merge_duplicated_sample_ids(self):
         user = qdb.user.User("demo@microbio.me")

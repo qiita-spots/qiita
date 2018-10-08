@@ -128,6 +128,30 @@ class CommandTests(TestCase):
         self.assertEqual(qdb.software.Command(1).name, "Split libraries FASTQ")
         self.assertEqual(qdb.software.Command(2).name, "Split libraries")
 
+    def test_addtl_processing_cmd(self):
+        # initial test
+        self.assertEqual(qdb.software.Command(1).addtl_processing_cmd, None)
+
+        # modify table directly, in order to test method
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software_command
+                     SET addtl_processing_cmd = 'ls'
+                     WHERE command_id = 1"""
+            qdb.sql_connection.TRN.add(sql, [1])
+            qdb.sql_connection.TRN.execute()
+
+        # test method returns 'ls'
+        self.assertEqual(qdb.software.Command(1).addtl_processing_cmd, 'ls')
+
+        # clean up table
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software_command
+                     SET addtl_processing_cmd = NULL
+                     WHERE command_id = 1"""
+            qdb.sql_connection.TRN.add(sql, [1])
+            qdb.sql_connection.TRN.execute()
+        self.assertEqual(qdb.software.Command(1).addtl_processing_cmd, None)
+
     def test_description(self):
         self.assertEqual(
             qdb.software.Command(1).description,
