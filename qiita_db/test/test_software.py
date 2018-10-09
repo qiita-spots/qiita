@@ -18,6 +18,8 @@ import networkx as nx
 from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
 
+from json import dumps, loads
+
 
 @qiita_test_checker()
 class CommandTests(TestCase):
@@ -128,29 +130,39 @@ class CommandTests(TestCase):
         self.assertEqual(qdb.software.Command(1).name, "Split libraries FASTQ")
         self.assertEqual(qdb.software.Command(2).name, "Split libraries")
 
-    def test_addtl_processing_cmd(self):
+    def test_post_processing_cmd(self):
         # initial test
-        self.assertEqual(qdb.software.Command(1).addtl_processing_cmd, None)
+        self.assertEqual(qdb.software.Command(1).post_processing_cmd, None)
+
+        results = {}
+        results['script_env'] = 'qiita'
+        results['script_path'] = 'qiita_db/worker.py'
+        results['script_params'] = {'a':'A', 'b':'B'}
+
+        results = dumps(results)
 
         # modify table directly, in order to test method
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.software_command
-                     SET addtl_processing_cmd = 'ls'
+                     SET post_processing_cmd = %s
                      WHERE command_id = 1"""
-            qdb.sql_connection.TRN.add(sql, [1])
+            qdb.sql_connection.TRN.add(sql, [results])
             qdb.sql_connection.TRN.execute()
 
+        results = qdb.software.Command(1).post_processing_cmd
+
         # test method returns 'ls'
-        self.assertEqual(qdb.software.Command(1).addtl_processing_cmd, 'ls')
+        self.assertEqual(results['script_env'], 'qiita')
+        self.assertEqual(results['script_path'], 'qiita_db/worker.py')
+        self.assertEqual(results['script_params'], {'a':'A', 'b':'B'})
 
         # clean up table
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.software_command
-                     SET addtl_processing_cmd = NULL
+                     SET post_processing_cmd = NULL
                      WHERE command_id = 1"""
-            qdb.sql_connection.TRN.add(sql, [1])
+            qdb.sql_connection.TRN.add(sql)
             qdb.sql_connection.TRN.execute()
-        self.assertEqual(qdb.software.Command(1).addtl_processing_cmd, None)
 
     def test_description(self):
         self.assertEqual(

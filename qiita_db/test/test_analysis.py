@@ -12,6 +12,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_core.testing import wait_for_processing_job
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
+from json import dumps, loads
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -515,38 +516,53 @@ class TestAnalysis(TestCase):
                '1.SKB8.640193', '1.SKB7.640196']
         self.assertItemsEqual(biom_ids, exp)
 
-    def test_build_files_addtl_processing_cmd(self):
+    def test_build_files_post_processing_cmd(self):
         tmp = qdb.artifact.Artifact(4).processing_parameters.command
         cmd_id = tmp.id
 
         # set a known artifact's additional processing command
         # to a known value. Then test for it.
+        # qiita_db/worker.py will work w/py2.7 & 3.6 envs.
+        results = {}
+        results['script_env'] = 'qiita'
+        results['script_path'] = 'qiita_db/worker.py'
+        results['script_params'] = {'a':'A', 'b':'B'}
+
+        #convert to json representation and store in PostgreSQL
+        results = dumps(results)
+
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.software_command
-                     SET addtl_processing_cmd = 'ls'
-                     WHERE command_id = %s""" % cmd_id
-            qdb.sql_connection.TRN.add(sql, [cmd_id])
+                     SET post_processing_cmd = %s 
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [results, cmd_id])
             qdb.sql_connection.TRN.execute()
 
+        #create a sample analysis and run build_files on it.
         analysis = self._create_analyses_with_samples()
-        results = npt.assert_warns(
+        post_processing_cmds = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning, analysis.build_files, False)
 
         # if build_files used additional processing commands, it will
-        # return a tuple, where the second element is a dictionary of
+        # return a tuple, where the third element is a dictionary of
         # the commands used.
-        # biom_tables = results[0]
-        addtl_processing_cmds = results[1]
-        for k in addtl_processing_cmds:
-            self.assertItemsEqual('ls', addtl_processing_cmds[k])
+
+        for cmd in post_processing_cmds:
+            #each cmd in the list is a tuple
+            #for some reason, post_processing metadata dict is inside a list
+            ppc = cmd[2][0]
+            self.assertItemsEqual('qiita', ppc['script_env'])
+            self.assertItemsEqual('qiita_db/worker.py', ppc['script_path'])
+            self.assertItemsEqual({'a': 'A', 'b': 'B'}, ppc['script_params'])
 
         # cleanup (assume command was NULL previously)
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.software_command
-                     SET addtl_processing_cmd = NULL
-                     WHERE command_id = %s""" % cmd_id
+                     SET post_processing_cmd = NULL 
+                     WHERE command_id = %s"""
             qdb.sql_connection.TRN.add(sql, [cmd_id])
             qdb.sql_connection.TRN.execute()
+
 
     def test_build_files_merge_duplicated_sample_ids(self):
         user = qdb.user.User("demo@microbio.me")

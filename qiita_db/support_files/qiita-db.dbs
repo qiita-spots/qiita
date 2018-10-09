@@ -1307,8 +1307,10 @@
 			<column name="ignore_parent_command" type="bool" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="addtl_processing_cmd" type="varchar" jt="12">
-                            <comment><![CDATA[Store information on additional processes to merge BIOMs, if any.]]></comment>
+                        <entity schema="qiita" name="processing_job_validator" />
+			<column name="preprocessing_status" type="varchar" jt="12" mandatory="y" >
+			<column name="post_processing_cmd" type="varchar" jt="12">
+                            <comment><![CDATA[Store information on additional post-processing steps for merged BIOMs, if any.]]></comment>
                         </column>
 			<index name="pk_soft_command" unique="PRIMARY_KEY" >
 				<column name="command_id" />
