@@ -1,50 +1,62 @@
 {% extends sitebase.html %}
 {% block head %}
+<link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.2.0/css/ol.css" type="text/css">
 <style type="text/css">
-  html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+  #map-canvas { height: 500px; }
 </style>
-<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=visualization"></script>
+<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.2.0/build/ol.js"></script>
+
 <script type="text/javascript">
+  $( document ).ready(function() {
+    // -> Borrowed from https://stackoverflow.com/q/32102584
 
-function initialize() {
-  var mapOptions = {
-    center: { lat: 40.01027, lng: -105.24827},
-    zoom: 4,
-    scrollwheel: false,
-    streetViewControl: false,
-    mapTypeControl: false
-  };
-
-  var map = new google.maps.Map(document.getElementById('map-canvas'),
-      mapOptions);
-
-  var pinColor = '00B2EE';
-  var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld= |" + pinColor,
-      new google.maps.Size(21, 34),
-      new google.maps.Point(0,0),
-      new google.maps.Point(10, 34));
-  var pinShadow = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_shadow",
-      new google.maps.Size(40, 37),
-      new google.maps.Point(0, 0),
-      new google.maps.Point(12, 35));
-
-  {% for lat, lng in lat_longs %}
-      setMarker(map, {{ lat }}, {{ lng }}, pinImage, pinShadow, pinColor);
-  {% end %}
-};
-
-google.maps.event.addDomListener(window, 'load', initialize);
-
-function setMarker(map, lat, lng, pinImage, pinShadow)
-{
-    var marker = new google.maps.Marker({
-        position: {lat: lat, lng: lng},
-        map: map,
-        clickable: false,
-        icon: pinImage,
-        shadow: pinShadow
+    // Creating the markers
+    var iconStyle = new ol.style.Style({
+      image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+        anchor: [0.5, 46],
+        anchorXUnits: 'fraction',
+        anchorYUnits: 'pixels',
+        opacity: 0.75,
+        src: '{% raw qiita_config.portal_dir %}/static/img/qiita-pointer.png'
+      }))
     });
-}
+    // internal funtion to avoid duplication of code
+    function _generate_iconFeature(lat, long) {
+      var iconFeature = new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.transform([long, lat], 'EPSG:4326',
+        'EPSG:3857')),
+        name: 'Null Island',
+        population: 4000,
+        rainfall: 500
+      });
+      iconFeature.setStyle(iconStyle);
+      return iconFeature;
+    }
+    // adding features via the lat/long
+    var iconFeatures = [];
+    {% for lat, lng in lat_longs %}
+      iconFeatures.push(_generate_iconFeature(lat, long));
+    {% end %}
+    // creating new verctor &layer for the markers
+    var vectorSource = new ol.source.Vector({ features: [] });
+    vectorSource.addFeatures(iconFeatures);
+    var vectorLayer = new ol.layer.Vector({ source: vectorSource });
+    // creating map
+    var map = new ol.Map({
+      target: 'map-canvas',
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        }),
+        vectorLayer
+      ],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([-105.24827, 40.01027]),
+        zoom: 4
+      })
+    });
+  });
+
 </script>
 
 {% end %}
@@ -104,12 +116,11 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
     </div>
   {% end %}
 
-  {% if img %}
+  {% if img and img is not None %}
     <div>
       <h5>Data usage</h5>
       <img height="100%" width="100%" src="{% raw img %}"/>
     </div>
   {% end %}
-
 
 {% end %}
