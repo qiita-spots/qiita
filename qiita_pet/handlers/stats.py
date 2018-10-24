@@ -34,7 +34,7 @@ class StatsHandler(BaseHandler):
             ('number_samples_ebi_prep', r_client.get),
             ('img', r_client.get),
             ('time', r_client.get),
-            ('num_processing_jobs', r_client.get),]
+            ('num_processing_jobs', r_client.get)]
         for k, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
             stats[k] = f(redis_key)
