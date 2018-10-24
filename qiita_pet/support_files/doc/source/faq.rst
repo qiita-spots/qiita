@@ -114,3 +114,9 @@ in your preparation information file.
 To correct this issue, simply add a column to your preparation information file named
 "run_prefix". In this column, add the sample names from your BIOM table that matches the sample
 names listed in the sample_name column in your preparation information file.
+
+How to convert Qiita files to QIIME2 artifacts?
+-----------------------------------------------
+
+Please visit the `Transferring Qiita Artifacts to Qiime2 Tutorial <https://forum.qiime2.org/t/transferring-qiita-artifacts-to-qiime2/4790>`__
+in the `QIIME2 forum <https://forum.qiime2.org>`__.
