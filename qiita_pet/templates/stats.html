@@ -58,6 +58,7 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
         <th>Studies</th>
         <th>Samples</th>
         <th>Users</th>
+        <th>Jobs</th>
       </tr>
     </thead>
       <tr>
@@ -80,8 +81,13 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
             <i>submitted to EBI (prep)</i>: {{ "{:,}".format(int(number_samples_ebi_prep)) }}
           {% end %}
         </td>
+
         {% if num_users and num_users is not None %}
           <td>{{ "{:,}".format(int(num_users)) }}</td>
+        {% end %}
+
+        {% if num_processing_jobs and num_processing_jobs is not None %}
+          <td>{{ "{:,}".format(int(num_processing_jobs)) }}</td>
         {% end %}
       </tr>
     </table>

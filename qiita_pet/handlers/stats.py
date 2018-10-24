@@ -33,7 +33,8 @@ class StatsHandler(BaseHandler):
             ('num_samples_ebi', r_client.get),
             ('number_samples_ebi_prep', r_client.get),
             ('img', r_client.get),
-            ('time', r_client.get)]
+            ('time', r_client.get),
+            ('num_processing_jobs', r_client.get),]
         for k, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
             stats[k] = f(redis_key)
@@ -68,6 +69,7 @@ class StatsHandler(BaseHandler):
                     num_samples_ebi=stats['num_samples_ebi'],
                     number_samples_ebi_prep=stats['number_samples_ebi_prep'],
                     img=stats['img'], time=stats['time'],
+                    num_processing_jobs=stats['num_processing_jobs'],
                     random_study_info=random_study_info,
                     random_study_title=random_study_title,
                     random_study_id=random_study_id)

@@ -225,7 +225,8 @@ class MetaUtilTests(TestCase):
             ('lat_longs', EXP_LAT_LONG, r_client.get),
             ('num_studies_ebi', '1', r_client.get),
             ('num_samples_ebi', '27', r_client.get),
-            ('number_samples_ebi_prep', '54', r_client.get)
+            ('number_samples_ebi_prep', '54', r_client.get),
+            ('num_processing_jobs', '14', r_client.get)
             # not testing img/time for simplicity
             # ('img', r_client.get),
             # ('time', r_client.get)
