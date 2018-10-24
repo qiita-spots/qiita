@@ -59,12 +59,12 @@ def new_prep_template_get_req(study_id):
     Returns
     -------
     (list of str, list of str, dict of {str: list of str})
-        The list of txt, tsv files in the upload dir for the given study
+        The list of txt, tsv, xlsx files in the upload dir for the given study
         The list of available data types
         The investigation type ontology information
     """
     prep_files = [f for _, f, _ in get_files_from_uploads_folders(study_id)
-                  if f.endswith(('.txt', '.tsv'))]
+                  if f.endswith(('.txt', '.tsv', '.xlsx'))]
     data_types = sorted(Study.all_data_types())
 
     # Get all the ENA terms for the investigation type
@@ -132,7 +132,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
     artifact_attached = pt.artifact is not None
     study_id = pt.study_id
     files = [f for _, f, _ in get_files_from_uploads_folders(study_id)
-             if f.endswith(('.txt', '.tsv'))]
+             if f.endswith(('.txt', '.tsv', '.xlsx'))]
 
     # The call to list is needed because keys is an iterator
     num_samples = len(list(pt.keys()))
