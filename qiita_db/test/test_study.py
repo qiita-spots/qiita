@@ -327,6 +327,13 @@ class TestStudy(TestCase):
     def test_owner(self):
         self.assertEqual(self.study.owner, qdb.user.User("test@foo.bar"))
 
+    def test_public_raw_download(self):
+        self.assertFalse(self.study.public_raw_download)
+        self.study.public_raw_download = True
+        self.assertTrue(self.study.public_raw_download)
+        self.study.public_raw_download = False
+        self.assertFalse(self.study.public_raw_download)
+
     def test_share(self):
         # Clear all sharing associations
         self._change_processed_data_status('sandbox')

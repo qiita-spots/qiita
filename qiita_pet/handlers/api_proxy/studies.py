@@ -90,6 +90,7 @@ def study_get_req(study_id, user_id):
     study_info['status'] = study.status
     study_info['ebi_study_accession'] = study.ebi_study_accession
     study_info['ebi_submission_status'] = study.ebi_submission_status
+    study_info['public_raw_download'] = study.public_raw_download
 
     # Clean up StudyPerson objects to string for display
     pi = study_info['principal_investigator']
@@ -111,7 +112,7 @@ def study_get_req(study_id, user_id):
     # Study.has_access no_public=True, will return True only if the user_id is
     # the owner of the study or if the study is shared with the user_id
     study_info['has_access_to_raw_data'] = study.has_access(
-        User(user_id), True)
+        User(user_id), True) or study.public_raw_download
 
     study_info['show_biom_download_button'] = 'BIOM' in [
         a.artifact_type for a in study.artifacts()]
@@ -445,7 +446,14 @@ def study_patch_request(user_id, study_id,
             except (QiitaDBLookupError, QiitaDBColumnError) as e:
                 return {'status': 'error',
                         'message': str(e)}
-
+        elif attribute == 'toggle_public_raw_download':
+            try:
+                study.public_raw_download = not study.public_raw_download
+                return {'status': 'success',
+                        'message': 'Successfully updated public_raw_download'}
+            except (QiitaDBLookupError, QiitaDBColumnError) as e:
+                return {'status': 'error',
+                        'message': str(e)}
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',
