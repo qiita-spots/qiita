@@ -127,12 +127,13 @@ class TestStudyAPI(TestCase):
             'principal_investigator': {
                 'affiliation': 'Wash U', 'name': 'PIDude',
                 'email': 'PI_dude@foo.bar'}, 'study_alias': 'FCM',
-            'study_id': 2,
+            'study_id': new_study.id,
             'most_recent_contact': datetime(2015, 5, 19, 16, 11),
             'ebi_study_accession': None, 'specimen_id_column': None,
             'study_title': 'Some New Study for test',
             'number_samples_collected': 25}, 'message': '', 'editable': True}
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
+        self.assertItemsEqual(obs['study_info'], exp['study_info'])
 
     def test_study_get_req_no_access(self):
         obs = study_get_req(1, 'demo@microbio.me')

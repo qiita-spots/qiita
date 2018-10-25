@@ -168,7 +168,8 @@ class TestStudy(TestCase):
             "emp_person_id": 2,
             "principal_investigator": qdb.study.StudyPerson(3),
             "lab_person": qdb.study.StudyPerson(1),
-            'specimen_id_column': None
+            'specimen_id_column': None,
+            'public_raw_download': False
         }
 
         self.existingexp = {
@@ -222,7 +223,7 @@ class TestStudy(TestCase):
             'mixs_compliant': True, 'metadata_complete': True,
             'reprocess': False, 'timeseries_type': 'None',
             'number_samples_promised': 27, 'emp_person_id': 2,
-            'funding': None, 'vamps_id': None,
+            'funding': None, 'vamps_id': None, 'public_raw_download': False,
             'first_contact': datetime(2014, 5, 19, 16, 10),
             'principal_investigator_id': 3, 'timeseries_type_id': 1,
             'publications': [{'f1': '10.100/123456', 'f2': True},
@@ -423,7 +424,7 @@ class TestStudy(TestCase):
         obs_info = obs.info
         insertion_timestamp = obs_info.pop('first_contact')
         exp = {'mixs_compliant': True, 'metadata_complete': True,
-               'reprocess': False,
+               'reprocess': False, 'public_raw_download': False,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': None, 'vamps_id': None,
                'principal_investigator': qdb.study.StudyPerson(3),
@@ -496,7 +497,7 @@ class TestStudy(TestCase):
         self.assertEqual(obs.status, 'sandbox')
         self.assertEqual(obs.title, "Fried chicken microbiome 3")
         exp = {'mixs_compliant': True, 'metadata_complete': False,
-               'reprocess': True,
+               'reprocess': True, 'public_raw_download': False,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': 'FundAgency', 'vamps_id': 'MBE_1111111',
                'first_contact': datetime(2014, 10, 24, 12, 47),
