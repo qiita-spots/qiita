@@ -11,6 +11,7 @@ from shutil import copyfile, rmtree
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
 from urllib import quote
+from itertools import zip_longest
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import ParseError
 from xml.sax.saxutils import escape
@@ -175,6 +176,7 @@ class EBISubmission(object):
         self.experiment_xml_fp = None
         self.run_xml_fp = None
         self.submission_xml_fp = None
+        self.per_sample_FASTQ_reverse = False
         self.publications = self.study.publications
 
         # getting the restrictions
@@ -222,7 +224,7 @@ class EBISubmission(object):
 
             self.samples[k] = self.sample_template.get(sample_prep.id)
             self.samples_prep[k] = sample_prep
-            self.sample_demux_fps[k] = get_output_fp("%s.fastq.gz" % k)
+            self.sample_demux_fps[k] = get_output_fp("%s.R1.fastq.gz" % k)
 
         if nvp:
             error_msgs.append("These samples do not have a valid platform "
@@ -513,7 +515,10 @@ class EBISubmission(object):
             library_selection.text = "PCR"
             library_layout = ET.SubElement(library_descriptor,
                                            "LIBRARY_LAYOUT")
-            ET.SubElement(library_layout, "SINGLE")
+            if self.per_sample_FASTQ_reverse:
+                ET.SubElement(library_layout, "PAIRED")
+            else:
+                ET.SubElement(library_layout, "SINGLE")
 
             lcp = ET.SubElement(library_descriptor,
                                 "LIBRARY_CONSTRUCTION_PROTOCOL")
@@ -567,11 +572,6 @@ class EBISubmission(object):
 
             # We only submit fastq
             file_type = 'fastq'
-            file_path = self.sample_demux_fps[sample_name]
-
-            with open(file_path) as fp:
-                md5 = safe_md5(fp).hexdigest()
-
             run = ET.SubElement(run_set, 'RUN', {
                 'alias': self._get_run_alias(sample_name),
                 'center_name': qiita_config.ebi_center_name}
@@ -579,6 +579,11 @@ class EBISubmission(object):
             ET.SubElement(run, 'EXPERIMENT_REF', experiment_ref_dict)
             data_block = ET.SubElement(run, 'DATA_BLOCK')
             files = ET.SubElement(data_block, 'FILES')
+
+            # inserting forward
+            file_path = self.sample_demux_fps[sample_name]
+            with open(file_path) as fp:
+                md5 = safe_md5(fp).hexdigest()
             ET.SubElement(files, 'FILE', {
                 'filename': join(self.ebi_dir, basename(file_path)),
                 'filetype': file_type,
@@ -586,6 +591,20 @@ class EBISubmission(object):
                 'checksum_method': 'MD5',
                 'checksum': md5}
             )
+
+            # inserting reverse
+            if self.per_sample_FASTQ_reverse:
+                k = file_path.rfind('R1')
+                file_path = '%sR2%s' % (file_path[:k], file_path[k+2:])
+                with open(file_path) as fp:
+                    md5 = safe_md5(fp).hexdigest()
+                ET.SubElement(files, 'FILE', {
+                    'filename': join(self.ebi_dir, basename(file_path)),
+                    'filetype': file_type,
+                    'quality_scoring_system': 'phred',
+                    'checksum_method': 'MD5',
+                    'checksum': md5}
+                )
 
         return run_set
 
@@ -820,7 +839,13 @@ class EBISubmission(object):
         - All 5 XML files (study, sample, experiment, run, and submission) must
           be generated before executing this function
         """
-        fastqs = [sfp for _, sfp in viewitems(self.sample_demux_fps)]
+        fastqs = []
+        for _, sfp in viewitems(self.sample_demux_fps):
+            fastqs.append(sfp)
+            if self.per_sample_FASTQ_reverse:
+                k = sfp.rfind('R1')
+                sfp = '%sR2%s' % (sfp[:k], sfp[k+2:])
+                fastqs.append(sfp)
         # divide all the fastqs in groups of 10
         fastqs_div = [fastqs[i::10] for i in range(10) if fastqs[i::10]]
         ascp_commands = []
@@ -931,32 +956,54 @@ class EBISubmission(object):
 
     def _generate_demultiplexed_fastq_per_sample_FASTQ(self):
         """Modularity helper"""
-        ar = self.artifact
-        fps = [(basename(fp), fp) for _, fp, fpt in ar.filepaths
-               if fpt == 'raw_forward_seqs']
-        fps.sort(key=lambda x: x[1])
+
+        # helper function to write files in this method
+        def _rename_file(fp, new_fp):
+            if fp.endswith('.gz'):
+                copyfile(fp, new_fp)
+            else:
+                cmd = "gzip -c %s > %s" % (fp, new_fp)
+                stdout, stderr, rv = system_call(cmd)
+                if rv != 0:
+                    error_msg = (
+                        "Error:\nStd output:%s\nStd error:%s"
+                        % (stdout, stderr))
+                    raise EBISubmissionError(error_msg)
+
+        fwd_reads = []
+        rev_reads = []
+        for _, fp, fpt in self.artifact.filepaths:
+            if fpt == 'raw_forward_seqs':
+                fwd_reads.append((basename(fp), fp))
+            elif fpt == 'raw_reverse_seqs':
+                rev_reads.append((basename(fp), fp))
+        fwd_reads.sort(key=lambda x: x[1])
+        rev_reads.sort(key=lambda x: x[1])
+        if rev_reads:
+            self.per_sample_FASTQ_reverse = True
+
+        # merging forward and reverse into a single list
+        fps = [(f[0], (f[1], r[1] if r is not None else None))
+               for f, r in zip_longest(fwd_reads, rev_reads)]
         if 'run_prefix' in self.prep_template.categories():
             rps = [(k, v) for k, v in viewitems(
                 self.prep_template.get_category('run_prefix'))]
         else:
             rps = [(v, v.split('.', 1)[1]) for v in self.prep_template.keys()]
         rps.sort(key=lambda x: x[1])
+
         demux_samples = set()
         for sn, rp in rps:
             for i, (bn, fp) in enumerate(fps):
                 if bn.startswith(rp):
                     demux_samples.add(sn)
                     new_fp = self.sample_demux_fps[sn]
-                    if fp.endswith('.gz'):
-                        copyfile(fp, new_fp)
-                    else:
-                        cmd = "gzip -c %s > %s" % (fp, new_fp)
-                        stdout, stderr, rv = system_call(cmd)
-                        if rv != 0:
-                            error_msg = (
-                                "Error:\nStd output:%s\nStd error:%s"
-                                % (stdout, stderr))
-                            raise EBISubmissionError(error_msg)
+                    _rename_file(fp[0], new_fp)
+
+                    if fp[1] is not None:
+                        k = new_fp.rfind('R1')
+                        new_fp = '%sR2%s' % (new_fp[:k], new_fp[k+2:])
+                        _rename_file(fp[1], new_fp)
                     del fps[i]
                     break
         if fps:
@@ -1054,12 +1101,20 @@ class EBISubmission(object):
                 demux_samples = self._generate_demultiplexed_fastq_demux(mtime)
         else:
             demux_samples = set()
-            extension = '.fastq.gz'
+            extension = '.R1.fastq.gz'
             extension_len = len(extension)
+            missing_files = []
             for f in listdir(self.full_ebi_dir):
                 fpath = join(self.full_ebi_dir, f)
                 if isfile(fpath) and f.endswith(extension):
                     demux_samples.add(f[:-extension_len])
+                else:
+                    missing_files.append(f[:-extension_len])
+            # we need to check that at least one of the samples are in the
+            # missing_files as this will indicate that we are dealing with
+            # per_sample_FASTQ_reverse
+            if list(demux_samples)[0] in missing_files:
+                self.per_sample_FASTQ_reverse = True
 
             missing_samples = set(
                 self.samples.keys()).difference(demux_samples)

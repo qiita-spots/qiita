@@ -105,7 +105,7 @@ class TestEBISubmission(TestCase):
             self.assertEqual(e.sample_template[sample], e.samples[sample])
             self.assertEqual(e.prep_template[sample], e.samples_prep[sample])
             self.assertEqual(e.sample_demux_fps[sample],
-                             get_output_fp('%s.fastq.gz' % sample))
+                             get_output_fp('%s.R1.fastq.gz' % sample))
 
     def test_get_study_alias(self):
         e = EBISubmission(3, 'ADD')
@@ -752,6 +752,23 @@ class TestEBISubmission(TestCase):
         self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
         self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
 
+        ebi_submission.generate_xml_files()
+        obs_run_xml = open(ebi_submission.run_xml_fp).read()
+        obs_experiment_xml = open(ebi_submission.experiment_xml_fp).read()
+        self.assertIn('1.SKB2.640194.R1.fastq.gz', obs_run_xml)
+        self.assertNotIn('1.SKB2.640194.R2.fastq.gz', obs_run_xml)
+        self.assertIn('1.SKM4.640180.R1.fastq.gz', obs_run_xml)
+        self.assertNotIn('1.SKM4.640180.R2.fastq.gz', obs_run_xml)
+        self.assertNotIn('PAIRED', obs_experiment_xml)
+        self.assertIn('SINGLE', obs_experiment_xml)
+        # generate_send_sequences_cmd returns a list of commands so joining
+        # for easier testing
+        obs_cmd = '|'.join(ebi_submission.generate_send_sequences_cmd())
+        self.assertIn('1.SKB2.640194.R1.fastq.gz', obs_cmd)
+        self.assertNotIn('1.SKB2.640194.R2.fastq.gz', obs_cmd)
+        self.assertIn('1.SKM4.640180.R1.fastq.gz', obs_cmd)
+        self.assertNotIn('1.SKM4.640180.R2.fastq.gz', obs_cmd)
+
         # at this point the full_ebi_dir has been created so we can test that
         # the ADD actually works without rewriting the files
         ebi_submission = EBISubmission(artifact.id, 'ADD')
@@ -759,6 +776,119 @@ class TestEBISubmission(TestCase):
         self.assertItemsEqual(obs_demux_samples, exp_samples)
         self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
         self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+
+        ebi_submission.generate_xml_files()
+        obs_run_xml = open(ebi_submission.run_xml_fp).read()
+        obs_experiment_xml = open(ebi_submission.experiment_xml_fp).read()
+        self.assertIn('1.SKB2.640194.R1.fastq.gz', obs_run_xml)
+        self.assertNotIn('1.SKB2.640194.R2.fastq.gz', obs_run_xml)
+        self.assertIn('1.SKM4.640180.R1.fastq.gz', obs_run_xml)
+        self.assertNotIn('1.SKM4.640180.R2.fastq.gz', obs_run_xml)
+        self.assertNotIn('PAIRED', obs_experiment_xml)
+        self.assertIn('SINGLE', obs_experiment_xml)
+        # generate_send_sequences_cmd returns a list of commands so joining
+        # for easier testing
+        obs_cmd = '|'.join(ebi_submission.generate_send_sequences_cmd())
+        self.assertIn('1.SKB2.640194.R1.fastq.gz', obs_cmd)
+        self.assertNotIn('1.SKB2.640194.R2.fastq.gz', obs_cmd)
+        self.assertIn('1.SKM4.640180.R1.fastq.gz', obs_cmd)
+        self.assertNotIn('1.SKM4.640180.R2.fastq.gz', obs_cmd)
+
+        Artifact.delete(artifact.id)
+        PrepTemplate.delete(pt.id)
+
+    def test_generate_demultiplexed_per_sample_fastq_reverse(self):
+        metadata_dict = {
+            'SKB2.640194': {'barcode': 'AAA',
+                            'primer': 'CCCC',
+                            'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'experiment_design_description':
+                                'microbiome of soil and rhizosphere',
+                            'library_construction_protocol':
+                                'PMID: 22402401',
+                            'run_prefix': '1.SKB2.640194'},
+            'SKM4.640180': {'barcode': 'CCC',
+                            'primer': 'AAAA',
+                            'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'experiment_design_description':
+                                'microbiome of soil and rhizosphere',
+                            'library_construction_protocol':
+                                'PMID: 22402401',
+                            'run_prefix': '1.SKM4.640180'}}
+        metadata = pd.DataFrame.from_dict(
+            metadata_dict, orient='index', dtype=str)
+        with warnings.catch_warnings(record=True):
+            pt = PrepTemplate.create(metadata, Study(1), "18S",
+                                     investigation_type="Metagenomics")
+        filepaths = []
+        for sn in pt:
+            # 1 is forward, 2 is reverse
+            filepaths.append((join(self.temp_dir, sn + '_rename.R1.fastq'), 1))
+            filepaths.append((join(self.temp_dir, sn + '_rename.R2.fastq'), 2))
+        for fn, _ in filepaths:
+            with open(fn, 'w') as fh:
+                fh.write('some text')
+            self.files_to_remove.append(fn)
+        artifact = Artifact.create(
+            filepaths, "per_sample_FASTQ", prep_template=pt)
+
+        ebi_submission = EBISubmission(artifact.id, 'ADD')
+        self.files_to_remove.append(ebi_submission.full_ebi_dir)
+
+        obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        exp_samples = ['1.SKM4.640180', '1.SKB2.640194']
+        self.assertItemsEqual(obs_demux_samples, exp_samples)
+        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+
+        ebi_submission.generate_xml_files()
+        obs_run_xml = open(ebi_submission.run_xml_fp).read()
+        obs_experiment_xml = open(ebi_submission.experiment_xml_fp).read()
+        self.assertIn('1.SKB2.640194.R1.fastq.gz', obs_run_xml)
+        self.assertIn('1.SKB2.640194.R2.fastq.gz', obs_run_xml)
+        self.assertIn('1.SKM4.640180.R1.fastq.gz', obs_run_xml)
+        self.assertIn('1.SKM4.640180.R2.fastq.gz', obs_run_xml)
+        self.assertIn('PAIRED', obs_experiment_xml)
+        self.assertNotIn('SINGLE', obs_experiment_xml)
+        # generate_send_sequences_cmd returns a list of commands so joining
+        # for easier testing
+        obs_cmd = '|'.join(ebi_submission.generate_send_sequences_cmd())
+        self.assertIn('1.SKB2.640194.R1.fastq.gz', obs_cmd)
+        self.assertIn('1.SKB2.640194.R2.fastq.gz', obs_cmd)
+        self.assertIn('1.SKM4.640180.R1.fastq.gz', obs_cmd)
+        self.assertIn('1.SKM4.640180.R2.fastq.gz', obs_cmd)
+
+        # now we have a full submission so let's test if a new one will create
+        # the correct values without rewriting the fastq files
+        ebi_submission = EBISubmission(artifact.id, 'ADD')
+        obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        exp_samples = ['1.SKM4.640180', '1.SKB2.640194']
+        self.assertItemsEqual(obs_demux_samples, exp_samples)
+        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+
+        ebi_submission.generate_xml_files()
+        obs_run_xml = open(ebi_submission.run_xml_fp).read()
+        obs_experiment_xml = open(ebi_submission.experiment_xml_fp).read()
+        self.assertIn('1.SKB2.640194.R1.fastq.gz', obs_run_xml)
+        self.assertIn('1.SKB2.640194.R2.fastq.gz', obs_run_xml)
+        self.assertIn('1.SKM4.640180.R1.fastq.gz', obs_run_xml)
+        self.assertIn('1.SKM4.640180.R2.fastq.gz', obs_run_xml)
+        self.assertIn('PAIRED', obs_experiment_xml)
+        self.assertNotIn('SINGLE', obs_experiment_xml)
+        # generate_send_sequences_cmd returns a list of commands so joining
+        # for easier testing
+        obs_cmd = '|'.join(ebi_submission.generate_send_sequences_cmd())
+        self.assertIn('1.SKB2.640194.R1.fastq.gz', obs_cmd)
+        self.assertIn('1.SKB2.640194.R2.fastq.gz', obs_cmd)
+        self.assertIn('1.SKM4.640180.R1.fastq.gz', obs_cmd)
+        self.assertIn('1.SKM4.640180.R2.fastq.gz', obs_cmd)
 
         Artifact.delete(artifact.id)
         PrepTemplate.delete(pt.id)
@@ -772,31 +902,31 @@ class TestEBISubmission(TestCase):
         obs = e.generate_send_sequences_cmd()
         _, base_fp = get_mountpoint("preprocessed_data")[0]
         exp = ('ascp --ignore-host-key -d -QT -k2 '
-               '%(ebi_dir)s/1.SKB2.640194.fastq.gz '
+               '%(ebi_dir)s/1.SKB2.640194.R1.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
-               '%(ebi_dir)s/1.SKM4.640180.fastq.gz '
+               '%(ebi_dir)s/1.SKM4.640180.R1.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
-               '%(ebi_dir)s/1.SKB3.640195.fastq.gz '
+               '%(ebi_dir)s/1.SKB3.640195.R1.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
-               '%(ebi_dir)s/1.SKB6.640176.fastq.gz '
+               '%(ebi_dir)s/1.SKB6.640176.R1.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
-               '%(ebi_dir)s/1.SKD6.640190.fastq.gz '
+               '%(ebi_dir)s/1.SKD6.640190.R1.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
-               '%(ebi_dir)s/1.SKM6.640187.fastq.gz '
+               '%(ebi_dir)s/1.SKM6.640187.R1.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
-               '%(ebi_dir)s/1.SKD9.640182.fastq.gz '
+               '%(ebi_dir)s/1.SKD9.640182.R1.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
-               '%(ebi_dir)s/1.SKM8.640201.fastq.gz '
+               '%(ebi_dir)s/1.SKM8.640201.R1.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
-               '%(ebi_dir)s/1.SKM2.640199.fastq.gz '
+               '%(ebi_dir)s/1.SKM2.640199.R1.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/' % {
                    'ebi_dir': e.full_ebi_dir, 'aid': artifact.id}).split('\n')
         self.assertEqual(obs, exp)
@@ -1480,8 +1610,8 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000008" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="938c29679790b9c17e4dab060fa4c8c5" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB2.640194.fastq.gz" \
+        <FILE checksum="a32357beb845f5b598f1a712fb3b4c70" \
+checksum_method="MD5" filename="%(ebi_dir)s/1.SKB2.640194.R1.fastq.gz" \
 filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
@@ -1491,8 +1621,8 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000024" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="550794cf00ec86b9d3e2feb08cb7a97b" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB3.640195.fastq.gz" \
+        <FILE checksum="deb905ced92812a65a2158fdcfd0f84d" \
+checksum_method="MD5" filename="%(ebi_dir)s/1.SKB3.640195.R1.fastq.gz" \
 filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
@@ -1502,8 +1632,8 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000025" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="adcc754811b86a240f0cc3d59c188cd0" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB6.640176.fastq.gz" \
+        <FILE checksum="847ba142770397a2fae3a8acfbc70640" \
+checksum_method="MD5" filename="%(ebi_dir)s/1.SKB6.640176.R1.fastq.gz" \
 filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
@@ -1513,8 +1643,8 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000004" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="2f8f469a8075b42e401ff0a2c85dc0e5" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKM4.640180.fastq.gz" \
+        <FILE checksum="0dc19bc7ad4ab613c3f738cc9eb57e2c" \
+checksum_method="MD5" filename="%(ebi_dir)s/1.SKM4.640180.R1.fastq.gz" \
 filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
@@ -1532,7 +1662,7 @@ Sample1" center_name="%(center_name)s">
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="%(sample_1)s" \
-checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample1.fastq.gz" \
+checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample1.R1.fastq.gz" \
 filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
@@ -1544,7 +1674,7 @@ Sample2" center_name="%(center_name)s">
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="%(sample_2)s" \
-checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample2.fastq.gz" \
+checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample2.R1.fastq.gz" \
 filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
@@ -1556,7 +1686,7 @@ Sample3" center_name="%(center_name)s">
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="%(sample_3)s" \
-checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample3.fastq.gz" \
+checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample3.R1.fastq.gz" \
 filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>

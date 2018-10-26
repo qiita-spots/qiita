@@ -24,23 +24,26 @@ from qiita_db.software import Software, Parameters
 from qiita_pet.handlers.base_handlers import BaseHandler
 
 
+VALID_SUBMISSION_TYPES = ['Demultiplexed', 'per_sample_FASTQ']
+
+
 class EBISubmitHandler(BaseHandler):
     @execute_as_transaction
-    def display_template(self, preprocessed_data_id, msg, msg_level):
+    def display_template(self, artifact_id, msg, msg_level):
         """Simple function to avoid duplication of code"""
-        preprocessed_data_id = int(preprocessed_data_id)
+        artifact_id = int(artifact_id)
         try:
-            preprocessed_data = Artifact(preprocessed_data_id)
+            artifact = Artifact(artifact_id)
         except QiitaDBUnknownIDError:
             raise HTTPError(404, reason="Artifact %d does not exist!" %
-                            preprocessed_data_id)
+                            artifact_id)
         else:
             user = self.current_user
             if user.level != 'admin':
                 raise HTTPError(403, reason="No permissions of admin, "
                                 "get/EBISubmitHandler: %s!" % user.id)
 
-        prep_templates = preprocessed_data.prep_templates
+        prep_templates = artifact.prep_templates
         allow_submission = len(prep_templates) == 1
         msg_list = ["Submission to EBI disabled:"]
         if not allow_submission:
@@ -53,27 +56,39 @@ class EBISubmitHandler(BaseHandler):
         # We currently support only one prep template for submission, so
         # grabbing the first one
         prep_template = prep_templates[0]
-        study = preprocessed_data.study
+        study = artifact.study
         sample_template = study.sample_template
         stats = [('Number of samples', len(prep_template)),
                  ('Number of metadata headers',
                   len(sample_template.categories()))]
 
-        demux = [path for _, path, ftype in preprocessed_data.filepaths
-                 if ftype == 'preprocessed_demux']
-        demux_length = len(demux)
-
-        if not demux_length:
-            msg = ("Study does not appear to have demultiplexed "
-                   "sequences associated")
+        artifact_type = artifact.artifact_type
+        if artifact_type not in VALID_SUBMISSION_TYPES:
+            msg = "You can only submit: '%s' and this artifact is '%s'" % (
+                ', '.join(VALID_SUBMISSION_TYPES), artifact_type)
             msg_level = 'danger'
-        elif demux_length > 1:
-            msg = ("Study appears to have multiple demultiplexed files!")
-            msg_level = 'danger'
-        elif demux_length == 1:
-            demux_file = demux[0]
-            demux_file_stats = demux_stats(demux_file)
-            stats.append(('Number of sequences', demux_file_stats.n))
+        elif artifact_type == 'Demultiplexed':
+            demux = [path for _, path, ftype in artifact.filepaths
+                     if ftype == 'preprocessed_demux']
+            demux_length = len(demux)
+            if demux_length > 1:
+                msg = "Study appears to have multiple demultiplexed files!"
+                msg_level = 'danger'
+            else:
+                demux_file = demux[0]
+                demux_file_stats = demux_stats(demux_file)
+                stats.append(('Number of sequences', demux_file_stats.n))
+                msg_level = 'success'
+        elif artifact_type == 'per_sample_FASTQ':
+            raw_forward_seqs = []
+            raw_reverse_seqs = []
+            for _, path, ftype in artifact.filepaths:
+                if ftype == 'raw_forward_seqs':
+                    raw_forward_seqs.append(path)
+                elif ftype == 'raw_reverse_seqs':
+                    raw_reverse_seqs.append(path)
+            stats.append(('Total forward', len(raw_forward_seqs)))
+            stats.append(('Total reverse', len(raw_reverse_seqs)))
             msg_level = 'success'
 
         # Check if the templates have all the required columns for EBI
@@ -98,7 +113,7 @@ class EBISubmitHandler(BaseHandler):
         self.render('ebi_submission.html',
                     study_title=study.title, stats=stats, message=msg,
                     study_id=study.id, level=msg_level,
-                    preprocessed_data_id=preprocessed_data_id,
+                    preprocessed_data_id=artifact_id,
                     investigation_type=prep_template.investigation_type,
                     allow_submission=allow_submission,
                     ebi_disabled_msg=ebi_disabled_msg)
