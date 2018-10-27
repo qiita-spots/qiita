@@ -222,6 +222,10 @@ class EBISubmission(object):
                         if im not in self.valid_platforms[platform]:
                             nvim.append(k)
 
+            # IMPORTANT: note that we are generating the samples we are going
+            # to be using during submission and they come from the sample info
+            # file, however, we are only retrieving the samples that exist in
+            # the prep AKA not all samples
             self.samples[k] = self.sample_template.get(sample_prep.id)
             self.samples_prep[k] = sample_prep
             self.sample_demux_fps[k] = get_output_fp("%s.R1.fastq.gz" % k)
