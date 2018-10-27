@@ -214,7 +214,7 @@ def submit_EBI(artifact_id, action, send, test=False):
         # then convert them to a DataFrame for easier cleanup
         new_samples = {
             sample for sample, accession in viewitems(
-            ebi_submission.prep_template.ebi_experiment_accessions)
+                ebi_submission.prep_template.ebi_experiment_accessions)
             if accession is None}
         new_samples = new_samples.intersection(ebi_submission.samples)
         rows = {k: dict(v) for k, v in viewitems(ebi_submission.samples)}
@@ -248,7 +248,6 @@ def submit_EBI(artifact_id, action, send, test=False):
                 'Even after cleaning the submission: %d is too large. Before '
                 'cleaning: %d, after: %d' % (
                     artifact_id, total_size, new_total_size))
-
 
     if send:
         # getting aspera's password
