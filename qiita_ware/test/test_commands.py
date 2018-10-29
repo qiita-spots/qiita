@@ -236,7 +236,7 @@ class CommandsTests(TestCase):
         with self.assertRaises(ComputeError) as error:
             submit_EBI(aid, 'VALIDATE', True, test_size=True)
         error = str(error.exception)
-        self.assertIn('too large. Before cleaning: 7404, after: 6687', error)
+        self.assertIn('is too large. Before cleaning:', error)
 
         rmtree(join(self.base_fp, '%d_ebi_submission' % aid), True)
 
