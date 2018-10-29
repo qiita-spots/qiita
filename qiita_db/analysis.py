@@ -992,10 +992,10 @@ class Analysis(qdb.base.QiitaObject):
                         params = "%s %s" % (params, biom_fp)
                         # if environment is successfully activated,
                         # run script with parameters
-                        p = Popen(["source activate %s && python %s %s" % (
-                                  cmd['script_env'],
-                                  cmd['script_path'],
-                                  params)], shell=True, stdout=PIPE)
+                        # script_env e.g.: 'deactivate; source activate qiita'
+                        # script_path e.g.:
+                        # python 'qiita_db/test/support_files/worker.py'
+                        p = Popen(["%s; %s %s" % (cmd['script_env'], cmd['script_path'], params)], shell=True, stdout=PIPE)
                         p.wait()
                         # consider processing p.communicate, returning it up
                         # the stack, annotating post_processing_cmds, etc.

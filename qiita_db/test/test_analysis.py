@@ -524,7 +524,7 @@ class TestAnalysis(TestCase):
         # to a known value. Then test for it.
         # qiita_db/test/support_files/worker.py will work w/py2.7 & 3.6 envs.
         results = {}
-        results['script_env'] = 'qiita'
+        results['script_env'] = 'deactivate; source activate qiita'
         results['script_path'] = 'qiita_db/test/support_files/worker.py'
         results['script_params'] = {'a': 'A', 'b': 'B'}
     
