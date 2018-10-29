@@ -228,6 +228,20 @@ class CommandsTests(TestCase):
 
         rmtree(join(self.base_fp, '%d_ebi_submission' % aid), True)
 
+    def test_max_ebiena_curl_error(self):
+        artifact = self.generate_new_study_with_preprocessed_data()
+        self.assertEqual(
+            artifact.study.ebi_submission_status, 'not submitted')
+        aid = artifact.id
+        with self.assertRaises(ComputeError) as error:
+            submit_EBI(aid, 'VALIDATE', True, test_size=True)
+        error = str(error.exception)
+        self.assertIn('too large. Before cleaning: 7404, after: 6687', error)
+
+        rmtree(join(self.base_fp, '%d_ebi_submission' % aid), True)
+
+    submit_EBI
+
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
 CCACCCAGTAAC
