@@ -136,7 +136,7 @@ class CommandTests(TestCase):
 
         results = {}
         results['script_env'] = 'qiita'
-        results['script_path'] = 'qiita_db/worker.py'
+        results['script_path'] = 'qiita_db/test/support_files/worker.py'
         results['script_params'] = {'a': 'A', 'b': 'B'}
 
         results = dumps(results)
@@ -153,7 +153,8 @@ class CommandTests(TestCase):
 
         # test method returns 'ls'
         self.assertEqual(results['script_env'], 'qiita')
-        self.assertEqual(results['script_path'], 'qiita_db/worker.py')
+        self.assertEqual(results['script_path'],
+                         'qiita_db/test/support_files/worker.py')
         self.assertEqual(results['script_params'], {'a': 'A', 'b': 'B'})
 
         # clean up table

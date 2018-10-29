@@ -854,6 +854,8 @@ class Analysis(qdb.base.QiitaObject):
 
                 data_type = ainfo['data_type']
 
+                #CHARLIE
+                #ainfo['algorithm'] is the original merging scheme!!!
                 label = "%s || %s" % (data_type, ainfo['algorithm'])
                 if label not in grouped_samples:
                     aparams = qdb.artifact.Artifact(aid).processing_parameters
@@ -910,6 +912,7 @@ class Analysis(qdb.base.QiitaObject):
 
             biom_files = []
             for label, tables in viewitems(grouped_samples):
+                #algorithm
                 data_type, algorithm = [
                     l.strip() for l in label.split('||')]
 
