@@ -135,8 +135,8 @@ class CommandTests(TestCase):
         self.assertEqual(qdb.software.Command(1).post_processing_cmd, None)
 
         results = {}
-        results['script_env'] = 'deactivate; source activate qiita'
-        results['script_path'] = 'qiita_db/test/support_files/worker.py'
+        results['script_env'] = 'source deactivate; source activate qiita'
+        results['script_path'] = 'test/support_files/worker.py'
         results['script_params'] = {'a': 'A', 'b': 'B'}
 
         results = dumps(results)
@@ -152,9 +152,10 @@ class CommandTests(TestCase):
         results = qdb.software.Command(1).post_processing_cmd
 
         # test method returns 'ls'
-        self.assertEqual(results['script_env'], 'deactivate; source activate qiita')
+        self.assertEqual(results['script_env'],
+                         'source deactivate; source activate qiita')
         self.assertEqual(results['script_path'],
-                         'qiita_db/test/support_files/worker.py')
+                         'test/support_files/worker.py')
         self.assertEqual(results['script_params'], {'a': 'A', 'b': 'B'})
 
         # clean up table
