@@ -104,8 +104,7 @@ class TestEBISubmission(TestCase):
         for sample in e.sample_template:
             self.assertEqual(e.sample_template[sample], e.samples[sample])
             self.assertEqual(e.prep_template[sample], e.samples_prep[sample])
-            self.assertEqual(e.sample_demux_fps[sample],
-                             get_output_fp('%s.R1.fastq.gz' % sample))
+            self.assertEqual(e.sample_demux_fps[sample], get_output_fp(sample))
 
     def test_get_study_alias(self):
         e = EBISubmission(3, 'ADD')
@@ -526,8 +525,10 @@ class TestEBISubmission(TestCase):
         submission.generate_demultiplexed_fastq(mtime=1)
         obs = ET.tostring(submission.generate_run_xml())
 
-        md5_sums = {s: safe_md5(open(fp)).hexdigest()
-                    for s, fp in viewitems(submission.sample_demux_fps)}
+        md5_sums = {}
+        for s, fp in viewitems(submission.sample_demux_fps):
+            md5_sums[s] = safe_md5(
+                open(fp + submission.FWD_READ_SUFFIX)).hexdigest()
 
         exp = RUNXML_NEWSTUDY % {
             'study_alias': submission._get_study_alias(),

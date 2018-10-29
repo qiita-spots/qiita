@@ -84,6 +84,8 @@ class EBISubmission(object):
         - If the sample preparation metadata doesn't have a platform field or
         it isn't a EBISubmission.valid_platforms
     """
+    FWD_READ_SUFFIX = '.R1.fastq.gz'
+    REV_READ_SUFFIX = '.R2.fastq.gz'
 
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
     valid_ebi_submission_states = ('submitting')
@@ -224,7 +226,7 @@ class EBISubmission(object):
 
             self.samples[k] = self.sample_template.get(sample_prep.id)
             self.samples_prep[k] = sample_prep
-            self.sample_demux_fps[k] = get_output_fp("%s.R1.fastq.gz" % k)
+            self.sample_demux_fps[k] = get_output_fp(k)
 
         if nvp:
             error_msgs.append("These samples do not have a valid platform "
@@ -581,7 +583,8 @@ class EBISubmission(object):
             files = ET.SubElement(data_block, 'FILES')
 
             # inserting forward
-            file_path = self.sample_demux_fps[sample_name]
+            file_path = self.sample_demux_fps[
+                sample_name] + self.FWD_READ_SUFFIX
             with open(file_path) as fp:
                 md5 = safe_md5(fp).hexdigest()
             ET.SubElement(files, 'FILE', {
@@ -594,8 +597,8 @@ class EBISubmission(object):
 
             # inserting reverse
             if self.per_sample_FASTQ_reverse:
-                k = file_path.rfind('R1')
-                file_path = '%sR2%s' % (file_path[:k], file_path[k+2:])
+                file_path = self.sample_demux_fps[
+                    sample_name] + self.REV_READ_SUFFIX
                 with open(file_path) as fp:
                     md5 = safe_md5(fp).hexdigest()
                 ET.SubElement(files, 'FILE', {
@@ -841,10 +844,9 @@ class EBISubmission(object):
         """
         fastqs = []
         for _, sfp in viewitems(self.sample_demux_fps):
-            fastqs.append(sfp)
+            fastqs.append(sfp + self.FWD_READ_SUFFIX)
             if self.per_sample_FASTQ_reverse:
-                k = sfp.rfind('R1')
-                sfp = '%sR2%s' % (sfp[:k], sfp[k+2:])
+                sfp = sfp + self.REV_READ_SUFFIX
                 fastqs.append(sfp)
         # divide all the fastqs in groups of 10
         fastqs_div = [fastqs[i::10] for i in range(10) if fastqs[i::10]]
@@ -982,9 +984,17 @@ class EBISubmission(object):
         if rev_reads:
             self.per_sample_FASTQ_reverse = True
 
-        # merging forward and reverse into a single list
-        fps = [(f[0], (f[1], r[1] if r is not None else None))
-               for f, r in zip_longest(fwd_reads, rev_reads)]
+        # merging forward and reverse into a single list, note that at this
+        # stage the files have passed multiple rounds of reviews: validator
+        # when the artifact was created, the summary generator, etc. so we can
+        # assure that if a rev exists for 1 fwd, there is one for all of them
+        fps = []
+        for f, r in zip_longest(fwd_reads, rev_reads):
+            sample_name = f[0]
+            fwd_read = f[1]
+            rev_read = r[1] if r is not None else None
+            fps.append((sample_name, (fwd_read, rev_read)))
+
         if 'run_prefix' in self.prep_template.categories():
             rps = [(k, v) for k, v in viewitems(
                 self.prep_template.get_category('run_prefix'))]
@@ -997,12 +1007,12 @@ class EBISubmission(object):
             for i, (bn, fp) in enumerate(fps):
                 if bn.startswith(rp):
                     demux_samples.add(sn)
-                    new_fp = self.sample_demux_fps[sn]
+                    new_fp = self.sample_demux_fps[sn] + self.FWD_READ_SUFFIX
                     _rename_file(fp[0], new_fp)
 
                     if fp[1] is not None:
-                        k = new_fp.rfind('R1')
-                        new_fp = '%sR2%s' % (new_fp[:k], new_fp[k+2:])
+                        new_fp = self.sample_demux_fps[
+                            sn] + self.REV_READ_SUFFIX
                         _rename_file(fp[1], new_fp)
                     del fps[i]
                     break
@@ -1034,7 +1044,7 @@ class EBISubmission(object):
                 raise EBISubmissionError(error_msg)
             for s, i in to_per_sample_ascii(demux_fh,
                                             self.prep_template.keys()):
-                sample_fp = self.sample_demux_fps[s]
+                sample_fp = self.sample_demux_fps[s] + self.FWD_READ_SUFFIX
                 wrote_sequences = False
                 with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
                     for record in i:
@@ -1100,20 +1110,27 @@ class EBISubmission(object):
             else:
                 demux_samples = self._generate_demultiplexed_fastq_demux(mtime)
         else:
+            # if we are within this else, it means that we already have
+            # generated the raw files and for some reason the submission
+            # failed so we don't need to generate the files again and just
+            # check which files exist in the file path to create our final
+            # list of samples
             demux_samples = set()
             extension = '.R1.fastq.gz'
             extension_len = len(extension)
-            missing_files = []
+            all_missing_files = set()
             for f in listdir(self.full_ebi_dir):
                 fpath = join(self.full_ebi_dir, f)
                 if isfile(fpath) and f.endswith(extension):
                     demux_samples.add(f[:-extension_len])
                 else:
-                    missing_files.append(f[:-extension_len])
-            # we need to check that at least one of the samples are in the
-            # missing_files as this will indicate that we are dealing with
-            # per_sample_FASTQ_reverse
-            if list(demux_samples)[0] in missing_files:
+                    all_missing_files.add(f[:-extension_len])
+            # at this stage we have created/reviewed all the files and have
+            # all the sample names, however, we are not sure if we are dealing
+            # with just forwards or if we are dealing with also reverse. The
+            # easiest way to do this is to review the all_missing_files
+            missing_files = all_missing_files - demux_samples
+            if missing_files != all_missing_files:
                 self.per_sample_FASTQ_reverse = True
 
             missing_samples = set(
