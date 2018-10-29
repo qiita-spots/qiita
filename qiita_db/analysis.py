@@ -981,7 +981,6 @@ class Analysis(qdb.base.QiitaObject):
                 # element of the list is a dictionary containing the Conda env
                 # to use, the script to run, and a dictionary of parameters.
                 if post_processing_cmds:
-                    print(type(post_processing_cmds))
                     for cmd in post_processing_cmds:
                         # for now, assume BIOM file is the last parameter
                         # and assume biom_fp is overwritten
@@ -997,7 +996,6 @@ class Analysis(qdb.base.QiitaObject):
                         p.wait()
                         # consider processing p.communicate, returning it up
                         # the stack, annotating post_processing_cmds, etc.
-                        print(p.communicate())
 
                     biom_files.append((
                                         data_type, biom_fp,
