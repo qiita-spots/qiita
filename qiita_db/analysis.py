@@ -1004,9 +1004,9 @@ class Analysis(qdb.base.QiitaObject):
                                  in fragments.items()
                                  if plc != ''}
 
-                    # TODO: Replace mkdtemp w/Qiita-specific functionality.
-                    # TODO: mkdtemp directories must be deleted manually.
-                    output_dir = mkdtemp(prefix='tmp')
+                    # since biom_fp uses base_fp as its location, assume it's
+                    # suitable for other files as well.
+                    output_dir = base_fp
 
                     fp_fragments = '%s/fragments.json' % output_dir
 
