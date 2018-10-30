@@ -34,7 +34,6 @@ from qiita_db.archive import Archive
 from json import loads, dump
 
 from subprocess import Popen, PIPE
-from tempfile import mkdtemp
 
 
 class Analysis(qdb.base.QiitaObject):
