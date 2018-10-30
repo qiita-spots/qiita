@@ -13,6 +13,7 @@ from qiita_core.testing import wait_for_processing_job
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 from json import dumps
+import ast
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -544,18 +545,29 @@ class TestAnalysis(TestCase):
             qdb.exceptions.QiitaDBWarning, analysis.build_files, False)
 
         # if build_files used additional processing commands, it will
-        # return a tuple, where the third element is a dictionary of
-        # the commands used.
-
+        # return a tuple, where the third element contains output metadata.
         for cmd in post_processing_cmds:
             # each cmd in the list is a tuple
-            # for some reason, post_processing metadata dict is inside a list
-            ppc = cmd[2][0]
-            self.assertItemsEqual('source deactivate; source activate qiita',
-                                  ppc['script_env'])
-            self.assertItemsEqual('test/support_files/worker.py',
-                                  ppc['script_path'])
-            self.assertItemsEqual({'a': 'A', 'b': 'B'}, ppc['script_params'])
+            ppc, params = cmd[2].split('\n')
+
+            # since we are using the qiita env as our test env, assume major
+            # and minor info will remain constant at 2 and 7, respectively.
+            s = 'Worker running Python sys.version_info(major=2, minor=7,'
+            self.assertItemsEqual(ppc[:56], s)
+
+            # cleanup the second line of output from worker.py, containing
+            # the parameters passed to it.
+            params = params.lstrip('>>')
+            params = params.rstrip('<<')
+            params = ast.literal_eval(params)
+
+            self.assertItemsEqual(params[0], 'test/support_files/worker.py')
+            self.assertItemsEqual(params[1], 'a=A')
+            self.assertItemsEqual(params[2], 'b=B')
+
+            # for now, just compare the option names
+            self.assertItemsEqual(params[3][:15], '--fp_fragments=')
+            self.assertItemsEqual(params[4][:13], '--output_dir=')
 
         # cleanup (assume command was NULL previously)
         with qdb.sql_connection.TRN:

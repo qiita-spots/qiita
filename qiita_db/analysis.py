@@ -30,8 +30,11 @@ import pandas as pd
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
+from qiita_db.archive import Archive
+from json import loads, dump
 
 from subprocess import Popen, PIPE
+from tempfile import mkdtemp
 
 
 class Analysis(qdb.base.QiitaObject):
@@ -829,11 +832,11 @@ class Analysis(qdb.base.QiitaObject):
             # make testing much harder as we will need to have analyses at
             # different stages and possible errors.
             samples = self.samples
-            # gettin the info of all the artifacts to save SQL time
+            # retrieving all info on artifacts to save SQL time
             bioms_info = qdb.util.get_artifacts_information(samples.keys())
 
             # figuring out if we are going to have duplicated samples, again
-            # doing it here cause it's computational cheaper
+            # doing it here cause it's computationally cheaper
             # 1. merge samples per: data_type, reference used and
             # the command id
             # Note that grouped_samples is basically how many biom tables we
@@ -848,19 +851,20 @@ class Analysis(qdb.base.QiitaObject):
             # order before passing off to _build_biom_tables().
             post_processing_cmds = []
             for aid, asamples in viewitems(samples):
-                # find the artifat info, [0] there should be only 1 info
+                # find the artifact info, [0] there should be only one info
                 ainfo = [bi for bi in bioms_info
                          if bi['artifact_id'] == aid][0]
 
                 data_type = ainfo['data_type']
 
+                # ainfo['algorithm'] is the original merging scheme
                 label = "%s || %s" % (data_type, ainfo['algorithm'])
                 if label not in grouped_samples:
                     aparams = qdb.artifact.Artifact(aid).processing_parameters
                     if aparams is not None:
                         cmd = aparams.command.post_processing_cmd
                         if cmd is not None:
-                            # preserve label, in case its needed.
+                            # preserve label, in case it's needed.
                             cmd['label'] = label
                             post_processing_cmds.append(cmd)
                     grouped_samples[label] = []
@@ -890,7 +894,8 @@ class Analysis(qdb.base.QiitaObject):
                 biom_files = self._build_biom_tables(
                                     grouped_samples,
                                     rename_dup_samples,
-                                    post_processing_cmds=post_processing_cmds)
+                                    post_processing_cmds=post_processing_cmds,
+                                    archive_merging_scheme=ainfo['algorithm'])
             else:
                 # preserve the legacy path
                 biom_files = self._build_biom_tables(
@@ -899,11 +904,14 @@ class Analysis(qdb.base.QiitaObject):
 
             # if post_processing_cmds exists, biom_files will be a triplet,
             # instead of a pair; the final element in the tuple will be an
-            # annotated post_processing_cmds list.
+            # file path to the new phylogenic tree.
             return biom_files
 
-    def _build_biom_tables(self, grouped_samples, rename_dup_samples=False,
-                           post_processing_cmds=None):
+    def _build_biom_tables(self,
+                           grouped_samples,
+                           rename_dup_samples=False,
+                           post_processing_cmds=None,
+                           archive_merging_scheme=None):
         """Build tables and add them to the analysis"""
         with qdb.sql_connection.TRN:
             base_fp = qdb.util.get_work_base_dir()
@@ -982,12 +990,43 @@ class Analysis(qdb.base.QiitaObject):
                 # element of the list is a dictionary containing the Conda env
                 # to use, the script to run, and a dictionary of parameters.
                 if post_processing_cmds:
+                    # assuming all commands require fragments, obtain
+                    # fragments once, instead of for every cmd.
+                    features = load_table(biom_fp).ids(axis='observation')
+                    features = list(features)
+                    fragments = Archive.retrieve_feature_values(
+                        archive_merging_scheme=archive_merging_scheme,
+                        features=features)
+
+                    # remove fragments that SEPP could not match
+                    fragments = {f: loads(fragments[f])
+                                 for f, plc
+                                 in fragments.items()
+                                 if plc != ''}
+
+                    # TODO: Replace mkdtemp w/Qiita-specific functionality.
+                    # TODO: mkdtemp directories must be deleted manually.
+                    output_dir = mkdtemp(prefix='tmp')
+
+                    fp_fragments = '%s/fragments.json' % output_dir
+
+                    with open(fp_fragments, 'w') as out_file:
+                        dump(fragments, out_file)
+
                     for cmd in post_processing_cmds:
-                        # for now, assume BIOM file is the last parameter
-                        # and assume biom_fp is overwritten
+                        # assume fragments file is passed as:
+                        # --fp_fragments=<path_to_fragments_file>
+                        # assume output dir is passed as:
+                        # --output_dir=<path_to_output_dir>
+
+                        # concatenate any other parameters into a string
                         params = ' '.join(["%s=%s" % (k, v) for k, v in
                                           cmd['script_params'].items()])
-                        params = "%s %s" % (params, biom_fp)
+
+                        # append fragments file and output dir parameters
+                        params = "%s --fp_fragments=%s --output_dir=%s" %\
+                                 (params, fp_fragments, output_dir)
+
                         # if environment is successfully activated,
                         # run script with parameters
                         # script_env e.g.: 'deactivate; source activate qiita'
@@ -997,13 +1036,24 @@ class Analysis(qdb.base.QiitaObject):
                                   (cmd['script_env'],
                                    cmd['script_path'],
                                    params)], shell=True, stdout=PIPE)
-                        p.wait()
-                        # consider processing p.communicate, returning it up
-                        # the stack, annotating post_processing_cmds, etc.
+
+                        # p.communicate() waits on child to finish.
+                        p_out, p_err = p.communicate()
+                        p_out = p_out.decode("utf-8").rstrip()
+
+                        # p_out will return either an error message or
+                        # the file path to the new tree, depending on p's
+                        # return code.
+                        if p.returncode != 0:
+                            raise IncompetentQiitaDeveloperError(p_out)
 
                     biom_files.append((
-                                        data_type, biom_fp,
-                                        post_processing_cmds))
+                                        data_type,
+                                        biom_fp,
+                                        # instead of returning post-processing
+                                        # metadata(post_processing_cmds),
+                                        # return fp to phylogenic tree.
+                                        p_out))
                 else:
                     biom_files.append((data_type, biom_fp))
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 
 # sample worker process prints the version information for the environment
