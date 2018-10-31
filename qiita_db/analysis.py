@@ -1007,7 +1007,7 @@ class Analysis(qdb.base.QiitaObject):
                     # suitable for other files as well.
                     output_dir = base_fp
 
-                    fp_archive = '%s/archive.json' % output_dir
+                    fp_archive = join(output_dir, 'archive.json')
 
                     with open(fp_archive, 'w') as out_file:
                         dump(archives, out_file)
