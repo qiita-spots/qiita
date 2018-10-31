@@ -71,7 +71,7 @@ class TestStudyAPI(TestCase):
                     'rhizospheres from the same location at different time '
                     'points in the plant lifecycle.'),
                 'status': 'private', 'spatial_series': False,
-                'specimen_id_column': None,
+                'specimen_id_column': None, 'public_raw_download': False,
                 'study_description': (
                     'Analysis of the Cannabis Plant Microbiome'),
                 'shared_with': ['shared@foo.bar'], 'publication_doi': [
@@ -85,6 +85,7 @@ class TestStudyAPI(TestCase):
                 'study_alias': 'Cannabis Soils', 'study_id': 1,
                 'most_recent_contact': datetime(2014, 5, 19, 16, 11),
                 'ebi_study_accession': 'EBI123456-BB', 'num_samples': 27,
+                'public_raw_download': False,
                 'study_title': (
                     'Identification of the Microbiomes for Cannabis Soils'),
                 'number_samples_collected': 27},
@@ -106,45 +107,33 @@ class TestStudyAPI(TestCase):
             'first_contact': datetime(2015, 5, 19, 16, 10),
             'most_recent_contact': datetime(2015, 5, 19, 16, 11),
         }
-
         new_study = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'), "Some New Study for test", info)
 
         obs = study_get_req(new_study.id, 'test@foo.bar')
-        exp = {
-            'status': 'success',
-            'message': '',
-            'study_info': {
-                'mixs_compliant': True,
-                'metadata_complete': True,
-                'reprocess': False,
-                'emp_person_id': None,
-                'number_samples_promised': 28,
-                'funding': None,
-                'vamps_id': None,
-                'first_contact': datetime(2015, 5, 19, 16, 10),
-                'timeseries_type_id': 1,
-                'study_abstract': 'ABS',
-                'status': 'private',
-                'spatial_series': False,
-                'study_description': 'DESC',
-                'shared_with': [],
-                'lab_person': None,
-                'study_alias': "FCM",
-                'owner': 'Dude',
-                'principal_investigator': {'affiliation': 'Wash U',
-                                           'name': 'PIDude',
-                                           'email': 'PI_dude@foo.bar'},
-                'study_alias': 'FCM',
-                'study_id': new_study.id,
-                'most_recent_contact': datetime(2015, 5, 19, 16, 11),
-                'publication_doi': [],
-                'publication_pid': [],
-                'num_samples': 25,
-                'study_title': 'Some New Study',
-                'number_samples_collected': 27},
-            'editable': True}
+        exp = {'status': 'success', 'study_info': {
+            'mixs_compliant': True, 'metadata_complete': True,
+            'reprocess': False, 'public_raw_download': False,
+            'owner': 'test@foo.bar', 'message': '', 'emp_person_id': None,
+            'number_samples_promised': 28, 'funding': None,
+            'show_biom_download_button': False, 'publication_pid': [],
+            'vamps_id': None, 'first_contact': datetime(2015, 5, 19, 16, 10),
+            'ebi_submission_status': 'not submitted',
+            'show_raw_download_button': False, 'timeseries_type_id': 1,
+            'study_abstract': 'ABS', 'status': 'sandbox',
+            'spatial_series': None, 'study_description': 'DESC',
+            'num_samples': 0, 'shared_with': [], 'publication_doi': [],
+            'has_access_to_raw_data': True, 'lab_person': None, 'level': '',
+            'principal_investigator': {
+                'affiliation': 'Wash U', 'name': 'PIDude',
+                'email': 'PI_dude@foo.bar'}, 'study_alias': 'FCM',
+            'study_id': new_study.id,
+            'most_recent_contact': datetime(2015, 5, 19, 16, 11),
+            'ebi_study_accession': None, 'specimen_id_column': None,
+            'study_title': 'Some New Study for test',
+            'number_samples_collected': 25}, 'message': '', 'editable': True}
         self.assertItemsEqual(obs, exp)
+        self.assertItemsEqual(obs['study_info'], exp['study_info'])
 
     def test_study_get_req_no_access(self):
         obs = study_get_req(1, 'demo@microbio.me')
@@ -573,6 +562,28 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'error', 'message': "Category 'bleep_bloop' is not"
                " present in the sample information."}
         self.assertEqual(obs, exp)
+
+    def test_study_patch_request_toggle_public_raw_download(self):
+        study_id = 1
+        study = qdb.study.Study(study_id)
+        obs = study_patch_request('shared@foo.bar', study_id,
+                                  'replace', '/toggle_public_raw_download',
+                                  None)
+        exp = {'status': 'success', 'message': 'Successfully updated '
+                                               'public_raw_download'}
+        self.assertEqual(obs, exp)
+        self.assertTrue(study.public_raw_download)
+
+        obs = study_patch_request('demo@microbio.me', study_id,
+                                  'replace', '/specimen_id_column',
+                                  'host_subject_id')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+        self.assertTrue(study.public_raw_download)
+
+        # returning to default status
+        study.public_raw_download = False
 
 
 if __name__ == '__main__':

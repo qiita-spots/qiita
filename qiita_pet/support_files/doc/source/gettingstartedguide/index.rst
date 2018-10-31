@@ -113,8 +113,8 @@ sample in the preparation file with the biological sample.
 Required fields for Qiita
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is the minimum set of columns for a sample information file to be added to
-the system:
+Note that Qiita require to have at least two columns, including ``sample_name``, for a
+sample information file to be added to the system:
 
 +-------------------+-----------------------------+-------------------------------------------------------------------------------+
 | Field name        | Format                      | Description                                                                   |
@@ -260,8 +260,8 @@ You can download an example prep information file from
 Required fields for Qiita
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is the minimum set of columns for a prep information file to be added the
-system:
+Note that Qiita require to have at least two columns, including ``sample_name``, for a
+prep information file to be added to the system:
 
 +-------------------+-------------------------------+------------------------------------------------------------------------+
 | Field name        | Format                        | Description                                                            |

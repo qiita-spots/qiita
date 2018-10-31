@@ -96,7 +96,7 @@
 
 {% block content %}
 
-{% if (level != 'info' and 'Retrieving remote files:' not in message) or not message %}
+{% if level != 'info' or 'Retrieving remote files:' not in message or not message %}
 
 <div class="container">
 
@@ -165,7 +165,7 @@
         <div class="panel-heading">
           <h4 class="panel-title">
             <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-              Upload via Remote Server (BETA)
+              Upload via Remote Server (ADVANCED)
             </a>
           </h4>
         </div>
@@ -194,7 +194,7 @@
                   <li>Prepare study files by storing them in one folder on your fileserver.</li>
                   <li>Generate a new key by running: <code>ssh-keygen -t rsa -C "ssh test key" -f ~/.ssh/qiita-key -P ""</code> in your remote server.</li>
                   <li>Allow access using the new key: <code>cat ~/.ssh/qiita-key.pub >> ~/.ssh/authorized_keys</code>. Note that erasing that line will remove access.</li>
-                  <li>Obtain your new generated <code>qiita-key</code> and use it in the Key option</li>
+                  <li>Obtain your new generated private <code>qiita-key</code> and use it in the Key option</li>
                   <li>Press 'List Files' to test the connection and verify the list of study files.</li>
                   <li>If the connection is made and files are correct, press 'Transfer Files' to initiate the transfer.</li>
                 </ol>
@@ -207,7 +207,7 @@
                 <div class="form-group">
                   <label class="col-md-1 control-label">URL</label>
                   <div class="col-md-6">
-                    <input type="text" class="form-control" name="inputURL" id="inputURL" placeholder="scp://user@server.com/folders/">
+                    <input type="text" class="form-control" name="inputURL" id="inputURL" placeholder="scp://user@server.com:/folders/">
                   </div>
                   <label for="inputURL" class="col-md-1 control-label">Key</label>
                   <div class="col-md-2">
