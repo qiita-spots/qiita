@@ -903,7 +903,7 @@ class Analysis(qdb.base.QiitaObject):
 
             # if post_processing_cmds exists, biom_files will be a triplet,
             # instead of a pair; the final element in the tuple will be an
-            # file path to the new phylogenic tree.
+            # file path to the new phylogenetic tree.
             return biom_files
 
     def _build_biom_tables(self,
@@ -1051,7 +1051,7 @@ class Analysis(qdb.base.QiitaObject):
                                         biom_fp,
                                         # instead of returning post-processing
                                         # metadata(post_processing_cmds),
-                                        # return fp to phylogenic tree.
+                                        # return fp to phylogenetic tree.
                                         p_out))
                 else:
                     biom_files.append((data_type, biom_fp))
