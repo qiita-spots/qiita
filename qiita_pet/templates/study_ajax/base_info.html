@@ -96,6 +96,7 @@
     $('#toggle_public_raw_download').on('click', function() {
       $(this).prop("disabled", true);
       toggle_public_raw_download();
+      $(this).prop("disabled", false);
       return false;
     });
   });
@@ -142,9 +143,9 @@
       <b>Shared With:</b> <span id="shared_html_{{study_info['study_id']}}"></span><br/>
       <b>Samples:</b> {{study_info['num_samples']}}<br />
       <b>EBI:</b> {% raw ebi_info %}<br />
-      <b>Public raw data:</b> {{study_info['public_raw_download']}}
+      <b>Allow Qiita users to download raw data files:</b>
         {% if editable %}
-        <button type="button" class="btn btn-default btn-sm" id="toggle_public_raw_download">Toggle</button>
+        <input type="checkbox" id="toggle_public_raw_download" {% if study_info['public_raw_download'] %} checked {% end %} />
         {% end %}<br />
     </td>
     <td width="25px">&nbsp;</td>

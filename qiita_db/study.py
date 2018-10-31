@@ -497,7 +497,7 @@ class Study(qdb.base.QiitaObject):
 
     @property
     def public_raw_download(self):
-        """Returns the public_raw_download of the study
+        """Returns if the study's raw data is available for download
 
         Returns
         -------
@@ -512,7 +512,7 @@ class Study(qdb.base.QiitaObject):
 
     @public_raw_download.setter
     def public_raw_download(self, public_raw_download):
-        """Sets the public_raw_download of the study
+        """Sets if the study's raw data is available for download
 
         Parameters
         ----------
