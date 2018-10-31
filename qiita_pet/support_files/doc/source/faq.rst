@@ -114,3 +114,18 @@ in your preparation information file.
 To correct this issue, simply add a column to your preparation information file named
 "run_prefix". In this column, add the sample names from your BIOM table that matches the sample
 names listed in the sample_name column in your preparation information file.
+
+How to convert Qiita files to QIIME2 artifacts?
+-----------------------------------------------
+
+Please visit the `Transferring Qiita Artifacts to Qiime2 Tutorial <https://forum.qiime2.org/t/transferring-qiita-artifacts-to-qiime2/4790>`__
+in the `QIIME2 forum <https://forum.qiime2.org>`__.
+
+How to cite Qiita?
+------------------
+
+If you use Qiita for processing, submition to EBI-ENA and/or its data for any published research, please include the following citation:
+
+**Qiita: rapid, web-enabled microbiome meta-analysis.**
+Antonio Gonzalez, Jose A. Navas-Molina, Tomasz Kosciolek, Daniel McDonald, Yoshiki Vázquez-Baeza, Gail Ackermann, Jeff DeReus, Stefan Janssen, Austin D. Swafford, Stephanie B. Orchanian, Jon G. Sanders, Joshua Shorenstein, Hannes Holste, Semar Petrus, Adam Robbins-Pianka, Colin J. Brislawn, Mingxun Wang, Jai Ram Rideout, Evan Bolyen, Matthew Dillon, J. Gregory Caporaso, Pieter C. Dorrestein & Rob Knight. Nature Methods, volume 15, pages 796–798 (2018);
+`https://doi.org/10.1038/s41592-018-0141-9 <https://doi.org/10.1038/s41592-018-0141-9>`__.
