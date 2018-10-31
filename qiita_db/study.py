@@ -487,12 +487,42 @@ class Study(qdb.base.QiitaObject):
         Parameters
         ----------
         title : str
-            The new study title
+            The study title
         """
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.{0} SET study_title = %s
                      WHERE study_id = %s""".format(self._table)
             qdb.sql_connection.TRN.add(sql, [title, self._id])
+            return qdb.sql_connection.TRN.execute()
+
+    @property
+    def public_raw_download(self):
+        """Returns if the study's raw data is available for download
+
+        Returns
+        -------
+        str
+            public_raw_download of study
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT public_raw_download FROM qiita.{0}
+                     WHERE study_id = %s""".format(self._table)
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @public_raw_download.setter
+    def public_raw_download(self, public_raw_download):
+        """Sets if the study's raw data is available for download
+
+        Parameters
+        ----------
+        public_raw_download : bool
+            The study public_raw_download
+        """
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.{0} SET public_raw_download = %s
+                     WHERE study_id = %s""".format(self._table)
+            qdb.sql_connection.TRN.add(sql, [public_raw_download, self._id])
             return qdb.sql_connection.TRN.execute()
 
     @property
