@@ -136,7 +136,7 @@ class CommandTests(TestCase):
 
         results = {}
         results['script_env'] = 'source deactivate; source activate qiita'
-        results['script_path'] = 'test/support_files/worker.py'
+        results['script_path'] = 'qiita_db/test/support_files/worker.py'
         results['script_params'] = {'a': 'A', 'b': 'B'}
 
         results = dumps(results)
@@ -155,7 +155,7 @@ class CommandTests(TestCase):
         self.assertEqual(results['script_env'],
                          'source deactivate; source activate qiita')
         self.assertEqual(results['script_path'],
-                         'test/support_files/worker.py')
+                         'qiita_db/test/support_files/worker.py')
         self.assertEqual(results['script_params'], {'a': 'A', 'b': 'B'})
 
         # clean up table

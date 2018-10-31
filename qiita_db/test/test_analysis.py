@@ -523,10 +523,10 @@ class TestAnalysis(TestCase):
 
         # set a known artifact's additional processing command
         # to a known value. Then test for it.
-        # test/support_files/worker.py will work w/py2.7 & 3.6 envs.
+        # qiita_db/test/support_files/worker.py will work w/py2.7 & 3.6 envs.
         results = {}
         results['script_env'] = 'source deactivate; source activate qiita'
-        results['script_path'] = 'test/support_files/worker.py'
+        results['script_path'] = 'qiita_db/test/support_files/worker.py'
         results['script_params'] = {'a': 'A', 'b': 'B'}
 
         # convert to json representation and store in PostgreSQL
@@ -541,8 +541,7 @@ class TestAnalysis(TestCase):
 
         # create a sample analysis and run build_files on it.
         analysis = self._create_analyses_with_samples()
-        post_processing_cmds = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning, analysis.build_files, False)
+        post_processing_cmds = analysis.build_files(False)
 
         # if build_files used additional processing commands, it will
         # return a tuple, where the third element contains output metadata.
@@ -561,7 +560,8 @@ class TestAnalysis(TestCase):
             params = params.rstrip('<<')
             params = ast.literal_eval(params)
 
-            self.assertItemsEqual(params[0], 'test/support_files/worker.py')
+            self.assertItemsEqual(params[0],
+                                  'qiita_db/test/support_files/worker.py')
             self.assertItemsEqual(params[1], 'a=A')
             self.assertItemsEqual(params[2], 'b=B')
 
