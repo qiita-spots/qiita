@@ -999,9 +999,9 @@ class Analysis(qdb.base.QiitaObject):
 
                     # remove archives that SEPP could not match
                     archives = {f: loads(archives[f])
-                                 for f, plc
-                                 in archives.items()
-                                 if plc != ''}
+                                for f, plc
+                                in archives.items()
+                                if plc != ''}
 
                     # since biom_fp uses base_fp as its location, assume it's
                     # suitable for other files as well.
