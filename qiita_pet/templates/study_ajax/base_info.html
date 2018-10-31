@@ -11,6 +11,28 @@
   var available_tags = []
   var assigned_tags = [];
 
+  function toggle_public_raw_download() {
+    if (confirm('Are you sure you want to toggle public raw download?')) {
+      $.ajax({
+        url: "{% raw qiita_config.portal_dir %}/study/{{study_info['study_id']}}",
+        method: 'PATCH',
+        dataType: 'json',
+        contentType: "application/json",
+        data: JSON.stringify({'op': 'replace',
+                              'path': '/toggle_public_raw_download',
+                              'value': null}),
+        success: function(data) {
+            if(data.status == 'error') {
+              bootstrapAlert(data.message, "danger");
+            }
+            else {
+              location.reload();
+            }
+          }
+      });
+    }
+  }
+
   function update_tags(){
     $.ajax({
       type: "GET",
@@ -70,6 +92,13 @@
         }
     });
     update_gui_tags();
+
+    $('#toggle_public_raw_download').on('click', function() {
+      $(this).prop("disabled", true);
+      toggle_public_raw_download();
+      $(this).prop("disabled", false);
+      return false;
+    });
   });
 
   function tags_patch() {
@@ -114,6 +143,10 @@
       <b>Shared With:</b> <span id="shared_html_{{study_info['study_id']}}"></span><br/>
       <b>Samples:</b> {{study_info['num_samples']}}<br />
       <b>EBI:</b> {% raw ebi_info %}<br />
+      <b>Allow Qiita users to download raw data files:</b>
+        {% if editable %}
+        <input type="checkbox" id="toggle_public_raw_download" {% if study_info['public_raw_download'] %} checked {% end %} />
+        {% end %}<br />
     </td>
     <td width="25px">&nbsp;</td>
     <td>

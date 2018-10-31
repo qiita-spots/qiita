@@ -206,7 +206,8 @@ class TestDownloadRawData(TestHandlerBase):
     def test_download_raw_data(self):
         # it's possible that one of the tests is deleting the raw data
         # so we will make sure that the files exists so this test passes
-        all_files = [fp for a in Study(1).artifacts()
+        study = Study(1)
+        all_files = [fp for a in study.artifacts()
                      for _, fp, _ in a.filepaths]
         for fp in all_files:
             if not exists(fp):
@@ -234,6 +235,25 @@ class TestDownloadRawData(TestHandlerBase):
             return_value=User("demo@microbio.me"))
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 405)
+
+        # now, let's make sure that when artifacts are public AND the
+        # public_raw_download any user can download the files
+        study.public_raw_download = True
+        BaseHandler.get_current_user = Mock(
+            return_value=User("demo@microbio.me"))
+        response = self.get('/download_study_bioms/1')
+        self.assertEqual(response.code, 405)
+        # 7 is an uploaded biom, which should now be available but as it's a
+        # biom, only the prep info file will be retrieved
+        Artifact(7).visibility = 'public'
+        BaseHandler.get_current_user = Mock(
+            return_value=User("demo@microbio.me"))
+        response = self.get('/download_study_bioms/1')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/7_mapping_file.txt\n')
+        self.assertRegexpMatches(response.body, exp)
 
 
 class TestDownloadEBISampleAccessions(TestHandlerBase):
