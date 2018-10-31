@@ -989,32 +989,32 @@ class Analysis(qdb.base.QiitaObject):
                 # element of the list is a dictionary containing the Conda env
                 # to use, the script to run, and a dictionary of parameters.
                 if post_processing_cmds:
-                    # assuming all commands require fragments, obtain
-                    # fragments once, instead of for every cmd.
+                    # assuming all commands require archives, obtain
+                    # archives once, instead of for every cmd.
                     features = load_table(biom_fp).ids(axis='observation')
                     features = list(features)
-                    fragments = Archive.retrieve_feature_values(
+                    archives = Archive.retrieve_feature_values(
                         archive_merging_scheme=archive_merging_scheme,
                         features=features)
 
-                    # remove fragments that SEPP could not match
-                    fragments = {f: loads(fragments[f])
+                    # remove archives that SEPP could not match
+                    archives = {f: loads(archives[f])
                                  for f, plc
-                                 in fragments.items()
+                                 in archives.items()
                                  if plc != ''}
 
                     # since biom_fp uses base_fp as its location, assume it's
                     # suitable for other files as well.
                     output_dir = base_fp
 
-                    fp_fragments = '%s/fragments.json' % output_dir
+                    fp_archive = '%s/archive.json' % output_dir
 
-                    with open(fp_fragments, 'w') as out_file:
-                        dump(fragments, out_file)
+                    with open(fp_archive, 'w') as out_file:
+                        dump(archives, out_file)
 
                     for cmd in post_processing_cmds:
-                        # assume fragments file is passed as:
-                        # --fp_fragments=<path_to_fragments_file>
+                        # assume archives file is passed as:
+                        # --fp_archive=<path_to_archives_file>
                         # assume output dir is passed as:
                         # --output_dir=<path_to_output_dir>
 
@@ -1022,9 +1022,9 @@ class Analysis(qdb.base.QiitaObject):
                         params = ' '.join(["%s=%s" % (k, v) for k, v in
                                           cmd['script_params'].items()])
 
-                        # append fragments file and output dir parameters
-                        params = "%s --fp_fragments=%s --output_dir=%s" %\
-                                 (params, fp_fragments, output_dir)
+                        # append archives file and output dir parameters
+                        params = "%s --fp_archive=%s --output_dir=%s" %\
+                                 (params, fp_archive, output_dir)
 
                         # if environment is successfully activated,
                         # run script with parameters
