@@ -193,6 +193,7 @@ def update_redis_stats():
                     if v is not None and v != ''])
 
     num_users = qdb.util.get_count('qiita.qiita_user')
+    num_processing_jobs = qdb.util.get_count('qiita.processing_job')
 
     lat_longs = get_lat_longs()
 
@@ -288,7 +289,8 @@ def update_redis_stats():
         ('num_samples_ebi', num_samples_ebi, r_client.set),
         ('number_samples_ebi_prep', number_samples_ebi_prep, r_client.set),
         ('img', img, r_client.set),
-        ('time', time, r_client.set)]
+        ('time', time, r_client.set),
+        ('num_processing_jobs', num_processing_jobs, r_client.set)]
     for k, v, f in vals:
         redis_key = '%s:stats:%s' % (portal, k)
         # important to "flush" variables to avoid errors

@@ -252,8 +252,10 @@ class DownloadRawData(BaseHandlerDownload):
         study_id = int(study_id)
         study = self._check_permissions(study_id)
         user = self.current_user
-        # Check "owner" access to the study
-        if not study.has_access(user, True):
+        # Checking access options
+        is_owner = study.has_access(user, True)
+        public_raw_download = study.public_raw_download
+        if not is_owner and not public_raw_download:
             raise HTTPError(405, reason="%s: %s, %s" % (
                 'No raw data access', self.current_user.email, str(study_id)))
 
@@ -261,6 +263,8 @@ class DownloadRawData(BaseHandlerDownload):
         to_download = []
         for a in study.artifacts():
             if not a.parents:
+                if not is_owner and a.visibility != 'public':
+                    continue
                 to_download.extend(self._list_artifact_files_nginx(a))
 
         self._write_nginx_file_list(to_download)
