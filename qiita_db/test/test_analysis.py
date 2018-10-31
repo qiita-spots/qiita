@@ -566,7 +566,7 @@ class TestAnalysis(TestCase):
             self.assertItemsEqual(params[2], 'b=B')
 
             # for now, just compare the option names
-            self.assertItemsEqual(params[3][:15], '--fp_fragments=')
+            self.assertItemsEqual(params[3][:13], '--fp_archive=')
             self.assertItemsEqual(params[4][:13], '--output_dir=')
 
         # cleanup (assume command was NULL previously)
