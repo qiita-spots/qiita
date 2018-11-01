@@ -30,6 +30,9 @@ import pandas as pd
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
+from json import loads, dump
+
+from subprocess import Popen, PIPE
 
 
 class Analysis(qdb.base.QiitaObject):
@@ -827,11 +830,11 @@ class Analysis(qdb.base.QiitaObject):
             # make testing much harder as we will need to have analyses at
             # different stages and possible errors.
             samples = self.samples
-            # gettin the info of all the artifacts to save SQL time
+            # retrieving all info on artifacts to save SQL time
             bioms_info = qdb.util.get_artifacts_information(samples.keys())
 
             # figuring out if we are going to have duplicated samples, again
-            # doing it here cause it's computational cheaper
+            # doing it here cause it's computationally cheaper
             # 1. merge samples per: data_type, reference used and
             # the command id
             # Note that grouped_samples is basically how many biom tables we
@@ -839,21 +842,29 @@ class Analysis(qdb.base.QiitaObject):
             rename_dup_samples = False
             grouped_samples = {}
 
-            addtl_processing_cmd = {}
+            # post_processing_cmds is a list of dictionaries, each describing
+            # an operation to be performed on the final merged BIOM. The order
+            # of operations will be list-order. Thus, in the case that
+            # multiple post_processing_cmds are implemented, ensure proper
+            # order before passing off to _build_biom_tables().
+            post_processing_cmds = []
             for aid, asamples in viewitems(samples):
-                # find the artifat info, [0] there should be only 1 info
+                # find the artifact info, [0] there should be only one info
                 ainfo = [bi for bi in bioms_info
                          if bi['artifact_id'] == aid][0]
 
                 data_type = ainfo['data_type']
 
+                # ainfo['algorithm'] is the original merging scheme
                 label = "%s || %s" % (data_type, ainfo['algorithm'])
                 if label not in grouped_samples:
                     aparams = qdb.artifact.Artifact(aid).processing_parameters
                     if aparams is not None:
-                        fam = aparams.command.addtl_processing_cmd
-                        if fam is not None:
-                            addtl_processing_cmd[label] = fam
+                        cmd = aparams.command.post_processing_cmd
+                        if cmd is not None:
+                            # preserve label, in case it's needed.
+                            cmd['label'] = label
+                            post_processing_cmds.append(cmd)
                     grouped_samples[label] = []
                 grouped_samples[label].append((aid, asamples))
             # 2. if rename_dup_samples is still False, make sure that we don't
@@ -876,23 +887,36 @@ class Analysis(qdb.base.QiitaObject):
                         dup_samples = dup_samples | s
 
             self._build_mapping_file(samples, rename_dup_samples)
-            biom_files = self._build_biom_tables(
-                grouped_samples, rename_dup_samples)
 
-            # if values for addtl_processing_cmd were found, return them as
-            # well, if only to allow for testing.
-            if addtl_processing_cmd:
-                return (biom_files, addtl_processing_cmd)
+            if post_processing_cmds:
+                biom_files = self._build_biom_tables(
+                                    grouped_samples,
+                                    rename_dup_samples,
+                                    post_processing_cmds=post_processing_cmds,
+                                    archive_merging_scheme=ainfo['algorithm'])
+            else:
+                # preserve the legacy path
+                biom_files = self._build_biom_tables(
+                                                    grouped_samples,
+                                                    rename_dup_samples)
 
+            # if post_processing_cmds exists, biom_files will be a triplet,
+            # instead of a pair; the final element in the tuple will be an
+            # file path to the new phylogenetic tree.
             return biom_files
 
-    def _build_biom_tables(self, grouped_samples, rename_dup_samples=False):
+    def _build_biom_tables(self,
+                           grouped_samples,
+                           rename_dup_samples=False,
+                           post_processing_cmds=None,
+                           archive_merging_scheme=None):
         """Build tables and add them to the analysis"""
         with qdb.sql_connection.TRN:
             base_fp = qdb.util.get_work_base_dir()
 
             biom_files = []
             for label, tables in viewitems(grouped_samples):
+
                 data_type, algorithm = [
                     l.strip() for l in label.split('||')]
 
@@ -958,7 +982,79 @@ class Analysis(qdb.base.QiitaObject):
                     new_table.to_hdf5(
                         f, "Generated by Qiita, analysis id: %d, info: %s" % (
                             self._id, label))
-                biom_files.append((data_type, biom_fp))
+
+                # post_processing_cmds are a list of commands to run on the
+                # final BIOM. The order of operations is list-order. Each
+                # element of the list is a dictionary containing the Conda env
+                # to use, the script to run, and a dictionary of parameters.
+                if post_processing_cmds:
+                    # assuming all commands require archives, obtain
+                    # archives once, instead of for every cmd.
+                    features = load_table(biom_fp).ids(axis='observation')
+                    features = list(features)
+                    archives = qdb.archive.Archive.retrieve_feature_values(
+                        archive_merging_scheme=archive_merging_scheme,
+                        features=features)
+
+                    # remove archives that SEPP could not match
+                    archives = {f: loads(archives[f])
+                                for f, plc
+                                in archives.items()
+                                if plc != ''}
+
+                    # since biom_fp uses base_fp as its location, assume it's
+                    # suitable for other files as well.
+                    output_dir = base_fp
+
+                    fp_archive = join(output_dir,
+                                      'archive_%d.json' % (self._id))
+
+                    with open(fp_archive, 'w') as out_file:
+                        dump(archives, out_file)
+
+                    for cmd in post_processing_cmds:
+                        # assume archives file is passed as:
+                        # --fp_archive=<path_to_archives_file>
+                        # assume output dir is passed as:
+                        # --output_dir=<path_to_output_dir>
+
+                        # concatenate any other parameters into a string
+                        params = ' '.join(["%s=%s" % (k, v) for k, v in
+                                          cmd['script_params'].items()])
+
+                        # append archives file and output dir parameters
+                        params = "%s --fp_archive=%s --output_dir=%s" %\
+                                 (params, fp_archive, output_dir)
+
+                        # if environment is successfully activated,
+                        # run script with parameters
+                        # script_env e.g.: 'deactivate; source activate qiita'
+                        # script_path e.g.:
+                        # python 'qiita_db/test/support_files/worker.py'
+                        p = Popen(["%s; %s %s" %
+                                  (cmd['script_env'],
+                                   cmd['script_path'],
+                                   params)], shell=True, stdout=PIPE)
+
+                        # p.communicate() waits on child to finish.
+                        p_out, p_err = p.communicate()
+                        p_out = p_out.decode("utf-8").rstrip()
+
+                        # p_out will return either an error message or
+                        # the file path to the new tree, depending on p's
+                        # return code.
+                        if p.returncode != 0:
+                            raise IncompetentQiitaDeveloperError(p_out)
+
+                    biom_files.append((
+                                        data_type,
+                                        biom_fp,
+                                        # instead of returning post-processing
+                                        # metadata(post_processing_cmds),
+                                        # return fp to phylogenetic tree.
+                                        p_out))
+                else:
+                    biom_files.append((data_type, biom_fp))
 
         # return the biom files, either with or without needed tree, to
         # the user.
