@@ -551,6 +551,28 @@ class EBISubmission(object):
 
         return experiment_set
 
+    def _add_file_subelement(self, add_file, file_type, sample_name,
+                             is_forward):
+        """generate_run_xml helper to avoid duplication of code
+        """
+
+        if is_forward:
+            suffix = self.FWD_READ_SUFFIX
+        else:
+            suffix = self.REV_READ_SUFFIX
+
+        file_path = self.sample_demux_fps[sample_name] + suffix
+        with open(file_path) as fp:
+            md5 = safe_md5(fp).hexdigest()
+
+        file_details = {'filetype': file_type,
+                        'quality_scoring_system': 'phred',
+                        'checksum_method': 'MD5',
+                        'checksum': md5,
+                        'filename': join(self.ebi_dir, basename(file_path))}
+
+        add_file(file_details)
+
     def generate_run_xml(self):
         """Generates the run XML file
 
@@ -582,32 +604,12 @@ class EBISubmission(object):
             data_block = ET.SubElement(run, 'DATA_BLOCK')
             files = ET.SubElement(data_block, 'FILES')
 
-            # inserting forward
-            file_path = self.sample_demux_fps[
-                sample_name] + self.FWD_READ_SUFFIX
-            with open(file_path) as fp:
-                md5 = safe_md5(fp).hexdigest()
-            ET.SubElement(files, 'FILE', {
-                'filename': join(self.ebi_dir, basename(file_path)),
-                'filetype': file_type,
-                'quality_scoring_system': 'phred',
-                'checksum_method': 'MD5',
-                'checksum': md5}
-            )
-
-            # inserting reverse
+            add_file = partial(ET.SubElement, files, 'FILE')
+            add_file_subelement = partial(self._add_file_subelement, add_file,
+                                          file_type, sample_name)
+            add_file_subelement(is_forward=True)
             if self.per_sample_FASTQ_reverse:
-                file_path = self.sample_demux_fps[
-                    sample_name] + self.REV_READ_SUFFIX
-                with open(file_path) as fp:
-                    md5 = safe_md5(fp).hexdigest()
-                ET.SubElement(files, 'FILE', {
-                    'filename': join(self.ebi_dir, basename(file_path)),
-                    'filetype': file_type,
-                    'quality_scoring_system': 'phred',
-                    'checksum_method': 'MD5',
-                    'checksum': md5}
-                )
+                add_file_subelement(is_forward=False)
 
         return run_set
 
@@ -1116,7 +1118,7 @@ class EBISubmission(object):
             # check which files exist in the file path to create our final
             # list of samples
             demux_samples = set()
-            extension = '.R1.fastq.gz'
+            extension = self.FWD_READ_SUFFIX
             extension_len = len(extension)
             all_missing_files = set()
             for f in listdir(self.full_ebi_dir):
