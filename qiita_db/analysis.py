@@ -30,7 +30,6 @@ import pandas as pd
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
-from qiita_db.archive import Archive
 from json import loads, dump
 
 from subprocess import Popen, PIPE
@@ -993,7 +992,7 @@ class Analysis(qdb.base.QiitaObject):
                     # archives once, instead of for every cmd.
                     features = load_table(biom_fp).ids(axis='observation')
                     features = list(features)
-                    archives = Archive.retrieve_feature_values(
+                    archives = qdb.archive.Archive.retrieve_feature_values(
                         archive_merging_scheme=archive_merging_scheme,
                         features=features)
 
