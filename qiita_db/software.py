@@ -28,7 +28,7 @@ class Command(qdb.base.QiitaObject):
     Attributes
     ----------
     active
-    addtl_processing_cmd
+    post_processing_cmd
     analysis_only
     default_parameter_sets
     description
@@ -467,7 +467,7 @@ class Command(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
-    def addtl_processing_cmd(self):
+    def post_processing_cmd(self):
         """Additional processing commands required for merging
 
         Returns
@@ -476,11 +476,18 @@ class Command(qdb.base.QiitaObject):
             Returns the additional processing command for merging
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT addtl_processing_cmd
+            sql = """SELECT post_processing_cmd
                      FROM qiita.software_command
                      WHERE command_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+
+            cmd = qdb.sql_connection.TRN.execute_fetchlast()
+            if cmd:
+                # assume correctly formatted json data
+                # load data into dictionary; don't return JSON
+                return loads(qdb.sql_connection.TRN.execute_fetchlast())
+
+        return None
 
     @property
     def description(self):

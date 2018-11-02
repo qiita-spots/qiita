@@ -67,6 +67,7 @@ class TestEBISubmission(TestCase):
         action = 'ADD'
 
         e = EBISubmission(artifact_id, action)
+        self.files_to_remove.append(e.full_ebi_dir)
 
         self.assertEqual(e.artifact_id, artifact_id)
         self.assertEqual(e.study_title, 'Identification of the Microbiomes '
@@ -104,22 +105,24 @@ class TestEBISubmission(TestCase):
         for sample in e.sample_template:
             self.assertEqual(e.sample_template[sample], e.samples[sample])
             self.assertEqual(e.prep_template[sample], e.samples_prep[sample])
-            self.assertEqual(e.sample_demux_fps[sample],
-                             get_output_fp('%s.R1.fastq.gz' % sample))
+            self.assertEqual(e.sample_demux_fps[sample], get_output_fp(sample))
 
     def test_get_study_alias(self):
         e = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(e.full_ebi_dir)
         exp = '%s_sid_1' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_study_alias(), exp)
 
     def test_get_sample_alias(self):
         e = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(e.full_ebi_dir)
         exp = '%s_sid_1:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_sample_alias('foo'), exp)
         self.assertEqual(e._sample_aliases, {exp: 'foo'})
 
     def test_get_experiment_alias(self):
         e = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(e.full_ebi_dir)
         exp = '%s_ptid_1:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_experiment_alias('foo'), exp)
         self.assertEqual(e._experiment_aliases, {exp: 'foo'})
@@ -127,6 +130,7 @@ class TestEBISubmission(TestCase):
     def test_get_submission_alias(self):
         artifact_id = 3
         e = EBISubmission(artifact_id, 'ADD')
+        self.files_to_remove.append(e.full_ebi_dir)
         obs = e._get_submission_alias()
         exp = '%s_submission_%d' % (qiita_config.ebi_organization_prefix,
                                     artifact_id)
@@ -135,6 +139,7 @@ class TestEBISubmission(TestCase):
     def test_get_run_alias(self):
         artifact_id = 3
         e = EBISubmission(artifact_id, 'ADD')
+        self.files_to_remove.append(e.full_ebi_dir)
         exp = '%s_ppdid_%d:foo' % (qiita_config.ebi_organization_prefix,
                                    artifact_id)
         self.assertEqual(e._get_run_alias('foo'), exp)
@@ -142,12 +147,14 @@ class TestEBISubmission(TestCase):
 
     def test_get_library_name(self):
         e = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(e.full_ebi_dir)
         obs = e._get_library_name("nasty<business>")
         exp = "nasty&lt;business&gt;"
         self.assertEqual(obs, exp)
 
     def test_add_dict_as_tags_and_values(self):
         e = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(e.full_ebi_dir)
         elm = ET.Element('TESTING', {'foo': 'bar'})
 
         e._add_dict_as_tags_and_values(elm, 'foo', {'x': 'y',
@@ -159,12 +166,14 @@ class TestEBISubmission(TestCase):
 
     def test_generate_study_xml(self):
         submission = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(submission.full_ebi_dir)
         obs = ET.tostring(submission.generate_study_xml())
         exp = ''.join([l.strip() for l in STUDYXML.splitlines()])
         self.assertEqual(obs, exp)
 
     def test_generate_sample_xml(self):
         submission = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(submission.full_ebi_dir)
 
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_sample_xml(samples=samples))
@@ -193,6 +202,7 @@ class TestEBISubmission(TestCase):
 
     def test_generate_spot_descriptor(self):
         e = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(e.full_ebi_dir)
         elm = ET.Element('design', {'foo': 'bar'})
 
         e._generate_spot_descriptor(elm, 'LS454')
@@ -202,6 +212,7 @@ class TestEBISubmission(TestCase):
 
     def test_generate_submission_xml(self):
         submission = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(submission.full_ebi_dir)
         submission.experiment_xml_fp = "/some/path/experiment.xml"
         submission.run_xml_fp = "/some/path/run.xml"
         obs = ET.tostring(
@@ -229,6 +240,7 @@ class TestEBISubmission(TestCase):
     def test_write_xml_file(self):
         element = ET.Element('TESTING', {'foo': 'bar'})
         e = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(e.full_ebi_dir)
         e.write_xml_file(element, 'testfile')
         self.files_to_remove.append('testfile')
 
@@ -238,6 +250,7 @@ class TestEBISubmission(TestCase):
 
     def test_generate_curl_command(self):
         submission = EBISubmission(3, 'ADD')
+        self.files_to_remove.append(submission.full_ebi_dir)
 
         test_ebi_seq_xfer_user = 'ebi_seq_xfer_user'
         test_ebi_seq_xfer_pass = 'ebi_seq_xfer_pass'
@@ -526,8 +539,10 @@ class TestEBISubmission(TestCase):
         submission.generate_demultiplexed_fastq(mtime=1)
         obs = ET.tostring(submission.generate_run_xml())
 
-        md5_sums = {s: safe_md5(open(fp)).hexdigest()
-                    for s, fp in viewitems(submission.sample_demux_fps)}
+        md5_sums = {}
+        for s, fp in viewitems(submission.sample_demux_fps):
+            md5_sums[s] = safe_md5(
+                open(fp + submission.FWD_READ_SUFFIX)).hexdigest()
 
         exp = RUNXML_NEWSTUDY % {
             'study_alias': submission._get_study_alias(),

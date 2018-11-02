@@ -58,9 +58,13 @@ class EBISubmitHandler(BaseHandler):
         prep_template = prep_templates[0]
         study = artifact.study
         sample_template = study.sample_template
-        stats = [('Number of samples', len(prep_template)),
-                 ('Number of metadata headers',
-                  len(sample_template.categories()))]
+        stats = {
+            'Number of samples': len(prep_template),
+            'Number of metadata headers': len(sample_template.categories()),
+            'Number of sequences': 'N/A',
+            'Total forward': 'N/A',
+            'Total reverse': 'N/A'
+        }
 
         artifact_type = artifact.artifact_type
         if artifact_type not in VALID_SUBMISSION_TYPES:
@@ -77,7 +81,7 @@ class EBISubmitHandler(BaseHandler):
             else:
                 demux_file = demux[0]
                 demux_file_stats = demux_stats(demux_file)
-                stats.append(('Number of sequences', demux_file_stats.n))
+                stats['Number of sequences'] = demux_file_stats.n
                 msg_level = 'success'
         elif artifact_type == 'per_sample_FASTQ':
             raw_forward_seqs = []
@@ -87,8 +91,8 @@ class EBISubmitHandler(BaseHandler):
                     raw_forward_seqs.append(path)
                 elif ftype == 'raw_reverse_seqs':
                     raw_reverse_seqs.append(path)
-            stats.append(('Total forward', len(raw_forward_seqs)))
-            stats.append(('Total reverse', len(raw_reverse_seqs)))
+            stats['Total forward'] = len(raw_forward_seqs)
+            stats['Total reverse'] = len(raw_reverse_seqs)
             msg_level = 'success'
 
         # Check if the templates have all the required columns for EBI
@@ -111,7 +115,7 @@ class EBISubmitHandler(BaseHandler):
             ebi_disabled_msg = None
 
         self.render('ebi_submission.html',
-                    study_title=study.title, stats=stats, message=msg,
+                    study_title=study.title, stats=stats.items(), message=msg,
                     study_id=study.id, level=msg_level,
                     preprocessed_data_id=artifact_id,
                     investigation_type=prep_template.investigation_type,
