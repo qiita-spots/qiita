@@ -405,6 +405,9 @@ Vue.component('processing-graph', {
         $("#processing-results").append($("<h4>").text('Job parameters:'));
 
         for(var key in data.job_parameters){
+          if (key.startsWith("qp-hide")) {
+            continue;
+          }
           $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#processing-results");
           $('<label>').addClass('col-sm-2 col-form-label').text(key + ':').appendTo($rowDiv);
           $colDiv = $('<div>').addClass('col-sm-5').appendTo($rowDiv).html(data.job_parameters[key]);
@@ -490,7 +493,12 @@ Vue.component('processing-graph', {
         // The rest of parameter types are represented with an input
         $inp = $('<input>');
         // It just changes the type of input
-        if (p_type == 'integer') {
+        if (p_name.startsWith("qp-hide")) {
+          // adding the hide attributes
+          $inp.attr('type', 'hidden');
+          $rowDiv.css('display', 'none');
+        }
+        else if (p_type == 'integer') {
           // For the integer type, show an input of type number
           $inp.attr('type', 'number');
         }
