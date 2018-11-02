@@ -10,12 +10,14 @@ from os.path import basename, isdir, join
 from shutil import rmtree
 from tarfile import open as taropen
 from tempfile import mkdtemp
-from os import environ
+from os import environ, stat
 from traceback import format_exc
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from scp import SCPClient
 from urlparse import urlparse
 from functools import partial
+from future.utils import viewitems
+import pandas as pd
 
 from qiita_db.artifact import Artifact
 from qiita_db.logger import LogEntry
@@ -164,7 +166,7 @@ def download_remote(URL, private_key, destination):
     ssh.close()
 
 
-def submit_EBI(artifact_id, action, send, test=False):
+def submit_EBI(artifact_id, action, send, test=False, test_size=False):
     """Submit an artifact to EBI
 
     Parameters
@@ -177,6 +179,8 @@ def submit_EBI(artifact_id, action, send, test=False):
         True to actually send the files
     test : bool
         If True some restrictions will be ignored, only used in parse_EBI_reply
+    test_size : bool
+        If True the EBI-ENA restriction size will be changed to 6000
     """
     # step 1: init and validate
     ebi_submission = EBISubmission(artifact_id, action)
@@ -194,6 +198,58 @@ def submit_EBI(artifact_id, action, send, test=False):
 
     # step 3: generate and write xml files
     ebi_submission.generate_xml_files()
+
+    # before we continue let's check the size of the submission
+    to_review = [ebi_submission.study_xml_fp,
+                 ebi_submission.sample_xml_fp,
+                 ebi_submission.experiment_xml_fp,
+                 ebi_submission.run_xml_fp,
+                 ebi_submission.submission_xml_fp]
+    total_size = sum([stat(tr).st_size for tr in to_review if tr is not None])
+    # note that the max for EBI is 10M but let's play it safe
+    max_size = 8.5e+6 if not test_size else 6000
+    if total_size > max_size:
+        LogEntry.create(
+            'Runtime', 'The submission: %d is larger than allowed (%d), will '
+            'try to fix: %d' % (artifact_id, max_size, total_size))
+        # let's confirm that we are only dealing with the latest samples and
+        # then convert them to a DataFrame for easier cleanup
+        new_samples = {
+            sample for sample, accession in viewitems(
+                ebi_submission.prep_template.ebi_experiment_accessions)
+            if accession is None}
+        new_samples = new_samples.intersection(ebi_submission.samples)
+        rows = {k: dict(v) for k, v in viewitems(ebi_submission.samples)}
+        df = pd.DataFrame.from_dict(rows, orient='index')
+        # remove unique columns and same value in all columns
+        nunique = df.apply(pd.Series.nunique)
+        nsamples = len(df.index)
+        cols_to_drop = set(
+            nunique[(nunique == 1) | (nunique == nsamples)].index)
+        cols_to_drop = cols_to_drop - {'taxon_id', 'scientific_name',
+                                       'description'}
+        df.drop(columns=cols_to_drop, inplace=True)
+        # let's overwrite samples
+        ebi_submission.samples = {k: r.to_dict() for k, r in df.iterrows()}
+        ebi_submission.write_xml_file(
+            ebi_submission.generate_sample_xml(new_samples),
+            ebi_submission.sample_xml_fp)
+        # let's do the same with the prep
+        ebi_submission.write_xml_file(
+            ebi_submission.generate_experiment_xml(new_samples),
+            ebi_submission.experiment_xml_fp)
+
+        # now let's recalculate the size to make sure it's fine
+        new_total_size = sum([stat(tr).st_size
+                              for tr in to_review if tr is not None])
+        LogEntry.create(
+            'Runtime', 'The submission: %d after cleaning is %d and was %d' % (
+                artifact_id, total_size, new_total_size))
+        if new_total_size > max_size:
+            raise ComputeError(
+                'Even after cleaning the submission: %d is too large. Before '
+                'cleaning: %d, after: %d' % (
+                    artifact_id, total_size, new_total_size))
 
     if send:
         # getting aspera's password
