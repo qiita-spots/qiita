@@ -1,5 +1,23 @@
 # Qiita changelog
 
+Version 112018
+--------------
+
+* Updated qp-deblur to generate a phylogenetic tree during analysis
+* Updated analysis to use the qiime2 2018.11.0
+* EBI-ENA submissions will check if the submission XML files are larger
+  than 8.5M (EBI-ENA max is 10M), in that case, it will remove columns with
+  single values and columns with a single value in all rows, and try again
+* EBI-ENA submissions will submit forward and reverse reads for per sample FASTQ
+* Users now can make their raw data public for public artifacts
+* Replaced Google map for OpenLayers in the stats page
+* Stats page now shows the total number of jobs ran in the system
+* Changed footer to point to Qiita's publication https://doi.org/10.1038/s41592-018-0141-9
+* Allowed xlsx files in the prep info files
+* Qiita now allows plugins to run any given command at the end of building
+  analyses to generate extra artifacts, for example to generate a deblur tree
+
+
 Version 092018
 --------------
 
