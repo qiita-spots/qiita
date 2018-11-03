@@ -1306,6 +1306,9 @@ class Software(qdb.base.QiitaObject):
         cmd = '%s "%s" "%s" "%s" "register" "ignored"' % (
             qiita_config.plugin_launcher, self.environment_script,
             self.start_script, url)
+        # this print is intentional as it will be stored in the internal
+        # Qiita logs
+        print 'Registering: %s, via %s' % (self.name, cmd)
         p = Process(target=qdb.processing_job._system_call, args=(cmd,))
         p.start()
 

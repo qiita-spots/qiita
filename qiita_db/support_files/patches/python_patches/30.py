@@ -12,7 +12,7 @@ st_update = set()
 pr_update = set()
 
 with qdb.sql_connection.TRN:
-    sql = """SELECT table_name
+    sql = r"""SELECT table_name
              FROM information_schema.tables
              WHERE table_schema='qiita'
                 AND (table_name SIMILAR TO 'sample\_[0-9]+'

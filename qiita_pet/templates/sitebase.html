@@ -211,6 +211,9 @@
 
                 let params = "";
                 for (k in item.params) {
+                  if (k.startsWith("qp-hide")) {
+                    continue;
+                  }
                   params += '<b>' + k + '</b>: ' + item.params[k] + '<br/>';
                 }
                 row.push(params)

@@ -354,7 +354,7 @@ def _activate_or_update_plugins(update=False):
         If True will update the plugins. Otherwise will activate them.
         Default: False.
     """
-    conf_files = glob(join(qiita_config.plugin_dir, "*.conf"))
+    conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
     label = "{} plugin (%s/{}): %s... ".format(
         "Updating" if update else "\tLoading", len(conf_files))
     for i, fp in enumerate(conf_files):
