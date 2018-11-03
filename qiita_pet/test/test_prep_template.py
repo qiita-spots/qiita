@@ -27,7 +27,7 @@ class TestPrepTemplateHandler(TestHandlerBase):
 
         self.broken_prep = join(uploads_dp, '1', 'broke_template.txt')
         with open(self.broken_prep, 'w') as f:
-            f.write("sample_name\tbroke \col\nSKD6.640190\tnew_value\n")
+            f.write(r"sample_name\tbroke \col\nSKD6.640190\tnew_value\n")
 
     def tearDown(self):
         super(TestPrepTemplateHandler, self).tearDown()
