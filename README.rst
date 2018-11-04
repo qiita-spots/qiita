@@ -31,20 +31,30 @@ For more specific details about qiita visit `the Qiita main site tutorial <https
 Current features
 ----------------
 
-* Create a study, add a sample information file with the description (metadata,
-  clinical, geographical, etc) of each sample and multiple preparation
-  information files, how the samples were prepared in the wet lab prior to data
-  generation.
-* Update sample information by modifying values in the existing columns, via
-  an upload and processing of a new information file. Updates include being able
-  to change values in existing columns or add new ones. It is also possible to
-  add samples to an existing sample information sheet. We currently don't
-  support deletions.
-* Change the status of a study: Sandboxed -> Private -> Public.
-* Long term sequence data deposition to the European Nucleotide Archive (ENA),
-  part of the European Bioinformatics Institute (EBI).
-* Search over existing studies (see known issues).
-* Generate basic visualizations with the available studies and datasets.
+* Full study management: Create, delete, update samples in the sample and
+  multiple preparation information files.
+* Upload files via direct drag & drop from the web interface or via scp
+  from any server that allows these connections.
+* Study privacy management: Sandboxed -> Private -> Public.
+* Easy long-term sequence data deposition to the European Nucleotide Archive (ENA),
+  part of the European Bioinformatics Institute (EBI) for private and public
+  studies.
+* Raw data processing for:
+
+  * Target gene data: we support deblur against GreenGenes (13_8) and close
+    reference picking against GreenGenes (13_8) and Silva.
+  * Metagenoic/Shotgun data: we support Shogun processing. Note that this data
+    is suitable for download and further down analyses but we don't recommend
+    analysis within Qiita.
+  * biom files can be added as new preparation templates for downstream
+    analyses; however, this cannot be made public.
+
+* Basic downstream analyses using Qiime2.
+* Basic study search in the study listing page.
+* Complex metadata search via redbiom.
+
+For more detailed information visit the `Qiita tutorial <https://cmi-workshop.readthedocs.io/en/latest/>`__
+and the `Qiita help <https://qiita.ucsd.edu/static/doc/html/index.html>`__.
 
 Accepted raw files
 ------------------
