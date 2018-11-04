@@ -368,7 +368,12 @@ def generate_biom_and_metadata_release(study_status='public'):
             human_cmd = []
             for p in a.parents:
                 pp = p.processing_parameters
-                pp_cmd_name = pp.command.name
+                # parent is a direct upload; for example per_sample_FASTQ in
+                # shotgun data
+                if pp is None:
+                    pp_cmd_name = ''
+                else:
+                    pp_cmd_name = pp.command.name
                 if pp_cmd_name == 'Trimming':
                     human_cmd.append('%s @ %s' % (
                         cmd_name, str(pp.values['length'])))

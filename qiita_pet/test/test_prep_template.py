@@ -27,7 +27,7 @@ class TestPrepTemplateHandler(TestHandlerBase):
 
         self.broken_prep = join(uploads_dp, '1', 'broke_template.txt')
         with open(self.broken_prep, 'w') as f:
-            f.write("sample_name\tbroke \col\nSKD6.640190\tnew_value\n")
+            f.write("sample_name\tbroke |col\nSKD6.640190\tnew_value\n")
 
     def tearDown(self):
         super(TestPrepTemplateHandler, self).tearDown()
@@ -52,7 +52,7 @@ class TestPrepTemplateHandler(TestHandlerBase):
                      'prep-file': 'broke_template.txt'}
         response = self.post('/prep_template/', arguments)
         self.assertEqual(response.code, 200)
-        self.assertIn('broke \\\\col', response.body)
+        self.assertIn('broke |col', response.body)
 
     def test_patch(self):
         arguments = {'op': 'replace',

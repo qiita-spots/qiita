@@ -2235,7 +2235,7 @@ class TestSampleTemplate(TestCase):
         with self.assertRaisesRegexp(
                 qdb.exceptions.QiitaDBOperationNotPermittedError,
                 '"latitude" cannot be deleted, this column is currently '
-                'selected as the tube identifier \(specimen_id_column\)'):
+                r'selected as the tube identifier \(specimen_id_column\)'):
             st.delete_column('latitude')
 
         self.new_study.specimen_id_column = None
