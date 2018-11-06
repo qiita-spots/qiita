@@ -1024,9 +1024,9 @@ class Analysis(qdb.base.QiitaObject):
                                           cmd['script_params'].items()])
 
                         # append archives file and output dir parameters
-                        params = ("%s fp_biom=biom_fp --fp_archive=%s "
+                        params = ("%s --fp_biom=%s --fp_archive=%s "
                                   "--output_dir=%s" % (
-                                      params, fp_archive, output_dir))
+                                      params, biom_fp, fp_archive, output_dir))
 
                         # if environment is successfully activated,
                         # run script with parameters
