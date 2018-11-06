@@ -32,8 +32,6 @@ from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 from json import loads, dump
 
-from subprocess import Popen, PIPE
-
 
 class Analysis(qdb.base.QiitaObject):
     """
@@ -912,7 +910,7 @@ class Analysis(qdb.base.QiitaObject):
                            archive_merging_scheme=None):
         """Build tables and add them to the analysis"""
         with qdb.sql_connection.TRN:
-            base_fp = qdb.util.get_work_base_dir()
+            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
 
             biom_files = []
             for label, tables in viewitems(grouped_samples):
@@ -987,6 +985,7 @@ class Analysis(qdb.base.QiitaObject):
                 # final BIOM. The order of operations is list-order. Each
                 # element of the list is a dictionary containing the Conda env
                 # to use, the script to run, and a dictionary of parameters.
+                archive_artifact_fp = None
                 if post_processing_cmds:
                     # assuming all commands require archives, obtain
                     # archives once, instead of for every cmd.
@@ -1017,44 +1016,38 @@ class Analysis(qdb.base.QiitaObject):
                         # --fp_archive=<path_to_archives_file>
                         # assume output dir is passed as:
                         # --output_dir=<path_to_output_dir>
+                        # assume input biom file is passed as:
+                        # --fp_biom=<path_to_biom_file>
 
                         # concatenate any other parameters into a string
                         params = ' '.join(["%s=%s" % (k, v) for k, v in
                                           cmd['script_params'].items()])
 
                         # append archives file and output dir parameters
-                        params = "%s --fp_archive=%s --output_dir=%s" %\
-                                 (params, fp_archive, output_dir)
+                        params = ("%s fp_biom=biom_fp --fp_archive=%s "
+                                  "--output_dir=%s" % (
+                                      params, fp_archive, output_dir))
 
                         # if environment is successfully activated,
                         # run script with parameters
                         # script_env e.g.: 'deactivate; source activate qiita'
                         # script_path e.g.:
                         # python 'qiita_db/test/support_files/worker.py'
-                        p = Popen(["%s; %s %s" %
-                                  (cmd['script_env'],
-                                   cmd['script_path'],
-                                   params)], shell=True, stdout=PIPE)
-
-                        # p.communicate() waits on child to finish.
-                        p_out, p_err = p.communicate()
-                        p_out = p_out.decode("utf-8").rstrip()
+                        cmd = "%s; %s %s" % (
+                            cmd['script_env'], cmd['script_path'], params)
+                        p_out, p_err, rv = qdb.processing_job._system_call(cmd)
 
                         # p_out will return either an error message or
                         # the file path to the new tree, depending on p's
                         # return code.
-                        if p.returncode != 0:
+                        if rv != 0:
+                            p_out = p_out.decode("utf-8").rstrip()
                             raise IncompetentQiitaDeveloperError(p_out)
-
-                    biom_files.append((
-                                        data_type,
-                                        biom_fp,
-                                        # instead of returning post-processing
-                                        # metadata(post_processing_cmds),
-                                        # return fp to phylogenetic tree.
-                                        p_out))
-                else:
-                    biom_files.append((data_type, biom_fp))
+                        p_out = loads(p_out)
+                        if p_out['archive'] is not None and p_out['archive']:
+                            archive_artifact_fp = p_out['archive']
+                            biom_fp = p_out['biom']
+                biom_files.append((data_type, biom_fp, archive_artifact_fp))
 
         # return the biom files, either with or without needed tree, to
         # the user.

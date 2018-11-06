@@ -39,9 +39,14 @@ def build_analysis_files(job):
 
         cmd = qdb.software.Command.get_validator('BIOM')
         val_jobs = []
-        for dtype, biom_fp in biom_files:
+        for dtype, biom_fp, archive_artifact_fp in biom_files:
+            if archive_artifact_fp is not None:
+                files = dumps({'biom': [biom_fp],
+                               'plain_test': [archive_artifact_fp]})
+            else:
+                files = dumps({'biom': [biom_fp]})
             validate_params = qdb.software.Parameters.load(
-                cmd, values_dict={'files': dumps({'biom': [biom_fp]}),
+                cmd, values_dict={'files': files,
                                   'artifact_type': 'BIOM',
                                   'provenance': dumps({'job': job.id,
                                                        'data_type': dtype}),
