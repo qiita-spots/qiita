@@ -13,7 +13,6 @@ from qiita_core.testing import wait_for_processing_job
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 from json import dumps
-import ast
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -541,33 +540,13 @@ class TestAnalysis(TestCase):
 
         # create a sample analysis and run build_files on it.
         analysis = self._create_analyses_with_samples()
-        post_processing_cmds = analysis.build_files(False)
+        biom_files = analysis.build_files(False)
 
         # if build_files used additional processing commands, it will
         # return a tuple, where the third element contains output metadata.
-        for cmd in post_processing_cmds:
-            # each cmd in the list is a tuple
-            ppc, params = cmd[2].split('\n')
-
-            # since we are using the qiita env as our test env, assume major
-            # and minor info will remain constant at 2 and 7, respectively.
-            s = 'Worker running Python sys.version_info(major=2, minor=7,'
-            self.assertItemsEqual(ppc[:56], s)
-
-            # cleanup the second line of output from worker.py, containing
-            # the parameters passed to it.
-            params = params.lstrip('>>')
-            params = params.rstrip('<<')
-            params = ast.literal_eval(params)
-
-            self.assertItemsEqual(params[0],
-                                  'qiita_db/test/support_files/worker.py')
-            self.assertItemsEqual(params[1], 'a=A')
-            self.assertItemsEqual(params[2], 'b=B')
-
-            # for now, just compare the option names
-            self.assertItemsEqual(params[3][:13], '--fp_archive=')
-            self.assertItemsEqual(params[4][:13], '--output_dir=')
+        for name, biom_fp, archive_artifact_fp in biom_files:
+            self.assertEqual(biom_fp, '/path/to/biom')
+            self.assertEqual(archive_artifact_fp, '/path/to/archive')
 
         # cleanup (assume command was NULL previously)
         with qdb.sql_connection.TRN:

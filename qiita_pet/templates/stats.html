@@ -35,7 +35,7 @@
     // adding features via the lat/long
     var iconFeatures = [];
     {% for lat, lng in lat_longs %}
-      iconFeatures.push(_generate_iconFeature(lat, long));
+      iconFeatures.push(_generate_iconFeature({% raw lat %}, {% raw lng %}));
     {% end %}
     // creating new verctor &layer for the markers
     var vectorSource = new ol.source.Vector({ features: [] });

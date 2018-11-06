@@ -143,10 +143,11 @@
       <b>Shared With:</b> <span id="shared_html_{{study_info['study_id']}}"></span><br/>
       <b>Samples:</b> {{study_info['num_samples']}}<br />
       <b>EBI:</b> {% raw ebi_info %}<br />
-      <b>Allow Qiita users to download raw data files:</b>
-        {% if editable %}
+      {% if editable %}
+        <b>Allow Qiita users to download raw data files:</b>
         <input type="checkbox" id="toggle_public_raw_download" {% if study_info['public_raw_download'] %} checked {% end %} />
-        {% end %}<br />
+        <br />
+      {% end %}
     </td>
     <td width="25px">&nbsp;</td>
     <td>
