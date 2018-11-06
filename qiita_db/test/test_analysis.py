@@ -430,7 +430,7 @@ class TestAnalysis(TestCase):
         obs_bioms = analysis._build_biom_tables(grouped_samples)
         biom_fp = self.get_fp(
             "%s_analysis_18S_algorithm.biom" % analysis.id)
-        obs = [(a, basename(b)) for a, b in obs_bioms]
+        obs = [(a, basename(b)) for a, b, _ in obs_bioms]
         self.assertEqual(obs, [('18S', basename(biom_fp))])
 
         table = load_table(obs_bioms[0][1])
@@ -455,7 +455,7 @@ class TestAnalysis(TestCase):
                 (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
                 (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples)
-        obs = [(a, basename(b)) for a, b in obs_bioms]
+        obs = [(a, basename(b)) for a, b, _ in obs_bioms]
         exp = [
             ('16S', '%s_analysis_16S_PickclosedreferenceOTUsreference2'
              'Trimlenght100.biom' % analysis_id),
@@ -466,7 +466,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, exp)
 
         exp = {'1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'}
-        for dt, fp in obs_bioms:
+        for dt, fp, _ in obs_bioms:
             table = load_table(fp)
             obs = set(table.ids(axis='sample'))
             self.assertEqual(obs, exp)
@@ -478,7 +478,7 @@ class TestAnalysis(TestCase):
                 (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
                 (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
         obs_bioms = analysis._build_biom_tables(grouped_samples, True)
-        obs = [(a, basename(b)) for a, b in obs_bioms]
+        obs = [(a, basename(b)) for a, b, _ in obs_bioms]
         biom_fp = (
             "%s_analysis_18S_algorithm.biom" % analysis.id)
         self.assertEqual(obs, [('18S', biom_fp)])
@@ -577,7 +577,7 @@ class TestAnalysis(TestCase):
 
         # testing that the generated files have the same sample ids
         biom_ids = []
-        for _, fp in biom_tables:
+        for _, fp, _ in biom_tables:
             biom_ids.extend(load_table(fp).ids(axis='sample'))
 
         mapping_fp = qdb.util.get_filepath_information(

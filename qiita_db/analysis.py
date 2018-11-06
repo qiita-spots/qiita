@@ -1044,8 +1044,8 @@ class Analysis(qdb.base.QiitaObject):
                             p_out = p_out.decode("utf-8").rstrip()
                             raise IncompetentQiitaDeveloperError(p_out)
                         p_out = loads(p_out)
-                        if p_out['artifact'] is not None and p_out['artifact']:
-                            archive_artifact_fp = p_out['artifact']
+                        if p_out['archive'] is not None and p_out['archive']:
+                            archive_artifact_fp = p_out['archive']
                             biom_fp = p_out['biom']
                 biom_files.append((data_type, biom_fp, archive_artifact_fp))
 
