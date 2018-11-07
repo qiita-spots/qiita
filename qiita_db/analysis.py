@@ -849,9 +849,7 @@ class Analysis(qdb.base.QiitaObject):
             post_processing_cmds = []
             for aid, asamples in viewitems(samples):
                 # find the artifact info, [0] there should be only one info
-                ainfo = [bi for bi in bioms_info
-                         if bi['artifact_id'] == aid][0]
-
+                ainfo = list(bioms_info)[0]
                 data_type = ainfo['data_type']
 
                 # ainfo['algorithm'] is the original merging scheme
@@ -888,11 +886,13 @@ class Analysis(qdb.base.QiitaObject):
             self._build_mapping_file(samples, rename_dup_samples)
 
             if post_processing_cmds:
+                merging_scheme = sub(
+                    ', BIOM: [0-9a-zA-Z]+.biom', '', ainfo['algorithm'])
                 biom_files = self._build_biom_tables(
                                     grouped_samples,
                                     rename_dup_samples,
                                     post_processing_cmds=post_processing_cmds,
-                                    archive_merging_scheme=ainfo['algorithm'])
+                                    archive_merging_scheme=merging_scheme)
             else:
                 # preserve the legacy path
                 biom_files = self._build_biom_tables(
