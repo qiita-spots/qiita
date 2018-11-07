@@ -20,13 +20,10 @@
     }))
   });
   // internal function to avoid duplication of code
-  function _generate_iconFeature(lat, long) {
+  function _generate_iconFeature(lat, lng) {
     var iconFeature = new ol.Feature({
-      geometry: new ol.geom.Point(ol.proj.transform([long, lat], 'EPSG:4326',
-      'EPSG:3857')),
-      name: 'Null Island',
-      population: 4000,
-      rainfall: 500
+      geometry: new ol.geom.Point(ol.proj.transform([lng, lat], 'EPSG:4326',
+      'EPSG:3857'))
     });
     iconFeature.setStyle(iconStyle);
     return iconFeature;
@@ -56,6 +53,7 @@
         zoom: 4
       })
     });
+    $("#map-canvas").data("map-canvas", map);
   });
 
 </script>
