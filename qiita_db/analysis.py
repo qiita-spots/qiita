@@ -887,7 +887,7 @@ class Analysis(qdb.base.QiitaObject):
 
             if post_processing_cmds:
                 merging_scheme = sub(
-                    ', BIOM: [0-9a-zA-Z]+.biom', '', ainfo['algorithm'])
+                    ', BIOM: [0-9a-zA-Z-.]+', '', ainfo['algorithm'])
                 print merging_scheme, ainfo['algorithm']
                 biom_files = self._build_biom_tables(
                                     grouped_samples,
