@@ -179,13 +179,33 @@ class TestAnalysisGraphHandler(TestHandlerBase):
              6: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']})
         args = {'name': 'New Test Graph Analysis', 'description': 'Desc'}
         response = self.post('/analysis/create/', args)
+
+        # Assert response status code is successful.
+        self.assertEqual(response.code, 200)
+
+        # effective url is of the form:
+        # http://localhost:50762/analysis/description/11/
         new_id = response.effective_url.split('/')[-2]
+
         a = Analysis(new_id)
+
+        # if analysis was created successfully, value of
+        # a.name should equal the parameter given above.
+        self.assertEqual(a.name, 'New Test Graph Analysis')
+
         # Wait until all the jobs are done so the BIOM tables exist
         for j in a.jobs:
             wait_for_processing_job(j.id)
+            print("DEBUG JOB ID: %s" % j.id)
+            print("DEBUG JOB CMD: %s" % j.command.name)
+            print("DEBUG JOB PARAM: %s" % j.parameters.values)
+            print("DEBUG JOB STATUS: %s" % j.status)
+            print("DEBUG JOB LOG MSG: %s" % j.log.msg)
+            # assert job completed successfully.
+            self.assertNotEqual(j.status, 'error')
 
         artifacts = a.artifacts
+
         self.assertEqual(len(artifacts), 2)
 
         # Create a new workflow starting on the first artifact
