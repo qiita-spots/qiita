@@ -1011,7 +1011,9 @@ class Analysis(qdb.base.QiitaObject):
 
                     # since biom_fp uses base_fp as its location, assume it's
                     # suitable for other files as well.
-                    output_dir = base_fp
+                    output_dir = join(base_fp, info)
+                    if not exists(output_dir):
+                        mkdir(output_dir)
 
                     fp_archive = join(output_dir,
                                       'archive_%d.json' % (self._id))
@@ -1057,7 +1059,7 @@ class Analysis(qdb.base.QiitaObject):
 
                         if p_out['archive'] is not None:
                             biom_files.append(
-                                (data_type, p_out['biom'], fp_archive))
+                                (data_type, p_out['biom'], p_out['archive']))
 
         # return the biom files, either with or without needed tree, to
         # the user.
