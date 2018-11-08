@@ -1041,16 +1041,18 @@ class Analysis(qdb.base.QiitaObject):
                         # script_env e.g.: 'deactivate; source activate qiita'
                         # script_path e.g.:
                         # python 'qiita_db/test/support_files/worker.py'
-                        cmd = "%s; %s %s" % (
+                        cmd = "%s %s %s" % (
                             cmd['script_env'], cmd['script_path'], params)
                         p_out, p_err, rv = qdb.processing_job._system_call(cmd)
-
+                        p_out = p_out.decode("utf-8").rstrip()
+                        # based on the set of commands ran, we could get a
+                        # rv !=0 but still have a successful return from the
+                        # command, thus checking both rv and p_out. Note that
                         # p_out will return either an error message or
                         # the file path to the new tree, depending on p's
                         # return code.
-                        if rv != 0:
-                            p_out = p_out.decode("utf-8").rstrip()
-                            raise IncompetentQiitaDeveloperError(p_out)
+                        if rv != 0 and 'biom' not in p_out:
+                            raise ValueError('Error %d: %s' % (rv, p_out))
                         p_out = loads(p_out)
 
                         # on successful cmd, set input variables for the

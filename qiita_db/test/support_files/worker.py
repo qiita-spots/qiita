@@ -21,7 +21,7 @@ from os.path import exists
 # --env_report is a worker.py specific flag to report the python environment
 # version that this script is currently running in. Useful for testing
 # environment switching.
-@click.option('--env_report', is_flag=True)
+@click.option('--env_report', is_flag=True, default=False)
 # execute needed to support click
 def execute(fp_archive, fp_biom, output_dir, env_report):
     """worker.py implements an example interface to directly communicate
