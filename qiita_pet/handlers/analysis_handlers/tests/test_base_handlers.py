@@ -182,15 +182,10 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         new_id = response.effective_url.split('/')[-2]
         a = Analysis(new_id)
         # Wait until all the jobs are done so the BIOM tables exist
-        print 'LOOK 4 ME!'
         for j in a.jobs:
             wait_for_processing_job(j.id)
-            print j.id, j.status
-            if j.status == 'error':
-                print j.log.msg
 
         artifacts = a.artifacts
-        print a.artifacts, []
         self.assertEqual(len(artifacts), 2)
 
         # Create a new workflow starting on the first artifact
