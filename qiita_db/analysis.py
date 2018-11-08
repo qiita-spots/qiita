@@ -1055,21 +1055,9 @@ class Analysis(qdb.base.QiitaObject):
                             raise ValueError('Error %d: %s' % (rv, p_out))
                         p_out = loads(p_out)
 
-                        # on successful cmd, set input variables for the
-                        # possible next cmd, with the outputs from this
-                        # cmd.
-                        biom_fp = p_out['biom']
-                        # reset fp_archive, assuming the next cmd
-                        # needs for example, an output phylogeny
-                        # rather than fragments.
-                        fp_archive = p_out['archive']
-                        # retain the current output_dir as the working
-                        # directory for any next cmd
-
-                        # (re)set the return value, so when this loop ends,
-                        # the data can be returned.
-                        if biom_fp is not None and fp_archive is not None:
-                            biom_files.append((data_type, biom_fp, fp_archive))
+                        if p_out['archive'] is not None:
+                            biom_files.append(
+                                (data_type, p_out['biom'], fp_archive))
 
         # return the biom files, either with or without needed tree, to
         # the user.
