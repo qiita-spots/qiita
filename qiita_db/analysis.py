@@ -846,7 +846,7 @@ class Analysis(qdb.base.QiitaObject):
             # of operations will be list-order. Thus, in the case that
             # multiple post_processing_cmds are implemented, ensure proper
             # order before passing off to _build_biom_tables().
-            post_processing_cmds = []
+            post_processing_cmds = dict()
             for aid, asamples in viewitems(samples):
                 # find the artifact info, [0] there should be only one info
                 ainfo = [bi for bi in bioms_info
@@ -861,8 +861,11 @@ class Analysis(qdb.base.QiitaObject):
                         cmd = aparams.command.post_processing_cmd
                         if cmd is not None:
                             # preserve label, in case it's needed.
-                            cmd['label'] = label
-                            post_processing_cmds.append(cmd)
+                            merging_scheme = sub(
+                                ', BIOM: [0-9a-zA-Z-.]+', '',
+                                ainfo['algorithm'])
+                            post_processing_cmds[ainfo['algorithm']] = (
+                                merging_scheme, cmd)
                     grouped_samples[label] = []
                 grouped_samples[label].append((aid, asamples))
             # 2. if rename_dup_samples is still False, make sure that we don't
@@ -887,13 +890,10 @@ class Analysis(qdb.base.QiitaObject):
             self._build_mapping_file(samples, rename_dup_samples)
 
             if post_processing_cmds:
-                merging_scheme = sub(
-                    ', BIOM: [0-9a-zA-Z-.]+', '', ainfo['algorithm'])
                 biom_files = self._build_biom_tables(
                                     grouped_samples,
                                     rename_dup_samples,
-                                    post_processing_cmds=post_processing_cmds,
-                                    archive_merging_scheme=merging_scheme)
+                                    post_processing_cmds=post_processing_cmds)
             else:
                 # preserve the legacy path
                 biom_files = self._build_biom_tables(
@@ -908,8 +908,7 @@ class Analysis(qdb.base.QiitaObject):
     def _build_biom_tables(self,
                            grouped_samples,
                            rename_dup_samples=False,
-                           post_processing_cmds=None,
-                           archive_merging_scheme=None):
+                           post_processing_cmds=None):
         """Build tables and add them to the analysis"""
         with qdb.sql_connection.TRN:
             # creating per analysis output folder
@@ -976,9 +975,9 @@ class Analysis(qdb.base.QiitaObject):
                 # write out the file
                 # data_type and algorithm values become part of the file
                 # name(s).
-                data_type = sub('[^0-9a-zA-Z]+', '', data_type)
-                algorithm = sub('[^0-9a-zA-Z]+', '', algorithm)
-                info = "%s_%s" % (data_type, algorithm)
+                data_type_fix = sub('[^0-9a-zA-Z]+', '', data_type)
+                algorithm_fix = sub('[^0-9a-zA-Z]+', '', algorithm)
+                info = "%s_%s" % (data_type_fix, algorithm_fix)
                 fn = "%d_analysis_%s.biom" % (self._id, info)
                 biom_fp = join(base_fp, fn)
                 # save final biom here
@@ -994,13 +993,14 @@ class Analysis(qdb.base.QiitaObject):
                 # final BIOM. The order of operations is list-order. Each
                 # element of the list is a dictionary containing the Conda env
                 # to use, the script to run, and a dictionary of parameters.
-                if post_processing_cmds:
+                if algorithm in post_processing_cmds:
+                    merging_scheme, pp_cmd = post_processing_cmds[algorithm]
                     # assuming all commands require archives, obtain
                     # archives once, instead of for every cmd.
                     features = load_table(biom_fp).ids(axis='observation')
                     features = list(features)
                     archives = qdb.archive.Archive.retrieve_feature_values(
-                        archive_merging_scheme=archive_merging_scheme,
+                        archive_merging_scheme=merging_scheme,
                         features=features)
 
                     # remove archives that SEPP could not match
@@ -1021,45 +1021,44 @@ class Analysis(qdb.base.QiitaObject):
                     with open(fp_archive, 'w') as out_file:
                         dump(archives, out_file)
 
-                    for cmd in post_processing_cmds:
-                        # assume archives file is passed as:
-                        # --fp_archive=<path_to_archives_file>
-                        # assume output dir is passed as:
-                        # --output_dir=<path_to_output_dir>
-                        # assume input biom file is passed as:
-                        # --fp_biom=<path_to_biom_file>
+                    # assume archives file is passed as:
+                    # --fp_archive=<path_to_archives_file>
+                    # assume output dir is passed as:
+                    # --output_dir=<path_to_output_dir>
+                    # assume input biom file is passed as:
+                    # --fp_biom=<path_to_biom_file>
 
-                        # concatenate any other parameters into a string
-                        params = ' '.join(["%s=%s" % (k, v) for k, v in
-                                          cmd['script_params'].items()])
+                    # concatenate any other parameters into a string
+                    params = ' '.join(["%s=%s" % (k, v) for k, v in
+                                      pp_cmd['script_params'].items()])
 
-                        # append archives file and output dir parameters
-                        params = ("%s --fp_biom=%s --fp_archive=%s "
-                                  "--output_dir=%s" % (
-                                      params, biom_fp, fp_archive, output_dir))
+                    # append archives file and output dir parameters
+                    params = ("%s --fp_biom=%s --fp_archive=%s "
+                              "--output_dir=%s" % (
+                                  params, biom_fp, fp_archive, output_dir))
 
-                        # if environment is successfully activated,
-                        # run script with parameters
-                        # script_env e.g.: 'deactivate; source activate qiita'
-                        # script_path e.g.:
-                        # python 'qiita_db/test/support_files/worker.py'
-                        cmd = "%s %s %s" % (
-                            cmd['script_env'], cmd['script_path'], params)
-                        p_out, p_err, rv = qdb.processing_job._system_call(cmd)
-                        p_out = p_out.decode("utf-8").rstrip()
-                        # based on the set of commands ran, we could get a
-                        # rv !=0 but still have a successful return from the
-                        # command, thus checking both rv and p_out. Note that
-                        # p_out will return either an error message or
-                        # the file path to the new tree, depending on p's
-                        # return code.
-                        if rv != 0 and 'biom' not in p_out:
-                            raise ValueError('Error %d: %s' % (rv, p_out))
-                        p_out = loads(p_out)
+                    # if environment is successfully activated,
+                    # run script with parameters
+                    # script_env e.g.: 'deactivate; source activate qiita'
+                    # script_path e.g.:
+                    # python 'qiita_db/test/support_files/worker.py'
+                    cmd = "%s %s %s" % (
+                        pp_cmd['script_env'], pp_cmd['script_path'], params)
+                    p_out, p_err, rv = qdb.processing_job._system_call(cmd)
+                    p_out = p_out.decode("utf-8").rstrip()
+                    # based on the set of commands ran, we could get a
+                    # rv !=0 but still have a successful return from the
+                    # command, thus checking both rv and p_out. Note that
+                    # p_out will return either an error message or
+                    # the file path to the new tree, depending on p's
+                    # return code.
+                    if rv != 0 and 'biom' not in p_out:
+                        raise ValueError('Error %d: %s' % (rv, p_out))
+                    p_out = loads(p_out)
 
-                        if p_out['archive'] is not None:
-                            biom_files.append(
-                                (data_type, p_out['biom'], p_out['archive']))
+                    if p_out['archive'] is not None:
+                        biom_files.append(
+                            (data_type, p_out['biom'], p_out['archive']))
 
         # return the biom files, either with or without needed tree, to
         # the user.
