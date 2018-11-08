@@ -993,7 +993,8 @@ class Analysis(qdb.base.QiitaObject):
                 # final BIOM. The order of operations is list-order. Each
                 # element of the list is a dictionary containing the Conda env
                 # to use, the script to run, and a dictionary of parameters.
-                if algorithm in post_processing_cmds:
+                if (post_processing_cmds is not None and
+                        algorithm in post_processing_cmds):
                     merging_scheme, pp_cmd = post_processing_cmds[algorithm]
                     # assuming all commands require archives, obtain
                     # archives once, instead of for every cmd.
