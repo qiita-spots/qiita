@@ -975,9 +975,9 @@ class Analysis(qdb.base.QiitaObject):
                 # write out the file
                 # data_type and algorithm values become part of the file
                 # name(s).
-                data_type_fix = sub('[^0-9a-zA-Z]+', '', data_type)
-                algorithm_fix = sub('[^0-9a-zA-Z]+', '', algorithm)
-                info = "%s_%s" % (data_type_fix, algorithm_fix)
+                info = "%s_%s" % (
+                    sub('[^0-9a-zA-Z]+', '', data_type),
+                    sub('[^0-9a-zA-Z]+', '', algorithm))
                 fn = "%d_analysis_%s.biom" % (self._id, info)
                 biom_fp = join(base_fp, fn)
                 # save final biom here
@@ -989,10 +989,8 @@ class Analysis(qdb.base.QiitaObject):
                 # let's add the regular biom without post processing
                 biom_files.append((data_type, biom_fp, None))
 
-                # post_processing_cmds are a list of commands to run on the
-                # final BIOM. The order of operations is list-order. Each
-                # element of the list is a dictionary containing the Conda env
-                # to use, the script to run, and a dictionary of parameters.
+                # post_processing_cmds can be None, default, or a dict of
+                # algorithm: merging_scheme, command
                 if (post_processing_cmds is not None and
                         algorithm in post_processing_cmds):
                     merging_scheme, pp_cmd = post_processing_cmds[algorithm]
@@ -1053,7 +1051,7 @@ class Analysis(qdb.base.QiitaObject):
                     # p_out will return either an error message or
                     # the file path to the new tree, depending on p's
                     # return code.
-                    if rv != 0 and 'biom' not in p_out:
+                    if rv != 0:
                         raise ValueError('Error %d: %s' % (rv, p_out))
                     p_out = loads(p_out)
 
