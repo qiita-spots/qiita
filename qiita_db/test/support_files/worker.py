@@ -2,6 +2,8 @@
 import click
 from json import dumps
 import sys
+from os import utime, mkdir
+from os.path import exists
 
 
 @click.command()
@@ -19,7 +21,7 @@ import sys
 # --env_report is a worker.py specific flag to report the python environment
 # version that this script is currently running in. Useful for testing
 # environment switching.
-@click.option('--env_report', is_flag=True)
+@click.option('--env_report', is_flag=True, default=False)
 # execute needed to support click
 def execute(fp_archive, fp_biom, output_dir, env_report):
     """worker.py implements an example interface to directly communicate
@@ -33,6 +35,14 @@ def execute(fp_archive, fp_biom, output_dir, env_report):
         click.echo("%s" % dumps(d))
     else:
         fp_archive = fp_archive.replace('.json', '.tre')
+
+        # creating blank files
+        if not exists(output_dir):
+            mkdir(output_dir)
+        for fname in [fp_archive, fp_biom]:
+            with open(fname, 'a'):
+                utime(fname, None)
+
         d = {'archive': fp_archive, 'biom': fp_biom, 'output_dir': output_dir}
         click.echo("%s" % dumps(d))
 

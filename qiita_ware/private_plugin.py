@@ -42,7 +42,7 @@ def build_analysis_files(job):
         for dtype, biom_fp, archive_artifact_fp in biom_files:
             if archive_artifact_fp is not None:
                 files = dumps({'biom': [biom_fp],
-                               'plain_test': [archive_artifact_fp]})
+                               'plain_text': [archive_artifact_fp]})
             else:
                 files = dumps({'biom': [biom_fp]})
             validate_params = qdb.software.Parameters.load(
