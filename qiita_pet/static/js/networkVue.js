@@ -523,7 +523,9 @@ Vue.component('processing-graph', {
         if (p_type == 'boolean') {
           // The boolean type works differently than the others, so we needed
           // to special case it here.
-          $inp.prop('checked', dflt_val);
+          if (dflt_val) {
+            $inp.prop('checked');
+          }
         }
         else {
           $inp.val(dflt_val);
