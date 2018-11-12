@@ -1,6 +1,5 @@
 {% from qiita_core.qiita_settings import qiita_config, r_client %}
 {% from qiita_core.util import get_qiita_version, get_release_info %}
-{% from qiita_pet import allowed_min_browser_versions %}
 {% from qiita_pet.portal import portal_styling %}
 {% set sysmessage = r_client.get('sysmessage') %}
 {% set user = current_user %}
@@ -47,12 +46,19 @@
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/vue.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/js/qiita.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.min.js"></script>
+    <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/platform.js"></script>
     <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/networkVue.js"></script>
     <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sampleTemplateVue.js"></script>
 
     <link rel="shortcut icon" href="{% raw qiita_config.portal_dir %}/static/img/favicon.ico">
 
     <script>
+      var allowed_min_browser_versions = {
+        'Chrome': {'version': 49, 'download': 'https://www.google.com/chrome/browser/'},
+        'Firefox': {'version': 48, 'download': 'https://support.mozilla.org/en-US/kb/update-firefox-latest-version'},
+        'Safari': {'version': 12, 'download': 'http://support.apple.com/en-us/HT6104'},
+      }
+
       $(window).resize(function () {
         $('body').css('padding-top', $('#navigation-bar').height()+10);
       });
@@ -93,45 +99,22 @@
       }
 
       function overlay_check() {
-        // from http://stackoverflow.com/q/5916900/379593
-        var ua=navigator.userAgent,tem,M=ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
-        if(/trident/i.test(M[1])){
-          tem=/\brv[ :]+(\d+)/g.exec(ua) || [];
-          return 'IE '+(tem[1]||'');
-        }
-        if(M[1]==='Chrome'){
-          tem=ua.match(/\bOPR\/(\d+)/)
-          if(tem!=null)   {return 'Opera '+tem[1];}
-        }
-        M=M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
-        if((tem=ua.match(/version\/(\d+)/i))!=null) {M.splice(1,1,tem[1]);}
-        objbrowserName = M[0];
-        objBrMajorVersion = M[1];
+        var browser_name = platform.name;
+        var browser_major_version = parseInt(platform.version.split("."));
+        if (!(browser_name in allowed_min_browser_versions) ||
+            browser_major_version < allowed_min_browser_versions[browser_name]['version']) {
+          var bowser_text = '';
+          // addding valid browsers
+          for (k in allowed_min_browser_versions) {
+            bowser_text += '<p id="explanation"><strong>' + k + ': ' +
+              allowed_min_browser_versions[k]['version'] + '.</strong> <a target="_blank" href="' +
+              allowed_min_browser_versions[k]['download'] + '">Download page</a></p>';
+          }
+          $('#overlay').append(bowser_text);
 
-        if ((objbrowserName == "Chrome"  && objBrMajorVersion < {{allowed_min_browser_versions['chrome']}})
-            {% if 'firefox' in allowed_min_browser_versions %}
-              || (objbrowserName == "Firefox" && objBrMajorVersion < {{allowed_min_browser_versions['firefox']}})
-            {% else %}
-              || (objbrowserName == "Firefox")
-            {% end %}
-            {% if 'safari' in allowed_min_browser_versions %}
-              || (objbrowserName == "Safari"  && objBrMajorVersion < {{allowed_min_browser_versions['safari']}})
-            {% else %}
-              || (objbrowserName == "Safari")
-            {% end %}
-            {% if 'IE' in allowed_min_browser_versions %}
-              || ((objbrowserName == "IE" || objbrowserName == "MSIE") && objBrMajorVersion < {{allowed_min_browser_versions['IE']}})
-            {% else %}
-              || (objbrowserName == "IE" || objbrowserName == "MSIE")
-            {% end %}
-          ) {
-          // Show overlay because too old a browser
-          ol = document.getElementById("overlay");
-          ol.style.visibility = "visible";
-          navbar = document.getElementById("navigation-bar");
-          navbar.style.visibility = "hidden";
-          jumbotron = document.getElementById("jumbotron");
-          jumbotron.style.visibility = "hidden";
+          $('#overlay').css('visibility', 'visible');
+          $('#navigation-bar').css('visibility', 'hidden');
+          $('#jumbotron').css('visibility', 'hidden');
         }
       }
 
@@ -583,16 +566,7 @@
       <div id="overlay" class="navbar-brand" style="visibility: hidden; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; font-size: 13px; text-align: center; z-index: 1000; background-color: #333333; color: #FFFFFF;">
           <img src="{% raw qiita_config.portal_dir %}{{portal_styling.logo}}" alt="Qiita logo" id="small-logo"/>
           <h1>This site only works with the following browsers</h1>
-          <p id="explanation"><strong>Chrome >= {{allowed_min_browser_versions['chrome']}}:</strong> You can download Chrome from <a href="https://www.google.com/chrome/browser/">here</a> or you can find instructions on how to update it <a href="https://support.google.com/chrome/answer/95414?hl=en">here</a></p>
-          {% if 'safari' in allowed_min_browser_versions %}
-            <p id="explanation"><strong>Safari >= {{allowed_min_browser_versions['safari']}}:</strong> You can update Safari following <a href="http://support.apple.com/en-us/HT6104">these</a> instructions.</p>
-          {% end %}
-          {% if 'firefox' in allowed_min_browser_versions %}
-            <p id="explanation"><strong>Firefox >= {{allowed_min_browser_versions['firefox']}}:</strong> For instructions on how to install or update Firefox go <a href="https://support.mozilla.org/en-US/kb/update-firefox-latest-version">here.</a></p>
-          {% end %}
-          {% if 'IE' in allowed_min_browser_versions %}
-            <p id="explanation"><strong>Internet Explorer >= {{allowed_min_browser_versions['IE']}}:</strong> For instructions on how to update IE go <a href="http://windows.microsoft.com/en-us/internet-explorer">here.</a></p>
-          {% end %}
+
       </div>
     </div>
 
