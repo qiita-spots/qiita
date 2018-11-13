@@ -523,8 +523,10 @@ Vue.component('processing-graph', {
         if (p_type == 'boolean') {
           // The boolean type works differently than the others, so we needed
           // to special case it here.
-          if (dflt_val) {
-            $inp.prop('checked');
+          if (dflt_val !== 'false' && dflt_val !== false) {
+            $inp.prop('checked', true);
+          } else {
+            $inp.prop('checked', false);
           }
         }
         else {
@@ -1024,7 +1026,7 @@ Vue.component('processing-graph', {
           }
           if (data[jobid]['error']) {
             contents = contents + " Error: " + data[jobid]['error'] + "</br>";
-            jobErrors = jobErrors + data[jobid]['error'] + "</br>";
+            jobErrors = jobErrors + data[jobid]['error'].replace(/(?:\\n)/g, '<br>') + "</br>";
           }
           // Count the number of jobs that are not completed
           if ((data[jobid]['status'] !== 'error') && (data[jobid]['status'] !== 'success')) {
@@ -1043,7 +1045,7 @@ Vue.component('processing-graph', {
             if (data.nodes.length == 0) {
               // No graph is available - execute the callback
               $('#network-header-div').hide();
-              vm.noInitJobsCallback('processing-job-div', jobErrors);
+              $("#processing-job-div").html("<h3>Error generating the analysis:</h3><h5>" + jobErrors + '</h5>');
             } else {
               // A graph is available, update de current graph
               vm.updateGraph();
