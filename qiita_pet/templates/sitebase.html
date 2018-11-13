@@ -103,14 +103,14 @@
         var browser_major_version = parseInt(platform.version.split("."));
         if (!(browser_name in allowed_min_browser_versions) ||
             browser_major_version < allowed_min_browser_versions[browser_name]['version']) {
-          var bowser_text = '';
-          // addding valid browsers
+          var browser_text = '';
+          // adding valid browsers
           for (k in allowed_min_browser_versions) {
-            bowser_text += '<p id="explanation"><strong>' + k + ': ' +
+            browser_text += '<p id="explanation"><strong>' + k + ': ' +
               allowed_min_browser_versions[k]['version'] + '.</strong> <a target="_blank" href="' +
               allowed_min_browser_versions[k]['download'] + '">Download page</a></p>';
           }
-          $('#overlay').append(bowser_text);
+          $('#overlay').append(browser_text);
 
           $('#overlay').css('visibility', 'visible');
           $('#navigation-bar').css('visibility', 'hidden');
