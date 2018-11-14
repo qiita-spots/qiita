@@ -81,11 +81,11 @@ def _parse_queue_values(d):
             v = int(dd[4:-2])
             if v > max_mem:
                 max_mem = v
-        if dd.startswith('pmem'):
+        elif dd.startswith('pmem'):
             v = int(dd[5:-2])
             if v > max_pmem:
                 max_pmem = v
-        if dd.startswith('vmem'):
+        elif dd.startswith('vmem'):
             v = int(dd[5:-2])
             if v > max_mem:
                 max_mem = v
