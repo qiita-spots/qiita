@@ -10,10 +10,12 @@
 from subprocess import check_output
 from qiita_db.sql_connection import TRN
 from qiita_db.processing_job import ProcessingJob
+import pandas as pd
 from time import sleep
+from datetime import timedelta
 from math import ceil
 
-
+QIITA_QUEUE_LOG = '/home/qiita/qiita-queues-logs-DONT-DELETE.log'
 SLEEP_TIME = 6
 CHANCES = 3
 SQL = """SELECT processing_job_id
@@ -68,16 +70,86 @@ def _get_jids_to_recover(recover_type):
         return jids_to_recover
 
 
+def _parse_queue_values(d):
+    max_mem = 0
+    max_pmem = 0
+    max_vmem = 0
+    max_wt = timedelta(hours=0, minutes=0, seconds=0)
+    d = d.split(',')
+    for dd in d:
+        if dd.startswith('mem'):
+            v = int(dd[4:-2])
+            if v > max_mem:
+                max_mem = v
+        if dd.startswith('pmem'):
+            v = int(dd[5:-2])
+            if v > max_pmem:
+                max_pmem = v
+        if dd.startswith('vmem'):
+            v = int(dd[5:-2])
+            if v > max_mem:
+                max_mem = v
+        elif dd.startswith('walltime'):
+            v = map(int, dd[9:].split(':'))
+            v = timedelta(hours=v[0], minutes=v[1], seconds=v[2])
+            if v > max_wt:
+                max_wt = v
+    return max_mem, max_pmem, max_vmem, max_wt
+
+
+def _qiita_queue_log_parse(jids_to_recover):
+    df = pd.read_csv(QIITA_QUEUE_LOG, sep='\t',
+                     index_col=None, header=None, dtype=str)
+    # renaming columns so they are easier to manipulate
+    df.columns = ['bjid', 'user', 'group', 'jid', 'session', 'resource-list',
+                  'resource-used', 'queue', 'account', 'exit-code']
+    # remove the register and empty fields to avoid errors
+    df = df[(df.bjid != '0') &
+            (~df.bjid.isnull()) &
+            (~df.user.isnull()) &
+            (df.jid != 'register.txt')]
+    # generate the qiita job id
+    df['qjid'] = df.jid.apply(lambda x: x.split('.')[0])
+
+    results = []
+    for jid, ddf in df.groupby('qjid'):
+        if jid in jids_to_recover:
+            vals = []
+            for _, r in ddf.iterrows():
+                vals.append({
+                    'exit-code': r['exit-code'],
+                    'resource-list': _parse_queue_values(r['resource-list']),
+                    'resource-used': _parse_queue_values(r['resource-used'])})
+            results.append((ProcessingJob(jid), vals))
+
+    return results
+
+
 def _flush_queues(recover_type):
-    # README: in theory we should be able to submit all recover_type jobs
+    # README 1: in theory we should be able to submit all recover_type jobs
     # one after the other but in reality that's not possible. The issue
     # is that a job is going to stay as running/waiting until is completed.
     # Thus, we need to run complete_job first, wait for everything to finish,
     # then continue with validate, then release_validators, and
     # finally everything else. Note that is suggested to wait for the
     # full recovery type to finish before moving to the next one
+    # README 2: we now have a logging file for all submitted jobs, so let's
+    # start checking for those that failed for system crashes or cause the
+    # workers were busy, error-codes: 1-2
 
     # first start with completing jobs that are not running
+    jids_to_recover = _get_jids_to_recover(recover_type)
+    review_jobs = _qiita_queue_log_parse(jids_to_recover)
+    jids_review_jobs = [j.id for j, r in review_jobs
+                        if {rr['exit-code'] for rr in r} == {'1'}]
+    _submit_jobs(jids_review_jobs, recover_type + '/queue_log/1')
+
+    jids_to_recover = _get_jids_to_recover(recover_type)
+    review_jobs = _qiita_queue_log_parse(jids_to_recover)
+    jids_review_jobs = [j.id for j, r in review_jobs
+                        if {rr['exit-code'] for rr in r} == {'0'}]
+    _submit_jobs(jids_review_jobs, recover_type + '/queue_log/0')
+
     jids_to_recover = _get_jids_to_recover(recover_type)
     complete_job = [j for j in jids_to_recover
                     if ProcessingJob(j).command.name == 'complete_job']

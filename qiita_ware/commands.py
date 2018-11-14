@@ -226,6 +226,9 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
         nsamples = len(df.index)
         cols_to_drop = set(
             nunique[(nunique == 1) | (nunique == nsamples)].index)
+        cols_to_drop = set(
+            nunique[(nunique <= int(nsamples * .01)) |
+                    (nunique >= int(nsamples * .5))].index)
         cols_to_drop = cols_to_drop - {'taxon_id', 'scientific_name',
                                        'description'}
         df.drop(columns=cols_to_drop, inplace=True)
