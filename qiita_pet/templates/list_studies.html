@@ -58,7 +58,8 @@ $(document).ready(function() {
   $('#user-studies-table').dataTable({
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
-      "sDom": '<"top">rti<"bottom"p>',
+      "sDom": 'l<"top">rti<"bottom"p>',
+      "order": [[ 3, "asc" ]],
       "columns": [
         { "orderable": false, "data": "artifact_biom_ids" },
         { "data": "study_title" },
@@ -131,6 +132,7 @@ $(document).ready(function() {
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
       "sDom": '<"top">rti<"bottom"p><"clear">',
+      "order": [[ 3, "asc" ]],
       "bLengthChange": false,
       "columns": [
         { "orderable": false, "data": "artifact_biom_ids" },
