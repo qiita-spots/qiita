@@ -595,7 +595,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                      VALUES (%s, %s)""".format(cls._table, cls._id_column)
             qdb.sql_connection.TRN.add(sql, values, many=True)
 
-            # Create table with custom columns
+            # Create table and populate with metadata key/value pairs
             table_name = cls._table_name(obj_id)
             sql = """CREATE TABLE qiita.{0} (
                         sample_id VARCHAR NOT NULL,

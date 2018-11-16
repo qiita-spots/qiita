@@ -90,8 +90,10 @@ if cols_sample:
             # converting to datetime
             for col in columns:
                 st_df[col] = st_df[col].apply(transform_date)
-            # SHOULD WE FIX?
-            # st.update(st_df)
+            # TODO: This transformation doesn't take much time.
+            # However, it is perhaps no longer needed with schema change
+            # to k/v pairs. Consider removing/revising at a later date.
+            st.update(st_df)
 
 if cols_prep:
     with TRN:
@@ -116,5 +118,7 @@ if cols_prep:
             # converting to datetime
             for col in columns:
                 pt_df[col] = pt_df[col].apply(transform_date)
-            # SHOULD WE FIX?
-            # pt.update(pt_df)
+            # TODO: This transformation doesn't take much time.
+            # However, it is perhaps no longer needed with schema change
+            # to k/v pairs. Consider removing/revising at a later date.
+            pt.update(pt_df)
