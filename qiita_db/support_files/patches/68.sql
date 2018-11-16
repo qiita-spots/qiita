@@ -19,6 +19,7 @@ BEGIN
     dyn_table := 'qiita.' || dyn_t;
     dyn_table_bk := dyn_t || '_bk';
 
+    -- EVAL : we need to check if removing indexes before renaming will improve speed
     -- rename the tables so we can move the data later
     EXECUTE 'ALTER TABLE ' || dyn_table || ' RENAME TO ' || dyn_table_bk;
 
@@ -36,6 +37,11 @@ BEGIN
     LOOP
       EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, column_name, column_value) SELECT sample_id, ''' || cname || ''', ' || cname || ' FROM qiita.' || dyn_table_bk || ';';
     END LOOP;
+
+    -- adding index
+    EXECUTE 'CREATE INDEX ' || dyn_t || '_idx ON ' || dyn_table || ' (sample_id, column_name)';
+
+    -- TOADD: remove old table
   END LOOP;
 END $do$;
 
@@ -62,6 +68,7 @@ BEGIN
     dyn_table := 'qiita.' || dyn_t;
     dyn_table_bk := dyn_t || '_bk';
 
+    -- EVAL : we need to check if removing indexes before renaming will improve speed
     -- rename the tables so we can move the data later
     EXECUTE 'ALTER TABLE ' || dyn_table || ' RENAME TO ' || dyn_table_bk;
 
@@ -82,5 +89,7 @@ BEGIN
 
     -- adding index
     EXECUTE 'CREATE INDEX ' || dyn_t || '_idx ON ' || dyn_table || ' (sample_id, column_name)';
+
+    -- TOADD: remove old table
   END LOOP;
 END $do$;
