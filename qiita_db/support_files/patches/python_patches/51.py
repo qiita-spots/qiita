@@ -90,7 +90,8 @@ if cols_sample:
             # converting to datetime
             for col in columns:
                 st_df[col] = st_df[col].apply(transform_date)
-            st.update(st_df)
+            # SHOULD WE FIX?
+            # st.update(st_df)
 
 if cols_prep:
     with TRN:
@@ -115,4 +116,5 @@ if cols_prep:
             # converting to datetime
             for col in columns:
                 pt_df[col] = pt_df[col].apply(transform_date)
-            pt.update(pt_df)
+            # SHOULD WE FIX?
+            # pt.update(pt_df)

@@ -597,19 +597,18 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             # Create table with custom columns
             table_name = cls._table_name(obj_id)
-            column_datatype = ["%s varchar" % col for col in headers]
             sql = """CREATE TABLE qiita.{0} (
-                        sample_id varchar NOT NULL, {1}
-                     )""".format(table_name, ', '.join(column_datatype))
+                        sample_id VARCHAR NOT NULL,
+                        column_name VARCHAR NOT NULL,
+                        column_value VARCHAR
+                     )""".format(table_name)
             qdb.sql_connection.TRN.add(sql)
 
-            values = [list(md_template[h]) for h in headers]
-            values.insert(0, sample_ids)
-            values = [list(v) for v in zip(*values)]
-            sql = """INSERT INTO qiita.{0} (sample_id, {1})
-                     VALUES (%s, {2})""".format(
-                table_name, ", ".join(headers),
-                ', '.join(["%s"] * len(headers)))
+            values = [(sid, x, y) for sid, row in md_template.iterrows()
+                      for x, y in row.iteritems()]
+            sql = """INSERT INTO qiita.{0} (sample_id, column_name,
+                                            column_value)
+                     VALUES (%s, %s, %s)""".format(table_name)
             qdb.sql_connection.TRN.add(sql, values, many=True)
 
             # Execute all the steps
@@ -1163,10 +1162,12 @@ class MetadataTemplate(qdb.base.QiitaObject):
             The static and dynamic category fields
 
         """
-        cols = qdb.util.get_table_cols(self._table_name(self._id))
-        cols.remove("sample_id")
-
-        return cols
+        with qdb.sql_connection.TRN:
+            sql = """SELECT DISTINCT column_name
+                     FROM qiita.{0}""".format(
+                        self._table_name(self._id))
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchflatten()
 
     def extend(self, md_template):
         """Adds the given template to the current one
