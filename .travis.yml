@@ -70,8 +70,8 @@ install:
   - source activate qiita
 before_script:
   # - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/10/main/postgresql.conf
-  - sudo cp /etc/postgresql/{9.4,10}/main/pg_hba.conf
-  - sudo service postgresql restart
+  # - sudo cp /etc/postgresql/{9.4,10}/main/pg_hba.conf
+  # - sudo service postgresql restart
   - qiita-env make --no-load-ontologies
   - qiita-test-install
 script:
@@ -91,10 +91,10 @@ script:
   - qiita pet webserver
 addons:
   postgresql: 10
-  apt:
-    packages:
-    - postgresql-10
-    - postgresql-client-10
+apt:
+  packages:
+  - postgresql-10
+  - postgresql-client-10
 services:
   - redis-server
 after_success:
