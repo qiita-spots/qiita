@@ -3,6 +3,7 @@ language: python
 sudo: false
 env:
   global:
+    - PGPORT=5432
     - PYTHON_VERSION=3.5
   matrix:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
@@ -84,7 +85,11 @@ script:
   - flake8 qiita_* setup.py scripts/qiita*
   - qiita pet webserver
 addons:
-  postgresql: "9.3"
+  postgresql: "10"
+apt:
+  packages:
+  - postgresql-10
+  - postgresql-client-10
 services:
   - redis-server
   - postgresql
