@@ -1,4 +1,4 @@
-dist: precise
+dist: xenial
 language: python
 sudo: false
 env:
@@ -88,11 +88,7 @@ script:
   - flake8 qiita_* setup.py scripts/qiita*
   - qiita pet webserver
 addons:
-  postgresql: "10"
-apt:
-  packages:
-  - postgresql-10
-  - postgresql-client-10
+  postgresql: 10
 services:
   - redis-server
 after_success:
