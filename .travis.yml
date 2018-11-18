@@ -1,9 +1,11 @@
-dist: xenial
+dist: precise
 language: python
 sudo: false
 env:
   global:
-    - PGPORT=5432
+    - PGUSER=travis
+    - PGHOST=""
+    - PGPORT=5433
     - PYTHON_VERSION=3.5
   matrix:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
@@ -89,6 +91,11 @@ script:
   - qiita pet webserver
 addons:
   postgresql: 10
+  apt:
+    packages:
+    - postgresql-10-postgis-2.4
+    - postgresql-10-postgis-2.4-scripts
+    - postgresql-client-10
 services:
   - redis-server
 after_success:
