@@ -7,8 +7,8 @@ env:
     - PYTHON_VERSION=3.5
   matrix:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
-    - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
-    - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_core qiita_ware"
+    # - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
+    # - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_core qiita_ware"
 before_install:
   - redis-server --version
   - redis-server --port 7777 &
@@ -67,6 +67,9 @@ install:
   - source deactivate
   - source activate qiita
 before_script:
+  - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/10/main/postgresql.conf
+  - sudo cp /etc/postgresql/{9.4,10}/main/pg_hba.conf
+  - sudo service postgresql restart
   - qiita-env make --no-load-ontologies
   - qiita-test-install
 script:
@@ -92,6 +95,5 @@ apt:
   - postgresql-client-10
 services:
   - redis-server
-  - postgresql
 after_success:
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then codecov ; fi
