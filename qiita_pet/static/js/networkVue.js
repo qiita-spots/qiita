@@ -1045,9 +1045,13 @@ Vue.component('processing-graph', {
             if (data.nodes.length == 0) {
               // No graph is available - execute the callback
               $('#network-header-div').hide();
-              $("#processing-job-div").html("<h3>Error generating the analysis:</h3><h5>" + jobErrors + '</h5>');
+              if (!vm.isAnalysisPipeline) {
+                vm.noInitJobsCallback('processing-job-div', jobErrors);
+              } else {
+                $("#processing-job-div").html("<h3>Error generating the analysis:</h3><h5>" + jobErrors + '</h5>');
+              }
             } else {
-              // A graph is available, update de current graph
+              // A graph is available, update the current graph
               vm.updateGraph();
             }
           });
