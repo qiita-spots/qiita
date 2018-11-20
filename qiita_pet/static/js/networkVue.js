@@ -1051,7 +1051,7 @@ Vue.component('processing-graph', {
                 $("#processing-job-div").html("<h3>Error generating the analysis:</h3><h5>" + jobErrors + '</h5>');
               }
             } else {
-              // A graph is available, update de current graph
+              // A graph is available, update the current graph
               vm.updateGraph();
             }
           });
