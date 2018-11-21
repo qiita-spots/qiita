@@ -84,7 +84,7 @@ script:
   - flake8 qiita_* setup.py scripts/qiita*
   - qiita pet webserver
 addons:
-  postgresql: "9.3"
+  postgresql: "9.5"
 services:
   - redis-server
   - postgresql
