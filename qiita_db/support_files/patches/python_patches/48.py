@@ -30,14 +30,18 @@ for s in studies:
     st = s.sample_template
     if st is None:
         continue
-    cols = searcher(st.to_dataframe())
+    cols = []
+    # TODOJSONB: uncomment
+    # cols = searcher(st.to_dataframe())
     if cols:
         to_fix.append((st, cols))
 
     for pt in s.prep_templates():
         if pt is None:
             continue
-        cols = searcher(pt.to_dataframe())
+        # TODOJSONB: uncomment
+        # cols = searcher(pt.to_dataframe())
+        cols = []
         if cols:
             to_fix.append((pt, cols))
 

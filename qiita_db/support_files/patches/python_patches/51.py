@@ -111,8 +111,9 @@ if cols_prep:
             # [1] the format is table_# so taking the #
             pt = PrepTemplate(int(table.split('_')[1]))
             # getting just the columns of interest
-            pt_df = pt.to_dataframe()[columns]
-            # converting to datetime
-            for col in columns:
-                pt_df[col] = pt_df[col].apply(transform_date)
-            pt.update(pt_df)
+            # TODOJSONB: uncomment
+            # pt_df = pt.to_dataframe()[columns]
+            # # converting to datetime
+            # for col in columns:
+            #     pt_df[col] = pt_df[col].apply(transform_date)
+            # pt.update(pt_df)
