@@ -404,7 +404,7 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
             sql_patch_filename = basename(sql_patch_fp)
 
             # patch 43.sql is when we started testing patches
-            if sql_patch_filename == '43.sql' and test:
+            if sql_patch_filename == '68.sql' and test:
                 _populate_test_db()
 
             py_patch_fp = corresponding_py_patch(

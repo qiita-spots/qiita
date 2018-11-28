@@ -35,12 +35,12 @@ INSERT INTO qiita.study (email, emp_person_id, first_contact,
     mixs_compliant, most_recent_contact, number_samples_collected,
     number_samples_promised, principal_investigator_id, reprocess,
     spatial_series, study_title, study_alias, study_description,
-    study_abstract, vamps_id, ebi_study_accession, ebi_submission_status) VALUES
+    study_abstract, vamps_id, ebi_study_accession) VALUES
     ('test@foo.bar', 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
     '2014-05-19 16:11', 27, 27, 3, FALSE, FALSE,
     'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome',
     'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',
-    NULL, 'EBI123456-BB', 'submitted');
+    NULL, 'EBI123456-BB');
 
 -- Add portal to the study
 INSERT INTO qiita.study_portal (study_id, portal_type_id) VALUES (1, 1);
@@ -53,7 +53,7 @@ INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
 
 -- Insert PMIDs for study
 INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.100/123456', '123456'), ('10.100/7891011', '7891011');
-INSERT INTO qiita.study_publication (study_id, publication_doi) VALUES (1, '10.100/123456'), (1, '10.100/7891011');
+INSERT INTO qiita.study_publication (study_id, publication) VALUES (1, '10.100/123456'), (1, '10.100/7891011');
 
 -- Insert an investigation
 INSERT INTO qiita.investigation (investigation_name, investigation_description, contact_person_id) VALUES
@@ -449,22 +449,22 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 ('2_test_folder', 8, '852952723', 1, 2);
 
 -- Insert jobs
-INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options, input_file_reference_id, input_file_software_command_id) VALUES
-(2, 1, 1, '{"--otu_table_fp":1}', 1, 3),
-(2, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}', 2, 3),
-(2, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}', 1, 3);
+-- INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options, input_file_reference_id, input_file_software_command_id) VALUES
+-- (2, 1, 1, '{"--otu_table_fp":1}', 1, 3),
+-- (2, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}', 2, 3),
+-- (2, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}', 1, 3);
 
 -- Add job results
-INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 13), (2, 14);
+-- INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 13), (2, 14);
 
 -- Insert Analysis
-INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 1, '121112'), ('admin@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', 1, '22221112');
+INSERT INTO qiita.analysis (email, name, description, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', '121112'), ('admin@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', '22221112');
 INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) VALUES (1, 1), (2, 1);
 -- Insert Analysis Workflow
-INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (1, 3), (2, 3);
+-- INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (1, 3), (2, 3);
 
 -- Attach jobs to analysis
-INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 3);
+-- INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 3);
 
 -- Insert filepath for analysis biom files
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
@@ -509,17 +509,21 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.sample_template_filepath VALUES (1, 17);
 
 --add collection to the database
-INSERT INTO qiita.collection (email, name, description) VALUES ('test@foo.bar', 'TEST_COLLECTION', 'collection for testing purposes');
+-- INSERT INTO qiita.collection (email, name, description) VALUES ('test@foo.bar', 'TEST_COLLECTION', 'collection for testing purposes');
 
 --associate analyses and jobs with collection
-INSERT INTO qiita.collection_analysis (collection_id, analysis_id) VALUES (1, 1);
-INSERT INTO qiita.collection_job (collection_id, job_id) VALUES (1, 1);
+-- INSERT INTO qiita.collection_analysis (collection_id, analysis_id) VALUES (1, 1);
+-- INSERT INTO qiita.collection_job (collection_id, job_id) VALUES (1, 1);
 
 --share collection with shared user
-INSERT INTO qiita.collection_users (email, collection_id) VALUES ('shared@foo.bar', 1);
+-- INSERT INTO qiita.collection_users (email, collection_id) VALUES ('shared@foo.bar', 1);
 
 --add default analysis for users
-INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) VALUES ('test@foo.bar', 'test@foo.bar-dflt-1', 'dflt', true, 1), ('admin@foo.bar', 'admin@foo.bar-dflt-1', 'dflt', true, 1), ('shared@foo.bar', 'shared@foo.bar-dflt-1', 'dflt', true, 1), ('demo@microbio.me', 'demo@microbio.me-dflt-1', 'dflt', true, 1), ('test@foo.bar', 'test@foo.bar-dflt-2', 'dflt', true, 1), ('admin@foo.bar', 'admin@foo.bar-dflt-2', 'dflt', true, 2), ('shared@foo.bar', 'shared@foo.bar-dflt-2', 'dflt', true, 2), ('demo@microbio.me', 'demo@microbio.me-dflt-2', 'dflt', true, 2);
+INSERT INTO qiita.analysis (email, name, description, dflt) VALUES
+  ('test@foo.bar', 'test@foo.bar-dflt-1', 'dflt', true),     ('admin@foo.bar', 'admin@foo.bar-dflt-1', 'dflt', true),
+  ('shared@foo.bar', 'shared@foo.bar-dflt-1', 'dflt', true), ('demo@microbio.me', 'demo@microbio.me-dflt-1', 'dflt', true),
+  ('test@foo.bar', 'test@foo.bar-dflt-2', 'dflt', true),     ('admin@foo.bar', 'admin@foo.bar-dflt-2', 'dflt', true),
+  ('shared@foo.bar', 'shared@foo.bar-dflt-2', 'dflt', true), ('demo@microbio.me', 'demo@microbio.me-dflt-2', 'dflt', true);
 INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) VALUES (3, 1), (4, 1), (5, 1), (6, 1), (7, 2), (8, 2), (9, 2), (10, 2);
 
 -- Attach samples to analysis
