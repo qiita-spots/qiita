@@ -112,6 +112,6 @@ setup(name='qiita-spots',
                         'sphinx_rtd_theme', 'paramiko', 'scp'],
       dependency_links=[
         'https://github.com/qiita-spots/qiita-files/archive/master.zip#'
-        'egg=qiita-files-0.1.0-dev']
+        'egg=qiita-files-0.1.0-dev'],
       classifiers=classifiers
       )
