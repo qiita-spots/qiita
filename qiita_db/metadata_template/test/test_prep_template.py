@@ -256,7 +256,7 @@ class TestPrepSample(TestCase):
                'experiment_title', 'illumina_technology', 'instrument_model',
                'library_construction_protocol', 'pcr_primers', 'platform',
                'primer', 'run_center', 'run_date', 'run_prefix', 'samp_size',
-               'sample_center', 'sample_id', 'sequencing_meth', 'study_center',
+               'sample_center', 'sequencing_meth', 'study_center',
                'target_gene', 'target_subfragment']
         self.assertItemsEqual(obs, exp)
 
@@ -280,6 +280,8 @@ class TestPrepSample(TestCase):
 @qiita_test_checker()
 class TestPrepTemplate(TestCase):
     def setUp(self):
+        self.QCN = \
+            qdb.metadata_template.base_metadata_template.QIITA_COLUMN_NAME
         self.metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
@@ -847,7 +849,9 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type)
 
         obs = self.conn_handler.execute_fetchall(
-            "SELECT sample_id FROM qiita.prep_%d" % pt.id)
+            """SELECT sample_id
+               FROM qiita.prep_%d
+               WHERE sample_id != '%s'""" % (pt.id, self.QCN))
         exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
         self.assertEqual(obs, exp)
 
@@ -1275,9 +1279,11 @@ class TestPrepTemplate(TestCase):
         npt.assert_warns(
             qdb.exceptions.QiitaDBWarning, pt.extend, self.metadata)
 
-        sql = "SELECT * FROM qiita.prep_{0}".format(pt.id)
-        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
-        exp = [{'sample_id': '1.SKB7.640196',
+        sql = """SELECT *
+                 FROM qiita.prep_{0}
+                 WHERE sample_id != '{1}'""".format(pt.id, self.QCN)
+        obs = dict(self.conn_handler.execute_fetchall(sql))
+        exp = {'1.SKB7.640196': {
                 'barcode': 'CCTCTGAGAGCT',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
@@ -1291,7 +1297,7 @@ class TestPrepTemplate(TestCase):
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP',
                 'new_col': 'val1'},
-               {'sample_id': '1.SKB8.640193',
+               '1.SKB8.640193': {
                 'barcode': 'GTCCGCAAGTTA',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
@@ -1305,7 +1311,7 @@ class TestPrepTemplate(TestCase):
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP',
                 'new_col': 'val2'},
-               {'sample_id': '1.SKD8.640184',
+               '1.SKD8.640184': {
                 'barcode': 'CGTAGAGCTCTC',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
@@ -1318,8 +1324,7 @@ class TestPrepTemplate(TestCase):
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP',
-                'new_col': 'val3'}]
-
+                'new_col': 'val3'}}
         self.assertItemsEqual(obs, exp)
 
     def test_extend_update(self):
@@ -1332,9 +1337,11 @@ class TestPrepTemplate(TestCase):
         npt.assert_warns(
             qdb.exceptions.QiitaDBWarning, pt.extend_and_update, self.metadata)
 
-        sql = "SELECT * FROM qiita.prep_{0}".format(pt.id)
-        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
-        exp = [{'sample_id': '1.SKB7.640196',
+        sql = """SELECT *
+                 FROM qiita.prep_{0}
+                 WHERE sample_id != '{1}'""".format(pt.id, self.QCN)
+        obs = dict(self.conn_handler.execute_fetchall(sql))
+        exp = {'1.SKB7.640196': {
                 'barcode': 'CCTCTGAGAGCT',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
@@ -1348,7 +1355,7 @@ class TestPrepTemplate(TestCase):
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP',
                 'new_col': 'val1'},
-               {'sample_id': '1.SKB8.640193',
+               '1.SKB8.640193': {
                 'barcode': 'GTCCGCAAGTTA',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
@@ -1362,7 +1369,7 @@ class TestPrepTemplate(TestCase):
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP',
                 'new_col': 'val2'},
-               {'sample_id': '1.SKD8.640184',
+               '1.SKD8.640184': {
                 'barcode': 'CGTAGAGCTCTC',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
@@ -1375,7 +1382,7 @@ class TestPrepTemplate(TestCase):
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP',
-                'new_col': 'val3'}]
+                'new_col': 'val3'}}
 
         self.assertItemsEqual(obs, exp)
 
@@ -1548,7 +1555,7 @@ class TestPrepTemplate(TestCase):
 
     def test_name_setter(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
-        self.assertEqual(pt.name, 'Prep information 1')
+        self.assertEqual(pt.name, 'Default Name')
         pt.name = 'New Name'
         self.assertEqual(pt.name, 'New Name')
         pt.name = 'Prep information 1'

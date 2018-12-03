@@ -8,9 +8,8 @@
 
 from future.utils import viewitems
 
-# TODOJSONB: uncomment
-# from qiita_db.metadata_template.sample_template import SampleTemplate
-# from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.sql_connection import TRN
 
 with TRN:
@@ -27,10 +26,8 @@ with TRN:
                 GROUP BY table_name"""
     # note that we are looking for those columns with duplicated names in
     # the headers
-    # TODOJSONB: uncomment
-    headers = []
-    # headers = set(PrepTemplate.metadata_headers()) & \
-    #     set(SampleTemplate.metadata_headers())
+    headers = set(PrepTemplate.metadata_headers()) & \
+        set(SampleTemplate.metadata_headers())
 
     if headers:
         TRN.add(sql, [tuple(headers)])

@@ -79,7 +79,7 @@ BEGIN
     FOR sid IN
       EXECUTE 'SELECT sample_id FROM qiita.' || dyn_table_bk
     LOOP
-      EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''' || sid || ''',  row_to_json((SELECT r FROM (SELECT * from qiita.' || dyn_table_bk || ' where sample_id = ''' || sid || ''') r)));';
+      EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''' || sid || ''',  row_to_json((SELECT r FROM (SELECT * from qiita.' || dyn_table_bk || ' where sample_id = ''' || sid || ''') r))::jsonb - ''sample_id'');';
     END LOOP;
 
     -- adding index

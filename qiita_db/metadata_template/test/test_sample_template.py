@@ -1343,10 +1343,13 @@ class TestSampleTemplate(TestCase):
 
         sql = "SELECT * FROM qiita.sample_{0}".format(st.id)
         obs = self.conn_handler.execute_fetchall(sql)
-        exp = [['%s.Sample1' % self.new_study.id, 'false',
-                '2015-09-01 00:00:00'],
-               ['%s.Sample2' % self.new_study.id, 'true',
-                '2015-09-01 00:00:00']]
+        exp = [
+            ['%s.Sample2' % self.new_study.id, {
+                'bool_col': 'true', 'date_col': '2015-09-01 00:00:00'}],
+            ['%s.Sample1' % self.new_study.id, {
+                'bool_col': 'false', 'date_col': '2015-09-01 00:00:00'}],
+            ['qiita_sample_column_names', {
+                'columns': ['bool_col', 'date_col']}]]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_generate_files(self):

@@ -31,16 +31,14 @@ for s in studies:
     if st is None:
         continue
     cols = []
-    # TODOJSONB: uncomment
-    # cols = searcher(st.to_dataframe())
+    cols = searcher(st.to_dataframe())
     if cols:
         to_fix.append((st, cols))
 
     for pt in s.prep_templates():
         if pt is None:
             continue
-        # TODOJSONB: uncomment
-        # cols = searcher(pt.to_dataframe())
+        cols = searcher(pt.to_dataframe())
         cols = []
         if cols:
             to_fix.append((pt, cols))
