@@ -108,12 +108,12 @@ setup(name='qiita-spots',
                         'natsort', 'networkx < 2.0', 'humanize',
                         'scikit-bio == 0.4.2', 'wtforms == 2.0.1', 'openpyxl',
                         'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
-                        'gitpython', 'qiita-files', 'redbiom==0.1.0-dev',
+                        'gitpython', 'qiita-files', 'redbiom==0.2.0-dev',
                         'sphinx_rtd_theme', 'paramiko', 'scp'],
       dependency_links=[
         'https://github.com/qiita-spots/qiita-files/archive/master.zip#'
         'egg=qiita-files-0.1.0-dev',
         'https://github.com/biocore/redbiom/archive/master.zip#'
-        'egg=redbiom-0.1.0-dev'],
+        'egg=redbiom-0.2.0-dev'],
       classifiers=classifiers
       )
