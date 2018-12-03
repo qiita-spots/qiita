@@ -365,18 +365,6 @@ INSERT INTO qiita.parent_artifact (parent_id, artifact_id)
     VALUES (1, 2), (1, 3),
            (2, 4), (2, 5), (2, 6);
 
--- Insert the jobs that processed the previous artifacts
-INSERT INTO qiita.processing_job (processing_job_id, email, command_id, command_parameters, processing_job_status_id)
-    VALUES ('6d368e16-2242-4cf8-87b4-a5dc40bb890b', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}'::json, 3),
-           ('4c7115e8-4c8e-424c-bf25-96c292ca1931', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}'::json, 3),
-           ('3c9991ab-6c14-4368-a48c-841e8837a79c', 'test@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json, 3);
-
--- Relate the above jobs with the artifacts
-INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
-    VALUES (1, '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
-           (1, '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
-           (2, '3c9991ab-6c14-4368-a48c-841e8837a79c');
-
 -- Insert filepaths for the artifacts and reference
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id)
     VALUES ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
@@ -523,20 +511,44 @@ INSERT INTO qiita.logging (time, severity_id, msg, information)
            ('Sun Nov 22 21:29:30 2015', 2, 'Error message', '{}');
 
 -- Create some processing jobs
-INSERT INTO qiita.processing_job
-        (processing_job_id, email, command_id, command_parameters,
-         processing_job_status_id, logging_id, heartbeat, step)
-    VALUES ('063e553b-327c-4818-ab4a-adfe58e49860', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}'::json, 1, NULL, NULL, NULL),
-           ('bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'test@foo.bar', 2, '{"min_seq_len":100,"max_seq_len":1000,"trim_seq_length":false,"min_qual_score":25,"max_ambig":6,"max_homopolymer":6,"max_primer_mismatch":0,"barcode_type":"golay_12","max_barcode_errors":1.5,"disable_bc_correction":false,"qual_score_window":0,"disable_primers":false,"reverse_primers":"disable","reverse_primer_mismatches":0,"truncate_ambi_bases":false,"input_data":1}'::json, 2, NULL, 'Sun Nov 22 21:00:00 2015', 'demultiplexing'),
-           ('b72369f9-a886-4193-8d3d-f7b504168e75', 'shared@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}'::json, 3, NULL, 'Sun Nov 22 21:15:00 2015', NULL),
-           ('d19f76ee-274e-4c1b-b3a2-a12d73507c55', 'shared@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json, 4, 1, 'Sun Nov 22 21:30:00 2015', 'generating demux file'),
-           ('ac653cb5-76a6-4a45-929e-eb9b2dee6b63', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json, 5, NULL, NULL, NULL);
+INSERT INTO qiita.processing_job (processing_job_id, email, command_id, command_parameters, processing_job_status_id, logging_id, heartbeat, step, pending, hidden) VALUES
+   ('6d368e16-2242-4cf8-87b4-a5dc40bb890b', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, NULL, NULL, NULL, false),
+   ('4c7115e8-4c8e-424c-bf25-96c292ca1931', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, NULL, NULL, NULL, false),
+   ('3c9991ab-6c14-4368-a48c-841e8837a79c', 'test@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}', 3, NULL, NULL, NULL, NULL, false),
+   ('b72369f9-a886-4193-8d3d-f7b504168e75', 'shared@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, '2015-11-22 21:15:00', NULL, NULL, false),
+   ('46b76f74-e100-47aa-9bf2-c0208bcea52d', 'test@foo.bar', 1, '{"max_barcode_errors": "1.5", "sequence_max_n": "0", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "rev_comp_mapping_barcodes": "True", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, NULL, NULL, NULL, NULL, false),
+   ('80bf25f3-5f1d-4e10-9369-315e4244f6d5', 'test@foo.bar', 3, '{"reference": "2", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, NULL, NULL, NULL, NULL, false),
+   ('9ba5ae7a-41e1-4202-b396-0259aeaac366', 'test@foo.bar', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, NULL, NULL, NULL, NULL, false),
+   ('e5609746-a985-41a1-babf-6b3ebe9eb5a9', 'test@foo.bar', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, NULL, NULL, NULL, NULL, false),
+   ('6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f', 'test@foo.bar', 1, '{"max_barcode_errors": "1.5", "sequence_max_n": "0", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "rev_comp_mapping_barcodes": "False", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, NULL, NULL, NULL, NULL, false),
+   ('8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0', 'test@foo.bar', 12, '{"biom_table": "8", "depth": "9000", "subsample_multinomial": "False"}', 3, NULL, NULL, NULL, NULL, false),
+   ('063e553b-327c-4818-ab4a-adfe58e49860', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 1, NULL, NULL, NULL, NULL, true),
+   ('bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'test@foo.bar', 2, '{"min_seq_len":100,"max_seq_len":1000,"trim_seq_length":false,"min_qual_score":25,"max_ambig":6,"max_homopolymer":6,"max_primer_mismatch":0,"barcode_type":"golay_12","max_barcode_errors":1.5,"disable_bc_correction":false,"qual_score_window":0,"disable_primers":false,"reverse_primers":"disable","reverse_primer_mismatches":0,"truncate_ambi_bases":false,"input_data":1}', 2, NULL, '2015-11-22 21:00:00', 'demultiplexing', NULL, true),
+   ('d19f76ee-274e-4c1b-b3a2-a12d73507c55', 'shared@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}', 4, 1, '2015-11-22 21:30:00', 'generating demux file', NULL, true),
+   ('ac653cb5-76a6-4a45-929e-eb9b2dee6b63', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}', 5, NULL, NULL, NULL, NULL, true);
 
-INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
-    VALUES (1, '063e553b-327c-4818-ab4a-adfe58e49860'),
-           (1, 'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
-           (1, 'b72369f9-a886-4193-8d3d-f7b504168e75'),
-           (2, 'd19f76ee-274e-4c1b-b3a2-a12d73507c55');
+INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id) VALUES
+   (1, '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+   (1, '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+   (2, '3c9991ab-6c14-4368-a48c-841e8837a79c'),
+   (1, '063e553b-327c-4818-ab4a-adfe58e49860'),
+   (1, 'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
+   (1, 'b72369f9-a886-4193-8d3d-f7b504168e75'),
+   (2, 'd19f76ee-274e-4c1b-b3a2-a12d73507c55'),
+   (1, '46b76f74-e100-47aa-9bf2-c0208bcea52d'),
+   (2, '80bf25f3-5f1d-4e10-9369-315e4244f6d5'),
+   (2, '9ba5ae7a-41e1-4202-b396-0259aeaac366'),
+   (2, 'e5609746-a985-41a1-babf-6b3ebe9eb5a9'),
+   (1, '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f'),
+   (8, '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0');
+
+INSERT INTO qiita.artifact_output_processing_job (artifact_id, processing_job_id, command_output_id) VALUES
+ (3, '46b76f74-e100-47aa-9bf2-c0208bcea52d', 1),
+ (6, '80bf25f3-5f1d-4e10-9369-315e4244f6d5', 3),
+ (5, '9ba5ae7a-41e1-4202-b396-0259aeaac366', 3),
+ (4, 'e5609746-a985-41a1-babf-6b3ebe9eb5a9', 3),
+ (2, '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f', 1),
+ (9, '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0', 7);
 
 -- Add client ids and secrets
 

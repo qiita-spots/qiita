@@ -1666,7 +1666,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 if aparams is None:
                     aparams = {}
                 else:
-                    # we are going remove any artifacts from the parameters
+                    # we are going to remove any artifacts from the parameters
                     for ti in commands[cid]['params']:
                         del aparams[ti]
 

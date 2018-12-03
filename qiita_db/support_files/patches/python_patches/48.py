@@ -30,7 +30,6 @@ for s in studies:
     st = s.sample_template
     if st is None:
         continue
-    cols = []
     cols = searcher(st.to_dataframe())
     if cols:
         to_fix.append((st, cols))
@@ -39,7 +38,6 @@ for s in studies:
         if pt is None:
             continue
         cols = searcher(pt.to_dataframe())
-        cols = []
         if cols:
             to_fix.append((pt, cols))
 
