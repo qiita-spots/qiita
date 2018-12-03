@@ -159,8 +159,9 @@ INSERT INTO qiita.sample_1 (sample_id, season_environment, assigned_from_geo, te
     ('1.SKD1.640179', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '410658', '0.15', '3483', 'soil metagenome', '0.178', '114', '15', '1.51', '7.1', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.8', 'SKD1', '4.32', 'Diesel bulk', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:M5', 'Cannabis Soil Microbiome', 68.0991287718, 34.8360987059, '1118232');
 
 -- Create a new prep template for the added raw data
-INSERT INTO qiita.prep_template (data_type_id, preprocessing_status, investigation_type) VALUES (2, 'success', 'Metagenomics');
-INSERT INTO qiita.prep_template (data_type_id, preprocessing_status, investigation_type) VALUES (2, 'success', 'Metagenomics');
+INSERT INTO qiita.prep_template (data_type_id, preprocessing_status, investigation_type, artifact_id, name) VALUES
+     (2, 'success', 'Metagenomics', NULL, 'Prep information 1'),
+     (2, 'success', 'Metagenomics', NULL, 'Prep information 2');
 
 -- Add the common prep info for study 1
 INSERT INTO qiita.prep_template_sample (prep_template_id, sample_id, ebi_experiment_accession) VALUES
@@ -344,23 +345,20 @@ INSERT INTO qiita.study_prep_template (study_id, prep_template_id) VALUES (1, 1)
 INSERT INTO qiita.study_prep_template (study_id, prep_template_id) VALUES (1, 2);
 
 -- Insert some artifacts
---   1 (Raw fastq) ---> 2 (demultiplexed) ---> 4 (otu table)
---                  \-> 3 (demultiplexed)
-INSERT INTO qiita.artifact (name, generated_timestamp, command_id, command_parameters,
-                            visibility_id, artifact_type_id, data_type_id)
-    VALUES ('Raw data 1', 'Mon Oct 1 09:30:27 2012', NULL, NULL, 3, 3, 2),
-           ('Demultiplexed 1', 'Mon Oct 1 10:30:27 2012', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}'::json,
-            3, 6, 2),
-           ('Demultiplexed 2', 'Mon Oct 1 11:30:27 2012', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}'::json,
-            3, 6, 2),
-           ('BIOM', 'Tue Oct 2 17:30:00 2012', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json,
-            3, 7, 2),
-           ('BIOM', 'Tue Oct 2 17:30:00 2012', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json,
-            3, 7, 2),
-           ('BIOM', 'Tue Oct 2 17:30:00 2012', 3, '{"reference":2,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json,
-            3, 7, 1),
-           ('BIOM', 'Tue Oct 2 17:30:00 2012', NULL, NULL,
-            3, 7, 1);
+INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters, visibility_id, artifact_type_id, data_type_id, submitted_to_vamps, name) VALUES
+    ('2012-10-01 09:30:27', NULL, NULL, 3, 3, 2, false, 'Raw data 1'),
+    ('2012-10-01 10:30:27', 1, '{"max_barcode_errors": "1.5", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "sequence_max_n": "0", "rev_comp_mapping_barcodes": "False", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, 6, 2, false, 'Demultiplexed 1'),
+    ('2012-10-01 11:30:27', 1, '{"max_barcode_errors": "1.5", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "sequence_max_n": "0", "rev_comp_mapping_barcodes": "True", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, 6, 2, false, 'Demultiplexed 2'),
+    ('2012-10-02 17:30:00', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, 7, 2, false, 'BIOM'),
+    ('2012-10-02 17:30:00', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, 7, 2, false, 'BIOM'),
+    ('2012-10-02 17:30:00', 3, '{"reference": "2", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, 7, 1, false, 'BIOM'),
+    ('2012-10-02 17:30:00', NULL, NULL, 3, 7, 1, false, 'BIOM'),
+    ('2018-12-03 14:06:45.117389', NULL, NULL, 4, 7, 2, false, 'noname'),
+    ('2018-12-03 14:06:45.117389', 12, '{"biom_table": "8", "depth": "9000", "subsample_multinomial": "False"}', 4, 7, 2, false, 'noname');
+
+-- link new artifacts with prep info files
+UPDATE qiita.prep_template SET artifact_id = 1 WHERE prep_template_id = 1;
+UPDATE qiita.prep_template SET artifact_id = 7 WHERE prep_template_id = 2;
 
 -- Link the child artifacts with their parents artifacts
 INSERT INTO qiita.parent_artifact (parent_id, artifact_id)
@@ -448,23 +446,20 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 ('1_job_result.txt', 9, '852952723', 1, 2),
 ('2_test_folder', 8, '852952723', 1, 2);
 
--- Insert jobs
--- INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options, input_file_reference_id, input_file_software_command_id) VALUES
--- (2, 1, 1, '{"--otu_table_fp":1}', 1, 3),
--- (2, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}', 2, 3),
--- (2, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}', 1, 3);
-
--- Add job results
--- INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 13), (2, 14);
-
 -- Insert Analysis
-INSERT INTO qiita.analysis (email, name, description, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', '121112'), ('admin@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', '22221112');
-INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) VALUES (1, 1), (2, 1);
--- Insert Analysis Workflow
--- INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (1, 3), (2, 3);
-
--- Attach jobs to analysis
--- INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 3);
+INSERT INTO qiita.analysis (email, name, description, pmid, "timestamp", dflt, logging_id) VALUES
+    ('test@foo.bar', 'SomeAnalysis', 'A test analysis', '121112', '2018-12-03 13:52:42.751331-07', false, NULL),
+    ('admin@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', '22221112', '2018-12-03 13:52:42.751331-07', false, NULL),
+    ('test@foo.bar', 'test@foo.bar-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
+    ('admin@foo.bar', 'admin@foo.bar-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
+    ('shared@foo.bar', 'shared@foo.bar-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
+    ('demo@microbio.me', 'demo@microbio.me-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
+    ('test@foo.bar', 'test@foo.bar-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
+    ('admin@foo.bar', 'admin@foo.bar-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
+    ('shared@foo.bar', 'shared@foo.bar-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
+    ('demo@microbio.me', 'demo@microbio.me-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL);
+INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) VALUES
+  (1, 1), (2, 1), (3, 1), (4, 1),(5, 1), (6, 1), (7, 2), (8, 2), (9, 2), (10, 2);
 
 -- Insert filepath for analysis biom files
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
@@ -480,7 +475,8 @@ INSERT INTO qiita.analysis_sample (analysis_id, artifact_id, sample_id) VALUES
 (1, 5, '1.SKB8.640193'), (1, 5, '1.SKD8.640184'), (1, 5, '1.SKB7.640196'), (1, 5, '1.SKM9.640192'), (1, 5, '1.SKM4.640180'),
 (2, 5, '1.SKB8.640193'), (2, 5, '1.SKD8.640184'), (2, 5, '1.SKB7.640196'), (2, 5, '1.SKM3.640197'),
 (1, 6, '1.SKB8.640193'), (1, 6, '1.SKD8.640184'), (1, 6, '1.SKB7.640196'), (1, 6, '1.SKM9.640192'), (1, 6, '1.SKM4.640180'),
-(2, 6, '1.SKB8.640193'), (2, 6, '1.SKD8.640184'), (2, 6, '1.SKB7.640196'), (2, 6, '1.SKM3.640197');
+(2, 6, '1.SKB8.640193'), (2, 6, '1.SKD8.640184'), (2, 6, '1.SKB7.640196'), (2, 6, '1.SKM3.640197'),
+(3, 4, '1.SKD8.640184'), (3, 4, '1.SKB7.640196'), (3, 4, '1.SKM9.640192'), (3, 4, '1.SKM4.640180');
 
 --Share analysis with shared user
 INSERT INTO qiita.analysis_users (analysis_id, email) VALUES (1, 'shared@foo.bar');
@@ -507,28 +503,6 @@ INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, name
 -- Create the new sample_template_filepath
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_19700101-000000.txt', 14, '852952723', 1, 9);
 INSERT INTO qiita.sample_template_filepath VALUES (1, 17);
-
---add collection to the database
--- INSERT INTO qiita.collection (email, name, description) VALUES ('test@foo.bar', 'TEST_COLLECTION', 'collection for testing purposes');
-
---associate analyses and jobs with collection
--- INSERT INTO qiita.collection_analysis (collection_id, analysis_id) VALUES (1, 1);
--- INSERT INTO qiita.collection_job (collection_id, job_id) VALUES (1, 1);
-
---share collection with shared user
--- INSERT INTO qiita.collection_users (email, collection_id) VALUES ('shared@foo.bar', 1);
-
---add default analysis for users
-INSERT INTO qiita.analysis (email, name, description, dflt) VALUES
-  ('test@foo.bar', 'test@foo.bar-dflt-1', 'dflt', true),     ('admin@foo.bar', 'admin@foo.bar-dflt-1', 'dflt', true),
-  ('shared@foo.bar', 'shared@foo.bar-dflt-1', 'dflt', true), ('demo@microbio.me', 'demo@microbio.me-dflt-1', 'dflt', true),
-  ('test@foo.bar', 'test@foo.bar-dflt-2', 'dflt', true),     ('admin@foo.bar', 'admin@foo.bar-dflt-2', 'dflt', true),
-  ('shared@foo.bar', 'shared@foo.bar-dflt-2', 'dflt', true), ('demo@microbio.me', 'demo@microbio.me-dflt-2', 'dflt', true);
-INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) VALUES (3, 1), (4, 1), (5, 1), (6, 1), (7, 2), (8, 2), (9, 2), (10, 2);
-
--- Attach samples to analysis
-INSERT INTO qiita.analysis_sample (analysis_id, artifact_id, sample_id)
-    VALUES (3, 4, '1.SKD8.640184'), (3, 4, '1.SKB7.640196'), (3, 4, '1.SKM9.640192'), (3, 4, '1.SKM4.640180');
 
 -- Create the new prep_template_filepath
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_19700101-000000.txt', 15, '3703494589', 1, 9);

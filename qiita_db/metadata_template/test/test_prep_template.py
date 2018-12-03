@@ -1555,7 +1555,7 @@ class TestPrepTemplate(TestCase):
 
     def test_name_setter(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
-        self.assertEqual(pt.name, 'Default Name')
+        self.assertEqual(pt.name, 'Prep information 1')
         pt.name = 'New Name'
         self.assertEqual(pt.name, 'New Name')
         pt.name = 'Prep information 1'

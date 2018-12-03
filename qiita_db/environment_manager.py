@@ -417,22 +417,6 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
         if sql_patch_filename == '68.sql' and test:
             with qdb.sql_connection.TRN:
                 _populate_test_db()
-                # after we populate the DB in test mode we need to apply some
-                # selected python patches and fixes
-                patches_to_apply = [43, 53, 55]
-                for p in patches_to_apply:
-                    execfile(corresponding_py_patch('%d.py' % p), {})
-                # this was originally done in patch 43.py but we need it here
-                # to hide unsuccessful commands
-                sql = """UPDATE qiita.processing_job
-                         SET hidden = TRUE
-                         WHERE processing_job_id IN (
-                           SELECT processing_job_id
-                             FROM qiita.processing_job
-                             LEFT JOIN qiita.processing_job_status USING (
-                               processing_job_status_id)
-                             WHERE processing_job_status != 'success')"""
-                qdb.sql_connection.TRN.add(sql)
 
         with qdb.sql_connection.TRN:
             with open(sql_patch_fp, 'U') as patch_file:
