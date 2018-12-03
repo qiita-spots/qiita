@@ -27,7 +27,7 @@ BEGIN
     -- inserts go fast but we will add them later
     EXECUTE format('CREATE TABLE %1$s (sample_id VARCHAR NOT NULL, sample_values JSONB NOT NULL)', dyn_table);
 
-    -- inserting our helper column qiita_sample_column_names, which is gonna keep all our columns; this is much easier than trying to keep all rows with the same values
+    -- inserting our helper column qiita_sample_column_names, which is going keep all our columns; this is much easier than trying to keep all rows with the same values
     EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''qiita_sample_column_names'',  (''{"columns":'' || (SELECT json_agg(column_name::text) FROM information_schema.columns WHERE table_name=''' || dyn_table_bk || ''' AND table_schema=''qiita'' AND column_name != ''sample_id'')::text || ''}'')::json);';
     -- inserting value per value of the table, this might take forever
     FOR sid IN
@@ -72,7 +72,7 @@ BEGIN
     -- inserts go fast but we will add them later
     EXECUTE format('CREATE TABLE %1$s (sample_id VARCHAR NOT NULL, sample_values JSONB NOT NULL)', dyn_table);
 
-    -- inserting our helper column qiita_sample_column_names, which is gonna keep all our columns; this is much easier than trying to keep all rows with the same values
+    -- inserting our helper column qiita_sample_column_names, which is going keep all our columns; this is much easier than trying to keep all rows with the same values
     EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''qiita_sample_column_names'',  (''{"columns":'' || (SELECT json_agg(column_name::text) FROM information_schema.columns WHERE table_name=''' || dyn_table_bk || ''' AND table_schema=''qiita'' AND column_name != ''sample_id'')::text || ''}'')::json);';
 
     -- inserting value per value of the table, this might take forever

@@ -413,7 +413,7 @@ class ArtifactSummaryHandler(StaticFileHandler, BaseHandler):
         """Overrides StaticFileHandler's method to include authentication"""
         user = self.current_user
 
-        # we are gonna inverse traverse the absolute_path and find the first
+        # we are going inverse traverse the absolute_path and find the first
         # instance of an int, which is the artifact_id
         for s in reversed(absolute_path.split('/')):
             try:

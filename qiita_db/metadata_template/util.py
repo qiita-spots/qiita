@@ -40,7 +40,7 @@ def prefix_sample_names_with_id(md_template, study_id):
          else '%d.%s' % (study_id, idx)
          for idx in md_template.index], index=md_template.index)
 
-    # get the rows that are gonna change
+    # get the rows that are going change
     changes = len(md_template.index[
         md_template['qiita_sample_name_with_id'] != md_template.index])
     if changes != 0 and changes != len(md_template.index):

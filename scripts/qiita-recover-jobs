@@ -26,7 +26,7 @@ SQL = """SELECT processing_job_id
 
 
 def _submit_jobs(jids_to_recover, recover_type):
-    # we are gonna split the SLEEP_TIME by CHANCES so we can ctrl-c
+    # we are going split the SLEEP_TIME by CHANCES so we can ctrl-c
     # ... just in case
     st = int(ceil(SLEEP_TIME/CHANCES))
     len_jids_to_recover = len(jids_to_recover)

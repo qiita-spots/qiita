@@ -382,10 +382,10 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
     Pulls the current patch from the settings table and applies all subsequent
     patches found in the patches directory.
     """
-    # we are going to open and close 2 main transactions; this is a required changed
-    # since patch 68.sql where we transition to jsonb for all info files. The 2 main
-    # transitions are: (1) get the current settings, (2) each patch in their
-    # independent trasaction
+    # we are going to open and close 2 main transactions; this is a required
+    # change since patch 68.sql where we transition to jsonb for all info
+    # files. The 2 main transitions are: (1) get the current settings,
+    # (2) each patch in their independent trasaction
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add("SELECT current_patch FROM settings")
         current_patch = qdb.sql_connection.TRN.execute_fetchlast()
@@ -411,12 +411,30 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
             splitext(basename(sql_patch_fp))[0] + '.py')
         py_patch_filename = basename(py_patch_fp)
 
-        with qdb.sql_connection.TRN:
-            # patch 43.sql is when we started testing patches, then in patch
-            # 68.sql is when we transitioned to jsonb for the info files
-            if sql_patch_filename == '68.sql' and test:
+        # patch 43.sql is when we started testing patches, then in patch
+        # 68.sql is when we transitioned to jsonb for the info files; let's do
+        # this in it's own transition
+        if sql_patch_filename == '68.sql' and test:
+            with qdb.sql_connection.TRN:
                 _populate_test_db()
+                # after we populate the DB in test mode we need to apply some
+                # selected python patches and fixes
+                patches_to_apply = [43, 53, 55]
+                for p in patches_to_apply:
+                    execfile(corresponding_py_patch('%d.py' % p), {})
+                # this was originally done in patch 43.py but we need it here
+                # to hide unsuccessful commands
+                sql = """UPDATE qiita.processing_job
+                         SET hidden = TRUE
+                         WHERE processing_job_id IN (
+                           SELECT processing_job_id
+                             FROM qiita.processing_job
+                             LEFT JOIN qiita.processing_job_status USING (
+                               processing_job_status_id)
+                             WHERE processing_job_status != 'success')"""
+                qdb.sql_connection.TRN.add(sql)
 
+        with qdb.sql_connection.TRN:
             with open(sql_patch_fp, 'U') as patch_file:
                 if verbose:
                     print('\tApplying patch %s...' % sql_patch_filename)
@@ -432,7 +450,8 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                           % py_patch_filename)
                 execfile(py_patch_fp, {})
 
-        # if we are in test move and we just applied patch 68.sql, let's regenerate
-        # the test study files
+        # if we are in test mode and we just applied patch 68.sql,
+        # let's regenerate the test study files; note that this was done
+        # via the patches but
         if test and sql_patch_filename == '68.sql':
             qdb.study.Study(1).sample_template.generate_files()

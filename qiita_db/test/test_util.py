@@ -1053,7 +1053,7 @@ class UtilTests(TestCase):
         qdb.study.Study.delete(new_study.id)
 
     def test_get_artifacts_information(self):
-        # we are gonna test that it ignores 1 and 2 cause they are not biom,
+        # we are going test that it ignores 1 and 2 cause they are not biom,
         # 4 has all information and 7 and 8 don't
         obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
         # not testing timestamp

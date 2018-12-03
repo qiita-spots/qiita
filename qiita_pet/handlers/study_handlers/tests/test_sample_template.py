@@ -276,7 +276,8 @@ class TestHelpers(TestHandlerBase):
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
                'num_columns': 30,
-               'columns': ['season_environment', 'assigned_from_geo',
+               'columns': sorted(
+                          ['season_environment', 'assigned_from_geo',
                            'texture', 'taxon_id', 'depth', 'host_taxid',
                            'common_name', 'water_content_soil', 'elevation',
                            'temp', 'tot_nitro', 'samp_salinity', 'altitude',
@@ -286,7 +287,7 @@ class TestHelpers(TestHandlerBase):
                            'physical_specimen_remaining', 'dna_extracted',
                            'sample_type', 'collection_timestamp',
                            'host_subject_id', 'description', 'latitude',
-                           'longitude', 'scientific_name'],
+                           'longitude', 'scientific_name']),
                'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
@@ -333,7 +334,7 @@ class TestHelpers(TestHandlerBase):
         # Test success
 
         obs = sample_template_columns_get_req(1, None, user)
-        exp = [
+        exp = sorted([
             'season_environment', 'assigned_from_geo', 'texture', 'taxon_id',
             'depth', 'host_taxid', 'common_name', 'water_content_soil',
             'elevation', 'temp', 'tot_nitro', 'samp_salinity', 'altitude',
@@ -342,7 +343,7 @@ class TestHelpers(TestHandlerBase):
             'physical_specimen_location', 'physical_specimen_remaining',
             'dna_extracted', 'sample_type', 'collection_timestamp',
             'host_subject_id', 'description', 'latitude', 'longitude',
-            'scientific_name']
+            'scientific_name'])
         self.assertEqual(obs, exp)
 
         obs = sample_template_columns_get_req(1, 'season_environment', user)
@@ -487,7 +488,8 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
                'num_columns': 30,
-               'columns': ['season_environment', 'assigned_from_geo',
+               'columns': sorted(
+                          ['season_environment', 'assigned_from_geo',
                            'texture', 'taxon_id', 'depth', 'host_taxid',
                            'common_name', 'water_content_soil', 'elevation',
                            'temp', 'tot_nitro', 'samp_salinity', 'altitude',
@@ -497,9 +499,9 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                            'physical_specimen_remaining', 'dna_extracted',
                            'sample_type', 'collection_timestamp',
                            'host_subject_id', 'description', 'latitude',
-                           'longitude', 'scientific_name'],
+                           'longitude', 'scientific_name']),
                'specimen_id_column': None}
-        self.assertEqual(obs, exp)
+        self.assertDictEqual(obs, exp)
 
 
 class TestSampleTemplateColumnsHandler(TestHandlerBase):
@@ -509,7 +511,7 @@ class TestSampleTemplateColumnsHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertIsNotNone(response.body)
         obs = loads(response.body)
-        exp = {'values': [
+        exp = {'values': sorted([
             'season_environment', 'assigned_from_geo', 'texture', 'taxon_id',
             'depth', 'host_taxid', 'common_name', 'water_content_soil',
             'elevation', 'temp', 'tot_nitro', 'samp_salinity', 'altitude',
@@ -518,7 +520,7 @@ class TestSampleTemplateColumnsHandler(TestHandlerBase):
             'physical_specimen_location', 'physical_specimen_remaining',
             'dna_extracted', 'sample_type', 'collection_timestamp',
             'host_subject_id', 'description', 'latitude', 'longitude',
-            'scientific_name']}
+            'scientific_name'])}
         self.assertEqual(obs, exp)
 
 
