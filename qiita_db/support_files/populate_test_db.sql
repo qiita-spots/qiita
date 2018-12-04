@@ -461,10 +461,13 @@ INSERT INTO qiita.analysis_artifact (analysis_id, artifact_id) VALUES
 
 -- Insert filepath for analysis biom files
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('1_analysis_18S.biom', 7, '852952723', 1, 1), ('1_analysis_mapping.txt', 9, '852952723', 1, 1);
+    ('1_analysis_18S.biom', 7, '852952723', 1, 1),
+    ('1_analysis_mapping.txt', 9, '852952723', 1, 1);
 
 -- Attach filepath to analysis
-INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES (1, 15, 2), (1, 16, NULL);
+INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES
+    (1, 15, 2),
+    (1, 16, NULL);
 
 -- Attach samples to analysis
 INSERT INTO qiita.analysis_sample (analysis_id, artifact_id, sample_id) VALUES
