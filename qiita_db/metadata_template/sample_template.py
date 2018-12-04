@@ -13,7 +13,8 @@ from time import strftime
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 import qiita_db as qdb
-from .base_metadata_template import BaseSample, MetadataTemplate
+from .base_metadata_template import (
+    BaseSample, MetadataTemplate, QIITA_COLUMN_NAME)
 
 
 class Sample(BaseSample):
@@ -68,7 +69,8 @@ class SampleTemplate(MetadataTemplate):
                         'run_prefix',
                         'sampleid',
                         'qiita_study_id',
-                        'qiita_prep_id'}
+                        'qiita_prep_id',
+                        QIITA_COLUMN_NAME}
 
     @classmethod
     def create(cls, md_template, study):
