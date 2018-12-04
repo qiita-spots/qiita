@@ -369,7 +369,7 @@ UPDATE qiita.prep_template SET artifact_id = 7 WHERE prep_template_id = 2;
 -- Link the child artifacts with their parents artifacts
 INSERT INTO qiita.parent_artifact (parent_id, artifact_id)
     VALUES (1, 2), (1, 3),
-           (2, 4), (2, 5), (2, 6);
+           (2, 4), (2, 5), (2, 6), (8, 9);
 
 -- Insert filepaths for the artifacts and reference
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id)
@@ -385,12 +385,6 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
            ('Silva_97_otus.fasta', 10, '852952723', 1, 6),
            ('Silva_97_otu_taxonomy.txt', 11, '852952723', 1, 6),
            ('1_study_1001_closed_reference_otu_table_Silva.biom', 7, '852952723', 1, 4);
-
--- Link the artifacts with the filepaths
-INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
-    VALUES (1, 1), (1, 2),
-           (2, 3), (2, 4), (2, 5),
-           (4, 9), (5, 9), (6, 12);
 
 -- Link the artifact with the prep template
 UPDATE qiita.prep_template SET artifact_id = 1 WHERE prep_template_id = 1;
@@ -479,7 +473,7 @@ INSERT INTO qiita.analysis_sample (analysis_id, artifact_id, sample_id) VALUES
 (2, 6, '1.SKB8.640193'), (2, 6, '1.SKD8.640184'), (2, 6, '1.SKB7.640196'), (2, 6, '1.SKM3.640197'),
 (3, 4, '1.SKD8.640184'), (3, 4, '1.SKB7.640196'), (3, 4, '1.SKM9.640192'), (3, 4, '1.SKM4.640180');
 
---Share analysis with shared user
+-- Share analysis with shared user
 INSERT INTO qiita.analysis_users (analysis_id, email) VALUES (1, 'shared@foo.bar');
 
 -- Add an ontology
@@ -513,6 +507,17 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_qiime_19700101-000000.txt', 16, '3703494589', 1, 9);
 INSERT INTO qiita.prep_template_filepath VALUES (1, 20), (1, 21);
 
+
+-- Insrting the BIOM artifact filepath
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+    ('biom_table.biom', 7, 3574395811, 1, 16);
+
+-- Link the artifacts with the filepaths
+INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
+    VALUES (1, 1), (1, 2),
+           (2, 3), (2, 4), (2, 5),
+           (4, 9), (5, 9), (6, 12),
+           (8, 22), (9, 15);
 
 -- Create some test messages
 INSERT INTO qiita.message (message) VALUES ('message 1'), ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque sed auctor ex, non placerat sapien. Vestibulum vestibulum massa ut sapien condimentum, cursus consequat diam sodales. Nulla aliquam arcu ut massa auctor, et vehicula mauris tempor. In lacinia viverra ante quis pellentesque. Nunc vel mi accumsan, porttitor eros ut, pharetra elit. Nulla ac nisi quis dui egestas malesuada vitae ut mauris. Morbi blandit non nisl a finibus. In erat velit, congue at ipsum sit amet, venenatis bibendum sem. Curabitur vel odio sed est rutrum rutrum. Quisque efficitur ut purus in ultrices. Pellentesque eu auctor justo.'), ('message <a href="#">3</a>');
