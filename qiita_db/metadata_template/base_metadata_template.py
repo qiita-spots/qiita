@@ -53,6 +53,8 @@ import qiita_db as qdb
 from string import letters, digits
 
 
+# this is the name of the sample where we store all columns for a sample/prep
+# information
 QIITA_COLUMN_NAME = 'qiita_sample_column_names'
 
 
@@ -730,7 +732,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
         with qdb.sql_connection.TRN:
             table_name = 'qiita.{0}{1}'.format(self._table_prefix, self._id)
-            # deleting from all samples
+            # deleting from all samples; note that (-) in pgsql jsonb means
+            # delete that key and value
             sql = """UPDATE {0}
                      SET sample_values = sample_values - %s
                      WHERE sample_id != %s""".format(table_name)
@@ -844,7 +847,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 if existing_samples:
                     # The values for the new columns are the only ones that get
                     # added to the database. None of the existing values will
-                    # be modified (see update for that functionality)
+                    # be modified (see update for that functionality). Remember
+                    # that || is a jsonb to update or add a new key/value
                     md_filtered = md_template[new_cols].loc[existing_samples]
                     for sid, df in md_filtered.iterrows():
                         values = dict(df.iteritems())

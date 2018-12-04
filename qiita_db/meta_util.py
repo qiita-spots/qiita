@@ -320,6 +320,9 @@ def get_lat_longs():
                     AND table_schema = 'qiita'"""
         qdb.sql_connection.TRN.add(sql, [tuple(portal_table_ids)])
 
+        # we are going to create multiple union selects to retrieve the
+        # latigute and longitude of all available studies. Note that UNION in
+        # PostgreSQL automatically removes duplicates
         sql_query = """
             SELECT CAST(sample_values->>'latitude' AS FLOAT),
                    CAST(sample_values->>'longitude' AS FLOAT)
@@ -331,6 +334,7 @@ def get_lat_longs():
         sql = ' UNION '.join(sql)
         qdb.sql_connection.TRN.add(sql)
 
+        # note that we are returning set to remove duplicates
         return qdb.sql_connection.TRN.execute_fetchindex()
 
 

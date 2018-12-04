@@ -280,6 +280,10 @@ class TestPrepSample(TestCase):
 @qiita_test_checker()
 class TestPrepTemplate(TestCase):
     def setUp(self):
+        # qdb.metadata_template.base_metadata_template.QIITA_COLUMN_NAME is
+        # the name of the sample where we store all columns for a sample/prep
+        # information and in this tests we want to avoid having to import it
+        # in different places so adding to the setUp
         self.QCN = \
             qdb.metadata_template.base_metadata_template.QIITA_COLUMN_NAME
         self.metadata_dict = {

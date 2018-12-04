@@ -508,7 +508,7 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.prep_template_filepath VALUES (1, 20), (1, 21);
 
 
--- Insrting the BIOM artifact filepath
+-- Inserting the BIOM artifact filepath
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
     ('biom_table.biom', 7, 3574395811, 1, 16);
 

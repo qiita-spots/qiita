@@ -385,7 +385,7 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
     # we are going to open and close 2 main transactions; this is a required
     # change since patch 68.sql where we transition to jsonb for all info
     # files. The 2 main transitions are: (1) get the current settings,
-    # (2) each patch in their independent trasaction
+    # (2) each patch in their independent transaction
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add("SELECT current_patch FROM settings")
         current_patch = qdb.sql_connection.TRN.execute_fetchlast()
@@ -413,7 +413,7 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
 
         # patch 43.sql is when we started testing patches, then in patch
         # 68.sql is when we transitioned to jsonb for the info files; let's do
-        # this in it's own transition
+        # this in its own transition
         if sql_patch_filename == '68.sql' and test:
             with qdb.sql_connection.TRN:
                 _populate_test_db()
@@ -434,8 +434,10 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                           % py_patch_filename)
                 execfile(py_patch_fp, {})
 
-        # if we are in test mode and we just applied patch 68.sql,
-        # let's regenerate the test study files; note that this was done
-        # via the patches but
+        # before moving to jsonb for sample/prep info files (patch 68.sql),
+        # one of the patches used to regenerate the sample information file
+        # for the test Study (1) so alot of the tests actually expect this.
+        # Now, trying to regenerate directly in the populate_test_db might
+        # require too many dev hours so the easiest is just do it here
         if test and sql_patch_filename == '68.sql':
             qdb.study.Study(1).sample_template.generate_files()
