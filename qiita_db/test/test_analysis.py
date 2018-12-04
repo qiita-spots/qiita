@@ -386,6 +386,15 @@ class TestAnalysis(TestCase):
             obs, index='#SampleID')
         exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.map_exp_fp, index='#SampleID')
+
+        # assert_frame_equal assumes same order on the rows, thus sorting
+        # frames by index
+        obs.sort_index(inplace=True)
+        exp.sort_index(inplace=True)
+        # then sorting columns
+        obs = obs.reindex_axis(sorted(obs.columns), axis=1)
+        exp = exp.reindex_axis(sorted(exp.columns), axis=1)
+
         assert_frame_equal(obs, exp)
 
     def test_build_mapping_file_duplicated_samples_no_merge(self):
@@ -406,6 +415,10 @@ class TestAnalysis(TestCase):
         # frames by index
         obs.sort_index(inplace=True)
         exp.sort_index(inplace=True)
+        # then sorting columns
+        obs = obs.reindex_axis(sorted(obs.columns), axis=1)
+        exp = exp.reindex_axis(sorted(exp.columns), axis=1)
+
         assert_frame_equal(obs, exp)
 
     def test_build_mapping_file_duplicated_samples_merge(self):
@@ -420,6 +433,15 @@ class TestAnalysis(TestCase):
             mapping_fp, index='#SampleID')
         exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.map_exp_fp, index='#SampleID')
+
+        # assert_frame_equal assumes same order on the rows, thus sorting
+        # frames by index
+        obs.sort_index(inplace=True)
+        exp.sort_index(inplace=True)
+        # then sorting columns
+        obs = obs.reindex_axis(sorted(obs.columns), axis=1)
+        exp = exp.reindex_axis(sorted(exp.columns), axis=1)
+
         assert_frame_equal(obs, exp)
 
     def test_build_biom_tables(self):
