@@ -52,8 +52,14 @@ INSERT INTO qiita.study_environmental_package (study_id, environmental_package_n
 INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
 
 -- Insert PMIDs for study
-INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.100/123456', '123456'), ('10.100/7891011', '7891011');
-INSERT INTO qiita.study_publication (study_id, publication) VALUES (1, '10.100/123456'), (1, '10.100/7891011');
+INSERT INTO qiita.publication (doi, pubmed_id) VALUES
+    ('10.100/123456', '123456'),
+    ('10.100/7891011', '7891011');
+INSERT INTO qiita.study_publication (study_id, publication, is_doi) VALUES
+    (1, '10.100/123456', true),
+    (1, '123456', false),
+    (1, '10.100/7891011', true),
+    (1, '7891011', false);
 
 -- Insert an investigation
 INSERT INTO qiita.investigation (investigation_name, investigation_description, contact_person_id) VALUES
@@ -448,6 +454,10 @@ INSERT INTO qiita.analysis (email, name, description, pmid, "timestamp", dflt, l
     ('demo@microbio.me', 'demo@microbio.me-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL);
 INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) VALUES
   (1, 1), (2, 1), (3, 1), (4, 1),(5, 1), (6, 1), (7, 2), (8, 2), (9, 2), (10, 2);
+
+INSERT INTO qiita.analysis_artifact (analysis_id, artifact_id) VALUES
+    (1, 8),
+    (1, 9);
 
 -- Insert filepath for analysis biom files
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
