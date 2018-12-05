@@ -28,7 +28,7 @@ from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
 
-import re
+from re import search
 
 
 try:
@@ -309,12 +309,12 @@ def start(port, master):
             raise
     base_url = qiita_config.base_url
 
-    if re.search(':\d+$', base_url):
-        tmp_str = "Qiita started on %s @ %s" % (base_url, ctime())
+    if search(r":\d+$", base_url):
+        tmp = "Qiita started on %s @ %s" % (base_url, ctime())
     else:
-        tmp_str = "Qiita started on %s:%d @ %s" % (base_url, port, ctime())
+        tmp = "Qiita started on %s:%d @ %s" % (base_url, port, ctime())
 
-    click.echo(tmp_str)
+    click.echo(tmp)
 
     ioloop = tornado.ioloop.IOLoop.instance()
 
