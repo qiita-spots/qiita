@@ -1,8 +1,8 @@
 -- November 21, 2018
 -- moving sample and prep info files to jsonb
 
--- 2/3 This is the continuation of 68.sql, let's move the data for the
--- prep templates but only for prep ids < 3500
+-- 3/3 This is the continuation of the patching that started in 68.sql, let's
+-- move the data for the prep templates but now for prep ids >= 3500
 DO $do$
 DECLARE
     dyn_t varchar;
@@ -21,7 +21,8 @@ BEGIN
                                'prep_columns',
                                'prep_template_processing_job',
                                'prep_template_sample')
-        AND SUBSTR(table_name, 6)::INT < 3500
+        AND table_name NOT LIKE '%_bk'
+        AND SUBSTR(table_name, 6)::INT >= 3500
   LOOP
     dyn_table := 'qiita.' || dyn_t;
     dyn_table_bk := dyn_t || '_bk';
@@ -45,5 +46,19 @@ BEGIN
 
     -- adding index
     EXECUTE 'ALTER TABLE ' || dyn_table || ' ADD CONSTRAINT pk_jsonb_' || dyn_t || ' PRIMARY KEY ( sample_id );';
+  END LOOP;
+END $do$;
+
+-- Dropping all the _bk tables
+DO $do$
+DECLARE
+    dyn_table varchar;
+BEGIN
+  FOR dyn_table IN
+    SELECT DISTINCT table_name
+    FROM information_schema.columns
+    WHERE table_name LIKE '%_bk'
+  LOOP
+    EXECUTE 'DROP TABLE qiita.' || dyn_table;
   END LOOP;
 END $do$;

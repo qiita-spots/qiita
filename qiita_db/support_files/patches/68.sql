@@ -1,14 +1,13 @@
 -- November 21, 2018
 -- moving sample and prep info files to jsonb
 
--- Due to:
--- ValueError: Error running SQL: OUT_OF_MEMORY. MSG: out of shared memory
--- HINT:  You might need to increase max_locks_per_transaction.
---
--- we need to split this patch in 2, so the continuation is 69.sql
+-- Due to error:
+--    ValueError: Error running SQL: OUT_OF_MEMORY. MSG: out of shared memory
+--    HINT:  You might need to increase max_locks_per_transaction.
+-- we need to split the full patch in 3; so the continuation is 69.sql
+-- and 70.sql
 
-
--- First, sample template
+-- 1/3 Sample template
 DO $do$
 DECLARE
     dyn_t varchar;
