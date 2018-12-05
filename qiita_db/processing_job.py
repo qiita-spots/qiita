@@ -395,6 +395,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             # see these changes
             qdb.sql_connection.TRN.commit()
         cmd = self._generate_cmd()
+
+        #TODO: HERE
         p = Process(target=_job_submitter, args=(self.id, cmd))
         p.start()
 
@@ -531,7 +533,7 @@ class ProcessingJob(qdb.base.QiitaObject):
 
         Parameters
         ----------
-        artfact_data : {'filepaths': list of (str, str), 'artifact_type': str}
+        artifact_data : {'filepaths': list of (str, str), 'artifact_type': str}
             Dict with the artifact information. `filepaths` contains the list
             of filepaths and filepath types for the artifact and
             `artifact_type` the type of the artifact
@@ -662,12 +664,14 @@ class ProcessingJob(qdb.base.QiitaObject):
                 else:
                     art_name = out_name
 
+                # TODO: This connects everything
                 provenance = {'job': self.id,
                               'cmd_out_id': cmd_out_id,
                               'name': art_name}
 
                 # Get the validator command for the current artifact type and
                 # create a new job
+                # TODO: HERE - see also def release_validators()
                 cmd = qdb.software.Command.get_validator(atype)
                 values_dict = {
                     'files': dumps(filepaths), 'artifact_type': atype,
@@ -682,6 +686,22 @@ class ProcessingJob(qdb.base.QiitaObject):
 
             # Change the current step of the job
 
+            '''
+            TODO: Aggregator Job
+            Turn release_validators job from something that can release all of
+            the validator jobs into something that aggregates all of the m
+            validator jobs an parallelizes them over the n cores that have been
+            assigned to the release_validators job.
+
+            Since the release_validator job already has to know information
+            about the validator jobs, it should not be hard to encapsulate
+            them.
+
+            Review and Modify all code below this line to the end of the
+            method (past job.submit()).
+
+            Is release_validators the same as the CompleteJob process?
+            '''
             self.step = "Validating outputs (%d remaining) via job(s) %s" % (
                 len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
 
@@ -690,6 +710,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             # Submit all the validator jobs
             for j in validator_jobs:
                 j.submit()
+
 
             # Submit the job that will release all the validators
             plugin = qdb.software.Software.from_name_and_version(

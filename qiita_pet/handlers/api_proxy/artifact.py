@@ -211,6 +211,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             return {'status': 'error',
                     'message': "Can't create artifact, no files provided."}
 
+        # TODO: HERE 
         command = Command.get_validator(artifact_type)
         job = ProcessingJob.create(
             user,

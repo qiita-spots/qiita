@@ -37,6 +37,7 @@ def build_analysis_files(job):
         analysis = qdb.analysis.Analysis(analysis_id)
         biom_files = analysis.build_files(merge_duplicated_sample_ids)
 
+        # TODO: CHECK HERE
         cmd = qdb.software.Command.get_validator('BIOM')
         val_jobs = []
         for dtype, biom_fp, archive_artifact_fp in biom_files:
