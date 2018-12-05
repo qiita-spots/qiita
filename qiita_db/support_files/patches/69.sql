@@ -1,14 +1,9 @@
 -- November 21, 2018
 -- moving sample and prep info files to jsonb
 
--- Due to:
--- ValueError: Error running SQL: OUT_OF_MEMORY. MSG: out of shared memory
--- HINT:  You might need to increase max_locks_per_transaction.
---
--- we need to split this patch in 2, so the continuation is 69.sql
+-- This is the continuation of 68.sql
 
-
--- First, sample template
+-- Now, let's move the data for the prep templates
 DO $do$
 DECLARE
     dyn_t varchar;
@@ -17,11 +12,16 @@ DECLARE
     sid varchar;
 BEGIN
   FOR dyn_t IN
-      SELECT DISTINCT table_name
-      FROM information_schema.columns
-      WHERE SUBSTR(table_name, 1, 7) = 'sample_'
-          AND table_schema = 'qiita'
-          AND table_name != 'sample_template_filepath'
+    SELECT DISTINCT table_name
+    FROM information_schema.columns
+    WHERE SUBSTR(table_name, 1, 5) = 'prep_'
+        AND table_schema = 'qiita'
+        AND table_name NOT IN ('prep_template',
+                               'prep_template_preprocessed_data',
+                               'prep_template_filepath',
+                               'prep_columns',
+                               'prep_template_processing_job',
+                               'prep_template_sample')
   LOOP
     dyn_table := 'qiita.' || dyn_t;
     dyn_table_bk := dyn_t || '_bk';
@@ -35,6 +35,7 @@ BEGIN
 
     -- inserting our helper column qiita_sample_column_names, which is going keep all our columns; this is much easier than trying to keep all rows with the same values
     EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''qiita_sample_column_names'',  (''{"columns":'' || (SELECT json_agg(column_name::text) FROM information_schema.columns WHERE table_name=''' || dyn_table_bk || ''' AND table_schema=''qiita'' AND column_name != ''sample_id'')::text || ''}'')::json);';
+
     -- inserting value per value of the table, this might take forever
     FOR sid IN
       EXECUTE 'SELECT sample_id FROM qiita.' || dyn_table_bk
@@ -44,5 +45,19 @@ BEGIN
 
     -- adding index
     EXECUTE 'ALTER TABLE ' || dyn_table || ' ADD CONSTRAINT pk_jsonb_' || dyn_t || ' PRIMARY KEY ( sample_id );';
+  END LOOP;
+END $do$;
+
+-- Dropping all the _bk tables
+DO $do$
+DECLARE
+    dyn_table varchar;
+BEGIN
+  FOR dyn_table IN
+    SELECT DISTINCT table_name
+    FROM information_schema.columns
+    WHERE table_name LIKE '%_bk'
+  LOOP
+    EXECUTE 'DROP TABLE qiita.' || dyn_table;
   END LOOP;
 END $do$;

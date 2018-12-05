@@ -434,10 +434,10 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                           % py_patch_filename)
                 execfile(py_patch_fp, {})
 
-        # before moving to jsonb for sample/prep info files (patch 68.sql),
+        # before moving to jsonb for sample/prep info files (patch 69.sql),
         # one of the patches used to regenerate the sample information file
         # for the test Study (1) so alot of the tests actually expect this.
         # Now, trying to regenerate directly in the populate_test_db might
         # require too many dev hours so the easiest is just do it here
-        if test and sql_patch_filename == '68.sql':
+        if test and sql_patch_filename == '69.sql':
             qdb.study.Study(1).sample_template.generate_files()
