@@ -25,7 +25,7 @@ BEGIN
 
     -- create the new table, note that there are no constraints so the
     -- inserts go fast but we will add them later
-    EXECUTE format('CREATE TABLE %1$s (sample_id VARCHAR NOT NULL, sample_values JSONB NOT NULL)', dyn_table);
+    EXECUTE format('CREATE TABLE %1$s (sample_id VARCHAR NOT NULL, sample_values JSONB)', dyn_table);
 
     -- inserting our helper column qiita_sample_column_names, which is going keep all our columns; this is much easier than trying to keep all rows with the same values
     EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''qiita_sample_column_names'',  (''{"columns":'' || (SELECT json_agg(column_name::text) FROM information_schema.columns WHERE table_name=''' || dyn_table_bk || ''' AND table_schema=''qiita'' AND column_name != ''sample_id'')::text || ''}'')::json);';
@@ -33,7 +33,7 @@ BEGIN
     FOR sid IN
       EXECUTE 'SELECT sample_id FROM qiita.' || dyn_table_bk
     LOOP
-      EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''' || sid || ''',  row_to_json((SELECT r FROM (SELECT * from qiita.' || dyn_table_bk || ' where sample_id = ''' || sid || ''') r))::jsonb - ''sample_id'');';
+      EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''' || sid || ''',  (SELECT row_to_json(t)::jsonb - ''sample_id'' FROM (SELECT * FROM qiita.' || dyn_table_bk || ' WHERE sample_id = ''' || sid || ''') t));';
     END LOOP;
 
     -- adding index
@@ -70,7 +70,7 @@ BEGIN
 
     -- create the new table, note that there are no constraints so the
     -- inserts go fast but we will add them later
-    EXECUTE format('CREATE TABLE %1$s (sample_id VARCHAR NOT NULL, sample_values JSONB NOT NULL)', dyn_table);
+    EXECUTE format('CREATE TABLE %1$s (sample_id VARCHAR NOT NULL, sample_values JSONB)', dyn_table);
 
     -- inserting our helper column qiita_sample_column_names, which is going keep all our columns; this is much easier than trying to keep all rows with the same values
     EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''qiita_sample_column_names'',  (''{"columns":'' || (SELECT json_agg(column_name::text) FROM information_schema.columns WHERE table_name=''' || dyn_table_bk || ''' AND table_schema=''qiita'' AND column_name != ''sample_id'')::text || ''}'')::json);';
@@ -79,7 +79,7 @@ BEGIN
     FOR sid IN
       EXECUTE 'SELECT sample_id FROM qiita.' || dyn_table_bk
     LOOP
-      EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''' || sid || ''',  row_to_json((SELECT r FROM (SELECT * from qiita.' || dyn_table_bk || ' where sample_id = ''' || sid || ''') r))::jsonb - ''sample_id'');';
+      EXECUTE 'INSERT INTO ' || dyn_table || ' (sample_id, sample_values) VALUES (''' || sid || ''',  (SELECT row_to_json(t)::jsonb - ''sample_id'' FROM (SELECT * FROM qiita.' || dyn_table_bk || ' WHERE sample_id = ''' || sid || ''') t));';
     END LOOP;
 
     -- adding index
