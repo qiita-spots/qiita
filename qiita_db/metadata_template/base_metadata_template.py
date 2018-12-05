@@ -1144,18 +1144,27 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # Retrieve all the information from the database
+            cols = self.categories()
             sql = """SELECT sample_id, sample_values
                      FROM qiita.{0}
                      WHERE sample_id != '{1}'""".format(
                         self._table_name(self._id), QIITA_COLUMN_NAME)
             qdb.sql_connection.TRN.add(sql)
-            meta = dict(qdb.sql_connection.TRN.execute_fetchindex())
 
-            df = pd.DataFrame.from_dict(meta, orient='index', dtype=str)
+            # we could have used dict() and then use pandas from_dict but
+            # that takes forever so it's much faster to simply parse here and
+            # load via pandas.DataFrame
+            data = []
+            for r in qdb.sql_connection.TRN.execute_fetchindex():
+                v = [r[0]]
+                v.extend([r[1][c] if c in r[1] else None for c in cols])
+                data.append(v)
+            cols.insert(0, 'sample_id')
+            df = pd.DataFrame(data, columns=cols, dtype=str)
+            df.set_index('sample_id', inplace=True)
 
             # Make sure that we are changing np.NaN by Nones
             df.where((pd.notnull(df)), None)
-            df.index.name = 'sample_id'
             id_column_name = 'qiita_%sid' % (self._table_prefix)
             if id_column_name == 'qiita_sample_id':
                 id_column_name = 'qiita_study_id'
