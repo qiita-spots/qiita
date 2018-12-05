@@ -1,7 +1,7 @@
 -- November 21, 2018
 -- moving sample and prep info files to jsonb
 
--- 2/3 This is the continuation of 68.sql, let's move the data for the
+-- 2/4 This is the continuation of 68.sql, let's move the data for the
 -- prep templates but only for prep ids < 3500
 DO $do$
 DECLARE

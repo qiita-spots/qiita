@@ -4,10 +4,10 @@
 -- Due to error:
 --    ValueError: Error running SQL: OUT_OF_MEMORY. MSG: out of shared memory
 --    HINT:  You might need to increase max_locks_per_transaction.
--- we need to split the full patch in 3; so the continuation is 69.sql
--- and 70.sql
+-- we need to split the full patch in 4 so the continuation is 69.sql,
+-- 70.sql and 71.sql
 
--- 1/3 Sample template
+-- 1/4 Sample template
 DO $do$
 DECLARE
     dyn_t varchar;
