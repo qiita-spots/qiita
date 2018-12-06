@@ -480,8 +480,15 @@ class PrepTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    def generate_files(self):
+    def generate_files(self, samples=None, columns=None):
         r"""Generates all the files that contain data from this template
+
+        Parameters
+        ----------
+        samples : iterable of str, optional
+            The samples that were added/updated
+        columns : iterable of str, optional
+            The columns that were added/updated
         """
         with qdb.sql_connection.TRN:
             # figuring out the filepath of the prep template
