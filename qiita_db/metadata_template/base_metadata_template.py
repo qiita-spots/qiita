@@ -616,7 +616,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         sample_values JSONB NOT NULL)""".format(table_name)
             qdb.sql_connection.TRN.add(sql)
 
-            values = '{"columns": %s}' % dumps(md_template.columns.tolist())
+            values = dumps({"columns": md_template.columns.tolist()})
             sql = """INSERT INTO qiita.{0} (sample_id, sample_values)
                      VALUES ('{1}', %s)""".format(
                         table_name, QIITA_COLUMN_NAME)
@@ -837,7 +837,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 cols = self.categories()
                 cols.extend(new_cols)
 
-                values = '{"columns": %s}' % dumps(cols)
+                values = dumps({"columns": cols})
                 sql = """UPDATE qiita.{0}
                          SET sample_values = %s
                          WHERE sample_id = '{1}'""".format(
@@ -878,8 +878,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(sql, values, many=True)
 
                 # inserting new samples to the info file
-                values = [(k, df.to_json())
-                          for k, df in md_filtered.iterrows()]
+                values = [(k, row.to_json())
+                          for k, row in md_filtered.iterrows()]
                 sql = """INSERT INTO qiita.{0} (sample_id, sample_values)
                          VALUES (%s, %s)""".format(table_name)
                 qdb.sql_connection.TRN.add(sql, values, many=True)
@@ -1150,14 +1150,24 @@ class MetadataTemplate(qdb.base.QiitaObject):
                      WHERE sample_id != '{1}'""".format(
                         self._table_name(self._id), QIITA_COLUMN_NAME)
             qdb.sql_connection.TRN.add(sql)
-
-            # we could have used dict() and then use pandas from_dict but
-            # that takes forever so it's much faster to simply parse here and
-            # load via pandas.DataFrame
+            # this query is going to return a tuple
+            # (sample_id, dict of columns/values); however it's important to
+            # notice that we can't assure that all column/values pairs are the
+            # same for all samples as we are not doing full bookkeeping of all
+            # the columns in all the samples. Thus, we have 2 options:
+            # 1. use dict() on the query result with pd.DataFrame.from_dict so
+            #    pandas deals with this; but this takes a crazy amount of time,
+            #    for more info google: "performance pandas from_dict"
+            # 2. generate a matrix rows/samples, cols/values and load them
+            #    via pandas.DataFrame, which actually has good performace
             data = []
             for r in qdb.sql_connection.TRN.execute_fetchindex():
+                # creating row of values, first insert sample id
                 v = [r[0]]
+                # then loop over all the possible values making sure that if
+                # the column doesn't exist in that sample, it gets a None
                 v.extend([r[1][c] if c in r[1] else None for c in cols])
+                # append the row to the full matrix
                 data.append(v)
             cols.insert(0, 'sample_id')
             df = pd.DataFrame(data, columns=cols, dtype=str)
@@ -1323,7 +1333,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             new_columns = list(set(new_columns).union(set(self.categories())))
             table_name = self._table_name(self.id)
-            values = '{"columns": %s}' % dumps(new_columns)
+            values = dumps({"columns": new_columns})
             sql = """UPDATE qiita.{0}
                      SET sample_values = %s
                      WHERE sample_id = '{1}'""".format(
