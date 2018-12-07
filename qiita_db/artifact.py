@@ -512,21 +512,25 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it is public")
 
-            # Check if this artifact has any children
-            if instance.children:
-                raise qdb.exceptions.QiitaDBArtifactDeletionError(
-                    artifact_id,
-                    "it has children: %s"
-                    % ', '.join([str(c.id) for c in instance.children]))
+            # delete children if children exists
+            for c in sorted(instance.children):
+                instance.delete(c.id)
 
             # Check if the artifact has been analyzed
-            sql = """SELECT EXISTS(SELECT *
-                                   FROM qiita.analysis_sample
-                                   WHERE artifact_id = %s)"""
+            sql = """SELECT email, analysis_id
+                     FROM qiita.analysis
+                     WHERE analysis_id IN (
+                        SELECT DISTINCT analysis_id
+                        FROM qiita.analysis_sample
+                        WHERE artifact_id = %s)"""
             qdb.sql_connection.TRN.add(sql, [artifact_id])
-            if qdb.sql_connection.TRN.execute_fetchlast():
+            analyses = qdb.sql_connection.TRN.execute_fetchindex()
+            if analyses:
+                analyses = '\n'.join(
+                    ['Analysis id: %s, Owner: %s' % (aid, email)
+                     for email, aid in analyses])
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
-                    artifact_id, "it has been analyzed")
+                    artifact_id, "it has been analyzed by: \n %s" % analyses)
 
             # Check if the artifact has been submitted to EBI
             if instance.can_be_submitted_to_ebi and \
