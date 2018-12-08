@@ -107,9 +107,10 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertEqual(job.status, 'error')
         log_msg = job.log.msg
         # making sure that the error has the actual artifact id we want to
-        # delete, the name of the children that can't be deleted and why
+        # delete, "because children" and why
         self.assertIn('Cannot delete artifact 1:', log_msg)
-        self.assertIn('Cannot delete artifact 4: it has been analyzed', log_msg)
+        self.assertIn('because children', log_msg)
+        self.assertIn('it has been analyzed', log_msg)
 
         job = self._create_job('delete_artifact', {'artifact': 3})
         private_task(job.id)

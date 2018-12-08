@@ -518,7 +518,8 @@ class Artifact(qdb.base.QiitaObject):
                     instance.delete(c.id)
                 except qdb.exceptions.QiitaDBArtifactDeletionError as e:
                     msg = 'because children %s' % str(e)
-                    raise qdb.exceptions.QiitaDBArtifactDeletionError(artifact_id, msg)
+                    raise qdb.exceptions.QiitaDBArtifactDeletionError(
+                        artifact_id, msg)
 
             # Check if the artifact has been analyzed
             sql = """SELECT email, analysis_id

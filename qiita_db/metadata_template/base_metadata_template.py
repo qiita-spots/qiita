@@ -650,7 +650,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         QiitaDBUnknownIDError
             If any of the `sample_names` don't exist
         """
-        keys = self.keys()
+        keys = list(self.keys())
         missing = [sn for sn in sample_names if sn not in keys]
         if missing:
             raise qdb.exceptions.QiitaDBUnknownIDError(
