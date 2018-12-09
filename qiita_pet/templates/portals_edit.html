@@ -73,6 +73,7 @@ function checkbox_action(action) {
   return false;
 }
 
+
 $(document).ready(function() {
   oTable = $('#info-table').dataTable({
     "deferRender": true,
@@ -118,8 +119,8 @@ $(document).ready(function() {
 {%end%}
 
 {%block content%}
-<div class="row topfloat">
-  <div class='col-lg-12'>
+<div class="row topfloat" style="background-color: #FFF;">
+  <div class='col-lg-12' style="background-color: #FFF;">
     <span style="float:right"><b>View from portal:</b>
       <select name="view-portal" id="view-portal" class="portal-select">
         <option value="QIITA">QIITA</option>
