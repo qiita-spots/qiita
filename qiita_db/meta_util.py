@@ -301,41 +301,36 @@ def update_redis_stats():
 
 
 def get_lat_longs():
-    """Retrieve the latitude and longitude of all the samples in the DB
+    """Retrieve the latitude and longitude of all the public samples in the DB
 
     Returns
     -------
     list of [float, float]
         The latitude and longitude for each sample in the database
     """
-    portal_table_ids = [
-        s.id for s in qdb.portal.Portal(qiita_config.portal).get_studies()]
-
     with qdb.sql_connection.TRN:
-        # getting all tables in the portal
-        sql = """SELECT DISTINCT table_name
-                 FROM information_schema.columns
-                 WHERE table_name SIMILAR TO 'sample_[0-9]+'
-                    AND SPLIT_PART(table_name, '_', 2)::int IN %s
-                    AND table_schema = 'qiita'"""
-        qdb.sql_connection.TRN.add(sql, [tuple(portal_table_ids)])
+        # getting all the public studies
+        studies = qdb.study.Study.get_by_status('public')
 
-        # we are going to create multiple union selects to retrieve the
-        # latigute and longitude of all available studies. Note that UNION in
-        # PostgreSQL automatically removes duplicates
-        sql_query = """
-            SELECT CAST(sample_values->>'latitude' AS FLOAT),
-                   CAST(sample_values->>'longitude' AS FLOAT)
-            FROM qiita.%s
-            WHERE isnumeric(sample_values->>'latitude') AND
-                  isnumeric(sample_values->>'longitude')"""
-        sql = [sql_query % s
-               for s in qdb.sql_connection.TRN.execute_fetchflatten()]
-        sql = ' UNION '.join(sql)
-        qdb.sql_connection.TRN.add(sql)
+        results = []
+        if studies:
+            # we are going to create multiple union selects to retrieve the
+            # latigute and longitude of all available studies. Note that
+            # UNION in PostgreSQL automatically removes duplicates
+            sql_query = """
+                SELECT CAST(sample_values->>'latitude' AS FLOAT),
+                       CAST(sample_values->>'longitude' AS FLOAT)
+                FROM qiita.sample_%d
+                WHERE isnumeric(sample_values->>'latitude') AND
+                      isnumeric(sample_values->>'longitude')"""
+            sql = [sql_query % s.id for s in studies]
+            sql = ' UNION '.join(sql)
+            qdb.sql_connection.TRN.add(sql)
 
-        # note that we are returning set to remove duplicates
-        return qdb.sql_connection.TRN.execute_fetchindex()
+            # note that we are returning set to remove duplicates
+            results = qdb.sql_connection.TRN.execute_fetchindex()
+
+        return results
 
 
 def generate_biom_and_metadata_release(study_status='public'):
