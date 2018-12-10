@@ -85,11 +85,11 @@ To successfully submit your data to EBI, you will also need to include a minimal
 preparation information depending on your data type:
 
 Amplicon Sequencing Data (16S, 18S, ITS, etc.)
-sample_name, barcode, linkerprimer ( use primer for older 454), experiment_design_description, library, library_construction_protocol,
+sample_name, barcode, linkerprimer (use primer for older 454), experiment_design_description, library, library_construction_protocol,
 linker, platform, run_center, run_date, run_prefix, pcr_primers, sequencing_meth, target_gene, target_subfragment, center_name, center_project_name,
 instrument_model, runid.
 
-Metagenomic Sequencing Data (WGS, WGMS,"shotgun", etc.)
+Metagenomic Sequencing Data (WGS, WGMS, "shotgun", etc.)
 sample_name, experiment_design_description, library_construction_protocol, platform, run_center, run_date, run_prefix, sequencing_meth, center_name,
 center_project_name, instrument_model, run_id, forward_read, reverse_read, sample_plate, sample_well, i7_index_id (Illumina only), index,
 i5_index_id (Illumina only), index2, sample_project, well_description.
@@ -105,15 +105,17 @@ Without these columns you will not be able to submit to EBI.
 
 For sequencing data, all valid values for instrument_model per platform, view the values in the table below:
 
-+--------------+----------------------------------------------------------------------------------------------------------+
-| Platform     | Valid instrument_model options                                                                           |
-+==============+==========================================================================================================+
-| ``LS454``    |  ``454 GS``, ``454 GS 20``, ``454 GS FLX``, ``454 GS FLX+``, ``454 GS FLX Titanium``, ``454 GS Junior``, |
-|              |  ``454 GS Junior`` or ``unspecified``                                                                    |
-+--------------+----------------------------------------------------------------------------------------------------------+
-| ``Illumina`` |  ``HiSeq X Five``, ``HiSeq X Ten``, ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``,       |
-|              |  ``Illumina Genome Analyzer IIx``, ``Illumina HiScanSQ``, ``Illumina HiSeq 1000``,                       |
-|              |  ``Illumina HiSeq 1500``,, ``Illumina HiSeq 2000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 3000``,    |
-|              |  ``Illumina HiSeq 4000``, ``Illumina MiSeq``, ``Illumina MiniSeq``, ``Illumina NovaSeq 6000``,           |
-|              |  ``NextSeq 500``, ``NextSeq 550``, or ``unspecified``                                                    |
-+--------------+----------------------------------------------------------------------------------------------------------+
++-----------------+----------------------------------------------------------------------------------------------------------+
+| Platform        | Valid instrument_model options                                                                           |
++=================+==========================================================================================================+
+| ``LS454``       |  ``454 GS``, ``454 GS 20``, ``454 GS FLX``, ``454 GS FLX+``, ``454 GS FLX Titanium``, ``454 GS Junior``, |
+|                 |  ``454 GS Junior`` or ``unspecified``                                                                    |
++-----------------+----------------------------------------------------------------------------------------------------------+
+| ``Illumina``    |  ``HiSeq X Five``, ``HiSeq X Ten``, ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``,       |
+|                 |  ``Illumina Genome Analyzer IIx``, ``Illumina HiScanSQ``, ``Illumina HiSeq 1000``,                       |
+|                 |  ``Illumina HiSeq 1500``,, ``Illumina HiSeq 2000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 3000``,    |
+|                 |  ``Illumina HiSeq 4000``, ``Illumina MiSeq``, ``Illumina MiniSeq``, ``Illumina NovaSeq 6000``,           |
+|                 |  ``NextSeq 500``, ``NextSeq 550``, or ``unspecified``                                                    |
++-----------------+----------------------------------------------------------------------------------------------------------+
+| ``Ion Torrent`` |  ``Ion Torrent PGM``, ``Ion Torrent Proton``, ``Ion Torrent S5``, ``Ion Torrent S5 XL``                  |
++-----------------+----------------------------------------------------------------------------------------------------------+
