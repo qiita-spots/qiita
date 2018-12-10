@@ -1648,7 +1648,11 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     'merging_scheme': cmd.merging_scheme,
                     'deprecated': cmd.software.deprecated}
 
-            # now let's get the actual artifacts
+            # Now let's get the actual artifacts. Note that ts is a cache
+            # (prep id : target subfragment) so we don't have to query
+            # multiple times the target subfragment for a prep info file.
+            # However, some artifacts (like analysis) do not have a prep info
+            # file; thus we can have a None prep id (key)
             ts = {None: []}
             ps = {}
             algorithm_az = {'': ''}

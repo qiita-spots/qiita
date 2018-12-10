@@ -1161,14 +1161,18 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # 2. generate a matrix rows/samples, cols/values and load them
             #    via pandas.DataFrame, which actually has good performace
             data = []
-            for r in qdb.sql_connection.TRN.execute_fetchindex():
+            for sid, values in qdb.sql_connection.TRN.execute_fetchindex():
                 # creating row of values, first insert sample id
-                v = [r[0]]
+                vals = [sid]
                 # then loop over all the possible values making sure that if
                 # the column doesn't exist in that sample, it gets a None
-                v.extend([r[1][c] if c in r[1] else None for c in cols])
+                for c in cols:
+                    v = None
+                    if c in values:
+                        v = values[c]
+                    vals.append(v)
                 # append the row to the full matrix
-                data.append(v)
+                data.append(vals)
             cols.insert(0, 'sample_id')
             df = pd.DataFrame(data, columns=cols, dtype=str)
             df.set_index('sample_id', inplace=True)
@@ -1318,11 +1322,31 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # a numpy array with only the values that actually changed
             # between the current_map and md_template
             changed_to = md_template.values[np.where(diff_map)]
-
+            # now we are going to take that map and create a new DataFrame
+            # which is going to have a double level index (sample_id /
+            # column_name) with a single column 'to'; this will looks something
+            # like:
+            #                                               to
+            # sample_name column
+            # XX.Sample1  sample_type                            6
+            # XX.Sample2  sample_type                            5
+            #             host_subject_id             the only one
+            # XX.Sample3  sample_type                           10
+            #             physical_specimen_location  new location
             to_update = pd.DataFrame({'to': changed_to}, index=changed.index)
-
             new_columns = []
+            # next by looping by level=0, we are actually just looping over
+            # sample_id but the resulting df is still indexed by
+            # (sample_id / column)
             for sid, df in to_update.groupby(level=0):
+                # thus, in the example above for XX.Sample2, well get df as:
+                #                                     to
+                # sample_name column
+                # XX.Sample2  sample_type                 5
+                #             host_subject_id  the only one
+                # then, if we transform it to dict, we'll get:
+                # {'to': {('XX.Sample2', u'sample_type'): '5',
+                #         ('XX.Sample2', u'host_subject_id'):  'the only one'}}
                 values = {k[1]: v for k, v in df.to_dict()['to'].iteritems()}
                 new_columns.extend(values.keys())
                 sql = """UPDATE qiita.{0}
