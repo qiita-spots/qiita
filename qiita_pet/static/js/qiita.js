@@ -29,7 +29,11 @@ function bootstrapAlert(message, severity, timeout){
     alertDiv.append('<p style="text-align:center">Need help? Send us an <a href="mailto:qiita.help@gmail.com">email</a>.</p>');
   }
 
-  $('#template-content').prepend(alertDiv);
+  if ($(".topfloat")[0]){
+    $( ".topfloat" ).children().prepend(alertDiv);
+  } else {
+    $('#template-content').prepend(alertDiv);
+  }
 
   if(timeout > 0) {
    if (timeoutHandleForBoostrapAlert != null) {
