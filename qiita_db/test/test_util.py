@@ -863,6 +863,22 @@ class UtilTests(TestCase):
         PREP = qdb.metadata_template.prep_template.PrepTemplate
         UTIL = qdb.util
 
+        # testing owner email as name
+        user = USER('test@foo.bar')
+        username = user.info['name']
+        # test without changes
+        self.assertDictEqual(
+            STUDY_INFO, UTIL.generate_study_list(user, 'user')[0])
+        # change user's name to None and tests again
+        user.info = {'name': None}
+        exp = STUDY_INFO.copy()
+        exp['owner'] = 'test@foo.bar'
+        self.assertDictEqual(
+            exp, qdb.util.generate_study_list(user, 'user')[0])
+
+        # returning original name
+        user.info = {'name': username}
+
         # creating a new study to make sure that empty studies are also
         # returned
         info = {"timeseries_type_id": 1, "metadata_complete": True,
@@ -967,22 +983,6 @@ class UtilTests(TestCase):
         qdb.study.Study.delete(new_study.id)
         PREP(1).artifact.visibility = 'private'
         PREP(2).artifact.visibility = 'private'
-
-    def test_generate_study_list_owner_email_as_name(self):
-        user = qdb.user.User('test@foo.bar')
-        username = user.info['name']
-        # test without changes
-        self.assertDictEqual(
-            STUDY_INFO, qdb.util.generate_study_list(user, 'user')[0])
-        # change user's name to None and tests again
-        user.info = {'name': None}
-        exp = STUDY_INFO.copy()
-        exp['owner'] = 'test@foo.bar'
-        self.assertDictEqual(
-            exp, qdb.util.generate_study_list(user, 'user')[0])
-
-        # returning original name
-        user.info = {'name': username}
 
     def test_generate_study_list_errors(self):
         with self.assertRaises(ValueError):
