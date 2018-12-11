@@ -1307,7 +1307,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # columns. We only have 1 column, which holds if that
             # (sample, column) pair has been modified or not (i.e. cell)
             ne_stacked = diff_map.stack()
-            # by using ne_stacked to index himself, we get only the columns
+            # by using ne_stacked to index itself, we get only the columns
             # that did change (see boolean indexing in pandas docs)
             changed = ne_stacked[ne_stacked]
             if changed.empty:
@@ -1334,20 +1334,28 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # XX.Sample3  sample_type                           10
             #             physical_specimen_location  new location
             to_update = pd.DataFrame({'to': changed_to}, index=changed.index)
+            # reset_index will expand the multi-index and convert the example
+            # to:
+            #    sample_name            column                 to
+            # 0  XX.Sample1                 sample_type             6
+            # 1  XX.Sample2                 sample_type             5
+            # 2  XX.Sample2             host_subject_id  the only one
+            # 3  XX.Sample3                 sample_type            10
+            # 4  XX.Sample3  physical_specimen_location  new location
+            to_update.reset_index(inplace=True)
             new_columns = []
-            # next by looping by level=0, we are actually just looping over
-            # sample_id but the resulting df is still indexed by
-            # (sample_id / column)
-            for sid, df in to_update.groupby(level=0):
-                # thus, in the example above for XX.Sample2, well get df as:
-                #                                     to
-                # sample_name column
-                # XX.Sample2  sample_type                 5
-                #             host_subject_id  the only one
-                # then, if we transform it to dict, we'll get:
-                # {'to': {('XX.Sample2', u'sample_type'): '5',
-                #         ('XX.Sample2', u'host_subject_id'):  'the only one'}}
-                values = {k[1]: v for k, v in df.to_dict()['to'].iteritems()}
+            for sid, df in to_update.groupby('sample_name'):
+                # getting just columns: column and to, and then using column
+                # as index will generate this for XX.Sample2:
+                #                        to
+                # column
+                # sample_type                 5
+                # host_subject_id  the only one
+                df = df[['column', 'to']].set_index('column')
+                # finally to_dict in XX.Sample2:
+                # {'to': {'host_subject_id': 'the only one',
+                #         'sample_type': '5'}}
+                values = df.to_dict()['to']
                 new_columns.extend(values.keys())
                 sql = """UPDATE qiita.{0}
                          SET sample_values = sample_values || %s
