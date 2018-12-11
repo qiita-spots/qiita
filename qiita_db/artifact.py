@@ -487,21 +487,20 @@ class Artifact(qdb.base.QiitaObject):
 
     @classmethod
     def delete(cls, artifact_id):
-        r"""Deletes an artifact from the system
+        r"""Deletes an artifact from the system with its children
 
         Parameters
         ----------
         artifact_id : int
-            The artifact to be removed
+            The parent artifact to be removed
 
         Raises
         ------
         QiitaDBArtifactDeletionError
-            If the artifact is public
-            If the artifact has children
-            If the artifact has been analyzed
-            If the artifact has been submitted to EBI
-            If the artifact has been submitted to VAMPS
+            If the artifacts are public
+            If the artifacts have been analyzed
+            If the artifacts have been submitted to EBI
+            If the artifacts have been submitted to VAMPS
         """
         with qdb.sql_connection.TRN:
             # This will fail if the artifact with id=artifact_id doesn't exist
@@ -512,42 +511,41 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it is public")
 
-            # delete children if children exists
-            for c in sorted(instance.children):
-                try:
-                    instance.delete(c.id)
-                except qdb.exceptions.QiitaDBArtifactDeletionError as e:
-                    msg = 'because children %s' % str(e)
-                    raise qdb.exceptions.QiitaDBArtifactDeletionError(
-                        artifact_id, msg)
+            children = instance.children
+            children_ids = [c.id for c in children]
+            all_ids = tuple(children_ids + [artifact_id])
+            all_artifacts = children + [instance]
 
-            # Check if the artifact has been analyzed
+            # Check if this or any of the children have been analyzed
             sql = """SELECT email, analysis_id
                      FROM qiita.analysis
                      WHERE analysis_id IN (
                         SELECT DISTINCT analysis_id
                         FROM qiita.analysis_sample
-                        WHERE artifact_id = %s)"""
-            qdb.sql_connection.TRN.add(sql, [artifact_id])
+                        WHERE artifact_id IN %s)"""
+            qdb.sql_connection.TRN.add(sql, [all_ids])
             analyses = qdb.sql_connection.TRN.execute_fetchindex()
             if analyses:
                 analyses = '\n'.join(
                     ['Analysis id: %s, Owner: %s' % (aid, email)
                      for email, aid in analyses])
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
-                    artifact_id, "it has been analyzed by: \n %s" % analyses)
+                    artifact_id, 'it or one of its children has been '
+                    'analyzed by: \n %s' % analyses)
 
-            # Check if the artifact has been submitted to EBI
-            if instance.can_be_submitted_to_ebi and \
-                    instance.ebi_run_accessions:
-                raise qdb.exceptions.QiitaDBArtifactDeletionError(
-                    artifact_id, "it has been submitted to EBI")
+            # Check if the artifacts have been submitted to EBI
+            for a in all_artifacts:
+                if a.can_be_submitted_to_ebi and a.ebi_run_accessions:
+                    raise qdb.exceptions.QiitaDBArtifactDeletionError(
+                        artifact_id, "Artifact %d has been submitted to "
+                        "EBI" % a.id)
 
-            # Check if the artifact has been submitted to VAMPS
-            if instance.can_be_submitted_to_vamps and \
-                    instance.is_submitted_to_vamps:
-                raise qdb.exceptions.QiitaDBArtifactDeletionError(
-                    artifact_id, "it has been submitted to VAMPS")
+            # Check if the artifacts have been submitted to VAMPS
+            for a in all_artifacts:
+                if a.can_be_submitted_to_vamps and a.is_submitted_to_vamps:
+                    raise qdb.exceptions.QiitaDBArtifactDeletionError(
+                        artifact_id, "Artifact %d has been submitted to "
+                        "VAMPS" % a.id)
 
             # Check if there is a job queued, running, waiting or
             # in_construction that will use/is using the artifact
@@ -556,10 +554,10 @@ class Artifact(qdb.base.QiitaObject):
                          JOIN qiita.processing_job USING (processing_job_id)
                          JOIN qiita.processing_job_status
                              USING (processing_job_status_id)
-                     WHERE artifact_id = %s
+                     WHERE artifact_id IN %s
                          AND processing_job_status IN (
                              'queued', 'running', 'waiting')"""
-            qdb.sql_connection.TRN.add(sql, [artifact_id])
+            qdb.sql_connection.TRN.add(sql, [all_ids])
             jobs = qdb.sql_connection.TRN.execute_fetchflatten()
             if jobs:
                 # if the artifact has active jobs we need to raise an error
@@ -573,35 +571,35 @@ class Artifact(qdb.base.QiitaObject):
                 if raise_error:
                     raise qdb.exceptions.QiitaDBArtifactDeletionError(
                         artifact_id, "there is a queued/running job that "
-                        "uses this artifact")
+                        "uses this artifact or one of it's children")
 
-            # We can now remove the artifact
-            filepaths = instance.filepaths
+            # We can now remove the artifacts
+            filepaths = [f for a in all_artifacts for f in a.filepaths]
             study = instance.study
 
             # Delete any failed/successful job that had the artifact as input
             sql = """SELECT processing_job_id
                      FROM qiita.artifact_processing_job
-                     WHERE artifact_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [artifact_id])
+                     WHERE artifact_id IN %s"""
+            qdb.sql_connection.TRN.add(sql, [all_ids])
             job_ids = tuple(qdb.sql_connection.TRN.execute_fetchflatten())
 
             if job_ids:
                 sql = """DELETE FROM qiita.artifact_processing_job
-                         WHERE artifact_id = %s"""
-                qdb.sql_connection.TRN.add(sql, [artifact_id])
+                         WHERE artifact_id IN %s"""
+                qdb.sql_connection.TRN.add(sql, [all_ids])
 
             # Delete the entry from the artifact_output_processing_job table
             sql = """DELETE FROM qiita.artifact_output_processing_job
-                     WHERE artifact_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [artifact_id])
+                     WHERE artifact_id IN %s"""
+            qdb.sql_connection.TRN.add(sql, [all_ids])
 
             # Detach the artifact from its filepaths
             sql = """DELETE FROM qiita.artifact_filepath
-                     WHERE artifact_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [artifact_id])
+                     WHERE artifact_id IN %s"""
+            qdb.sql_connection.TRN.add(sql, [all_ids])
 
-            # If the artifact doesn't have parents and study is not None (is an
+            # If the artifacts don't have parents and study is not None (is an
             # analysis), we move the files to the uploads folder. We also need
             # to nullify the column in the prep template table
             if not instance.parents and study is not None:
@@ -612,23 +610,24 @@ class Artifact(qdb.base.QiitaObject):
                          SET artifact_id = NULL
                          WHERE prep_template_id IN %s"""
                 qdb.sql_connection.TRN.add(
-                    sql, [tuple(pt.id for pt in instance.prep_templates)])
+                    sql, [tuple(pt.id for a in all_artifacts
+                                for pt in a.prep_templates)])
             else:
                 sql = """DELETE FROM qiita.parent_artifact
-                         WHERE artifact_id = %s"""
-                qdb.sql_connection.TRN.add(sql, [artifact_id])
+                         WHERE artifact_id IN %s"""
+                qdb.sql_connection.TRN.add(sql, [all_ids])
 
-            # Detach the artifact from the study_artifact table
-            sql = "DELETE FROM qiita.study_artifact WHERE artifact_id = %s"
-            qdb.sql_connection.TRN.add(sql, [artifact_id])
+            # Detach the artifacts from the study_artifact table
+            sql = "DELETE FROM qiita.study_artifact WHERE artifact_id IN %s"
+            qdb.sql_connection.TRN.add(sql, [all_ids])
 
-            # Detach the artifact from the analysis_artifact table
-            sql = "DELETE FROM qiita.analysis_artifact WHERE artifact_id = %s"
-            qdb.sql_connection.TRN.add(sql, [artifact_id])
+            # Detach the artifacts from the analysis_artifact table
+            sql = "DELETE FROM qiita.analysis_artifact WHERE artifact_id IN %s"
+            qdb.sql_connection.TRN.add(sql, [all_ids])
 
-            # Delete the row in the artifact table
-            sql = "DELETE FROM qiita.artifact WHERE artifact_id = %s"
-            qdb.sql_connection.TRN.add(sql, [artifact_id])
+            # Delete the rows in the artifact table
+            sql = "DELETE FROM qiita.artifact WHERE artifact_id IN %s"
+            qdb.sql_connection.TRN.add(sql, [all_ids])
 
     @property
     def name(self):
