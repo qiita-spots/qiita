@@ -40,6 +40,7 @@ install:
   # following https://github.com/biocore/redbiom/blob/master/Makefile
   - export REDBIOM_HOST=http://127.0.0.1:7379
   - curl -s http://127.0.0.1:7379/FLUSHALL > /dev/null
+  - redbiom --version
   - redbiom admin scripts-writable
   - redbiom admin create-context --name "qiita-test" --description "qiita-test context"
   - redbiom admin load-sample-metadata --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
