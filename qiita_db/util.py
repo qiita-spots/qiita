@@ -1418,7 +1418,8 @@ def generate_study_list(user, visibility):
             (SELECT array_agg(study_tag) FROM qiita.per_study_tags
                 WHERE study_id=qiita.study.study_id) AS study_tags,
             (SELECT name FROM qiita.qiita_user
-                WHERE email=qiita.study.email) AS owner
+                WHERE email=qiita.study.email) AS owner,
+            qiita.study.email AS owner_email
             FROM qiita.study
             LEFT JOIN qiita.study_person ON (
                 study_person_id=principal_investigator_id)
@@ -1431,6 +1432,12 @@ def generate_study_list(user, visibility):
             qdb.sql_connection.TRN.add(sql, [tuple(sids)])
             for info in qdb.sql_connection.TRN.execute_fetchindex():
                 info = dict(info)
+
+                # cleaning owners name
+                if info['owner'] in (None, ''):
+                    info['owner'] = info['owner_email']
+                del info['owner_email']
+
                 # cleaning aids_with_deprecation
                 info['artifact_biom_ids'] = []
                 if info['aids_with_deprecation'] is not None:
