@@ -398,8 +398,9 @@ Vue.component('processing-graph', {
         // Create the DOM elements to add the rows content
         for (var row of rowsContent) {
           $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#processing-results");
-          $('<label>').addClass('col-sm-1 col-form-label').text(row[0]).appendTo($rowDiv);
-          $colDiv = $('<div>').addClass('col-sm-5').appendTo($rowDiv).html(row[1]);
+          $rowLabel = $('<div>').addClass('col-sm-4').appendTo($rowDiv);
+          $('<label>').addClass('col-form-label').text(row[0]).appendTo($rowLabel);
+          $('<div>').addClass('col-sm-8').appendTo($rowDiv).html(row[1]);
         }
 
         $("#processing-results").append($("<h4>").text('Job parameters:'));
@@ -409,8 +410,9 @@ Vue.component('processing-graph', {
             continue;
           }
           $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#processing-results");
-          $('<label>').addClass('col-sm-2 col-form-label').text(key + ':').appendTo($rowDiv);
-          $colDiv = $('<div>').addClass('col-sm-5').appendTo($rowDiv).html(data.job_parameters[key]);
+          $rowLabel = $('<div>').addClass('col-sm-4').appendTo($rowDiv);
+          $('<label>').addClass('col-form-label').text(key + ':').appendTo($rowLabel);
+          $('<div>').addClass('col-sm-8').appendTo($rowDiv).html(data.job_parameters[key]);
         }
       })
         .fail(function(object, status, error_msg) {

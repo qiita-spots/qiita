@@ -616,7 +616,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         sample_values JSONB NOT NULL)""".format(table_name)
             qdb.sql_connection.TRN.add(sql)
 
-            values = '{"columns": %s}' % dumps(md_template.columns.tolist())
+            values = dumps({"columns": md_template.columns.tolist()})
             sql = """INSERT INTO qiita.{0} (sample_id, sample_values)
                      VALUES ('{1}', %s)""".format(
                         table_name, QIITA_COLUMN_NAME)
@@ -676,7 +676,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         QiitaDBUnknownIDError
             If any of the `sample_names` don't exist
         """
-        keys = self.keys()
+        keys = list(self.keys())
         missing = [sn for sn in sample_names if sn not in keys]
         if missing:
             raise qdb.exceptions.QiitaDBUnknownIDError(
@@ -844,7 +844,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 cols = self.categories()
                 cols.extend(new_cols)
 
-                values = '{"columns": %s}' % dumps(cols)
+                values = dumps({"columns": cols})
                 sql = """UPDATE qiita.{0}
                          SET sample_values = %s
                          WHERE sample_id = '{1}'""".format(
@@ -885,8 +885,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(sql, values, many=True)
 
                 # inserting new samples to the info file
-                values = [(k, df.to_json())
-                          for k, df in md_filtered.iterrows()]
+                values = [(k, row.to_json())
+                          for k, row in md_filtered.iterrows()]
                 sql = """INSERT INTO qiita.{0} (sample_id, sample_values)
                          VALUES (%s, %s)""".format(table_name)
                 qdb.sql_connection.TRN.add(sql, values, many=True)
@@ -1159,15 +1159,29 @@ class MetadataTemplate(qdb.base.QiitaObject):
                      WHERE sample_id != '{1}'""".format(
                         self._table_name(self._id), QIITA_COLUMN_NAME)
             qdb.sql_connection.TRN.add(sql)
-
-            # we could have used dict() and then use pandas from_dict but
-            # that takes forever so it's much faster to simply parse here and
-            # load via pandas.DataFrame
+            # this query is going to return a tuple
+            # (sample_id, dict of columns/values); however it's important to
+            # notice that we can't assure that all column/values pairs are the
+            # same for all samples as we are not doing full bookkeeping of all
+            # the columns in all the samples. Thus, we have 2 options:
+            # 1. use dict() on the query result with pd.DataFrame.from_dict so
+            #    pandas deals with this; but this takes a crazy amount of time,
+            #    for more info google: "performance pandas from_dict"
+            # 2. generate a matrix rows/samples, cols/values and load them
+            #    via pandas.DataFrame, which actually has good performace
             data = []
-            for r in qdb.sql_connection.TRN.execute_fetchindex():
-                v = [r[0]]
-                v.extend([r[1][c] if c in r[1] else None for c in cols])
-                data.append(v)
+            for sid, values in qdb.sql_connection.TRN.execute_fetchindex():
+                # creating row of values, first insert sample id
+                vals = [sid]
+                # then loop over all the possible values making sure that if
+                # the column doesn't exist in that sample, it gets a None
+                for c in cols:
+                    v = None
+                    if c in values:
+                        v = values[c]
+                    vals.append(v)
+                # append the row to the full matrix
+                data.append(vals)
             cols.insert(0, 'sample_id')
             df = pd.DataFrame(data, columns=cols, dtype=str)
             df.set_index('sample_id', inplace=True)
@@ -1309,7 +1323,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # columns. We only have 1 column, which holds if that
             # (sample, column) pair has been modified or not (i.e. cell)
             ne_stacked = diff_map.stack()
-            # by using ne_stacked to index himself, we get only the columns
+            # by using ne_stacked to index itself, we get only the columns
             # that did change (see boolean indexing in pandas docs)
             changed = ne_stacked[ne_stacked]
             if changed.empty:
@@ -1324,14 +1338,40 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # a numpy array with only the values that actually changed
             # between the current_map and md_template
             changed_to = md_template.values[np.where(diff_map)]
-
+            # now we are going to take that map and create a new DataFrame
+            # which is going to have a double level index (sample_id /
+            # column_name) with a single column 'to'; this will looks something
+            # like:
+            #                                               to
+            # sample_name column
+            # XX.Sample1  sample_type                            6
+            # XX.Sample2  sample_type                            5
+            #             host_subject_id             the only one
+            # XX.Sample3  sample_type                           10
+            #             physical_specimen_location  new location
             to_update = pd.DataFrame({'to': changed_to}, index=changed.index)
-
+            # reset_index will expand the multi-index and convert the example
+            # to:
+            #    sample_name            column                 to
+            # 0  XX.Sample1                 sample_type             6
+            # 1  XX.Sample2                 sample_type             5
+            # 2  XX.Sample2             host_subject_id  the only one
+            # 3  XX.Sample3                 sample_type            10
+            # 4  XX.Sample3  physical_specimen_location  new location
+            to_update.reset_index(inplace=True)
             new_columns = []
-            samples_updated = []
-            for sid, df in to_update.groupby(level=0):
-                samples_updated.append(sid)
-                values = {k[1]: v for k, v in df.to_dict()['to'].iteritems()}
+            for sid, df in to_update.groupby('sample_name'):
+                # getting just columns: column and to, and then using column
+                # as index will generate this for XX.Sample2:
+                #                        to
+                # column
+                # sample_type                 5
+                # host_subject_id  the only one
+                df = df[['column', 'to']].set_index('column')
+                # finally to_dict in XX.Sample2:
+                # {'to': {'host_subject_id': 'the only one',
+                #         'sample_type': '5'}}
+                values = df.to_dict()['to']
                 new_columns.extend(values.keys())
                 sql = """UPDATE qiita.{0}
                          SET sample_values = sample_values || %s
@@ -1341,7 +1381,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             nc = list(set(new_columns).union(set(self.categories())))
             table_name = self._table_name(self.id)
-            values = '{"columns": %s}' % dumps(nc)
+            values = dumps({"columns": new_columns})
             sql = """UPDATE qiita.{0}
                      SET sample_values = %s
                      WHERE sample_id = '{1}'""".format(
