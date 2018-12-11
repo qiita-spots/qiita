@@ -138,7 +138,7 @@ class ProcessingJob(qdb.base.QiitaObject):
 
         Notes
         -----
-        If force is True the job is gonna be created even if another job
+        If force is True the job is going to be created even if another job
         exists with the same parameters
         """
         TTRN = qdb.sql_connection.TRN

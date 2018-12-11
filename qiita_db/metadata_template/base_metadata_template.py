@@ -37,10 +37,10 @@ Methods
 
 from __future__ import division
 from future.utils import viewitems
-from future.builtins import zip
 from itertools import chain
 from copy import deepcopy
 from datetime import datetime
+from json import loads, dumps
 
 import pandas as pd
 import numpy as np
@@ -51,6 +51,11 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 
 from string import letters, digits
+
+
+# this is the name of the sample where we store all columns for a sample/prep
+# information
+QIITA_COLUMN_NAME = 'qiita_sample_column_names'
 
 
 class BaseSample(qdb.base.QiitaObject):
@@ -182,12 +187,17 @@ class BaseSample(qdb.base.QiitaObject):
         set of str
             The set of all available metadata categories
         """
-        # Get all the columns
-        cols = qdb.util.get_table_cols(self._dynamic_table)
-        # Remove the sample_id column as this column is used internally for
-        # data storage and it doesn't actually belong to the metadata
-        cols.remove('sample_id')
-        return set(cols)
+        with qdb.sql_connection.TRN:
+            sql = """SELECT sample_values->>'columns'
+                     FROM qiita.{0}
+                     WHERE sample_id = '{1}'""".format(
+                        self._dynamic_table, QIITA_COLUMN_NAME)
+            qdb.sql_connection.TRN.add(sql)
+            results = qdb.sql_connection.TRN.execute_fetchflatten()
+            if results:
+                results = loads(results[0])
+
+            return set(results)
 
     def _to_dict(self):
         r"""Returns the categories and their values in a dictionary
@@ -198,15 +208,14 @@ class BaseSample(qdb.base.QiitaObject):
             A dictionary of the form {category: value}
         """
         with qdb.sql_connection.TRN:
-            sql = "SELECT * FROM qiita.{0} WHERE sample_id=%s".format(
-                self._dynamic_table)
+            sql = """SELECT sample_values
+                     FROM qiita.{0}
+                     WHERE sample_id=%s""".format(self._dynamic_table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            d = dict(qdb.sql_connection.TRN.execute_fetchindex()[0])
 
-            # Remove the sample_id, is not part of the metadata
-            del d['sample_id']
+            result = qdb.sql_connection.TRN.execute_fetchindex()
 
-            return d
+            return result[0]['sample_values']
 
     def __len__(self):
         r"""Returns the number of metadata categories
@@ -249,9 +258,12 @@ class BaseSample(qdb.base.QiitaObject):
                     "Metadata category %s does not exists for sample %s"
                     " in template %d" % (key, self._id, self._md_template.id))
 
-            sql = """SELECT {0} FROM qiita.{1}
-                     WHERE sample_id=%s""".format(key, self._dynamic_table)
+            sql = """SELECT sample_values->>'{0}' as {0}
+                     FROM qiita.{1}
+                     WHERE sample_id = %s""".format(
+                key, self._dynamic_table)
             qdb.sql_connection.TRN.add(sql, [self._id])
+
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     def setitem(self, column, value):
@@ -278,9 +290,11 @@ class BaseSample(qdb.base.QiitaObject):
                     (column, self._dynamic_table))
 
             sql = """UPDATE qiita.{0}
-                     SET {1}=%s
-                     WHERE sample_id=%s""".format(self._dynamic_table, column)
-            qdb.sql_connection.TRN.add(sql, [value, self._id])
+                     SET sample_values = sample_values || %s
+                     WHERE sample_id = %s""".format(self._dynamic_table)
+
+            qdb.sql_connection.TRN.add(sql, [dumps({column: value}), self.id])
+            qdb.sql_connection.TRN.execute()
 
     def __setitem__(self, column, value):
         r"""Sets the metadata value for the category `column`
@@ -597,19 +611,20 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             # Create table with custom columns
             table_name = cls._table_name(obj_id)
-            column_datatype = ["%s varchar" % col for col in headers]
             sql = """CREATE TABLE qiita.{0} (
-                        sample_id varchar NOT NULL, {1}
-                     )""".format(table_name, ', '.join(column_datatype))
+                        sample_id VARCHAR NOT NULL PRIMARY KEY,
+                        sample_values JSONB NOT NULL)""".format(table_name)
             qdb.sql_connection.TRN.add(sql)
 
-            values = [list(md_template[h]) for h in headers]
-            values.insert(0, sample_ids)
-            values = [list(v) for v in zip(*values)]
-            sql = """INSERT INTO qiita.{0} (sample_id, {1})
-                     VALUES (%s, {2})""".format(
-                table_name, ", ".join(headers),
-                ', '.join(["%s"] * len(headers)))
+            values = dumps({"columns": md_template.columns.tolist()})
+            sql = """INSERT INTO qiita.{0} (sample_id, sample_values)
+                     VALUES ('{1}', %s)""".format(
+                        table_name, QIITA_COLUMN_NAME)
+            qdb.sql_connection.TRN.add(sql, [values])
+
+            values = [(k, df.to_json()) for k, df in md_template.iterrows()]
+            sql = """INSERT INTO qiita.{0} (sample_id, sample_values)
+                     VALUES (%s, %s)""".format(table_name)
             qdb.sql_connection.TRN.add(sql, values, many=True)
 
             # Execute all the steps
@@ -625,17 +640,28 @@ class MetadataTemplate(qdb.base.QiitaObject):
             Alphabetical list of all metadata headers available
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT DISTINCT column_name
-                        FROM information_schema.columns
-                        WHERE table_name LIKE '{0}%' AND
-                              table_name != 'sample_template_filepath' AND
-                              table_name != 'prep_template_filepath' AND
-                              table_name != 'prep_template_sample' AND
-                              table_name != 'prep_template_processing_job' AND
-                              table_name != 'prep_template'
-                        ORDER BY column_name""".format(cls._table_prefix)
+            sql = """SELECT DISTINCT table_name
+                     FROM information_schema.columns
+                     WHERE table_name LIKE '{0}%' AND
+                        table_name != 'sample_template_filepath' AND
+                        table_name != 'prep_template_filepath' AND
+                        table_name != 'prep_template_sample' AND
+                        table_name != 'prep_template_processing_job' AND
+                        table_name != 'prep_template'""".format(
+                        cls._table_prefix)
             qdb.sql_connection.TRN.add(sql)
-            return qdb.sql_connection.TRN.execute_fetchflatten()
+            tables = qdb.sql_connection.TRN.execute_fetchflatten()
+            sql = """SELECT sample_values->>'columns'
+                     FROM qiita.%s WHERE sample_id = '{0}'""".format(
+                        QIITA_COLUMN_NAME)
+            results = []
+            for t in tables:
+                qdb.sql_connection.TRN.add(sql % t)
+                vals = qdb.sql_connection.TRN.execute_fetchflatten()
+                if vals:
+                    results.extend(loads(vals[0]))
+
+            return list(set(results))
 
     def _common_delete_sample_steps(self, sample_names):
         r"""Executes the common delete sample steps
@@ -705,9 +731,24 @@ class MetadataTemplate(qdb.base.QiitaObject):
                     column_name)
 
         with qdb.sql_connection.TRN:
-            sql = 'ALTER TABLE qiita.%s%d DROP COLUMN %s' % (
-                self._table_prefix, self._id, column_name)
-            qdb.sql_connection.TRN.add(sql)
+            table_name = 'qiita.{0}{1}'.format(self._table_prefix, self._id)
+            # deleting from all samples; note that (-) in pgsql jsonb means
+            # delete that key and value
+            sql = """UPDATE {0}
+                     SET sample_values = sample_values - %s
+                     WHERE sample_id != %s""".format(table_name)
+            qdb.sql_connection.TRN.add(sql, [column_name, QIITA_COLUMN_NAME])
+
+            # deleting from QIITA_COLUMN_NAME
+            columns = self.categories()
+            columns.remove(column_name)
+            values = '{"columns": %s}' % dumps(columns)
+            sql = """UPDATE {0}
+                     SET sample_values = %s
+                     WHERE sample_id = '{1}'""".format(
+                        table_name, QIITA_COLUMN_NAME)
+            qdb.sql_connection.TRN.add(sql, [values])
+
             qdb.sql_connection.TRN.execute()
 
             self.generate_files()
@@ -793,56 +834,54 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 # code). Sorting the new columns to enforce an order
                 new_cols = sorted(new_cols)
 
-                sql_alter = """ALTER TABLE qiita.{0} ADD COLUMN {1} {2}"""
-                for category in new_cols:
-                    qdb.sql_connection.TRN.add(
-                        sql_alter.format(table_name, category, 'varchar'))
+                cols = self.categories()
+                cols.extend(new_cols)
+
+                values = dumps({"columns": cols})
+                sql = """UPDATE qiita.{0}
+                         SET sample_values = %s
+                         WHERE sample_id = '{1}'""".format(
+                            table_name, QIITA_COLUMN_NAME)
+                qdb.sql_connection.TRN.add(sql, [values])
 
                 if existing_samples:
                     # The values for the new columns are the only ones that get
                     # added to the database. None of the existing values will
-                    # be modified (see update for that functionality)
+                    # be modified (see update for that functionality). Remember
+                    # that || is a jsonb to update or add a new key/value
                     md_filtered = md_template[new_cols].loc[existing_samples]
-                    values = [list(md_filtered[h]) for h in md_filtered]
-                    values.append(existing_samples)
-                    values = [list(v) for v in zip(*values)]
-                    # psycopg2 requires a list of iterable, in which each
-                    # iterable is a set of values to use in the string
-                    # formatting of the query. We have all the values in
-                    # different lists (but in the same order) so use zip to
-                    # create the list of iterable that psycopg2 requires.
-                    set_str = ["{0} = %s".format(col) for col in new_cols]
-                    sql = """UPDATE qiita.{0}
-                             SET {1}
-                             WHERE sample_id=%s""".format(table_name,
-                                                          ",".join(set_str))
-                    for v in values:
-                        qdb.sql_connection.TRN.add(sql, v)
+                    for sid, df in md_filtered.iterrows():
+                        values = dict(df.iteritems())
+                        sql = """UPDATE qiita.{0}
+                                 SET sample_values = sample_values || %s
+                                 WHERE sample_id = %s""".format(
+                                    self._table_name(self._id))
+                        qdb.sql_connection.TRN.add(sql, [dumps(values), sid])
 
             if new_samples:
                 warnings.warn(
                     "The following samples have been added to the existing"
                     " template: %s" % ", ".join(new_samples),
                     qdb.exceptions.QiitaDBWarning)
+
                 new_samples = sorted(new_samples)
+
                 # At this point we only want the information
                 # from the new samples
                 md_filtered = md_template.loc[new_samples]
-                # Insert new_samples in the study table
+
+                # Insert new samples to the study sample table
                 values = [[self._id, s_id] for s_id in new_samples]
                 sql = """INSERT INTO qiita.{0} ({1}, sample_id)
                          VALUES (%s, %s)""".format(self._table,
                                                    self._id_column)
                 qdb.sql_connection.TRN.add(sql, values, many=True)
 
-                # Insert values on custom table
-                values = [list(md_filtered[h]) for h in md_filtered]
-                values.insert(0, new_samples)
-                values = [list(v) for v in zip(*values)]
-                sql = """INSERT INTO qiita.{0} (sample_id, {1})
-                         VALUES (%s, {2})""".format(
-                    table_name, ", ".join(headers),
-                    ', '.join(["%s"] * len(headers)))
+                # inserting new samples to the info file
+                values = [(k, row.to_json())
+                          for k, row in md_filtered.iterrows()]
+                sql = """INSERT INTO qiita.{0} (sample_id, sample_values)
+                         VALUES (%s, %s)""".format(table_name)
                 qdb.sql_connection.TRN.add(sql, values, many=True)
 
             # Execute all the steps
@@ -1105,20 +1144,41 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # Retrieve all the information from the database
-            sql = "SELECT * FROM qiita.{0}".format(self._table_name(self._id))
+            cols = self.categories()
+            sql = """SELECT sample_id, sample_values
+                     FROM qiita.{0}
+                     WHERE sample_id != '{1}'""".format(
+                        self._table_name(self._id), QIITA_COLUMN_NAME)
             qdb.sql_connection.TRN.add(sql)
-            meta = qdb.sql_connection.TRN.execute_fetchindex()
-
-            # When we create the dataframe, we are providing a matrix (list of
-            # lists) with all the data, so we need to make sure that all the
-            # rows contain the columns in the same order
-            cols = sorted(meta[0].keys())
-            meta_matrix = [[r[c] for c in cols] for r in meta]
-            df = pd.DataFrame(meta_matrix, columns=cols, dtype=str)
+            # this query is going to return a tuple
+            # (sample_id, dict of columns/values); however it's important to
+            # notice that we can't assure that all column/values pairs are the
+            # same for all samples as we are not doing full bookkeeping of all
+            # the columns in all the samples. Thus, we have 2 options:
+            # 1. use dict() on the query result with pd.DataFrame.from_dict so
+            #    pandas deals with this; but this takes a crazy amount of time,
+            #    for more info google: "performance pandas from_dict"
+            # 2. generate a matrix rows/samples, cols/values and load them
+            #    via pandas.DataFrame, which actually has good performace
+            data = []
+            for sid, values in qdb.sql_connection.TRN.execute_fetchindex():
+                # creating row of values, first insert sample id
+                vals = [sid]
+                # then loop over all the possible values making sure that if
+                # the column doesn't exist in that sample, it gets a None
+                for c in cols:
+                    v = None
+                    if c in values:
+                        v = values[c]
+                    vals.append(v)
+                # append the row to the full matrix
+                data.append(vals)
+            cols.insert(0, 'sample_id')
+            df = pd.DataFrame(data, columns=cols, dtype=str)
+            df.set_index('sample_id', inplace=True)
 
             # Make sure that we are changing np.NaN by Nones
             df.where((pd.notnull(df)), None)
-            df.set_index('sample_id', inplace=True, drop=True)
             id_column_name = 'qiita_%sid' % (self._table_prefix)
             if id_column_name == 'qiita_sample_id':
                 id_column_name = 'qiita_study_id'
@@ -1155,18 +1215,26 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         sort='descending')]
 
     def categories(self):
-        """Identifies the metadata columns present in a template
+        """Identifies the metadata columns present in an info file
 
         Returns
         -------
         cols : list
-            The static and dynamic category fields
-
+            The category fields
         """
-        cols = qdb.util.get_table_cols(self._table_name(self._id))
-        cols.remove("sample_id")
+        with qdb.sql_connection.TRN:
+            sql = """SELECT sample_values->>'columns'
+                     FROM qiita.{0}
+                     WHERE sample_id = '{1}'""".format(
+                        self._table_name(self._id), QIITA_COLUMN_NAME)
 
-        return cols
+            qdb.sql_connection.TRN.add(sql)
+
+            results = qdb.sql_connection.TRN.execute_fetchflatten()
+            if results:
+                results = sorted(loads(results[0]))
+
+            return results
 
     def extend(self, md_template):
         """Adds the given template to the current one
@@ -1239,7 +1307,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # columns. We only have 1 column, which holds if that
             # (sample, column) pair has been modified or not (i.e. cell)
             ne_stacked = diff_map.stack()
-            # by using ne_stacked to index himself, we get only the columns
+            # by using ne_stacked to index itself, we get only the columns
             # that did change (see boolean indexing in pandas docs)
             changed = ne_stacked[ne_stacked]
             if changed.empty:
@@ -1254,48 +1322,55 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # a numpy array with only the values that actually changed
             # between the current_map and md_template
             changed_to = md_template.values[np.where(diff_map)]
-
-            # to_update is a MultiIndexed DataFrame, in which the index 0 is
-            # the samples and the index 1 is the columns, we define these
-            # variables here so we don't put magic numbers across the code
-            sample_idx = 0
-            col_idx = 1
+            # now we are going to take that map and create a new DataFrame
+            # which is going to have a double level index (sample_id /
+            # column_name) with a single column 'to'; this will looks something
+            # like:
+            #                                               to
+            # sample_name column
+            # XX.Sample1  sample_type                            6
+            # XX.Sample2  sample_type                            5
+            #             host_subject_id             the only one
+            # XX.Sample3  sample_type                           10
+            #             physical_specimen_location  new location
             to_update = pd.DataFrame({'to': changed_to}, index=changed.index)
+            # reset_index will expand the multi-index and convert the example
+            # to:
+            #    sample_name            column                 to
+            # 0  XX.Sample1                 sample_type             6
+            # 1  XX.Sample2                 sample_type             5
+            # 2  XX.Sample2             host_subject_id  the only one
+            # 3  XX.Sample3                 sample_type            10
+            # 4  XX.Sample3  physical_specimen_location  new location
+            to_update.reset_index(inplace=True)
+            new_columns = []
+            for sid, df in to_update.groupby('sample_name'):
+                # getting just columns: column and to, and then using column
+                # as index will generate this for XX.Sample2:
+                #                        to
+                # column
+                # sample_type                 5
+                # host_subject_id  the only one
+                df = df[['column', 'to']].set_index('column')
+                # finally to_dict in XX.Sample2:
+                # {'to': {'host_subject_id': 'the only one',
+                #         'sample_type': '5'}}
+                values = df.to_dict()['to']
+                new_columns.extend(values.keys())
+                sql = """UPDATE qiita.{0}
+                         SET sample_values = sample_values || %s
+                         WHERE sample_id = %s""".format(
+                            self._table_name(self._id))
+                qdb.sql_connection.TRN.add(sql, [dumps(values), sid])
 
-            # Get the columns that we need to change
-            indices = list(set(to_update.index.labels[col_idx]))
-            cols_to_update = to_update.index.levels[col_idx][indices]
-
-            if not self.can_be_updated(columns=set(cols_to_update)):
-                raise qdb.exceptions.QiitaDBError(
-                    'The new template is modifying fields that cannot be '
-                    'modified. Try removing the restricted fields or '
-                    'deleting the processed data. You are trying to modify: %s'
-                    % ', '.join(cols_to_update))
-
-            # Get the samples that we need to change
-            indices = list(set(to_update.index.labels[sample_idx]))
-            samples_to_update = to_update.index.levels[sample_idx][indices]
-
-            sql_eq_cols = ', '.join(
-                ["{0} = c.{0}".format(col) for col in cols_to_update])
-            # We add 1 because we need to add the sample name
-            single_value = "(%s)" % ', '.join(
-                ["%s"] * (len(cols_to_update) + 1))
-            sql_cols = ', '.join(cols_to_update)
-
-            sql = """UPDATE qiita.{0} AS t SET
-                        {1}
-                     FROM (VALUES {2})
-                        AS c(sample_id, {3})
-                     WHERE c.sample_id = t.sample_id
-                    """.format(self._table_name(self._id), sql_eq_cols,
-                               single_value, sql_cols)
-            for sample in samples_to_update:
-                sample_vals = [md_template[col][sample]
-                               for col in cols_to_update]
-                sample_vals.insert(0, sample)
-                qdb.sql_connection.TRN.add(sql, sample_vals)
+            new_columns = list(set(new_columns).union(set(self.categories())))
+            table_name = self._table_name(self.id)
+            values = dumps({"columns": new_columns})
+            sql = """UPDATE qiita.{0}
+                     SET sample_values = %s
+                     WHERE sample_id = '{1}'""".format(
+                        table_name, QIITA_COLUMN_NAME)
+            qdb.sql_connection.TRN.add(sql, [values])
 
             qdb.sql_connection.TRN.execute()
 
@@ -1397,9 +1472,12 @@ class MetadataTemplate(qdb.base.QiitaObject):
             If category is not part of the template
         """
         with qdb.sql_connection.TRN:
-            qdb.util.check_table_cols([category], self._table_name(self._id))
-            sql = 'SELECT sample_id, {0} FROM qiita.{1}'.format(
-                category, self._table_name(self._id))
+            if category not in self.categories():
+                raise qdb.exceptions.QiitaDBColumnError(category)
+            sql = """SELECT sample_id, sample_values->>'{0}' as {0}
+                     FROM qiita.{1}
+                     WHERE sample_id != '{2}'""".format(
+                category, self._table_name(self._id), QIITA_COLUMN_NAME)
             qdb.sql_connection.TRN.add(sql)
             return dict(qdb.sql_connection.TRN.execute_fetchindex())
 

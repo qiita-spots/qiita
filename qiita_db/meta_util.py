@@ -316,22 +316,25 @@ def get_lat_longs():
         sql = """SELECT DISTINCT table_name
                  FROM information_schema.columns
                  WHERE table_name SIMILAR TO 'sample_[0-9]+'
-                    AND table_schema = 'qiita'
-                    AND column_name IN ('latitude', 'longitude')
                     AND SPLIT_PART(table_name, '_', 2)::int IN %s
-                    GROUP BY table_name HAVING COUNT(column_name) = 2;"""
+                    AND table_schema = 'qiita'"""
         qdb.sql_connection.TRN.add(sql, [tuple(portal_table_ids)])
 
-        sql = [('SELECT CAST(latitude AS FLOAT), '
-                '       CAST(longitude AS FLOAT) '
-                'FROM qiita.%s '
-                'WHERE isnumeric(latitude) AND isnumeric(longitude) '
-                "AND latitude <> 'NaN' "
-                "AND longitude <> 'NaN' " % s)
+        # we are going to create multiple union selects to retrieve the
+        # latigute and longitude of all available studies. Note that UNION in
+        # PostgreSQL automatically removes duplicates
+        sql_query = """
+            SELECT CAST(sample_values->>'latitude' AS FLOAT),
+                   CAST(sample_values->>'longitude' AS FLOAT)
+            FROM qiita.%s
+            WHERE isnumeric(sample_values->>'latitude') AND
+                  isnumeric(sample_values->>'longitude')"""
+        sql = [sql_query % s
                for s in qdb.sql_connection.TRN.execute_fetchflatten()]
         sql = ' UNION '.join(sql)
         qdb.sql_connection.TRN.add(sql)
 
+        # note that we are returning set to remove duplicates
         return qdb.sql_connection.TRN.execute_fetchindex()
 
 

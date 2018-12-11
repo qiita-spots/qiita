@@ -483,7 +483,7 @@ class TestSampleTemplate(TestCase):
                'elevation', 'env_biome', 'env_feature', 'host_subject_id',
                'host_taxid', 'latitude', 'longitude', 'ph',
                'physical_specimen_location', 'physical_specimen_remaining',
-               'samp_salinity', 'sample_id', 'sample_type', 'scientific_name',
+               'samp_salinity', 'sample_type', 'scientific_name',
                'season_environment', 'taxon_id', 'temp', 'texture',
                'tot_nitro', 'tot_org_carb', 'water_content_soil']
         self.assertItemsEqual(obs, exp)
@@ -1011,7 +1011,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'}}
         for s_id in exp_sample_ids:
-            self.assertEqual(st[s_id]._to_dict(), exp_dict[s_id])
+            self.assertDictEqual(st[s_id]._to_dict(), exp_dict[s_id])
         exp = {"%s.Sample1" % new_id: None,
                "%s.Sample2" % new_id: None,
                "%s.Sample3" % new_id: None}
@@ -1343,10 +1343,13 @@ class TestSampleTemplate(TestCase):
 
         sql = "SELECT * FROM qiita.sample_{0}".format(st.id)
         obs = self.conn_handler.execute_fetchall(sql)
-        exp = [['%s.Sample1' % self.new_study.id, 'false',
-                '2015-09-01 00:00:00'],
-               ['%s.Sample2' % self.new_study.id, 'true',
-                '2015-09-01 00:00:00']]
+        exp = [
+            ['%s.Sample2' % self.new_study.id, {
+                'bool_col': 'true', 'date_col': '2015-09-01 00:00:00'}],
+            ['%s.Sample1' % self.new_study.id, {
+                'bool_col': 'false', 'date_col': '2015-09-01 00:00:00'}],
+            ['qiita_sample_column_names', {
+                'columns': ['bool_col', 'date_col']}]]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_generate_files(self):
@@ -1878,8 +1881,7 @@ class TestSampleTemplate(TestCase):
                 'physical_specimen_remaining': 'true',
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
-                'collection_timestamp':
-                '2014-05-29 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 1',
                 'latitude': '42.42',
@@ -1892,8 +1894,7 @@ class TestSampleTemplate(TestCase):
                 'physical_specimen_remaining': 'true',
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
-                'collection_timestamp':
-                '2014-05-29 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 2',
                 'latitude': '4.2',
@@ -1906,8 +1907,7 @@ class TestSampleTemplate(TestCase):
                 'physical_specimen_remaining': 'true',
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
-                'collection_timestamp':
-                '2014-05-29 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 3',
                 'latitude': '4.8',
@@ -1922,7 +1922,7 @@ class TestSampleTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_column_type=False)
 
         obs = self.tester.to_dataframe()
         # We don't test the specific values as this would blow up the size

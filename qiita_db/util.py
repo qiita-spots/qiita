@@ -1622,12 +1622,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                          parent_info.command_id, parent_info.name
                 ORDER BY a.command_id, artifact_id),
               has_target_subfragment AS (
-                SELECT main_query.*, CASE WHEN (
-                        SELECT true FROM information_schema.columns
-                        WHERE table_name = 'prep_' || CAST(
-                            prep_template_id AS TEXT)
-                        AND column_name='target_subfragment')
-                    THEN prep_template_id ELSE NULL END, prep_template_id
+                SELECT main_query.*, prep_template_id
                 FROM main_query
                 LEFT JOIN qiita.prep_template pt ON (
                     main_query.root_id = pt.artifact_id)
@@ -1641,7 +1636,10 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                         WHERE parameter_type = 'artifact'
                         GROUP BY command_id"""
 
-        sql_ts = """SELECT DISTINCT target_subfragment FROM qiita.prep_%s"""
+        QCN = qdb.metadata_template.base_metadata_template.QIITA_COLUMN_NAME
+        sql_ts = """SELECT DISTINCT sample_values->>'target_subfragment'
+                    FROM qiita.prep_%s
+                    WHERE sample_id != '{0}'""".format(QCN)
 
         with qdb.sql_connection.TRN:
             results = []
@@ -1657,15 +1655,19 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     'merging_scheme': cmd.merging_scheme,
                     'deprecated': cmd.software.deprecated}
 
-            # now let's get the actual artifacts
-            ts = {}
+            # Now let's get the actual artifacts. Note that ts is a cache
+            # (prep id : target subfragment) so we don't have to query
+            # multiple times the target subfragment for a prep info file.
+            # However, some artifacts (like analysis) do not have a prep info
+            # file; thus we can have a None prep id (key)
+            ts = {None: []}
             ps = {}
             algorithm_az = {'': ''}
             PT = qdb.metadata_template.prep_template.PrepTemplate
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
                 aid, name, cid, cname, gt, aparams, dt, pid, pcid, pname, \
-                    pparams, filepaths, _, target, prep_template_id = row
+                    pparams, filepaths, _, prep_template_id = row
 
                 # cleaning up aparams
                 # - [0] due to the array_agg
@@ -1673,7 +1675,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 if aparams is None:
                     aparams = {}
                 else:
-                    # we are gonna remove any artifacts from the parameters
+                    # we are going to remove any artifacts from the parameters
                     for ti in commands[cid]['params']:
                         del aparams[ti]
 
@@ -1682,10 +1684,6 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     filepaths = []
                 else:
                     filepaths = [fp for fp in filepaths if fp.endswith('biom')]
-
-                # - ignoring empty target
-                if target == [None]:
-                    target = []
 
                 # generating algorithm, by default is ''
                 algorithm = ''
@@ -1722,14 +1720,11 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                         algorithm_az[algorithm] = hashlib.md5(
                             algorithm).hexdigest()
 
-                if target is None:
-                    target = []
-                else:
-                    if target not in ts:
-                        qdb.sql_connection.TRN.add(sql_ts, [target])
-                        ts[target] = \
-                            qdb.sql_connection.TRN.execute_fetchflatten()
-                    target = ts[target]
+                if prep_template_id not in ts:
+                    qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])
+                    ts[prep_template_id] = \
+                        qdb.sql_connection.TRN.execute_fetchflatten()
+                target = ts[prep_template_id]
 
                 prep_samples = 0
                 platform = 'not provided'
