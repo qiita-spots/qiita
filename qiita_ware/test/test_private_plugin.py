@@ -440,7 +440,7 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
         job = self._create_job('delete_study', {'study': 1})
         private_task(job.id)
         self.assertEqual(job.status, 'error')
-        self.assertIn("Cannot delete artifact 2: it has been "
+        self.assertIn("Cannot delete artifact 2: Artifact 2 has been "
                       "submitted to EBI", job.log.msg)
 
         # delete everything from the EBI submissions and the processing job so
