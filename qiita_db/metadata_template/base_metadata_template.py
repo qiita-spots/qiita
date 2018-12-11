@@ -1360,7 +1360,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # 4  XX.Sample3  physical_specimen_location  new location
             to_update.reset_index(inplace=True)
             new_columns = []
+            samples_updated = []
             for sid, df in to_update.groupby('sample_name'):
+                samples_updated.append(sid)
                 # getting just columns: column and to, and then using column
                 # as index will generate this for XX.Sample2:
                 #                        to
@@ -1381,7 +1383,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             nc = list(set(new_columns).union(set(self.categories())))
             table_name = self._table_name(self.id)
-            values = dumps({"columns": new_columns})
+            values = dumps({"columns": nc})
             sql = """UPDATE qiita.{0}
                      SET sample_values = %s
                      WHERE sample_id = '{1}'""".format(
