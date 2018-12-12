@@ -1331,7 +1331,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                     "There are no differences between the data stored in the "
                     "DB and the new data provided",
                     qdb.exceptions.QiitaDBWarning)
-                return set([]), set([])
+                return None, None
 
             changed.index.names = ['sample_name', 'column']
             # the combination of np.where and boolean indexing produces
