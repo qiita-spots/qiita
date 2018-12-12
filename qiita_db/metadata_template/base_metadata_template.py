@@ -1438,9 +1438,13 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 md_template, self.study_id, current_columns=self.categories())
             new_samples, new_columns = self._common_extend_steps(md_template)
             samples, columns = self._update(md_template)
-            if new_samples is not None:
+            if samples is None:
+                samples = new_samples
+            elif new_samples is not None:
                 samples.update(new_samples)
-            if new_columns is not None:
+            if columns is None:
+                columns = new_columns
+            elif new_columns is not None:
                 columns.update(new_columns)
 
             self.validate(self.columns_restrictions)
