@@ -696,7 +696,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(sql2, [sn, self.id])
             qdb.sql_connection.TRN.execute()
 
-            self.generate_files()
+            self.generate_files(samples=sample_names)
 
     def delete_column(self, column_name):
         """Delete `column_name` from info file
@@ -803,6 +803,13 @@ class MetadataTemplate(qdb.base.QiitaObject):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by sample ids
+
+        Returns
+        -------
+        list of str
+            The new samples being added
+        list of str
+            The new columns being added
         """
         with qdb.sql_connection.TRN:
             # Check if we are adding new samples
@@ -886,6 +893,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             # Execute all the steps
             qdb.sql_connection.TRN.execute()
+
+        return new_samples, new_cols
 
     @classmethod
     def exists(cls, obj_id):
@@ -1247,9 +1256,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             md_template = self._clean_validate_template(
                 md_template, self.study_id, current_columns=self.categories())
-            self._common_extend_steps(md_template)
+            new_samples, new_columns = self._common_extend_steps(md_template)
             self.validate(self.columns_restrictions)
-            self.generate_files()
+            self.generate_files(new_samples, new_columns)
 
     def _update(self, md_template):
         r"""Update values in the template
@@ -1258,6 +1267,13 @@ class MetadataTemplate(qdb.base.QiitaObject):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by samples ids
+
+        Returns
+        -------
+        set of str
+            The samples that were updated
+        set of str
+            The columns that were updated
 
         Raises
         ------
@@ -1315,7 +1331,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                     "There are no differences between the data stored in the "
                     "DB and the new data provided",
                     qdb.exceptions.QiitaDBWarning)
-                return
+                return None, None
 
             changed.index.names = ['sample_name', 'column']
             # the combination of np.where and boolean indexing produces
@@ -1344,7 +1360,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # 4  XX.Sample3  physical_specimen_location  new location
             to_update.reset_index(inplace=True)
             new_columns = []
+            samples_updated = []
             for sid, df in to_update.groupby('sample_name'):
+                samples_updated.append(sid)
                 # getting just columns: column and to, and then using column
                 # as index will generate this for XX.Sample2:
                 #                        to
@@ -1363,9 +1381,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
                             self._table_name(self._id))
                 qdb.sql_connection.TRN.add(sql, [dumps(values), sid])
 
-            new_columns = list(set(new_columns).union(set(self.categories())))
+            nc = list(set(new_columns).union(set(self.categories())))
             table_name = self._table_name(self.id)
-            values = dumps({"columns": new_columns})
+            values = dumps({"columns": nc})
             sql = """UPDATE qiita.{0}
                      SET sample_values = %s
                      WHERE sample_id = '{1}'""".format(
@@ -1373,6 +1391,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [values])
 
             qdb.sql_connection.TRN.execute()
+
+        return set(samples_updated), set(new_columns)
 
     def update(self, md_template):
         r"""Update values in the template
@@ -1396,9 +1416,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # Clean and validate the metadata template given
             new_map = self._clean_validate_template(
                 md_template, self.study_id, current_columns=self.categories())
-            self._update(new_map)
+            samples, columns = self._update(new_map)
             self.validate(self.columns_restrictions)
-            self.generate_files()
+            self.generate_files(samples, columns)
 
     def extend_and_update(self, md_template):
         """Performs the update and extend operations at once
@@ -1416,10 +1436,19 @@ class MetadataTemplate(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             md_template = self._clean_validate_template(
                 md_template, self.study_id, current_columns=self.categories())
-            self._common_extend_steps(md_template)
-            self._update(md_template)
+            new_samples, new_columns = self._common_extend_steps(md_template)
+            samples, columns = self._update(md_template)
+            if samples is None:
+                samples = new_samples
+            elif new_samples is not None:
+                samples.update(new_samples)
+            if columns is None:
+                columns = new_columns
+            elif new_columns is not None:
+                columns.update(new_columns)
+
             self.validate(self.columns_restrictions)
-            self.generate_files()
+            self.generate_files(samples, columns)
 
     def update_category(self, category, samples_and_values):
         """Update an existing column
