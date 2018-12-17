@@ -691,7 +691,6 @@ class ProcessingJob(qdb.base.QiitaObject):
             for j in validator_jobs:
                 j.submit()
 
-
             # Submit the job that will release all the validators
             plugin = qdb.software.Software.from_name_and_version(
                 'Qiita', 'alpha')
