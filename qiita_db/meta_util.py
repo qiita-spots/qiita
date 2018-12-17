@@ -24,8 +24,8 @@ Methods
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from os import stat, makedirs, rename
-from os.path import join, relpath, exists
+from os import stat, rename
+from os.path import join, relpath
 from time import strftime, localtime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -37,6 +37,7 @@ from datetime import datetime
 from tarfile import open as topen, TarInfo
 from hashlib import md5
 
+from qiita_core.util import create_nested_path
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
@@ -397,8 +398,7 @@ def generate_biom_and_metadata_release(study_status='public'):
     # writing text and tgz file
     ts = datetime.now().strftime('%m%d%y-%H%M%S')
     tgz_dir = join(working_dir, 'releases')
-    if not exists(tgz_dir):
-        makedirs(tgz_dir)
+    create_nested_path(tgz_dir)
     tgz_name = join(tgz_dir, '%s-%s-building.tgz' % (portal, study_status))
     tgz_name_final = join(tgz_dir, '%s-%s.tgz' % (portal, study_status))
     txt_hd = StringIO()

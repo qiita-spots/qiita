@@ -9,6 +9,7 @@ from smtplib import SMTP, SMTP_SSL, SMTPException
 from future import standard_library
 from functools import wraps
 from os.path import dirname
+from os import makedirs
 from git import Repo
 from git.exc import InvalidGitRepositoryError
 
@@ -170,3 +171,28 @@ def get_release_info(study_status='public'):
         timestamp = ''
 
     return md5sum, filepath, timestamp
+
+
+def create_nested_path(path):
+    """Wraps makedirs() to make it safe to use across multiple concurrent calls.
+    Returns successfully if the path was created, or if it already exists.
+    (Note, this alters the normal makedirs() behavior, where False is returned
+    if the full path already exists.)
+
+    Parameters
+    ----------
+    path : str
+        The path to be created. The path can contain multiple levels that do
+        not currently exist on the filesystem.
+
+    Raises
+    ------
+    OSError
+        If the operation failed for whatever reason (likely because the caller
+        does not have permission to create new directories in the part of the
+        filesystem requested
+    """
+    # TODO: exist_ok=True will suffice for now, to avoid stomping when multiple
+    # artifacts are being manipulated with a study at the same time.
+    # In the future, employ a process-spanning mutex to serialize.
+    makedirs(path, exist_ok=True)

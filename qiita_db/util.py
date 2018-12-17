@@ -49,7 +49,7 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, exists
-from os import walk, remove, listdir, makedirs, rename
+from os import walk, remove, listdir, rename
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
 from tempfile import mkstemp
@@ -64,6 +64,7 @@ from humanize import naturalsize
 from os.path import getsize
 import hashlib
 
+from qiita_core.util import create_nested_path
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
@@ -503,8 +504,7 @@ def move_upload_files_to_trash(study_id, files_to_move):
                 "The upload folder for study id: %d doesn't exist" % study_id)
 
         trashpath = join(foldername, trash_folder)
-        if not exists(trashpath):
-            makedirs(trashpath)
+        create_nested_path(trashpath)
 
         fullpath = join(foldername, filename)
         new_fullpath = join(foldername, trash_folder, filename)
@@ -611,8 +611,7 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
                 # Generate the new filepaths, format:
                 # mountpoint/obj_id/original_name
                 dirname = db_path(str(obj_id))
-                if not exists(dirname):
-                    makedirs(dirname)
+                create_nested_path(dirname)
                 new_filepaths = [
                     (join(dirname, basename(path)), id_)
                     for path, id_ in filepaths]
@@ -916,8 +915,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
     with qdb.sql_connection.TRN:
         uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
 
-        if not exists(uploads_fp):
-            makedirs(uploads_fp)
+        create_nested_path(uploads_fp)
 
         path_builder = partial(join, uploads_fp)
 
