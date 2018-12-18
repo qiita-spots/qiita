@@ -718,19 +718,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                 these as a nested parameter into the new
                 release_job_revisited.
                 '''
-                validator_jobs_revisited.append((self.user,
-                                                 validate_params,
-                                                 True))
-
-            # Change the current step of the job
-            self.step = "Validating outputs (%d remaining) via job(s) %s" % (
-                len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
-
-            # Link all the validator jobs with the current job
-            self._set_validator_jobs(validator_jobs)
-            # Submit all the validator jobs
-            for j in validator_jobs:
-                j.submit()
+                #validator_jobs_revisited.append((self.user,
+                #                                 validate_params,
+                #                                 True))
 
             '''
             CHARLIE: Aggregator Job
@@ -746,6 +736,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             Review and Modify all code below this line to the end of the
             method (past job.submit()).
             '''
+            # Change the current step of the job
             self.step = "Validating outputs (%d remaining) via job(s) %s" % (
                 len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
 
@@ -773,7 +764,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             # Submit the job that will release all the validators
             plugin = qdb.software.Software.from_name_and_version(
                 'Qiita', 'alpha')
-            cmd = plugin.get_command('release_validators_revisited')
+            #cmd = plugin.get_command('release_validators_revisted')
+            cmd = plugin.get_command('release_validators')
             params = qdb.software.Parameters.load(
                 cmd, values_dict={'job': self.id})
             job = ProcessingJob.create(self.user, params)
