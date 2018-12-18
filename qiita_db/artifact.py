@@ -180,8 +180,7 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [name, mp, True, True])
 
             # We are intersted in the dirpath
-            dp = qdb.util.get_mountpoint(name)[0][1]
-            create_nested_path(dp)
+            create_nested_path(qdb.util.get_mountpoint(name)[0][1])
 
             qdb.sql_connection.TRN.execute()
 

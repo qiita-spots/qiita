@@ -902,6 +902,7 @@ def empty_trash_upload_folder(delete_files=True):
             qdb.sql_connection.TRN.execute()
 
 
+# CHARLIE
 def move_filepaths_to_upload_folder(study_id, filepaths):
     r"""Goes over the filepaths list and moves all the filepaths that are not
     used in any place to the upload folder of the study

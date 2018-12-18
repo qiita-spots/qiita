@@ -297,6 +297,20 @@ def start(port, master):
         Application(), ssl_options=ssl_options)
 
     try:
+        '''
+        Why don't we do
+        app = make_app()
+    server = tornado.httpserver.HTTPServer(app)
+    server.bind(8888)
+    server.start(0)  # forks one process per cpu
+    IOLoop.current().start()?
+        CHARLIE: Investigate this, so that we understand how many processes are
+        being created, if more than one. We need this info to know how to
+        critsec portions of the code, like when we makedirs. if Multiple
+        processes are calling makedirs() at roughly the same time during a
+        busy time, we need to make sure makedirs and moves don't trample all
+        over each other.
+        '''
         http_server.listen(port)
     except socket.error as e:
         if e.errno == errno.EADDRINUSE:

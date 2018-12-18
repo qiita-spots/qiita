@@ -67,7 +67,9 @@ def _job_submitter(job_id, cmd):
     if return_value != 0:
         error = ("Error submitting job:\nStd output:%s\nStd error:%s"
                  % (std_out, std_err))
+
         # Forcing the creation of a new connection
+        # CHARLIE: What is the reason for creating a new transaction?
         qdb.sql_connection.create_new_transaction()
         ProcessingJob(job_id).complete(False, error=error)
 
@@ -355,6 +357,9 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [new_status, self.id])
             qdb.sql_connection.TRN.execute()
 
+    # CHARLIE
+    # This is where qiita-plugin-launcher is specified to become the script
+    # that calls starts a process/job going.
     def _generate_cmd(self):
         """Generates the command to submit the job
 
@@ -396,11 +401,16 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.commit()
         cmd = self._generate_cmd()
 
+        # CHARLIE
+        # this is the only time we're using multiprocess package here
         p = Process(target=_job_submitter, args=(self.id, cmd))
         p.start()
 
     def release(self):
         """Releases the job from the waiting status and creates the artifact
+
+        CHARLIE: Note here, that a job is waiting until this function is called
+        and then the job gets to go, and this artifact is created in the GUI
 
         Returns
         -------
@@ -465,6 +475,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                     "Only artifact transformation and private jobs can "
                     "release validators")
 
+            # CHARLIE: stuck jobs?
+
             # Check if all the validators are completed. Validator jobs can be
             # in two states when completed: 'waiting' in case of success
             # or 'error' otherwise
@@ -472,6 +484,10 @@ class ProcessingJob(qdb.base.QiitaObject):
                              if j.status not in ['waiting', 'error']]
 
             # Active polling - wait until all validator jobs are completed
+            # CHARLIE: This might be a fault right here. As soon as we see
+            # one errored validator, we should qdel the other jobs and exit
+            # early. Why wait for them all to complete? The check should be
+            # in this loop
             while validator_ids:
                 jids = ', '.join([j[0] for j in validator_ids])
                 self.step = ("Validating outputs (%d remaining) via "
@@ -582,6 +598,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     data_type=data_type, name=job_params['name'])
                 self._set_status('success')
 
+    # CHARLIE: This method is only called by .complete()
     def _complete_artifact_transformation(self, artifacts_data):
         """Performs the needed steps to complete an artifact transformation job
 
@@ -603,7 +620,18 @@ class ProcessingJob(qdb.base.QiitaObject):
             If there is more than one prep information attached to the new
             artifact
         """
+        # CHARLIE: It's here that we assume, at least for some times this
+        # method is called, that it is because an actual job like deblur has
+        # returned successfully. Or perhaps this is called immediately after
+        # the deblur call has been started and the jobs will sit and wait.
+        # Maybe the jobs never finish because they are well and truly stuck,
+        # instead of sitting there waiting to get started. This method is only
+        # called by complete() and it seems that's only called when the job
+        # itself has completed. If so, then why are validator jobs waiting to
+        # start? I think it points to unintended behavior. In any case, it's
+        # simpler to me
         validator_jobs = []
+        validator_jobs_revisited = []
         with qdb.sql_connection.TRN:
             cmd_id = self.command.id
             for out_name, a_data in viewitems(artifacts_data):
@@ -614,7 +642,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     filepaths[fptype].append(fp)
                 atype = a_data['artifact_type']
 
-                # The valdiate job needs a prep information file. In theory,
+                # The validate job needs a prep information file. In theory,
                 # a job can be generated from more that one prep information
                 # file, so we check here if we have one or more templates. At
                 # this moment, If we allow more than one template, there is a
@@ -663,12 +691,14 @@ class ProcessingJob(qdb.base.QiitaObject):
                 else:
                     art_name = out_name
 
+                # CHARLIE: This connects everything
                 provenance = {'job': self.id,
                               'cmd_out_id': cmd_out_id,
                               'name': art_name}
 
                 # Get the validator command for the current artifact type and
                 # create a new job
+                # CHARLIE: see also def release_validators()
                 cmd = qdb.software.Command.get_validator(atype)
                 values_dict = {
                     'files': dumps(filepaths), 'artifact_type': atype,
@@ -678,8 +708,19 @@ class ProcessingJob(qdb.base.QiitaObject):
                     values_dict['analysis'] = analysis
                 validate_params = qdb.software.Parameters.load(
                     cmd, values_dict=values_dict)
+                # CHARLIE
                 validator_jobs.append(
                     ProcessingJob.create(self.user, validate_params, True))
+                '''
+                Keep a copy of all of the information needed to create the
+                above ProcessingJob object as a tuple of parameters in the
+                same order. Instead of submitting a bunch of jobs, we'll pass
+                these as a nested parameter into the new
+                release_job_revisited.
+                '''
+                validator_jobs_revisited.append((self.user,
+                                                 validate_params,
+                                                 True))
 
             # Change the current step of the job
             self.step = "Validating outputs (%d remaining) via job(s) %s" % (
@@ -691,13 +732,57 @@ class ProcessingJob(qdb.base.QiitaObject):
             for j in validator_jobs:
                 j.submit()
 
+            '''
+            CHARLIE: Aggregator Job
+            Turn release_validators job from something that can release all of
+            the validator jobs into something that aggregates all of the m
+            validator jobs an parallelizes them over the n cores that have been
+            assigned to the release_validators job.
+
+            Since the release_validator job already has to know information
+            about the validator jobs, it should not be hard to encapsulate
+            them.
+
+            Review and Modify all code below this line to the end of the
+            method (past job.submit()).
+            '''
+            self.step = "Validating outputs (%d remaining) via job(s) %s" % (
+                len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
+
+            '''
+            CHARLIE:
+            Since these validator jobs won't be separate jobs anymore,
+            We don't need to associate them with this object. We also don't
+            want to submit them to the system. Note that we'll have to fudge
+            the step update messages as well.
+            '''
+            # Link all the validator jobs with the current job
+            self._set_validator_jobs(validator_jobs)
+
+            # Submit all the validator jobs
+            for j in validator_jobs:
+                j.submit()
+
+            '''
+            CHARLIE:
+            Instead of creating a release_validators job to release the
+            validators ordinarily created above, create a new type of job that
+            does the validation work (m validation jobs over n allocated
+            processors) and then does any 'releasing' or book-keeping itself.
+            '''
             # Submit the job that will release all the validators
             plugin = qdb.software.Software.from_name_and_version(
                 'Qiita', 'alpha')
-            cmd = plugin.get_command('release_validators')
+            cmd = plugin.get_command('release_validators_revisited')
             params = qdb.software.Parameters.load(
                 cmd, values_dict={'job': self.id})
             job = ProcessingJob.create(self.user, params)
+
+        '''
+        CHARLIE:
+        Perhaps this job.submit() shouldn't be outside of the transaction, but
+        we will keep it in any case, to submit the new revisited job.
+        '''
         # Doing the submission outside of the transaction
         job.submit()
 
@@ -717,6 +802,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 
+    # CHARLIE
     def complete(self, success, artifacts_data=None, error=None):
         """Completes the job, either with a success or error status
 
@@ -1021,7 +1107,7 @@ class ProcessingJob(qdb.base.QiitaObject):
 
     @property
     def processing_job_workflow(self):
-        """The processing job worflow
+        """The processing job workflow
 
         Returns
         -------
@@ -1048,6 +1134,8 @@ class ProcessingJob(qdb.base.QiitaObject):
     @property
     def pending(self):
         """A dictionary with the information about the predecessor jobs
+
+        CHARLIE: put this in Torque?
 
         Returns
         -------

@@ -9,7 +9,7 @@
 # -----------------------------------------------------------------------------
 
 from subprocess import Popen
-#from qiita_core.util import create_nested_path
+from qiita_db.util import create_nested_path
 from os.path import join
 
 import click
@@ -33,7 +33,7 @@ def start(env_script, start_script, url, job_id, job_dir):
     lines.append(' '.join(main_cmd))
 
     # writing the file to be used with qsub
-    #create_nested_path(job_dir)
+    create_nested_path(job_dir)
 
     fp = join(job_dir, '%s.txt' % job_id)
     open(fp, 'w').write("\n".join(lines))
@@ -43,6 +43,9 @@ def start(env_script, start_script, url, job_id, job_dir):
                 "epilogue=/home/qiita/qiita-epilogue.sh" % (fp, job_dir,
                                                             job_dir))
     proc = Popen(qsub_cmd, shell=True)
+
+    # CHARLIE proc.returncode of zero means a successful program launch, not
+    # the exit value of the program itself.
     if proc.returncode and proc.returncode != 0:
         raise ValueError("Error launching the plugin.")
 

@@ -46,6 +46,7 @@ def start(qiita_env, command, arguments):
     with open(fp, 'w') as f:
         f.write(PBSFILE % (dirpath, dirpath, "\n".join(lines)))
     qsub_cmd = "qsub %s" % fp
+    # CHARLIE: What is a private job?
     proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
     if proc.returncode and proc.returncode != 0:
