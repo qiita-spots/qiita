@@ -65,6 +65,7 @@ from os.path import getsize
 import hashlib
 
 from os import makedirs
+from errno import EEXIST
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
@@ -1911,6 +1912,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
 
     return results
 
+
 def create_nested_path(path):
     """Wraps makedirs() to make it safe to use across multiple concurrent calls.
     Returns successfully if the path was created, or if it already exists.
@@ -1930,7 +1932,17 @@ def create_nested_path(path):
         does not have permission to create new directories in the part of the
         filesystem requested
     """
-    # TODO: exist_ok=True will suffice for now, to avoid stomping when multiple
-    # artifacts are being manipulated with a study at the same time.
+    # TODO: catching errno=EEXIST (17 usually) will suffice for now, to avoid
+    # stomping when multiple artifacts are being manipulated within a study.
     # In the future, employ a process-spanning mutex to serialize.
-    makedirs(path, exist_ok=True)
+    # With Python3, the try/except wrapper can be replaced with a call to
+    # makedirs with exist_ok=True
+    try:
+        # try creating the directory specified. if the directory already exists
+        # , or if qiita does not have permissions to create/modify the path, an
+        # exception will be thrown.
+        makedirs(path)
+    except OSError as e:
+        # if the directory already exists, treat as success (idempotent)
+        if e.errno != EEXIST:
+            raise
