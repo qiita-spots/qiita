@@ -23,8 +23,8 @@ from skbio.util import safe_md5, create_dir
 from qiita_files.demux import to_per_sample_ascii
 
 from qiita_core.qiita_settings import qiita_config
-from qiita_core.util import create_nested_path
 from qiita_ware.exceptions import EBISubmissionError
+from qiita_db.util import create_nested_path
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id, get_mountpoint, open_file

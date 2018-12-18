@@ -64,7 +64,7 @@ from humanize import naturalsize
 from os.path import getsize
 import hashlib
 
-from qiita_core.util import create_nested_path
+from os import makedirs
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
@@ -1910,3 +1910,27 @@ def generate_analysis_list(analysis_ids, public_only=False):
                 'mapping_files': mapping_files})
 
     return results
+
+def create_nested_path(path):
+    """Wraps makedirs() to make it safe to use across multiple concurrent calls.
+    Returns successfully if the path was created, or if it already exists.
+    (Note, this alters the normal makedirs() behavior, where False is returned
+    if the full path already exists.)
+
+    Parameters
+    ----------
+    path : str
+        The path to be created. The path can contain multiple levels that do
+        not currently exist on the filesystem.
+
+    Raises
+    ------
+    OSError
+        If the operation failed for whatever reason (likely because the caller
+        does not have permission to create new directories in the part of the
+        filesystem requested
+    """
+    # TODO: exist_ok=True will suffice for now, to avoid stomping when multiple
+    # artifacts are being manipulated with a study at the same time.
+    # In the future, employ a process-spanning mutex to serialize.
+    makedirs(path, exist_ok=True)

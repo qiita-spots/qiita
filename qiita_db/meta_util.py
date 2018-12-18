@@ -37,7 +37,7 @@ from datetime import datetime
 from tarfile import open as topen, TarInfo
 from hashlib import md5
 
-from qiita_core.util import create_nested_path
+from qiita_db.util import create_nested_path
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb

@@ -15,7 +15,7 @@ from os.path import isfile, relpath
 from shutil import rmtree
 from functools import partial
 from collections import namedtuple
-from qiita_core.util import create_nested_path
+from qiita_db.util import create_nested_path
 
 import networkx as nx
 

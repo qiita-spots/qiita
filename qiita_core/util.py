@@ -9,7 +9,6 @@ from smtplib import SMTP, SMTP_SSL, SMTPException
 from future import standard_library
 from functools import wraps
 from os.path import dirname
-from os import makedirs
 from git import Repo
 from git.exc import InvalidGitRepositoryError
 
@@ -172,6 +171,7 @@ def get_release_info(study_status='public'):
 
     return md5sum, filepath, timestamp
 
+'''
 
 def create_nested_path(path):
     """Wraps makedirs() to make it safe to use across multiple concurrent calls.
@@ -196,3 +196,4 @@ def create_nested_path(path):
     # artifacts are being manipulated with a study at the same time.
     # In the future, employ a process-spanning mutex to serialize.
     makedirs(path, exist_ok=True)
+'''

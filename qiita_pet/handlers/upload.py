@@ -19,13 +19,14 @@ from .util import check_access
 from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config, r_client
-from qiita_core.util import execute_as_transaction, create_nested_path
+from qiita_core.util import execute_as_transaction
 from qiita_db.util import (get_files_from_uploads_folders,
                            get_mountpoint, move_upload_files_to_trash)
 from qiita_db.study import Study
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.software import Software, Parameters
 from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.util import create_nested_path
 
 
 UPLOAD_STUDY_FORMAT = 'upload_study_%s'
