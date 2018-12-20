@@ -199,6 +199,7 @@ class Archive(qdb.base.QiitaObject):
 
             return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
+    @classmethod
     def insert_features(self, merging_scheme, features):
         r"""Inserts new features to the database based on a given artifact
 
