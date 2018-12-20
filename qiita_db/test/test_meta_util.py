@@ -403,6 +403,19 @@ class MetaUtilTests(TestCase):
                         "UPDATE settings SET base_data_dir = '%s'" % obdr)
                     bdr = qdb.sql_connection.TRN.execute()
 
+    def test_generate_plugin_releases(self):
+        qdb.meta_util.generate_plugin_releases()
+
+        working_dir = qiita_config.working_dir
+        tgz = r_client.get('release-archive:filepath')
+        with topen(join(working_dir, tgz), "r:gz") as tmp:
+            tgz_obs = [ti.name for ti in tmp]
+        # the expected folder/file in the tgz should be named as the time
+        # when it was created so let's test that
+        time = r_client.get('release-archive:time').replace('-', '').replace(
+            ':', '').replace(' ', '-')
+        self.assertEqual(tgz_obs, [time])
+
 
 if __name__ == '__main__':
     main()

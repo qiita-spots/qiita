@@ -144,7 +144,7 @@ def get_qiita_version():
 
 
 def get_release_info(study_status='public'):
-    """Returns the study status release MD5
+    """Returns the studies and the archive release details
 
     Parameters
     ----------
@@ -155,7 +155,7 @@ def get_release_info(study_status='public'):
 
     Returns
     ------
-    str, str, str
+    ((str, str, str), (str, str, str))
         The release MD5, filepath and timestamp
     """
     portal = qiita_config.portal
@@ -168,5 +168,17 @@ def get_release_info(study_status='public'):
         filepath = ''
     if timestamp is None:
         timestamp = ''
+    biom_metadata_release = ((md5sum, filepath, timestamp))
 
-    return md5sum, filepath, timestamp
+    md5sum = r_client.get('release-archive:md5sum')
+    filepath = r_client.get('release-archive:filepath')
+    timestamp = r_client.get('release-archive:time')
+    if md5sum is None:
+        md5sum = ''
+    if filepath is None:
+        filepath = ''
+    if timestamp is None:
+        timestamp = ''
+    archive_release = ((md5sum, filepath, timestamp))
+
+    return (biom_metadata_release, archive_release)

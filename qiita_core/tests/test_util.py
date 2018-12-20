@@ -13,7 +13,8 @@ from unittest import TestCase, main
 from qiita_core.util import (
     send_email, qiita_test_checker, execute_as_transaction, get_qiita_version,
     is_test_environment, get_release_info)
-from qiita_db.meta_util import generate_biom_and_metadata_release
+from qiita_db.meta_util import (
+    generate_biom_and_metadata_release, generate_plugin_releases)
 import qiita_db as qdb
 
 
@@ -70,15 +71,16 @@ class UtilTests(TestCase):
         generate_biom_and_metadata_release('private')
         # just checking that is not empty cause the MD5 will change on every
         # run
-        md5sum, filepath, timestamp = get_release_info('private')
-        self.assertNotEqual(md5sum, '')
-        self.assertNotEqual(filepath, '')
-        self.assertNotEqual(timestamp, '')
+        biom_metadata_release, archive_release = get_release_info('private')
+        # note that we are testing not eqaul as we should have some information
+        # but as the md5 will change is pretty hard to test equal
+        self.assertNotEqual(biom_metadata_release, ('', '', ''))
+        self.assertEqual(archive_release, ('', '', ''))
 
-        md5sum, filepath, timestamp = get_release_info('public')
-        self.assertEqual(md5sum, '')
-        self.assertEqual(filepath, '')
-        self.assertEqual(timestamp, '')
+        generate_plugin_releases()
+        biom_metadata_release, archive_release = get_release_info('public')
+        self.assertEqual(biom_metadata_release, ('', '', ''))
+        self.assertNotEqual(archive_release, ('', '', ''))
 
 
 if __name__ == '__main__':
