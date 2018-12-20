@@ -57,5 +57,4 @@ class APIArchiveObservations(OauthBaseHandler):
 
         ms = Archive.get_merging_scheme_from_job(ProcessingJob(req_path))
 
-        archive = Archive()
-        self.write(archive.insert_features(ms, loads(req_value)))
+        self.write(Archive.insert_features(ms, loads(req_value)))
