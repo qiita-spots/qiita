@@ -111,9 +111,8 @@ Which statistical method better fits my question?
 As you can imagine, you are not alone as this is a common problem while doing analysis.
 Thus, we suggest posting your question to the `QIIME2 Forum <https://forum.qiime2.org/>`__.
 This will generally ensure that your question is answered in a timely manner. There
-are many users and developers monitoring the QIIME2 Forum. Additionally, posting to
-the forum also helps us to manage our support burden as other users may have the
-same question in the future.
+are many users and developers monitoring the QIIME2 Forum. Posting questions in the forum
+allows you to share answers with others, who may have similar questions in the future.
 
 Do you have Meta-Analysis questions?
 ------------------------------------
@@ -121,7 +120,7 @@ Do you have Meta-Analysis questions?
 A common thing is why do I have a given pattern in my analysis, like
 PCoA plots or taxonomy summaries.
 
-Let's start saying, this is an open area of research so we are still
+Let's start by saying, this is an open area of research so we are still
 learning about the effect sizes and what matters in individual and
 meta-analysis. However, there are a few good resources to help you
 understand those patterns:
