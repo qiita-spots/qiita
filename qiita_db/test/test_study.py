@@ -285,13 +285,13 @@ class TestStudy(TestCase):
         obs = qdb.study.Study.get_info(info_cols=exp_keys)
         exp = [
             {'metadata_complete': True, 'reprocess': False,
-             'timeseries_type': 'None',
-             'publications': [{'f1': '7891011', 'f2': False},
-                              {'f1': '10.100/7891011', 'f2': True},
-                              {'f1': '123456', 'f2': False},
-                              {'f1': '10.100/123456', 'f2': True}],
-             'study_title': 'Identification of the Microbiomes '
-                            'for Cannabis Soils'},
+             'timeseries_type': 'None', 'publications': [
+                {'f1': '10.100/123456', 'f2': True},
+                {'f1': '123456', 'f2': False},
+                {'f1': '10.100/7891011', 'f2': True},
+                {'f1': '7891011', 'f2': False}],
+             'study_title': ('Identification of the Microbiomes for '
+                             'Cannabis Soils')},
             {'metadata_complete': False, 'reprocess': False,
              'timeseries_type': 'None', 'publications': None,
              'study_title': 'test_study_1'}]

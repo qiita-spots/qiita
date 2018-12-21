@@ -93,6 +93,8 @@ class EBISubmission(object):
     valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
                                  '454 GS FLX+', '454 GS FLX TITANIUM',
                                  '454 GS JUNIOR', 'UNSPECIFIED'],
+                       'ION TORRENT': ['ION TORRENT PGM', 'ION TORRENT PROTON',
+                                       'ION TORRENT S5', 'ION TORRENT S5 XL'],
                        'ILLUMINA': ['HISEQ X FIVE',
                                     'HISEQ X TEN',
                                     'ILLUMINA GENOME ANALYZER',

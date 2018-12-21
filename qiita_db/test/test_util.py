@@ -863,6 +863,22 @@ class UtilTests(TestCase):
         PREP = qdb.metadata_template.prep_template.PrepTemplate
         UTIL = qdb.util
 
+        # testing owner email as name
+        user = USER('test@foo.bar')
+        username = user.info['name']
+        # test without changes
+        self.assertDictEqual(
+            STUDY_INFO, UTIL.generate_study_list(user, 'user')[0])
+        # change user's name to None and tests again
+        user.info = {'name': None}
+        exp = STUDY_INFO.copy()
+        exp['owner'] = 'test@foo.bar'
+        self.assertDictEqual(
+            exp, qdb.util.generate_study_list(user, 'user')[0])
+
+        # returning original name
+        user.info = {'name': username}
+
         # creating a new study to make sure that empty studies are also
         # returned
         info = {"timeseries_type_id": 1, "metadata_complete": True,
@@ -876,36 +892,6 @@ class UtilTests(TestCase):
         new_study = STUDY.create(
             USER('shared@foo.bar'), 'test_study_1', info=info)
 
-        sinfo = {
-            'study_id': 1,
-            'owner': 'Dude',
-            'study_alias': 'Cannabis Soils',
-            'status': 'private',
-            'study_abstract':
-                'This is a preliminary study to examine the microbiota '
-                'associated with the Cannabis plant. Soils samples '
-                'from the bulk soil, soil associated with the roots, '
-                'and the rhizosphere were extracted and the DNA '
-                'sequenced. Roots from three independent plants of '
-                'different strains were examined. These roots were '
-                'obtained November 11, 2011 from plants that had been '
-                'harvested in the summer. Future studies will attempt '
-                'to analyze the soils and rhizospheres from the same '
-                'location at different time points in the plant '
-                'lifecycle.',
-            'metadata_complete': True,
-            'ebi_study_accession': 'EBI123456-BB',
-            'ebi_submission_status': 'submitted',
-            'study_title':
-                'Identification of the Microbiomes for Cannabis Soils',
-            'number_samples_collected': 27,
-            'shared': [('shared@foo.bar', 'Shared')],
-            'publication_doi': ['10.100/123456', '10.100/7891011'],
-            'publication_pid': ['123456', '7891011'],
-            'pi': ('PI_dude@foo.bar', 'PIDude'),
-            'artifact_biom_ids': [4, 5, 6, 7],
-            'study_tags': None,
-        }
         snew_info = {
             'status': 'sandbox', 'study_title': 'test_study_1',
             'metadata_complete': True, 'publication_pid': [],
@@ -917,9 +903,9 @@ class UtilTests(TestCase):
             'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
             'study_alias': 'TST', 'study_tags': None,
             'number_samples_collected': 0}
-        exp1 = [sinfo]
+        exp1 = [STUDY_INFO]
         exp2 = [snew_info]
-        exp_both = [sinfo, snew_info]
+        exp_both = [STUDY_INFO, snew_info]
 
         # let's make sure that everything is private for study 1
         for a in STUDY(1).artifacts():
@@ -1053,7 +1039,7 @@ class UtilTests(TestCase):
         qdb.study.Study.delete(new_study.id)
 
     def test_get_artifacts_information(self):
-        # we are gonna test that it ignores 1 and 2 cause they are not biom,
+        # we are going to test that it ignores 1 and 2 cause they are not biom,
         # 4 has all information and 7 and 8 don't
         obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
         # not testing timestamp
@@ -1225,6 +1211,38 @@ class TestFilePathOpening(TestCase):
                 self.assertTrue(isinstance(fh_inner, h5py.File))
 
         remove(name)
+
+
+STUDY_INFO = {
+    'study_id': 1,
+    'owner': 'Dude',
+    'study_alias': 'Cannabis Soils',
+    'status': 'private',
+    'study_abstract':
+        'This is a preliminary study to examine the microbiota '
+        'associated with the Cannabis plant. Soils samples '
+        'from the bulk soil, soil associated with the roots, '
+        'and the rhizosphere were extracted and the DNA '
+        'sequenced. Roots from three independent plants of '
+        'different strains were examined. These roots were '
+        'obtained November 11, 2011 from plants that had been '
+        'harvested in the summer. Future studies will attempt '
+        'to analyze the soils and rhizospheres from the same '
+        'location at different time points in the plant '
+        'lifecycle.',
+    'metadata_complete': True,
+    'ebi_study_accession': 'EBI123456-BB',
+    'ebi_submission_status': 'submitted',
+    'study_title':
+        'Identification of the Microbiomes for Cannabis Soils',
+    'number_samples_collected': 27,
+    'shared': [('shared@foo.bar', 'Shared')],
+    'publication_doi': ['10.100/123456', '10.100/7891011'],
+    'publication_pid': ['123456', '7891011'],
+    'pi': ('PI_dude@foo.bar', 'PIDude'),
+    'artifact_biom_ids': [4, 5, 6, 7],
+    'study_tags': None,
+}
 
 
 if __name__ == '__main__':

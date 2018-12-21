@@ -256,7 +256,7 @@ class TestBaseHandlersUtils(TestCase):
                'editable': True,
                'buttons': '',
                'processing_info': {},
-               'files': [(27, 'biom_table.biom (biom)')],
+               'files': [(22, 'biom_table.biom (biom)')],
                'is_from_analysis': True,
                'summary': None,
                'job': None,
