@@ -42,13 +42,13 @@ $(document).ready(function() {
     });
 
     $("#new_person_name").on("keyup", function() {
-      var charlie  = $(this).val();
+      var npn  = $(this).val();
       // removing any duplicated whitespaces
-      charlie = charlie.replace(/ +(?= )/g, '');
+      npn = npn.replace(/ +(?= )/g, '');
       //remove all utf-8 encoded characters that are not also printable ASCII characters.
-      charlie = charlie.replace(/[^\x20-\x7E]+/g, "");
+      npn = npn.replace(/[^\x20-\x7E]+/g, "");
       // removing white spaces from the front of the text
-      $(this).val(charlie.trimLeft());
+      $(this).val(npn.trimLeft());
     });
 
     $("#create_study").validate({
@@ -193,25 +193,25 @@ function cancel_edition(){
       <div name="new_person_div" id="new_person_div">
         <table>
           <tr>
-            <td>Name:</td>
+              <td><b>Name:</b><br><font size=1>Names may only contain ASCII characters </font></td>
             <td><input type="text" id="new_person_name" name="new_person_name" class="form-control"></td>
             <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
           </tr>
-            <td>Affiliation:</td>
+            <td><b>Affiliation:</b></td>
             <td><input type="text" id="new_person_affiliation" name="new_person_affiliation" class="form-control"></td>
             <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
           </tr>
           <tr>
-            <td>E-mail Address:</td>
+            <td><b>E-mail Address:</b></td>
             <td><input type="text" id="new_person_email" name="new_person_email" class="form-control"></td>
             <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
           </tr>
           <tr>
-            <td>Phone:</td>
+            <td><b>Phone:</b></td>
             <td><input type="text" id="new_person_phone" name="new_person_phone" class="form-control"></td>
           </tr>
           <tr>
-            <td>Address:</td>
+            <td><b>Address:</b></td>
             <td><input type="text" id="new_person_address" name="new_person_address" class="form-control"></td>
           </tr>
           <tr>
