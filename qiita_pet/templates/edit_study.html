@@ -30,6 +30,7 @@ $(document).ready(function() {
     $( "#{{creation_form.lab_person.id}}" ).chosen({
         allow_single_deselect: true
       });
+
     $("#study_title").on("keyup", function() {
       var title = $(this).val();
       // removing any duplicated whitespaces
@@ -39,6 +40,17 @@ $(document).ready(function() {
       // removing white spaces from the front of the text
       $(this).val(title.trimLeft());
     });
+
+    $("#new_person_name").on("keyup", function() {
+      var charlie  = $(this).val();
+      // removing any duplicated whitespaces
+      charlie = charlie.replace(/ +(?= )/g, '');
+      //remove all utf-8 encoded characters that are not also printable ASCII characters.
+      charlie = charlie.replace(/[^\x20-\x7E]+/g, "");
+      // removing white spaces from the front of the text
+      $(this).val(charlie.trimLeft());
+    });
+
     $("#create_study").validate({
       ignore: "",
       submitHandler: function (form) {
@@ -164,7 +176,6 @@ function cancel_edition(){
         {% set kwargs['class_'] = kwargs['class_'] + ' chzn-select' %}
     {% elif form_item.label.text == 'Study Title'%}
         {% set additional_info = 'Study titles may only contain ASCII characters' %}
-
     {% end %}
   <tr>
     <td width="20%">{% raw form_item.label %} <br /> <small>{{additional_info}}</small></td>
