@@ -102,6 +102,41 @@ To update your unzip for most operating systems you can simply use your regular 
 admin program. However, for Mac we suggest using
 `this version of unzip <ftp://ftp.microbio.me/pub/qiita/unzip>`__.
 
+Do you have general analytical questions?
+-----------------------------------------
+
+Normally these are: How can I test X factor in my samples? Why do I see this pattern?
+Which statistical method better fits my question?
+
+As you can imagine, you are not alone as this is a common problem while doing analysis.
+Thus, we suggest posting your question to the `QIIME2 Forum <https://forum.qiime2.org/>`__.
+This will generally ensure that your question is answered in a timely manner. There
+are many users and developers monitoring the QIIME2 Forum. Additionally, posting to
+the forum also helps us to manage our support burden as other users may have the
+same question in the future.
+
+Do you have Meta-Analysis questions?
+------------------------------------
+
+A common thing is why do I have a given pattern in my analysis, like
+PCoA plots or taxonomy summaries.
+
+Let's start saying, this is an open area of research so we are still
+learning about the effect sizes and what matters in individual and
+meta-analysis. However, there are a few good resources to help you
+understand those patterns:
+
+1. `Meta-analyses of studies of the human microbiota <https://genome.cshlp.org/content/23/10/1704>`__.
+
+2. `Tiny microbes, enormous impacts: what matters in gut microbiome studies? <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-1086-x>`__.
+
+3. `Qiita: rapid, web-enabled microbiome meta-analysis <https://www.nature.com/articles/s41592-018-0141-9>`__.
+
+4. Additionally there some posts in the Qiime2 forum that might help you, like
+   `this <https://forum.qiime2.org/t/combining-datasets-with-2-sets-of-primers/3073>`__ or
+   `this <https://forum.qiime2.org/t/combining-data-from-different-sequencing-centers-and-primers/4241>`__.
+
+
 How to solve BIOM name errors?
 ------------------------------
 
