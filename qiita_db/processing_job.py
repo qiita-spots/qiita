@@ -6,21 +6,198 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from uuid import UUID
-from datetime import datetime
-from subprocess import Popen, PIPE
-from multiprocessing import Process
-from os.path import join
-from itertools import chain
-from collections import defaultdict, Iterable
-from json import dumps, loads
-from time import sleep
-
-from future.utils import viewitems, viewvalues
 import networkx as nx
-
-from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
+from collections import defaultdict, Iterable
+from datetime import datetime
+from future.utils import viewitems, viewvalues
+from itertools import chain
+from json import dumps, loads
+from multiprocessing import Process, Queue, Event
+from os.path import join
+from qiita_core.qiita_settings import qiita_config
+from qiita_db.util import create_nested_path
+from re import search, findall
+from subprocess import Popen, PIPE
+from time import sleep
+from uuid import UUID
+
+
+def launch_local(env_script, start_script, url, job_id, job_dir):
+
+    cmd = [start_script, url, job_id, job_dir]
+
+    # When Popen executes, the shell is not in interactive mode,
+    # so it is not sourcing any of the bash configuration files
+    # We need to source it so the env_script are available
+    cmd = "bash -c '%s; echo $PATH; %s'" % (env_script, ' '.join(cmd))
+
+    # Popen() may also need universal_newlines=True
+    proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
+
+    # Communicate pulls all stdout/stderr from the PIPEs
+    # This call waits until cmd is done
+    stdout, stderr = proc.communicate()
+
+    #proc.returncode should always exist, but it will be equal to None if the
+    #proc hasn't finished yet. It will be negative, the command was terminated
+    #by SIGNAL = negative_value. (Python on unix platforms only).
+
+    error = None
+
+    if proc.returncode:
+        #cmd has finished
+        if proc.returncode != 0:
+            #cmd exited w/an error. return error string to support
+            #legacy behavior.
+            error = "Command returned error: %s" % str(proc.returncode)
+    else:
+        raise AssertionError("launch is returning before cmd has completed")
+
+    #TODO integratoin with a Local version of Watcher needed.
+
+
+def launch_torque(env_script, start_script, url, job_id, job_dir):
+
+    cmd = [start_script, url, job_id, job_dir]
+
+    # generating file contents to be used with qsub
+    lines = []
+
+    # is PBS_JOBID is being set correctly?
+    lines.append("echo $PBS_JOBID")
+
+    # should be explicitly defined here, rather than in a
+    # profile, perhaps.
+    lines.append("source ~/.bash_profile")
+    lines.append(env_script)
+    lines.append(' '.join(cmd))
+
+    # writing the file to be used with qsub
+    create_nested_path(job_dir)
+
+    fp = join(job_dir, '%s.txt' % job_id)
+    open(fp, 'w').write("\n".join(lines))
+
+    # TODO: revisit epilogue
+    qsub_cmd = ("qsub -l nodes=1:ppn=5 %s -o %s/qsub-output.txt "
+                "-e %s/qsub-error.txt -l "
+                "epilogue=/home/qiita/qiita-epilogue.sh" % (fp, job_dir,
+                                                            job_dir))
+
+    # stdX parameters added to support returning the Torque ID from qsub
+    # Popen may also need universal_newlines=True
+    proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
+
+    # Adding proc.communicate call to wait for qsub to return and
+    # retrieve Torque ID from stdout.
+    # Communicate pulls all stdout/stderr from the PIPEs
+    # This call waits until cmd is done
+    stdout, stderr = proc.communicate()
+
+    # proc.returncode in this case means qsub successfully pushed the job
+    # onto Torque's queue.
+    #
+    # proc.returncode should always exist, but it will be equal to None if the
+    # proc hasn't finished yet. A negative value means the command was
+    # terminated by SIGNAL = the value (UNIX only)
+    if proc.returncode and proc.returncode != 0:
+        raise AssertionError("Error Torque could not launch plugin: %d" % proc.returncode)
+
+    # qsub returns the name of the torque job on stdout
+    # however, we are relying on watcher to manage processes. We may still
+    # need this value to store in the db, etc.
+    torque_job_id = stdout.strip('\n')
+
+
+class Watcher(Process):
+    #I need conversions to support the statement below in qiita executable.
+    #qdb.processing_job.ProcessingJob(msg['Job_Id']).complete(msg['exit_status'], error=msg['error_msg'])
+    job_state_map = {'C':'completed', 'E':'exiting', 'H':'held', 'Q':'queued', 'R':'running', 'T':'moving', 'W':'waiting', 'S':'suspended'}
+
+    def __init__(self):
+        super(Watcher, self).__init__()
+        #set to qiita or whomever owns the processes we must watch.
+        self.owner = 'ccowart@qiita.ucsd.edu'
+        #Torque is set to drop jobs from its queue 60 seconds after
+        #completion, by default. Setting a polling value less than
+        #that allows for multiple chances to catch the exit status
+        #before it disappears.
+        self.polling_value = 15
+        #the cross-process method by which to communicate across
+        #process boundaries. Note that when Watcher object runs,
+        #another process will get created, and receive a copy of
+        #the Watcher object. At this point, these self.* variables
+        #become local to each process. Hence, the main process
+        #can't see self.processes for example, Theirs will just
+        #be empty.
+        self.queue = Queue()
+        self.processes = {}
+        #the cross-process sentinel value to shutdown Watcher
+        self.event = Event()
+
+    def _element_extract(self, snippet, list_of_elements):
+        results = {}
+        for element in list_of_elements:
+            value = search('<%s>(.*?)<\/%s>' % (element, element), snippet)
+            if value:
+                results[element] = value.group(1)
+            else:
+                raise AssertionError("%s element is missing!" % element)
+        return results
+
+    def run(self):
+        while not self.event.is_set():
+            proc = Popen("qstat -x", shell=True, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = proc.communicate()
+            if proc.returncode == 0:
+                #qstat returned successfully with metadata on processes
+                #break up metadata into individual <Job></Job> elements
+                #for processing.
+                m = findall('<Job>(.*?)<\/Job>', stdout)
+                for item in m:
+                    #filter out jobs that don't belong to owner
+                    if search('<Job_Owner>%s<\/Job_Owner>' % self.owner, item):
+                        #extract the metadata we want.
+                        #if a job has completed, an exit_status element will
+                        #be present. We also want that.
+                        results = self._element_extract(item, ['Job_Id', 'Job_Name', 'job_state'])
+                        results['job_state'] = Watcher.job_state_map[results['job_state']]
+                        if results['job_state'] == 'completed':
+                            results2 = self._element_extract(item, ['exit_status'])
+                            results['exit_status'] = results2['exit_status']
+
+                        #determine if anything has changed since last poll
+                        if results['Job_Id'] in self.processes:
+                            if 0 != cmp(self.processes[results['Job_Id']], results):
+                                self.processes[results['Job_Id']] = results
+                                #self.queue.put("Metadata for %s has changed:" % results['Job_Id'])
+                                self.queue.put(results)
+                        else:
+                            self.processes[results['Job_Id']] = results
+                            #self.queue.put("New metadata for %s:" % results['Job_Id'])
+                            self.queue.put(results)
+            #Barnacle defaults to 60 seconds before wiping metadata from completed
+            #jobs. We want to poll enough times to have 2-3 chances of catching a
+            #completed job before it disappears.
+            else:
+                raise AssertionError("qstat is not working!")
+            sleep(self.polling_value)
+    def stop(self):
+        #This put is a 'poison-pill' for the listener thread or process.
+        #if the listener pulls this string off the queue. It knows it
+        #should shut itself down.
+        self.queue.put('QUIT')
+        #setting self.event is a safe way of communicating a boolean
+        #value across processes and threads.
+        #when this event is 'set' by the main line of execution in Qiita,
+        #(or in any other process if need be), Watcher's run loop will
+        #stop and the Watcher process will exit.
+        self.event.set()
+        #Here, it is assumed that we are running this from the main
+        #context. By joining(), we're waiting for the Watcher process to
+        #end before returning from this method.
+        self.join()
 
 
 def _system_call(cmd):
@@ -51,27 +228,6 @@ def _system_call(cmd):
     stdout, stderr = proc.communicate()
     return_value = proc.returncode
     return stdout, stderr, return_value
-
-
-def _job_submitter(job_id, cmd):
-    """Executes the commands `cmd` and updates the job in case of failure
-
-    Parameters
-    ----------
-    job_id : str
-        The job id that is executed by cmd
-    cmd : str
-        The command to execute the job
-    """
-    std_out, std_err, return_value = _system_call(cmd)
-    if return_value != 0:
-        error = ("Error submitting job:\nStd output:%s\nStd error:%s"
-                 % (std_out, std_err))
-
-        # Forcing the creation of a new connection
-        # CHARLIE: What is the reason for creating a new transaction?
-        qdb.sql_connection.create_new_transaction()
-        ProcessingJob(job_id).complete(False, error=error)
 
 
 class ProcessingJob(qdb.base.QiitaObject):
@@ -315,6 +471,9 @@ class ProcessingJob(qdb.base.QiitaObject):
             'success', 'error', 'in_construction', 'waiting'}
 
         """
+        #This needs to be replaced or merged with calls to qstat, in order
+        #to obtain the most accurate result. For now, probably the best thing
+        #is to have qstat update the database table and keep this method as is.
         with qdb.sql_connection.TRN:
             sql = """SELECT processing_job_status
                      FROM qiita.processing_job_status
@@ -357,28 +516,6 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [new_status, self.id])
             qdb.sql_connection.TRN.execute()
 
-    # CHARLIE
-    # This is where qiita-plugin-launcher is specified to become the script
-    # that calls starts a process/job going.
-    def _generate_cmd(self):
-        """Generates the command to submit the job
-
-        Returns
-        -------
-        str
-            The command to use to submit the job
-        """
-        job_dir = join(qdb.util.get_work_base_dir(), self.id)
-        software = self.command.software
-        plugin_start_script = software.start_script
-        plugin_env_script = software.environment_script
-        # Appending the portal URL so the job requests the information from the
-        # portal server that submitted the job
-        url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
-        cmd = '%s "%s" "%s" "%s" "%s" "%s"' % (
-            qiita_config.plugin_launcher, plugin_env_script,
-            plugin_start_script, url, self.id, job_dir)
-        return cmd
 
     def submit(self):
         """Submits the job to execution
@@ -399,18 +536,41 @@ class ProcessingJob(qdb.base.QiitaObject):
             # to commit the changes to the DB or the other processes will not
             # see these changes
             qdb.sql_connection.TRN.commit()
-        cmd = self._generate_cmd()
 
-        # CHARLIE
-        # this is the only time we're using multiprocess package here
-        p = Process(target=_job_submitter, args=(self.id, cmd))
+        job_dir = join(qdb.util.get_work_base_dir(), self.id)
+        software = self.command.software
+        plugin_start_script = software.start_script
+        plugin_env_script = software.environment_script
+
+        # Appending the portal URL so the job requests the information from the
+        # portal server that submitted the job
+        url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
+
+        # qiita_config.plugin_launcher is configured at program start to
+        # use either torque jobs or local processes. This metadata shouldn't
+        # persist to the exec() call.
+        #
+        # since we are consolidating code from multiple locations, there is
+        # no need to pack the parameters into a string, only to unpack them
+        # again.
+        cmap = {'qiita-plugin-launcher': launch_local,
+                'qiita-plugin-launcher-qsub': launch_torque}
+
+        if qiita_config.plugin_launcher in cmap:
+            p = Process(target=cmap[qiita_config.plugin_launcher],
+                        args=(plugin_env_script,
+                              plugin_start_script,
+                              url,
+                              self.id,
+                              job_dir))
+        else:
+            raise AssertionError("plugin_launcher should be one of two values for now")
+
         p.start()
+
 
     def release(self):
         """Releases the job from the waiting status and creates the artifact
-
-        CHARLIE: Note here, that a job is waiting until this function is called
-        and then the job gets to go, and this artifact is created in the GUI
 
         Returns
         -------
@@ -475,8 +635,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                     "Only artifact transformation and private jobs can "
                     "release validators")
 
-            # CHARLIE: stuck jobs?
-
             # Check if all the validators are completed. Validator jobs can be
             # in two states when completed: 'waiting' in case of success
             # or 'error' otherwise
@@ -484,10 +642,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                              if j.status not in ['waiting', 'error']]
 
             # Active polling - wait until all validator jobs are completed
-            # CHARLIE: This might be a fault right here. As soon as we see
-            # one errored validator, we should qdel the other jobs and exit
-            # early. Why wait for them all to complete? The check should be
-            # in this loop
+            # TODO: As soon as we see one errored validator, we should kill
+            # the other jobs and exit early. Don't wait for all of the jobs
+            # to complete.
             while validator_ids:
                 jids = ', '.join([j[0] for j in validator_ids])
                 self.step = ("Validating outputs (%d remaining) via "
@@ -598,7 +755,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                     data_type=data_type, name=job_params['name'])
                 self._set_status('success')
 
-    # CHARLIE: This method is only called by .complete()
     def _complete_artifact_transformation(self, artifacts_data):
         """Performs the needed steps to complete an artifact transformation job
 
@@ -620,18 +776,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             If there is more than one prep information attached to the new
             artifact
         """
-        # CHARLIE: It's here that we assume, at least for some times this
-        # method is called, that it is because an actual job like deblur has
-        # returned successfully. Or perhaps this is called immediately after
-        # the deblur call has been started and the jobs will sit and wait.
-        # Maybe the jobs never finish because they are well and truly stuck,
-        # instead of sitting there waiting to get started. This method is only
-        # called by complete() and it seems that's only called when the job
-        # itself has completed. If so, then why are validator jobs waiting to
-        # start? I think it points to unintended behavior. In any case, it's
-        # simpler to me
         validator_jobs = []
-        validator_jobs_revisited = []
         with qdb.sql_connection.TRN:
             cmd_id = self.command.id
             for out_name, a_data in viewitems(artifacts_data):
@@ -691,14 +836,13 @@ class ProcessingJob(qdb.base.QiitaObject):
                 else:
                     art_name = out_name
 
-                # CHARLIE: This connects everything
                 provenance = {'job': self.id,
                               'cmd_out_id': cmd_out_id,
                               'name': art_name}
 
                 # Get the validator command for the current artifact type and
                 # create a new job
-                # CHARLIE: see also def release_validators()
+                # see also def release_validators()
                 cmd = qdb.software.Command.get_validator(atype)
                 values_dict = {
                     'files': dumps(filepaths), 'artifact_type': atype,
@@ -708,45 +852,14 @@ class ProcessingJob(qdb.base.QiitaObject):
                     values_dict['analysis'] = analysis
                 validate_params = qdb.software.Parameters.load(
                     cmd, values_dict=values_dict)
-                # CHARLIE
+
                 validator_jobs.append(
                     ProcessingJob.create(self.user, validate_params, True))
-                '''
-                Keep a copy of all of the information needed to create the
-                above ProcessingJob object as a tuple of parameters in the
-                same order. Instead of submitting a bunch of jobs, we'll pass
-                these as a nested parameter into the new
-                release_job_revisited.
-                '''
-                #validator_jobs_revisited.append((self.user,
-                #                                 validate_params,
-                #                                 True))
 
-            '''
-            CHARLIE: Aggregator Job
-            Turn release_validators job from something that can release all of
-            the validator jobs into something that aggregates all of the m
-            validator jobs an parallelizes them over the n cores that have been
-            assigned to the release_validators job.
-
-            Since the release_validator job already has to know information
-            about the validator jobs, it should not be hard to encapsulate
-            them.
-
-            Review and Modify all code below this line to the end of the
-            method (past job.submit()).
-            '''
             # Change the current step of the job
             self.step = "Validating outputs (%d remaining) via job(s) %s" % (
                 len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
 
-            '''
-            CHARLIE:
-            Since these validator jobs won't be separate jobs anymore,
-            We don't need to associate them with this object. We also don't
-            want to submit them to the system. Note that we'll have to fudge
-            the step update messages as well.
-            '''
             # Link all the validator jobs with the current job
             self._set_validator_jobs(validator_jobs)
 
@@ -754,27 +867,14 @@ class ProcessingJob(qdb.base.QiitaObject):
             for j in validator_jobs:
                 j.submit()
 
-            '''
-            CHARLIE:
-            Instead of creating a release_validators job to release the
-            validators ordinarily created above, create a new type of job that
-            does the validation work (m validation jobs over n allocated
-            processors) and then does any 'releasing' or book-keeping itself.
-            '''
             # Submit the job that will release all the validators
             plugin = qdb.software.Software.from_name_and_version(
                 'Qiita', 'alpha')
-            #cmd = plugin.get_command('release_validators_revisted')
             cmd = plugin.get_command('release_validators')
             params = qdb.software.Parameters.load(
                 cmd, values_dict={'job': self.id})
             job = ProcessingJob.create(self.user, params)
 
-        '''
-        CHARLIE:
-        Perhaps this job.submit() shouldn't be outside of the transaction, but
-        we will keep it in any case, to submit the new revisited job.
-        '''
         # Doing the submission outside of the transaction
         job.submit()
 
@@ -794,7 +894,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 
-    # CHARLIE
+
     def complete(self, success, artifacts_data=None, error=None):
         """Completes the job, either with a success or error status
 
@@ -1126,8 +1226,6 @@ class ProcessingJob(qdb.base.QiitaObject):
     @property
     def pending(self):
         """A dictionary with the information about the predecessor jobs
-
-        CHARLIE: put this in Torque?
 
         Returns
         -------

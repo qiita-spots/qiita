@@ -425,7 +425,6 @@ class Command(qdb.base.QiitaObject):
                              qdb.util.convert_to_id(at, 'artifact_type'),
                              False])
 
-                # CHARLIE: CHECK HERE
                 sql = """INSERT INTO qiita.command_output
                             (name, command_id, artifact_type_id,
                              check_biom_merge)

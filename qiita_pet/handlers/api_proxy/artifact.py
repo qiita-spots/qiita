@@ -211,13 +211,8 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             return {'status': 'error',
                     'message': "Can't create artifact, no files provided."}
 
-        # CHARLIE: HERE
-        # it might be nice if this instead called a command which pushed the
-        # actual job creation down to an 'API level', so we could make changes
-        # and not have the behavior be changed at this level. submitting jobs
-        # from the GUI layer seems so ugly; I understand that it's the GUI
-        # that determines the event of it, but at the moment of event, it
-        # should go to an API layer.
+        # TODO: It might be good to have an API call that wraps to a lower
+        # level method that creates this job.
         command = Command.get_validator(artifact_type)
         job = ProcessingJob.create(
             user,
