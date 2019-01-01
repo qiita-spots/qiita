@@ -32,6 +32,7 @@ Methods
     add_message
     get_pubmed_ids_from_dois
     generate_analysis_list
+    human_merging_scheme
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -1691,31 +1692,18 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 # was a direct upload
                 deprecated = False
                 if cid is not None:
-                    ms = commands[cid]['merging_scheme']
                     deprecated = commands[cid]['deprecated']
-                    eparams = []
-                    if ms['parameters']:
-                        eparams.append(','.join(['%s: %s' % (k, aparams[k])
-                                                 for k in ms['parameters']]))
-                    if ms['outputs'] and filepaths:
-                        eparams.append('BIOM: %s' % ', '.join(filepaths))
-                    if eparams:
-                        cname = "%s (%s)" % (cname, ', '.join(eparams))
-
-                    if ms['ignore_parent_command']:
-                        algorithm = cname
+                    if pcid is None:
+                        parent_merging_scheme = None
                     else:
-                        palgorithm = 'N/A'
-                        if pcid is not None:
-                            palgorithm = pname
-                            ms = commands[pcid]['merging_scheme']
-                            if ms['parameters']:
-                                pparams = pparams[0]
-                                params = ','.join(['%s: %s' % (k, pparams[k])
-                                                   for k in ms['parameters']])
-                                palgorithm = "%s (%s)" % (palgorithm, params)
+                        parent_merging_scheme = commands[pcid][
+                            'merging_scheme']
 
-                        algorithm = '%s | %s' % (cname, palgorithm)
+                    algorithm = human_merging_scheme(
+                        cname, commands[cid]['merging_scheme'],
+                        pname, parent_merging_scheme,
+                        aparams, filepaths, pparams)
+
                     if algorithm not in algorithm_az:
                         algorithm_az[algorithm] = hashlib.md5(
                             algorithm).hexdigest()
@@ -1914,3 +1902,59 @@ def generate_analysis_list(analysis_ids, public_only=False):
                 'mapping_files': mapping_files})
 
     return results
+
+
+def human_merging_scheme(cname, merging_scheme,
+                         pname, parent_merging_scheme,
+                         artifact_parameters, artifact_filepaths,
+                         parent_parameters):
+    """From the artifact and its parent features format the merging scheme
+
+    Parameters
+    ----------
+    cname : str
+        The artifact command name
+    merging_scheme : dict, from qdb.artifact.Artifact.merging_scheme
+        The artifact merging scheme
+    pname : str
+        The artifact parent command name
+    parent_merging_scheme : dict, from qdb.artifact.Artifact.merging_scheme
+        The artifact parent merging scheme
+    artifact_parameters : dict
+        The artfiact processing parameters
+    artifact_filepaths : list of str
+        The artifact filepaths
+    parent_parameters :
+        The artifact parents processing parameters
+
+    Returns
+    -------
+    str
+        The merging scheme
+    """
+    eparams = []
+    if merging_scheme['parameters']:
+        eparams.append(','.join(['%s: %s' % (k, artifact_parameters[k])
+                                 for k in merging_scheme['parameters']]))
+    if (merging_scheme['outputs'] and
+            artifact_filepaths is not None and
+            artifact_filepaths):
+        eparams.append('BIOM: %s' % ', '.join(artifact_filepaths))
+    if eparams:
+        cname = "%s (%s)" % (cname, ', '.join(eparams))
+
+    if merging_scheme['ignore_parent_command']:
+        algorithm = cname
+    else:
+        palgorithm = 'N/A'
+        if pname is not None:
+            palgorithm = pname
+            if parent_merging_scheme['parameters']:
+                params = ','.join(
+                    ['%s: %s' % (k, parent_parameters[k])
+                     for k in parent_merging_scheme['parameters']])
+                palgorithm = "%s (%s)" % (palgorithm, params)
+
+        algorithm = '%s | %s' % (cname, palgorithm)
+
+    return algorithm

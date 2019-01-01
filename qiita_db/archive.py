@@ -97,47 +97,22 @@ class Archive(object):
         """
         with qdb.sql_connection.TRN:
             acmd = job.command
-            ms = acmd.merging_scheme
-
-            # 1. cleaning aparams - the parameters of the main artifact/job
-            temp = acmd.optional_parameters.copy()
-            temp.update(acmd.required_parameters)
-            # list: cause it can be tuple or lists
-            # [0]: the first value is the parameter type
-            tparams = job.parameters.values
-            aparams = ','.join(
-                ['%s: %s' % (k, tparams[k]) for k, v in temp.items()
-                 if list(v)[0] != 'artifact' and k in ms['parameters']])
-            # in theory we could check here for the filepath merging but
-            # as the files haven't been creted we don't have this info.
-            # Additionally, based on the current funtionality, this is not
-            # important as normally the difference between files is just
-            # an additional filtering step
-            cname = acmd.name
-            if aparams:
-                cname = "%s (%s)" % (cname, aparams)
-
-            # 2. cleaning pparams - the parameters of the parent artifact
-            # [0] getting the atributes from the first parent
-            ppp = job.input_artifacts[0].processing_parameters
-            pcmd = None if ppp is None else ppp.command
-            if ms['ignore_parent_command']:
-                algorithm = cname
+            parent = job.input_artifacts[0]
+            parent_pparameters = parent.processing_parameters
+            if parent_pparameters is None:
+                parent_cmd_name = None
+                parent_parameters = None
+                parent_merging_scheme = None
             else:
-                palgorithm = 'N/A'
-                if pcmd is not None:
-                    pms = pcmd.merging_scheme
-                    palgorithm = pcmd.name
-                    if pms['parameters']:
-                        ppms = pms['parameters']
-                        pparams = ','.join(
-                            ['%s: %s' % (k, v) for k, v in ppp.values.items()
-                             if list(str(v))[0] != 'artifact' and k in ppms])
-                        if pparams:
-                            palgorithm = "%s (%s)" % (palgorithm, pparams)
-                algorithm = '%s | %s' % (cname, palgorithm)
+                pcmd = parent_pparameters.command
+                parent_cmd_name = pcmd.name
+                parent_parameters = parent_pparameters.values
+                parent_merging_scheme = pcmd.merging_scheme
 
-            return algorithm
+            return qdb.util.human_merging_scheme(
+                acmd.name, acmd.merging_scheme,
+                parent_cmd_name, parent_merging_scheme,
+                job.parameters.values, [], parent_parameters)
 
     @classmethod
     def retrieve_feature_values(cls, archive_merging_scheme=None,
