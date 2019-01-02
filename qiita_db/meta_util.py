@@ -318,12 +318,12 @@ def get_lat_longs():
             # latigute and longitude of all available studies. Note that
             # UNION in PostgreSQL automatically removes duplicates
             sql_query = """
-                SELECT CAST(sample_values->>'latitude' AS FLOAT),
+                SELECT {0}, CAST(sample_values->>'latitude' AS FLOAT),
                        CAST(sample_values->>'longitude' AS FLOAT)
-                FROM qiita.sample_%d
+                FROM qiita.sample_{0}
                 WHERE isnumeric(sample_values->>'latitude') AND
                       isnumeric(sample_values->>'longitude')"""
-            sql = [sql_query % s.id for s in studies]
+            sql = [sql_query.format(s.id) for s in studies]
             sql = ' UNION '.join(sql)
             qdb.sql_connection.TRN.add(sql)
 
