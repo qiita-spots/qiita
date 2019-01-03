@@ -121,6 +121,14 @@ class Watcher(Process):
                         self.queue.put(self.processes[child_job_id])
 
     def run(self):
+        # check to see if qstat is available. If not, exit immediately.
+        proc = Popen("qstat -x", shell=True, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
+        if proc.returncode != 0:
+            # inform any process expecting data from Watcher
+            self.queue.put('QUIT')
+            self.event.set()
+
         while not self.event.is_set():
             proc = Popen("qstat -x", shell=True, stdout=PIPE, stderr=PIPE)
             stdout, stderr = proc.communicate()
@@ -161,8 +169,15 @@ class Watcher(Process):
                             self.processes[results['Job_Id']] = results
                             self.queue.put(results)
             else:
-                raise AssertionError("qstat is not working")
+                # raise AssertionError("qstat is not working")
+                self.queue.put('QUIT')
+                self.event.set()
+                print("setting loop to exit")
+                # don't join(), since we are exiting from the main loop
+
             sleep(self.polling_value)
+
+        print("Exiting")
 
     def stop(self):
         # 'poison pill' to thread/process

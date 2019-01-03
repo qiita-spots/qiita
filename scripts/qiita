@@ -30,6 +30,31 @@ from qiita_ware.commands import submit_EBI as _submit_EBI
 
 from threading import Thread
 
+import signal
+import sys
+
+watcher = None
+
+def watcher_sigint_handler(sig, frame):
+    print("Stopping Watcher...")
+    watcher.stop()
+    sys.exit(0)
+
+if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
+    print("LAUNCHER IS qiita-plugin-launcher-qsub")
+    watcher = qdb.processing_job.Watcher()
+    watcher.start()
+    #wait for OK or QUIT
+    msg = watcher.queue.get(True)
+
+    if msg == 'QUIT':
+        print("Error: Watcher not running")
+        sys.exit(1)
+    else:
+        print("Watcher is running: %s" % msg)
+        # register a signal handler that will stop watcher
+        # on ctrl-c, so that Qiita may exit as expected.
+        signal.signal(signal.SIGINT, watcher_sigint_handler)
 
 try:
     conn = qdb.sql_connection.SQLConnectionHandler()
@@ -276,9 +301,6 @@ def start(port, master):
     from tornado.options import options, parse_command_line
     from tornado.ioloop import PeriodicCallback
 
-    watcher = qdb.processing_job.Watcher()
-    watcher.start()
-
     def update_database_func():
         while True:
             #blocking call waits on new job info
@@ -297,12 +319,13 @@ def start(port, master):
             #TODO: What happens if the job is not in the DB?
             qdb.processing_job.ProcessingJob(msg['Job_Id']).complete(exit_status, error=error_msg)
 
-    #Thread() can be replaced with Process() if need be
-    p = Thread(target=update_database_func, args=())
-    p.start()
-    #for now, assume a p.join() is not needed.
-    #this thread and Watcher can both exit using
-    #watcher.stop().
+    if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
+        #Thread() can be replaced with Process() if need be
+        #update_database_func() requires a defined watcher object.
+        #if plugin_launcher is defined as qsub, it should be
+        #defined.
+        p = Thread(target=update_database_func, args=())
+        p.start()
 
     if master:
         # Deactivate all the plugins and only activate those that are currently
