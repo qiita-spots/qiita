@@ -23,11 +23,130 @@ from time import sleep
 from uuid import UUID
 
 
+class Watcher(Process):
+    # TODO: Qiita will need a proper mapping of these states to Qiita states
+    # Currently, these strings are being inserted directly into Qiita's status
+    # table. Qiita will be unfamiliar with many of these. We will need at least
+    # one additional job type for 'Held': A job waiting for another to complete
+    # before it can run.
+    #
+    # Note that the main Qiita script instantiates an object of this class in
+    # a separate thread, so it can periodically update the database w/metadata
+    # from Watcher's queue. Qiita's script also calls qdb.complete() so there
+    # are no circular references. TODO: replace w/a REST call.
+
+    # valid Qiita states:
+    #             The current status of the job, one of {'queued', 'running',
+    #             'success', 'error', 'in_construction', 'waiting'}
+
+    job_state_map = {'C': 'completed', 'E': 'exiting', 'H': 'held',
+                     'Q': 'queued', 'R': 'running', 'T': 'moving',
+                     'W': 'waiting', 'S': 'suspended'}
+
+    def __init__(self):
+        super(Watcher, self).__init__()
+
+        # set self.owner to qiita, or whomever owns processes we need to watch.
+        self.owner = 'qiita@qiita.ucsd.edu'
+
+        # Torque is set to drop jobs from its queue 60 seconds after
+        # completion, by default. Setting a polling value less than
+        # that allows for multiple chances to catch the exit status
+        # before it disappears.
+        self.polling_value = 15
+
+        # the cross-process method by which to communicate across
+        # process boundaries. Note that when Watcher object runs,
+        # another process will get created, and receive a copy of
+        # the Watcher object. At this point, these self.* variables
+        # become local to each process. Hence, the main process
+        # can't see self.processes for example; theirs will just
+        # be empty.
+        self.queue = Queue()
+        self.processes = {}
+
+        # the cross-process sentinel value to shutdown Watcher
+        self.event = Event()
+
+    def _element_extract(self, snippet, list_of_elements):
+        results = {}
+        for element in list_of_elements:
+            # TODO: Verify \/ is not needed in all three cases
+            value = search('<%s>(.*?)</%s>' % (element, element), snippet)
+            if value:
+                results[element] = value.group(1)
+            else:
+                raise AssertionError("%s element is missing!" % element)
+        return results
+
+    def run(self):
+        while not self.event.is_set():
+            proc = Popen("qstat -x", shell=True, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = proc.communicate()
+            if proc.returncode == 0:
+                # qstat returned successfully with metadata on processes
+                # break up metadata into individual <Job></Job> elements
+                # for processing.
+                m = findall('<Job>(.*?)</Job>', stdout)
+                for item in m:
+                    # filter out jobs that don't belong to owner
+                    if search('<Job_Owner>%s</Job_Owner>' % self.owner, item):
+                        # extract the metadata we want.
+                        # if a job has completed, an exit_status element will
+                        # be present. We also want that.
+                        results = self._element_extract(item, ['Job_Id',
+                                                               'Job_Name',
+                                                               'job_state'])
+                        tmp = Watcher.job_state_map[results['job_state']]
+                        results['job_state'] = tmp
+                        if results['job_state'] == 'completed':
+                            results2 = self._element_extract(item,
+                                                             ['exit_status'])
+                            results['exit_status'] = results2['exit_status']
+
+                        # determine if anything has changed since last poll
+                        if results['Job_Id'] in self.processes:
+                            tmp = cmp(self.processes[results['Job_Id']],
+                                      results)
+                            if 0 != tmp:
+                                # metadata for existing job has changed
+                                self.processes[results['Job_Id']] = results
+                                self.queue.put(results)
+                        else:
+                            # metadata for new job inserted
+                            self.processes[results['Job_Id']] = results
+                            self.queue.put(results)
+            else:
+                raise AssertionError("qstat is not working")
+            sleep(self.polling_value)
+
+    def stop(self):
+        # 'poison pill' to thread/process
+        self.queue.put('QUIT')
+        # setting self.event is a safe way of communicating a boolean
+        # value across processes and threads.
+        # when this event is 'set' by the main line of execution in Qiita,
+        # (or in any other process if need be), Watcher's run loop will
+        # stop and the Watcher process will exit.
+        self.event.set()
+        # Here, it is assumed that we are running this from the main
+        # context. By joining(), we're waiting for the Watcher process to
+        # end before returning from this method.
+        self.join()
+
+
 def launch_local(env_script, start_script, url, job_id, job_dir):
+
+    # launch_local() differs from launch_torque(), as no Watcher() is used.
+    # each launch_local() process will execute the cmd as a child process,
+    # wait, and update the database once cmd has completed.
+    #
+    # As processes are lighter weight than jobs, this should be fine.
+    # This is how the current job model works locally.
 
     cmd = [start_script, url, job_id, job_dir]
 
-    # When Popen executes, the shell is not in interactive mode,
+    # When Popen() executes, the shell is not in interactive mode,
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
     cmd = "bash -c '%s; echo $PATH; %s'" % (env_script, ' '.join(cmd))
@@ -39,32 +158,32 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     # This call waits until cmd is done
     stdout, stderr = proc.communicate()
 
-    #proc.returncode should always exist, but it will be equal to None if the
-    #proc hasn't finished yet. It will be negative, the command was terminated
-    #by SIGNAL = negative_value. (Python on unix platforms only).
-
+    # proc.returncode will be equal to None if the process hasn't finished
+    # yet. If cmd was terminated by a SIGNAL, it will be a negative value.
+    # (*nix platforms only)
     error = None
 
-    if proc.returncode:
-        #cmd has finished
-        if proc.returncode != 0:
-            #cmd exited w/an error. return error string to support
-            #legacy behavior.
-            error = "Command returned error: %s" % str(proc.returncode)
-    else:
+    if not proc.returncode:
         raise AssertionError("launch is returning before cmd has completed")
 
-    #TODO integratoin with a Local version of Watcher needed.
+    if proc.returncode != 0:
+        error = ("Error submitting job:\nStd output:%s\nStd error:%s"
+                 % (stdout, stderr))
+
+        # Forcing the creation of a new connection
+        qdb.sql_connection.create_new_transaction()
+        ProcessingJob(job_id).complete(False, error=error)
 
 
-def launch_torque(env_script, start_script, url, job_id, job_dir):
+def launch_torque(env_script, start_script, url, job_id, job_dir,
+                  dependent_job_id):
 
     cmd = [start_script, url, job_id, job_dir]
 
     # generating file contents to be used with qsub
     lines = []
 
-    # is PBS_JOBID is being set correctly?
+    # TODO: is PBS_JOBID is being set correctly?
     lines.append("echo $PBS_JOBID")
 
     # should be explicitly defined here, rather than in a
@@ -80,13 +199,29 @@ def launch_torque(env_script, start_script, url, job_id, job_dir):
     open(fp, 'w').write("\n".join(lines))
 
     # TODO: revisit epilogue
-    qsub_cmd = ("qsub -l nodes=1:ppn=5 %s -o %s/qsub-output.txt "
-                "-e %s/qsub-error.txt -l "
-                "epilogue=/home/qiita/qiita-epilogue.sh" % (fp, job_dir,
-                                                            job_dir))
+
+    qsub_cmd = []
+
+    if dependent_job_id:
+        # note that a dependent job should be submitted before the 'parent' job
+        # ends, most likely. Torque doesn't keep job state around forever, and
+        # creating a dependency on a job already completed has not been tested.
+        qsub_cmd.append("qsub -W depend=after:%s" % dependent_job_id)
+    else:
+        qsub_cmd.append("qsub")
+
+    qsub_cmd.append("-l nodes=1:ppn=5 %s" % fp)
+    qsub_cmd.append("-o %s/qsub-output.txt " % job_dir)
+    qsub_cmd.append("-e %s/qsub-error.txt" % job_dir)
+    qsub_cmd.append("-l epilogue=/home/qiita/qiita-epilogue.sh")
+
+    # "%s -l nodes=1:ppn=5 %s -o %s/qsub-output.txt -e %s/qsub-error.txt -l
+    # epilogue=/home/qiita/qiita-epilogue.sh" % (cmd_prefix, fp, job_dir,
+    # job_dir)
+    qsub_cmd = ' '.join(qsub_cmd)
 
     # stdX parameters added to support returning the Torque ID from qsub
-    # Popen may also need universal_newlines=True
+    # Popen() may also need universal_newlines=True
     proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
 
     # Adding proc.communicate call to wait for qsub to return and
@@ -102,102 +237,12 @@ def launch_torque(env_script, start_script, url, job_id, job_dir):
     # proc hasn't finished yet. A negative value means the command was
     # terminated by SIGNAL = the value (UNIX only)
     if proc.returncode and proc.returncode != 0:
-        raise AssertionError("Error Torque could not launch plugin: %d" % proc.returncode)
+        raise AssertionError("Error Torque could not launch plugin: %d" %
+                             proc.returncode)
 
-    # qsub returns the name of the torque job on stdout
-    # however, we are relying on watcher to manage processes. We may still
-    # need this value to store in the db, etc.
     torque_job_id = stdout.strip('\n')
 
-
-class Watcher(Process):
-    #I need conversions to support the statement below in qiita executable.
-    #qdb.processing_job.ProcessingJob(msg['Job_Id']).complete(msg['exit_status'], error=msg['error_msg'])
-    job_state_map = {'C':'completed', 'E':'exiting', 'H':'held', 'Q':'queued', 'R':'running', 'T':'moving', 'W':'waiting', 'S':'suspended'}
-
-    def __init__(self):
-        super(Watcher, self).__init__()
-        #set to qiita or whomever owns the processes we must watch.
-        self.owner = 'ccowart@qiita.ucsd.edu'
-        #Torque is set to drop jobs from its queue 60 seconds after
-        #completion, by default. Setting a polling value less than
-        #that allows for multiple chances to catch the exit status
-        #before it disappears.
-        self.polling_value = 15
-        #the cross-process method by which to communicate across
-        #process boundaries. Note that when Watcher object runs,
-        #another process will get created, and receive a copy of
-        #the Watcher object. At this point, these self.* variables
-        #become local to each process. Hence, the main process
-        #can't see self.processes for example, Theirs will just
-        #be empty.
-        self.queue = Queue()
-        self.processes = {}
-        #the cross-process sentinel value to shutdown Watcher
-        self.event = Event()
-
-    def _element_extract(self, snippet, list_of_elements):
-        results = {}
-        for element in list_of_elements:
-            value = search('<%s>(.*?)<\/%s>' % (element, element), snippet)
-            if value:
-                results[element] = value.group(1)
-            else:
-                raise AssertionError("%s element is missing!" % element)
-        return results
-
-    def run(self):
-        while not self.event.is_set():
-            proc = Popen("qstat -x", shell=True, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = proc.communicate()
-            if proc.returncode == 0:
-                #qstat returned successfully with metadata on processes
-                #break up metadata into individual <Job></Job> elements
-                #for processing.
-                m = findall('<Job>(.*?)<\/Job>', stdout)
-                for item in m:
-                    #filter out jobs that don't belong to owner
-                    if search('<Job_Owner>%s<\/Job_Owner>' % self.owner, item):
-                        #extract the metadata we want.
-                        #if a job has completed, an exit_status element will
-                        #be present. We also want that.
-                        results = self._element_extract(item, ['Job_Id', 'Job_Name', 'job_state'])
-                        results['job_state'] = Watcher.job_state_map[results['job_state']]
-                        if results['job_state'] == 'completed':
-                            results2 = self._element_extract(item, ['exit_status'])
-                            results['exit_status'] = results2['exit_status']
-
-                        #determine if anything has changed since last poll
-                        if results['Job_Id'] in self.processes:
-                            if 0 != cmp(self.processes[results['Job_Id']], results):
-                                self.processes[results['Job_Id']] = results
-                                #self.queue.put("Metadata for %s has changed:" % results['Job_Id'])
-                                self.queue.put(results)
-                        else:
-                            self.processes[results['Job_Id']] = results
-                            #self.queue.put("New metadata for %s:" % results['Job_Id'])
-                            self.queue.put(results)
-            #Barnacle defaults to 60 seconds before wiping metadata from completed
-            #jobs. We want to poll enough times to have 2-3 chances of catching a
-            #completed job before it disappears.
-            else:
-                raise AssertionError("qstat is not working!")
-            sleep(self.polling_value)
-    def stop(self):
-        #This put is a 'poison-pill' for the listener thread or process.
-        #if the listener pulls this string off the queue. It knows it
-        #should shut itself down.
-        self.queue.put('QUIT')
-        #setting self.event is a safe way of communicating a boolean
-        #value across processes and threads.
-        #when this event is 'set' by the main line of execution in Qiita,
-        #(or in any other process if need be), Watcher's run loop will
-        #stop and the Watcher process will exit.
-        self.event.set()
-        #Here, it is assumed that we are running this from the main
-        #context. By joining(), we're waiting for the Watcher process to
-        #end before returning from this method.
-        self.join()
+    return torque_job_id
 
 
 def _system_call(cmd):
@@ -249,6 +294,7 @@ class ProcessingJob(qdb.base.QiitaObject):
     create
     """
     _table = 'processing_job'
+    _queue_count = 2
 
     @classmethod
     def exists(cls, job_id):
@@ -471,9 +517,6 @@ class ProcessingJob(qdb.base.QiitaObject):
             'success', 'error', 'in_construction', 'waiting'}
 
         """
-        #This needs to be replaced or merged with calls to qstat, in order
-        #to obtain the most accurate result. For now, probably the best thing
-        #is to have qstat update the database table and keep this method as is.
         with qdb.sql_connection.TRN:
             sql = """SELECT processing_job_status
                      FROM qiita.processing_job_status
@@ -516,9 +559,15 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [new_status, self.id])
             qdb.sql_connection.TRN.execute()
 
-
-    def submit(self):
+    def submit(self, parent_job_id=None, dependent_jobs_list=None):
         """Submits the job to execution
+        This method has the ability to submit itself, as well as a list of
+        other ProcessingJob objects. If a list of ProcessingJob objects is
+        supplied, they will be submitted conditionally on the successful
+        execution of this object.
+
+        Users of this method don't need to set parent_job_id. It is used
+        internally by submit() for subsequent submit() calls for dependents.
 
         Raises
         ------
@@ -546,28 +595,70 @@ class ProcessingJob(qdb.base.QiitaObject):
         # portal server that submitted the job
         url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
 
-        # qiita_config.plugin_launcher is configured at program start to
-        # use either torque jobs or local processes. This metadata shouldn't
-        # persist to the exec() call.
-        #
-        # since we are consolidating code from multiple locations, there is
-        # no need to pack the parameters into a string, only to unpack them
-        # again.
-        cmap = {'qiita-plugin-launcher': launch_local,
-                'qiita-plugin-launcher-qsub': launch_torque}
+        cmap = {'qiita-plugin-launcher': {'function': launch_local,
+                                          'execute_in_process': False},
+                'qiita-plugin-launcher-qsub': {'function': launch_torque,
+                                               'execute_in_process': True}}
 
+        # note that dependent jobs, such as m validator jobs marshalled into
+        # n 'queues' require the job_id returned by an external scheduler such
+        # as Torque's MOAB, rather than a job name that can be defined within
+        # Qiita. Hence, this method must be able to handle the case where a job
+        # requires metadata from a late-defined and time-sensitive source.
         if qiita_config.plugin_launcher in cmap:
-            p = Process(target=cmap[qiita_config.plugin_launcher],
-                        args=(plugin_env_script,
-                              plugin_start_script,
-                              url,
-                              self.id,
-                              job_dir))
+            launcher = cmap[qiita_config.plugin_launcher]
+            if launcher['execute_in_process'] is True:
+                # run this launcher function within this process.
+                # usually this is done if the launcher spawns other processes
+                # before returning immediately, usually with a job ID that can
+                # be used to monitor the job's progress.
+
+                # note that parent_job_id is being passed transparently from
+                # submit declaration to the launcher.
+                job_id = launcher['function'](plugin_env_script,
+                                              plugin_start_script,
+                                              url,
+                                              self.id,
+                                              job_dir,
+                                              parent_job_id)
+
+                if dependent_jobs_list:
+                    for job in dependent_jobs_list:
+                        job.submit(parent_job_id=job_id,
+                                   dependent_jobs_list=dependent_jobs_list)
+
+            elif launcher['execute_in_process'] is False:
+                # run this launcher function as a new process.
+                # usually this is done if the launcher performs work that takes
+                # an especially long time, or waits for children who perform
+                # such work.
+                p = Process(target=launcher['function'],
+                            args=(plugin_env_script,
+                                  plugin_start_script,
+                                  url,
+                                  self.id,
+                                  job_dir))
+
+                p.start()
+
+                if dependent_jobs_list:
+                    # for now, treat dependents as independent when
+                    # running locally.
+                    for dependent in dependent_jobs_list:
+                        p = Process(target=launcher['function'],
+                                    args=(plugin_env_script,
+                                          plugin_start_script,
+                                          url,
+                                          self.id,
+                                          job_dir))
+                        p.start()
+            else:
+                error = ("execute_in_process must be defined",
+                         "as either true or false")
+                raise AssertionError(error)
         else:
-            raise AssertionError("plugin_launcher should be one of two values for now")
-
-        p.start()
-
+            error = "plugin_launcher should be one of two values for now"
+            raise AssertionError(error)
 
     def release(self):
         """Releases the job from the waiting status and creates the artifact
@@ -638,6 +729,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             # Check if all the validators are completed. Validator jobs can be
             # in two states when completed: 'waiting' in case of success
             # or 'error' otherwise
+
             validator_ids = [j.id for j in self.validator_jobs
                              if j.status not in ['waiting', 'error']]
 
@@ -863,9 +955,23 @@ class ProcessingJob(qdb.base.QiitaObject):
             # Link all the validator jobs with the current job
             self._set_validator_jobs(validator_jobs)
 
+            # Submit m validator jobs as n lists of jobs
+            n = ProcessingJob._queue_count
+            # taken from:
+            # https://www.geeksforgeeks.org/break-list-chunks-size-n-python/
+            lists = [validator_jobs[i * n:(i + 1) * n]
+                     for i in range((len(validator_jobs) + n - 1) // n)]
+
+            for sub_list in lists:
+                lead_item = sub_list.pop(0)
+                if not sub_list:
+                    # sub_list is now empty
+                    sub_list = None
+                lead_item.submit(dependent_jobs_list=sub_list)
+
             # Submit all the validator jobs
-            for j in validator_jobs:
-                j.submit()
+            # for j in validator_jobs:
+            #    j.submit()
 
             # Submit the job that will release all the validators
             plugin = qdb.software.Software.from_name_and_version(
@@ -893,7 +999,6 @@ class ProcessingJob(qdb.base.QiitaObject):
             sql_args = [[self.id, j.id] for j in validator_jobs]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
-
 
     def complete(self, success, artifacts_data=None, error=None):
         """Completes the job, either with a success or error status

@@ -289,6 +289,7 @@ def start(port, master):
             #since we are in the main process.
             #qdb.sql_connection.create_new_transaction()
             #{'job_state': 'queued', 'Job_Id': '1094576.barnacle.ucsd.edu', 'Job_Name': 'job2'}
+            #TODO: What happens if the job is not in the DB?
             qdb.processing_job.ProcessingJob(msg['Job_Id']).complete(msg['exit_status'], error=msg['error_msg'])
 
     #Thread() can be replaced with Process() if need be
@@ -363,6 +364,8 @@ def start(port, master):
     PeriodicCallback(lambda: active_children(), 1200000).start()
 
     ioloop.start()
+
+    watcher.stop()
 
 # #############################################################################
 # PLUGIN COMMANDS
