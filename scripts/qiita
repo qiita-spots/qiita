@@ -285,12 +285,17 @@ def start(port, master):
             msg = watcher.queue.get(True)
             if msg == 'QUIT':
                 break;
+
+            tmp = watcher.torque_to_qiita_state_map
+            exit_status = tmp[msg['exit_status']]
+            error_msg = msg['error_msg']
+
             #assuming we don't need to force a new connection,
             #since we are in the main process.
             #qdb.sql_connection.create_new_transaction()
             #{'job_state': 'queued', 'Job_Id': '1094576.barnacle.ucsd.edu', 'Job_Name': 'job2'}
             #TODO: What happens if the job is not in the DB?
-            qdb.processing_job.ProcessingJob(msg['Job_Id']).complete(msg['exit_status'], error=msg['error_msg'])
+            qdb.processing_job.ProcessingJob(msg['Job_Id']).complete(exit_status, error=error_msg)
 
     #Thread() can be replaced with Process() if need be
     p = Thread(target=update_database_func, args=())

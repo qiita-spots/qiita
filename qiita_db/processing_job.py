@@ -39,9 +39,20 @@ class Watcher(Process):
     #             The current status of the job, one of {'queued', 'running',
     #             'success', 'error', 'in_construction', 'waiting'}
 
+    # TODO: what to map in_construction to?
     job_state_map = {'C': 'completed', 'E': 'exiting', 'H': 'held',
                      'Q': 'queued', 'R': 'running', 'T': 'moving',
                      'W': 'waiting', 'S': 'suspended'}
+
+    torque_to_qiita_state_map = {'completed': 'completed',
+                                 'exiting': 'running',
+                                 'held': 'queued',
+                                 'queued': 'queued',
+                                 'running': 'running',
+                                 'moving': 'waiting',
+                                 'waiting': 'waiting',
+                                 'suspended': 'waiting',
+                                 'DROPPED': 'error'}
 
     def __init__(self):
         super(Watcher, self).__init__()
@@ -68,7 +79,8 @@ class Watcher(Process):
         # the cross-process sentinel value to shutdown Watcher
         self.event = Event()
 
-    def _element_extract(self, snippet, list_of_elements):
+    def _element_extract2(self, snippet, list_of_elements,
+                          list_of_optional_elements):
         results = {}
         for element in list_of_elements:
             # TODO: Verify \/ is not needed in all three cases
@@ -77,7 +89,36 @@ class Watcher(Process):
                 results[element] = value.group(1)
             else:
                 raise AssertionError("%s element is missing!" % element)
+
+        for element in list_of_optional_elements:
+            value = search('<%s>(.*?)</%s>' % (element, element), snippet)
+            if value:
+                results[element] = value.group(1)
+
         return results
+
+    def process_dependent_jobs(self, results):
+        # when a job has its status changed, check to see if the job completed
+        # with an error. If so, check to see if had any jobs that were being
+        # 'held' on this job's successful completion. If we are maintaining
+        # state on any of these jobs, mark them as 'DROPPED', because they will
+        # no longer appear in qstat output.
+        if results['job_state'] == 'completed':
+            if results['exit_status'] == '0':
+                return
+
+            if 'depend' in results:
+                tmp = results['depend'].split(':')
+                if tmp[0] == 'beforeok':
+                    tmp.pop(0)
+                    for child_job_id in tmp:
+                        # jobs in 'beforeok' are labeled with the complete
+                        # job id and what looks to be the server name doing
+                        # the work. For now, simply remove the
+                        # '@barnacle.ucsd.edu' (server) component.
+                        child_job_id = child_job_id.split('@')[0]
+                        self.processes[child_job_id]['job_state'] = 'DROPPED'
+                        self.queue.put(self.processes[child_job_id])
 
     def run(self):
         while not self.event.is_set():
@@ -94,14 +135,16 @@ class Watcher(Process):
                         # extract the metadata we want.
                         # if a job has completed, an exit_status element will
                         # be present. We also want that.
-                        results = self._element_extract(item, ['Job_Id',
-                                                               'Job_Name',
-                                                               'job_state'])
+                        results = self._element_extract2(item, ['Job_Id',
+                                                                'Job_Name',
+                                                                'job_state'],
+                                                               ['depend'])
                         tmp = Watcher.job_state_map[results['job_state']]
                         results['job_state'] = tmp
                         if results['job_state'] == 'completed':
-                            results2 = self._element_extract(item,
-                                                             ['exit_status'])
+                            results2 = self._element_extract2(item,
+                                                              ['exit_status'],
+                                                              [])
                             results['exit_status'] = results2['exit_status']
 
                         # determine if anything has changed since last poll
@@ -112,6 +155,7 @@ class Watcher(Process):
                                 # metadata for existing job has changed
                                 self.processes[results['Job_Id']] = results
                                 self.queue.put(results)
+                                self.process_dependent_jobs(results)
                         else:
                             # metadata for new job inserted
                             self.processes[results['Job_Id']] = results
@@ -206,7 +250,7 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
         # note that a dependent job should be submitted before the 'parent' job
         # ends, most likely. Torque doesn't keep job state around forever, and
         # creating a dependency on a job already completed has not been tested.
-        qsub_cmd.append("qsub -W depend=after:%s" % dependent_job_id)
+        qsub_cmd.append("qsub -W depend=afterok:%s" % dependent_job_id)
     else:
         qsub_cmd.append("qsub")
 
