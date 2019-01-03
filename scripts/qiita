@@ -35,16 +35,17 @@ import sys
 
 watcher = None
 
+
 def watcher_sigint_handler(sig, frame):
     print("Stopping Watcher...")
     watcher.stop()
     sys.exit(0)
 
+
 if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
-    print("LAUNCHER IS qiita-plugin-launcher-qsub")
     watcher = qdb.processing_job.Watcher()
     watcher.start()
-    #wait for OK or QUIT
+    # wait for OK or QUIT
     msg = watcher.queue.get(True)
 
     if msg == 'QUIT':
@@ -55,6 +56,7 @@ if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
         # register a signal handler that will stop watcher
         # on ctrl-c, so that Qiita may exit as expected.
         signal.signal(signal.SIGINT, watcher_sigint_handler)
+
 
 try:
     conn = qdb.sql_connection.SQLConnectionHandler()
@@ -303,27 +305,29 @@ def start(port, master):
 
     def update_database_func():
         while True:
-            #blocking call waits on new job info
+            # blocking call waits on new job info
             msg = watcher.queue.get(True)
             if msg == 'QUIT':
-                break;
+                break
 
             tmp = watcher.torque_to_qiita_state_map
             exit_status = tmp[msg['exit_status']]
             error_msg = msg['error_msg']
 
-            #assuming we don't need to force a new connection,
-            #since we are in the main process.
-            #qdb.sql_connection.create_new_transaction()
-            #{'job_state': 'queued', 'Job_Id': '1094576.barnacle.ucsd.edu', 'Job_Name': 'job2'}
-            #TODO: What happens if the job is not in the DB?
-            qdb.processing_job.ProcessingJob(msg['Job_Id']).complete(exit_status, error=error_msg)
+            # assuming we don't need to force a new connection,
+            # since we are in the main process.
+            # qdb.sql_connection.create_new_transaction()
+            # {'job_state': 'queued', 'Job_Id': '1094576.barnacle.ucsd.edu',
+            # 'Job_Name': 'job2'}
+            # TODO: What happens if the job is not in the DB?
+            tmp = qdb.processing_job.ProcessingJob(msg['Job_Id'])
+            tmp.complete(exit_status, error=error_msg)
 
     if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
-        #Thread() can be replaced with Process() if need be
-        #update_database_func() requires a defined watcher object.
-        #if plugin_launcher is defined as qsub, it should be
-        #defined.
+        # Thread() can be replaced with Process() if need be
+        # update_database_func() requires a defined watcher object.
+        # if plugin_launcher is defined as qsub, it should be
+        # defined.
         p = Thread(target=update_database_func, args=())
         p.start()
 
