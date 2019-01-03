@@ -223,7 +223,8 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     error = None
 
     if not proc.returncode:
-        raise AssertionError("launch is returning before cmd has completed")
+        error = "launch is returning before cmd='%s' has completed" % cmd
+        raise AssertionError(error)
 
     if proc.returncode != 0:
         error = ("Error submitting job:\nStd output:%s\nStd error:%s"
