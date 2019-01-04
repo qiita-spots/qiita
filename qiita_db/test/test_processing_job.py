@@ -8,7 +8,6 @@
 
 from unittest import TestCase, main
 from datetime import datetime
-from os.path import join
 from os import close
 from tempfile import mkstemp
 from json import dumps, loads
@@ -19,7 +18,9 @@ import pandas as pd
 
 import qiita_db as qdb
 from qiita_core.util import qiita_test_checker
-from qiita_core.qiita_settings import qiita_config
+
+# from qiita_core.qiita_settings import qiita_config
+# from os.path import join
 
 
 def _create_job(force=True):

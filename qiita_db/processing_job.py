@@ -208,7 +208,12 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     # When Popen() executes, the shell is not in interactive mode,
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
-    cmd = "bash -c '%s; echo $PATH; %s'" % (env_script, ' '.join(cmd))
+    # cmd = "bash -c '%s; echo $PATH; %s'" % (env_script, ' '.join(cmd))
+    cmd = "source deactivate; %s; %s %s %s %s" % (env_script,
+                                                  start_script,
+                                                  url,
+                                                  job_id,
+                                                  job_dir)
 
     # Popen() may also need universal_newlines=True
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
@@ -279,6 +284,7 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
 
     # stdX parameters added to support returning the Torque ID from qsub
     # Popen() may also need universal_newlines=True
+    # may also need stdout = stdout.decode("utf-8").rstrip()
     proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
 
     # Adding proc.communicate call to wait for qsub to return and
