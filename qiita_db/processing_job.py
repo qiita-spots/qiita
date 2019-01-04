@@ -686,9 +686,23 @@ class ProcessingJob(qdb.base.QiitaObject):
                                               parent_job_id)
 
                 if dependent_jobs_list:
-                    for job in dependent_jobs_list:
-                        job.submit(parent_job_id=job_id,
-                                   dependent_jobs_list=dependent_jobs_list)
+                    # a dependent_jobs_list will always have at least one
+                    # job
+                    next_job = sub_list.pop(0)
+
+                    if not dependent_jobs_list:
+                        # dependent_jobs_list is now empty
+                        dependent_jobs_list = None
+
+                    # The idea here is that a list of jobs is considered a
+                    # chain. Each job in the chain is submitted with the job
+                    # id of job submitted before it; a job will only run if
+                    # 'parent_job' ran successfully. Each iteration of submit()
+                    # launches a job, pulls the next job from the list, and
+                    # submits it. The remainder of the list is also passed to
+                    # continue the process.
+                    next_job.submit(parent_job_id=job_id,
+                                    dependent_jobs_list=dependent_jobs_list)
 
             elif launcher['execute_in_process'] is False:
                 # run this launcher function as a new process.
@@ -1026,11 +1040,12 @@ class ProcessingJob(qdb.base.QiitaObject):
                      for i in range((len(validator_jobs) + n - 1) // n)]
 
             for sub_list in lists:
-                lead_item = sub_list.pop(0)
+                # each sub_list will always have at least a lead_job
+                lead_job = sub_list.pop(0)
                 if not sub_list:
                     # sub_list is now empty
                     sub_list = None
-                lead_item.submit(dependent_jobs_list=sub_list)
+                lead_job.submit(dependent_jobs_list=sub_list)
 
             # Submit all the validator jobs
             # for j in validator_jobs:
