@@ -83,7 +83,6 @@ class Watcher(Process):
                          list_of_optional_elements):
         results = {}
         for element in list_of_elements:
-            # TODO: Verify \/ is not needed in all three cases
             value = search('<%s>(.*?)</%s>' % (element, element), snippet)
             if value:
                 results[element] = value.group(1)
@@ -97,7 +96,7 @@ class Watcher(Process):
 
         return results
 
-    def process_dependent_jobs(self, results):
+    def _process_dependent_jobs(self, results):
         # when a job has its status changed, check to see if the job completed
         # with an error. If so, check to see if had any jobs that were being
         # 'held' on this job's successful completion. If we are maintaining
@@ -163,21 +162,17 @@ class Watcher(Process):
                                 # metadata for existing job has changed
                                 self.processes[results['Job_Id']] = results
                                 self.queue.put(results)
-                                self.process_dependent_jobs(results)
+                                self._process_dependent_jobs(results)
                         else:
                             # metadata for new job inserted
                             self.processes[results['Job_Id']] = results
                             self.queue.put(results)
             else:
-                # raise AssertionError("qstat is not working")
                 self.queue.put('QUIT')
                 self.event.set()
-                print("setting loop to exit")
                 # don't join(), since we are exiting from the main loop
 
             sleep(self.polling_value)
-
-        print("Exiting")
 
     def stop(self):
         # 'poison pill' to thread/process
@@ -234,7 +229,6 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
         # Forcing the creation of a new connection
         qdb.sql_connection.create_new_transaction()
         ProcessingJob(job_id).complete(False, error=error)
-        # raise AssertionError(error)
 
 
 def launch_torque(env_script, start_script, url, job_id, job_dir,
@@ -248,8 +242,7 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
     # TODO: is PBS_JOBID is being set correctly?
     lines.append("echo $PBS_JOBID")
 
-    # should be explicitly defined here, rather than in a
-    # profile, perhaps.
+    # TODO: revisit below
     lines.append("source ~/.bash_profile")
     lines.append(env_script)
     lines.append(' '.join(cmd))
@@ -259,8 +252,6 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
 
     fp = join(job_dir, '%s.txt' % job_id)
     open(fp, 'w').write("\n".join(lines))
-
-    # TODO: revisit epilogue
 
     qsub_cmd = []
 
@@ -275,11 +266,9 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
     qsub_cmd.append("-l nodes=1:ppn=5 %s" % fp)
     qsub_cmd.append("-o %s/qsub-output.txt " % job_dir)
     qsub_cmd.append("-e %s/qsub-error.txt" % job_dir)
+    # TODO: revisit epilogue
     qsub_cmd.append("-l epilogue=/home/qiita/qiita-epilogue.sh")
 
-    # "%s -l nodes=1:ppn=5 %s -o %s/qsub-output.txt -e %s/qsub-error.txt -l
-    # epilogue=/home/qiita/qiita-epilogue.sh" % (cmd_prefix, fp, job_dir,
-    # job_dir)
     qsub_cmd = ' '.join(qsub_cmd)
 
     # stdX parameters added to support returning the Torque ID from qsub
@@ -289,7 +278,7 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
 
     # Adding proc.communicate call to wait for qsub to return and
     # retrieve Torque ID from stdout.
-    # Communicate pulls all stdout/stderr from the PIPEs
+    # Communicate() pulls all stdout/stderr from the PIPEs
     # This call waits until cmd is done
     stdout, stderr = proc.communicate()
 
@@ -688,7 +677,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if dependent_jobs_list:
                     # a dependent_jobs_list will always have at least one
                     # job
-                    next_job = sub_list.pop(0)
+                    next_job = dependent_jobs_list.pop(0)
 
                     if not dependent_jobs_list:
                         # dependent_jobs_list is now empty
