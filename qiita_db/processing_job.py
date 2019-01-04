@@ -79,8 +79,8 @@ class Watcher(Process):
         # the cross-process sentinel value to shutdown Watcher
         self.event = Event()
 
-    def _element_extract2(self, snippet, list_of_elements,
-                          list_of_optional_elements):
+    def _element_extract(self, snippet, list_of_elements,
+                         list_of_optional_elements):
         results = {}
         for element in list_of_elements:
             # TODO: Verify \/ is not needed in all three cases
@@ -143,16 +143,16 @@ class Watcher(Process):
                         # extract the metadata we want.
                         # if a job has completed, an exit_status element will
                         # be present. We also want that.
-                        results = self._element_extract2(item, ['Job_Id',
-                                                                'Job_Name',
-                                                                'job_state'],
-                                                               ['depend'])
+                        results = self._element_extract(item, ['Job_Id',
+                                                               'Job_Name',
+                                                               'job_state'],
+                                                              ['depend'])
                         tmp = Watcher.job_state_map[results['job_state']]
                         results['job_state'] = tmp
                         if results['job_state'] == 'completed':
-                            results2 = self._element_extract2(item,
-                                                              ['exit_status'],
-                                                              [])
+                            results2 = self._element_extract(item,
+                                                             ['exit_status'],
+                                                             [])
                             results['exit_status'] = results2['exit_status']
 
                         # determine if anything has changed since last poll
@@ -208,12 +208,12 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     # When Popen() executes, the shell is not in interactive mode,
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
-    # cmd = "bash -c '%s; echo $PATH; %s'" % (env_script, ' '.join(cmd))
-    cmd = "source deactivate; %s; %s %s %s %s" % (env_script,
-                                                  start_script,
-                                                  url,
-                                                  job_id,
-                                                  job_dir)
+    cmd = "bash -c '%s; echo $PATH; %s'" % (env_script, ' '.join(cmd))
+    # cmd = "source deactivate; %s; %s %s %s %s" % (env_script,
+    #                                              start_script,
+    #                                              url,
+    #                                              job_id,
+    #                                              job_dir)
 
     # Popen() may also need universal_newlines=True
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
