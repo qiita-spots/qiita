@@ -230,11 +230,11 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     if proc.returncode != 0:
         error = "error from launch_local when launching cmd='%s'" % cmd
         error = "%s\n%s\n%s" % (error, stdout, stderr)
-        raise AssertionError(error)
 
         # Forcing the creation of a new connection
         qdb.sql_connection.create_new_transaction()
         ProcessingJob(job_id).complete(False, error=error)
+        # raise AssertionError(error)
 
 
 def launch_torque(env_script, start_script, url, job_id, job_dir,
