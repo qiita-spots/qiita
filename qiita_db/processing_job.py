@@ -222,13 +222,10 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     # (*nix platforms only)
     error = None
 
-    if not proc.returncode:
-        error = "launch is returning before cmd='%s' has completed" % cmd
-        raise AssertionError(error)
-
     if proc.returncode != 0:
-        error = ("Error submitting job:\nStd output:%s\nStd error:%s"
-                 % (stdout, stderr))
+        error = "error from launch_local when launching cmd='%s'" % cmd
+        error = "%s\n%s\n%s" % (error, stdout, stderr)
+        raise AssertionError(error)
 
         # Forcing the creation of a new connection
         qdb.sql_connection.create_new_transaction()

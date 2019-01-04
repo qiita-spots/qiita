@@ -59,6 +59,7 @@ class ProcessingJobUtilTest(TestCase):
         self.assertEqual(obs_err, "Test system call stderr\n")
         self.assertEqual(obs_status, 1)
 
+    # TODO: REDO
     def test_job_submitter(self):
         # The cmd parameter of the function should be the command that
         # actually executes the function. However, in order to avoid executing
@@ -69,6 +70,7 @@ class ProcessingJobUtilTest(TestCase):
         cmd = 'echo "Test system call stdout"'
         qdb.processing_job._job_submitter(job.id, cmd)
 
+    # TODO: REDO
     def test_job_submitter_error(self):
         # Same comment as above, but here we are going to force failure, and
         # check that the job is updated correctly
@@ -190,6 +192,7 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(self.tester3.status, 'success')
         self.assertEqual(self.tester4.status, 'error')
 
+    # TODO: REDO
     def test_generate_cmd(self):
         obs = self.tester1._generate_cmd()
         exp = ('qiita-plugin-launcher "source activate qiita" '
