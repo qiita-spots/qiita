@@ -312,16 +312,29 @@ def start(port, master):
 
             tmp = watcher.torque_to_qiita_state_map
             exit_status = tmp[msg['exit_status']]
-            error_msg = msg['error_msg']
+
+            error_msg = None
+
+            if 'error_msg' in msg:
+                error_msg = msg['error_msg']
 
             # assuming we don't need to force a new connection,
             # since we are in the main process.
             # qdb.sql_connection.create_new_transaction()
             # {'job_state': 'queued', 'Job_Id': '1094576.barnacle.ucsd.edu',
             # 'Job_Name': 'job2'}
-            # TODO: What happens if the job is not in the DB?
-            tmp = qdb.processing_job.ProcessingJob(msg['Job_Id'])
-            tmp.complete(exit_status, error=error_msg)
+            qid = qdb.processing_job.ProcessingJob.by_ext_id(msg['Job_Id'])
+
+            if qid:
+                # Qiita recognizes the external ID from watcher, and has
+                # mapped it to a Qiita ID. Now, create a Job object to
+                # register the job's changed status in Qiita.
+                job_obj = qdb.processing_job.ProcessingJob(qid)
+                job_obj.complete(exit_status, error=error_msg)
+            else:
+                # for now, ignore any job owned by Qiita, but can't be
+                # mapped to a ProcessJob.
+                pass
 
     if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
         # Thread() can be replaced with Process() if need be

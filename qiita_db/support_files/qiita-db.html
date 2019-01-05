@@ -1964,7 +1964,7 @@ The last heartbeat received by this job</title></a>
   <a xlink:href='#processing_job.step'><text x='1953' y='1282'>step</text><title>step varchar</title></a>
   <a xlink:href='#processing_job.pending'><text x='1953' y='1297'>pending</text><title>pending varchar</title></a>
   <use id='nn' x='1937' y='1302' xlink:href='#nn'/><a xlink:href='#processing_job.hidden'><text x='1953' y='1312'>hidden</text><title>hidden bool not null default &#039;False&#039;</title></a>
-
+<a xlink:href='#processing_job.external_job_id'><text x='1953' y='1324'>external_job_id</text><title>Store an external job ID (e.g. Torque job ID) associated this Qiita job</title></a>
 <!-- ============= Table 'software' ============= -->
 <rect class='table' x='2385' y='953' width='135' height='180' rx='7' ry='7' />
 <path d='M 2385.50 979.50 L 2385.50 960.50 Q 2385.50 953.50 2392.50 953.50 L 2512.50 953.50 Q 2519.50 953.50 2519.50 960.50 L 2519.50 979.50 L2385.50 979.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
@@ -5865,6 +5865,12 @@ The name of the column that describes the specimen identifiers &#040;such as wha
 		<td><a name='processing_job.hidden'>hidden</a></td>
 		<td> bool   DEFO 'False' </td>
 		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='processing_job.external_job_id'>external_job_id</a></td>
+		<td> varchar   </td>
+		<td> Store an external job ID (e.g. Torque job ID) associated this Qiita job </td>
 	</tr>
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;processing&#095;job</td>

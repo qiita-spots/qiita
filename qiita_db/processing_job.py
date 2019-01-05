@@ -204,11 +204,6 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
     cmd = "bash -c '%s; echo $PATH; %s'" % (env_script, ' '.join(cmd))
-    # cmd = "source deactivate; %s; %s %s %s %s" % (env_script,
-    #                                              start_script,
-    #                                              url,
-    #                                              job_id,
-    #                                              job_dir)
 
     # Popen() may also need universal_newlines=True
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
@@ -234,6 +229,7 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
 def launch_torque(env_script, start_script, url, job_id, job_dir,
                   dependent_job_id):
 
+    # note that job_id is Qiita's UUID, not a Torque job ID
     cmd = [start_script, url, job_id, job_dir]
 
     # generating file contents to be used with qsub
@@ -347,6 +343,12 @@ class ProcessingJob(qdb.base.QiitaObject):
     """
     _table = 'processing_job'
     _queue_count = 2
+    _launch_map = {'qiita-plugin-launcher':
+                   {'function': launch_local,
+                    'execute_in_process': False},
+                   'qiita-plugin-launcher-qsub':
+                   {'function': launch_torque,
+                    'execute_in_process': True}}
 
     @classmethod
     def exists(cls, job_id):
@@ -372,6 +374,26 @@ class ProcessingJob(qdb.base.QiitaObject):
                                    FROM qiita.processing_job
                                    WHERE processing_job_id = %s)"""
             qdb.sql_connection.TRN.add(sql, [job_id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @classmethod
+    def by_ext_id(cls, external_id):
+        """Return Qiita Job UUID associated with external_id
+
+        Parameters
+        ----------
+        external_id : str
+            An external id (e.g. Torque Job ID)
+
+        Returns
+        -------
+        str
+            Qiita Job UUID, if found, otherwise None
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT processing_job_id FROM qiita.processing_job
+                     WHERE external_job_id = '%s'"""
+            qdb.sql_connection.TRN.add(sql, [external_id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
@@ -611,6 +633,29 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [new_status, self.id])
             qdb.sql_connection.TRN.execute()
 
+    def _set_ext_id(self, value):
+        """Sets the external job id of the job
+
+        Parameters
+        ----------
+        value : str, {'queued', 'running', 'success', 'error',
+                      'in_construction', 'waiting'}
+            The new status of the job
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBStatusError
+            - If the current status of the job is 'success'
+            - If the current status of the job is 'running' and `value` is
+            'queued'
+        """
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.processing_job
+                     SET external_job_id = '%s'
+                     WHERE processing_job_id = '%s'"""
+            qdb.sql_connection.TRN.add(sql, [value, self.id])
+            qdb.sql_connection.TRN.execute()
+
     def submit(self, parent_job_id=None, dependent_jobs_list=None):
         """Submits the job to execution
         This method has the ability to submit itself, as well as a list of
@@ -647,18 +692,13 @@ class ProcessingJob(qdb.base.QiitaObject):
         # portal server that submitted the job
         url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
 
-        cmap = {'qiita-plugin-launcher': {'function': launch_local,
-                                          'execute_in_process': False},
-                'qiita-plugin-launcher-qsub': {'function': launch_torque,
-                                               'execute_in_process': True}}
-
         # note that dependent jobs, such as m validator jobs marshalled into
         # n 'queues' require the job_id returned by an external scheduler such
         # as Torque's MOAB, rather than a job name that can be defined within
         # Qiita. Hence, this method must be able to handle the case where a job
         # requires metadata from a late-defined and time-sensitive source.
-        if qiita_config.plugin_launcher in cmap:
-            launcher = cmap[qiita_config.plugin_launcher]
+        if qiita_config.plugin_launcher in ProcessingJob._launch_map:
+            launcher = ProcessingJob._launch_map[qiita_config.plugin_launcher]
             if launcher['execute_in_process'] is True:
                 # run this launcher function within this process.
                 # usually this is done if the launcher spawns other processes
@@ -673,6 +713,12 @@ class ProcessingJob(qdb.base.QiitaObject):
                                               self.id,
                                               job_dir,
                                               parent_job_id)
+
+                # note that at this point, self.id is Qiita's UUID for a Qiita
+                # job. job_id at this point is an external ID (e.g. Torque Job
+                # ID). Record the mapping between job_id and self.id using
+                # _set_ext_id().
+                self._set_ext_id(job_id)
 
                 if dependent_jobs_list:
                     # a dependent_jobs_list will always have at least one
@@ -709,7 +755,9 @@ class ProcessingJob(qdb.base.QiitaObject):
 
                 if dependent_jobs_list:
                     # for now, treat dependents as independent when
-                    # running locally.
+                    # running locally. This means they will not be
+                    # organized into n 'queues' or 'chains', and
+                    # will all run simultaneously.
                     for dependent in dependent_jobs_list:
                         p = Process(target=launcher['function'],
                                     args=(plugin_env_script,
@@ -1000,7 +1048,7 @@ class ProcessingJob(qdb.base.QiitaObject):
 
                 # Get the validator command for the current artifact type and
                 # create a new job
-                # see also def release_validators()
+                # see also release_validators()
                 cmd = qdb.software.Command.get_validator(atype)
                 values_dict = {
                     'files': dumps(filepaths), 'artifact_type': atype,
@@ -1035,10 +1083,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                     # sub_list is now empty
                     sub_list = None
                 lead_job.submit(dependent_jobs_list=sub_list)
-
-            # Submit all the validator jobs
-            # for j in validator_jobs:
-            #    j.submit()
 
             # Submit the job that will release all the validators
             plugin = qdb.software.Software.from_name_and_version(

@@ -1049,6 +1049,9 @@
 			<column name="hidden" type="bool" jt="-7" mandatory="y" >
 				<defo>&#039;False&#039;</defo>
 			</column>
+			<column name="external_job_id" type="varchar" jt="12" mandatory="n" >
+				<comment><![CDATA[Store an external job ID (e.g. Torque job ID) associated this Qiita job]]></comment>
+			</column>
 			<index name="pk_processing_job" unique="PRIMARY_KEY" >
 				<column name="processing_job_id" />
 			</index>
