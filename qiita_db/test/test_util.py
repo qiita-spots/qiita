@@ -1047,26 +1047,27 @@ class UtilTests(TestCase):
             del obs[i]['timestamp']
 
         exp = [
-           {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-            'artifact_id': 4, 'data_type': '18S', 'target_gene': '16S rRNA',
-            'name': 'BIOM', 'target_subfragment': ['V4'], 'parameters': {
-             'reference': '1', 'similarity': '0.97',
-             'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-             'threads': '1', 'sortmerna_coverage': '0.97'},
-            'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-            'deprecated': False, 'platform': 'Illumina',
-            'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
-            'prep_samples': 27},
-           {'files': [], 'artifact_id': 7, 'data_type': '16S',
-            'target_gene': '16S rRNA', 'name': 'BIOM',
-            'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
-            'deprecated': False, 'platform': 'Illumina', 'algorithm_az': '',
-            'prep_samples': 27},
-           {'files': ['biom_table.biom'], 'artifact_id': 8, 'data_type': '18S',
-            'target_gene': 'not provided', 'name': 'noname',
-            'target_subfragment': [], 'parameters': {}, 'algorithm': '',
-            'deprecated': False, 'platform': 'not provided',
-            'algorithm_az': '', 'prep_samples': 0}]
+            {'files': ['1_study_1001_closed_reference_otu_table.biom'],
+             'artifact_id': 4, 'data_type': '18S', 'active': True,
+             'target_gene': '16S rRNA', 'name': 'BIOM',
+             'target_subfragment': ['V4'], 'parameters': {
+                'reference': '1', 'similarity': '0.97',
+                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+                'threads': '1', 'sortmerna_coverage': '0.97'},
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'deprecated': False, 'platform': 'Illumina',
+             'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
+             'prep_samples': 27},
+            {'files': [], 'artifact_id': 7, 'data_type': '16S', 'active': None,
+             'target_gene': '16S rRNA', 'name': 'BIOM',
+             'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
+             'deprecated': None, 'platform': 'Illumina', 'algorithm_az': '',
+             'prep_samples': 27},
+            {'files': ['biom_table.biom'], 'artifact_id': 8,
+             'data_type': '18S', 'active': None, 'target_gene': 'not provided',
+             'name': 'noname', 'target_subfragment': [], 'parameters': {},
+             'algorithm': '', 'deprecated': None, 'platform': 'not provided',
+             'algorithm_az': '', 'prep_samples': 0}]
         self.assertItemsEqual(obs, exp)
 
         # now let's test that the order given by the commands actually give the
