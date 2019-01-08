@@ -67,7 +67,7 @@ host_body_mass_index, host_body_mass_index_units, irb_institute, irb_protocol_id
 
 Please note that personally identifiable health information and protected health information (PHI) should NOT be supplied. For
 information regarding the rules for defining PHI you can reference the
-`CMI User Information Sheet: The De-Identification of Protected Health Information <https://drive.google.com/a/eng.ucsd.edu/file/d/0B6NwNax2VIfab1lBWmVQSGdnM0U/>`__.
+`CMI User Information Sheet: The De-Identification of Protected Health Information <http://cmi.ucsd.edu/PHIChecklist>`__.
 
 We recommend creation of a metadata template for your study using `Qiimp <https://qiita.ucsd.edu/iframe/?iframe=qiimp>`__ as this tool
 enables you to automatically ensure compliance with EBI and MIMARKS standards and enable your data to be consistent with other

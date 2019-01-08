@@ -1654,6 +1654,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 commands[cid] = {
                     'params': params,
                     'merging_scheme': cmd.merging_scheme,
+                    'active': cmd.active,
                     'deprecated': cmd.software.deprecated}
 
             # Now let's get the actual artifacts. Note that ts is a cache
@@ -1690,9 +1691,11 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 algorithm = ''
                 # set to False because if there is no cid, it means that it
                 # was a direct upload
-                deprecated = False
+                deprecated = None
+                active = None
                 if cid is not None:
                     deprecated = commands[cid]['deprecated']
+                    active = commands[cid]['active']
                     if pcid is None:
                         parent_merging_scheme = None
                     else:
@@ -1746,6 +1749,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     'algorithm': algorithm,
                     'algorithm_az': algorithm_az[algorithm],
                     'deprecated': deprecated,
+                    'active': active,
                     'files': filepaths})
 
             return results

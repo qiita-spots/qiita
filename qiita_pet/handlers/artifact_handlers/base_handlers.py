@@ -197,7 +197,7 @@ def artifact_summary_get_request(user, artifact_id):
             'software': sw.name,
             'software_version': sw.version,
             'processing_parameters': proc_params.values,
-            'software_active': sw.active,
+            'command_active': cmd.active,
             'software_deprecated': sw.deprecated,
             }
     else:
