@@ -24,7 +24,7 @@ class StudyEditorForm(Form):
     r"""Reduced WTForm for editing the study information
 
     Allows editing any study information that will not require a metadata
-    changes
+    change
 
     Attributes
     ----------

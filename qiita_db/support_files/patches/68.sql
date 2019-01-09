@@ -1,3 +1,7 @@
+-- December 21, 2018
+-- Strip non-printable-ASCII characters from study_person.name
+UPDATE qiita.study_person SET name = regexp_replace(name, '[^\x20-\x7E]+', '', 'g');
+
 -- November 21, 2018
 -- moving sample and prep info files to jsonb
 

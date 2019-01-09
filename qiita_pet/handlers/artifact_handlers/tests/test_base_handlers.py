@@ -227,7 +227,7 @@ class TestBaseHandlersUtils(TestCase):
                            'btn-sm" href="/vamps/2"><span class="glyphicon '
                            'glyphicon-export"></span> Submit to VAMPS</a>'),
                'processing_info': {
-                 'software_active': False, 'software_deprecated': False,
+                 'command_active': True, 'software_deprecated': False,
                  'command': 'Split libraries FASTQ',
                  'processing_parameters': {
                    'max_barcode_errors': '1.5', 'sequence_max_n': '0',

@@ -1094,6 +1094,7 @@ Vue.component('processing-graph', {
       'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}, 'color': '#333333'},
       'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}, 'color': '#333333'},
       'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}, 'color': '#333333'},
+      'outdated': {border: '#666666', background: '#666666', highlight: {border: '#000000', background: '#666666'}, 'color': '#ffffff'},
       'deprecated': {border: '#000000', background: '#000000', highlight: {border: '#000000', background: '#333333'}, 'color': '#ffffff'}
     };
 
@@ -1114,7 +1115,7 @@ Vue.component('processing-graph', {
       var text = '<td style="padding: 5px; color:' + vm.colorScheme[circle_name]['color'] +
         '; background-color:' + vm.colorScheme[circle_name]['background'] +
         ';"><small>' + circle_name + '</small></td>';
-      if (circle_name === 'artifact' || circle_name === 'type' || circle_name === 'deprecated'){
+      if (circle_name === 'artifact' || circle_name === 'type' || circle_name === 'deprecated' || circle_name === 'outdated'){
         circle_types.push(text);
       } else {
         circle_statuses.push(text);
