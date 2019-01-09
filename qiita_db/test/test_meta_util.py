@@ -307,16 +307,21 @@ class MetaUtilTests(TestCase):
         txt_obs = fhd.readlines()
         tmp.close()
         txt_exp = [
-            'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
+            'biom fp\tsample fp\tprep fp\tqiita artifact id\tplatform\t'
+            'target gene\tmerging scheme\tartifact software\t'
+            'parent software\n',
             'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
-            '%s\t%s\t4\tPick closed-reference OTUs, Split libraries FASTQ\n'
-            % (fn_sample, fn_prep),
+            '%s\t%s\t4\tIllumina\t16S rRNA\t'
+            'Pick closed-reference OTUs | Split libraries FASTQ\t'
+            'QIIME v1.9.1\tQIIME v1.9.1\n' % (fn_sample, fn_prep),
             'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
-            '%s\t%s\t5\tPick closed-reference OTUs, Split libraries FASTQ\n'
-            % (fn_sample, fn_prep),
+            '%s\t%s\t5\tIllumina\t16S rRNA\t'
+            'Pick closed-reference OTUs | Split libraries FASTQ\t'
+            'QIIME v1.9.1\tQIIME v1.9.1\n' % (fn_sample, fn_prep),
             'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
-            'm\t%s\t%s\t6\tPick closed-reference OTUs, Split libraries FASTQ\n'
-            % (fn_sample, fn_prep)]
+            'm\t%s\t%s\t6\tIllumina\t16S rRNA\t'
+            'Pick closed-reference OTUs | Split libraries FASTQ\t'
+            'QIIME v1.9.1\tQIIME v1.9.1\n' % (fn_sample, fn_prep)]
         self.assertEqual(txt_obs, txt_exp)
 
         # whatever the configuration was, we will change to settings so we can
@@ -384,17 +389,23 @@ class MetaUtilTests(TestCase):
         fhd = tmp.extractfile(txt)
         txt_obs = fhd.readlines()
         tmp.close()
+
         txt_exp = [
-            'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
+            'biom fp\tsample fp\tprep fp\tqiita artifact id\tplatform\t'
+            'target gene\tmerging scheme\tartifact software\t'
+            'parent software\n',
             'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
-            '%s\t%s\t4\tPick closed-reference OTUs, Split libraries FASTQ\n'
-            % (fn_sample, fn_prep),
+            '%s\t%s\t4\tIllumina\t16S rRNA\t'
+            'Pick closed-reference OTUs | Split libraries FASTQ\t'
+            'QIIME v1.9.1\tQIIME v1.9.1\n' % (fn_sample, fn_prep),
             'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
-            '%s\t%s\t5\tPick closed-reference OTUs, Split libraries FASTQ\n'
-            % (fn_sample, fn_prep),
+            '%s\t%s\t5\tIllumina\t16S rRNA\t'
+            'Pick closed-reference OTUs | Split libraries FASTQ\t'
+            'QIIME v1.9.1\tQIIME v1.9.1\n' % (fn_sample, fn_prep),
             'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
-            'm\t%s\t%s\t6\tPick closed-reference OTUs, Split libraries FASTQ\n'
-            % (fn_sample, fn_prep)]
+            'm\t%s\t%s\t6\tIllumina\t16S rRNA\t'
+            'Pick closed-reference OTUs | Split libraries FASTQ'
+            '\tQIIME v1.9.1\tQIIME v1.9.1\n' % (fn_sample, fn_prep)]
         self.assertEqual(txt_obs, txt_exp)
 
         # returning configuration
