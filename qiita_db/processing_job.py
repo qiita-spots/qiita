@@ -14,13 +14,13 @@ from future.utils import viewitems, viewvalues
 from itertools import chain
 from json import dumps, loads
 from multiprocessing import Process, Queue, Event
-from os.path import join
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import create_nested_path
 from re import search, findall
 from subprocess import Popen, PIPE
 from time import sleep
 from uuid import UUID
+from os.path import join
 
 
 class Watcher(Process):
@@ -227,7 +227,7 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
 
 
 def launch_torque(env_script, start_script, url, job_id, job_dir,
-                  dependent_job_id):
+                  dependent_job_id, resource_params):
 
     # note that job_id is Qiita's UUID, not a Torque job ID
     cmd = [start_script, url, job_id, job_dir]
@@ -259,7 +259,7 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
     else:
         qsub_cmd.append("qsub")
 
-    qsub_cmd.append("-l nodes=1:ppn=5 %s" % fp)
+    qsub_cmd.append("-l %s %s" % (resource_params, fp))
     qsub_cmd.append("-o %s/qsub-output.txt " % job_dir)
     qsub_cmd.append("-e %s/qsub-error.txt" % job_dir)
     # TODO: revisit epilogue
@@ -395,6 +395,60 @@ class ProcessingJob(qdb.base.QiitaObject):
                      WHERE external_job_id = '%s'"""
             qdb.sql_connection.TRN.add(sql, [external_id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    def get_resource_allocation_info(self):
+        """Return resource allocation defined for this job. For
+        external computational resources only.
+
+        Returns
+        -------
+        str
+            A resource allocation string useful to the external resource
+        """
+        with qdb.sql_connection.TRN:
+            if self.command.name == 'complete_job':
+                type = 'COMPLETE_JOBS_RESOURCE_PARAM'
+                v = loads(self.parameters.values['payload'])
+                # assume an empty string for name is preferable to None
+                name = ''
+                if v['artifacts'] is not None:
+                    name = v['artifacts'].values()[0]['artifact_type']
+            elif self.command.name == 'release_validators':
+                type = 'RELEASE_VALIDATORS_RESOURCE_PARAMS'
+                tmp = ProcessingJob(self.parameters.values['job'])
+                name = tmp.parameters.command.name
+            elif self.id == 'register':
+                type = 'REGISTER'
+                name = 'REGISTER'
+            else:
+                # assume anything else is a command
+                type = 'RESOURCE_PARAMS_COMMAND'
+                name = self.command.name
+
+            # first, query for resources matching name and type
+            sql = """SELECT allocation FROM
+                     qiita.processing_job_resource_allocation
+                     WHERE name = '%s' and type = '%s'"""
+            qdb.sql_connection.TRN.add(sql, [name, type])
+
+            result = qdb.sql_connection.TRN.execute_fetchlast()
+
+            # if no matches for both type and name were found, query the
+            # 'default' value for the type
+
+            if not result:
+                sql = """SELECT allocation FROM
+                         qiita.processing_job_resource_allocation WHERE
+                         name = '%s' and type = '%s'"""
+                qdb.sql_connection.TRN.add(sql, ['default', type])
+
+            result = qdb.sql_connection.TRN.execute_fetchlast()
+
+            if not result:
+                AssertionError("Could not match %s to a resource allocation!" %
+                               name)
+
+            return result
 
     @classmethod
     def create(cls, user, parameters, force=False):
@@ -705,6 +759,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # before returning immediately, usually with a job ID that can
                 # be used to monitor the job's progress.
 
+                resource_params = ProcessingJob.get_resource_allocation_info()
+
                 # note that parent_job_id is being passed transparently from
                 # submit declaration to the launcher.
                 job_id = launcher['function'](plugin_env_script,
@@ -712,7 +768,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                                               url,
                                               self.id,
                                               job_dir,
-                                              parent_job_id)
+                                              parent_job_id, resource_params)
 
                 # note that at this point, self.id is Qiita's UUID for a Qiita
                 # job. job_id at this point is an external ID (e.g. Torque Job
