@@ -72,9 +72,11 @@ class UtilTests(TestCase):
         # just checking that is not empty cause the MD5 will change on every
         # run
         biom_metadata_release, archive_release = get_release_info('private')
-        # note that we are testing not eqaul as we should have some information
-        # but as the md5 will change is pretty hard to test equal
+        # note that we are testing not equal as we should have some information
+        # and then we will test that at least the 2nd element is correct
         self.assertNotEqual(biom_metadata_release, ('', '', ''))
+        self.assertEqual(biom_metadata_release[1],
+                         'releases/QIITA-private.tgz')
         self.assertEqual(archive_release, ('', '', ''))
 
         generate_plugin_releases()

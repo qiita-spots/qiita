@@ -66,7 +66,9 @@ class ArchiveTest(TestCase):
         obs = qdb.archive.Archive.retrieve_feature_values('Nothing')
         self.assertEqual(obs, exp)
 
-        # now merging_schemes should have 3 elements
+        # now merging_schemes should have 3 elements; note that 2 is empty
+        # string because we are inserting an artifact [8] that was a direct
+        # upload
         self.assertDictEqual(qdb.archive.Archive.merging_schemes(), {
             1: 'Pick closed-reference OTUs | Split libraries FASTQ',
             2: '', 3: 'Single Rarefaction | N/A'})
