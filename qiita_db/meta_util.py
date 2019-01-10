@@ -25,7 +25,7 @@ Methods
 from __future__ import division
 
 from os import stat, rename
-from os.path import join, relpath, exists, basename
+from os.path import join, relpath, basename
 from time import strftime, localtime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
