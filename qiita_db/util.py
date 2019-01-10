@@ -1905,8 +1905,8 @@ def generate_analysis_list(analysis_ids, public_only=False):
                 'mapping_files': mapping_files})
 
     return results
-  
-  
+
+
 def create_nested_path(path):
     """Wraps makedirs() to make it safe to use across multiple concurrent calls.
     Returns successfully if the path was created, or if it already exists.
@@ -1940,8 +1940,8 @@ def create_nested_path(path):
         # if the directory already exists, treat as success (idempotent)
         if e.errno != EEXIST:
             raise
-            
-            
+
+
 def human_merging_scheme(cname, merging_scheme,
                          pname, parent_merging_scheme,
                          artifact_parameters, artifact_filepaths,
