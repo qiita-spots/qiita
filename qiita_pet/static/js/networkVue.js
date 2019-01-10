@@ -1128,11 +1128,11 @@ Vue.component('processing-graph', {
     }
     var full_text = '<table style="border-spacing: 3px;border-collapse: separate;">' +
       '<tr>' +
-        '<td><small>Circle/Job status:</small></td>' +
+        '<td><small>Job status (circles):</small></td>' +
         '<td>' + circle_statuses.join('') + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<td><small>Triangle/Artifact types:</small>' +
+        '<td><small>Artifact status (triangle):</small>' +
         '<td>' + circle_types.join('') + '</td>' +
       '</tr>' +
     '</table>';
