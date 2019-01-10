@@ -307,9 +307,9 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1030' y='733' width='655' height='2' />
 
 <!-- ============= Group 'Group_template' ============= -->
-<rect class='grp' style='fill:#ffffcc;stroke:#e0e0c5' x='1004' y='205' width='707' height='485' />
+<rect class='grp' style='fill:#ffffcc;stroke:#e0e0c5' x='1004' y='205' width='662' height='485' />
 <text x='1015' y='220'>Group_template</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1015' y='223' width='685' height='2' />
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1015' y='223' width='640' height='2' />
 
 <!-- ============= Group 'Group_processing' ============= -->
 <rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='1709' y='925' width='1097' height='770' />
@@ -571,16 +571,11 @@ table {
 	analysis_sample references artifact ( artifact_id )</title>
 </path>
 <text x='352' y='1105' transform='rotate(0 352,1105)' title='Foreign Key fk_analysis_sample_artifact
-	analysis_sample references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1245 375 L 1245,450' >
-	<title>Foreign Key fk_prep_template
-	prep_template_sample references prep_template ( prep_template_id )</title>
-</path>
-<text x='1258' y='375' transform='rotate(90 1258,375)' title='Foreign Key fk_prep_template
-	prep_template_sample references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1485 345 L 1485,352 Q 1485,360 1492,360 L 1770,360' >
+	analysis_sample references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1500 330 L 1770,330' >
 	<title>Foreign Key fk_required_sample_info_study
 	study_sample references study ( study_id )</title>
 </path>
-<text x='1498' y='345' transform='rotate(90 1498,345)' title='Foreign Key fk_required_sample_info_study
+<text x='1507' y='325' transform='rotate(0 1507,325)' title='Foreign Key fk_required_sample_info_study
 	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1635 495 L 1770,495' >
 	<title>Foreign Key fk_study_prep_template_study
 	study_prep_template references study ( study_id )</title>
@@ -861,7 +856,12 @@ table {
 	study references timeseries_type ( timeseries_type_id )</title>
 </path>
 <text x='1972' y='535' transform='rotate(0 1972,535)' title='Foreign Key fk_study_timeseries_type
-	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><!-- ============= Table 'column_controlled_vocabularies' ============= -->
+	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1245 375 L 1245,450' >
+	<title>Foreign Key fk_prep_template
+	prep_template_sample references prep_template ( prep_template_id )</title>
+</path>
+<text x='1258' y='375' transform='rotate(90 1258,375)' title='Foreign Key fk_prep_template
+	prep_template_sample references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><!-- ============= Table 'column_controlled_vocabularies' ============= -->
 <rect class='table' x='270' y='1208' width='195' height='75' rx='7' ry='7' />
 <path d='M 270.50 1234.50 L 270.50 1215.50 Q 270.50 1208.50 277.50 1208.50 L 457.50 1208.50 Q 464.50 1208.50 464.50 1215.50 L 464.50 1234.50 L270.50 1234.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#column_controlled_vocabularies'><text x='280' y='1222' class='tableTitle'>column_controlled_vocabularies</text><title>Table qiita.column_controlled_vocabularies
@@ -1041,17 +1041,6 @@ Whether the message has been read or not&#046;</title></a>
   <use id='nn' x='1502' y='1347' xlink:href='#nn'/><a xlink:href='#message.message'><text x='1518' y='1357'>message</text><title>message varchar not null</title></a>
   <use id='nn' x='1502' y='1362' xlink:href='#nn'/><a xlink:href='#message.message_time'><text x='1518' y='1372'>message_time</text><title>message_time timestamp not null default current&#095;timestamp</title></a>
   <a xlink:href='#message.expiration'><text x='1518' y='1387'>expiration</text><title>expiration timestamp</title></a>
-
-<!-- ============= Table 'sample_x' ============= -->
-<rect class='table' x='1530' y='233' width='165' height='90' rx='7' ry='7' />
-<path d='M 1530.50 259.50 L 1530.50 240.50 Q 1530.50 233.50 1537.50 233.50 L 1687.50 233.50 Q 1694.50 233.50 1694.50 240.50 L 1694.50 259.50 L1530.50 259.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#sample_x'><text x='1587' y='247' class='tableTitle'>sample_x</text><title>Table qiita.sample_x
-data for samples in study x &#040;sample template&#041;x is the study&#095;id from study tableMAKE SURE sample&#095;id IS FK TO sample&#095;id IN required&#095;sample&#095;info TABLE</title></a>
-  <use id='nn' x='1532' y='267' xlink:href='#nn'/><a xlink:href='#sample_x.sample_id'><use id='pk' x='1532' y='266' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
-<a xlink:href='#sample_x.sample_id'><text x='1548' y='277'>sample_id</text><title>sample_id varchar not null</title></a>
-  <use id='nn' x='1532' y='282' xlink:href='#nn'/><a xlink:href='#sample_x.description'><text x='1548' y='292'>description</text><title>description varchar not null</title></a>
-  <a xlink:href='#sample_x.other_mapping_columns'><text x='1548' y='307'>other_mapping_columns</text><title>other_mapping_columns varchar
-Represents whatever other columns go with this study</title></a>
 
 <!-- ============= Table 'parent_artifact' ============= -->
 <rect class='table' x='1050' y='893' width='90' height='75' rx='7' ry='7' />
@@ -1352,28 +1341,6 @@ Referred by prep_template ( data_type_id ) </title></a>
   <use id='nn' x='692' y='1197' xlink:href='#nn'/><a xlink:href='#data_type.data_type'><use id='unq' x='692' y='1196' xlink:href='#unq'/><title>Unique Index  ( data_type ) </title></a>
 <a xlink:href='#data_type.data_type'><text x='708' y='1207'>data_type</text><title>data_type varchar not null
 Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use</title></a>
-
-<!-- ============= Table 'prep_y' ============= -->
-<rect class='table' x='1020' y='278' width='90' height='75' rx='7' ry='7' />
-<path d='M 1020.50 304.50 L 1020.50 285.50 Q 1020.50 278.50 1027.50 278.50 L 1102.50 278.50 Q 1109.50 278.50 1109.50 285.50 L 1109.50 304.50 L1020.50 304.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#prep_y'><text x='1046' y='292' class='tableTitle'>prep_y</text><title>Table qiita.prep_y
-Information on how raw data y was prepared &#040;prep template&#041;Linked by y being raw&#095;data&#095;id from raw data table&#046;</title></a>
-  <use id='nn' x='1022' y='312' xlink:href='#nn'/><a xlink:href='#prep_y.sample_id'><use id='pk' x='1022' y='311' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
-<a xlink:href='#prep_y.sample_id'><text x='1038' y='322'>sample_id</text><title>sample_id varchar not null</title></a>
-  <a xlink:href='#prep_y.data'><text x='1038' y='337'>data</text><title>data bigint
-STUFFFFF</title></a>
-
-<!-- ============= Table 'prep_template_sample' ============= -->
-<rect class='table' x='1140' y='278' width='180' height='90' rx='7' ry='7' />
-<path d='M 1140.50 304.50 L 1140.50 285.50 Q 1140.50 278.50 1147.50 278.50 L 1312.50 278.50 Q 1319.50 278.50 1319.50 285.50 L 1319.50 304.50 L1140.50 304.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#prep_template_sample'><text x='1169' y='292' class='tableTitle'>prep_template_sample</text><title>Table qiita.prep_template_sample</title></a>
-  <use id='nn' x='1142' y='312' xlink:href='#nn'/><a xlink:href='#prep_template_sample.prep_template_id'><use id='pk' x='1142' y='311' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, sample_id ) Index  ( prep_template_id ) </title></a>
-<a xlink:href='#prep_template_sample.prep_template_id'><text x='1158' y='322'>prep_template_id</text><title>prep_template_id bigint not null
-The prep template identifier</title></a>
-<a xlink:href='#prep_template_sample.prep_template_id'><use id='fk' x='1308' y='311' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
-  <use id='nn' x='1142' y='327' xlink:href='#nn'/><a xlink:href='#prep_template_sample.sample_id'><use id='pk' x='1142' y='326' xlink:href='#pk'/><title>Index  ( sample_id ) Index  ( sample_id ) Primary Key  ( prep_template_id, sample_id ) </title></a>
-<a xlink:href='#prep_template_sample.sample_id'><text x='1158' y='337'>sample_id</text><title>sample_id varchar not null</title></a>
-  <a xlink:href='#prep_template_sample.ebi_experiment_accession'><text x='1158' y='352'>ebi_experiment_accession</text><title>ebi_experiment_accession varchar</title></a>
 
 <!-- ============= Table 'study_sample' ============= -->
 <rect class='table' x='1350' y='233' width='150' height='105' rx='7' ry='7' />
@@ -1911,8 +1878,8 @@ Referred by processing_job ( command_id ) </title></a>
   <use id='nn' x='2162' y='1332' xlink:href='#nn'/><a xlink:href='#software_command.active'><text x='2178' y='1342'>active</text><title>active bool not null default &#039;True&#039;</title></a>
   <use id='nn' x='2162' y='1347' xlink:href='#nn'/><a xlink:href='#software_command.is_analysis'><text x='2178' y='1357'>is_analysis</text><title>is_analysis bool not null default &#039;False&#039;</title></a>
   <use id='nn' x='2162' y='1362' xlink:href='#nn'/><a xlink:href='#software_command.ignore_parent_command'><text x='2178' y='1372'>ignore_parent_command</text><title>ignore_parent_command bool not null default false</title></a>
-  <use id='nn' x='2162' y='1377' xlink:href='#nn'/><a xlink:href='#software_command.post_processing_cmd'><text x='2178' y='1387'>post_processing_cmd</text><title>post_processing_cmd varchar
-Store information on additional post-processing steps for merged BIOMs, if any.</title></a>
+  <a xlink:href='#software_command.post_processing_cmd'><text x='2178' y='1387'>post_processing_cmd</text><title>post_processing_cmd varchar
+Store information on additional post&#045;processing steps for merged BIOMs&#044; if any&#046;</title></a>
 
 <!-- ============= Table 'processing_job_validator' ============= -->
 <rect class='table' x='2160' y='1403' width='150' height='90' rx='7' ry='7' />
@@ -2041,6 +2008,38 @@ Controlled Vocabulary</title></a>
   <a xlink:href='#study.specimen_id_column'><text x='1803' y='592'>specimen_id_column</text><title>specimen_id_column varchar&#040;256&#041;
 The name of the column that describes the specimen identifiers &#040;such as what is written on the tubes&#041;&#046;</title></a>
   <a xlink:href='#study.public_raw_download'><text x='1803' y='607'>public_raw_download</text><title>public_raw_download bool default &#039;false&#039;</title></a>
+
+<!-- ============= Table 'prep_y' ============= -->
+<rect class='table' x='1020' y='278' width='120' height='75' rx='7' ry='7' />
+<path d='M 1020.50 304.50 L 1020.50 285.50 Q 1020.50 278.50 1027.50 278.50 L 1132.50 278.50 Q 1139.50 278.50 1139.50 285.50 L 1139.50 304.50 L1020.50 304.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#prep_y'><text x='1061' y='292' class='tableTitle'>prep_y</text><title>Table qiita.prep_y
+Information on how raw data y was prepared &#040;prep template&#041;Linked by y being raw&#095;data&#095;id from raw data table&#046;</title></a>
+  <use id='nn' x='1022' y='312' xlink:href='#nn'/><a xlink:href='#prep_y.sample_id'><use id='pk' x='1022' y='311' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
+<a xlink:href='#prep_y.sample_id'><text x='1038' y='322'>sample_id</text><title>sample_id varchar not null</title></a>
+  <a xlink:href='#prep_y.sample_values'><text x='1038' y='337'>sample_values</text><title>sample_values varchar
+Note that this is a jsonb but there DBSchema doesn&#039;t have this data type</title></a>
+
+<!-- ============= Table 'prep_template_sample' ============= -->
+<rect class='table' x='1155' y='278' width='180' height='90' rx='7' ry='7' />
+<path d='M 1155.50 304.50 L 1155.50 285.50 Q 1155.50 278.50 1162.50 278.50 L 1327.50 278.50 Q 1334.50 278.50 1334.50 285.50 L 1334.50 304.50 L1155.50 304.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#prep_template_sample'><text x='1184' y='292' class='tableTitle'>prep_template_sample</text><title>Table qiita.prep_template_sample</title></a>
+  <use id='nn' x='1157' y='312' xlink:href='#nn'/><a xlink:href='#prep_template_sample.prep_template_id'><use id='pk' x='1157' y='311' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, sample_id ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_template_sample.prep_template_id'><text x='1173' y='322'>prep_template_id</text><title>prep_template_id bigint not null
+The prep template identifier</title></a>
+<a xlink:href='#prep_template_sample.prep_template_id'><use id='fk' x='1323' y='311' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1157' y='327' xlink:href='#nn'/><a xlink:href='#prep_template_sample.sample_id'><use id='pk' x='1157' y='326' xlink:href='#pk'/><title>Index  ( sample_id ) Index  ( sample_id ) Primary Key  ( prep_template_id, sample_id ) </title></a>
+<a xlink:href='#prep_template_sample.sample_id'><text x='1173' y='337'>sample_id</text><title>sample_id varchar not null</title></a>
+  <a xlink:href='#prep_template_sample.ebi_experiment_accession'><text x='1173' y='352'>ebi_experiment_accession</text><title>ebi_experiment_accession varchar</title></a>
+
+<!-- ============= Table 'sample_x' ============= -->
+<rect class='table' x='1530' y='233' width='120' height='75' rx='7' ry='7' />
+<path d='M 1530.50 259.50 L 1530.50 240.50 Q 1530.50 233.50 1537.50 233.50 L 1642.50 233.50 Q 1649.50 233.50 1649.50 240.50 L 1649.50 259.50 L1530.50 259.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#sample_x'><text x='1564' y='247' class='tableTitle'>sample_x</text><title>Table qiita.sample_x
+data for samples in study x &#040;sample template&#041;x is the study&#095;id from study tableMAKE SURE sample&#095;id IS FK TO sample&#095;id IN required&#095;sample&#095;info TABLE</title></a>
+  <use id='nn' x='1532' y='267' xlink:href='#nn'/><a xlink:href='#sample_x.sample_id'><use id='pk' x='1532' y='266' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
+<a xlink:href='#sample_x.sample_id'><text x='1548' y='277'>sample_id</text><title>sample_id varchar not null</title></a>
+  <a xlink:href='#sample_x.sample_values'><text x='1548' y='292'>sample_values</text><title>sample_values varchar
+Note that this is a jsonb but there DBSchema doesn&#039;t have this data type</title></a>
 
 </g></svg>
 
@@ -2629,39 +2628,6 @@ The name of the column that describes the specimen identifiers &#040;such as wha
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;message</td>
 		<td> ON message&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='sample_x'>Table sample_x</a></th></tr>
-<tr><td colspan='3'>data for samples in study x &#040;sample template&#041;x is the study&#095;id from study tableMAKE SURE sample&#095;id IS FK TO sample&#095;id IN required&#095;sample&#095;info TABLE </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='sample_x.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='sample_x.description'>description</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='sample_x.other_mapping_columns'>other&#095;mapping&#095;columns</a></td>
-		<td> varchar   </td>
-		<td> Represents whatever other columns go with this study </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study&#095;x&#095;y</td>
-		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -3702,83 +3668,6 @@ The name of the column that describes the specimen identifiers &#040;such as wha
 	</tr>
 	<tr>		<td>U</td><td>idx&#095;data&#095;type</td>
 		<td> ON data&#095;type</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='prep_y'>Table prep_y</a></th></tr>
-<tr><td colspan='3'>Information on how raw data y was prepared &#040;prep template&#041;Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='prep_y.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='prep_y.data'>data</a></td>
-		<td> bigint   </td>
-		<td> STUFFFFF </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;prep&#095;y</td>
-		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='prep_template_sample'>Table prep_template_sample</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='prep_template_sample.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint   </td>
-		<td> The prep template identifier </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='prep_template_sample.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='prep_template_sample.ebi_experiment_accession'>ebi&#095;experiment&#095;accession</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;0</td>
-		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;0</td>
-		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;common&#095;prep&#095;info</td>
-		<td> ON prep&#095;template&#095;id&#044; sample&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;1</td>
-		<td> ON prep&#095;template&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_prep_template</td>
-		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5726,10 +5615,10 @@ The name of the column that describes the specimen identifiers &#040;such as wha
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
+		<td>&nbsp;</td>
 		<td><a name='software_command.post_processing_cmd'>post&#095;processing&#095;cmd</a></td>
 		<td> varchar   </td>
-		<td>Store information on additional post-processing steps for merged BIOMs, if any.</td>
+		<td> Store information on additional post&#045;processing steps for merged BIOMs&#044; if any&#046; </td>
 	</tr>
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;soft&#095;command</td>
@@ -6193,6 +6082,110 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>&nbsp;</td><td>fk_study_timeseries_type</td>
 		<td > ( timeseries&#095;type&#095;id ) ref <a href='#timeseries&#095;type'>timeseries&#095;type</a> (timeseries&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='prep_y'>Table prep_y</a></th></tr>
+<tr><td colspan='3'>Information on how raw data y was prepared &#040;prep template&#041;Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='prep_y.sample_id'>sample&#095;id</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='prep_y.sample_values'>sample&#095;values</a></td>
+		<td> varchar   </td>
+		<td> Note that this is a jsonb but there DBSchema doesn&#039;t have this data type </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;prep&#095;y</td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='prep_template_sample'>Table prep_template_sample</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='prep_template_sample.prep_template_id'>prep&#095;template&#095;id</a></td>
+		<td> bigint   </td>
+		<td> The prep template identifier </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='prep_template_sample.sample_id'>sample&#095;id</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='prep_template_sample.ebi_experiment_accession'>ebi&#095;experiment&#095;accession</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;0</td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;0</td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>Pk</td><td>idx&#095;common&#095;prep&#095;info</td>
+		<td> ON prep&#095;template&#095;id&#044; sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;1</td>
+		<td> ON prep&#095;template&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_prep_template</td>
+		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='sample_x'>Table sample_x</a></th></tr>
+<tr><td colspan='3'>data for samples in study x &#040;sample template&#041;x is the study&#095;id from study tableMAKE SURE sample&#095;id IS FK TO sample&#095;id IN required&#095;sample&#095;info TABLE </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='sample_x.sample_id'>sample&#095;id</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='sample_x.sample_values'>sample&#095;values</a></td>
+		<td> varchar   </td>
+		<td> Note that this is a jsonb but there DBSchema doesn&#039;t have this data type </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;study&#095;x&#095;y</td>
+		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>

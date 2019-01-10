@@ -32,6 +32,7 @@ Methods
     add_message
     get_pubmed_ids_from_dois
     generate_analysis_list
+    human_merging_scheme
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -1417,7 +1418,8 @@ def generate_study_list(user, visibility):
             (SELECT array_agg(study_tag) FROM qiita.per_study_tags
                 WHERE study_id=qiita.study.study_id) AS study_tags,
             (SELECT name FROM qiita.qiita_user
-                WHERE email=qiita.study.email) AS owner
+                WHERE email=qiita.study.email) AS owner,
+            qiita.study.email AS owner_email
             FROM qiita.study
             LEFT JOIN qiita.study_person ON (
                 study_person_id=principal_investigator_id)
@@ -1430,6 +1432,12 @@ def generate_study_list(user, visibility):
             qdb.sql_connection.TRN.add(sql, [tuple(sids)])
             for info in qdb.sql_connection.TRN.execute_fetchindex():
                 info = dict(info)
+
+                # cleaning owners name
+                if info['owner'] in (None, ''):
+                    info['owner'] = info['owner_email']
+                del info['owner_email']
+
                 # cleaning aids_with_deprecation
                 info['artifact_biom_ids'] = []
                 if info['aids_with_deprecation'] is not None:
@@ -1614,12 +1622,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                          parent_info.command_id, parent_info.name
                 ORDER BY a.command_id, artifact_id),
               has_target_subfragment AS (
-                SELECT main_query.*, CASE WHEN (
-                        SELECT true FROM information_schema.columns
-                        WHERE table_name = 'prep_' || CAST(
-                            prep_template_id AS TEXT)
-                        AND column_name='target_subfragment')
-                    THEN prep_template_id ELSE NULL END, prep_template_id
+                SELECT main_query.*, prep_template_id
                 FROM main_query
                 LEFT JOIN qiita.prep_template pt ON (
                     main_query.root_id = pt.artifact_id)
@@ -1633,7 +1636,10 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                         WHERE parameter_type = 'artifact'
                         GROUP BY command_id"""
 
-        sql_ts = """SELECT DISTINCT target_subfragment FROM qiita.prep_%s"""
+        QCN = qdb.metadata_template.base_metadata_template.QIITA_COLUMN_NAME
+        sql_ts = """SELECT DISTINCT sample_values->>'target_subfragment'
+                    FROM qiita.prep_%s
+                    WHERE sample_id != '{0}'""".format(QCN)
 
         with qdb.sql_connection.TRN:
             results = []
@@ -1647,17 +1653,22 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 commands[cid] = {
                     'params': params,
                     'merging_scheme': cmd.merging_scheme,
+                    'active': cmd.active,
                     'deprecated': cmd.software.deprecated}
 
-            # now let's get the actual artifacts
-            ts = {}
+            # Now let's get the actual artifacts. Note that ts is a cache
+            # (prep id : target subfragment) so we don't have to query
+            # multiple times the target subfragment for a prep info file.
+            # However, some artifacts (like analysis) do not have a prep info
+            # file; thus we can have a None prep id (key)
+            ts = {None: []}
             ps = {}
             algorithm_az = {'': ''}
             PT = qdb.metadata_template.prep_template.PrepTemplate
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
                 aid, name, cid, cname, gt, aparams, dt, pid, pcid, pname, \
-                    pparams, filepaths, _, target, prep_template_id = row
+                    pparams, filepaths, _, prep_template_id = row
 
                 # cleaning up aparams
                 # - [0] due to the array_agg
@@ -1665,7 +1676,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 if aparams is None:
                     aparams = {}
                 else:
-                    # we are gonna remove any artifacts from the parameters
+                    # we are going to remove any artifacts from the parameters
                     for ti in commands[cid]['params']:
                         del aparams[ti]
 
@@ -1675,53 +1686,35 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 else:
                     filepaths = [fp for fp in filepaths if fp.endswith('biom')]
 
-                # - ignoring empty target
-                if target == [None]:
-                    target = []
-
                 # generating algorithm, by default is ''
                 algorithm = ''
                 # set to False because if there is no cid, it means that it
                 # was a direct upload
-                deprecated = False
+                deprecated = None
+                active = None
                 if cid is not None:
-                    ms = commands[cid]['merging_scheme']
                     deprecated = commands[cid]['deprecated']
-                    eparams = []
-                    if ms['parameters']:
-                        eparams.append(','.join(['%s: %s' % (k, aparams[k])
-                                                 for k in ms['parameters']]))
-                    if ms['outputs'] and filepaths:
-                        eparams.append('BIOM: %s' % ', '.join(filepaths))
-                    if eparams:
-                        cname = "%s (%s)" % (cname, ', '.join(eparams))
-
-                    if ms['ignore_parent_command']:
-                        algorithm = cname
+                    active = commands[cid]['active']
+                    if pcid is None:
+                        parent_merging_scheme = None
                     else:
-                        palgorithm = 'N/A'
-                        if pcid is not None:
-                            palgorithm = pname
-                            ms = commands[pcid]['merging_scheme']
-                            if ms['parameters']:
-                                pparams = pparams[0]
-                                params = ','.join(['%s: %s' % (k, pparams[k])
-                                                   for k in ms['parameters']])
-                                palgorithm = "%s (%s)" % (palgorithm, params)
+                        parent_merging_scheme = commands[pcid][
+                            'merging_scheme']
 
-                        algorithm = '%s | %s' % (cname, palgorithm)
+                    algorithm = human_merging_scheme(
+                        cname, commands[cid]['merging_scheme'],
+                        pname, parent_merging_scheme,
+                        aparams, filepaths, pparams)
+
                     if algorithm not in algorithm_az:
                         algorithm_az[algorithm] = hashlib.md5(
                             algorithm).hexdigest()
 
-                if target is None:
-                    target = []
-                else:
-                    if target not in ts:
-                        qdb.sql_connection.TRN.add(sql_ts, [target])
-                        ts[target] = \
-                            qdb.sql_connection.TRN.execute_fetchflatten()
-                    target = ts[target]
+                if prep_template_id not in ts:
+                    qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])
+                    ts[prep_template_id] = \
+                        qdb.sql_connection.TRN.execute_fetchflatten()
+                target = ts[prep_template_id]
 
                 prep_samples = 0
                 platform = 'not provided'
@@ -1755,6 +1748,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     'algorithm': algorithm,
                     'algorithm_az': algorithm_az[algorithm],
                     'deprecated': deprecated,
+                    'active': active,
                     'files': filepaths})
 
             return results
@@ -1911,8 +1905,8 @@ def generate_analysis_list(analysis_ids, public_only=False):
                 'mapping_files': mapping_files})
 
     return results
-
-
+  
+  
 def create_nested_path(path):
     """Wraps makedirs() to make it safe to use across multiple concurrent calls.
     Returns successfully if the path was created, or if it already exists.
@@ -1946,3 +1940,59 @@ def create_nested_path(path):
         # if the directory already exists, treat as success (idempotent)
         if e.errno != EEXIST:
             raise
+            
+            
+def human_merging_scheme(cname, merging_scheme,
+                         pname, parent_merging_scheme,
+                         artifact_parameters, artifact_filepaths,
+                         parent_parameters):
+    """From the artifact and its parent features format the merging scheme
+
+    Parameters
+    ----------
+    cname : str
+        The artifact command name
+    merging_scheme : dict, from qdb.artifact.Artifact.merging_scheme
+        The artifact merging scheme
+    pname : str
+        The artifact parent command name
+    parent_merging_scheme : dict, from qdb.artifact.Artifact.merging_scheme
+        The artifact parent merging scheme
+    artifact_parameters : dict
+        The artfiact processing parameters
+    artifact_filepaths : list of str
+        The artifact filepaths
+    parent_parameters :
+        The artifact parents processing parameters
+
+    Returns
+    -------
+    str
+        The merging scheme
+    """
+    eparams = []
+    if merging_scheme['parameters']:
+        eparams.append(','.join(['%s: %s' % (k, artifact_parameters[k])
+                                 for k in merging_scheme['parameters']]))
+    if (merging_scheme['outputs'] and
+            artifact_filepaths is not None and
+            artifact_filepaths):
+        eparams.append('BIOM: %s' % ', '.join(artifact_filepaths))
+    if eparams:
+        cname = "%s (%s)" % (cname, ', '.join(eparams))
+
+    if merging_scheme['ignore_parent_command']:
+        algorithm = cname
+    else:
+        palgorithm = 'N/A'
+        if pname is not None:
+            palgorithm = pname
+            if parent_merging_scheme['parameters']:
+                params = ','.join(
+                    ['%s: %s' % (k, parent_parameters[k])
+                     for k in parent_merging_scheme['parameters']])
+                palgorithm = "%s (%s)" % (palgorithm, params)
+
+        algorithm = '%s | %s' % (cname, palgorithm)
+
+    return algorithm

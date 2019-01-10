@@ -94,7 +94,7 @@
            $('#sync').hide();
            $this.resumable.opts.query['alias_sites'] = $('#alias_sites').val();
            // Add the file
-           $this.addFile(file);
+           $this.addFile(file, true);
            // We want to upload when files are added
            $this.progressContainer.show();
            $this.resumable.upload();
@@ -116,7 +116,7 @@
      }
 
      // Add a new file (or rather: glue between newly added resumable files and the UI)
-     this.addFile = function(resumableFile){
+     this.addFile = function(resumableFile, checkDuplicates=false){
        // A list and and edit item for the UI
        fileName = resumableFile.fileName
        dirId = resumableFile.dirid
@@ -151,6 +151,15 @@
 
        html = html + '</div>';
        listNode.html(html);
+       if (checkDuplicates) {
+         _.each(this.uploaderList.children(), function(div) {
+           var div = $(div);
+           var label = $(div.find('label')[0]).text();
+           if (label.startsWith(fileName)) {
+             div.remove();
+           }
+         })
+       }
        this.uploaderList.append(listNode);
 
        var editNode = $(document.createElement('div'));

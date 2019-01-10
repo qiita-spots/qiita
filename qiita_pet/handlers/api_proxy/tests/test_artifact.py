@@ -226,33 +226,36 @@ class TestArtifactAPI(TestCase):
     def test_artifact_get_info(self):
         obs = artifact_get_info('test@foo.bar', [5, 6, 7])
         data = [
-          {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
-           'artifact_id': 6, 'data_type': '16S',
-           'timestamp': '2012-10-02 17:30:00', 'target_gene': '16S rRNA',
-           'name': 'BIOM', 'target_subfragment': ['V4'], 'parameters': {
-             'reference': '2', 'similarity': '0.97', 'sortmerna_e_value': '1',
-             'sortmerna_max_pos': '10000', 'threads': '1',
-             'sortmerna_coverage': '0.97'},
-           'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-           'deprecated': False, 'platform': 'Illumina',
-           'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
-           'prep_samples': 27},
-          {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-           'artifact_id': 5, 'data_type': '18S',
-           'timestamp': '2012-10-02 17:30:00', 'target_gene': '16S rRNA',
-           'name': 'BIOM', 'target_subfragment': ['V4'], 'parameters': {
-             'reference': '1', 'similarity': '0.97', 'sortmerna_e_value': '1',
-             'sortmerna_max_pos': '10000', 'threads': '1',
-             'sortmerna_coverage': '0.97'},
-           'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-           'deprecated': False, 'platform': 'not provided',
-           'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
-           'prep_samples': 27},
-          {'files': [], 'artifact_id': 7, 'data_type': '16S',
-           'timestamp': '2012-10-02 17:30:00', 'target_gene': '16S rRNA',
-           'name': 'BIOM', 'target_subfragment': ['V4'], 'parameters': {},
-           'algorithm': '', 'deprecated': False, 'platform': 'Illumina',
-           'algorithm_az': '', 'prep_samples': 27}]
+            {'files': ['1_study_1001_closed_reference_otu_table_Silva.biom'],
+             'artifact_id': 6, 'data_type': '16S',
+             'timestamp': '2012-10-02 17:30:00', 'active': True,
+             'target_gene': '16S rRNA', 'name': 'BIOM',
+             'target_subfragment': ['V4'], 'parameters': {
+                'reference': '2', 'similarity': '0.97',
+                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+                'threads': '1', 'sortmerna_coverage': '0.97'},
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'deprecated': False, 'platform': 'Illumina',
+             'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
+             'prep_samples': 27},
+            {'files': ['1_study_1001_closed_reference_otu_table.biom'],
+             'artifact_id': 5, 'data_type': '18S',
+             'timestamp': '2012-10-02 17:30:00', 'active': True,
+             'target_gene': '16S rRNA', 'name': 'BIOM',
+             'target_subfragment': ['V4'], 'parameters': {
+                'reference': '1', 'similarity': '0.97',
+                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
+                'threads': '1', 'sortmerna_coverage': '0.97'},
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'deprecated': False, 'platform': 'not provided',
+             'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
+             'prep_samples': 27},
+            {'files': [], 'artifact_id': 7, 'data_type': '16S',
+             'timestamp': '2012-10-02 17:30:00', 'active': None,
+             'target_gene': '16S rRNA', 'name': 'BIOM',
+             'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
+             'deprecated': None, 'platform': 'Illumina', 'algorithm_az': '',
+             'prep_samples': 27}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         self.assertItemsEqual(obs.keys(), exp.keys())
         self.assertEqual(obs['status'], exp['status'])

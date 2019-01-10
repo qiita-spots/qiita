@@ -30,6 +30,7 @@ $(document).ready(function() {
     $( "#{{creation_form.lab_person.id}}" ).chosen({
         allow_single_deselect: true
       });
+
     $("#study_title").on("keyup", function() {
       var title = $(this).val();
       // removing any duplicated whitespaces
@@ -39,6 +40,17 @@ $(document).ready(function() {
       // removing white spaces from the front of the text
       $(this).val(title.trimLeft());
     });
+
+    $("#new_person_name").on("keyup", function() {
+      var npn  = $(this).val();
+      // removing any duplicated whitespaces
+      npn = npn.replace(/ +(?= )/g, '');
+      //remove all utf-8 encoded characters that are not also printable ASCII characters.
+      npn = npn.replace(/[^\x20-\x7E]+/g, "");
+      // removing white spaces from the front of the text
+      $(this).val(npn.trimLeft());
+    });
+
     $("#create_study").validate({
       ignore: "",
       submitHandler: function (form) {
@@ -164,7 +176,6 @@ function cancel_edition(){
         {% set kwargs['class_'] = kwargs['class_'] + ' chzn-select' %}
     {% elif form_item.label.text == 'Study Title'%}
         {% set additional_info = 'Study titles may only contain ASCII characters' %}
-
     {% end %}
   <tr>
     <td width="20%">{% raw form_item.label %} <br /> <small>{{additional_info}}</small></td>
@@ -182,25 +193,25 @@ function cancel_edition(){
       <div name="new_person_div" id="new_person_div">
         <table>
           <tr>
-            <td>Name:</td>
+              <td><b>Name:</b><br><font size=1>Names may only contain ASCII characters </font></td>
             <td><input type="text" id="new_person_name" name="new_person_name" class="form-control"></td>
             <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
           </tr>
-            <td>Affiliation:</td>
+            <td><b>Affiliation:</b></td>
             <td><input type="text" id="new_person_affiliation" name="new_person_affiliation" class="form-control"></td>
             <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
           </tr>
           <tr>
-            <td>E-mail Address:</td>
+            <td><b>E-mail Address:</b></td>
             <td><input type="text" id="new_person_email" name="new_person_email" class="form-control"></td>
             <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
           </tr>
           <tr>
-            <td>Phone:</td>
+            <td><b>Phone:</b></td>
             <td><input type="text" id="new_person_phone" name="new_person_phone" class="form-control"></td>
           </tr>
           <tr>
-            <td>Address:</td>
+            <td><b>Address:</b></td>
             <td><input type="text" id="new_person_address" name="new_person_address" class="form-control"></td>
           </tr>
           <tr>

@@ -302,38 +302,36 @@ def update_redis_stats():
 
 
 def get_lat_longs():
-    """Retrieve the latitude and longitude of all the samples in the DB
+    """Retrieve the latitude and longitude of all the public samples in the DB
 
     Returns
     -------
     list of [float, float]
         The latitude and longitude for each sample in the database
     """
-    portal_table_ids = [
-        s.id for s in qdb.portal.Portal(qiita_config.portal).get_studies()]
-
     with qdb.sql_connection.TRN:
-        # getting all tables in the portal
-        sql = """SELECT DISTINCT table_name
-                 FROM information_schema.columns
-                 WHERE table_name SIMILAR TO 'sample_[0-9]+'
-                    AND table_schema = 'qiita'
-                    AND column_name IN ('latitude', 'longitude')
-                    AND SPLIT_PART(table_name, '_', 2)::int IN %s
-                    GROUP BY table_name HAVING COUNT(column_name) = 2;"""
-        qdb.sql_connection.TRN.add(sql, [tuple(portal_table_ids)])
+        # getting all the public studies
+        studies = qdb.study.Study.get_by_status('public')
 
-        sql = [('SELECT CAST(latitude AS FLOAT), '
-                '       CAST(longitude AS FLOAT) '
-                'FROM qiita.%s '
-                'WHERE isnumeric(latitude) AND isnumeric(longitude) '
-                "AND latitude <> 'NaN' "
-                "AND longitude <> 'NaN' " % s)
-               for s in qdb.sql_connection.TRN.execute_fetchflatten()]
-        sql = ' UNION '.join(sql)
-        qdb.sql_connection.TRN.add(sql)
+        results = []
+        if studies:
+            # we are going to create multiple union selects to retrieve the
+            # latigute and longitude of all available studies. Note that
+            # UNION in PostgreSQL automatically removes duplicates
+            sql_query = """
+                SELECT {0}, CAST(sample_values->>'latitude' AS FLOAT),
+                       CAST(sample_values->>'longitude' AS FLOAT)
+                FROM qiita.sample_{0}
+                WHERE isnumeric(sample_values->>'latitude') AND
+                      isnumeric(sample_values->>'longitude')"""
+            sql = [sql_query.format(s.id) for s in studies]
+            sql = ' UNION '.join(sql)
+            qdb.sql_connection.TRN.add(sql)
 
-        return qdb.sql_connection.TRN.execute_fetchindex()
+            # note that we are returning set to remove duplicates
+            results = qdb.sql_connection.TRN.execute_fetchindex()
+
+        return results
 
 
 def generate_biom_and_metadata_release(study_status='public'):
@@ -362,38 +360,66 @@ def generate_biom_and_metadata_release(study_status='public'):
             if a.processing_parameters is None:
                 continue
 
-            cmd_name = a.processing_parameters.command.name
+            processing_params = a.processing_parameters
+            cmd_name = processing_params.command.name
+            ms = processing_params.command.merging_scheme
+            software = processing_params.command.software
+            software = '%s v%s' % (software.name, software.version)
 
             # this loop is necessary as in theory an artifact can be
             # generated from multiple prep info files
-            human_cmd = []
+            afps = [fp for _, fp, _ in a.filepaths if fp.endswith('biom')]
+            merging_schemes = []
+            parent_softwares = []
             for p in a.parents:
-                pp = p.processing_parameters
-                # parent is a direct upload; for example per_sample_FASTQ in
-                # shotgun data
-                if pp is None:
-                    pp_cmd_name = ''
+                pparent = p.processing_parameters
+                # if parent is None, then is a direct upload; for example
+                # per_sample_FASTQ in shotgun data
+                if pparent is None:
+                    parent_cmd_name = None
+                    parent_merging_scheme = None
+                    parent_pp = None
+                    parent_software = 'N/A'
                 else:
-                    pp_cmd_name = pp.command.name
-                if pp_cmd_name == 'Trimming':
-                    human_cmd.append('%s @ %s' % (
-                        cmd_name, str(pp.values['length'])))
-                else:
-                    human_cmd.append('%s, %s' % (cmd_name, pp_cmd_name))
-            human_cmd = ', '.join(human_cmd)
+                    parent_cmd_name = pparent.command.name
+                    parent_merging_scheme = pparent.command.merging_scheme
+                    parent_pp = pparent.values
+                    psoftware = pparent.command.software
+                    parent_software = '%s v%s' % (
+                        psoftware.name, psoftware.version)
+
+                merging_schemes.append(qdb.util.human_merging_scheme(
+                    cmd_name, ms, parent_cmd_name, parent_merging_scheme,
+                    processing_params, afps, parent_pp))
+                parent_softwares.append(parent_software)
+            merging_schemes = ', '.join(merging_schemes)
+            parent_softwares = ', '.join(parent_softwares)
 
             for _, fp, fp_type in a.filepaths:
                 if fp_type != 'biom' or 'only-16s' in fp:
                     continue
                 fp = relpath(fp, bdir)
-                # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
-                #          human readable name)
                 for pt in a.prep_templates:
+                    categories = pt.categories()
+                    platform = ''
+                    target_gene = ''
+                    if 'platform' in categories:
+                        platform = ', '.join(
+                            set(pt.get_category('platform').values()))
+                    if 'target_gene' in categories:
+                        target_gene = ', '.join(
+                            set(pt.get_category('target_gene').values()))
                     for _, prep_fp in pt.get_filepaths():
                         if 'qiime' not in prep_fp:
                             break
                     prep_fp = relpath(prep_fp, bdir)
-                    data.append((fp, sample_fp, prep_fp, a.id, human_cmd))
+                    # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
+                    #          platform, target gene, merging schemes,
+                    #          artifact software/version,
+                    #          parent sofware/version)
+                    data.append((fp, sample_fp, prep_fp, a.id, platform,
+                                 target_gene, merging_schemes, software,
+                                 parent_softwares))
 
     # writing text and tgz file
     ts = datetime.now().strftime('%m%d%y-%H%M%S')
@@ -403,12 +429,13 @@ def generate_biom_and_metadata_release(study_status='public'):
     tgz_name_final = join(tgz_dir, '%s-%s.tgz' % (portal, study_status))
     txt_hd = StringIO()
     with topen(tgz_name, "w|gz") as tgz:
-        # writing header for txt
         txt_hd.write(
-            "biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n")
-        for biom_fp, sample_fp, prep_fp, artifact_id, human_cmd in data:
-            txt_hd.write("%s\t%s\t%s\t%s\t%s\n" % (
-                biom_fp, sample_fp, prep_fp, artifact_id, human_cmd))
+            "biom fp\tsample fp\tprep fp\tqiita artifact id\tplatform\t"
+            "target gene\tmerging scheme\tartifact software\t"
+            "parent software\n")
+        for biom_fp, sample_fp, prep_fp, aid, pform, tg, ms, asv, psv in data:
+            txt_hd.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
+                biom_fp, sample_fp, prep_fp, aid, pform, tg, ms, asv, psv))
             tgz.add(join(bdir, biom_fp), arcname=biom_fp, recursive=False)
             tgz.add(join(bdir, sample_fp), arcname=sample_fp, recursive=False)
             tgz.add(join(bdir, prep_fp), arcname=prep_fp, recursive=False)

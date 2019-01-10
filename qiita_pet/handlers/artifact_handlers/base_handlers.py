@@ -197,7 +197,7 @@ def artifact_summary_get_request(user, artifact_id):
             'software': sw.name,
             'software_version': sw.version,
             'processing_parameters': proc_params.values,
-            'software_active': sw.active,
+            'command_active': cmd.active,
             'software_deprecated': sw.deprecated,
             }
     else:
@@ -413,7 +413,7 @@ class ArtifactSummaryHandler(StaticFileHandler, BaseHandler):
         """Overrides StaticFileHandler's method to include authentication"""
         user = self.current_user
 
-        # we are gonna inverse traverse the absolute_path and find the first
+        # we are going to inverse traverse the absolute_path and find the first
         # instance of an int, which is the artifact_id
         for s in reversed(absolute_path.split('/')):
             try:
