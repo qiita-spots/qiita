@@ -1132,7 +1132,7 @@ Vue.component('processing-graph', {
         '<td>' + circle_statuses.join('') + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<td><small>Artifact status (triangle):</small>' +
+        '<td><small>Artifact status (triangles):</small>' +
         '<td>' + circle_types.join('') + '</td>' +
       '</tr>' +
     '</table>';
