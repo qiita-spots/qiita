@@ -17,7 +17,8 @@ from qiita_db.util import (
 from qiita_db.meta_util import (
     update_redis_stats as qiita_update_redis_stats,
     generate_biom_and_metadata_release as
-    qiita_generate_biom_and_metadata_release)
+    qiita_generate_biom_and_metadata_release,
+    generate_plugin_releases as qiita_generate_plugin_releases)
 
 
 @click.group()
@@ -57,6 +58,11 @@ def update_redis_stats():
 @commands.command()
 def generate_biom_and_metadata_release():
     qiita_generate_biom_and_metadata_release('public')
+
+
+@commands.command()
+def generate_plugin_releases():
+    qiita_generate_plugin_releases()
 
 
 if __name__ == "__main__":

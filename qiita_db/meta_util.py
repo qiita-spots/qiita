@@ -25,7 +25,7 @@ Methods
 from __future__ import division
 
 from os import stat, rename
-from os.path import join, relpath
+from os.path import join, relpath, exists, basename
 from time import strftime, localtime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -36,6 +36,8 @@ from future.utils import viewitems
 from datetime import datetime
 from tarfile import open as topen, TarInfo
 from hashlib import md5
+from re import sub
+from json import loads, dump
 
 from qiita_db.util import create_nested_path
 from qiita_core.qiita_settings import qiita_config, r_client
@@ -458,6 +460,79 @@ def generate_biom_and_metadata_release(study_status='public'):
         ('time', time, r_client.set)]
     for k, v, f in vals:
         redis_key = '%s:release:%s:%s' % (portal, study_status, k)
+        # important to "flush" variables to avoid errors
+        r_client.delete(redis_key)
+        f(redis_key, v)
+
+
+def generate_plugin_releases():
+    """Generate releases for plugins
+    """
+    ARCHIVE = qdb.archive.Archive
+    qiita_config = ConfigurationManager()
+    working_dir = qiita_config.working_dir
+
+    commands = [c for s in qdb.software.Software.iter(active=True)
+                for c in s.commands if c.post_processing_cmd is not None]
+
+    tnow = datetime.now()
+    ts = tnow.strftime('%m%d%y-%H%M%S')
+    tgz_dir = join(working_dir, 'releases', 'archive')
+    create_nested_path(tgz_dir)
+    tgz_dir_release = join(tgz_dir, ts)
+    create_nested_path(tgz_dir_release)
+    for cmd in commands:
+        cmd_name = cmd.name
+        mschemes = [v for _, v in ARCHIVE.merging_schemes().iteritems()
+                    if cmd_name in v]
+        for ms in mschemes:
+            ms_name = sub('[^0-9a-zA-Z]+', '', ms)
+            ms_fp = join(tgz_dir_release, ms_name)
+            create_nested_path(ms_fp)
+
+            pfp = join(ms_fp, 'archive.json')
+            archives = {k: loads(v)
+                        for k, v in ARCHIVE.retrieve_feature_values(
+                              archive_merging_scheme=ms).iteritems()
+                        if v != ''}
+            with open(pfp, 'w') as f:
+                dump(archives, f)
+
+            # now let's run the post_processing_cmd
+            ppc = cmd.post_processing_cmd
+
+            # concatenate any other parameters into a string
+            params = ' '.join(["%s=%s" % (k, v) for k, v in
+                              ppc['script_params'].items()])
+            # append archives file and output dir parameters
+            params = ("%s --fp_archive=%s --output_dir=%s" % (
+                params, pfp, ms_fp))
+
+            ppc_cmd = "%s %s %s" % (
+                ppc['script_env'], ppc['script_path'], params)
+            p_out, p_err, rv = qdb.processing_job._system_call(ppc_cmd)
+            p_out = p_out.decode("utf-8").rstrip()
+            if rv != 0:
+                raise ValueError('Error %d: %s' % (rv, p_out))
+            p_out = loads(p_out)
+
+    # tgz-ing all files
+    tgz_name = join(tgz_dir, 'archive-%s-building.tgz' % ts)
+    tgz_name_final = join(tgz_dir, 'archive.tgz')
+    with topen(tgz_name, "w|gz") as tgz:
+        tgz.add(tgz_dir_release, arcname=basename(tgz_dir_release))
+    # getting the release md5
+    with open(tgz_name, "rb") as f:
+        md5sum = md5()
+        for c in iter(lambda: f.read(4096), b""):
+            md5sum.update(c)
+    rename(tgz_name, tgz_name_final)
+    vals = [
+        ('filepath', tgz_name_final[len(working_dir):], r_client.set),
+        ('md5sum', md5sum.hexdigest(), r_client.set),
+        ('time', tnow.strftime('%m-%d-%y %H:%M:%S'), r_client.set)]
+    for k, v, f in vals:
+        redis_key = 'release-archive:%s' % k
         # important to "flush" variables to avoid errors
         r_client.delete(redis_key)
         f(redis_key, v)
