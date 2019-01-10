@@ -16,6 +16,9 @@ import qiita_db as qdb
 @qiita_test_checker()
 class ArchiveTest(TestCase):
     def test_insert_from_biom_and_retrieve_feature_values(self):
+        # merging_scheme should be empty
+        self.assertDictEqual(qdb.archive.Archive.merging_schemes(), dict())
+
         # 1 - to test error as it's FASTQ
         with self.assertRaises(ValueError) as err:
             qdb.archive.Archive.insert_from_artifact(
@@ -62,6 +65,13 @@ class ArchiveTest(TestCase):
         exp = {}
         obs = qdb.archive.Archive.retrieve_feature_values('Nothing')
         self.assertEqual(obs, exp)
+
+        # now merging_schemes should have 3 elements; note that 2 is empty
+        # string because we are inserting an artifact [8] that was a direct
+        # upload
+        self.assertDictEqual(qdb.archive.Archive.merging_schemes(), {
+            1: 'Pick closed-reference OTUs | Split libraries FASTQ',
+            2: '', 3: 'Single Rarefaction | N/A'})
 
     def test_get_merging_scheme_from_job(self):
         exp = 'Split libraries FASTQ | N/A'

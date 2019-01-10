@@ -4,7 +4,7 @@
 {% set sysmessage = r_client.get('sysmessage') %}
 {% set user = current_user %}
 {% set qiita_version, qiita_sha = get_qiita_version() %}
-{% set public_md5, _, public_timestamp = get_release_info() %}
+{% set biom_metadata_release, archive_release = get_release_info() %}
 
 {% set level = globals().get('level', '') %}
 {% if level not in {'danger', 'success', 'info', 'warning'} %}
@@ -490,12 +490,23 @@
                   <li>
                     <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
                   </li>
+                  <li role="separator" class="divider"></li>
                   <li>
                     <a type="button" data-toggle="modal" data-target=".qiita_pet_download_confirm">
                       Download public BIOM and metadata files
                       <small>
-                        <br/><b>MD5:</b> {{public_md5}}
-                        <br/><b>Last update:</b> {{public_timestamp}}
+                        <br/><b>MD5:</b> {{biom_metadata_release[0]}}
+                        <br/><b>Last update:</b> {{biom_metadata_release[2]}}
+                      </small>
+                    </a>
+                  </li>
+                  <li role="separator" class="divider"></li>
+                  <li>
+                    <a type="button" href="{% raw qiita_config.portal_dir %}/release/download/archive">
+                      BETA: Download Archive files (for example, deblur trees)
+                      <small>
+                        <br/><b>MD5:</b> {{archive_release[0]}}
+                        <br/><b>Last update:</b> {{archive_release[2]}}
                       </small>
                     </a>
                   </li>

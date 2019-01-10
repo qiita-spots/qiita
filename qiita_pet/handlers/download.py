@@ -228,7 +228,11 @@ class DownloadStudyBIOMSHandler(BaseHandlerDownload):
 class DownloadRelease(BaseHandlerDownload):
     @coroutine
     def get(self, extras):
-        _, relpath, _ = get_release_info()
+        biom_metadata_release, archive_release = get_release_info()
+        if extras == 'archive':
+            relpath = archive_release[1]
+        else:
+            relpath = biom_metadata_release[1]
 
         # If we don't have nginx, write a file that indicates this
         # Note that this configuration will automatically create and download

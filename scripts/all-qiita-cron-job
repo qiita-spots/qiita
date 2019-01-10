@@ -5,3 +5,4 @@ qiita-cron-job generate_biom_and_metadata_release
 qiita-cron-job purge_filepaths
 qiita-cron-job purge_files_from_filesystem
 qiita-cron-job update_redis_stats
+qiita-cron-job generate_plugin_releases
