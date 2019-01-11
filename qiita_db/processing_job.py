@@ -44,14 +44,18 @@ class Watcher(Process):
                      'Q': 'queued', 'R': 'running', 'T': 'moving',
                      'W': 'waiting', 'S': 'suspended'}
 
+    # TODO: moving, waiting, and suspended have been mapped to
+    # 'running' in Qiita, as 'waiting' in Qiita connotes that the
+    # main job itself has completed, and is waiting on validator
+    # jobs to finish, etc. Revisit
     torque_to_qiita_state_map = {'completed': 'completed',
-                                 'exiting': 'running',
                                  'held': 'queued',
                                  'queued': 'queued',
+                                 'exiting': 'running',
                                  'running': 'running',
-                                 'moving': 'waiting',
-                                 'waiting': 'waiting',
-                                 'suspended': 'waiting',
+                                 'moving': 'running',
+                                 'waiting': 'running',
+                                 'suspended': 'running',
                                  'DROPPED': 'error'}
 
     def __init__(self):
@@ -203,7 +207,7 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     # When Popen() executes, the shell is not in interactive mode,
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
-    cmd = "bash -c '%s; echo $PATH; %s'" % (env_script, ' '.join(cmd))
+    cmd = "bash -c '%s; %s'" % (env_script, ' '.join(cmd))
 
     # Popen() may also need universal_newlines=True
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
@@ -259,7 +263,7 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
     else:
         qsub_cmd.append("qsub")
 
-    qsub_cmd.append("-l %s %s" % (resource_params, fp))
+    qsub_cmd.append("%s %s" % (resource_params, fp))
     qsub_cmd.append("-o %s/qsub-output.txt " % job_dir)
     qsub_cmd.append("-e %s/qsub-error.txt" % job_dir)
     # TODO: revisit epilogue
@@ -414,7 +418,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if v['artifacts'] is not None:
                     name = v['artifacts'].values()[0]['artifact_type']
             elif self.command.name == 'release_validators':
-                type = 'RELEASE_VALIDATORS_RESOURCE_PARAMS'
+                type = 'RELEASE_VALIDATORS_RESOURCE_PARAM'
                 tmp = ProcessingJob(self.parameters.values['job'])
                 name = tmp.parameters.command.name
             elif self.id == 'register':
