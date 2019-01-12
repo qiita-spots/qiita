@@ -44,6 +44,13 @@ class ConfigurationManager(object):
         Max upload size
     valid_upload_extension : str
         The extensions that are valid to upload, comma separated
+    trq_owner : str
+        Email address of submitter of Torque jobs
+    trq_poll_val : int
+        Interval (in seconds) to wait between calls to Torque's qstat program
+    trq_dependency_q_cnt : int
+        Hard upper-limit on the number of an artifact's concurrent validation
+        processes.
     user : str
         The postgres user
     password : str
@@ -140,6 +147,7 @@ class ConfigurationManager(object):
 
         self._get_main(config)
         self._get_smtp(config)
+        self._get_torque(config)
         self._get_postgres(config)
         self._get_redis(config)
         self._get_ebi(config)
@@ -221,6 +229,22 @@ class ConfigurationManager(object):
         if not self.key_file:
             self.key_file = join(install_dir, 'qiita_core', 'support_files',
                                  'server.key')
+
+    def _get_torque(self, config):
+        """Get the configuration of the torque section"""
+        self.trq_owner = config.get('torque', 'TORQUE_JOB_OWNER')
+        self.trq_poll_val = config.get('torque', 'TORQUE_POLLING_VALUE')
+        self.trq_dependency_q_cnt = config.get('torque',
+                'TORQUE_PROCESSING_QUEUE_COUNT')
+
+        if not self.trq_owner:
+            self.trq_owner = None
+
+        if not self.trq_poll_val:
+            self.trq_poll_val = None
+
+        if not self.trq_dependency_q_cnt:
+            self.trq_dependency_q_cnt = None
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""

@@ -61,6 +61,11 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.cookie_secret, "SECRET")
         self.assertEqual(obs.key_file, "/tmp/server.key")
 
+        # Torque section
+        self.assertEqual(obs.trq_owner, "torque_user@somewhere.org")
+        self.assertEqual(obs.trq_poll_val, 15)
+        self.assertEqual(obs.trq_dependency_q_cnt, 2)
+
         # Postgres section
         self.assertEqual(obs.user, "postgres")
         self.assertEqual(obs.admin_user, "postgres")
@@ -174,6 +179,14 @@ class ConfigurationManagerTests(TestCase):
 
         self.assertEqual(obs.qiita_env, "")
 
+    def test_get_torque(self):
+        obs = ConfigurationManager()
+
+        conf_setter = partial(self.conf.set, 'torque')
+        conf_setter('TORQUE_JOB_OWNER', '')
+        obs._get_torque(self.conf)
+        self.assertIsNone(obs.trq_owner)
+
     def test_get_postgres(self):
         obs = ConfigurationManager()
 
@@ -202,31 +215,44 @@ class ConfigurationManagerTests(TestCase):
 
 
 CONF = """
+# WARNING!!!! DO NOT MODIFY THIS FILE
+# IF YOU NEED TO PROVIDE YOUR OWN CONFIGURATION, COPY THIS FILE TO A NEW
+# LOCATION AND EDIT THE COPY
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 # ------------------------------ Main settings --------------------------------
 [main]
 # Change to FALSE in a production system
 TEST_ENVIRONMENT = TRUE
 
-# Absolute path to write log file to. If not given, no log file will be created
-LOG_DIR = /tmp/
+# Absolute path to the directory where log files are saved. If not given, no
+# log file will be created
+LOG_DIR =
 
 # Whether studies require admin approval to be made available
 REQUIRE_APPROVAL = True
 
 # Base URL: DO NOT ADD TRAILING SLASH
-BASE_URL = https://localhost
+BASE_URL = https://localhost:21174
 
 # Download path files
-UPLOAD_DATA_DIR = /tmp/
+UPLOAD_DATA_DIR = /home/travis/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_db/support_files/test_data/uploads/
 
 # Working directory path
-WORKING_DIR = /tmp/
+WORKING_DIR = /home/travis/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_db/support_files/test_data/working_dir/
 
 # Maximum upload size (in Gb)
 MAX_UPLOAD_SIZE = 100
 
 # Path to the base directory where the data files are going to be stored
-BASE_DATA_DIR = /tmp/
+BASE_DATA_DIR = /home/travis/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_db/support_files/test_data/
 
 # Valid upload extension, comma separated. Empty for no uploads
 VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt,tsv,sff,fna,qual
@@ -242,11 +268,11 @@ PRIVATE_LAUNCHER = qiita-private-launcher
 PLUGIN_LAUNCHER = qiita-plugin-launcher
 
 # Plugins configuration directory
-PLUGIN_DIR = /tmp/
+PLUGIN_DIR =
 
 # Webserver certificate file paths
-CERTIFICATE_FILE = /tmp/server.cert
-KEY_FILE = /tmp/server.key
+CERTIFICATE_FILE =
+KEY_FILE =
 
 # The value used to secure cookies used for user sessions. A suitable value can
 # be generated with:
@@ -271,10 +297,10 @@ PORT = 25
 SSL = False
 
 # The user name to connect with
-USER = qiita
+USER =
 
 # The user password to connect with
-PASSWORD = supersecurepassword
+PASSWORD =
 
 # The email to have messages sent from
 EMAIL = example@domain.com
@@ -282,8 +308,8 @@ EMAIL = example@domain.com
 # ----------------------------- Redis settings --------------------------------
 [redis]
 HOST = localhost
-PORT = 6379
-PASSWORD = anotherpassword
+PORT = 7777
+PASSWORD =
 # The redis database you will use, redis has a max of 16.
 # Qiita should have its own database
 DB = 13
@@ -306,10 +332,21 @@ HOST = localhost
 PORT = 5432
 
 # The password to use to connect to the database
-PASSWORD = andanotherpwd
+PASSWORD =
 
 # The postgres password for the admin_user
-ADMIN_PASSWORD = thishastobesecure
+ADMIN_PASSWORD =
+
+# ----------------------------- Torque settings -----------------------------
+[torque]
+# The email address of the submitter of Torque jobs
+TORQUE_JOB_OWNER = torque_user@somewhere.org
+
+# The number of seconds to wait between successive qstat calls
+TORQUE_POLLING_VALUE = 15
+
+# Hard upper-limit on concurrently running validator jobs
+TORQUE_PROCESSING_QUEUE_COUNT = 2
 
 # ----------------------------- EBI settings -----------------------------
 [ebi]
@@ -317,12 +354,15 @@ ADMIN_PASSWORD = thishastobesecure
 EBI_SEQ_XFER_USER = Webin-41528
 
 # Password for the above user
-EBI_SEQ_XFER_PASS = passwordforebi
+EBI_SEQ_XFER_PASS =
 
 # URL of EBI's FASP site
 EBI_SEQ_XFER_URL = webin.ebi.ac.uk
 
 # URL of EBI's HTTPS dropbox
+# live submission URL
+#EBI_DROPBOX_URL = https://www.ebi.ac.uk/ena/submit/drop-box/submit/
+# testing URL
 EBI_DROPBOX_URL = https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/
 
 # The name of the sequencing center to use when doing EBI submissions
@@ -346,13 +386,16 @@ URL = https://vamps.mbl.edu/mobe_workshop/getfile.php
 PORTAL = QIITA
 
 # Portal subdirectory
-PORTAL_DIR = /portal
+PORTAL_DIR =
 
 # Full path to portal styling config file
-PORTAL_FP = /tmp/portal.cfg
+PORTAL_FP =
+
 
 # ----------------------------- iframes settings ---------------------------
 [iframe]
+# The real world QIIMP will always need to be accessed with https because Qiita
+# runs on https too
 QIIMP = https://localhost:8898/
 """
 

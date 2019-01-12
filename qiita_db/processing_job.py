@@ -62,13 +62,13 @@ class Watcher(Process):
         super(Watcher, self).__init__()
 
         # set self.owner to qiita, or whomever owns processes we need to watch.
-        self.owner = 'qiita@qiita.ucsd.edu'
+        self.owner = qiita_config.trq_owner
 
         # Torque is set to drop jobs from its queue 60 seconds after
         # completion, by default. Setting a polling value less than
         # that allows for multiple chances to catch the exit status
         # before it disappears.
-        self.polling_value = 15
+        self.polling_value = qiita_config.trq_poll_val
 
         # the cross-process method by which to communicate across
         # process boundaries. Note that when Watcher object runs,
@@ -346,7 +346,6 @@ class ProcessingJob(qdb.base.QiitaObject):
     create
     """
     _table = 'processing_job'
-    _queue_count = 2
     _launch_map = {'qiita-plugin-launcher':
                    {'function': launch_local,
                     'execute_in_process': False},
@@ -1130,7 +1129,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             self._set_validator_jobs(validator_jobs)
 
             # Submit m validator jobs as n lists of jobs
-            n = ProcessingJob._queue_count
+            n = qiita_config.trq_dependency_q_cnt
             # taken from:
             # https://www.geeksforgeeks.org/break-list-chunks-size-n-python/
             lists = [validator_jobs[i * n:(i + 1) * n]
