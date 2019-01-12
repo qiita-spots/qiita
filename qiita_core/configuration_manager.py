@@ -235,7 +235,7 @@ class ConfigurationManager(object):
         self.trq_owner = config.get('torque', 'TORQUE_JOB_OWNER')
         self.trq_poll_val = config.get('torque', 'TORQUE_POLLING_VALUE')
         self.trq_dependency_q_cnt = config.get('torque',
-                'TORQUE_PROCESSING_QUEUE_COUNT')
+                                               'TORQUE_PROCESSING_QUEUE_COUNT')
 
         if not self.trq_owner:
             self.trq_owner = None

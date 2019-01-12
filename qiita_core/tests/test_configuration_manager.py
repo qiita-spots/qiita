@@ -215,18 +215,6 @@ class ConfigurationManagerTests(TestCase):
 
 
 CONF = """
-# WARNING!!!! DO NOT MODIFY THIS FILE
-# IF YOU NEED TO PROVIDE YOUR OWN CONFIGURATION, COPY THIS FILE TO A NEW
-# LOCATION AND EDIT THE COPY
-
-# -----------------------------------------------------------------------------
-# Copyright (c) 2014--, The Qiita Development Team.
-#
-# Distributed under the terms of the BSD 3-clause License.
-#
-# The full license is in the file LICENSE, distributed with this software.
-# -----------------------------------------------------------------------------
-
 # ------------------------------ Main settings --------------------------------
 [main]
 # Change to FALSE in a production system
@@ -234,25 +222,25 @@ TEST_ENVIRONMENT = TRUE
 
 # Absolute path to the directory where log files are saved. If not given, no
 # log file will be created
-LOG_DIR =
+LOG_DIR = /tmp/
 
 # Whether studies require admin approval to be made available
 REQUIRE_APPROVAL = True
 
 # Base URL: DO NOT ADD TRAILING SLASH
-BASE_URL = https://localhost:21174
+BASE_URL = https://localhost
 
 # Download path files
-UPLOAD_DATA_DIR = /home/travis/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_db/support_files/test_data/uploads/
+UPLOAD_DATA_DIR = /tmp/
 
 # Working directory path
-WORKING_DIR = /home/travis/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_db/support_files/test_data/working_dir/
+WORKING_DIR = /tmp/
 
 # Maximum upload size (in Gb)
 MAX_UPLOAD_SIZE = 100
 
 # Path to the base directory where the data files are going to be stored
-BASE_DATA_DIR = /home/travis/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_db/support_files/test_data/
+BASE_DATA_DIR = /tmp/
 
 # Valid upload extension, comma separated. Empty for no uploads
 VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt,tsv,sff,fna,qual
@@ -268,11 +256,11 @@ PRIVATE_LAUNCHER = qiita-private-launcher
 PLUGIN_LAUNCHER = qiita-plugin-launcher
 
 # Plugins configuration directory
-PLUGIN_DIR =
+PLUGIN_DIR = /tmp/
 
 # Webserver certificate file paths
-CERTIFICATE_FILE =
-KEY_FILE =
+CERTIFICATE_FILE = /tmp/server.cert
+KEY_FILE = /tmp/server.key
 
 # The value used to secure cookies used for user sessions. A suitable value can
 # be generated with:
@@ -297,10 +285,10 @@ PORT = 25
 SSL = False
 
 # The user name to connect with
-USER =
+USER = qiita
 
 # The user password to connect with
-PASSWORD =
+PASSWORD = supersecurepassword
 
 # The email to have messages sent from
 EMAIL = example@domain.com
@@ -308,8 +296,8 @@ EMAIL = example@domain.com
 # ----------------------------- Redis settings --------------------------------
 [redis]
 HOST = localhost
-PORT = 7777
-PASSWORD =
+PORT = 6379
+PASSWORD = anotherpassword
 # The redis database you will use, redis has a max of 16.
 # Qiita should have its own database
 DB = 13
@@ -332,10 +320,10 @@ HOST = localhost
 PORT = 5432
 
 # The password to use to connect to the database
-PASSWORD =
+PASSWORD = andanotherpwd
 
 # The postgres password for the admin_user
-ADMIN_PASSWORD =
+ADMIN_PASSWORD = thishastobesecure
 
 # ----------------------------- Torque settings -----------------------------
 [torque]
@@ -354,15 +342,12 @@ TORQUE_PROCESSING_QUEUE_COUNT = 2
 EBI_SEQ_XFER_USER = Webin-41528
 
 # Password for the above user
-EBI_SEQ_XFER_PASS =
+EBI_SEQ_XFER_PASS = passwordforebi
 
 # URL of EBI's FASP site
 EBI_SEQ_XFER_URL = webin.ebi.ac.uk
 
 # URL of EBI's HTTPS dropbox
-# live submission URL
-#EBI_DROPBOX_URL = https://www.ebi.ac.uk/ena/submit/drop-box/submit/
-# testing URL
 EBI_DROPBOX_URL = https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/
 
 # The name of the sequencing center to use when doing EBI submissions
@@ -386,16 +371,13 @@ URL = https://vamps.mbl.edu/mobe_workshop/getfile.php
 PORTAL = QIITA
 
 # Portal subdirectory
-PORTAL_DIR =
+PORTAL_DIR = /portal
 
 # Full path to portal styling config file
-PORTAL_FP =
-
+PORTAL_FP = /tmp/portal.cfg
 
 # ----------------------------- iframes settings ---------------------------
 [iframe]
-# The real world QIIMP will always need to be accessed with https because Qiita
-# runs on https too
 QIIMP = https://localhost:8898/
 """
 
