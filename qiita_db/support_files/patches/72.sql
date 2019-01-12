@@ -62,7 +62,6 @@ insert into qiita.processing_job_resource_allocation (name, description, type, a
 -- January 11, 2019
 -- add general configuration info to store attribute/value pairs that are
 -- intended to be mutable during Qiita's operation.
-alter table settings add column trq_owner varchar;
-alter table settings add column trq_poll_val int;
-alter table settings add column trq_dependency_q_cnt int;
-
+-- alter table settings add column trq_owner varchar;
+-- alter table settings add column trq_poll_val int;
+-- alter table settings add column trq_dependency_q_cnt int;
