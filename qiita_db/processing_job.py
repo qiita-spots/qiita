@@ -118,7 +118,7 @@ class Watcher(Process):
                         # jobs in 'beforeok' are labeled with the complete
                         # job id and what looks to be the server name doing
                         # the work. For now, simply remove the
-                        # '@barnacle.ucsd.edu' (server) component.
+                        # '@host.domain.org' (server) component.
                         child_job_id = child_job_id.split('@')[0]
                         self.processes[child_job_id]['job_state'] = 'DROPPED'
                         self.queue.put(self.processes[child_job_id])
