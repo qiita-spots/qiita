@@ -410,29 +410,29 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             if self.command.name == 'complete_job':
-                type = 'COMPLETE_JOBS_RESOURCE_PARAM'
+                jtype = 'COMPLETE_JOBS_RESOURCE_PARAM'
                 v = loads(self.parameters.values['payload'])
                 # assume an empty string for name is preferable to None
                 name = ''
                 if v['artifacts'] is not None:
                     name = v['artifacts'].values()[0]['artifact_type']
             elif self.command.name == 'release_validators':
-                type = 'RELEASE_VALIDATORS_RESOURCE_PARAM'
+                jtype = 'RELEASE_VALIDATORS_RESOURCE_PARAM'
                 tmp = ProcessingJob(self.parameters.values['job'])
                 name = tmp.parameters.command.name
             elif self.id == 'register':
-                type = 'REGISTER'
+                jtype = 'REGISTER'
                 name = 'REGISTER'
             else:
                 # assume anything else is a command
-                type = 'RESOURCE_PARAMS_COMMAND'
+                jtype = 'RESOURCE_PARAMS_COMMAND'
                 name = self.command.name
 
             # first, query for resources matching name and type
             sql = """SELECT allocation FROM
                      qiita.processing_job_resource_allocation
                      WHERE name = '%s' and type = '%s'"""
-            qdb.sql_connection.TRN.add(sql, [name, type])
+            qdb.sql_connection.TRN.add(sql, [name, jtype])
 
             result = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -443,7 +443,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 sql = """SELECT allocation FROM
                          qiita.processing_job_resource_allocation WHERE
                          name = '%s' and type = '%s'"""
-                qdb.sql_connection.TRN.add(sql, ['default', type])
+                qdb.sql_connection.TRN.add(sql, ['default', jtype])
 
             result = qdb.sql_connection.TRN.execute_fetchlast()
 

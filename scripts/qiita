@@ -34,29 +34,29 @@ from threading import Thread
 import signal
 import sys
 
-watcher = None
+gWatcher = None
 
 
 def watcher_sigint_handler(sig, frame):
     print("Stopping Watcher...")
-    watcher.stop()
+    gWatcher.stop()
     sys.exit(0)
 
 
 if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
-    watcher = qdb.processing_job.Watcher()
-    watcher.start()
+    gWatcher = qdb.processing_job.Watcher()
+    gWatcher.start()
     # wait for OK or QUIT
-    msg = watcher.queue.get(True)
+    msg = gWatcher.queue.get(True)
 
     if msg == 'QUIT':
         print("Error: Watcher not running")
         sys.exit(1)
     else:
         print("Watcher is running: %s" % msg)
-        # register a signal handler that will stop watcher
+        # register a signal handler that will stop Watcher
         # on ctrl-c, so that Qiita may exit as expected.
-        signal.signal(signal.SIGINT, watcher_sigint_handler)
+        signal.signal(signal.SIGINT, gWatcher_sigint_handler)
 
 try:
     conn = qdb.sql_connection.SQLConnectionHandler()
@@ -306,11 +306,11 @@ def start(port, master):
     def update_database_func():
         while True:
             # blocking call waits on new job info
-            msg = watcher.queue.get(True)
+            msg = gWatcher.queue.get(True)
             if msg == 'QUIT':
                 break
 
-            tmp = watcher.torque_to_qiita_state_map
+            tmp = gWatcher.torque_to_qiita_state_map
             exit_status = tmp[msg['exit_status']]
 
             error_msg = None
@@ -326,22 +326,22 @@ def start(port, master):
             qid = qdb.processing_job.ProcessingJob.by_ext_id(msg['Job_Id'])
 
             if qid:
-                # Qiita recognizes the external ID from watcher, and has
+                # Qiita recognizes the external ID from Watcher, and has
                 # mapped it to a Qiita ID. Now, create a Job object to
                 # register the job's changed status in Qiita.
                 job_obj = qdb.processing_job.ProcessingJob(qid)
                 job_obj.complete(exit_status, error=error_msg)
             else:
-                # for now, ignore any job owned by Qiita, but can't be
+                # ignore any job owned by Qiita, but can't be
                 # mapped to a ProcessJob.
                 pass
 
     if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
         # Thread() can be replaced with Process() if need be
-        # update_database_func() requires a defined watcher object.
+        # update_database_func() requires a defined Watcher object.
         # if plugin_launcher is defined as qsub, it should be
         # defined.
-        p = Thread(target=update_database_func, args=())
+        p = Thread(target=update_database_func)
         p.start()
 
     if master:
@@ -417,7 +417,7 @@ def start(port, master):
 
     ioloop.start()
 
-    watcher.stop()
+    gWatcher.stop()
 
 # #############################################################################
 # PLUGIN COMMANDS
