@@ -439,7 +439,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             # first, query for resources matching name and type
             sql = """SELECT allocation FROM
                      qiita.processing_job_resource_allocation
-                     WHERE name = '%s' and type = '%s'"""
+                     WHERE name = '%s' and job_type = '%s'"""
             qdb.sql_connection.TRN.add(sql, [name, jtype])
 
             result = qdb.sql_connection.TRN.execute_fetchlast()
@@ -450,7 +450,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             if not result:
                 sql = """SELECT allocation FROM
                          qiita.processing_job_resource_allocation WHERE
-                         name = '%s' and type = '%s'"""
+                         name = '%s' and job_type = '%s'"""
                 qdb.sql_connection.TRN.add(sql, ['default', jtype])
 
             result = qdb.sql_connection.TRN.execute_fetchlast()
