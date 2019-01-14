@@ -402,10 +402,17 @@ class EBISubmission(object):
 
         for sample_name in sorted(samples):
             sample_info = dict(self.samples[sample_name])
-            sample = ET.SubElement(sample_set, 'SAMPLE', {
-                'alias': self._get_sample_alias(sample_name),
-                'center_name': qiita_config.ebi_center_name}
-            )
+
+            if self._ebi_sample_accessions[sample_name] is None:
+                sample = ET.SubElement(sample_set, 'SAMPLE', {
+                    'alias': self._get_sample_alias(sample_name),
+                    'center_name': qiita_config.ebi_center_name}
+                )
+            else:
+                sample = ET.SubElement(sample_set, 'SAMPLE', {
+                    'accession': self._ebi_sample_accessions[sample_name],
+                    'center_name': qiita_config.ebi_center_name}
+                )
 
             sample_title = ET.SubElement(sample, 'TITLE')
             sample_title.text = escape(clean_whitespace(sample_name))
