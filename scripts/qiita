@@ -46,6 +46,9 @@ def watcher_sigint_handler(sig, frame):
 if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
     gWatcher = qdb.processing_job.Watcher()
     gWatcher.start()
+
+    print("Watcher is running. Type Ctrl-C to exit Qiita.")
+
     # wait for OK or QUIT
     msg = gWatcher.queue.get(True)
 
@@ -310,19 +313,35 @@ def start(port, master):
             if msg == 'QUIT':
                 break
 
-            tmp = gWatcher.torque_to_qiita_state_map
-            exit_status = tmp[msg['exit_status']]
+            # TODO: add method to update Qiita of a job's status
+            # beyond completion. Review qclient.update_job_step.
 
-            error_msg = None
+            # get state of job
+            job_state = msg['job_state']
 
+            # currently, we are only informing Qiita of when a
+            # job has completed, either successfully or unsuccessfully.
+            if job_state != 'completed' and job_state != 'DROPPED':
+                continue
+
+            if job_state == 'completed':
+                # get returned exit_status from job's process
+                # all completed jobs should have an exit_status
+                exit_status = int(msg['exit_status'])
+                if exit_status == 0:
+                    job_state = True
+                else:
+                    job_state = False
+
+            else:
+                # Assume job is validator job that was DROPPED.
+                job_state = False
+
+            job_error = None
+            # get error message, if one is present
             if 'error_msg' in msg:
-                error_msg = msg['error_msg']
+                job_error = msg['error_msg']
 
-            # assuming we don't need to force a new connection,
-            # since we are in the main process.
-            # qdb.sql_connection.create_new_transaction()
-            # {'job_state': 'queued', 'Job_Id': '1094576.barnacle.ucsd.edu',
-            # 'Job_Name': 'job2'}
             qid = qdb.processing_job.ProcessingJob.by_ext_id(msg['Job_Id'])
 
             if qid:
@@ -330,7 +349,7 @@ def start(port, master):
                 # mapped it to a Qiita ID. Now, create a Job object to
                 # register the job's changed status in Qiita.
                 job_obj = qdb.processing_job.ProcessingJob(qid)
-                job_obj.complete(exit_status, error=error_msg)
+                job_obj.complete(job_state, error=job_error)
             else:
                 # ignore any job owned by Qiita, but can't be
                 # mapped to a ProcessJob.
