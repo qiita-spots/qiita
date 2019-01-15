@@ -564,7 +564,7 @@ with TRN:
 # At this point we are ready to start transferring the data from the old
 # structures to the new structures. Overview of the procedure:
 # Step 1: Add initial set of artifacts up to rarefied table
-# Step 2: Transfer the "analisys jobs" to processing jobs and create
+# Step 2: Transfer the "analysis jobs" to processing jobs and create
 #         the analysis artifacts
 db_dir = get_db_files_base_dir()
 with TRN:

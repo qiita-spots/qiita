@@ -8,7 +8,6 @@
 
 from unittest import TestCase, main
 from datetime import datetime
-from os.path import join
 from os import close
 from tempfile import mkstemp
 from json import dumps, loads
@@ -19,7 +18,6 @@ import pandas as pd
 
 import qiita_db as qdb
 from qiita_core.util import qiita_test_checker
-from qiita_core.qiita_settings import qiita_config
 
 
 def _create_job(force=True):
@@ -58,27 +56,6 @@ class ProcessingJobUtilTest(TestCase):
         self.assertEqual(obs_out, "")
         self.assertEqual(obs_err, "Test system call stderr\n")
         self.assertEqual(obs_status, 1)
-
-    def test_job_submitter(self):
-        # The cmd parameter of the function should be the command that
-        # actually executes the function. However, in order to avoid executing
-        # a expensive command, we are just going to pass some other command.
-        # In case of success, nothing happens, so we just run it and see that
-        # it doesn't raise an error
-        job = _create_job()
-        cmd = 'echo "Test system call stdout"'
-        qdb.processing_job._job_submitter(job.id, cmd)
-
-    def test_job_submitter_error(self):
-        # Same comment as above, but here we are going to force failure, and
-        # check that the job is updated correctly
-        job = _create_job()
-        cmd = '>&2  echo "Test system call stderr"; exit 1'
-        qdb.processing_job._job_submitter(job.id, cmd)
-        self.assertEqual(job.status, 'error')
-        exp = ("Error submitting job:\nStd output:\nStd error:"
-               "Test system call stderr\n")
-        self.assertEqual(job.log.msg, exp)
 
 
 @qiita_test_checker()
@@ -190,19 +167,10 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(self.tester3.status, 'success')
         self.assertEqual(self.tester4.status, 'error')
 
-    def test_generate_cmd(self):
-        obs = self.tester1._generate_cmd()
-        exp = ('qiita-plugin-launcher "source activate qiita" '
-               '"start_target_gene" "%s" '
-               '"063e553b-327c-4818-ab4a-adfe58e49860" "%s"'
-               % (qiita_config.base_url,
-                  join(qdb.util.get_work_base_dir(),
-                       "063e553b-327c-4818-ab4a-adfe58e49860")))
-        self.assertEqual(obs, exp)
-
     def test_submit(self):
         # In order to test a success, we need to actually run the job, which
         # will mean to run split libraries, for example.
+        # TODO: rewrite this test
         pass
 
     def test_log(self):

@@ -8,7 +8,7 @@
 
 from os.path import basename, join, isdir, isfile, exists
 from shutil import copyfile, rmtree
-from os import makedirs, remove, listdir
+from os import remove, listdir
 from datetime import date, timedelta
 from urllib import quote
 from itertools import zip_longest
@@ -24,6 +24,7 @@ from qiita_files.demux import to_per_sample_ascii
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.exceptions import EBISubmissionError
+from qiita_db.util import create_nested_path
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id, get_mountpoint, open_file
@@ -1117,7 +1118,7 @@ class EBISubmission(object):
             if isdir(self.full_ebi_dir):
                 rmtree(self.full_ebi_dir)
 
-            makedirs(self.full_ebi_dir)
+            create_nested_path(self.full_ebi_dir)
 
             if self.artifact.artifact_type == 'per_sample_FASTQ':
                 demux_samples, missing_samples = \

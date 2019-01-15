@@ -50,7 +50,7 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, exists
-from os import walk, remove, listdir, makedirs, rename
+from os import walk, remove, listdir, rename
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
 from tempfile import mkstemp
@@ -65,6 +65,8 @@ from humanize import naturalsize
 from os.path import getsize
 import hashlib
 
+from os import makedirs
+from errno import EEXIST
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
@@ -504,8 +506,7 @@ def move_upload_files_to_trash(study_id, files_to_move):
                 "The upload folder for study id: %d doesn't exist" % study_id)
 
         trashpath = join(foldername, trash_folder)
-        if not exists(trashpath):
-            makedirs(trashpath)
+        create_nested_path(trashpath)
 
         fullpath = join(foldername, filename)
         new_fullpath = join(foldername, trash_folder, filename)
@@ -612,8 +613,7 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
                 # Generate the new filepaths, format:
                 # mountpoint/obj_id/original_name
                 dirname = db_path(str(obj_id))
-                if not exists(dirname):
-                    makedirs(dirname)
+                create_nested_path(dirname)
                 new_filepaths = [
                     (join(dirname, basename(path)), id_)
                     for path, id_ in filepaths]
@@ -917,8 +917,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
     with qdb.sql_connection.TRN:
         uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
 
-        if not exists(uploads_fp):
-            makedirs(uploads_fp)
+        create_nested_path(uploads_fp)
 
         path_builder = partial(join, uploads_fp)
 
@@ -1906,6 +1905,41 @@ def generate_analysis_list(analysis_ids, public_only=False):
                 'mapping_files': mapping_files})
 
     return results
+
+
+def create_nested_path(path):
+    """Wraps makedirs() to make it safe to use across multiple concurrent calls.
+    Returns successfully if the path was created, or if it already exists.
+    (Note, this alters the normal makedirs() behavior, where False is returned
+    if the full path already exists.)
+
+    Parameters
+    ----------
+    path : str
+        The path to be created. The path can contain multiple levels that do
+        not currently exist on the filesystem.
+
+    Raises
+    ------
+    OSError
+        If the operation failed for whatever reason (likely because the caller
+        does not have permission to create new directories in the part of the
+        filesystem requested
+    """
+    # TODO: catching errno=EEXIST (17 usually) will suffice for now, to avoid
+    # stomping when multiple artifacts are being manipulated within a study.
+    # In the future, employ a process-spanning mutex to serialize.
+    # With Python3, the try/except wrapper can be replaced with a call to
+    # makedirs with exist_ok=True
+    try:
+        # try creating the directory specified. if the directory already exists
+        # , or if qiita does not have permissions to create/modify the path, an
+        # exception will be thrown.
+        makedirs(path)
+    except OSError as e:
+        # if the directory already exists, treat as success (idempotent)
+        if e.errno != EEXIST:
+            raise
 
 
 def human_merging_scheme(cname, merging_scheme,

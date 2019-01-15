@@ -24,8 +24,8 @@ Methods
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from os import stat, makedirs, rename
-from os.path import join, relpath, exists, basename
+from os import stat, rename
+from os.path import join, relpath, basename
 from time import strftime, localtime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -39,6 +39,7 @@ from hashlib import md5
 from re import sub
 from json import loads, dump
 
+from qiita_db.util import create_nested_path
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
@@ -425,8 +426,7 @@ def generate_biom_and_metadata_release(study_status='public'):
     # writing text and tgz file
     ts = datetime.now().strftime('%m%d%y-%H%M%S')
     tgz_dir = join(working_dir, 'releases')
-    if not exists(tgz_dir):
-        makedirs(tgz_dir)
+    create_nested_path(tgz_dir)
     tgz_name = join(tgz_dir, '%s-%s-building.tgz' % (portal, study_status))
     tgz_name_final = join(tgz_dir, '%s-%s.tgz' % (portal, study_status))
     txt_hd = StringIO()
@@ -478,11 +478,9 @@ def generate_plugin_releases():
     tnow = datetime.now()
     ts = tnow.strftime('%m%d%y-%H%M%S')
     tgz_dir = join(working_dir, 'releases', 'archive')
-    if not exists(tgz_dir):
-        makedirs(tgz_dir)
+    create_nested_path(tgz_dir)
     tgz_dir_release = join(tgz_dir, ts)
-    if not exists(tgz_dir_release):
-        makedirs(tgz_dir_release)
+    create_nested_path(tgz_dir_release)
     for cmd in commands:
         cmd_name = cmd.name
         mschemes = [v for _, v in ARCHIVE.merging_schemes().iteritems()
@@ -490,8 +488,7 @@ def generate_plugin_releases():
         for ms in mschemes:
             ms_name = sub('[^0-9a-zA-Z]+', '', ms)
             ms_fp = join(tgz_dir_release, ms_name)
-            if not exists(ms_fp):
-                makedirs(ms_fp)
+            create_nested_path(ms_fp)
 
             pfp = join(ms_fp, 'archive.json')
             archives = {k: loads(v)

@@ -10,11 +10,12 @@ from __future__ import division
 from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
-from os import remove, makedirs
-from os.path import isfile, exists, relpath
+from os import remove
+from os.path import isfile, relpath
 from shutil import rmtree
 from functools import partial
 from collections import namedtuple
+from qiita_db.util import create_nested_path
 
 import networkx as nx
 
@@ -179,9 +180,7 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [name, mp, True, True])
 
             # We are intersted in the dirpath
-            dp = qdb.util.get_mountpoint(name)[0][1]
-            if not exists(dp):
-                makedirs(dp)
+            create_nested_path(qdb.util.get_mountpoint(name)[0][1])
 
             qdb.sql_connection.TRN.execute()
 
