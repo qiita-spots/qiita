@@ -27,15 +27,13 @@ class TestRedbiom(TestHandlerBase):
         response = self.post('/redbiom/', post_args)
         self.assertEqual(response.code, 200)
 
-        samples = ['1.SKD6.640190', '1.SKD9.640182', '1.SKD8.640184',
-                   '1.SKD5.640186', '1.SKD2.640178', '1.SKD4.640185',
-                   '1.SKD1.640179', '1.SKD3.640198', '1.SKD7.640191']
         exp_artifact_biom_ids = {
-            '5': samples, '4': samples, '7': samples, '6': samples}
+            '5': ['1.SKD2.640178'],
+            '4': ['1.SKD2.640178', '1.SKD8.640184']}
         response_body = loads(response.body)
         obs_artifact_biom_ids = response_body['data'][0].pop(
             'artifact_biom_ids')
-        self.assertItemsEqual(obs_artifact_biom_ids, exp_artifact_biom_ids)
+        self.assertDictEqual(obs_artifact_biom_ids, exp_artifact_biom_ids)
         exp = {'status': 'success', 'message': '', 'data': DATA}
         self.assertEqual(response_body, exp)
 
