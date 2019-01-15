@@ -48,7 +48,6 @@ class RedbiomPublicSearch(BaseHandler):
                 _, data = redbiom.fetch.data_from_samples(ctx, redbiom_samples)
                 for vals in data.values():
                     for idx in vals:
-                        print idx
                         aid, sample_id = idx.split('_', 1)
                         sid = sample_id.split('.', 1)[0]
                         study_artifacts[sid][aid].append(sample_id)
