@@ -62,4 +62,4 @@ sequences mapping to the human genome (additional host genomes will become avail
 Next, the QC'd sequences will be compared against reference databases to determine the presence and abundance of protein-coding functional genes and
 pathways using HUMAnN2. These are then summarized as BIOM tables, which can be used in subsequent analysis and visualization.
 
-For more information visit the `Shotgun Qiita Plugin GitHub page <https://github.com/qiita-spots/qp-shotgun>`.
+For more information visit the `Shotgun Qiita Plugin GitHub page <https://github.com/qiita-spots/qp-shotgun>`_.
