@@ -254,55 +254,51 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
 
     with open(fp, 'w') as torque_job_file:
         torque_job_file.write("\n".join(lines))
-        torque_job_file.close()
 
-        qsub_cmd = ['qsub']
+    qsub_cmd = ['qsub']
 
-        if dependent_job_id:
-            # note that a dependent job should be submitted before the
-            # 'parent' job ends, most likely. Torque doesn't keep job state
-            # around forever, and creating a dependency on a job already
-            # completed has not been tested.
-            qsub_cmd.append("-W")
-            qsub_cmd.append("depend=afterok:%s" % dependent_job_id)
+    if dependent_job_id:
+        # note that a dependent job should be submitted before the
+        # 'parent' job ends, most likely. Torque doesn't keep job state
+        # around forever, and creating a dependency on a job already
+        # completed has not been tested.
+        qsub_cmd.append("-W")
+        qsub_cmd.append("depend=afterok:%s" % dependent_job_id)
 
-        qsub_cmd.append("%s" % resource_params)
-        qsub_cmd.append("%s" % fp)
-        qsub_cmd.append("-o")
-        qsub_cmd.append("%s/qsub-output.txt" % job_dir)
-        qsub_cmd.append("-e")
-        qsub_cmd.append("%s/qsub-error.txt" % job_dir)
-        # TODO: revisit epilogue
-        qsub_cmd.append("-l")
-        qsub_cmd.append("epilogue=/home/qiita/qiita-epilogue.sh")
+    qsub_cmd.append(resource_params)
+    qsub_cmd.append(fp)
+    qsub_cmd.append("-o")
+    qsub_cmd.append("%s/qsub-output.txt" % job_dir)
+    qsub_cmd.append("-e")
+    qsub_cmd.append("%s/qsub-error.txt" % job_dir)
+    # TODO: revisit epilogue
+    qsub_cmd.append("-l")
+    qsub_cmd.append("epilogue=/home/qiita/qiita-epilogue.sh")
 
-        # stdX parameters added to support returning the Torque ID from qsub
-        # Popen() may also need universal_newlines=True
-        # may also need stdout = stdout.decode("utf-8").rstrip()
-        proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
+    # stdX parameters added to support returning the Torque ID from qsub
+    # Popen() may also need universal_newlines=True
+    # may also need stdout = stdout.decode("utf-8").rstrip()
+    proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
 
-        # Adding proc.communicate call to wait for qsub to return and
-        # retrieve Torque ID from stdout.
-        # Communicate() pulls all stdout/stderr from the PIPEs
-        # This call waits until cmd is done
-        stdout, stderr = proc.communicate()
+    # Adding proc.communicate call to wait for qsub to return and
+    # retrieve Torque ID from stdout.
+    # Communicate() pulls all stdout/stderr from the PIPEs
+    # This call waits until cmd is done
+    stdout, stderr = proc.communicate()
 
-        # proc.returncode in this case means qsub successfully pushed the job
-        # onto Torque's queue.
-        #
-        # proc.returncode should always exist, but it will be equal to None if
-        # the proc hasn't finished yet. A negative value means the command was
-        # terminated by SIGNAL = the value (UNIX only)
-        if proc.returncode and proc.returncode != 0:
-            raise AssertionError("Error Torque could not launch plugin: %d" %
-                                 proc.returncode)
+    # proc.returncode in this case means qsub successfully pushed the job
+    # onto Torque's queue.
+    #
+    # proc.returncode should always exist, but it will be equal to None if
+    # the proc hasn't finished yet. A negative value means the command was
+    # terminated by SIGNAL = the value (UNIX only)
+    if proc.returncode != 0:
+        raise AssertionError("Error Torque could not launch plugin: %d" %
+                             proc.returncode)
 
-        torque_job_id = stdout.strip('\n')
+    torque_job_id = stdout.strip('\n')
 
-        return torque_job_id
-
-    # if Torque job ID file can't be opened, return None
-    return None
+    return torque_job_id
 
 
 def _system_call(cmd):
@@ -774,6 +770,10 @@ class ProcessingJob(qdb.base.QiitaObject):
 
                 # note that parent_job_id is being passed transparently from
                 # submit declaration to the launcher.
+                # TODO: In proc launches should throw exceptions, that are
+                # handled by this code. Out of proc launches will need to
+                # handle exceptions by catching them and returning an error
+                # code.
                 job_id = launcher['function'](plugin_env_script,
                                               plugin_start_script,
                                               url,

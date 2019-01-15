@@ -327,14 +327,10 @@ def start(port, master):
             if job_state == 'completed':
                 # get returned exit_status from job's process
                 # all completed jobs should have an exit_status
-                exit_status = int(msg['exit_status'])
-                if exit_status == 0:
-                    job_state = True
-                else:
-                    job_state = False
-
+                job_state = int(msg['exit_status']) == 0
             else:
                 # Assume job is validator job that was DROPPED.
+                # Assume DROPPED job does not have an exit_status.
                 job_state = False
 
             job_error = None
