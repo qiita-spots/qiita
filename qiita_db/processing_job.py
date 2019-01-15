@@ -133,6 +133,7 @@ class Watcher(Process):
         # check to see if qstat is available. If not, exit immediately.
         proc = Popen("qstat -x", shell=True, stdout=PIPE, stderr=PIPE)
         proc.wait()
+  
         if proc.returncode != 0:
             # inform any process expecting data from Watcher
             self.queue.put('QUIT')
