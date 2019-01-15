@@ -97,7 +97,7 @@ class Watcher(Process):
 
         if missing_elements:
             raise AssertionError("The following elements were not found: %s"
-                                 % str(missing_elements))
+                                 % ', '.join(missing_elements))
 
         for element in list_of_optional_elements:
             value = search('<%s>(.*?)</%s>' % (element, element), snippet)
@@ -166,7 +166,7 @@ class Watcher(Process):
 
                         # determine if anything has changed since last poll
                         if results['Job_Id'] in self.processes:
-                            if self.processes[results['Job_Id'] != results:
+                            if self.processes[results['Job_Id']] != results:
                                 # metadata for existing job has changed
                                 self.processes[results['Job_Id']] = results
                                 self.queue.put(results)
