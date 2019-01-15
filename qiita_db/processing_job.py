@@ -86,12 +86,18 @@ class Watcher(Process):
     def _element_extract(self, snippet, list_of_elements,
                          list_of_optional_elements):
         results = {}
+        missing_elements = []
+
         for element in list_of_elements:
             value = search('<%s>(.*?)</%s>' % (element, element), snippet)
             if value:
                 results[element] = value.group(1)
             else:
-                raise AssertionError("%s element is missing!" % element)
+                missing_elements.append(element)
+
+        if missing_elements:
+            raise AssertionError("The following elements were not found: %s"
+                                 % str(missing_elements))
 
         for element in list_of_optional_elements:
             value = search('<%s>(.*?)</%s>' % (element, element), snippet)
@@ -102,7 +108,7 @@ class Watcher(Process):
 
     def _process_dependent_jobs(self, results):
         # when a job has its status changed, check to see if the job completed
-        # with an error. If so, check to see if had any jobs that were being
+        # with an error. If so, check to see if it had any jobs that were being
         # 'held' on this job's successful completion. If we are maintaining
         # state on any of these jobs, mark them as 'DROPPED', because they will
         # no longer appear in qstat output.
@@ -126,7 +132,7 @@ class Watcher(Process):
     def run(self):
         # check to see if qstat is available. If not, exit immediately.
         proc = Popen("qstat -x", shell=True, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = proc.communicate()
+        proc.wait()
         if proc.returncode != 0:
             # inform any process expecting data from Watcher
             self.queue.put('QUIT')
@@ -160,9 +166,7 @@ class Watcher(Process):
 
                         # determine if anything has changed since last poll
                         if results['Job_Id'] in self.processes:
-                            tmp = cmp(self.processes[results['Job_Id']],
-                                      results)
-                            if 0 != tmp:
+                            if self.processes[results['Job_Id'] != results:
                                 # metadata for existing job has changed
                                 self.processes[results['Job_Id']] = results
                                 self.queue.put(results)
