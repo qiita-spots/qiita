@@ -23,7 +23,7 @@ For each preparation that needs to be uploaded to EBI-ENA we will check:
       3. *sample_type*
       4. *taxon_id* - needs to match *scientific_name* value
       5. *scientific_name* - needs to match *taxon_id* value - this is the name of the `metagenome <https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Tree&id=12908&lvl=3&srchmode=1&keep=1&unlock>`__ referenced in the column *taxon_id* and that the two values match.  Submission will not work if the user puts *host_scientific_name* or *host_taxid* instead.  Do not accept EBI null values. For null values use *scientific_name* “metagenome” and *taxon_id* “256318”
-      6. *env_biome*, *env_feature*, *env_material*, *env_package*, for options `visit <http://ols.wordvis.com/>`__
+      6. *env_biome*, *env_feature*, *env_material*, *env_package*, for options `visit the ENVO section in <http://ols.wordvis.com/>`__
       7. *elevation*, *latitude*, *longitude*
       8. *empo_1*, *empo_2*, *empo_3*
 
