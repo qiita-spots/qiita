@@ -39,6 +39,7 @@ Looking for information about submitting your files to EBI? Please see the docum
 .. toctree::
 
    europeanbioinformaticsinstitute.rst
+   checklist-for-ebi-ena-submission
 
 Looking for comparable studies? Please see the document here:
 
