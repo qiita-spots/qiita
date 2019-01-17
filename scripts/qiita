@@ -47,19 +47,16 @@ if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
     gWatcher = qdb.processing_job.Watcher()
     gWatcher.start()
 
-    print("Watcher is running. Type Ctrl-C to exit Qiita.")
-
-    # wait for OK or QUIT
-    msg = gWatcher.queue.get(True)
-
-    if msg == 'QUIT':
-        print("Error: Watcher not running")
-        sys.exit(1)
-    else:
-        print("Watcher is running: %s" % msg)
+    if gWatcher.is_alive():
         # register a signal handler that will stop Watcher
         # on ctrl-c, so that Qiita may exit as expected.
         signal.signal(signal.SIGINT, watcher_sigint_handler)
+        print("Watcher is running. Type Ctrl-C to exit Qiita.")
+    else:
+        # if Watcher is needed, but cannot start, treat as
+        # a fatal error.
+        print("Error: Watcher not running")
+        sys.exit(1)
 
 try:
     conn = qdb.sql_connection.SQLConnectionHandler()
