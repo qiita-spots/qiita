@@ -6,7 +6,7 @@
 
 -- On January 17, 2019 while releasing the release candidate; we realized that
 -- we were hitting the max memory allocated for the machine so we needed to
--- split this in to 2
+-- split this into two
 -- Dropping all the _bk tables 1/2
 DO $do$
 DECLARE
