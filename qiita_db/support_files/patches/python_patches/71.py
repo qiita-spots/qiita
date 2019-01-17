@@ -6,10 +6,10 @@ with TRN:
              FROM information_schema.columns
              WHERE table_name LIKE '%_bk'"""
     TRN.add(sql)
-    tables = TRN.execute_fetchflatten()
+    tables = ['qiita.%s' % t for t in TRN.execute_fetchflatten()]
 
-sql = "DROP TABLE qiita.%s"
-for table in tables:
-    with TRN:
-        TRN.add(sql % table)
-        TRN.execute()
+
+with TRN:
+    sql = "DROP TABLE %s" % ', '.join(tables)
+    TRN.add(sql)
+    TRN.execute()
