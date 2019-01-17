@@ -8,8 +8,9 @@ with TRN:
     TRN.add(sql)
     tables = ['qiita.%s' % t for t in TRN.execute_fetchflatten()]
 
-
-with TRN:
-    sql = "DROP TABLE %s" % ', '.join(tables)
+chunk_size = 500
+for i in range(0, len(tables), chunk_size):
+    chunk = tables[i:chunk_size+i]
+    sql = "DROP TABLE %s" % ', '.join(chunk)
     TRN.add(sql)
     TRN.execute()
