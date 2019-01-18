@@ -1308,10 +1308,8 @@ class Software(qdb.base.QiitaObject):
         # Qiita logs
         print 'Registering: %s, via %s' % (self.name, cmd)
         p_out, p_err, rv = qdb.processing_job._system_call(cmd)
-        print p_out, p_err, rv
         if rv != 0:
             raise ValueError('Error %d: %s' % (rv, p_out))
-        print p_out, p_err, rv
 
 
 class DefaultParameters(qdb.base.QiitaObject):
