@@ -433,7 +433,8 @@ def start(port, master):
 
     ioloop.start()
 
-    gWatcher.stop()
+    if master:
+        gWatcher.stop()
 
 # #############################################################################
 # PLUGIN COMMANDS

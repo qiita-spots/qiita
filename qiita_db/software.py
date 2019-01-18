@@ -9,7 +9,6 @@
 from json import dumps, loads
 from copy import deepcopy
 from future import standard_library
-from multiprocessing import Process
 import inspect
 import warnings
 
@@ -1303,14 +1302,16 @@ class Software(qdb.base.QiitaObject):
     def register_commands(self):
         """Registers the software commands"""
         url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
-        cmd = '%s "%s" "%s" "%s" "register" "ignored"' % (
-            qiita_config.plugin_launcher, self.environment_script,
-            self.start_script, url)
+        cmd = 'source ~/.bash_profile; %s; %s "%s" "register" "ignored"' % (
+            self.environment_script, self.start_script, url)
         # this print is intentional as it will be stored in the internal
         # Qiita logs
         print 'Registering: %s, via %s' % (self.name, cmd)
-        p = Process(target=qdb.processing_job._system_call, args=(cmd,))
-        p.start()
+        p_out, p_err, rv = qdb.processing_job._system_call(cmd)
+        print p_out, p_err, rv
+        if rv != 0:
+            raise ValueError('Error %d: %s' % (rv, p_out))
+        print p_out, p_err, rv
 
 
 class DefaultParameters(qdb.base.QiitaObject):
