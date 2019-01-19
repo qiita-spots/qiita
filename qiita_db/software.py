@@ -1306,10 +1306,11 @@ class Software(qdb.base.QiitaObject):
             self.environment_script, self.start_script, url)
         # this print is intentional as it will be stored in the internal
         # Qiita logs
-        print 'Registering: %s, via %s' % (self.name, cmd)
         p_out, p_err, rv = qdb.processing_job._system_call(cmd)
+
         if rv != 0:
-            raise ValueError('Error %d: %s' % (rv, p_out))
+            raise ValueError("exit_status: %d\nstdout: %s\nstderr: %s\n" %
+                             (rv, p_out, p_err))
 
 
 class DefaultParameters(qdb.base.QiitaObject):

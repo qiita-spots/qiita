@@ -409,19 +409,34 @@ def start(port, master):
                            if s.type == 'artifact definition']
             stransformation = [s for s in active_software
                                if s.type == 'artifact transformation']
+
             # registering definition artifacts
+
             for s in sdefinition:
-                s.register_commands()
+                print('Registering: %s...' % (s.name))
+                try:
+                    s.register_commands()
+                except ValueError as e:
+                    print(e.message)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
                 sleep(1)
             # sleep to make sure that all definitions are done
             sleep(4)
+
+            print('Definition artifacts registration complete')
+
             for s in stransformation:
-                s.register_commands()
+                print('Registering: %s...' % (s.name))
+                try:
+                    s.register_commands()
+                except ValueError as e:
+                    print(e.message)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
                 sleep(1)
+
+            print('Command artifacts registration complete')
 
         ioloop.add_timeout(ioloop.time() + 0.5, callback_function)
 

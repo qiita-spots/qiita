@@ -327,7 +327,7 @@ def _system_call(cmd):
     license.
     """
     proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
-                 stderr=PIPE, executable='/bin/bash')
+                 stderr=PIPE)
     # Communicate pulls all stdout/stderr from the PIPEs
     # This call blocks until the command is done
     stdout, stderr = proc.communicate()
