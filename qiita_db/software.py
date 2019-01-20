@@ -1309,8 +1309,10 @@ class Software(qdb.base.QiitaObject):
         p_out, p_err, rv = qdb.processing_job._system_call(cmd)
 
         if rv != 0:
-            raise ValueError("exit_status: %d\nstdout: %s\nstderr: %s\n" %
-                             (rv, p_out, p_err))
+            s = "cmd: %s\nexit status: %d\n" % (cmd, rv)
+            s += "stdout: %s\nstderr: %s\n" % (p_out, p_err)
+
+            raise ValueError(s)
 
 
 class DefaultParameters(qdb.base.QiitaObject):
