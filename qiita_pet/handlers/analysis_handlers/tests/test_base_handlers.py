@@ -185,6 +185,9 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         for j in a.jobs:
             wait_for_processing_job(j.id)
 
+        print '----------------'
+        print job.status, job.log.msg if job.status == 'error'
+
         artifacts = a.artifacts
         self.assertEqual(len(artifacts), 2)
 
