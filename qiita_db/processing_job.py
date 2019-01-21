@@ -453,7 +453,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                          name = %s and job_type = %s"""
                 qdb.sql_connection.TRN.add(sql, ['default', jtype])
 
-            result = qdb.sql_connection.TRN.execute_fetchlast()
+            result = qdb.sql_connection.TRN.execute_fetchflatten()
 
             if not result:
                 AssertionError("Could not match %s to a resource allocation!" %
