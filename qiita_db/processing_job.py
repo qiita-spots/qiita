@@ -764,13 +764,13 @@ class ProcessingJob(qdb.base.QiitaObject):
         # requires metadata from a late-defined and time-sensitive source.
         if qiita_config.plugin_launcher in ProcessingJob._launch_map:
             launcher = ProcessingJob._launch_map[qiita_config.plugin_launcher]
-            if launcher['execute_in_process'] is True:
+            if launcher['execute_in_process']:
                 # run this launcher function within this process.
                 # usually this is done if the launcher spawns other processes
                 # before returning immediately, usually with a job ID that can
                 # be used to monitor the job's progress.
 
-                resource_params = ProcessingJob.get_resource_allocation_info()
+                resource_params = self.get_resource_allocation_info()
 
                 # note that parent_job_id is being passed transparently from
                 # submit declaration to the launcher.
@@ -810,7 +810,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     next_job.submit(parent_job_id=job_id,
                                     dependent_jobs_list=dependent_jobs_list)
 
-            elif launcher['execute_in_process'] is False:
+            elif not launcher['execute_in_process']:
                 # run this launcher function as a new process.
                 # usually this is done if the launcher performs work that takes
                 # an especially long time, or waits for children who perform
