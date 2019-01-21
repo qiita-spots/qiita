@@ -403,7 +403,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT processing_job_id FROM qiita.processing_job
-                     WHERE external_job_id = '%s'"""
+                     WHERE external_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [external_id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -716,8 +716,8 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.processing_job
-                     SET external_job_id = '%s'
-                     WHERE processing_job_id = '%s'"""
+                     SET external_job_id = %s
+                     WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [value, self.id])
             qdb.sql_connection.TRN.execute()
 
