@@ -1302,7 +1302,7 @@ class Software(qdb.base.QiitaObject):
     def register_commands(self):
         """Registers the software commands"""
         url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
-        cmd = 'source ~/.bash_profile; %s; %s "%s" "register" "ignored"' % (
+        cmd = '%s; %s "%s" "register" "ignored"' % (
             self.environment_script, self.start_script, url)
         # this print is intentional as it will be stored in the internal
         # Qiita logs

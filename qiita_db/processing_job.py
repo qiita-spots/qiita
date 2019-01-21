@@ -305,16 +305,13 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
     return torque_job_id
 
 
-def _system_call(cmd, bash=False):
+def _system_call(cmd):
     """Execute the command `cmd`
 
     Parameters
     ----------
     cmd : str
         The string containing the command to be run.
-    bash : bool
-        By default, execute cmd using sh.
-        Set to True to execute cmd using bash.
 
     Returns
     -------
@@ -329,12 +326,8 @@ def _system_call(cmd, bash=False):
     the authors of this function to port it to Qiita and keep it under BSD
     license.
     """
-    if bash:
-        proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
-                     stderr=PIPE, executable='/bin/bash')
-    else:
-        proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
-                     stderr=PIPE)
+    proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
+                 stderr=PIPE)
     # Communicate pulls all stdout/stderr from the PIPEs
     # This call blocks until the command is done
     stdout, stderr = proc.communicate()
