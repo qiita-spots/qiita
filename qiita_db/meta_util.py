@@ -325,8 +325,8 @@ def get_lat_longs():
                        CAST(sample_values->>'longitude' AS FLOAT)
                 FROM qiita.sample_{0}
                 WHERE sample_values->>'latitude' != 'NaN' AND
-                sample_values->>'longitude' != 'NaN' AND
-                isnumeric(sample_values->>'latitude') AND
+                      sample_values->>'longitude' != 'NaN' AND
+                      isnumeric(sample_values->>'latitude') AND
                       isnumeric(sample_values->>'longitude')"""
             sql = [sql_query.format(s.id) for s in studies]
             sql = ' UNION '.join(sql)
