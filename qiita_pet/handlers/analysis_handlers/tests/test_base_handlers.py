@@ -184,9 +184,10 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         # Wait until all the jobs are done so the BIOM tables exist
         for j in a.jobs:
             wait_for_processing_job(j.id)
-
-        print '----------------'
-        print job.status, job.log.msg if job.status == 'error'
+            print '----------------'
+            print j.status
+            if j.status == 'error':
+                print j.log.msg
 
         artifacts = a.artifacts
         self.assertEqual(len(artifacts), 2)
