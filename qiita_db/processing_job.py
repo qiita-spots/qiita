@@ -282,7 +282,7 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
     # stdX parameters added to support returning the Torque ID from qsub
     # Popen() may also need universal_newlines=True
     # may also need stdout = stdout.decode("utf-8").rstrip()
-    proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
+    proc = Popen(' '.join(qsub_cmd), shell=True, stdout=PIPE, stderr=PIPE)
 
     # Adding proc.communicate call to wait for qsub to return and
     # retrieve Torque ID from stdout.
