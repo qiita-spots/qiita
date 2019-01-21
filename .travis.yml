@@ -70,6 +70,7 @@ install:
 before_script:
   - qiita-env make --no-load-ontologies
   - qiita-test-install
+  - qiita plugins update
 script:
   # Some of the tests rely on the plugin system to complete successfuly.
   # Thus, we need a qiita webserver running to be able to execute the tests.
