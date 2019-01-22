@@ -457,10 +457,11 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if not result:
                     AssertionError(
                         "Could not match %s to a resource allocation!" % name)
+                # [0] sending one element as execute_fetchflatten returns
+                # an array
+                result = result[0]
 
-            # [0] sending one element as execute_fetchlast and
-            # execute_fetchflatten return an array
-            return result[0]
+            return result
 
     @classmethod
     def create(cls, user, parameters, force=False):
