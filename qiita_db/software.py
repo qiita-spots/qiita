@@ -1304,8 +1304,15 @@ class Software(qdb.base.QiitaObject):
         url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
         cmd = '%s; %s "%s" "register" "ignored"' % (
             self.environment_script, self.start_script, url)
-        # this print is intentional as it will be stored in the internal
-        # Qiita logs
+
+        # it can be assumed that any command beginning with 'source'
+        # is calling 'source', an internal command of 'bash' and hence
+        # should be executed from bash, instead of sh.
+        # TODO: confirm that exit_code propagates from bash to sh to
+        # rv.
+        if cmd.startswith('source'):
+            cmd = "bash -c '%s'" % cmd
+
         p_out, p_err, rv = qdb.processing_job._system_call(cmd)
 
         if rv != 0:

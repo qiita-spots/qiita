@@ -205,19 +205,13 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     #
     # As processes are lighter weight than jobs, this should be fine.
     # This is how the current job model works locally.
-
-    #cmd = [start_script, url, job_id, job_dir]
-    
     cmd = [start_script, url, job_id, job_dir]
 
     # When Popen() executes, the shell is not in interactive mode,
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
-    # cmd = "bash -c '%s; %s'" % (env_script, ' '.join(cmd))
-    cmd = '%s; %s' % (env_script, ' '.join(cmd))
-    
-    cmd = "bash -c '%s'" % cmd
-    
+    cmd = "bash -c '%s; %s'" % (env_script, ' '.join(cmd))
+
     # Popen() may also need universal_newlines=True
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
 
