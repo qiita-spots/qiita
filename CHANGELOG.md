@@ -1,5 +1,23 @@
 # Qiita changelog
 
+Version 012019
+--------------
+
+* Updated PostgreSQL from 9.3 to 9.5
+* Information files storage is now jsonb key-value pairs
+* Improved sample insertion by only updating the preparation information files that overlap with the updated/new samples
+* Qiita uses the latests redbiom (0.3.0)
+* Solved Qiita-redbiom issue where it returned all artifacts (https://github.com/biocore/qiita/issues/2569)
+* Deleting an artifact will delete its children
+* Map in the stats section only uses public data and shows the study id of the sample
+* Added functionality to do archiving release; for example: full Qiita deblur trees
+* Improved job submission and tracking; new cool things to come!
+* IonTorrent EBI-ENA submission is available
+* Fixed and not allowing special chars for PI names
+* Help section now has a new Meta-Analyses Help & EBI-ENA submission checklist
+* The "Download public BIOM and metadata files" now includes software version, target_gene, platform and merging scheme for the artifacts
+* Improved the processing graph display to make it more user friendly: artifacts are triangles and jobs are circles
+
 Version 112018
 --------------
 
@@ -16,7 +34,6 @@ Version 112018
 * Allowed xlsx files in the prep info files
 * Qiita now allows plugins to run any given command at the end of building
   analyses to generate extra artifacts, for example to generate a deblur tree
-
 
 Version 092018
 --------------

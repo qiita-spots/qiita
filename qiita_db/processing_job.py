@@ -281,7 +281,8 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
     # stdX parameters added to support returning the Torque ID from qsub
     # Popen() may also need universal_newlines=True
     # may also need stdout = stdout.decode("utf-8").rstrip()
-    proc = Popen(' '.join(qsub_cmd), shell=True, stdout=PIPE, stderr=PIPE)
+    qsub_cmd = ' '.join(qsub_cmd)
+    proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
 
     # Adding proc.communicate call to wait for qsub to return and
     # retrieve Torque ID from stdout.
@@ -441,7 +442,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                      WHERE name = %s and job_type = %s"""
             qdb.sql_connection.TRN.add(sql, [name, jtype])
 
-            result = qdb.sql_connection.TRN.execute_fetchlast()
+            result = qdb.sql_connection.TRN.execute_fetchflatten()
 
             # if no matches for both type and name were found, query the
             # 'default' value for the type
@@ -452,13 +453,14 @@ class ProcessingJob(qdb.base.QiitaObject):
                          name = %s and job_type = %s"""
                 qdb.sql_connection.TRN.add(sql, ['default', jtype])
 
-            result = qdb.sql_connection.TRN.execute_fetchflatten()
+                result = qdb.sql_connection.TRN.execute_fetchflatten()
+                if not result:
+                    AssertionError(
+                        "Could not match %s to a resource allocation!" % name)
 
-            if not result:
-                AssertionError("Could not match %s to a resource allocation!" %
-                               name)
-
-            return result
+            # [0] sending one element as execute_fetchflatten returns
+            # an array
+            return result[0]
 
     @classmethod
     def create(cls, user, parameters, force=False):
