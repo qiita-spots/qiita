@@ -704,7 +704,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         ----------
         value : str, {'queued', 'running', 'success', 'error',
                       'in_construction', 'waiting'}
-            The new status of the job
+            The job's new status
 
         Raises
         ------
