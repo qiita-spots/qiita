@@ -219,8 +219,8 @@ Vue.component('processing-graph', {
         var node = vm.nodes_ds.get(artifactId);
         var node_info = vm.colorScheme['deleting'];
         node.group = 'deleting';
-        jobNode.shape = node_info['shape'];
         node.color = node_info;
+        node.shape = node_info['shape'];
         vm.nodes_ds.update(node);
         // Add the job to the list of jobs to check for deletion.
         vm.runningJobs.push(data.job);

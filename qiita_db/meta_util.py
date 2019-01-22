@@ -394,7 +394,7 @@ def generate_biom_and_metadata_release(study_status='public'):
 
                 merging_schemes.append(qdb.util.human_merging_scheme(
                     cmd_name, ms, parent_cmd_name, parent_merging_scheme,
-                    processing_params, afps, parent_pp))
+                    processing_params.values, afps, parent_pp))
                 parent_softwares.append(parent_software)
             merging_schemes = ', '.join(merging_schemes)
             parent_softwares = ', '.join(parent_softwares)
