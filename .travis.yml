@@ -26,7 +26,7 @@ install:
     pyzmq 'networkx<2.0' pyparsing natsort mock future libgfortran seaborn nltk
     'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate qiita
-  - pip install pip=18.1
+  - pip install -U pip
   - pip install sphinx sphinx-bootstrap-theme nose-timer codecov 'Click==6.7'
   - 'echo "backend: Agg" > matplotlibrc'
   - git clone https://github.com/nicolasff/webdis
