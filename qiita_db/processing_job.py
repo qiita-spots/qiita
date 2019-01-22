@@ -21,6 +21,8 @@ from subprocess import Popen, PIPE
 from time import sleep
 from uuid import UUID
 from os.path import join
+from threading import Thread
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 
 class Watcher(Process):
@@ -278,31 +280,48 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
     qsub_cmd.append("-l")
     qsub_cmd.append("epilogue=/home/qiita/qiita-epilogue.sh")
 
-    # stdX parameters added to support returning the Torque ID from qsub
     # Popen() may also need universal_newlines=True
     # may also need stdout = stdout.decode("utf-8").rstrip()
     qsub_cmd = ' '.join(qsub_cmd)
-    proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
 
-    # Adding proc.communicate call to wait for qsub to return and
-    # retrieve Torque ID from stdout.
-    # Communicate() pulls all stdout/stderr from the PIPEs
-    # This call waits until cmd is done
-    stdout, stderr = proc.communicate()
+    # Qopen is a wrapper for Popen() that allows us to wait on a qsub
+    # call, but return if the qsub command is not returning after a
+    # prolonged period of time.
+    q = Qopen(qsub_cmd)
+    q.start()
 
-    # proc.returncode in this case means qsub successfully pushed the job
+    # wait for qsub_cmd to finish, but not longer than the number of
+    # seconds specified below.
+    q.join(2)
+
+    # if q.returncode is None, it's because qsub did not return.
+    if q.returncode is None:
+        e = "Error Torque configuration information incorrect: %s" % qsub_cmd
+        raise IncompetentQiitaDeveloperError(e)
+
+    # q.returncode in this case means qsub successfully pushed the job
     # onto Torque's queue.
-    #
-    # proc.returncode should always exist, but it will be equal to None if
-    # the proc hasn't finished yet. A negative value means the command was
-    # terminated by SIGNAL = the value (UNIX only)
-    if proc.returncode != 0:
-        raise AssertionError("Error Torque could not launch plugin: %d" %
-                             proc.returncode)
+    if q.returncode != 0:
+        raise AssertionError("Error Torque could not launch %s (%d)" %
+                             (qsub_cmd, q.returncode))
 
-    torque_job_id = stdout.strip('\n')
+    torque_job_id = q.stdout.strip('\n')
 
     return torque_job_id
+
+
+class Qopen(Thread):
+    def __init__(self, cmd):
+        super(Qopen, self).__init__()
+        self.cmd = cmd
+        self.stdout = None
+        self.stderr = None
+        self.returncode = None
+
+    def run(self):
+        proc = Popen(self.cmd, shell=True, stdout=PIPE, stderr=PIPE)
+        self.stdout, self.stderr = proc.communicate()
+        self.returncode = proc.returncode
 
 
 def _system_call(cmd):
