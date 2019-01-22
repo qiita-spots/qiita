@@ -1670,9 +1670,10 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 aid, name, cid, cname, gt, aparams, dt, pid, pcid, pname, \
                     pparams, filepaths, _, prep_template_id = row
 
-                # cleaning up aparams
+                # cleaning up aparams & pparams
                 # - [0] due to the array_agg
                 aparams = aparams[0]
+                pparams = pparams[0]
                 if aparams is None:
                     aparams = {}
                 else:

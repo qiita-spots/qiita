@@ -34,32 +34,18 @@ from threading import Thread
 import signal
 import sys
 
+# identify gWatcher variable and signal handler globally.
+# Only the master process will instantiate a Watcher() process.
+# All other processes will have gWatcher = None
 gWatcher = None
 
 
 def watcher_sigint_handler(sig, frame):
     print("Stopping Watcher...")
-    gWatcher.stop()
+    if gWatcher:
+        gWatcher.stop()
     sys.exit(0)
 
-
-if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
-    gWatcher = qdb.processing_job.Watcher()
-    gWatcher.start()
-
-    print("Watcher is running. Type Ctrl-C to exit Qiita.")
-
-    # wait for OK or QUIT
-    msg = gWatcher.queue.get(True)
-
-    if msg == 'QUIT':
-        print("Error: Watcher not running")
-        sys.exit(1)
-    else:
-        print("Watcher is running: %s" % msg)
-        # register a signal handler that will stop Watcher
-        # on ctrl-c, so that Qiita may exit as expected.
-        signal.signal(signal.SIGINT, watcher_sigint_handler)
 
 try:
     conn = qdb.sql_connection.SQLConnectionHandler()
@@ -352,12 +338,27 @@ def start(port, master):
                 pass
 
     if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
-        # Thread() can be replaced with Process() if need be
-        # update_database_func() requires a defined Watcher object.
-        # if plugin_launcher is defined as qsub, it should be
-        # defined.
-        p = Thread(target=update_database_func)
-        p.start()
+        if master:
+            # Only a single Watcher() process is desired
+            gWatcher = qdb.processing_job.Watcher()
+            gWatcher.start()
+            if gWatcher.is_alive():
+                # register a signal handler that will stop Watcher
+                # on ctrl-c, so that Qiita may exit as expected.
+                signal.signal(signal.SIGINT, watcher_sigint_handler)
+                print("Watcher is running. Type Ctrl-C to exit Qiita.")
+            else:
+                # if Watcher is needed, but cannot start, treat as
+                # a fatal error.
+                print("Error: Watcher not running")
+                sys.exit(1)
+
+            # Thread() can be replaced with Process() if need be
+            # update_database_func() requires a defined Watcher object.
+            # if plugin_launcher is defined as qsub, it should be
+            # defined.
+            p = Thread(target=update_database_func)
+            p.start()
 
     if master:
         # Deactivate all the plugins and only activate those that are currently
@@ -408,19 +409,34 @@ def start(port, master):
                            if s.type == 'artifact definition']
             stransformation = [s for s in active_software
                                if s.type == 'artifact transformation']
+
             # registering definition artifacts
+
             for s in sdefinition:
-                s.register_commands()
+                print('Registering: %s...' % (s.name))
+                try:
+                    s.register_commands()
+                except ValueError as e:
+                    print(e.message)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
                 sleep(1)
             # sleep to make sure that all definitions are done
             sleep(4)
+
+            print('Definition artifacts registration complete')
+
             for s in stransformation:
-                s.register_commands()
+                print('Registering: %s...' % (s.name))
+                try:
+                    s.register_commands()
+                except ValueError as e:
+                    print(e.message)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
                 sleep(1)
+
+            print('Command artifacts registration complete')
 
         ioloop.add_timeout(ioloop.time() + 0.5, callback_function)
 
@@ -432,7 +448,8 @@ def start(port, master):
 
     ioloop.start()
 
-    gWatcher.stop()
+    if master:
+        gWatcher.stop()
 
 # #############################################################################
 # PLUGIN COMMANDS

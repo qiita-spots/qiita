@@ -205,7 +205,6 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     #
     # As processes are lighter weight than jobs, this should be fine.
     # This is how the current job model works locally.
-
     cmd = [start_script, url, job_id, job_dir]
 
     # When Popen() executes, the shell is not in interactive mode,
@@ -282,7 +281,7 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
     # stdX parameters added to support returning the Torque ID from qsub
     # Popen() may also need universal_newlines=True
     # may also need stdout = stdout.decode("utf-8").rstrip()
-    proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
+    proc = Popen(' '.join(qsub_cmd), shell=True, stdout=PIPE, stderr=PIPE)
 
     # Adding proc.communicate call to wait for qsub to return and
     # retrieve Torque ID from stdout.
@@ -403,7 +402,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT processing_job_id FROM qiita.processing_job
-                     WHERE external_job_id = '%s'"""
+                     WHERE external_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [external_id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -439,7 +438,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             # first, query for resources matching name and type
             sql = """SELECT allocation FROM
                      qiita.processing_job_resource_allocation
-                     WHERE name = '%s' and job_type = '%s'"""
+                     WHERE name = %s and job_type = %s"""
             qdb.sql_connection.TRN.add(sql, [name, jtype])
 
             result = qdb.sql_connection.TRN.execute_fetchlast()
@@ -450,10 +449,10 @@ class ProcessingJob(qdb.base.QiitaObject):
             if not result:
                 sql = """SELECT allocation FROM
                          qiita.processing_job_resource_allocation WHERE
-                         name = '%s' and job_type = '%s'"""
+                         name = %s and job_type = %s"""
                 qdb.sql_connection.TRN.add(sql, ['default', jtype])
 
-            result = qdb.sql_connection.TRN.execute_fetchlast()
+            result = qdb.sql_connection.TRN.execute_fetchflatten()
 
             if not result:
                 AssertionError("Could not match %s to a resource allocation!" %
@@ -705,7 +704,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         ----------
         value : str, {'queued', 'running', 'success', 'error',
                       'in_construction', 'waiting'}
-            The new status of the job
+            The job's new status
 
         Raises
         ------
@@ -716,8 +715,8 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.processing_job
-                     SET external_job_id = '%s'
-                     WHERE processing_job_id = '%s'"""
+                     SET external_job_id = %s
+                     WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [value, self.id])
             qdb.sql_connection.TRN.execute()
 
@@ -764,13 +763,13 @@ class ProcessingJob(qdb.base.QiitaObject):
         # requires metadata from a late-defined and time-sensitive source.
         if qiita_config.plugin_launcher in ProcessingJob._launch_map:
             launcher = ProcessingJob._launch_map[qiita_config.plugin_launcher]
-            if launcher['execute_in_process'] is True:
+            if launcher['execute_in_process']:
                 # run this launcher function within this process.
                 # usually this is done if the launcher spawns other processes
                 # before returning immediately, usually with a job ID that can
                 # be used to monitor the job's progress.
 
-                resource_params = ProcessingJob.get_resource_allocation_info()
+                resource_params = self.get_resource_allocation_info()
 
                 # note that parent_job_id is being passed transparently from
                 # submit declaration to the launcher.
@@ -810,7 +809,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     next_job.submit(parent_job_id=job_id,
                                     dependent_jobs_list=dependent_jobs_list)
 
-            elif launcher['execute_in_process'] is False:
+            elif not launcher['execute_in_process']:
                 # run this launcher function as a new process.
                 # usually this is done if the launcher performs work that takes
                 # an especially long time, or waits for children who perform
