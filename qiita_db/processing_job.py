@@ -442,7 +442,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                      WHERE name = %s and job_type = %s"""
             qdb.sql_connection.TRN.add(sql, [name, jtype])
 
-            result = qdb.sql_connection.TRN.execute_fetchlast()
+            result = qdb.sql_connection.TRN.execute_fetchflatten()
 
             # if no matches for both type and name were found, query the
             # 'default' value for the type
@@ -457,11 +457,10 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if not result:
                     AssertionError(
                         "Could not match %s to a resource allocation!" % name)
-                # [0] sending one element as execute_fetchflatten returns
-                # an array
-                result = result[0]
 
-            return result
+            # [0] sending one element as execute_fetchflatten returns
+            # an array
+            return result[0]
 
     @classmethod
     def create(cls, user, parameters, force=False):
