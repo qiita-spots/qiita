@@ -68,8 +68,18 @@ class MetaUtilTests(TestCase):
         # Now shared has access to public study files
         self._set_artifact_public()
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
-            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
-                user, i))
+            obs = qdb.meta_util.validate_filepath_access_by_user(user, i)
+            if i < 3:
+                self.assertFalse(obs)
+            else:
+                self.assertTrue(obs)
+
+        # testing that if study.public_raw_download is true we get access
+        qdb.study.Study(1).public_raw_download = True
+        for i in [1, 2, 3]:
+            obs = qdb.meta_util.validate_filepath_access_by_user(user, i)
+            self.assertTrue(obs)
+        qdb.study.Study(1).public_raw_download = False
 
         # Test that it doesn't break: if the SampleTemplate hasn't been added
         info = {
@@ -88,15 +98,21 @@ class MetaUtilTests(TestCase):
         study = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'), "Test study", info)
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
-            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
-                user, i))
+            obs = qdb.meta_util.validate_filepath_access_by_user(user, i)
+            if i < 3:
+                self.assertFalse(obs)
+            else:
+                self.assertTrue(obs)
 
         # test in case there is a prep template that failed
         self.conn_handler.execute(
             "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
-            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
-                user, i))
+            obs = qdb.meta_util.validate_filepath_access_by_user(user, i)
+            if i < 3:
+                self.assertFalse(obs)
+            else:
+                self.assertTrue(obs)
 
         # admin should have access to everything
         admin = qdb.user.User('admin@foo.bar')
