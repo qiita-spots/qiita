@@ -28,6 +28,24 @@ from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
 
+from re import search
+from threading import Thread
+
+import signal
+import sys
+
+# identify gWatcher variable and signal handler globally.
+# Only the master process will instantiate a Watcher() process.
+# All other processes will have gWatcher = None
+gWatcher = None
+
+
+def watcher_sigint_handler(sig, frame):
+    print("Stopping Watcher...")
+    if gWatcher:
+        gWatcher.stop()
+    sys.exit(0)
+
 
 try:
     conn = qdb.sql_connection.SQLConnectionHandler()
@@ -274,6 +292,74 @@ def start(port, master):
     from tornado.options import options, parse_command_line
     from tornado.ioloop import PeriodicCallback
 
+    def update_database_func():
+        while True:
+            # blocking call waits on new job info
+            msg = gWatcher.queue.get(True)
+            if msg == 'QUIT':
+                break
+
+            # TODO: add method to update Qiita of a job's status
+            # beyond completion. Review qclient.update_job_step.
+
+            # get state of job
+            job_state = msg['job_state']
+
+            # currently, we are only informing Qiita of when a
+            # job has completed, either successfully or unsuccessfully.
+            if job_state != 'completed' and job_state != 'DROPPED':
+                continue
+
+            if job_state == 'completed':
+                # get returned exit_status from job's process
+                # all completed jobs should have an exit_status
+                job_state = int(msg['exit_status']) == 0
+            else:
+                # Assume job is validator job that was DROPPED.
+                # Assume DROPPED job does not have an exit_status.
+                job_state = False
+
+            job_error = None
+            # get error message, if one is present
+            if 'error_msg' in msg:
+                job_error = msg['error_msg']
+
+            qid = qdb.processing_job.ProcessingJob.by_ext_id(msg['Job_Id'])
+
+            if qid:
+                # Qiita recognizes the external ID from Watcher, and has
+                # mapped it to a Qiita ID. Now, create a Job object to
+                # register the job's changed status in Qiita.
+                job_obj = qdb.processing_job.ProcessingJob(qid)
+                job_obj.complete(job_state, error=job_error)
+            else:
+                # ignore any job owned by Qiita, but can't be
+                # mapped to a ProcessJob.
+                pass
+
+    if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
+        if master:
+            # Only a single Watcher() process is desired
+            gWatcher = qdb.processing_job.Watcher()
+            gWatcher.start()
+            if gWatcher.is_alive():
+                # register a signal handler that will stop Watcher
+                # on ctrl-c, so that Qiita may exit as expected.
+                signal.signal(signal.SIGINT, watcher_sigint_handler)
+                print("Watcher is running. Type Ctrl-C to exit Qiita.")
+            else:
+                # if Watcher is needed, but cannot start, treat as
+                # a fatal error.
+                print("Error: Watcher not running")
+                sys.exit(1)
+
+            # Thread() can be replaced with Process() if need be
+            # update_database_func() requires a defined Watcher object.
+            # if plugin_launcher is defined as qsub, it should be
+            # defined.
+            p = Thread(target=update_database_func)
+            p.start()
+
     if master:
         # Deactivate all the plugins and only activate those that are currently
         # available in the config file folder
@@ -306,7 +392,14 @@ def start(port, master):
         else:
             raise
     base_url = qiita_config.base_url
-    click.echo("Qiita started on %s:%d @ %s" % (base_url, port, ctime()))
+
+    if search(r":\d+$", base_url):
+        tmp = "Qiita started on %s @ %s" % (base_url, ctime())
+    else:
+        tmp = "Qiita started on %s:%d @ %s" % (base_url, port, ctime())
+
+    click.echo(tmp)
+
     ioloop = tornado.ioloop.IOLoop.instance()
 
     if master:
@@ -316,19 +409,34 @@ def start(port, master):
                            if s.type == 'artifact definition']
             stransformation = [s for s in active_software
                                if s.type == 'artifact transformation']
+
             # registering definition artifacts
+
             for s in sdefinition:
-                s.register_commands()
+                print('Registering: %s...' % (s.name))
+                try:
+                    s.register_commands()
+                except ValueError as e:
+                    print(e.message)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
                 sleep(1)
             # sleep to make sure that all definitions are done
             sleep(4)
+
+            print('Definition artifacts registration complete')
+
             for s in stransformation:
-                s.register_commands()
+                print('Registering: %s...' % (s.name))
+                try:
+                    s.register_commands()
+                except ValueError as e:
+                    print(e.message)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
                 sleep(1)
+
+            print('Command artifacts registration complete')
 
         ioloop.add_timeout(ioloop.time() + 0.5, callback_function)
 
@@ -339,6 +447,9 @@ def start(port, master):
     PeriodicCallback(lambda: active_children(), 1200000).start()
 
     ioloop.start()
+
+    if master:
+        gWatcher.stop()
 
 # #############################################################################
 # PLUGIN COMMANDS

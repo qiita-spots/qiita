@@ -1098,8 +1098,7 @@ CCACCCAGTAAC
 SAMPLEXML = """
 <SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.sample.xsd">
-  <SAMPLE alias="%(organization_prefix)s_sid_1:1.SKB2.640194" \
-center_name="%(center_name)s">
+  <SAMPLE accession="ERS000008" center_name="%(center_name)s">
       <TITLE>1.SKB2.640194</TITLE>
     <SAMPLE_NAME>
       <TAXON_ID>410658</TAXON_ID>
@@ -1189,8 +1188,7 @@ shrubland biome</VALUE>
       </SAMPLE_ATTRIBUTE>
     </SAMPLE_ATTRIBUTES>
   </SAMPLE>
-  <SAMPLE alias="%(organization_prefix)s_sid_1:1.SKB3.640195" \
-center_name="%(center_name)s">
+  <SAMPLE accession="ERS000024" center_name="%(center_name)s">
     <TITLE>1.SKB3.640195</TITLE>
     <SAMPLE_NAME>
       <TAXON_ID>410658</TAXON_ID>

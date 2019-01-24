@@ -281,18 +281,20 @@ In order to submit your data to EBI, certain fields are required in your prepara
 
 For all valid values for instrument_model per platform, view the values in the table below:
 
-+--------------+----------------------------------------------------------------------------------------------------------+
-| Platform     | Valid instrument_model options                                                                           |
-+==============+==========================================================================================================+
-| ``LS454``    |  ``454 GS``, ``454 GS 20``, ``454 GS FLX``, ``454 GS FLX+``, ``454 GS FLX Titanium``, ``454 GS Junior``, |
-|              |  ``454 GS Junior`` or ``unspecified``                                                                    |
-+--------------+----------------------------------------------------------------------------------------------------------+
-| ``Illumina`` |  ``HiSeq X Five``, ``HiSeq X Ten``, ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``,       |
-|              |  ``Illumina Genome Analyzer IIx``, ``Illumina HiScanSQ``, ``Illumina HiSeq 1000``,                       |
-|              |  ``Illumina HiSeq 1500``,, ``Illumina HiSeq 2000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 3000``,    |
-|              |  ``Illumina HiSeq 4000``, ``Illumina MiSeq``, ``Illumina MiniSeq``, ``Illumina NovaSeq 6000``,           |
-|              |  ``NextSeq 500``, ``NextSeq 550``, or ``unspecified``                                                    |
-+--------------+----------------------------------------------------------------------------------------------------------+
++-----------------+----------------------------------------------------------------------------------------------------------+
+| Platform        | Valid instrument_model options                                                                           |
++=================+==========================================================================================================+
+| ``LS454``       |  ``454 GS``, ``454 GS 20``, ``454 GS FLX``, ``454 GS FLX+``, ``454 GS FLX Titanium``, ``454 GS Junior``, |
+|                 |  ``454 GS Junior`` or ``unspecified``                                                                    |
++-----------------+----------------------------------------------------------------------------------------------------------+
+| ``Illumina``    |  ``HiSeq X Five``, ``HiSeq X Ten``, ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``,       |
+|                 |  ``Illumina Genome Analyzer IIx``, ``Illumina HiScanSQ``, ``Illumina HiSeq 1000``,                       |
+|                 |  ``Illumina HiSeq 1500``,, ``Illumina HiSeq 2000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 3000``,    |
+|                 |  ``Illumina HiSeq 4000``, ``Illumina MiSeq``, ``Illumina MiniSeq``, ``Illumina NovaSeq 6000``,           |
+|                 |  ``NextSeq 500``, ``NextSeq 550``, or ``unspecified``                                                    |
++-----------------+----------------------------------------------------------------------------------------------------------+
+| ``Ion Torrent`` |  ``Ion Torrent PGM``, ``Ion Torrent Proton``, ``Ion Torrent S5``, ``Ion Torrent S5 XL``                  |
++-----------------+----------------------------------------------------------------------------------------------------------+
 
 
 Required fields for pre-processing target gene data

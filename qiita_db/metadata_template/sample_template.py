@@ -13,7 +13,8 @@ from time import strftime
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 import qiita_db as qdb
-from .base_metadata_template import BaseSample, MetadataTemplate
+from .base_metadata_template import (
+    BaseSample, MetadataTemplate, QIITA_COLUMN_NAME)
 
 
 class Sample(BaseSample):
@@ -68,7 +69,8 @@ class SampleTemplate(MetadataTemplate):
                         'run_prefix',
                         'sampleid',
                         'qiita_study_id',
-                        'qiita_prep_id'}
+                        'qiita_prep_id',
+                        QIITA_COLUMN_NAME}
 
     @classmethod
     def create(cls, md_template, study):
@@ -247,8 +249,15 @@ class SampleTemplate(MetadataTemplate):
         """
         return True, ""
 
-    def generate_files(self):
+    def generate_files(self, samples=None, columns=None):
         r"""Generates all the files that contain data from this template
+
+        Parameters
+        ----------
+        samples : iterable of str, optional
+            The samples that were added/updated
+        columns : iterable of str, optional
+            The columns that were added/updated
         """
         with qdb.sql_connection.TRN:
             # figuring out the filepath of the sample template
@@ -263,7 +272,14 @@ class SampleTemplate(MetadataTemplate):
 
             # generating all new QIIME mapping files
             for pt in qdb.study.Study(self._id).prep_templates():
-                pt.generate_files()
+                if samples is not None and samples and (
+                        columns is None or not columns):
+                    overlapping = set(samples) & set(pt.keys())
+                    # if the prep has no overlapping sample ids, we can skip
+                    # generationg the prep
+                    if not overlapping:
+                        continue
+                pt.generate_files(samples, columns)
 
     @property
     def ebi_sample_accessions(self):

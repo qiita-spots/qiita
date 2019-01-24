@@ -223,11 +223,17 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
             qdb.sql_connection.TRN.execute()
 
             # Insert the settings values to the database
-            sql = """INSERT INTO settings (test, base_data_dir, base_work_dir)
-                     VALUES (%s, %s, %s)"""
+            sql = """INSERT INTO settings
+                     (test, base_data_dir, base_work_dir, trq_owner,
+                     trq_poll_val, trq_dependency_q_cnt)
+                     VALUES (%s, %s, %s, %s, %s, %s)"""
             qdb.sql_connection.TRN.add(
-                sql, [test, qiita_config.base_data_dir,
-                      qiita_config.working_dir])
+                sql, [test,
+                      qiita_config.base_data_dir,
+                      qiita_config.working_dir,
+                      qiita_config.trq_owner,
+                      qiita_config.trq_poll_val,
+                      qiita_config.trq_dependency_q_cnt])
             qdb.sql_connection.TRN.execute()
             create_layout(test=test, verbose=verbose)
 
@@ -382,6 +388,10 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
     Pulls the current patch from the settings table and applies all subsequent
     patches found in the patches directory.
     """
+    # we are going to open and close 2 main transactions; this is a required
+    # change since patch 68.sql where we transition to jsonb for all info
+    # files. The 2 main transitions are: (1) get the current settings,
+    # (2) each patch in their independent transaction
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add("SELECT current_patch FROM settings")
         current_patch = qdb.sql_connection.TRN.execute_fetchlast()
@@ -398,19 +408,23 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
         else:
             next_patch_index = sql_patch_files.index(current_sql_patch_fp) + 1
 
-        patch_update_sql = "UPDATE settings SET current_patch = %s"
+    patch_update_sql = "UPDATE settings SET current_patch = %s"
 
-        for sql_patch_fp in sql_patch_files[next_patch_index:]:
-            sql_patch_filename = basename(sql_patch_fp)
+    for sql_patch_fp in sql_patch_files[next_patch_index:]:
+        sql_patch_filename = basename(sql_patch_fp)
 
-            # patch 43.sql is when we started testing patches
-            if sql_patch_filename == '43.sql' and test:
+        py_patch_fp = corresponding_py_patch(
+            splitext(basename(sql_patch_fp))[0] + '.py')
+        py_patch_filename = basename(py_patch_fp)
+
+        # patch 43.sql is when we started testing patches, then in patch
+        # 68.sql is when we transitioned to jsonb for the info files; let's do
+        # this in its own transition
+        if sql_patch_filename == '68.sql' and test:
+            with qdb.sql_connection.TRN:
                 _populate_test_db()
 
-            py_patch_fp = corresponding_py_patch(
-                splitext(basename(sql_patch_fp))[0] + '.py')
-            py_patch_filename = basename(py_patch_fp)
-
+        with qdb.sql_connection.TRN:
             with open(sql_patch_fp, 'U') as patch_file:
                 if verbose:
                     print('\tApplying patch %s...' % sql_patch_filename)
@@ -425,3 +439,11 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                     print('\t\tApplying python patch %s...'
                           % py_patch_filename)
                 execfile(py_patch_fp, {})
+
+        # before moving to jsonb for sample/prep info files (patch 69.sql),
+        # one of the patches used to regenerate the sample information file
+        # for the test Study (1) so alot of the tests actually expect this.
+        # Now, trying to regenerate directly in the populate_test_db might
+        # require too many dev hours so the easiest is just do it here
+        if test and sql_patch_filename == '69.sql':
+            qdb.study.Study(1).sample_template.generate_files()

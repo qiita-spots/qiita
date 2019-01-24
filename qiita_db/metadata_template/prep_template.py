@@ -21,7 +21,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 from .constants import (PREP_TEMPLATE_COLUMNS, TARGET_GENE_DATA_TYPES,
                         PREP_TEMPLATE_COLUMNS_TARGET_GENE)
-from .base_metadata_template import BaseSample, MetadataTemplate
+from .base_metadata_template import (
+    BaseSample, MetadataTemplate, QIITA_COLUMN_NAME)
 
 
 def _check_duplicated_columns(prep_cols, sample_cols):
@@ -94,7 +95,8 @@ class PrepTemplate(MetadataTemplate):
     _forbidden_words = {
                         'sampleid',
                         'qiita_study_id',
-                        'qiita_prep_id'}
+                        'qiita_prep_id',
+                        QIITA_COLUMN_NAME}
 
     @classmethod
     def create(cls, md_template, study, data_type, investigation_type=None,
@@ -478,8 +480,15 @@ class PrepTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    def generate_files(self):
+    def generate_files(self, samples=None, columns=None):
         r"""Generates all the files that contain data from this template
+
+        Parameters
+        ----------
+        samples : iterable of str, optional
+            The samples that were added/updated
+        columns : iterable of str, optional
+            The columns that were added/updated
         """
         with qdb.sql_connection.TRN:
             # figuring out the filepath of the prep template

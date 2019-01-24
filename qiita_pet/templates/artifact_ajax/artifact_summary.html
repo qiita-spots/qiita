@@ -111,10 +111,16 @@
 <div class='row'>
   <div class='col-md-12'>
     <h4>
-      {% if processing_info and not processing_info['software_active'] %}
-        <div class="alert alert-warning" role="alert">
-          Warning, the software that generated this artifact is deprecated as a new version is available.
-        </div>
+      {% if processing_info %}
+        {% if processing_info['software_deprecated'] %}
+          <div class="alert alert-danger" role="alert">
+            Danger, the software that generated this artifact was produced by a software version with a known bug and the results are wrong, please re-run with the newer version.
+          </div>
+        {% elif not processing_info['command_active'] %}
+          <div class="alert alert-warning" role="alert">
+            Warning, a newer version of the software that generated this artifact is available, which may or may not change results.
+          </div>
+        {% end %}
       {% end %}
       <i id='summary-title'>{{name}}</i><i> (ID: {{artifact_id}}) Visibility: {{visibility}}</i>
       {% if editable %}

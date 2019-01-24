@@ -8,7 +8,7 @@
 
 from os.path import basename, join, isdir, isfile, exists
 from shutil import copyfile, rmtree
-from os import makedirs, remove, listdir
+from os import remove, listdir
 from datetime import date, timedelta
 from urllib import quote
 from itertools import zip_longest
@@ -24,6 +24,7 @@ from qiita_files.demux import to_per_sample_ascii
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.exceptions import EBISubmissionError
+from qiita_db.util import create_nested_path
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id, get_mountpoint, open_file
@@ -93,6 +94,8 @@ class EBISubmission(object):
     valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
                                  '454 GS FLX+', '454 GS FLX TITANIUM',
                                  '454 GS JUNIOR', 'UNSPECIFIED'],
+                       'ION TORRENT': ['ION TORRENT PGM', 'ION TORRENT PROTON',
+                                       'ION TORRENT S5', 'ION TORRENT S5 XL'],
                        'ILLUMINA': ['HISEQ X FIVE',
                                     'HISEQ X TEN',
                                     'ILLUMINA GENOME ANALYZER',
@@ -400,10 +403,17 @@ class EBISubmission(object):
 
         for sample_name in sorted(samples):
             sample_info = dict(self.samples[sample_name])
-            sample = ET.SubElement(sample_set, 'SAMPLE', {
-                'alias': self._get_sample_alias(sample_name),
-                'center_name': qiita_config.ebi_center_name}
-            )
+
+            if self._ebi_sample_accessions[sample_name] is None:
+                sample = ET.SubElement(sample_set, 'SAMPLE', {
+                    'alias': self._get_sample_alias(sample_name),
+                    'center_name': qiita_config.ebi_center_name}
+                )
+            else:
+                sample = ET.SubElement(sample_set, 'SAMPLE', {
+                    'accession': self._ebi_sample_accessions[sample_name],
+                    'center_name': qiita_config.ebi_center_name}
+                )
 
             sample_title = ET.SubElement(sample, 'TITLE')
             sample_title.text = escape(clean_whitespace(sample_name))
@@ -1108,7 +1118,7 @@ class EBISubmission(object):
             if isdir(self.full_ebi_dir):
                 rmtree(self.full_ebi_dir)
 
-            makedirs(self.full_ebi_dir)
+            create_nested_path(self.full_ebi_dir)
 
             if self.artifact.artifact_type == 'per_sample_FASTQ':
                 demux_samples, missing_samples = \

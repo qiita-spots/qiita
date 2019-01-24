@@ -9,7 +9,6 @@
 from json import dumps, loads
 from copy import deepcopy
 from future import standard_library
-from multiprocessing import Process
 import inspect
 import warnings
 
@@ -1303,14 +1302,24 @@ class Software(qdb.base.QiitaObject):
     def register_commands(self):
         """Registers the software commands"""
         url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
-        cmd = '%s "%s" "%s" "%s" "register" "ignored"' % (
-            qiita_config.plugin_launcher, self.environment_script,
-            self.start_script, url)
-        # this print is intentional as it will be stored in the internal
-        # Qiita logs
-        print 'Registering: %s, via %s' % (self.name, cmd)
-        p = Process(target=qdb.processing_job._system_call, args=(cmd,))
-        p.start()
+        cmd = '%s; %s "%s" "register" "ignored"' % (
+            self.environment_script, self.start_script, url)
+
+        # it can be assumed that any command beginning with 'source'
+        # is calling 'source', an internal command of 'bash' and hence
+        # should be executed from bash, instead of sh.
+        # TODO: confirm that exit_code propagates from bash to sh to
+        # rv.
+        if cmd.startswith('source'):
+            cmd = "bash -c '%s'" % cmd
+
+        p_out, p_err, rv = qdb.processing_job._system_call(cmd)
+
+        if rv != 0:
+            s = "cmd: %s\nexit status: %d\n" % (cmd, rv)
+            s += "stdout: %s\nstderr: %s\n" % (p_out, p_err)
+
+            raise ValueError(s)
 
 
 class DefaultParameters(qdb.base.QiitaObject):

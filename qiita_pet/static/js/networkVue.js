@@ -187,7 +187,9 @@ Vue.component('processing-graph', {
                 } else {
                   // In this case the job changed to either 'running', 'queued' or 'waiting'. In
                   // this case, we just need to update the internal values of the nodes and the colors
-                  jobNode.color = vm.colorScheme[jobStatus];
+                  var node_info = vm.colorScheme[jobStatus]
+                  jobNode.color = node_info;
+                  jobNode.shape = node_info['shape'];
                   jobNode.status = jobStatus;
                   vm.nodes_ds.update(jobNode);
                 }
@@ -215,8 +217,10 @@ Vue.component('processing-graph', {
         $("#processing-results").empty();
         // Update the artifact node to mark that it is being deleted
         var node = vm.nodes_ds.get(artifactId);
+        var node_info = vm.colorScheme['deleting'];
         node.group = 'deleting';
-        node.color = vm.colorScheme['deleting']
+        node.color = node_info;
+        node.shape = node_info['shape'];
         vm.nodes_ds.update(node);
         // Add the job to the list of jobs to check for deletion.
         vm.runningJobs.push(data.job);
@@ -398,8 +402,9 @@ Vue.component('processing-graph', {
         // Create the DOM elements to add the rows content
         for (var row of rowsContent) {
           $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#processing-results");
-          $('<label>').addClass('col-sm-1 col-form-label').text(row[0]).appendTo($rowDiv);
-          $colDiv = $('<div>').addClass('col-sm-5').appendTo($rowDiv).html(row[1]);
+          $rowLabel = $('<div>').addClass('col-sm-4').appendTo($rowDiv);
+          $('<label>').addClass('col-form-label').text(row[0]).appendTo($rowLabel);
+          $('<div>').addClass('col-sm-8').appendTo($rowDiv).html(row[1]);
         }
 
         $("#processing-results").append($("<h4>").text('Job parameters:'));
@@ -409,8 +414,9 @@ Vue.component('processing-graph', {
             continue;
           }
           $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#processing-results");
-          $('<label>').addClass('col-sm-2 col-form-label').text(key + ':').appendTo($rowDiv);
-          $colDiv = $('<div>').addClass('col-sm-5').appendTo($rowDiv).html(data.job_parameters[key]);
+          $rowLabel = $('<div>').addClass('col-sm-4').appendTo($rowDiv);
+          $('<label>').addClass('col-form-label').text(key + ':').appendTo($rowLabel);
+          $('<div>').addClass('col-sm-8').appendTo($rowDiv).html(data.job_parameters[key]);
         }
       })
         .fail(function(object, status, error_msg) {
@@ -712,13 +718,14 @@ Vue.component('processing-graph', {
       $(job_info.inputs).each(function(){
         vm.edges_ds.add({id: vm.edges_ds.length + 1, from: this, to: job_info.id});
       });
-      vm.nodes_ds.add({id: job_info.id, group: "job", label: formatNodeLabel(job_info.label), color: vm.colorScheme.in_construction, status: 'in_construction'});
+      var node_info = vm.colorScheme.in_construction;
+      vm.nodes_ds.add({id: job_info.id, shape: node_info['shape'], group: "job", shape: 'dot', label: formatNodeLabel(job_info.label), color: node_info, status: 'in_construction'});
       $(job_info.outputs).each(function(){
         var out_name = this[0];
         var out_type = this[1];
         var n_id = job_info.id + ":" + out_name;
         vm.edges_ds.add({id: vm.edges_ds.length + 1, from: job_info.id, to: n_id });
-        vm.nodes_ds.add({id: n_id, label: formatNodeLabel(out_name + "\n(" + out_type + ")"), group: "type", name: out_name, type: out_type});
+        vm.nodes_ds.add({id: n_id, shape: 'dot', label: formatNodeLabel(out_name + "\n(" + out_type + ")"), group: "type", name: out_name, type: out_type});
       });
       vm.network.redraw();
     },
@@ -747,7 +754,6 @@ Vue.component('processing-graph', {
       var options = {
         clickToUse: true,
         nodes: {
-          shape: 'dot',
           font: {
             size: 16,
             color: '#000000'
@@ -971,7 +977,8 @@ Vue.component('processing-graph', {
           }
           // Format node list data
           for(var i = 0; i < data.nodes.length; i++) {
-            vm.nodes.push({id: data.nodes[i][2], label: formatNodeLabel(data.nodes[i][3]), type: data.nodes[i][1], group: data.nodes[i][0], color: vm.colorScheme[data.nodes[i][4]], status: data.nodes[i][4]});
+            var node_info = vm.colorScheme[data.nodes[i][4]];
+            vm.nodes.push({id: data.nodes[i][2], shape: node_info['shape'], label: formatNodeLabel(data.nodes[i][3]), type: data.nodes[i][1], group: data.nodes[i][0], color: node_info, status: data.nodes[i][4]});
             if (data.nodes[i][1] === 'job') {
               job_status = data.nodes[i][4];
               if (job_status === 'in_construction') {
@@ -1083,16 +1090,17 @@ Vue.component('processing-graph', {
     vm.countdownPoll = 15;
     $('#countdown-span').html(vm.countdownPoll);
     vm.colorScheme = {
-      'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}, 'color': '#333333'},
-      'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}, 'color': '#333333'},
-      'error': {border: '#ff3333', background: '#ff5b5b', highlight: {border: '#ff3333', background: '#ff8484'}, 'color': '#333333'},
-      'in_construction': {border: '#634a00', background: '#e59400', highlight: {border: '#634a00', background: '#efbe66'}, 'color': '#333333'},
-      'queued': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333'},
-      'waiting': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333'},
-      'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}, 'color': '#333333'},
-      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}, 'color': '#333333'},
-      'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}, 'color': '#333333'},
-      'deprecated': {border: '#000000', background: '#000000', highlight: {border: '#000000', background: '#333333'}, 'color': '#ffffff'}
+      'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}, 'color': '#333333', 'shape': 'dot'},
+      'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}, 'color': '#333333', 'shape': 'dot'},
+      'error': {border: '#ff3333', background: '#ff5b5b', highlight: {border: '#ff3333', background: '#ff8484'}, 'color': '#333333', 'shape': 'dot'},
+      'in_construction': {border: '#634a00', background: '#e59400', highlight: {border: '#634a00', background: '#efbe66'}, 'color': '#333333', 'shape': 'dot'},
+      'queued': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333', 'shape': 'dot'},
+      'waiting': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333', 'shape': 'dot'},
+      'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}, 'color': '#333333', 'shape': 'triangle'},
+      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}, 'color': '#333333', 'shape': 'triangle'},
+      'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}, 'color': '#333333', 'shape': 'triangle'},
+      'outdated': {border: '#666666', background: '#666666', highlight: {border: '#000000', background: '#666666'}, 'color': '#ffffff', 'shape': 'triangle'},
+      'deprecated': {border: '#000000', background: '#000000', highlight: {border: '#000000', background: '#333333'}, 'color': '#ffffff', 'shape': 'triangleDown'}
     };
 
     show_loading('processing-network-div');
@@ -1112,7 +1120,7 @@ Vue.component('processing-graph', {
       var text = '<td style="padding: 5px; color:' + vm.colorScheme[circle_name]['color'] +
         '; background-color:' + vm.colorScheme[circle_name]['background'] +
         ';"><small>' + circle_name + '</small></td>';
-      if (circle_name === 'artifact' || circle_name === 'type' || circle_name === 'deprecated'){
+      if (circle_name === 'artifact' || circle_name === 'type' || circle_name === 'deprecated' || circle_name === 'outdated'){
         circle_types.push(text);
       } else {
         circle_statuses.push(text);
@@ -1120,11 +1128,11 @@ Vue.component('processing-graph', {
     }
     var full_text = '<table style="border-spacing: 3px;border-collapse: separate;">' +
       '<tr>' +
-        '<td><small>Circle status:</small></td>' +
+        '<td><small>Job status (circles):</small></td>' +
         '<td>' + circle_statuses.join('') + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<td><small>Circle types:</small>' +
+        '<td><small>Artifact status (triangles):</small>' +
         '<td>' + circle_types.join('') + '</td>' +
       '</tr>' +
     '</table>';

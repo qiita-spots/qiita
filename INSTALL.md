@@ -21,7 +21,7 @@ conda update conda
 Setup a virtual environment in conda named `qiita` by executing the following:
 
 ```bash
-conda create --yes --name qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran seaborn 'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1' hdf5
+conda create --yes --name qiita python=2.7 pip==18.1 nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran seaborn 'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1' hdf5
 ```
 
 If you receive an error message about conda being unable to find one of the specified packages in its repository, you will have to manually find the appropriate conda channel that they belong to (see troubleshooting section below).
@@ -324,7 +324,7 @@ Now you can re-run your `conda create` command:
 ### python
 
 As a general rule of thumb you will want to have an updated version of Python
-2.7 and an updated version of pip (`pip install -U pip` will do the trick).
+2.7 and a specific version of pip (`pip install pip==18.1` will do the trick).
 
 H5PY is known to cause a few problems, however their [installation
 instructions](http://docs.h5py.org/en/latest/build.html) are a great resource

@@ -8,8 +8,8 @@
 
 from tornado.web import authenticated, HTTPError
 
-from os.path import isdir, join, exists
-from os import makedirs, remove
+from os.path import join, exists
+from os import remove
 from json import loads, dumps
 
 from collections import defaultdict
@@ -26,6 +26,7 @@ from qiita_db.study import Study
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.software import Software, Parameters
 from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.util import create_nested_path
 
 
 UPLOAD_STUDY_FORMAT = 'upload_study_%s'
@@ -137,8 +138,7 @@ class StudyUploadViaRemote(BaseHandler):
         upload_folder = join(upload_folder, study_id)
         ssh_key_fp = join(upload_folder, '.key.txt')
 
-        if not isdir(upload_folder):
-            makedirs(upload_folder)
+        create_nested_path(upload_folder)
 
         with open(ssh_key_fp, 'w') as f:
             f.write(ssh_key)
@@ -201,8 +201,7 @@ class UploadFileHandler(BaseHandler):
 
         # creating temporal folder for upload of the file
         temp_dir = join(base_fp, study_id, resumable_identifier)
-        if not isdir(temp_dir):
-            makedirs(temp_dir)
+        create_nested_path(temp_dir)
 
         # location of the file as it is transmitted
         temporary_location = join(temp_dir, resumable_filename)
