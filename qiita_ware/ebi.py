@@ -8,9 +8,9 @@
 
 from os.path import basename, join, isdir, isfile, exists
 from shutil import copyfile, rmtree
-from os import remove, listdir
+from os import remove, listdir, makedirs
 from datetime import date, timedelta
-from urllib import quote
+from urllib.parse import quote
 from itertools import zip_longest
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import ParseError
@@ -19,7 +19,7 @@ from gzip import GzipFile
 from functools import partial
 from h5py import File
 from future.utils import viewitems, viewkeys
-from skbio.util import safe_md5, create_dir
+from skbio.util import safe_md5
 from qiita_files.demux import to_per_sample_ascii
 
 from qiita_core.qiita_settings import qiita_config
@@ -704,7 +704,7 @@ class EBISubmission(object):
         fp : str
             The filepath to which the XML will be written
         """
-        create_dir(self.xml_dir)
+        makedirs(self.xml_dir)
         ET.ElementTree(element).write(fp, encoding='UTF-8')
 
     def generate_xml_files(self):

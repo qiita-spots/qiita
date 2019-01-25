@@ -370,7 +370,7 @@ def start(port, master):
     r_client.delete('qiita-usernames')
     users = [email for email, name in qdb.user.User.iter()]
     if users:
-        r_client.zadd('qiita-usernames', **{u: 0 for u in users})
+        r_client.zadd('qiita-usernames', {u: 0 for u in users})
 
     if qiita_config.log_dir:
         options.log_file_prefix = join(qiita_config.log_dir,

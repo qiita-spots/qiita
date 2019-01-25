@@ -21,7 +21,7 @@ class ForRecursion(object):
                 a.visibility = status
             except Exception:
                 # print so we know which changes failed and we can deal by hand
-                print "failed aid: %d, status %s" % (artifact.id, status)
+                print ("failed aid: %d, status %s" % (artifact.id, status))
                 return
             cls.change_status(a, status)
 

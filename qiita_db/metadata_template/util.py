@@ -18,10 +18,7 @@ from skbio.util import find_duplicates
 
 import qiita_db as qdb
 
-if PY3:
-    from string import ascii_letters as letters, digits
-else:
-    from string import letters, digits
+from string import ascii_letters, digits
 
 
 def prefix_sample_names_with_id(md_template, study_id):
@@ -240,7 +237,7 @@ def get_invalid_sample_names(sample_names):
     """
 
     # from the QIIME mapping file documentation
-    valid = set(letters+digits+'.')
+    valid = set(ascii_letters+digits+'.')
     inv = []
 
     for s in sample_names:

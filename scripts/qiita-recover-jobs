@@ -31,12 +31,12 @@ def _submit_jobs(jids_to_recover, recover_type):
     st = int(ceil(SLEEP_TIME/CHANCES))
     len_jids_to_recover = len(jids_to_recover)
     for i, j in enumerate(jids_to_recover):
-        print 'recovering %s: %d/%d' % (recover_type, len_jids_to_recover, i)
+        print ('recovering %s: %d/%d' % (recover_type, len_jids_to_recover, i))
         job = ProcessingJob(j)
         job._set_status('in_construction')
         job.submit()
         for i in range(CHANCES):
-            print 'You can ctrl-c now, iteration %d' % i
+            print ('You can ctrl-c now, iteration %d' % i)
             sleep(st)
 
 
@@ -66,7 +66,7 @@ def _get_jids_to_recover(recover_type):
         TRN.add(SQL, [recover_type])
         jids = set(TRN.execute_fetchflatten())
         jids_to_recover = list(jids - _retrieve_queue_jobs())
-        print 'Total %s: %d' % (recover_type, len(jids_to_recover))
+        print ('Total %s: %d' % (recover_type, len(jids_to_recover)))
         return jids_to_recover
 
 
@@ -226,11 +226,11 @@ def qiita_recover_jobs():
             status = list(status)[0]
 
             if status == 'waiting':
-                print "releasing job validators: %s" % j
+                print ("releasing job validators: %s" % j)
                 try:
                     job.release_validators()
                 except Exception:
-                    print "ERROR, releasing %s validators" % j
+                    print( "ERROR, releasing %s validators" % j)
                 sleep(SLEEP_TIME)
             elif status == 'running':
                 _submit_jobs(validators, recover_type + ' validator, running')
@@ -254,7 +254,7 @@ def qiita_recover_jobs():
         status = job.status
 
         if status == 'waiting':
-            print "releasing job validators: %s" % j
+            print ("releasing job validators: %s" % j)
             job.release_validators()
             sleep(SLEEP_TIME)
         elif 'running' == status:

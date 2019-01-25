@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import main
-from StringIO import StringIO
+from io import StringIO
 import os
 
 import pandas as pd

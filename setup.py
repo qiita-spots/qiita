@@ -20,7 +20,7 @@ classes = """
     Topic :: Software Development :: Libraries :: Application Frameworks
     Topic :: Software Development :: Libraries :: Python Modules
     Programming Language :: Python
-    Programming Language :: Python :: 2.7
+    Programming Language :: Python :: 3.6
     Programming Language :: Python :: Implementation :: CPython
     Operating System :: POSIX :: Linux
     Operating System :: MacOS :: MacOS X
@@ -100,15 +100,13 @@ setup(name='qiita-spots',
               'support_files/doc/source/_static/*.png'
               ]},
       scripts=glob('scripts/*'),
-      extras_require={'test': ["nose >= 0.10.1", "pep8", 'mock']},
-      install_requires=['psycopg2 < 2.7', 'click >= 3.3', 'future',
-                        'bcrypt', 'pandas >= 0.17', 'numpy >= 1.7',
-                        'tornado==3.1.1', 'toredis', 'redis <= 2.10.6', 'six',
-                        'pyparsing', 'h5py >= 2.3.1', 'biom-format',
-                        'natsort', 'networkx < 2.0', 'humanize',
-                        'scikit-bio == 0.4.2', 'wtforms == 2.0.1', 'openpyxl',
-                        'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
-                        'gitpython', 'qiita-files', 'redbiom==0.3.0',
+      extras_require={'test': ["nose", "pep8", 'mock']},
+      install_requires=['psycopg2 ', 'click', 'future', 'bcrypt', 'pandas',
+                        'numpy', 'tornado', 'toredis', 'redis', 'six',
+                        'pyparsing', 'h5py', 'biom-format', 'natsort',
+                        'networkx', 'humanize', 'scikit-bio', 'wtforms',
+                        'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx',
+                        'gitpython', 'qiita-files', 'redbiom',
                         'sphinx_rtd_theme', 'paramiko', 'scp'],
       dependency_links=[
         'https://github.com/qiita-spots/qiita-files/archive/master.zip#'

@@ -14,7 +14,7 @@ from os import environ, stat
 from traceback import format_exc
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from scp import SCPClient
-from urlparse import urlparse
+from urllib.parse import urlparse
 from functools import partial
 from future.utils import viewitems
 import pandas as pd

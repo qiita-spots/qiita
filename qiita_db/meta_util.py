@@ -30,8 +30,8 @@ from time import strftime, localtime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from base64 import b64encode
-from urllib import quote
-from StringIO import StringIO
+from urllib.parse import quote
+from io import StringIO
 from future.utils import viewitems
 from datetime import datetime
 from tarfile import open as topen, TarInfo
