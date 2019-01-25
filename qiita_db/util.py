@@ -633,7 +633,7 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
                         move, new_fp[0], old_fp[0])
 
         def str_to_id(x):
-            return (x if isinstance(x, (int, long))
+            return (x if isinstance(x, int)
                     else convert_to_id(x, "filepath_type"))
         paths_w_checksum = [(basename(path), str_to_id(id_),
                             compute_checksum(path))

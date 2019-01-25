@@ -438,7 +438,8 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                 if verbose:
                     print('\t\tApplying python patch %s...'
                           % py_patch_filename)
-                execfile(py_patch_fp, {})
+                with open(py_patch_fp) as py_patch:
+                    exec(py_patch.read(), globals())
 
         # before moving to jsonb for sample/prep info files (patch 69.sql),
         # one of the patches used to regenerate the sample information file
