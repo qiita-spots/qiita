@@ -283,7 +283,7 @@ def job_ajax_patch_req(req_op, req_path, req_value=None, req_from=None):
         job_id = req_path[0]
         try:
             job = ProcessingJob(job_id)
-        except QiitaDBUnknownIDError as e:
+        except QiitaDBUnknownIDError:
             return {'status': 'error',
                     'message': 'Incorrect path parameter: '
                                '%s is not a recognized job id' % job_id}

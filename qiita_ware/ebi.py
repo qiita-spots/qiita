@@ -47,7 +47,7 @@ def clean_whitespace(text):
     str
         fixed text
     """
-    return ' '.join(unicode(str(text), 'utf8').split())
+    return ' '.join(str(text).split())
 
 
 class EBISubmission(object):

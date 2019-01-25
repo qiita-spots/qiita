@@ -95,7 +95,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         self.assertEqual(obs_body['token_type'], exp['token_type'])
         self.assertEqual(obs_body['expires_in'], exp['expires_in'])
         self.assertEqual(len(obs_body['access_token']), 55)
-        self.assertEqual(type(obs_body['access_token']), unicode)
+        self.assertEqual(type(obs_body['access_token']), str)
 
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
@@ -122,7 +122,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         self.assertEqual(obs_body['token_type'], exp['token_type'])
         self.assertEqual(obs_body['expires_in'], exp['expires_in'])
         self.assertEqual(len(obs_body['access_token']), 55)
-        self.assertEqual(type(obs_body['access_token']), unicode)
+        self.assertEqual(type(obs_body['access_token']), str)
 
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
@@ -215,7 +215,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         self.assertEqual(obs_body['token_type'], exp['token_type'])
         self.assertEqual(obs_body['expires_in'], exp['expires_in'])
         self.assertEqual(len(obs_body['access_token']), 55)
-        self.assertEqual(type(obs_body['access_token']), unicode)
+        self.assertEqual(type(obs_body['access_token']), str)
 
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])

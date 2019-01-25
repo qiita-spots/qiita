@@ -611,7 +611,7 @@ class Transaction(object):
 
                 try:
                     res = cur.fetchall()
-                except ProgrammingError as e:
+                except ProgrammingError:
                     # At this execution point, we don't know if the sql query
                     # that we executed should retrieve values from the database
                     # If the query was not supposed to retrieve any value

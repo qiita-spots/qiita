@@ -242,7 +242,7 @@ def create_rand_string(length, punct=True):
     if punct:
         chars += punctuation
     sr = SystemRandom()
-    return ''.join(sr.choice(chars) for i in xrange(length))
+    return ''.join(sr.choice(chars) for i in range(length))
 
 
 def hash_password(password, hashedpw=None):
@@ -799,7 +799,7 @@ def purge_filepaths(delete_files=True):
                 fp = join(get_mountpoint_path_by_id(dd_id), fp)
                 _rm_files(qdb.sql_connection.TRN, fp)
             else:
-                print (fp, fp_type)
+                print(fp, fp_type)
 
         if delete_files:
             qdb.sql_connection.TRN.execute()
@@ -816,7 +816,7 @@ def _rm_exists(fp, obj, _id, delete_files):
                 _rm_files(qdb.sql_connection.TRN, fp)
                 qdb.sql_connection.TRN.execute()
         else:
-            print ("Remove %s" % fp)
+            print("Remove %s" % fp)
 
 
 def purge_files_from_filesystem(delete_files=True):
@@ -842,10 +842,10 @@ def purge_files_from_filesystem(delete_files=True):
 
     missing_db = actual_paths - db_paths
     if missing_db:
-        print ('paths without db entries: %s' % ', '.join(missing_db))
+        print('paths without db entries: %s' % ', '.join(missing_db))
     missing_paths = [x for x in db_paths - actual_paths if not isdir(x)]
     if missing_paths:
-        print ('paths without actual mounts: %s' % ', '.join(missing_paths))
+        print('paths without actual mounts: %s' % ', '.join(missing_paths))
 
     # Step 2, clean based on the 2 main group: True/False subdirectory
     # -> subdirectory True
@@ -897,7 +897,7 @@ def empty_trash_upload_folder(delete_files=True):
                             fp = join(path, f)
                             _rm_files(qdb.sql_connection.TRN, fp)
                     else:
-                        print (files)
+                        print(files)
 
         if delete_files:
             qdb.sql_connection.TRN.execute()

@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.utils import PY3, viewitems
+from future.utils import viewitems
 from six import StringIO
 from collections import defaultdict
 
@@ -103,7 +103,7 @@ def load_template_to_dataframe(fn, index='sample_name'):
                 try:
                     tblock = block.encode('utf-8')
                 except UnicodeDecodeError:
-                    tblock = unicode(block, errors='replace')
+                    tblock = str(block, errors='replace')
                     tblock = tblock.replace(u'\ufffd', '&#128062;')
                     errors[tblock].append('(%d, %d)' % (row, col))
         if bool(errors):

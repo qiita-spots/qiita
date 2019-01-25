@@ -133,7 +133,7 @@ class PrepTemplate(MetadataTemplate):
                 cls.validate_investigation_type(investigation_type)
 
             # Check if the data_type is the id or the string
-            if isinstance(data_type, (int, long)):
+            if isinstance(data_type, int):
                 data_type_id = data_type
                 data_type_str = qdb.util.convert_from_id(data_type,
                                                          "data_type")

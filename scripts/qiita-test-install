@@ -125,19 +125,19 @@ except ImportError as e:
 try:
     from qiita_core.configuration_manager import ConfigurationManager
     ConfigurationManager()
-except e:
+except Exception as e:
     missing_deps_errors.append((e, 'You need to add to your enviroment '
                                 'the Qiita configuration using '
                                 'QIITA_CONFIG_FP'))
 
 if missing_deps_errors:
     for e, t in missing_deps_errors:
-        print ('%s\n=============' % (t))
+        print('%s\n=============' % (t))
     exit('Missing core dependencies, can not continue.')
 
 if missing_deps_warnings:
     for e, t in missing_deps_errors:
-        print ('%s\n=============' % (t))
+        print('%s\n=============' % (t))
 
 
 # trick flake8 to not complain about module-level imports not being at the top
@@ -292,9 +292,9 @@ def main():
         ("Python version", python_version.replace('\n', ' ')),
         ("Python executable", executable)]
     max_len = max([len(e[0]) for e in system_info])
-    print (system_info_header)
+    print(system_info_header)
     for v in system_info:
-        print ("%*s:\t%s" % (max_len, v[0], v[1]))
+        print("%*s:\t%s" % (max_len, v[0], v[1]))
 
     conn_handler = SQLConnectionHandler()
     current_patch = conn_handler.execute_fetchone(
@@ -329,9 +329,9 @@ def main():
         ('Qiita ware library version', qiita_ware_lib_version)
     ]
     max_len = max([len(e[0]) for e in version_info])
-    print (dependency_info_header)
+    print(dependency_info_header)
     for v in version_info:
-        print ("%*s:\t%s" % (max_len, v[0], v[1]))
+        print("%*s:\t%s" % (max_len, v[0], v[1]))
 
     extra_info = None
     qiita_config = ConfigurationManager()
@@ -382,7 +382,7 @@ def main():
     except Exception:
         redbiom_redis_running = False
 
-    print (qiita_config_header)
+    print(qiita_config_header)
     qiita_config_info = [
         ('QIITA_CONFIG_FP filepath', qiita_conf_fp),
         ('Test environment', str(qiita_config.test_environment)),
@@ -407,11 +407,11 @@ def main():
     max_len = max([len(e[0]) for e in qiita_config_info])
     for v in qiita_config_info:
         if v != ('Extra info', None):
-            print ("%*s:\t%s" % (max_len, v[0], v[1]))
+            print("%*s:\t%s" % (max_len, v[0], v[1]))
 
-    print (qiita_plugins_header)
+    print(qiita_plugins_header)
     if not psql_running:
-        print ("PostgreSQL not running, can't retrieve plugin information")
+        print("PostgreSQL not running, can't retrieve plugin information")
     else:
         try:
             import qiita_db as qdb
@@ -423,15 +423,15 @@ def main():
                 qdb.sql_connection.TRN.add(sql)
                 res = qdb.sql_connection.TRN.execute_fetchindex()
                 for name, version, client_id, client_secret in res:
-                    print ("Plugin name: %s" % name)
-                    print ("\tVersion: %s" % version)
-                    print ("\tClient id: %s" % client_id)
-                    print ("\tClient secret: %s" % client_secret)
+                    print("Plugin name: %s" % name)
+                    print("\tVersion: %s" % version)
+                    print("\tClient id: %s" % client_id)
+                    print("\tClient secret: %s" % client_secret)
         except Exception as e:
-            print ("An error occurred while retrieving plugin information: %s"
-                   % str(e))
+            print("An error occurred while retrieving plugin information: %s"
+                  % str(e))
 
-    print (qiita_config_tests_header)
+    print(qiita_config_tests_header)
     suite = TestLoader().loadTestsFromTestCase(QiitaConfig)
     TextTestRunner(stream=stdout, verbosity=1).run(suite)
 

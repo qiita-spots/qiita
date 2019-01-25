@@ -78,7 +78,7 @@ def _populate_test_db():
 
 
 def _add_ontology_data():
-    print ('Loading Ontology Data')
+    print('Loading Ontology Data')
     if not exists(reference_base_dir):
         mkdir(reference_base_dir)
 
@@ -309,8 +309,8 @@ def drop_environment(ask_for_confirmation):
         if ask_for_confirmation:
             confirm = ''
             while confirm not in ('Y', 'y', 'N', 'n'):
-                confirm = raw_input("THIS IS NOT A TEST ENVIRONMENT.\n"
-                                    "Proceed with drop? (y/n)")
+                confirm = input("THIS IS NOT A TEST ENVIRONMENT.\n"
+                                "Proceed with drop? (y/n)")
 
             do_drop = confirm in ('Y', 'y')
         else:
