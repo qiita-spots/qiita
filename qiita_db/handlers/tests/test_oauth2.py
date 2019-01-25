@@ -17,20 +17,29 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
     def setUp(self):
         # Create client test authentication token
         self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
-        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.client_token, 'client_id', 'test123123123')
-        r_client.hset(self.client_token, 'grant_type', 'client')
+        token_info = {
+            'timestamp': '12/12/12 12:12:00',
+            'client_id': 'test123123123',
+            'grant_type': 'client'
+
+        }
+        r_client.hmset(self.client_token, token_info)
         r_client.expire(self.client_token, 5)
+
         # Create username test authentication token
         self.user_token = 'SOMEAUTHTESTINGTOKENHEREUSERNAME'
-        r_client.hset(self.user_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.user_token, 'client_id', 'testuser')
-        r_client.hset(self.user_token, 'grant_type', 'password')
-        r_client.hset(self.user_token, 'user', 'test@foo.bar')
+        token_info = {
+            'timestamp': '12/12/12 12:12:00',
+            'client_id': 'testuser',
+            'grant_type': 'password',
+            'user': 'test@foo.bar'
+        }
+        r_client.hmset(self.user_token, token_info)
         r_client.expire(self.user_token, 5)
+
         # Create test access limit token
         self.user_rate_key = 'testuser_test@foo.bar_daily_limit'
-        r_client.setex(self.user_rate_key, 2, 5)
+        r_client.setex(self.user_rate_key, 5, 2)
         super(OAuth2BaseHandlerTests, self).setUp()
 
     def test_authenticate_header_client(self):
@@ -45,7 +54,7 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
 
         # Check rate limiting works
         self.assertEqual(int(r_client.get(self.user_rate_key)), 1)
-        r_client.setex('testuser_test@foo.bar_daily_limit', 0, 2)
+        r_client.setex('testuser_test@foo.bar_daily_limit', 1, 0)
         obs = self.get('/qiita_db/artifacts/100/', headers={
             'Authorization': 'Bearer ' + self.user_token})
         exp = {'error': 'invalid_grant',
@@ -88,20 +97,20 @@ class OAuth2HandlerTests(TestHandlerBase):
                                  'pLaEFtbUNXWnVhYmUwTzVNcDI4czE='})
         self.assertEqual(obs.code, 200)
         obs_body = loads(obs.body)
-        exp = {'access_token': 'token',
+        exp = {'access_token': obs_body['access_token'],
                'token_type': 'Bearer',
                'expires_in': 3600}
-        self.assertItemsEqual(obs_body.keys(), exp.keys())
-        self.assertEqual(obs_body['token_type'], exp['token_type'])
-        self.assertEqual(obs_body['expires_in'], exp['expires_in'])
-        self.assertEqual(len(obs_body['access_token']), 55)
-        self.assertEqual(type(obs_body['access_token']), str)
+        self.assertDictEqual(obs_body, exp)
 
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
-        self.assertNotEqual(token, {})
-        self.assertItemsEqual(token.keys(), ['timestamp', 'client_id',
-                                             'grant_type'])
+        exp = {
+            b'timestamp': token[b'timestamp'],
+            b'client_id': (b'19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAV'
+                           b't8IhK7gZgDaO4'),
+            b'grant_type': b'client'
+        }
+        self.assertDictEqual(token, exp)
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
     def test_authenticate_client_post(self):
@@ -115,21 +124,20 @@ class OAuth2HandlerTests(TestHandlerBase):
                                  'KhAmmCWZuabe0O5Mp28s1'})
         self.assertEqual(obs.code, 200)
         obs_body = loads(obs.body)
-        exp = {'access_token': 'placeholder',
+        exp = {'access_token': obs_body['access_token'],
                'token_type': 'Bearer',
                'expires_in': 3600}
-        self.assertItemsEqual(obs_body.keys(), exp.keys())
-        self.assertEqual(obs_body['token_type'], exp['token_type'])
-        self.assertEqual(obs_body['expires_in'], exp['expires_in'])
-        self.assertEqual(len(obs_body['access_token']), 55)
-        self.assertEqual(type(obs_body['access_token']), str)
+        self.assertDictEqual(obs_body, exp)
 
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
-        self.assertNotEqual(token, {})
-        self.assertItemsEqual(token.keys(), ['timestamp', 'client_id',
-                                             'grant_type'])
-        self.assertEqual(token['grant_type'], 'client')
+        exp = {
+            b'timestamp': token[b'timestamp'],
+            b'client_id': (b'19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8'
+                           b'IhK7gZgDaO4'),
+            b'grant_type': b'client'
+        }
+        self.assertDictEqual(token, exp)
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
     def test_authenticate_client_bad_base64_hash(self):
@@ -208,22 +216,18 @@ class OAuth2HandlerTests(TestHandlerBase):
                 'password': 'password'})
         self.assertEqual(obs.code, 200)
         obs_body = loads(obs.body)
-        exp = {'access_token': 'placeholder',
+        exp = {'access_token': obs_body['access_token'],
                'token_type': 'Bearer',
                'expires_in': 3600}
-        self.assertItemsEqual(obs_body.keys(), exp.keys())
-        self.assertEqual(obs_body['token_type'], exp['token_type'])
-        self.assertEqual(obs_body['expires_in'], exp['expires_in'])
-        self.assertEqual(len(obs_body['access_token']), 55)
-        self.assertEqual(type(obs_body['access_token']), str)
+        self.assertDictEqual(obs_body, exp)
 
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
-        self.assertNotEqual(token, {})
-        self.assertItemsEqual(token.keys(), ['timestamp', 'user', 'client_id',
-                                             'grant_type'])
-        self.assertEqual(token['user'], 'test@foo.bar')
-        self.assertEqual(token['grant_type'], 'password')
+        exp = {b'timestamp': token[b'timestamp'],
+               b'user': b'test@foo.bar',
+               b'client_id': token[b'client_id'],
+               b'grant_type': b'password'}
+        self.assertDictEqual(token, exp)
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
     def test_authenticate_password_non_user_client_id_header(self):

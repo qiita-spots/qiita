@@ -1169,7 +1169,7 @@ class Artifact(qdb.base.QiitaObject):
             # status. Approach: Loop over all the artifacts and add all the
             # jobs that have been attached to them.
             visited = set()
-            queue = nodes.keys()
+            queue = list(nodes.keys())
             while queue:
                 current = queue.pop(0)
                 if current not in visited:
