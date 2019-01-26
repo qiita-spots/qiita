@@ -1134,7 +1134,7 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type)
         pt.to_file(fp)
         self._clean_up_files.append(fp)
-        with open(fp, 'U') as f:
+        with open(fp, newline=None) as f:
             obs = f.read()
         self.assertEqual(obs, EXP_PREP_TEMPLATE.format(pt.id))
 

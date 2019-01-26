@@ -104,7 +104,7 @@ def workflow_handler_post_req(user_id, command_id, params):
         wf_id = None
         job_info = None
         status = 'error'
-        message = str(exc.message)
+        message = str(exc)
 
     if wf is not None:
         # this is safe as we are creating the workflow for the first time

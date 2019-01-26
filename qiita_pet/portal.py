@@ -51,7 +51,7 @@ class PortalStyleManager(object):
 
         # Parse the configuration file
         config = ConfigParser()
-        with open(self.conf_fp, 'U') as conf_file:
+        with open(self.conf_fp, newline=None) as conf_file:
             config.readfp(conf_file)
 
         _required_sections = {'sitebase', 'index', 'study_list'}
@@ -63,7 +63,7 @@ class PortalStyleManager(object):
         # Load the custom CSS if needed
         self.custom_css = ''
         if self.css_fp:
-            with open(self.css_fp, 'U') as f:
+            with open(self.css_fp, newline=None) as f:
                 self.custom_css = f.read()
 
         self._get_sitebase(config)

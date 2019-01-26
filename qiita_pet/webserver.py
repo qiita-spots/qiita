@@ -239,6 +239,7 @@ class Application(tornado.web.Application):
 
         # 404 PAGE MUST BE LAST IN THIS LIST!
         handlers.append((r".*", NoPageHandler))
+        handlers.append((r"/.*", NoPageHandler))
 
         settings = {
             "template_path": TEMPLATE_PATH,

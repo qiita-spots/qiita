@@ -1368,7 +1368,7 @@ class TestSampleTemplate(TestCase):
             self.metadata, self.new_study)
         st.to_file(fp)
         self._clean_up_files.append(fp)
-        with open(fp, 'U') as f:
+        with open(fp, newline=None) as f:
             obs = f.read()
         self.assertEqual(obs, EXP_SAMPLE_TEMPLATE.format(self.new_study.id))
 
@@ -1378,7 +1378,7 @@ class TestSampleTemplate(TestCase):
                         '%s.Sample3' % self.new_study.id})
         self._clean_up_files.append(fp)
 
-        with open(fp, 'U') as f:
+        with open(fp, newline=None) as f:
             obs = f.read()
         self.assertEqual(
             obs, EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES.format(self.new_study.id))
@@ -2136,7 +2136,7 @@ class TestSampleTemplate(TestCase):
             # it should be QiitaDBWarning
             self.assertEqual(warn.category, qdb.exceptions.QiitaDBWarning)
             # it should contain this text
-            message = str(warn.message)
+            message = str(warn)
             exp_error = ('Sample "%s.Sample2", column "latitude", wrong value '
                          '"wrong latitude"' % self.new_study.id)
             self.assertIn(exp_error, message)
@@ -2186,7 +2186,7 @@ class TestSampleTemplate(TestCase):
             # warnings is a list of 1 element
             self.assertEqual(len(warn), 1)
             # the order might change so testing by elements
-            self.assertCountEqual(str(warn[0].message).split('\n'),
+            self.assertCountEqual(str(warn[0]).split('\n'),
                                   exp_message.split('\n'))
 
     def test_validate_errors_timestampB_year4digits(self):
@@ -2219,7 +2219,7 @@ class TestSampleTemplate(TestCase):
                 'of these fields.'.format(st.id))
             # warnings is a list of 1 element
             self.assertEqual(len(warn), 1)
-            self.assertEqual(str(warn[0].message), exp_message)
+            self.assertEqual(str(warn[0]), exp_message)
 
     def test_delete_column(self):
         st = qdb.metadata_template.sample_template.SampleTemplate.create(

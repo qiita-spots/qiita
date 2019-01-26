@@ -149,7 +149,7 @@ class OauthBaseHandler(RequestHandler):
                 'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
                 (error, trace_info, request_info))
 
-        message = exc_info[1].message
+        message = str(exc_info[1])
         if hasattr(exc_info[1], 'log_message'):
             message = exc_info[1].log_message
 

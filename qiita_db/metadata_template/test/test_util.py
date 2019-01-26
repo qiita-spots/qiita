@@ -59,7 +59,7 @@ class TestUtil(TestCase):
             qdb.metadata_template.util.prefix_sample_names_with_id(
                 metadata_map, 1)
             self.assertEqual(len(warn), 1)
-            self.assertEqual(str(warn[0].message), 'Some of the samples were '
+            self.assertEqual(str(warn[0]), 'Some of the samples were '
                              'already prefixed with the study id.')
         metadata_map.sort_index(inplace=True)
         assert_frame_equal(metadata_map, exp_df)

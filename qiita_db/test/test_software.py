@@ -597,7 +597,7 @@ class SoftwareTests(TestCase):
                      client_secret))
         with warnings.catch_warnings(record=True) as warns:
             obs = qdb.software.Software.from_file(fp)
-            obs_warns = [str(w.message) for w in warns]
+            obs_warns = [str(w) for w in warns]
             exp_warns = ['Plugin "QIIME" version "1.9.1" config file does not '
                          'match with stored information. Check the config file'
                          ' or run "qiita plugin update" to update the plugin '
@@ -665,7 +665,7 @@ class SoftwareTests(TestCase):
                      '20rNMhmqN'))
         with warnings.catch_warnings(record=True) as warns:
             obs = qdb.software.Software.from_file(fp)
-            obs_warns = [str(w.message) for w in warns]
+            obs_warns = [str(w) for w in warns]
             exp_warns = []
             self.assertCountEqual(obs_warns, exp_warns)
 
