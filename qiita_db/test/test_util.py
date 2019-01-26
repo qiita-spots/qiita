@@ -101,8 +101,8 @@ class DBUtilTests(TestCase):
         obs = qdb.util.get_artifact_types()
         exp = {'SFF': 1, 'FASTA_Sanger': 2, 'FASTQ': 3, 'FASTA': 4,
                'per_sample_FASTQ': 5, 'Demultiplexed': 6, 'BIOM': 7,
-               'beta_div_plots': 8L, 'rarefaction_curves': 9L,
-               'taxa_summary': 10L}
+               'beta_div_plots': 8, 'rarefaction_curves': 9,
+               'taxa_summary': 10}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_artifact_types(key_by_id=True)
@@ -668,7 +668,7 @@ class DBUtilTests(TestCase):
         obs = qdb.util.get_filepath_information(1)
         # This path is machine specific. Just checking that is not empty
         self.assertIsNotNone(obs.pop('fullpath'))
-        exp = {'filepath_id': 1L, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
+        exp = {'filepath_id': 1, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
                'filepath_type': 'raw_forward_seqs', 'checksum': '852952723',
                'data_type': 'raw_data', 'mountpoint': 'raw_data',
                'subdirectory': False, 'active': True}

@@ -696,4 +696,4 @@ except Exception as e:
     errors.append("Error purging filepaths: %s" % str(e))
 
 if errors:
-    print "\n".join(errors)
+    print("\n".join(errors))

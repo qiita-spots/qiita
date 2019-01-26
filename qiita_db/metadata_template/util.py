@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.utils import PY3, viewitems
+from future.utils import viewitems
 from six import StringIO
 from collections import defaultdict
 
@@ -18,10 +18,7 @@ from skbio.util import find_duplicates
 
 import qiita_db as qdb
 
-if PY3:
-    from string import ascii_letters as letters, digits
-else:
-    from string import letters, digits
+from string import ascii_letters, digits
 
 
 def prefix_sample_names_with_id(md_template, study_id):
@@ -106,7 +103,7 @@ def load_template_to_dataframe(fn, index='sample_name'):
                 try:
                     tblock = block.encode('utf-8')
                 except UnicodeDecodeError:
-                    tblock = unicode(block, errors='replace')
+                    tblock = str(block, errors='replace')
                     tblock = tblock.replace(u'\ufffd', '&#128062;')
                     errors[tblock].append('(%d, %d)' % (row, col))
         if bool(errors):
@@ -240,7 +237,7 @@ def get_invalid_sample_names(sample_names):
     """
 
     # from the QIIME mapping file documentation
-    valid = set(letters+digits+'.')
+    valid = set(ascii_letters+digits+'.')
     inv = []
 
     for s in sample_names:

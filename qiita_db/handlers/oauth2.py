@@ -90,13 +90,14 @@ def authenticate_oauth(f):
                          'invalid_grant')
             return
         # Check daily rate limit for key if password style key
-        if db_token['grant_type'] == 'password':
-            limit_key = '%s_%s_daily_limit' % (db_token['client_id'],
-                                               db_token['user'])
+        if db_token[b'grant_type'] == b'password':
+            limit_key = '%s_%s_daily_limit' % (
+                db_token[b'client_id'].decode('ascii'),
+                db_token[b'user'].decode('ascii'))
             limiter = r_client.get(limit_key)
             if limiter is None:
                 # Set limit to 5,000 requests per day
-                r_client.setex(limit_key, 5000, 86400)
+                r_client.setex(limit_key, 86400, 5000)
             else:
                 r_client.decr(limit_key)
                 if int(r_client.get(limit_key)) <= 0:
@@ -212,19 +213,23 @@ class TokenAuthHandler(OauthBaseHandler):
         """
         token = self.generate_access_token()
 
-        r_client.hset(token, 'timestamp', datetime.datetime.now())
-        r_client.hset(token, 'client_id', client_id)
-        r_client.hset(token, 'grant_type', grant_type)
-        r_client.expire(token, timeout)
+        token_info = {
+            'timestamp': datetime.datetime.now().strftime('%m-%d-%y %H:%M:%S'),
+            'client_id': client_id,
+            'grant_type': grant_type
+        }
         if user:
-            r_client.hset(token, 'user', user)
+            token_info['user'] = user
+
+        r_client.hmset(token, token_info)
+        r_client.expire(token, timeout)
         if grant_type == 'password':
             # Check if client has access limit key, and if not, create it
             limit_key = '%s_%s_daily_limit' % (client_id, user)
             limiter = r_client.get(limit_key)
             if limiter is None:
                 # Set limit to 5,000 requests per day
-                r_client.setex(limit_key, 5000, 86400)
+                r_client.setex(limit_key, 86400, 5000)
 
         self.write({'access_token': token,
                     'token_type': 'Bearer',
@@ -367,7 +372,7 @@ class TokenAuthHandler(OauthBaseHandler):
                 return
             try:
                 client_id, client_secret = urlsafe_b64decode(
-                    header_info[1]).split(':')
+                    header_info[1]).decode('ascii').split(':')
             except ValueError:
                 # Split didn't work, so invalid information sent
                 _oauth_error(self, 'Oauth2 error: invalid base64 encoded info',
