@@ -26,13 +26,13 @@ install:
     pyzmq networkx pyparsing natsort mock future libgfortran seaborn nltk pandas
     matplotlib scipy numpy h5py
   - source activate qiita
+  - 'echo "backend: Agg" > ~/matplotlibrc'
   - pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
   - git clone https://github.com/nicolasff/webdis
   - pushd webdis
   - make
   - ./webdis &
   - popd
-  # export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.5/bin/"
   - travis_retry pip install . --process-dependency-links
   # loading redbiom with Qiita's test set
   # but first let's make sure redis is empty

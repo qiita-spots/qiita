@@ -59,7 +59,7 @@ class ArtifactTestsReadOnly(TestCase):
                ['rarefaction_curves', 'Rarefaction curves', False, False,
                 False],
                ['taxa_summary', 'Taxa summary plots', False, False, False]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         qdb.artifact.Artifact.create_type(
             "NewType", "NewTypeDesc", False, False, False,
@@ -80,7 +80,7 @@ class ArtifactTestsReadOnly(TestCase):
                 False],
                ['taxa_summary', 'Taxa summary plots', False, False, False],
                ['NewType', 'NewTypeDesc', False, False, False]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
         self.assertTrue(exists(qdb.util.get_mountpoint('NewType')[0][1]))
 
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
@@ -245,7 +245,7 @@ class ArtifactTestsReadOnly(TestCase):
         obs = tester._create_lineage_graph_from_edge_list([])
         self.assertTrue(isinstance(obs, nx.DiGraph))
         self.assertEqual(obs.nodes(), [tester])
-        self.assertEqual(obs.edges(), [])
+        self.assertEqual(list(obs.edges()), [])
 
     def test_create_lineage_graph_from_edge_list(self):
         tester = qdb.artifact.Artifact(1)
@@ -254,12 +254,12 @@ class ArtifactTestsReadOnly(TestCase):
         self.assertTrue(isinstance(obs, nx.DiGraph))
         exp = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
                qdb.artifact.Artifact(3), qdb.artifact.Artifact(4)]
-        self.assertItemsEqual(obs.nodes(), exp)
+        self.assertCountEqual(obs.nodes(), exp)
         exp = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
                (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
                (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
                (qdb.artifact.Artifact(3), qdb.artifact.Artifact(4))]
-        self.assertItemsEqual(obs.edges(), exp)
+        self.assertCountEqual(obs.edges(), exp)
 
     def test_ancestors(self):
         obs = qdb.artifact.Artifact(1).ancestors
@@ -273,30 +273,30 @@ class ArtifactTestsReadOnly(TestCase):
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
         exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
+        self.assertCountEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2))]
-        self.assertItemsEqual(obs_edges, exp_edges)
+        self.assertCountEqual(obs_edges, exp_edges)
 
         obs = qdb.artifact.Artifact(3).ancestors
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
         exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
+        self.assertCountEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(3))]
-        self.assertItemsEqual(obs_edges, exp_edges)
+        self.assertCountEqual(obs_edges, exp_edges)
 
         obs = qdb.artifact.Artifact(4).ancestors
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
         exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
                      qdb.artifact.Artifact(4)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
+        self.assertCountEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4))]
-        self.assertItemsEqual(obs_edges, exp_edges)
+        self.assertCountEqual(obs_edges, exp_edges)
 
     def test_descendants(self):
         obs = qdb.artifact.Artifact(1).descendants
@@ -305,40 +305,40 @@ class ArtifactTestsReadOnly(TestCase):
         exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
                      qdb.artifact.Artifact(3), qdb.artifact.Artifact(4),
                      qdb.artifact.Artifact(5), qdb.artifact.Artifact(6)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
+        self.assertCountEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
                      (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(6))]
-        self.assertItemsEqual(obs_edges, exp_edges)
+        self.assertCountEqual(obs_edges, exp_edges)
 
         obs = qdb.artifact.Artifact(2).descendants
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
         exp_nodes = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(4),
                      qdb.artifact.Artifact(5), qdb.artifact.Artifact(6)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
+        self.assertCountEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(6))]
-        self.assertItemsEqual(obs_edges, exp_edges)
+        self.assertCountEqual(obs_edges, exp_edges)
 
         obs = qdb.artifact.Artifact(3).descendants
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
-        self.assertItemsEqual(obs_nodes, [qdb.artifact.Artifact(3)])
+        self.assertCountEqual(obs_nodes, [qdb.artifact.Artifact(3)])
         obs_edges = obs.edges()
-        self.assertItemsEqual(obs_edges, [])
+        self.assertCountEqual(obs_edges, [])
 
         obs = qdb.artifact.Artifact(4).descendants
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
-        self.assertItemsEqual(obs_nodes, [qdb.artifact.Artifact(4)])
+        self.assertCountEqual(obs_nodes, [qdb.artifact.Artifact(4)])
         obs_edges = obs.edges()
-        self.assertItemsEqual(obs_edges, [])
+        self.assertCountEqual(obs_edges, [])
 
     def test_descendants_with_jobs(self):
         A = qdb.artifact.Artifact
@@ -384,9 +384,9 @@ class ArtifactTestsReadOnly(TestCase):
         obs = A(3).descendants
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
-        self.assertItemsEqual(obs_nodes, [A(3)])
+        self.assertCountEqual(obs_nodes, [A(3)])
         obs_edges = obs.edges()
-        self.assertItemsEqual(obs_edges, [])
+        self.assertCountEqual(obs_edges, [])
 
         # Create a workflow starting in the artifact 1, so we can test that
         # "in construction" jobs also show up correctly
@@ -402,7 +402,7 @@ class ArtifactTestsReadOnly(TestCase):
         user = qdb.user.User('test@foo.bar')
         wf = qdb.processing_job.ProcessingWorkflow.from_scratch(
             user, params, name='Test WF')
-        parent = wf.graph.nodes()[0]
+        parent = list(wf.graph.nodes())[0]
         wf.add(qdb.software.DefaultParameters(10),
                connections={parent: {'demultiplexed': 'input_data'}})
         obs = A(1).descendants_with_jobs

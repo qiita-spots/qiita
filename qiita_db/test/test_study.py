@@ -874,11 +874,11 @@ class TestStudy(TestCase):
         study = qdb.study.Study(1)
         tags = ['this is my tag', 'actual GOLD!']
         message = study.update_tags(user, tags)
-        self.assertItemsEqual(study.tags, tags[:1])
+        self.assertCountEqual(study.tags, tags[:1])
         self.assertEqual(message, 'Only admins can assign: actual GOLD!')
         # now like admin
         message = study.update_tags(admin, tags)
-        self.assertItemsEqual(study.tags, tags)
+        self.assertCountEqual(study.tags, tags)
         self.assertEqual(message, '')
 
         # cleaning tags

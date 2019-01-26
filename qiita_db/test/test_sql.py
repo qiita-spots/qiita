@@ -138,7 +138,7 @@ class TestSQL(TestCase):
         self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
         obs = self.conn_handler.execute_fetchall(sql, [new.id])
         exp = [[1], [new_root.id]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_artifact_ancestry_root(self):
         """Correctly returns the ancestry of a root artifact"""
@@ -152,7 +152,7 @@ class TestSQL(TestCase):
         sql = "SELECT * FROM qiita.artifact_ancestry(%s)"
         obs = self.conn_handler.execute_fetchall(sql, [4])
         exp = [[4, 2], [2, 1]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_artifact_ancestry_leaf_multiple_parents(self):
         """Correctly returns the ancestry of a leaf artifact w multiple parents
@@ -166,7 +166,7 @@ class TestSQL(TestCase):
         obs = self.conn_handler.execute_fetchall(sql, [child.id])
         exp = [[child.id, parent1.id], [child.id, parent2.id],
                [parent1.id, root.id], [parent2.id, root.id]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_artifact_ancestry_middle(self):
         """Correctly returns the ancestry of an artifact in the middle of the
@@ -188,7 +188,7 @@ class TestSQL(TestCase):
         sql = "SELECT * FROM qiita.artifact_descendants(%s)"
         obs = self.conn_handler.execute_fetchall(sql, [1])
         exp = [[2, 1], [3, 1], [4, 2], [5, 2], [6, 2]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_artifact_descendants_middle(self):
         """Correctly returns the descendants of an artifact in the middle of
@@ -196,7 +196,7 @@ class TestSQL(TestCase):
         sql = "SELECT * FROM qiita.artifact_descendants(%s)"
         obs = self.conn_handler.execute_fetchall(sql, [2])
         exp = [[4, 2], [5, 2], [6, 2]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_isnumeric(self):
         """Test SQL function isnumeric"""

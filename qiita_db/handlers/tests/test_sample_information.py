@@ -42,7 +42,7 @@ class SampleInfoDBHandlerTests(OauthTestingBase):
                '1.SKD3.640198', '1.SKB5.640181', '1.SKB4.640189',
                '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
                '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191']
-        self.assertItemsEqual(obs.keys(), exp)
+        self.assertCountEqual(obs.keys(), exp)
 
         obs = obs['1.SKB1.640202']
         exp = {'qiita_study_id': '1', 'physical_specimen_location': 'ANL',

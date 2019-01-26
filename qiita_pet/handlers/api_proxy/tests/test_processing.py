@@ -47,7 +47,7 @@ class TestProcessingAPIReadOnly(TestCase):
                     {'command': 'Single Rarefaction', 'id': 12,
                      'output': [['rarefied_table', 'BIOM']]}]}
         # since the order of the commands can change, test them separately
-        self.assertItemsEqual(obs.pop('commands'), exp.pop('commands'))
+        self.assertCountEqual(obs.pop('commands'), exp.pop('commands'))
         self.assertEqual(obs, exp)
 
     def test_list_options_handler_get_req(self):
@@ -70,7 +70,7 @@ class TestProcessingAPIReadOnly(TestCase):
                                'sortmerna_max_pos': ['integer', '10000'],
                                'threads': ['integer', '1']}}
         # First check that the keys are the same
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['options'], exp['options'])

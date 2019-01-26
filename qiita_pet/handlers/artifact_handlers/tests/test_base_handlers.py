@@ -71,10 +71,10 @@ class TestBaseHandlersUtils(TestCase):
         "Utility function for testing the artifact summary get request"
         obs_files = obs.pop('files')
         exp_files = exp.pop('files')
-        self.assertItemsEqual(obs_files, exp_files)
+        self.assertCountEqual(obs_files, exp_files)
         obs_jobs = obs.pop('processing_jobs')
         exp_jobs = obs.pop('processing_jobs')
-        self.assertItemsEqual(obs_jobs, exp_jobs)
+        self.assertCountEqual(obs_jobs, exp_jobs)
         self.assertEqual(obs, exp)
 
     def test_artifact_summary_get_request(self):

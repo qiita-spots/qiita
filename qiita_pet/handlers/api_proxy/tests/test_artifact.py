@@ -80,8 +80,8 @@ class TestArtifactAPIReadOnly(TestCase):
                'edge_list': [(1, 3), (1, 2), (2, 5), (2, 4), (2, 6)]}
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['status'], exp['status'])
-        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
-        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
+        self.assertCountEqual(obs['node_labels'], exp['node_labels'])
+        self.assertCountEqual(obs['edge_list'], exp['edge_list'])
 
     def test_artifact_graph_get_req_no_access(self):
         obs = artifact_graph_get_req(1, 'ancestors', 'demo@microbio.me')
@@ -115,7 +115,7 @@ class TestArtifactAPIReadOnly(TestCase):
 
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['status'], exp['status'])
-        self.assertItemsEqual(obs['types'], exp['types'])
+        self.assertCountEqual(obs['types'], exp['types'])
 
 
 @qiita_test_checker()
@@ -257,10 +257,10 @@ class TestArtifactAPI(TestCase):
              'deprecated': None, 'platform': 'Illumina', 'algorithm_az': '',
              'prep_samples': 27}]
         exp = {'status': 'success', 'msg': '', 'data': data}
-        self.assertItemsEqual(obs.keys(), exp.keys())
+        self.assertCountEqual(obs.keys(), exp.keys())
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['msg'], exp['msg'])
-        self.assertItemsEqual(obs['data'], exp['data'])
+        self.assertCountEqual(obs['data'], exp['data'])
 
     def test_artifact_post_req(self):
         # Create new prep template to attach artifact to

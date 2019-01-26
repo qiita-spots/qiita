@@ -209,7 +209,7 @@ class StudySamplesInfoHandlerTests(RESTHandlerTestCase):
         obs = json_decode(response.body)
         self.assertEqual(obs.keys(), exp.keys())
         self.assertEqual(obs['number-of-samples'], exp['number-of-samples'])
-        self.assertItemsEqual(obs['categories'], exp['categories'])
+        self.assertCountEqual(obs['categories'], exp['categories'])
 
     def test_get_study_does_not_exist(self):
         exp = {'message': 'Study not found'}
