@@ -128,7 +128,7 @@ class TestHelpers(TestHandlerBase):
         # Test success
         obs = sample_template_handler_post_request(
             1, user, 'uploaded_file.txt')
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertEqual(list(obs.keys()), ['job'])
         job_info = r_client.get('sample_template_1')
         self.assertIsNotNone(job_info)
 
@@ -187,7 +187,7 @@ class TestHelpers(TestHandlerBase):
         obs = sample_template_handler_patch_request(
             user, "remove", "/%s/columns/col2/"
                             % new_study.id)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertEqual(list(obs.keys()), ['job'])
         job_info = r_client.get('sample_template_%s' % new_study.id)
         self.assertIsNotNone(job_info)
 
@@ -218,7 +218,7 @@ class TestHelpers(TestHandlerBase):
         # Test success
         obs = sample_template_handler_patch_request(
             user, "replace", "/1/data", req_value='uploaded_file.txt')
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertEqual(list(obs.keys()), ['job'])
         job_info = r_client.get('sample_template_1')
         self.assertIsNotNone(job_info)
 
@@ -246,7 +246,7 @@ class TestHelpers(TestHandlerBase):
         # Test success
         user = User('test@foo.bar')
         obs = sample_template_handler_delete_request(1, user)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertEqual(list(obs.keys()), ['job'])
         job_info = r_client.get('sample_template_1')
         self.assertIsNotNone(job_info)
 
@@ -445,7 +445,7 @@ class TestSampleTemplateHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertIsNotNone(response.body)
         obs = loads(response.body)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertEqual(list(obs.keys()), ['job'])
         # Wait until the job is done
         wait_for_processing_job(obs['job'])
 
@@ -457,7 +457,7 @@ class TestSampleTemplateHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertIsNotNone(response.body)
         obs = loads(response.body)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertEqual(list(obs.keys()), ['job'])
         # Wait until the job is done
         wait_for_processing_job(obs['job'])
 
@@ -467,7 +467,7 @@ class TestSampleTemplateHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertIsNotNone(response.body)
         obs = loads(response.body)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertEqual(list(obs.keys()), ['job'])
         # Wait until the job is done
         wait_for_processing_job(obs['job'])
 

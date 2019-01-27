@@ -59,7 +59,7 @@ class TestUtil(TestCase):
             qdb.metadata_template.util.prefix_sample_names_with_id(
                 metadata_map, 1)
             self.assertEqual(len(warn), 1)
-            self.assertEqual(str(warn[0].message), 'Some of the samples were '
+            self.assertEqual(str(warn[0]), 'Some of the samples were '
                              'already prefixed with the study id.')
         metadata_map.sort_index(inplace=True)
         assert_frame_equal(metadata_map, exp_df)
@@ -264,21 +264,21 @@ class TestUtil(TestCase):
         one_invalid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
                        'I am the chosen one', 'v10l3t5', '4r3', '81u3']
         obs = qdb.metadata_template.util.get_invalid_sample_names(one_invalid)
-        self.assertItemsEqual(obs, ['I am the chosen one'])
+        self.assertCountEqual(obs, ['I am the chosen one'])
 
         one_invalid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
                        ':L{=<', ':L}=<', '4r3', '81u3']
         obs = qdb.metadata_template.util.get_invalid_sample_names(one_invalid)
-        self.assertItemsEqual(obs, [':L{=<', ':L}=<'])
+        self.assertCountEqual(obs, [':L{=<', ':L}=<'])
 
     def test_get_get_invalid_sample_names_mixed(self):
         one_invalid = ['.', '1', '2']
         obs = qdb.metadata_template.util.get_invalid_sample_names(one_invalid)
-        self.assertItemsEqual(obs, [])
+        self.assertCountEqual(obs, [])
 
         one_invalid = [' ', ' ', ' ']
         obs = qdb.metadata_template.util.get_invalid_sample_names(one_invalid)
-        self.assertItemsEqual(obs, [' ', ' ', ' '])
+        self.assertCountEqual(obs, [' ', ' ', ' '])
 
     def test_looks_like_qiime_mapping_file(self):
         obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(

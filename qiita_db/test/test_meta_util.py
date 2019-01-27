@@ -155,7 +155,7 @@ class MetaUtilTests(TestCase):
     def test_get_lat_longs(self):
         # no public studies should return an empty array
         obs = qdb.meta_util.get_lat_longs()
-        self.assertItemsEqual(obs, [])
+        self.assertCountEqual(obs, [])
 
         old_visibility = {}
         for pt in qdb.study.Study(1).prep_templates():
@@ -188,7 +188,7 @@ class MetaUtilTests(TestCase):
             [1, 78.3634273709, 74.423907894],
             [1, 38.2627021402, 3.48274264219]]
         obs = qdb.meta_util.get_lat_longs()
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         for k, v in old_visibility.iteritems():
             k.artifact.visibility = v
@@ -234,7 +234,7 @@ class MetaUtilTests(TestCase):
         obs = qdb.meta_util.get_lat_longs()
         exp = []
 
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
         qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
         qdb.study.Study.delete(study.id)
 

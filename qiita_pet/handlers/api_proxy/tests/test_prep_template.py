@@ -115,7 +115,7 @@ class TestPrepAPIReadOnly(TestCase):
 
     def test_prep_template_get_req(self):
         obs = prep_template_get_req(1, 'test@foo.bar')
-        self.assertItemsEqual(obs.keys(), ['status', 'message', 'template'])
+        self.assertCountEqual(obs.keys(), ['status', 'message', 'template'])
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['template'].keys(), [
@@ -183,7 +183,7 @@ class TestPrepAPIReadOnly(TestCase):
         self.assertEqual(obs['message'], '')
         # [0] the fp_id is the first element, that should change
         fp_ids = [fp[0] for fp in obs['filepaths']]
-        self.assertItemsEqual(fp_ids, [18, 19, 20, 21, 24, 25])
+        self.assertCountEqual(fp_ids, [18, 19, 20, 21, 24, 25])
 
     def test_prep_template_filepaths_get_req_no_access(self):
         obs = prep_template_filepaths_get_req(1, 'demo@microbio.me')
@@ -452,7 +452,7 @@ class TestPrepAPI(TestCase):
                'file': 'update.txt',
                'id': 'ignored in test'}
 
-        self.assertItemsEqual(obs['message'].split('\n'), exp['message'])
+        self.assertCountEqual(obs['message'].split('\n'), exp['message'])
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['file'], exp['file'])
         self.assertIsInstance(obs['id'], int)

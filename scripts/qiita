@@ -417,7 +417,7 @@ def start(port, master):
                 try:
                     s.register_commands()
                 except ValueError as e:
-                    print(e.message)
+                    print(e)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
                 sleep(1)
@@ -431,7 +431,7 @@ def start(port, master):
                 try:
                     s.register_commands()
                 except ValueError as e:
-                    print(e.message)
+                    print(e)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
                 sleep(1)

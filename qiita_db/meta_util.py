@@ -455,7 +455,6 @@ def generate_biom_and_metadata_release(study_status='public'):
 
         txt_hd.seek(0)
         info = TarInfo(name='%s-%s-%s.txt' % (portal, study_status, ts))
-        info.size = len(txt_hd.buf)
         tgz.addfile(tarinfo=info, fileobj=txt_hd)
 
     with open(tgz_name, "rb") as f:

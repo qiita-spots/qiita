@@ -762,7 +762,7 @@ class DBUtilTests(TestCase):
                                     datetime(2015, 8, 5, 19, 41))
         obs = [[x[0], x[1]] for x in user.messages()]
         exp = [[message_id, 'SYS MESSAGE']]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         qdb.util.clear_system_messages()
         obs = [[x[0], x[1]] for x in user.messages()]
@@ -776,11 +776,11 @@ class DBUtilTests(TestCase):
         obs = qdb.util.supported_filepath_types("FASTQ")
         exp = [["raw_forward_seqs", True], ["raw_reverse_seqs", False],
                ["raw_barcodes", True]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         obs = qdb.util.supported_filepath_types("BIOM")
         exp = [["biom", True], ["directory", False], ["log", False]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_generate_analysis_list(self):
         self.assertEqual(qdb.util.generate_analysis_list([]), [])
@@ -1068,7 +1068,7 @@ class UtilTests(TestCase):
              'name': 'noname', 'target_subfragment': [], 'parameters': {},
              'algorithm': '', 'deprecated': None, 'platform': 'not provided',
              'algorithm_az': '', 'prep_samples': 0}]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         # now let's test that the order given by the commands actually give the
         # correct results
@@ -1087,7 +1087,7 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1) '
                                    '| Split libraries FASTQ')
             exp[0]['algorithm_az'] = '33fed1b35728417d7ba4139b8f817d44'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # setting up database changes for also command output
             qdb.sql_connection.TRN.add(
@@ -1101,7 +1101,7 @@ class UtilTests(TestCase):
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom) | Split libraries FASTQ')
             exp[0]['algorithm_az'] = 'de5b794a2cacd428f36fea86df196bfd'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # let's test that we ignore the parent_info
             qdb.sql_connection.TRN.add("""UPDATE qiita.software_command
@@ -1115,7 +1115,7 @@ class UtilTests(TestCase):
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom)')
             exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # let's test that we ignore the parent_info
             qdb.sql_connection.TRN.add("""UPDATE qiita.software_command
@@ -1129,7 +1129,7 @@ class UtilTests(TestCase):
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom)')
             exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # returning database as it was
             qdb.sql_connection.TRN.add(

@@ -258,7 +258,7 @@ class TestPrepSample(TestCase):
                'primer', 'run_center', 'run_date', 'run_prefix', 'samp_size',
                'sample_center', 'sequencing_meth', 'study_center',
                'target_gene', 'target_subfragment']
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_setitem(self):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
@@ -877,7 +877,7 @@ class TestPrepTemplate(TestCase):
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
-        self.assertItemsEqual(pt.categories(), exp_categories)
+        self.assertCountEqual(pt.categories(), exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
                 'barcode': 'CCTCTGAGAGCT',
@@ -1010,7 +1010,7 @@ class TestPrepTemplate(TestCase):
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
-        self.assertItemsEqual(pt.categories(), exp_categories)
+        self.assertCountEqual(pt.categories(), exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
                 'ebi_submission_accession': None,
@@ -1134,7 +1134,7 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type)
         pt.to_file(fp)
         self._clean_up_files.append(fp)
-        with open(fp, 'U') as f:
+        with open(fp, newline=None) as f:
             obs = f.read()
         self.assertEqual(obs, EXP_PREP_TEMPLATE.format(pt.id))
 
@@ -1329,7 +1329,7 @@ class TestPrepTemplate(TestCase):
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP',
                 'new_col': 'val3'}}
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_extend_update(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
@@ -1388,7 +1388,7 @@ class TestPrepTemplate(TestCase):
                 'emp_status': 'EMP',
                 'new_col': 'val3'}}
 
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_ebi_experiment_accessions(self):
         obs = self.tester.ebi_experiment_accessions

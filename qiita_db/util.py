@@ -434,7 +434,7 @@ def compute_checksum(path):
         filepaths.append(path)
 
     for fp in filepaths:
-        with open(fp, "Ub") as f:
+        with open(fp, 'rb', newline=None) as f:
             # Go line by line so we don't need to load the entire file
             for line in f:
                 if crc is None:

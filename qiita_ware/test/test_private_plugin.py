@@ -145,7 +145,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         obs = r_client.get("sample_template_%d" % study.id)
         self.assertIsNotNone(obs)
         obs = loads(obs)
-        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertCountEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
         self.assertEqual(obs['job_id'], job.id)
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn(
@@ -183,7 +183,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         obs = r_client.get("sample_template_1")
         self.assertIsNotNone(obs)
         obs = loads(obs)
-        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertCountEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
         self.assertEqual(obs['job_id'], job.id)
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn('The following columns have been added to the existing '
@@ -243,7 +243,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         obs = r_client.get("prep_template_1")
         self.assertIsNotNone(obs)
         obs = loads(obs)
-        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertCountEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
         self.assertEqual(obs['job_id'], job.id)
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn('The following columns have been added to the existing '

@@ -44,7 +44,7 @@ class TestStudyAPI(TestCase):
             'message': '',
             'data_types': ['16S', '18S', 'ITS', 'Proteomic', 'Metagenomic',
                            'Metabolomic']}
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_study_get_req(self):
         obs = study_get_req(1, 'test@foo.bar')
@@ -132,8 +132,8 @@ class TestStudyAPI(TestCase):
             'ebi_study_accession': None, 'specimen_id_column': None,
             'study_title': 'Some New Study for test',
             'number_samples_collected': 25}, 'message': '', 'editable': True}
-        self.assertItemsEqual(obs, exp)
-        self.assertItemsEqual(obs['study_info'], exp['study_info'])
+        self.assertCountEqual(obs, exp)
+        self.assertCountEqual(obs['study_info'], exp['study_info'])
 
     def test_study_get_req_no_access(self):
         obs = study_get_req(1, 'demo@microbio.me')

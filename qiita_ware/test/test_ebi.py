@@ -86,8 +86,8 @@ class TestEBISubmission(TestCase):
                           'different time points in the plant lifecycle.'))
         self.assertEqual(e.investigation_type, 'Metagenomics')
         self.assertIsNone(e.new_investigation_type)
-        self.assertItemsEqual(e.sample_template, e.samples)
-        self.assertItemsEqual(e.publications, [
+        self.assertCountEqual(e.sample_template, e.samples)
+        self.assertCountEqual(e.publications, [
             ['10.100/123456', True], ['123456', False],
             ['10.100/7891011', True], ['7891011', False]])
         self.assertEqual(e.action, action)
@@ -491,7 +491,7 @@ class TestEBISubmission(TestCase):
         e = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(e.full_ebi_dir)
         exp = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182']
-        self.assertItemsEqual(exp, e.samples)
+        self.assertCountEqual(exp, e.samples)
 
     def test_generate_experiment_xml(self):
         artifact = self.generate_new_study_with_preprocessed_data()
@@ -663,10 +663,10 @@ class TestEBISubmission(TestCase):
             rewrite_fastq=True)
 
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
-        self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
+        self.assertCountEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
-        self.assertItemsEqual(obs_demux_samples, ebi_submission.samples.keys())
-        self.assertItemsEqual(obs_demux_samples,
+        self.assertCountEqual(obs_demux_samples, ebi_submission.samples.keys())
+        self.assertCountEqual(obs_demux_samples,
                               ebi_submission.samples_prep.keys())
 
         # If the last test passed then we can test that the folder already
@@ -674,10 +674,10 @@ class TestEBISubmission(TestCase):
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
-        self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
+        self.assertCountEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
-        self.assertItemsEqual(obs_demux_samples, ebi_submission.samples.keys())
-        self.assertItemsEqual(obs_demux_samples,
+        self.assertCountEqual(obs_demux_samples, ebi_submission.samples.keys())
+        self.assertCountEqual(obs_demux_samples,
                               ebi_submission.samples_prep.keys())
 
     def _generate_per_sample_FASTQs(self, prep_template, sequences):
@@ -763,9 +763,9 @@ class TestEBISubmission(TestCase):
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
 
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
-        self.assertItemsEqual(obs_demux_samples, exp_samples)
-        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
-        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+        self.assertCountEqual(obs_demux_samples, exp_samples)
+        self.assertCountEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertCountEqual(ebi_submission.samples_prep.keys(), exp_samples)
 
         ebi_submission.generate_xml_files()
         obs_run_xml = open(ebi_submission.run_xml_fp).read()
@@ -788,9 +788,9 @@ class TestEBISubmission(TestCase):
         # the ADD actually works without rewriting the files
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
-        self.assertItemsEqual(obs_demux_samples, exp_samples)
-        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
-        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+        self.assertCountEqual(obs_demux_samples, exp_samples)
+        self.assertCountEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertCountEqual(ebi_submission.samples_prep.keys(), exp_samples)
 
         ebi_submission.generate_xml_files()
         obs_run_xml = open(ebi_submission.run_xml_fp).read()
@@ -858,9 +858,9 @@ class TestEBISubmission(TestCase):
 
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
         exp_samples = ['1.SKM4.640180', '1.SKB2.640194']
-        self.assertItemsEqual(obs_demux_samples, exp_samples)
-        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
-        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+        self.assertCountEqual(obs_demux_samples, exp_samples)
+        self.assertCountEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertCountEqual(ebi_submission.samples_prep.keys(), exp_samples)
 
         ebi_submission.generate_xml_files()
         obs_run_xml = open(ebi_submission.run_xml_fp).read()
@@ -884,9 +884,9 @@ class TestEBISubmission(TestCase):
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
         exp_samples = ['1.SKM4.640180', '1.SKB2.640194']
-        self.assertItemsEqual(obs_demux_samples, exp_samples)
-        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
-        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+        self.assertCountEqual(obs_demux_samples, exp_samples)
+        self.assertCountEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertCountEqual(ebi_submission.samples_prep.keys(), exp_samples)
 
         ebi_submission.generate_xml_files()
         obs_run_xml = open(ebi_submission.run_xml_fp).read()

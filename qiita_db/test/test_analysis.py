@@ -192,7 +192,7 @@ class TestAnalysis(TestCase):
             qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis")
 
         # make sure portal is associated
-        self.assertItemsEqual(obs._portals, ["QIITA", "EMP"])
+        self.assertCountEqual(obs._portals, ["QIITA", "EMP"])
 
     def test_create_from_default(self):
         with qdb.sql_connection.TRN:
@@ -209,8 +209,8 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs._portals, ["QIITA"])
         self.assertLess(time1, obs.timestamp)
         self.assertEqual(obs.description, "A New Analysis")
-        self.assertItemsEqual(obs.samples, [4])
-        self.assertItemsEqual(
+        self.assertCountEqual(obs.samples, [4])
+        self.assertCountEqual(
             obs.samples[4], ['1.SKD8.640184', '1.SKB7.640196',
                              '1.SKM9.640192', '1.SKM4.640180'])
         self.assertEqual(obs.data_types, ['18S'])
@@ -266,14 +266,14 @@ class TestAnalysis(TestCase):
                    '1.SKM9.640192', '1.SKM4.640180'],
                6: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
                    '1.SKM9.640192', '1.SKM4.640180']}
-        self.assertItemsEqual(self.analysis.samples, exp)
+        self.assertCountEqual(self.analysis.samples, exp)
 
     def test_retrieve_portal(self):
         self.assertEqual(self.analysis._portals, ["QIITA"])
 
     def test_retrieve_data_types(self):
         exp = ['18S', '16S']
-        self.assertItemsEqual(self.analysis.data_types, exp)
+        self.assertCountEqual(self.analysis.data_types, exp)
 
     def test_retrieve_shared_with(self):
         self.assertEqual(self.analysis.shared_with,
@@ -329,9 +329,9 @@ class TestAnalysis(TestCase):
                    '1.SKM4.640180', '1.SKB8.640193']}
         analysis.add_samples(exp)
         obs = analysis.samples
-        self.assertItemsEqual(obs.keys(), exp.keys())
+        self.assertCountEqual(obs.keys(), exp.keys())
         for k in obs:
-            self.assertItemsEqual(obs[k], exp[k])
+            self.assertCountEqual(obs[k], exp[k])
 
         analysis.remove_samples(artifacts=(qdb.artifact.Artifact(4), ),
                                 samples=('1.SKB8.640193', ))
@@ -342,9 +342,9 @@ class TestAnalysis(TestCase):
                6: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
                    '1.SKM4.640180', '1.SKB8.640193']}
         obs = analysis.samples
-        self.assertItemsEqual(obs.keys(), exp.keys())
+        self.assertCountEqual(obs.keys(), exp.keys())
         for k in obs:
-            self.assertItemsEqual(obs[k], exp[k])
+            self.assertCountEqual(obs[k], exp[k])
 
         analysis.remove_samples(samples=('1.SKD8.640184', ))
         exp = {4: ['1.SKB7.640196', '1.SKM9.640192', '1.SKM4.640180'],
@@ -352,13 +352,13 @@ class TestAnalysis(TestCase):
                    '1.SKM4.640180'],
                6: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
                    '1.SKM4.640180']}
-        self.assertItemsEqual(analysis.samples, exp)
+        self.assertCountEqual(analysis.samples, exp)
 
         analysis.remove_samples(
             artifacts=(qdb.artifact.Artifact(4), qdb.artifact.Artifact(5)))
         exp = {6: {'1.SKB7.640196', '1.SKB8.640193',
                    '1.SKM4.640180', '1.SKM9.640192'}}
-        self.assertItemsEqual(analysis.samples, exp)
+        self.assertCountEqual(analysis.samples, exp)
 
     def test_share_unshare(self):
         analysis = self._create_analyses_with_samples()
@@ -509,7 +509,7 @@ class TestAnalysis(TestCase):
         obs = set(table.ids(axis='sample'))
         exp = {'4.1.SKD8.640184', '4.1.SKB7.640196', '4.1.SKB8.640193',
                '5.1.SKB8.640193', '5.1.SKB7.640196', '5.1.SKD8.640184'}
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_build_biom_tables_raise_error_due_to_sample_selection(self):
         grouped_samples = {
@@ -531,12 +531,12 @@ class TestAnalysis(TestCase):
         mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
             mapping_fp, index='#SampleID').index
 
-        self.assertItemsEqual(biom_ids, mf_ids)
+        self.assertCountEqual(biom_ids, mf_ids)
 
         # now that the samples have been prefixed
         exp = ['1.SKM9.640192', '1.SKM4.640180', '1.SKD8.640184',
                '1.SKB8.640193', '1.SKB7.640196']
-        self.assertItemsEqual(biom_ids, exp)
+        self.assertCountEqual(biom_ids, exp)
 
     def test_build_files_post_processing_cmd(self):
         tmp = qdb.artifact.Artifact(4).processing_parameters.command
@@ -617,7 +617,7 @@ class TestAnalysis(TestCase):
         mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
             mapping_fp, index='#SampleID').index
 
-        self.assertItemsEqual(biom_ids, mf_ids)
+        self.assertCountEqual(biom_ids, mf_ids)
 
         # now that the samples have been prefixed
         exp = ['4.1.SKM9.640192', '4.1.SKM4.640180', '4.1.SKD8.640184',
@@ -626,7 +626,7 @@ class TestAnalysis(TestCase):
                '5.1.SKB8.640193', '5.1.SKB7.640196',
                '6.1.SKM9.640192', '6.1.SKM4.640180', '6.1.SKD8.640184',
                '6.1.SKB8.640193', '6.1.SKB7.640196']
-        self.assertItemsEqual(biom_ids, exp)
+        self.assertCountEqual(biom_ids, exp)
 
     def test_add_file(self):
         # Tested indirectly through build_files

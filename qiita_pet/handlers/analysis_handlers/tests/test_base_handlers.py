@@ -79,22 +79,22 @@ class TestBaseHandlersUtils(TestCase):
                     ('artifact', 'BIOM', 9, 'noname\n(BIOM)', 'artifact'),
                     ('artifact', 'BIOM',   8, 'noname\n(BIOM)', 'artifact')],
                'workflow': None}
-        self.assertItemsEqual(obs, exp)
-        self.assertItemsEqual(obs['edges'], exp['edges'])
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs, exp)
+        self.assertCountEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
         self.assertIsNone(obs['workflow'])
 
         # An admin has full access to the analysis
         obs = analyisis_graph_handler_get_request(1, User('admin@foo.bar'))
-        self.assertItemsEqual(obs, exp)
-        self.assertItemsEqual(obs['edges'], exp['edges'])
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs, exp)
+        self.assertCountEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
 
         # If the analysis is shared with the user he also has access
         obs = analyisis_graph_handler_get_request(1, User('shared@foo.bar'))
-        self.assertItemsEqual(obs, exp)
-        self.assertItemsEqual(obs['edges'], exp['edges'])
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs, exp)
+        self.assertCountEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
 
         # The user doesn't have access to the analysis
         with self.assertRaises(HTTPError):
@@ -163,9 +163,9 @@ class TestAnalysisGraphHandler(TestHandlerBase):
                     ['artifact', 'BIOM', 9, 'noname\n(BIOM)', 'artifact'],
                     ['artifact', 'BIOM', 8, 'noname\n(BIOM)', 'artifact']],
                'workflow': None}
-        self.assertItemsEqual(obs, exp)
-        self.assertItemsEqual(obs['edges'], exp['edges'])
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs, exp)
+        self.assertCountEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
         self.assertIsNone(obs['workflow'])
 
         # Create a new analysis with 2 starting BIOMs to be able to test
@@ -197,7 +197,7 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         wf = ProcessingWorkflow.from_scratch(user, params)
 
         # There is only one job in the workflow
-        job_id = wf.graph.nodes()[0].id
+        job_id = list(wf.graph.nodes())[0].id
 
         response = self.get('/analysis/description/%s/graph/' % new_id)
         self.assertEqual(response.code, 200)
@@ -215,11 +215,11 @@ class TestAnalysisGraphHandler(TestHandlerBase):
                      'taxa_summary\n(taxa_summary)', 'type']],
                'workflow': wf.id}
         # Check that the keys are the same
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
         # Check the edges
-        self.assertItemsEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['edges'], exp['edges'])
         # Check the edges
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
         # Check the edges
         self.assertEqual(obs['workflow'], exp['workflow'])
 
@@ -252,11 +252,11 @@ class TestAnalysisGraphHandler(TestHandlerBase):
                      'rarefied_table\n(BIOM)', 'type']],
                'workflow': wf.id}
         # Check that the keys are the same
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
         # Check the edges
-        self.assertItemsEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['edges'], exp['edges'])
         # Check the edges
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
         # Check the edges
         self.assertEqual(obs['workflow'], exp['workflow'])
 

@@ -76,7 +76,7 @@ class UtilTests(TestCase):
         # and then we will test that at least the 2nd element is correct
         self.assertNotEqual(biom_metadata_release, ('', '', ''))
         self.assertEqual(biom_metadata_release[1],
-                         'releases/QIITA-private.tgz')
+                         b'releases/QIITA-private.tgz')
         self.assertEqual(archive_release, ('', '', ''))
 
         generate_plugin_releases()

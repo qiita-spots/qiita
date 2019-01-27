@@ -22,7 +22,7 @@ class StudyPersonHandlerTests(RESTHandlerTestCase):
         response = self.get('/api/v1/person', headers=self.headers)
         self.assertEqual(response.code, 200)
         obs = json_decode(response.body)
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_exist(self):
         exp = {'email': 'lab_dude@foo.bar', 'phone': '121-222-3333',

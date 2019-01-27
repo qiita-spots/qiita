@@ -783,7 +783,7 @@ class Software(qdb.base.QiitaObject):
             file doesn't match
         """
         config = ConfigParser()
-        with open(fp, 'U') as conf_file:
+        with open(fp, newline=None) as conf_file:
             config.readfp(conf_file)
 
         name = config.get('main', 'NAME')

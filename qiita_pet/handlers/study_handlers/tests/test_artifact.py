@@ -51,8 +51,8 @@ class ArtifactGraphAJAXTests(TestHandlerBase):
         obs = loads(response.body)
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['message'], exp['message'])
-        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
-        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
+        self.assertCountEqual(obs['node_labels'], exp['node_labels'])
+        self.assertCountEqual(obs['edge_list'], exp['edge_list'])
 
     def test_get_unknown(self):
         response = self.get('/artifact/graph/', {'direction': 'BAD',
@@ -182,10 +182,10 @@ class ArtifactGetInfoTest(TestHandlerBase):
              'parameters': {}, 'target_gene': '16S rRNA', 'name': 'BIOM'}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         obs = loads(response.body)
-        self.assertItemsEqual(obs.keys(), exp.keys())
+        self.assertCountEqual(obs.keys(), exp.keys())
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['msg'], exp['msg'])
-        self.assertItemsEqual(obs['data'], exp['data'])
+        self.assertCountEqual(obs['data'], exp['data'])
 
 
 class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):

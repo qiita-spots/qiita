@@ -104,13 +104,13 @@ def workflow_handler_post_req(user_id, command_id, params):
         wf_id = None
         job_info = None
         status = 'error'
-        message = str(exc.message)
+        message = str(exc)
 
     if wf is not None:
         # this is safe as we are creating the workflow for the first time
         # and there is only one node. Remember networkx doesn't assure order
         # of nodes
-        job = wf.graph.nodes()[0]
+        job = list(wf.graph.nodes())[0]
         inputs = [a.id for a in job.input_artifacts]
         job_cmd = job.command
         wf_id = wf.id

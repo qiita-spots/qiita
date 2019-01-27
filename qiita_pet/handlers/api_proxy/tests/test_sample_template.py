@@ -264,7 +264,7 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs['message'], '')
         # [0] the fp_id is the first element, that should change
         fp_ids = [fp[0] for fp in obs['filepaths']]
-        self.assertItemsEqual(fp_ids, [17, 23])
+        self.assertCountEqual(fp_ids, [17, 23])
 
     def test_sample_template_filepaths_get_req_no_access(self):
         obs = sample_template_filepaths_get_req(1, 'demo@microbio.me')

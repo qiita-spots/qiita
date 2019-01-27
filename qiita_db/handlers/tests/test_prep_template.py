@@ -87,7 +87,7 @@ class PrepTemplateDataHandlerTests(OauthTestingBase):
                '1.SKD3.640198', '1.SKB5.640181', '1.SKB4.640189',
                '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
                '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191']
-        self.assertItemsEqual(obs.keys(), exp)
+        self.assertCountEqual(obs.keys(), exp)
 
         obs = obs['1.SKB1.640202']
         exp = {
@@ -152,7 +152,7 @@ class PrepTemplateAPItestHandlerTests(OauthTestingBase):
         self.assertEqual(obs.keys(), ['prep'])
 
         pt = qdb.metadata_template.prep_template.PrepTemplate(obs['prep'])
-        self.assertItemsEqual(pt.keys(), ['1.SKB8.640193', '1.SKD8.640184'])
+        self.assertCountEqual(pt.keys(), ['1.SKB8.640193', '1.SKD8.640184'])
 
         # testing that a new prep doesn't break the call due to empty artifact
         obs = self.get('/qiita_db/prep_template/%d/' % pt.id,

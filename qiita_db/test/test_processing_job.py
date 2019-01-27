@@ -632,13 +632,13 @@ class ProcessingJobTest(TestCase):
         tester = qdb.processing_job.ProcessingWorkflow.from_scratch(
             exp_user, exp_params, name=name, force=True)
 
-        parent = tester.graph.nodes()[0]
+        parent = list(tester.graph.nodes())[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
         tester.add(dflt_params, connections=connections)
         # we could get the child using tester.graph.nodes()[1] but networkx
         # doesn't assure order so using the actual graph to get the child
-        child = nx.topological_sort(tester.graph)[1]
+        child = list(nx.topological_sort(tester.graph))[1]
 
         mapping = {1: 3}
         obs = parent._update_children(mapping)
@@ -748,8 +748,8 @@ class ProcessingWorkflowTests(TestCase):
                 'b72369f9-a886-4193-8d3d-f7b504168e75'),
             qdb.processing_job.ProcessingJob(
                 'd19f76ee-274e-4c1b-b3a2-a12d73507c55')]
-        self.assertItemsEqual(obs.nodes(), exp_nodes)
-        self.assertEqual(obs.edges(), [(exp_nodes[0], exp_nodes[1])])
+        self.assertCountEqual(obs.nodes(), exp_nodes)
+        self.assertEqual(list(obs.edges()), [(exp_nodes[0], exp_nodes[1])])
 
     def test_graph_only_root(self):
         obs = qdb.processing_job.ProcessingWorkflow(2).graph
@@ -757,8 +757,8 @@ class ProcessingWorkflowTests(TestCase):
         exp_nodes = [
             qdb.processing_job.ProcessingJob(
                 'ac653cb5-76a6-4a45-929e-eb9b2dee6b63')]
-        self.assertItemsEqual(obs.nodes(), exp_nodes)
-        self.assertEqual(obs.edges(), [])
+        self.assertCountEqual(obs.nodes(), exp_nodes)
+        self.assertEqual(list(obs.edges()), [])
 
     def test_raise_if_not_in_construction(self):
         # We just need to test that the execution continues (i.e. no raise)
@@ -791,8 +791,8 @@ class ProcessingWorkflowTests(TestCase):
         self.assertEqual(len(obs_graph.nodes()), 2)
         obs_edges = obs_graph.edges()
         self.assertEqual(len(obs_edges), 1)
-        obs_src = obs_edges[0][0]
-        obs_dst = obs_edges[0][1]
+        obs_edges = list(obs_edges)[0]
+        obs_src, obs_dst = list(obs_edges)
         self.assertTrue(isinstance(obs_src, qdb.processing_job.ProcessingJob))
         self.assertTrue(isinstance(obs_dst, qdb.processing_job.ProcessingJob))
         self.assertTrue(obs_src.command, qdb.software.Command(1))
@@ -856,8 +856,8 @@ class ProcessingWorkflowTests(TestCase):
         self.assertTrue(isinstance(obs_graph, nx.DiGraph))
         nodes = obs_graph.nodes()
         self.assertEqual(len(nodes), 1)
-        self.assertEqual(nodes[0].parameters, exp_params)
-        self.assertEqual(obs_graph.edges(), [])
+        self.assertEqual(list(nodes)[0].parameters, exp_params)
+        self.assertEqual(list(obs_graph.edges()), [])
 
     def test_add(self):
         exp_command = qdb.software.Command(1)
@@ -876,7 +876,7 @@ class ProcessingWorkflowTests(TestCase):
         obs = qdb.processing_job.ProcessingWorkflow.from_scratch(
             exp_user, exp_params, name=name, force=True)
 
-        parent = obs.graph.nodes()[0]
+        parent = list(obs.graph.nodes())[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
         obs.add(dflt_params, connections=connections, force=True)
@@ -887,8 +887,8 @@ class ProcessingWorkflowTests(TestCase):
         self.assertEqual(len(obs_nodes), 2)
         obs_edges = obs_graph.edges()
         self.assertEqual(len(obs_edges), 1)
-        obs_src = obs_edges[0][0]
-        obs_dst = obs_edges[0][1]
+        obs_edges = list(obs_edges)[0]
+        obs_src, obs_dst = list(obs_edges)
         self.assertEqual(obs_src, parent)
         self.assertTrue(isinstance(obs_dst, qdb.processing_job.ProcessingJob))
         obs_params = obs_dst.parameters.values
@@ -952,19 +952,20 @@ class ProcessingWorkflowTests(TestCase):
         tester = qdb.processing_job.ProcessingWorkflow.from_scratch(
             exp_user, exp_params, name=name, force=True)
 
-        parent = tester.graph.nodes()[0]
+        parent = list(tester.graph.nodes())[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
         tester.add(dflt_params, connections=connections)
 
         self.assertEqual(len(tester.graph.nodes()), 2)
-        tester.remove(tester.graph.edges()[0][1])
+        element = list(tester.graph.edges())[0]
+        tester.remove(element[1])
 
         g = tester.graph
         obs_nodes = g.nodes()
         self.assertEqual(len(obs_nodes), 1)
-        self.assertEqual(obs_nodes[0], parent)
-        self.assertEqual(g.edges(), [])
+        self.assertEqual(list(obs_nodes)[0], parent)
+        self.assertEqual(list(g.edges()), [])
 
         # Test with cascade = true
         exp_user = qdb.user.User('test@foo.bar')
@@ -975,9 +976,10 @@ class ProcessingWorkflowTests(TestCase):
         tester = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
             exp_user, dflt_wf, req_params, name=name, force=True)
 
-        tester.remove(tester.graph.edges()[0][0], cascade=True)
+        element = list(tester.graph.edges())[0]
+        tester.remove(element[0], cascade=True)
 
-        self.assertEqual(tester.graph.nodes(), [])
+        self.assertEqual(list(tester.graph.nodes()), [])
 
     def test_remove_error(self):
         with self.assertRaises(
@@ -996,7 +998,8 @@ class ProcessingWorkflowTests(TestCase):
 
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
-            tester.remove(tester.graph.edges()[0][0])
+            element = list(tester.graph.edges())[0]
+            tester.remove(element[0])
 
 
 @qiita_test_checker()
@@ -1014,7 +1017,7 @@ class ProcessingJobDuplicated(TestCase):
         # setting them as error. This is basically testing that the duplicated
         # job creation allows to create if all jobs are error and if success
         # that the job doesn't have children
-        for jobs in context.exception.message.split('\n')[1:]:
+        for jobs in str(context.exception).split('\n')[1:]:
             jid, status = jobs.split(': ')
             if status != 'success':
                 qdb.processing_job.ProcessingJob(jid)._set_status('error')

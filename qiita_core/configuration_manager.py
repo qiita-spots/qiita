@@ -136,7 +136,7 @@ class ConfigurationManager(object):
 
         # Parse the configuration file
         config = ConfigParser()
-        with open(conf_fp, 'U') as conf_file:
+        with open(conf_fp, newline=None) as conf_file:
             config.readfp(conf_file)
 
         _required_sections = {'main', 'redis', 'postgres', 'smtp', 'ebi',
