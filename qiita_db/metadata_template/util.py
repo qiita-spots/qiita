@@ -7,9 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.utils import viewitems
 from six import StringIO
-from collections import defaultdict
 
 import pandas as pd
 import numpy as np
@@ -95,25 +93,7 @@ def load_template_to_dataframe(fn, index='sample_name'):
     # Load in file lines
     holdfile = None
     with qdb.util.open_file(fn, newline=None) as f:
-        errors = defaultdict(list)
         holdfile = f.readlines()
-        # here we are checking for non UTF-8 chars
-        for row, line in enumerate(holdfile):
-            for col, block in enumerate(line.split('\t')):
-                try:
-                    tblock = block.encode('utf-8')
-                except UnicodeDecodeError:
-                    tblock = str(block, errors='replace')
-                    tblock = tblock.replace(u'\ufffd', '&#128062;')
-                    errors[tblock].append('(%d, %d)' % (row, col))
-        if bool(errors):
-            raise ValueError(
-                "There are invalid (non UTF-8) characters in your information "
-                "file. The offending fields and their location (row, column) "
-                "are listed below, invalid characters are represented using "
-                "&#128062;: %s" % '; '.join(
-                    ['"%s" = %s' % (k, ', '.join(v))
-                     for k, v in viewitems(errors)]))
 
     if not holdfile:
         raise ValueError('Empty file passed!')
@@ -351,7 +331,7 @@ def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
                 comments.append(line)
         else:
             # Will add empty string to empty fields
-            tmp_line = map(strip_f, line.split('\t'))
+            tmp_line = list(map(strip_f, line.split('\t')))
             if len(tmp_line) < len(header):
                 tmp_line.extend([''] * (len(header) - len(tmp_line)))
             mapping_data.append(tmp_line)

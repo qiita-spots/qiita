@@ -739,7 +739,7 @@ class TestPrepTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_clean_validate_template_no_forbidden_words1(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
@@ -972,10 +972,10 @@ class TestPrepTemplate(TestCase):
         exp = pd.read_csv(
             exp_fp, sep='\t', infer_datetime_format=False,
             parse_dates=False, index_col=False, comment='\t')
-        obs = obs.reindex_axis(sorted(obs.columns), axis=1)
-        exp = exp.reindex_axis(sorted(exp.columns), axis=1)
+        obs = obs.reindex(sorted(obs.columns), axis=1)
+        exp = exp.reindex(sorted(exp.columns), axis=1)
 
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
@@ -1510,7 +1510,7 @@ class TestPrepTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_delete_column(self):
         QE = qdb.exceptions

@@ -32,7 +32,7 @@ for i in ${studies[@]}; do
 
     # Insert the study
     echo "\tloading study... "
-    output="`qiita db load_study --owner demo@microbio.me --title "$title" --info $conf_fp`"
+    output="`qiita db load-study --owner demo@microbio.me --title "$title" --info $conf_fp`"
     study_id=`echo -e "${output}" | cut -d " " -f 9`
     echo "Ok"
 
@@ -43,14 +43,14 @@ for i in ${studies[@]}; do
 
     # Loading prep template
     echo "\tloading prep template... "
-    output=`qiita db load_prep_template $prep_file --study $study_id --data_type "16S"`
+    output=`qiita db load-prep-template $prep_file --study $study_id --data_type "16S"`
     pt_id=`echo -e "${output}" | cut -d " " -f 10`
     echo "Ok"
 
     # Loading processed data
     echo "\tloading processed data... "
     cp $otu_table ${otu_table}_backup
-    output="`qiita db load_artifact --artifact_type BIOM --fp $otu_table --fp_type biom --prep_template $pt_id`"
+    output="`qiita db load-artifact --artifact_type BIOM --fp $otu_table --fp_type biom --prep_template $pt_id`"
     pd_id=`echo -e "${output}" | cut -d " " -f 2`
     mv ${otu_table}_backup $otu_table
     echo "Ok"

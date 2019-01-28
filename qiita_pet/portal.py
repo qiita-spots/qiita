@@ -52,7 +52,7 @@ class PortalStyleManager(object):
         # Parse the configuration file
         config = ConfigParser()
         with open(self.conf_fp, newline=None) as conf_file:
-            config.readfp(conf_file)
+            config.read_file(conf_file)
 
         _required_sections = {'sitebase', 'index', 'study_list'}
         if not _required_sections.issubset(set(config.sections())):

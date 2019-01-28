@@ -75,7 +75,7 @@ class PrepTemplateDataHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        self.assertEqual(obs.keys(), ['data'])
+        self.assertCountEqual(obs.keys(), ['data'])
 
         obs = obs['data']
         exp = ['1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195',
@@ -87,7 +87,7 @@ class PrepTemplateDataHandlerTests(OauthTestingBase):
                '1.SKD3.640198', '1.SKB5.640181', '1.SKB4.640189',
                '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
                '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191']
-        self.assertCountEqual(obs.keys(), exp)
+        self.assertCountEqual(list(obs.keys()), exp)
 
         obs = obs['1.SKB1.640202']
         exp = {
@@ -149,7 +149,7 @@ class PrepTemplateAPItestHandlerTests(OauthTestingBase):
                         data=data)
         self.assertEqual(obs.code, 200)
         obs = loads(obs.body)
-        self.assertEqual(obs.keys(), ['prep'])
+        self.assertCountEqual(obs.keys(), ['prep'])
 
         pt = qdb.metadata_template.prep_template.PrepTemplate(obs['prep'])
         self.assertCountEqual(pt.keys(), ['1.SKB8.640193', '1.SKD8.640184'])

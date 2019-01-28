@@ -16,7 +16,7 @@ from qiita_pet.util import convert_text_html
 class BaseHandler(RequestHandler):
     def get_current_user(self):
         '''Overrides default method of returning user curently connected'''
-        username = self.get_secure_cookie("user")
+        username = self.get_secure_cookie(b"user")
         if username is not None:
             # strip off quotes added by get_secure_cookie
             username = username.strip("\"' ")

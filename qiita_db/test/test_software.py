@@ -212,7 +212,7 @@ class CommandTests(TestCase):
         exp_params = {
             'input_data': ('artifact', ['FASTQ', 'per_sample_FASTQ'])}
         obs = qdb.software.Command(1).required_parameters
-        self.assertCountEqual(obs.keys(), exp_params.keys())
+        self.assertCountEqual(list(obs.keys()), exp_params.keys())
         self.assertEqual(obs['input_data'][0],  exp_params['input_data'][0])
         self.assertCountEqual(obs['input_data'][1],
                               exp_params['input_data'][1])
@@ -220,7 +220,7 @@ class CommandTests(TestCase):
         exp_params = {
             'input_data': ('artifact', ['SFF', 'FASTA', 'FASTA_Sanger'])}
         obs = qdb.software.Command(2).required_parameters
-        self.assertCountEqual(obs.keys(), exp_params.keys())
+        self.assertCountEqual(list(obs.keys()), exp_params.keys())
         self.assertEqual(obs['input_data'][0],  exp_params['input_data'][0])
         self.assertCountEqual(obs['input_data'][1],
                               exp_params['input_data'][1])

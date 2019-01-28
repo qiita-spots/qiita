@@ -42,7 +42,7 @@ class StudyPrepCreatorTests(RESTHandlerTestCase):
                              headers=self.headers, asjson=True)
         self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
-        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertCountEqual(obs.keys(), ['message'])
         self.assertGreater(len(obs['message']), 0)
 
     def test_post_valid_study(self):
@@ -100,7 +100,7 @@ class StudyPrepArtifactCreatorTests(RESTHandlerTestCase):
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
         self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
-        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertCountEqual(obs.keys(), ['message'])
         self.assertGreater(len(obs['message']), 0)
 
     def test_post_unknown_filepath_type_id(self):
@@ -112,7 +112,7 @@ class StudyPrepArtifactCreatorTests(RESTHandlerTestCase):
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
         self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
-        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertCountEqual(obs.keys(), ['message'])
         self.assertGreater(len(obs['message']), 0)
 
     def test_post_files_notfound(self):
@@ -124,7 +124,7 @@ class StudyPrepArtifactCreatorTests(RESTHandlerTestCase):
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
         self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
-        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertCountEqual(obs.keys(), ['message'])
         self.assertGreater(len(obs['message']), 0)
 
     def test_post_valid(self):

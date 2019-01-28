@@ -521,7 +521,7 @@ def generate_plugin_releases():
             ppc_cmd = "%s %s %s" % (
                 ppc['script_env'], ppc['script_path'], params)
             p_out, p_err, rv = qdb.processing_job._system_call(ppc_cmd)
-            p_out = p_out.decode("utf-8").rstrip()
+            p_out = p_out.rstrip()
             if rv != 0:
                 raise ValueError('Error %d: %s' % (rv, p_out))
             p_out = loads(p_out)

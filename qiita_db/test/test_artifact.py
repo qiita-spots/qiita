@@ -244,8 +244,8 @@ class ArtifactTestsReadOnly(TestCase):
         tester = qdb.artifact.Artifact(1)
         obs = tester._create_lineage_graph_from_edge_list([])
         self.assertTrue(isinstance(obs, nx.DiGraph))
-        self.assertEqual(obs.nodes(), [tester])
-        self.assertEqual(list(obs.edges()), [])
+        self.assertCountEqual(obs.nodes(), [tester])
+        self.assertCountEqual(obs.edges(), [])
 
     def test_create_lineage_graph_from_edge_list(self):
         tester = qdb.artifact.Artifact(1)
@@ -265,9 +265,9 @@ class ArtifactTestsReadOnly(TestCase):
         obs = qdb.artifact.Artifact(1).ancestors
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
-        self.assertEqual(obs_nodes, [qdb.artifact.Artifact(1)])
+        self.assertCountEqual(obs_nodes, [qdb.artifact.Artifact(1)])
         obs_edges = obs.edges()
-        self.assertEqual(obs_edges, [])
+        self.assertCountEqual(obs_edges, [])
 
         obs = qdb.artifact.Artifact(2).ancestors
         self.assertTrue(isinstance(obs, nx.DiGraph))
@@ -893,7 +893,7 @@ class ArtifactTests(TestCase):
         before = datetime.now()
         cmd = qdb.software.Command(3)
         exp_params = qdb.software.Parameters.from_default_params(
-            cmd.default_parameter_sets.next(), {'input_data': 1})
+            cmd.default_parameter_sets.__next__(), {'input_data': 1})
         obs = qdb.artifact.Artifact.create(
             self.filepaths_biom, "BIOM", parents=[qdb.artifact.Artifact(2)],
             processing_parameters=exp_params)
@@ -1270,7 +1270,7 @@ class ArtifactTests(TestCase):
 
         obs = self.prep_template.artifact.descendants_with_jobs.nodes()
         exp = [('artifact', artifact)]
-        self.assertEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
 
 if __name__ == '__main__':
