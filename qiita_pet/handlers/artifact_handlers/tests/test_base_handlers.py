@@ -284,7 +284,7 @@ class TestBaseHandlersUtils(TestCase):
             artifact_post_req(User('demo@microbio.me'), 1)
 
         obs = artifact_post_req(User('test@foo.bar'), 2)
-        self.assertEqual(list(obs.keys()), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         # Wait until the job is completed
         wait_for_prep_information_job(1)
         # Check that the delete function has been actually called

@@ -765,7 +765,7 @@ class TestSampleTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_clean_validate_template(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
@@ -816,7 +816,7 @@ class TestSampleTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_clean_validate_template_no_pgsql_reserved_words(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
@@ -2108,7 +2108,7 @@ class TestSampleTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_validate_template_warning_missing_restrictions(self):
         del self.metadata['collection_timestamp']
@@ -2136,7 +2136,7 @@ class TestSampleTemplate(TestCase):
             # it should be QiitaDBWarning
             self.assertEqual(warn.category, qdb.exceptions.QiitaDBWarning)
             # it should contain this text
-            message = str(warn)
+            message = str(warn.message)
             exp_error = ('Sample "%s.Sample2", column "latitude", wrong value '
                          '"wrong latitude"' % self.new_study.id)
             self.assertIn(exp_error, message)
@@ -2186,7 +2186,7 @@ class TestSampleTemplate(TestCase):
             # warnings is a list of 1 element
             self.assertEqual(len(warn), 1)
             # the order might change so testing by elements
-            self.assertCountEqual(str(warn[0]).split('\n'),
+            self.assertCountEqual(str(warn[0].message).split('\n'),
                                   exp_message.split('\n'))
 
     def test_validate_errors_timestampB_year4digits(self):
@@ -2219,7 +2219,7 @@ class TestSampleTemplate(TestCase):
                 'of these fields.'.format(st.id))
             # warnings is a list of 1 element
             self.assertEqual(len(warn), 1)
-            self.assertEqual(str(warn[0]), exp_message)
+            self.assertEqual(str(warn[0].message), exp_message)
 
     def test_delete_column(self):
         st = qdb.metadata_template.sample_template.SampleTemplate.create(

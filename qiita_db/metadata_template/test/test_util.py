@@ -59,7 +59,7 @@ class TestUtil(TestCase):
             qdb.metadata_template.util.prefix_sample_names_with_id(
                 metadata_map, 1)
             self.assertEqual(len(warn), 1)
-            self.assertEqual(str(warn[0]), 'Some of the samples were '
+            self.assertEqual(str(warn[0].message), 'Some of the samples were '
                              'already prefixed with the study id.')
         metadata_map.sort_index(inplace=True)
         assert_frame_equal(metadata_map, exp_df)
@@ -69,7 +69,7 @@ class TestUtil(TestCase):
             StringIO(EXP_SAMPLE_TEMPLATE))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_xlsx(self):
         mfp = join(dirname(abspath(getfile(currentframe()))), 'support_files')
@@ -79,7 +79,7 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
         exp = pd.DataFrame.from_dict(EXP_QIIMP, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
         # test loading an empty qiimp file
         fp = join(mfp, 'empty_qiimp_wb.xlsx')
@@ -92,7 +92,7 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
         exp = pd.DataFrame.from_dict(EXP_NOT_QIIMP, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_qiime_map(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
@@ -103,7 +103,7 @@ class TestUtil(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_duplicate_cols(self):
         LTTD = qdb.metadata_template.util.load_template_to_dataframe
@@ -132,7 +132,7 @@ class TestUtil(TestCase):
             StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_empty_columns(self):
         obs = npt.assert_warns(
@@ -141,14 +141,14 @@ class TestUtil(TestCase):
             StringIO(EXP_ST_SPACES_EMPTY_COLUMN))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_empty_rows(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_no_sample_name_cast(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
@@ -158,20 +158,20 @@ class TestUtil(TestCase):
         exp.index.name = 'sample_name'
         obs.sort_index(inplace=True)
         exp.sort_index(inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_empty_sample_names(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_empty_column(self):
         obs = npt.assert_warns(
@@ -180,14 +180,14 @@ class TestUtil(TestCase):
             StringIO(SAMPLE_TEMPLATE_EMPTY_COLUMN))
         exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_column_with_nas(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(SAMPLE_TEMPLATE_COLUMN_WITH_NAS))
         exp = pd.DataFrame.from_dict(ST_COLUMN_WITH_NAS_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_exception(self):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
@@ -199,7 +199,7 @@ class TestUtil(TestCase):
             StringIO(EXP_SAMPLE_TEMPLATE_WHITESPACE))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_lowercase(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
@@ -207,13 +207,7 @@ class TestUtil(TestCase):
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         exp.rename(columns={"str_column": "str_CoLumn"}, inplace=True)
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_non_utf8_error(self):
-        bad = EXP_SAMPLE_TEMPLATE.replace('Test Sample 2', 'Test Sample\x962')
-        with self.assertRaises(ValueError):
-            qdb.metadata_template.util.load_template_to_dataframe(
-                StringIO(bad))
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_non_utf8(self):
         replace = EXP_SAMPLE_TEMPLATE.replace(
@@ -233,7 +227,7 @@ class TestUtil(TestCase):
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_LAT_ALL_INT_DICT,
                                      dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT))
@@ -241,14 +235,14 @@ class TestUtil(TestCase):
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT,
                                      dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_with_nulls(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_NULLS))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_NULLS_DICT, dtype=str)
         exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_get_invalid_sample_names(self):
         all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',

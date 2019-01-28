@@ -257,7 +257,7 @@ class TestArtifactAPI(TestCase):
              'deprecated': None, 'platform': 'Illumina', 'algorithm_az': '',
              'prep_samples': 27}]
         exp = {'status': 'success', 'msg': '', 'data': data}
-        self.assertCountEqual(obs.keys(), exp.keys())
+        self.assertCountEqual(list(obs.keys()), exp.keys())
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['msg'], exp['msg'])
         self.assertCountEqual(obs['data'], exp['data'])

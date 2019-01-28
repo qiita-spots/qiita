@@ -329,7 +329,7 @@ class TestAnalysis(TestCase):
                    '1.SKM4.640180', '1.SKB8.640193']}
         analysis.add_samples(exp)
         obs = analysis.samples
-        self.assertCountEqual(obs.keys(), exp.keys())
+        self.assertCountEqual(list(obs.keys()), exp.keys())
         for k in obs:
             self.assertCountEqual(obs[k], exp[k])
 
@@ -342,7 +342,7 @@ class TestAnalysis(TestCase):
                6: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
                    '1.SKM4.640180', '1.SKB8.640193']}
         obs = analysis.samples
-        self.assertCountEqual(obs.keys(), exp.keys())
+        self.assertCountEqual(list(obs.keys()), exp.keys())
         for k in obs:
             self.assertCountEqual(obs[k], exp[k])
 
@@ -392,10 +392,10 @@ class TestAnalysis(TestCase):
         obs.sort_index(inplace=True)
         exp.sort_index(inplace=True)
         # then sorting columns
-        obs = obs.reindex_axis(sorted(obs.columns), axis=1)
-        exp = exp.reindex_axis(sorted(exp.columns), axis=1)
+        obs = obs.reindex(sorted(obs.columns), axis=1)
+        exp = exp.reindex(sorted(exp.columns), axis=1)
 
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_build_mapping_file_duplicated_samples_no_merge(self):
         analysis = self._create_analyses_with_samples()
@@ -416,10 +416,10 @@ class TestAnalysis(TestCase):
         obs.sort_index(inplace=True)
         exp.sort_index(inplace=True)
         # then sorting columns
-        obs = obs.reindex_axis(sorted(obs.columns), axis=1)
-        exp = exp.reindex_axis(sorted(exp.columns), axis=1)
+        obs = obs.reindex(sorted(obs.columns), axis=1)
+        exp = exp.reindex(sorted(exp.columns), axis=1)
 
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_build_mapping_file_duplicated_samples_merge(self):
         analysis = self._create_analyses_with_samples()
@@ -439,10 +439,10 @@ class TestAnalysis(TestCase):
         obs.sort_index(inplace=True)
         exp.sort_index(inplace=True)
         # then sorting columns
-        obs = obs.reindex_axis(sorted(obs.columns), axis=1)
-        exp = exp.reindex_axis(sorted(exp.columns), axis=1)
+        obs = obs.reindex(sorted(obs.columns), axis=1)
+        exp = exp.reindex(sorted(exp.columns), axis=1)
 
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_build_biom_tables(self):
         analysis = self._create_analyses_with_samples()
@@ -485,7 +485,7 @@ class TestAnalysis(TestCase):
              'SplitlibrariesFASTQ.biom' % analysis_id),
             ('18S', '%s_analysis_18S_PickclosedreferenceOTUsreference1'
              'Trimlenght150.biom' % analysis_id)]
-        self.assertEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         exp = {'1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'}
         for dt, fp, _ in obs_bioms:

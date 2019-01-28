@@ -76,7 +76,7 @@ class TestSampleAPI(TestCase):
 
     def test_sample_template_get_req(self):
         obs = sample_template_get_req(1, 'test@foo.bar')
-        self.assertEqual(obs.keys(), ['status', 'message', 'template'])
+        self.assertCountEqual(obs.keys(), ['status', 'message', 'template'])
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(obs['message'], '')
         self.assertEqual(len(obs['template']), 27)

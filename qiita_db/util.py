@@ -1709,7 +1709,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
                     if algorithm not in algorithm_az:
                         algorithm_az[algorithm] = hashlib.md5(
-                            algorithm).hexdigest()
+                            algorithm.encode('utf-8')).hexdigest()
 
                 if prep_template_id not in ts:
                     qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])

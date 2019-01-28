@@ -182,7 +182,7 @@ class ArtifactGetInfoTest(TestHandlerBase):
              'parameters': {}, 'target_gene': '16S rRNA', 'name': 'BIOM'}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         obs = loads(response.body)
-        self.assertCountEqual(obs.keys(), exp.keys())
+        self.assertCountEqual(list(obs.keys()), exp.keys())
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['msg'], exp['msg'])
         self.assertCountEqual(obs['data'], exp['data'])

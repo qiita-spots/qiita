@@ -280,7 +280,7 @@ class ProcessingJobAPItestHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        self.assertEqual(list(obs.keys()), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         self.assertIsNotNone(obs['job'])
 
     def test_post_processing_job_status(self):
@@ -302,7 +302,7 @@ class ProcessingJobAPItestHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        self.assertEqual(list(obs.keys()), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         job_id = obs['job']
         self.assertTrue(qdb.processing_job.ProcessingJob.exists(job_id))
         self.assertEqual(qdb.processing_job.ProcessingJob(job_id).status,

@@ -115,7 +115,8 @@ class TestPrepAPIReadOnly(TestCase):
 
     def test_prep_template_get_req(self):
         obs = prep_template_get_req(1, 'test@foo.bar')
-        self.assertCountEqual(obs.keys(), ['status', 'message', 'template'])
+        self.assertCountEqual(
+            list(obs.keys()), ['status', 'message', 'template'])
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['template'].keys(), [
