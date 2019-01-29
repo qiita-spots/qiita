@@ -185,7 +185,9 @@ def artifact_summary_get_request(user, artifact_id):
                          'per_sample_FASTQ']:
         # If the artifact is one of the "raw" types, only the owner of the
         # study and users that has been shared with can see the files
-        if not artifact.study.has_access(user, no_public=True):
+        study = artifact.study
+        has_access = study.has_access(user, no_public=True)
+        if (not study.public_raw_download and not has_access):
             files = []
 
     proc_params = artifact.processing_parameters

@@ -110,7 +110,16 @@ def validate_filepath_access_by_user(user, filepath_id):
         if arid:
             # [0] cause we should only have 1
             artifact = qdb.artifact.Artifact(arid[0])
+
             if artifact.visibility == 'public':
+                # TODO: https://github.com/biocore/qiita/issues/1724
+                if artifact.artifact_type in ['SFF', 'FASTQ', 'FASTA',
+                                              'FASTA_Sanger',
+                                              'per_sample_FASTQ']:
+                    study = artifact.study
+                    has_access = study.has_access(user, no_public=True)
+                    if (not study.public_raw_download and not has_access):
+                        return False
                 return True
             else:
                 study = artifact.study
