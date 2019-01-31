@@ -101,7 +101,9 @@ setup(name='qiita-spots',
               ]},
       scripts=glob('scripts/*'),
       extras_require={'test': ["nose", "pep8", 'mock']},
-      install_requires=['psycopg2 ', 'click', 'future', 'bcrypt', 'pandas',
+      # psycopg2 2.7 has substantial changes to the code base so let's stick
+      # to 2.6
+      install_requires=['psycopg2<2.7', 'click', 'future', 'bcrypt', 'pandas',
                         'numpy', 'tornado', 'toredis', 'redis', 'six',
                         'pyparsing', 'h5py', 'biom-format', 'natsort',
                         'networkx', 'humanize', 'scikit-bio', 'wtforms',

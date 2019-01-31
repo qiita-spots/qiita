@@ -136,7 +136,7 @@ class ConfigurationManagerTests(TestCase):
         with warnings.catch_warnings(record=True) as warns:
             obs._get_main(self.conf)
 
-            obs_warns = [str(w) for w in warns]
+            obs_warns = [str(w.message) for w in warns]
             exp_warns = ['Random cookie secret generated.']
             self.assertCountEqual(obs_warns, exp_warns)
 

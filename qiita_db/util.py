@@ -55,7 +55,6 @@ from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
 from tempfile import mkstemp
 from csv import writer as csv_writer
-from json import dumps
 from datetime import datetime
 from itertools import chain
 from contextlib import contextmanager
@@ -70,17 +69,6 @@ from errno import EEXIST
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
-
-
-def params_dict_to_json(options):
-    """Convert a dict of parameter key-value pairs to JSON string
-
-    Parameters
-    ----------
-    options : dict
-        The dict of options
-    """
-    return dumps(options, sort_keys=True, separators=(',', ':'))
 
 
 def scrub_data(s):
