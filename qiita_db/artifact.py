@@ -1033,9 +1033,6 @@ class Artifact(qdb.base.QiitaObject):
                             remove(fp)
                         else:
                             rmtree(fp)
-
-                # qdb.sql_connection.TRN.add_post_commit_func(
-                #     partial(map, path_cleaner, to_delete_fps))
                 qdb.sql_connection.TRN.add_post_commit_func(
                     path_cleaner, to_delete_fps)
 

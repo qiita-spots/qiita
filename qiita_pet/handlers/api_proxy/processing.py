@@ -168,7 +168,7 @@ def workflow_handler_patch_req(req_op, req_path, req_value=None,
         return {'status': 'success',
                 'message': '',
                 'job': {'id': job.id,
-                        'inputs': req_value['connections'].keys(),
+                        'inputs': list(req_value['connections'].keys()),
                         'label': job_cmd.name,
                         'outputs': job_cmd.outputs}}
     elif req_op == 'remove':

@@ -39,11 +39,6 @@ class DBUtilTests(TestCase):
             if exists(fp):
                 remove(fp)
 
-    def test_params_dict_to_json(self):
-        params_dict = {'opt1': '1', 'opt2': [2, '3'], 3: 9}
-        exp = '{"3":9,"opt1":"1","opt2":[2,"3"]}'
-        self.assertEqual(qdb.util.params_dict_to_json(params_dict), exp)
-
     def test_check_required_columns(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
         qdb.util.check_required_columns(self.required, self.table)

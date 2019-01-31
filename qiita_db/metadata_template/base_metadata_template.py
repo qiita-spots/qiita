@@ -858,7 +858,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                     # that || is a jsonb to update or add a new key/value
                     md_filtered = md_template[new_cols].loc[existing_samples]
                     for sid, df in md_filtered.iterrows():
-                        values = dict(df.iteritems())
+                        values = dict(df.items())
                         sql = """UPDATE qiita.{0}
                                  SET sample_values = sample_values || %s
                                  WHERE sample_id = %s""".format(

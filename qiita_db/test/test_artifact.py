@@ -893,7 +893,7 @@ class ArtifactTests(TestCase):
         before = datetime.now()
         cmd = qdb.software.Command(3)
         exp_params = qdb.software.Parameters.from_default_params(
-            cmd.default_parameter_sets.__next__(), {'input_data': 1})
+            next(cmd.default_parameter_sets), {'input_data': 1})
         obs = qdb.artifact.Artifact.create(
             self.filepaths_biom, "BIOM", parents=[qdb.artifact.Artifact(2)],
             processing_parameters=exp_params)

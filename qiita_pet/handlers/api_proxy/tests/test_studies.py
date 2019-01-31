@@ -37,6 +37,8 @@ class TestStudyAPI(TestCase):
                 else:
                     remove(fp)
 
+
+class TestStudyAPI1(TestStudyAPI):
     def test_data_types_get_req(self):
         obs = data_types_get_req()
         exp = {
@@ -146,83 +148,6 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'error',
                'message': 'Study does not exist'}
         self.assertEqual(obs, exp)
-
-    def test_study_prep_get_req(self):
-        obs = study_prep_get_req(1, 'test@foo.bar')
-        exp = {'status': 'success',
-               'message': '',
-               'info': {
-                   '18S': [{
-                       'id': 1,
-                       'status': 'private',
-                       'name': 'Prep information 1',
-                       'start_artifact_id': 1,
-                       'start_artifact': 'FASTQ',
-                       'youngest_artifact': 'BIOM - BIOM',
-                       'ebi_experiment': 27}, {
-                       'id': 2,
-                       'status': 'private',
-                       'name': 'Prep information 2',
-                       'start_artifact': 'BIOM',
-                       'youngest_artifact': 'BIOM - BIOM',
-                       'ebi_experiment': 27,
-                       'start_artifact_id': 7}]}}
-        self.assertEqual(obs, exp)
-
-        # Add a new prep template
-        pt = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.prep_template.PrepTemplate.create,
-            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
-            qdb.study.Study(1), '16S')
-        obs = study_prep_get_req(1, 'test@foo.bar')
-        exp = {'status': 'success',
-               'message': '',
-               'info': {
-                   '18S': [{'id': 1,
-                            'status': 'private',
-                            'name': 'Prep information 1',
-                            'start_artifact_id': 1,
-                            'start_artifact': 'FASTQ',
-                            'youngest_artifact': 'BIOM - BIOM',
-                            'ebi_experiment': 27},
-                           {'id': 2,
-                            'status': 'private',
-                            'name': 'Prep information 2',
-                            'start_artifact_id': 7,
-                            'start_artifact': 'BIOM',
-                            'youngest_artifact': 'BIOM - BIOM',
-                            'ebi_experiment': 27}],
-                   '16S': [{'id': pt.id,
-                            'status': 'sandbox',
-                            'name': 'Prep information %d' % pt.id,
-                            'start_artifact_id': None,
-                            'start_artifact': None,
-                            'youngest_artifact': None,
-                            'ebi_experiment': 0}]}}
-        self.assertEqual(obs, exp)
-
-        obs = study_prep_get_req(1, 'admin@foo.bar')
-        self.assertEqual(obs, exp)
-
-        qdb.artifact.Artifact(1).visibility = 'public'
-        obs = study_prep_get_req(1, 'demo@microbio.me')
-        exp = {'status': 'success',
-               'message': '',
-               'info': {
-                   '18S': [{'id': 1,
-                            'status': 'public',
-                            'name': 'Prep information 1',
-                            'start_artifact_id': 1,
-                            'start_artifact': 'FASTQ',
-                            'youngest_artifact': 'BIOM - BIOM',
-                            'ebi_experiment': 27}]}}
-        self.assertEqual(obs, exp)
-        # Reset visibility of the artifacts
-        for i in range(4, 0, -1):
-            qdb.artifact.Artifact(i).visibility = "private"
-
-        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_study_prep_get_req_failed_EBI(self):
         temp_dir = mkdtemp()
@@ -413,7 +338,7 @@ class TestStudyAPI(TestCase):
         filenames = ['test_1.R1.fastq.gz', 'test_2.R1.fastq.gz']
         for f in filenames:
             fpt = join(study_upload_dir, f)
-            open(fpt, 'w', 0).close()
+            open(fpt, 'wb', 0).close()
             self._clean_up_files.append(fpt)
         obs = study_files_get_req(
             'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
@@ -430,7 +355,7 @@ class TestStudyAPI(TestCase):
         filenames = ['test_1.R2.fastq.gz', 'test_2.R2.fastq.gz']
         for f in filenames:
             fpt = join(study_upload_dir, f)
-            open(fpt, 'w', 0).close()
+            open(fpt, 'wb', 0).close()
             self._clean_up_files.append(fpt)
         obs = study_files_get_req(
             'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
@@ -446,7 +371,7 @@ class TestStudyAPI(TestCase):
         filenames = ['test_1.R3.fastq.gz']
         for f in filenames:
             fpt = join(study_upload_dir, f)
-            open(fpt, 'w', 0).close()
+            open(fpt, 'wb', 0).close()
             self._clean_up_files.append(fpt)
         obs = study_files_get_req(
             'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
@@ -584,6 +509,86 @@ class TestStudyAPI(TestCase):
 
         # returning to default status
         study.public_raw_download = False
+
+
+class TestStudyAPI2(TestStudyAPI):
+    # This test expects a clean DB so creating it's own class
+    def test_study_prep_get_req(self):
+        obs = study_prep_get_req(1, 'test@foo.bar')
+        exp = {'status': 'success',
+               'message': '',
+               'info': {
+                   '18S': [{
+                       'id': 1,
+                       'status': 'private',
+                       'name': 'Prep information 1',
+                       'start_artifact_id': 1,
+                       'start_artifact': 'FASTQ',
+                       'youngest_artifact': 'BIOM - BIOM',
+                       'ebi_experiment': 27}, {
+                       'id': 2,
+                       'status': 'private',
+                       'name': 'Prep information 2',
+                       'start_artifact': 'BIOM',
+                       'youngest_artifact': 'BIOM - BIOM',
+                       'ebi_experiment': 27,
+                       'start_artifact_id': 7}]}}
+        self.assertEqual(obs, exp)
+
+        # Add a new prep template
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
+            qdb.study.Study(1), '16S')
+        obs = study_prep_get_req(1, 'test@foo.bar')
+        exp = {'status': 'success',
+               'message': '',
+               'info': {
+                   '18S': [{'id': 1,
+                            'status': 'private',
+                            'name': 'Prep information 1',
+                            'start_artifact_id': 1,
+                            'start_artifact': 'FASTQ',
+                            'youngest_artifact': 'BIOM - BIOM',
+                            'ebi_experiment': 27},
+                           {'id': 2,
+                            'status': 'private',
+                            'name': 'Prep information 2',
+                            'start_artifact_id': 7,
+                            'start_artifact': 'BIOM',
+                            'youngest_artifact': 'BIOM - BIOM',
+                            'ebi_experiment': 27}],
+                   '16S': [{'id': pt.id,
+                            'status': 'sandbox',
+                            'name': 'Prep information %d' % pt.id,
+                            'start_artifact_id': None,
+                            'start_artifact': None,
+                            'youngest_artifact': None,
+                            'ebi_experiment': 0}]}}
+        self.assertEqual(obs, exp)
+
+        obs = study_prep_get_req(1, 'admin@foo.bar')
+        self.assertEqual(obs, exp)
+
+        qdb.artifact.Artifact(1).visibility = 'public'
+        obs = study_prep_get_req(1, 'demo@microbio.me')
+        exp = {'status': 'success',
+               'message': '',
+               'info': {
+                   '18S': [{'id': 1,
+                            'status': 'public',
+                            'name': 'Prep information 1',
+                            'start_artifact_id': 1,
+                            'start_artifact': 'FASTQ',
+                            'youngest_artifact': 'BIOM - BIOM',
+                            'ebi_experiment': 27}]}}
+        self.assertEqual(obs, exp)
+        # Reset visibility of the artifacts
+        for i in range(4, 0, -1):
+            qdb.artifact.Artifact(i).visibility = "private"
+
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
 
 if __name__ == '__main__':
