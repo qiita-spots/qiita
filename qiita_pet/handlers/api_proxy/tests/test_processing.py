@@ -139,7 +139,7 @@ class TestProcessingAPI(TestCase):
             exp_user, exp_params, name=name, force=True)
 
         graph = wf.graph
-        nodes = graph.nodes()
+        nodes = list(graph.nodes())
         job_id = nodes[0].id
         value = {'dflt_params': 10,
                  'connections': {job_id: {'demultiplexed': 'input_data'}}}
@@ -207,7 +207,7 @@ class TestProcessingAPI(TestCase):
             exp_user, exp_params, name=name, force=True)
 
         graph = wf.graph
-        nodes = graph.nodes()
+        nodes = list(graph.nodes())
         job_id = nodes[0].id
 
         # Incorrect path parameter

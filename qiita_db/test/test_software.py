@@ -872,7 +872,7 @@ class ParametersTests(TestCase):
         self.assertFalse(a == b)
         # Test difference due to command
         b = qdb.software.Parameters.from_default_params(
-            qdb.software.Command(2).default_parameter_sets.__next__(),
+            next(qdb.software.Command(2).default_parameter_sets),
             {'input_data': 1})
         self.assertFalse(a == b)
         # Test difference due to values
