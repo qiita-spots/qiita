@@ -158,7 +158,12 @@ class Archive(qdb.base.QiitaObject):
                 vals.append(archive_merging_scheme)
             if features is not None:
                 extras.append("""archive_feature IN %s""")
-                vals.append(tuple([f.decode('ascii') for f in features]))
+                # depending on the method calling test retrieve_feature_values
+                # the features elements can be string or bytes; making sure
+                # everything is string for SQL
+                vals.append(
+                    tuple([f.decode('ascii') if isinstance(f, bytes) else f
+                           for f in features]))
 
             sql = """SELECT archive_feature, archive_feature_value
                      FROM qiita.archive_feature_value
