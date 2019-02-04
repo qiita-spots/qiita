@@ -84,14 +84,17 @@ class TestMetadataTemplateReadOnly(TestCase):
             'sampleid',
             'sample_id',
             '{',
-            'this|is',
+            'bla:1',
+            'bla|2',
+            'bla1:2|3',
+            'this&is',
             '4column',
             'just_fine2'])
         self.assertItemsEqual(set(results), {'tax on',
                                              'bla.',
                                              '.',
                                              '{',
-                                             'this|is',
+                                             'this&is',
                                              '4column'})
 
 

@@ -838,7 +838,7 @@ class TestSampleTemplate(TestCase):
 
     def test_clean_validate_template_no_invalid_chars3(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
-        self.metadata.rename(columns={'taxon_id': 'this|is'}, inplace=True)
+        self.metadata.rename(columns={'taxon_id': 'this&is'}, inplace=True)
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             ST._clean_validate_template(self.metadata, 2)
 
@@ -1778,6 +1778,10 @@ class TestSampleTemplate(TestCase):
         """extend correctly adds new samples and columns at the same time"""
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata, self.new_study)
+
+        # test updating with same data, none of the rest of the code/tests
+        # should change
+        st.extend_and_update(self.metadata)
 
         self.metadata_dict['Sample4'] = {
             'physical_specimen_location': 'location1',

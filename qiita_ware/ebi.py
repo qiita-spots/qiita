@@ -380,7 +380,7 @@ class EBISubmission(object):
 
         return study_set
 
-    def generate_sample_xml(self, samples=None):
+    def generate_sample_xml(self, samples=None, ignore_columns=None):
         """Generates the sample XML file
 
         Parameters
@@ -388,6 +388,9 @@ class EBISubmission(object):
         samples : list of str, optional
             The list of samples to be included in the sample xml. If not
             provided or an empty list is provided, all the samples are used
+        ignore_columns : list of str, optional
+            The list of columns to ignore during submission; helful for when
+            the submissions are too large
 
         Returns
         -------
@@ -433,6 +436,9 @@ class EBISubmission(object):
             description.text = escape(clean_whitespace(text))
 
             if sample_info:
+                if ignore_columns is not None:
+                    for key in ignore_columns:
+                        del sample_info[key]
                 sample_attributes = ET.SubElement(sample, 'SAMPLE_ATTRIBUTES')
                 self._add_dict_as_tags_and_values(sample_attributes,
                                                   'SAMPLE_ATTRIBUTE',
