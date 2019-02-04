@@ -227,8 +227,10 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                     (nunique >= int(nsamples * .5))].index)
         cols_to_drop = cols_to_drop - {'taxon_id', 'scientific_name',
                                        'description'}
+        all_samples = ebi_submission.sample_template.ebi_sample_accessions
+        samples = {k: all_samples[k] for k in ebi_submission.samples}
         ebi_submission.write_xml_file(
-            ebi_submission.generate_sample_xml(new_samples, cols_to_drop),
+            ebi_submission.generate_sample_xml(samples, cols_to_drop),
             ebi_submission.sample_xml_fp)
 
         # now let's recalculate the size to make sure it's fine
