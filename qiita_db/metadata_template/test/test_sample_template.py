@@ -838,7 +838,7 @@ class TestSampleTemplate(TestCase):
 
     def test_clean_validate_template_no_invalid_chars3(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
-        self.metadata.rename(columns={'taxon_id': 'this|is'}, inplace=True)
+        self.metadata.rename(columns={'taxon_id': 'this&is'}, inplace=True)
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             ST._clean_validate_template(self.metadata, 2)
 
