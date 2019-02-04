@@ -1779,6 +1779,10 @@ class TestSampleTemplate(TestCase):
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata, self.new_study)
 
+        # test updating with same data, none of the rest of the code/tests
+        # should change
+        st.extend_and_update(self.metadata)
+
         self.metadata_dict['Sample4'] = {
             'physical_specimen_location': 'location1',
             'physical_specimen_remaining': 'true',
