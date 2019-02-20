@@ -100,20 +100,17 @@ setup(name='qiita-spots',
               'support_files/doc/source/_static/*.png'
               ]},
       scripts=glob('scripts/*'),
-      extras_require={'test': ["nose", "pep8", 'mock']},
+      extras_require={'test': ["nose", "pep8", 'mock', 'flake8']},
       # psycopg2 2.7 has substantial changes to the code base so let's stick
       # to 2.6
       install_requires=['psycopg2<2.7', 'click', 'future', 'bcrypt', 'pandas',
-                        'numpy', 'tornado', 'toredis', 'redis', 'six',
-                        'pyparsing', 'h5py', 'biom-format', 'natsort',
+                        'numpy', 'tornado', 'toredis', 'redis', 'six', 'scp',
+                        'pyparsing', 'h5py', 'biom-format', 'natsort', 'nose',
                         'networkx', 'humanize', 'scikit-bio', 'wtforms',
-                        'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx',
-                        'gitpython', 'qiita-files', 'redbiom',
-                        'sphinx_rtd_theme', 'paramiko', 'scp'],
-      dependency_links=[
-        'https://github.com/qiita-spots/qiita-files/archive/master.zip#'
-        'egg=qiita-files-0.1.0-dev',
-        'https://github.com/biocore/redbiom/archive/0.3.0.zip#'
-        'egg=redbiom-0.3.0'],
+                        'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx', 'nltk',
+                        'gitpython', 'redbiom', 'pyzmq', 'sphinx_rtd_theme',
+                        'paramiko', 'seaborn',  'matplotlib', 'scipy',
+                        'qiita-files @ https://github.com/qiita-spots/'
+                        'qiita-files/archive/master.zip'],
       classifiers=classifiers
       )
