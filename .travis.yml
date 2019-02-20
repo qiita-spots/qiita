@@ -32,6 +32,7 @@ install:
   - ./webdis &
   - popd
   - travis_retry pip install .
+  - python -m nltk.downloader stopwords
   # loading redbiom with Qiita's test set
   # but first let's make sure redis is empty
   # following https://github.com/biocore/redbiom/blob/master/Makefile
