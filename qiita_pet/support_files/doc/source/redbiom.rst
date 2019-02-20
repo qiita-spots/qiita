@@ -44,10 +44,11 @@ Search Options
 
 * **Feature**:
 
-  * The search will be on all the features, in specific: **OTU ids for closed reference**.
+  * The search will be on all the features, in specific: **OTU ids for closed reference** or **exact sequences for deblur**.
 
   * Examples:
     * Find all samples in which the Greengenes feature 4479944 is found: *4479944*
+    * Find all samples in which the sequence exists: *TACGAAGGGTGCAAGCATTACTCGGAATTACTGGGCGTAAAGCGTGCGTAGGTGGTTCGTTAAGTCTGATGTGAAAGCCCTGGGCTCAACCTGGGAACTG*
 
 * **Taxon**:
 
