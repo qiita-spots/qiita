@@ -614,11 +614,11 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
             # Move the original files to the controlled DB directory
             transfer_function = shutil_copy if copy else move
             for old_fp, new_fp in zip(filepaths, new_filepaths):
-                    transfer_function(old_fp[0], new_fp[0])
-                    # In case the transaction executes a rollback, we need to
-                    # make sure the files have not been moved
-                    qdb.sql_connection.TRN.add_post_rollback_func(
-                        move, new_fp[0], old_fp[0])
+                transfer_function(old_fp[0], new_fp[0])
+                # In case the transaction executes a rollback, we need to
+                # make sure the files have not been moved
+                qdb.sql_connection.TRN.add_post_rollback_func(
+                    move, new_fp[0], old_fp[0])
 
         def str_to_id(x):
             return (x if isinstance(x, int)
@@ -1557,190 +1557,190 @@ def generate_study_list_without_artifacts(study_ids, portal=None):
 
 
 def get_artifacts_information(artifact_ids, only_biom=True):
-        """Returns processing information about the artifact ids
+    """Returns processing information about the artifact ids
 
-        Parameters
-        ----------
-        artifact_ids : list of ints
-            The artifact ids to look for. Non-existing ids will be ignored
-        only_biom : bool
-            If true only the biom artifacts are retrieved
+    Parameters
+    ----------
+    artifact_ids : list of ints
+        The artifact ids to look for. Non-existing ids will be ignored
+    only_biom : bool
+        If true only the biom artifacts are retrieved
 
-        Returns
-        -------
-        dict
-            The info of the artifacts
-        """
-        if not artifact_ids:
-            return {}
+    Returns
+    -------
+    dict
+        The info of the artifacts
+    """
+    if not artifact_ids:
+        return {}
 
-        sql = """
-            WITH main_query AS (
-                SELECT a.artifact_id, a.name, a.command_id as cid, sc.name,
-                       a.generated_timestamp, array_agg(a.command_parameters),
-                       dt.data_type, parent_id,
-                       parent_info.command_id, parent_info.name,
-                       array_agg(parent_info.command_parameters),
-                       array_agg(filepaths.filepath),
-                       qiita.find_artifact_roots(a.artifact_id) AS root_id
-                FROM qiita.artifact a
-                LEFT JOIN qiita.software_command sc USING (command_id)"""
-        if only_biom:
-            sql += """
-                JOIN qiita.artifact_type at ON (
-                    a.artifact_type_id = at .artifact_type_id
-                        AND artifact_type = 'BIOM')"""
+    sql = """
+        WITH main_query AS (
+            SELECT a.artifact_id, a.name, a.command_id as cid, sc.name,
+                   a.generated_timestamp, array_agg(a.command_parameters),
+                   dt.data_type, parent_id,
+                   parent_info.command_id, parent_info.name,
+                   array_agg(parent_info.command_parameters),
+                   array_agg(filepaths.filepath),
+                   qiita.find_artifact_roots(a.artifact_id) AS root_id
+            FROM qiita.artifact a
+            LEFT JOIN qiita.software_command sc USING (command_id)"""
+    if only_biom:
         sql += """
-                LEFT JOIN qiita.parent_artifact pa ON (
-                    a.artifact_id = pa.artifact_id)
-                LEFT JOIN qiita.data_type dt USING (data_type_id)
-                LEFT OUTER JOIN LATERAL (
-                    SELECT command_id, sc.name, command_parameters
-                    FROM qiita.artifact ap
-                    LEFT JOIN qiita.software_command sc USING (command_id)
-                    WHERE ap.artifact_id = pa.parent_id) parent_info ON true
-                LEFT OUTER JOIN LATERAL (
-                    SELECT filepath
-                    FROM qiita.artifact_filepath af
-                    JOIN qiita.filepath USING (filepath_id)
-                    WHERE af.artifact_id = a.artifact_id) filepaths ON true
-                WHERE a.artifact_id IN %s
-                GROUP BY a.artifact_id, a.name, a.command_id, sc.name,
-                         a.generated_timestamp, dt.data_type, parent_id,
-                         parent_info.command_id, parent_info.name
-                ORDER BY a.command_id, artifact_id),
-              has_target_subfragment AS (
-                SELECT main_query.*, prep_template_id
-                FROM main_query
-                LEFT JOIN qiita.prep_template pt ON (
-                    main_query.root_id = pt.artifact_id)
-            )
-            SELECT * FROM has_target_subfragment
-            ORDER BY cid, data_type, artifact_id
-            """
+            JOIN qiita.artifact_type at ON (
+                a.artifact_type_id = at .artifact_type_id
+                    AND artifact_type = 'BIOM')"""
+    sql += """
+            LEFT JOIN qiita.parent_artifact pa ON (
+                a.artifact_id = pa.artifact_id)
+            LEFT JOIN qiita.data_type dt USING (data_type_id)
+            LEFT OUTER JOIN LATERAL (
+                SELECT command_id, sc.name, command_parameters
+                FROM qiita.artifact ap
+                LEFT JOIN qiita.software_command sc USING (command_id)
+                WHERE ap.artifact_id = pa.parent_id) parent_info ON true
+            LEFT OUTER JOIN LATERAL (
+                SELECT filepath
+                FROM qiita.artifact_filepath af
+                JOIN qiita.filepath USING (filepath_id)
+                WHERE af.artifact_id = a.artifact_id) filepaths ON true
+            WHERE a.artifact_id IN %s
+            GROUP BY a.artifact_id, a.name, a.command_id, sc.name,
+                     a.generated_timestamp, dt.data_type, parent_id,
+                     parent_info.command_id, parent_info.name
+            ORDER BY a.command_id, artifact_id),
+          has_target_subfragment AS (
+            SELECT main_query.*, prep_template_id
+            FROM main_query
+            LEFT JOIN qiita.prep_template pt ON (
+                main_query.root_id = pt.artifact_id)
+        )
+        SELECT * FROM has_target_subfragment
+        ORDER BY cid, data_type, artifact_id
+        """
 
-        sql_params = """SELECT command_id, array_agg(parameter_name)
-                        FROM qiita.command_parameter
-                        WHERE parameter_type = 'artifact'
-                        GROUP BY command_id"""
+    sql_params = """SELECT command_id, array_agg(parameter_name)
+                    FROM qiita.command_parameter
+                    WHERE parameter_type = 'artifact'
+                    GROUP BY command_id"""
 
-        QCN = qdb.metadata_template.base_metadata_template.QIITA_COLUMN_NAME
-        sql_ts = """SELECT DISTINCT sample_values->>'target_subfragment'
-                    FROM qiita.prep_%s
-                    WHERE sample_id != '{0}'""".format(QCN)
+    QCN = qdb.metadata_template.base_metadata_template.QIITA_COLUMN_NAME
+    sql_ts = """SELECT DISTINCT sample_values->>'target_subfragment'
+                FROM qiita.prep_%s
+                WHERE sample_id != '{0}'""".format(QCN)
 
-        with qdb.sql_connection.TRN:
-            results = []
+    with qdb.sql_connection.TRN:
+        results = []
 
-            # getting all commands and their artifact parameters so we can
-            # delete from the results below
-            commands = {}
-            qdb.sql_connection.TRN.add(sql_params)
-            for cid, params in qdb.sql_connection.TRN.execute_fetchindex():
-                cmd = qdb.software.Command(cid)
-                commands[cid] = {
-                    'params': params,
-                    'merging_scheme': cmd.merging_scheme,
-                    'active': cmd.active,
-                    'deprecated': cmd.software.deprecated}
+        # getting all commands and their artifact parameters so we can
+        # delete from the results below
+        commands = {}
+        qdb.sql_connection.TRN.add(sql_params)
+        for cid, params in qdb.sql_connection.TRN.execute_fetchindex():
+            cmd = qdb.software.Command(cid)
+            commands[cid] = {
+                'params': params,
+                'merging_scheme': cmd.merging_scheme,
+                'active': cmd.active,
+                'deprecated': cmd.software.deprecated}
 
-            # Now let's get the actual artifacts. Note that ts is a cache
-            # (prep id : target subfragment) so we don't have to query
-            # multiple times the target subfragment for a prep info file.
-            # However, some artifacts (like analysis) do not have a prep info
-            # file; thus we can have a None prep id (key)
-            ts = {None: []}
-            ps = {}
-            algorithm_az = {'': ''}
-            PT = qdb.metadata_template.prep_template.PrepTemplate
-            qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
-            for row in qdb.sql_connection.TRN.execute_fetchindex():
-                aid, name, cid, cname, gt, aparams, dt, pid, pcid, pname, \
-                    pparams, filepaths, _, prep_template_id = row
+        # Now let's get the actual artifacts. Note that ts is a cache
+        # (prep id : target subfragment) so we don't have to query
+        # multiple times the target subfragment for a prep info file.
+        # However, some artifacts (like analysis) do not have a prep info
+        # file; thus we can have a None prep id (key)
+        ts = {None: []}
+        ps = {}
+        algorithm_az = {'': ''}
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
+        for row in qdb.sql_connection.TRN.execute_fetchindex():
+            aid, name, cid, cname, gt, aparams, dt, pid, pcid, pname, \
+                pparams, filepaths, _, prep_template_id = row
 
-                # cleaning up aparams & pparams
-                # - [0] due to the array_agg
-                aparams = aparams[0]
-                pparams = pparams[0]
-                if aparams is None:
-                    aparams = {}
+            # cleaning up aparams & pparams
+            # - [0] due to the array_agg
+            aparams = aparams[0]
+            pparams = pparams[0]
+            if aparams is None:
+                aparams = {}
+            else:
+                # we are going to remove any artifacts from the parameters
+                for ti in commands[cid]['params']:
+                    del aparams[ti]
+
+            # - ignoring empty filepaths
+            if filepaths == [None]:
+                filepaths = []
+            else:
+                filepaths = [fp for fp in filepaths if fp.endswith('biom')]
+
+            # generating algorithm, by default is ''
+            algorithm = ''
+            # set to False because if there is no cid, it means that it
+            # was a direct upload
+            deprecated = None
+            active = None
+            if cid is not None:
+                deprecated = commands[cid]['deprecated']
+                active = commands[cid]['active']
+                if pcid is None:
+                    parent_merging_scheme = None
                 else:
-                    # we are going to remove any artifacts from the parameters
-                    for ti in commands[cid]['params']:
-                        del aparams[ti]
+                    parent_merging_scheme = commands[pcid][
+                        'merging_scheme']
 
-                # - ignoring empty filepaths
-                if filepaths == [None]:
-                    filepaths = []
-                else:
-                    filepaths = [fp for fp in filepaths if fp.endswith('biom')]
+                algorithm = human_merging_scheme(
+                    cname, commands[cid]['merging_scheme'],
+                    pname, parent_merging_scheme,
+                    aparams, filepaths, pparams)
 
-                # generating algorithm, by default is ''
-                algorithm = ''
-                # set to False because if there is no cid, it means that it
-                # was a direct upload
-                deprecated = None
-                active = None
-                if cid is not None:
-                    deprecated = commands[cid]['deprecated']
-                    active = commands[cid]['active']
-                    if pcid is None:
-                        parent_merging_scheme = None
-                    else:
-                        parent_merging_scheme = commands[pcid][
-                            'merging_scheme']
+                if algorithm not in algorithm_az:
+                    algorithm_az[algorithm] = hashlib.md5(
+                        algorithm.encode('utf-8')).hexdigest()
 
-                    algorithm = human_merging_scheme(
-                        cname, commands[cid]['merging_scheme'],
-                        pname, parent_merging_scheme,
-                        aparams, filepaths, pparams)
+            if prep_template_id not in ts:
+                qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])
+                ts[prep_template_id] = \
+                    qdb.sql_connection.TRN.execute_fetchflatten()
+            target = ts[prep_template_id]
 
-                    if algorithm not in algorithm_az:
-                        algorithm_az[algorithm] = hashlib.md5(
-                            algorithm.encode('utf-8')).hexdigest()
+            prep_samples = 0
+            platform = 'not provided'
+            target_gene = 'not provided'
+            if prep_template_id is not None:
+                if prep_template_id not in ps:
+                    pt = PT(prep_template_id)
+                    categories = pt.categories()
+                    if 'platform' in categories:
+                        platform = ', '.join(
+                            set(pt.get_category('platform').values()))
+                    if 'target_gene' in categories:
+                        target_gene = ', '.join(
+                            set(pt.get_category('target_gene').values()))
 
-                if prep_template_id not in ts:
-                    qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])
-                    ts[prep_template_id] = \
-                        qdb.sql_connection.TRN.execute_fetchflatten()
-                target = ts[prep_template_id]
+                    ps[prep_template_id] = [
+                        len(list(pt.keys())), platform, target_gene]
 
-                prep_samples = 0
-                platform = 'not provided'
-                target_gene = 'not provided'
-                if prep_template_id is not None:
-                    if prep_template_id not in ps:
-                        pt = PT(prep_template_id)
-                        categories = pt.categories()
-                        if 'platform' in categories:
-                            platform = ', '.join(
-                                set(pt.get_category('platform').values()))
-                        if 'target_gene' in categories:
-                            target_gene = ', '.join(
-                                set(pt.get_category('target_gene').values()))
+                prep_samples, patform, target_gene = ps[prep_template_id]
 
-                        ps[prep_template_id] = [
-                            len(list(pt.keys())), platform, target_gene]
+            results.append({
+                'artifact_id': aid,
+                'target_subfragment': target,
+                'prep_samples': prep_samples,
+                'platform': platform,
+                'target_gene': target_gene,
+                'name': name,
+                'data_type': dt,
+                'timestamp': str(gt),
+                'parameters': aparams,
+                'algorithm': algorithm,
+                'algorithm_az': algorithm_az[algorithm],
+                'deprecated': deprecated,
+                'active': active,
+                'files': filepaths})
 
-                    prep_samples, patform, target_gene = ps[prep_template_id]
-
-                results.append({
-                    'artifact_id': aid,
-                    'target_subfragment': target,
-                    'prep_samples': prep_samples,
-                    'platform': platform,
-                    'target_gene': target_gene,
-                    'name': name,
-                    'data_type': dt,
-                    'timestamp': str(gt),
-                    'parameters': aparams,
-                    'algorithm': algorithm,
-                    'algorithm_az': algorithm_az[algorithm],
-                    'deprecated': deprecated,
-                    'active': active,
-                    'files': filepaths})
-
-            return results
+        return results
 
 
 def _is_string_or_bytes(s):

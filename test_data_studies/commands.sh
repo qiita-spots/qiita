@@ -38,7 +38,7 @@ for i in ${studies[@]}; do
 
     # Insert the sample template
     echo "\tloading sample template... "
-    qiita db load_sample_template $sample_file --study $study_id
+    qiita db load-sample-template $sample_file --study $study_id
     echo "Ok"
 
     # Loading prep template

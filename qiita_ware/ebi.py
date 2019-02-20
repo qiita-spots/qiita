@@ -446,7 +446,7 @@ class EBISubmission(object):
         Therefore, we can break it out into its own method.
         """
         # This section applies only to the LS454 platform
-        if platform is not 'LS454':
+        if platform != 'LS454':
             return
 
         # There is some hard-coded information in here, but this is what we
@@ -1060,6 +1060,7 @@ class EBISubmission(object):
                 raise EBISubmissionError(error_msg)
             for s, i in to_per_sample_ascii(demux_fh,
                                             self.prep_template.keys()):
+                s = s.decode('ascii')
                 sample_fp = self.sample_demux_fps[s] + self.FWD_READ_SUFFIX
                 wrote_sequences = False
                 with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:

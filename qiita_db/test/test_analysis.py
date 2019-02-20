@@ -50,7 +50,7 @@ class TestAnalysis(TestCase):
 
         qiita_config.portal = self.portal
         with open(self.biom_fp, 'w') as f:
-                f.write("")
+            f.write("")
 
         fp = self.get_fp('testfile.txt')
         if exists(fp):
