@@ -56,4 +56,4 @@ Search Options
 
   * Examples:
     * Find all samples in which the genera Escherichia is found: *g__Escherichia*
-    * Find all samples in which the order Clostridiales is found: *o__Clostridiales*
+    * Find all samples in which the phylum Tenericutes is found: *p__Tenericutes*
