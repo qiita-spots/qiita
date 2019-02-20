@@ -102,7 +102,7 @@ setup(name='qiita-spots',
       scripts=glob('scripts/*'),
       extras_require={'test': ["nose", "pep8", 'mock', 'flake8']},
       # making sure that numpy is installed before biom
-      setup_requires=['numpy']
+      setup_requires=['numpy'],
       # psycopg2 2.7 has substantial changes to the code base so let's stick
       # to 2.6
       install_requires=['psycopg2<2.7', 'click', 'future', 'bcrypt', 'pandas',
