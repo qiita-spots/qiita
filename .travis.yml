@@ -25,7 +25,7 @@ install:
   - travis_retry conda create -q --yes -n qiita python=3.6 pip libgfortran numpy
   - source activate qiita
   - 'echo "backend: Agg" > ~/matplotlibrc'
-  - pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
+  - pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click nose pep8 mock
   - git clone https://github.com/nicolasff/webdis
   - pushd webdis
   - make
