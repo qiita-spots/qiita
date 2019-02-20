@@ -58,7 +58,7 @@ class RedbiomPublicSearch(BaseHandler):
         study_artifacts = defaultdict(lambda: defaultdict(list))
         query = [f for f in query.split(' ')]
         for ctx in contexts:
-            for idx in redbiom.util.ids_from(query, True, 'feature', ctx):
+            for idx in redbiom.util.ids_from(query, False, 'feature', ctx):
                 aid, sample_id = idx.split('_', 1)
                 sid = sample_id.split('.', 1)[0]
                 study_artifacts[sid][aid].append(sample_id)
@@ -71,7 +71,7 @@ class RedbiomPublicSearch(BaseHandler):
             # find the features with those taxonomies and then search
             # those features in the samples
             features = redbiom.fetch.taxon_descendents(ctx, query)
-            for idx in redbiom.util.ids_from(features, True, 'feature', ctx):
+            for idx in redbiom.util.ids_from(features, False, 'feature', ctx):
                 aid, sample_id = idx.split('_', 1)
                 sid = sample_id.split('.', 1)[0]
                 study_artifacts[sid][aid].append(sample_id)
