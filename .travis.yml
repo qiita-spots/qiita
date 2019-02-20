@@ -22,7 +22,7 @@ before_install:
 install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
-  - travis_retry conda create -q --yes -n qiita python=3.6 pip libgfortran nltk numpy
+  - travis_retry conda create -q --yes -n qiita python=3.6 pip libgfortran numpy
   - source activate qiita
   - 'echo "backend: Agg" > ~/matplotlibrc'
   - pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
@@ -31,7 +31,7 @@ install:
   - make
   - ./webdis &
   - popd
-  - travis_retry pip install .
+  - travis_retry pip install . --no-binary redbiom
   # loading redbiom with Qiita's test set
   # but first let's make sure redis is empty
   # following https://github.com/biocore/redbiom/blob/master/Makefile

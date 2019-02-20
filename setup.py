@@ -109,7 +109,7 @@ setup(name='qiita-spots',
                         'biom-format', 'tornado', 'toredis', 'redis', 'six',
                         'scp', 'pyparsing', 'h5py',  'natsort', 'nose',
                         'networkx', 'humanize', 'scikit-bio', 'wtforms',
-                        'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx',
+                        'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx', 'nltk',
                         'gitpython', 'redbiom', 'pyzmq', 'sphinx_rtd_theme',
                         'paramiko', 'seaborn',  'matplotlib', 'scipy',
                         'flake8', 'qiita-files @ https://github.com/'
