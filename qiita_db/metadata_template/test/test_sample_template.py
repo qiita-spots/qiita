@@ -1349,7 +1349,7 @@ class TestSampleTemplate(TestCase):
             ['%s.Sample1' % self.new_study.id, {
                 'bool_col': 'false', 'date_col': '2015-09-01 00:00:00'}],
             ['qiita_sample_column_names', {
-                'columns': ['bool_col', 'date_col']}]]
+                'columns': ['date_col', 'bool_col']}]]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_generate_files(self):
