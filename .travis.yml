@@ -22,7 +22,7 @@ before_install:
 install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
-  - travis_retry conda create -q --yes -n qiita python=3.6 pip libgfortran numpy
+  - travis_retry conda create -q --yes -n qiita python=3.6 pip libgfortran nltk numpy
   - source activate qiita
   - 'echo "backend: Agg" > ~/matplotlibrc'
   - pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
