@@ -91,7 +91,8 @@ class TestRedbiom(TestHandlerBase):
         data[0]['artifact_biom_ids'] = {
             '5': ['1.SKM3.640197'], '4': ['1.SKM3.640197']}
         response = self.post('/redbiom/', post_args)
-        print data
+        print data[0]['artifact_biom_ids']
+        print loads(response.body)[0]['artifact_biom_ids']
         exp = {'status': 'success', 'message': '', 'data': data}
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
