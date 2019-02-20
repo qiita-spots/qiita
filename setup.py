@@ -101,6 +101,8 @@ setup(name='qiita-spots',
               ]},
       scripts=glob('scripts/*'),
       extras_require={'test': ["nose", "pep8", 'mock', 'flake8']},
+      # making sure that numpy is installed before biom
+      setup_requires=['numpy']
       # psycopg2 2.7 has substantial changes to the code base so let's stick
       # to 2.6
       install_requires=['psycopg2<2.7', 'click', 'future', 'bcrypt', 'pandas',
@@ -109,7 +111,7 @@ setup(name='qiita-spots',
                         'networkx', 'humanize', 'scikit-bio', 'wtforms',
                         'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx', 'nltk',
                         'gitpython', 'redbiom', 'pyzmq', 'sphinx_rtd_theme',
-                        'paramiko', 'seaborn',  'matplotlib', 'scipy', 'numpy',
+                        'paramiko', 'seaborn',  'matplotlib', 'scipy',
                         'qiita-files @ https://github.com/qiita-spots/'
                         'qiita-files/archive/master.zip'],
       classifiers=classifiers
