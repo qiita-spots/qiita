@@ -446,7 +446,7 @@ class EBISubmission(object):
         Therefore, we can break it out into its own method.
         """
         # This section applies only to the LS454 platform
-        if platform is not 'LS454':
+        if platform != 'LS454':
             return
 
         # There is some hard-coded information in here, but this is what we
@@ -576,7 +576,7 @@ class EBISubmission(object):
             suffix = self.REV_READ_SUFFIX
 
         file_path = self.sample_demux_fps[sample_name] + suffix
-        with open(file_path) as fp:
+        with open(file_path, 'rb') as fp:
             md5 = safe_md5(fp).hexdigest()
 
         file_details = {'filetype': file_type,
@@ -704,8 +704,10 @@ class EBISubmission(object):
         fp : str
             The filepath to which the XML will be written
         """
-        makedirs(self.xml_dir)
-        ET.ElementTree(element).write(fp, encoding='UTF-8')
+        if not exists(self.xml_dir):
+            makedirs(self.xml_dir)
+        ET.ElementTree(element).write(
+            fp, encoding='UTF-8', xml_declaration=True)
 
     def generate_xml_files(self):
         """Generate all the XML files"""
@@ -1060,6 +1062,7 @@ class EBISubmission(object):
                 raise EBISubmissionError(error_msg)
             for s, i in to_per_sample_ascii(demux_fh,
                                             self.prep_template.keys()):
+                s = s.decode('ascii')
                 sample_fp = self.sample_demux_fps[s] + self.FWD_READ_SUFFIX
                 wrote_sequences = False
                 with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:

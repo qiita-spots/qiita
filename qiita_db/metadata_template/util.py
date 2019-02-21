@@ -92,7 +92,8 @@ def load_template_to_dataframe(fn, index='sample_name'):
     """
     # Load in file lines
     holdfile = None
-    with qdb.util.open_file(fn, newline=None) as f:
+    with qdb.util.open_file(fn, newline=None,
+                            encoding="utf8", errors='ignore') as f:
         holdfile = f.readlines()
 
     if not holdfile:

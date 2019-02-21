@@ -221,7 +221,7 @@ class StudySamplesInfoHandlerTests(RESTHandlerTestCase):
 
     def test_get_no_samples(self):
         # /api/v1/study/%d/samples/info -> {'number-of-samples':<int>,
-                                        #   'categories': [<str>]}
+        #                                   'categories': [<str>]}
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,
@@ -308,7 +308,7 @@ class StudySamplesCategoriesHandlerTests(RESTHandlerTestCase):
 
     def test_get_no_samples(self):
         # /api/v1/study/%d/samples/info -> {'number-of-samples':<int>,
-                                        #   'categories': [<str>]}
+        #                                   'categories': [<str>]}
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,

@@ -866,7 +866,7 @@ class TestStudy(TestCase):
 
         # testing that insertion went fine
         obs = qdb.study.Study.get_tags()
-        exp = {'user': ['this is my tag', 'I want GOLD!!'],
+        exp = {'user': ['I want GOLD!!', 'this is my tag'],
                'admin': ['actual GOLD!']}
         self.assertEqual(obs, exp)
 

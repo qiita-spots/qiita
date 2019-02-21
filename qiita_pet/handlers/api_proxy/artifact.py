@@ -94,14 +94,14 @@ def artifact_get_prep_req(user_id, artifact_ids):
     """
     samples = {}
 
-    for aid in artifact_ids:
+    for aid in sorted(artifact_ids):
         artifact = Artifact(aid)
         access_error = check_access(artifact.study.id, user_id)
         if access_error:
             return access_error
 
         samples[aid] = list(chain(
-            *[pt.keys() for pt in Artifact(aid).prep_templates]))
+            *[sorted(pt.keys()) for pt in Artifact(aid).prep_templates]))
 
     return {'status': 'success', 'msg': '', 'data': samples}
 

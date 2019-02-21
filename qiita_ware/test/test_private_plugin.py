@@ -160,12 +160,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
             'data_type': None})
         private_task(job.id)
         self.assertEqual(job.status, 'error')
-        self.assertIn(
-            'There are invalid (non UTF-8) characters in your information '
-            'file. The offending fields and their location (row, column) are '
-            'listed below, invalid characters are represented using '
-            '&#128062;: "&#128062;collection_timestamp" = (0, 13)',
-            job.log.msg)
+        self.assertIn("The 'SampleTemplate' object with attributes (id: 1) "
+                      "already exists.", job.log.msg)
 
     def test_update_sample_template(self):
         fd, fp = mkstemp(suffix=".txt")

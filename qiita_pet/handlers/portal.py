@@ -77,8 +77,8 @@ class StudyPortalHandler(PortalEditBase):
                 else:
                     raise HTTPError(400, reason="Unknown action: %s" % action)
         except QiitaDBError as e:
-                self.write(action.upper() + " ERROR:<br/>" + str(e))
-                return
+            self.write(action.upper() + " ERROR:<br/>" + str(e))
+            return
 
         msg = '; '.join([str(w) for w in warns])
         self.write(action + " completed successfully<br/>" + msg)

@@ -432,9 +432,9 @@ class MetaUtilTests(TestCase):
 
         # returning configuration
         with qdb.sql_connection.TRN:
-                    qdb.sql_connection.TRN.add(
-                        "UPDATE settings SET base_data_dir = '%s'" % obdr)
-                    bdr = qdb.sql_connection.TRN.execute()
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET base_data_dir = '%s'" % obdr)
+            bdr = qdb.sql_connection.TRN.execute()
 
     def test_generate_plugin_releases(self):
         qdb.meta_util.generate_plugin_releases()
