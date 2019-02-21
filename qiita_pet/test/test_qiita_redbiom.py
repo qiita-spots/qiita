@@ -89,7 +89,8 @@ class TestRedbiom(TestHandlerBase):
         }
         data = deepcopy(DATA)
         data[0]['artifact_biom_ids'] = {
-            '5': ['1.SKM3.640197'], '4': ['1.SKM3.640197']}
+            '5': ['1.SKD2.640178', '1.SKM3.640197'],
+            '4': ['1.SKM3.640197', '1.SKD2.640178']}
         response = self.post('/redbiom/', post_args)
         exp = {'status': 'success', 'message': '', 'data': data}
         self.assertEqual(response.code, 200)
