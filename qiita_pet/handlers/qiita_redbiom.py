@@ -14,6 +14,7 @@ import redbiom._requests
 import redbiom.util
 import redbiom.fetch
 from tornado.gen import coroutine, Task
+from tornado.web import HTTPError
 
 from qiita_core.util import execute_as_transaction
 from qiita_db.util import generate_study_list_without_artifacts
@@ -71,6 +72,8 @@ class RedbiomPublicSearch(BaseHandler):
             # find the features with those taxonomies and then search
             # those features in the samples
             features = redbiom.fetch.taxon_descendents(ctx, query)
+            if len(features) > 600:
+                raise HTTPError(504)
             for idx in redbiom.util.ids_from(features, False, 'feature', ctx):
                 aid, sample_id = idx.split('_', 1)
                 sid = sample_id.split('.', 1)[0]
