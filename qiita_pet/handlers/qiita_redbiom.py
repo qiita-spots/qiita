@@ -72,6 +72,9 @@ class RedbiomPublicSearch(BaseHandler):
             # find the features with those taxonomies and then search
             # those features in the samples
             features = redbiom.fetch.taxon_descendents(ctx, query)
+            # from empirical evidence we saw that when we return more than 600
+            # features we'll reach issue #2312 so avoiding saturating the
+            # workers and raise this error quickly
             if len(features) > 600:
                 raise HTTPError(504)
             for idx in redbiom.util.ids_from(features, False, 'feature', ctx):
