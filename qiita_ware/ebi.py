@@ -576,7 +576,7 @@ class EBISubmission(object):
             suffix = self.REV_READ_SUFFIX
 
         file_path = self.sample_demux_fps[sample_name] + suffix
-        with open(file_path) as fp:
+        with open(file_path, 'rb') as fp:
             md5 = safe_md5(fp).hexdigest()
 
         file_details = {'filetype': file_type,
@@ -704,7 +704,8 @@ class EBISubmission(object):
         fp : str
             The filepath to which the XML will be written
         """
-        makedirs(self.xml_dir)
+        if not exists(self.xml_dir):
+            makedirs(self.xml_dir)
         ET.ElementTree(element).write(fp, encoding='UTF-8')
 
     def generate_xml_files(self):

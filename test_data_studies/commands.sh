@@ -63,5 +63,5 @@ for i in ${studies[@]}; do
 done
 
 # Making sure the studies/artifacts are public
-aids=`echo -e "from qiita_db.study import Study\nstudies = Study.get_by_status('public')\naids = [a.id for s in studies for a in s.artifacts()]\nprint(aids)" | python`
+aids=`echo -e "from qiita_db.study import Study\nstudies = Study.get_by_status('public')\naids = sorted([a.id for s in studies for a in s.artifacts()])\nprint(aids)" | python`
 if [ "$aids" != "[10, 11, 12]" ]; then echo "ERROR: artifacts not created: ", aids; exit 1; fi
