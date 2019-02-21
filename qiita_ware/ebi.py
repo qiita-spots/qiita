@@ -706,7 +706,8 @@ class EBISubmission(object):
         """
         if not exists(self.xml_dir):
             makedirs(self.xml_dir)
-        ET.ElementTree(element).write(fp, encoding='UTF-8')
+        ET.ElementTree(element).write(
+            fp, encoding='UTF-8', xml_declaration=True)
 
     def generate_xml_files(self):
         """Generate all the XML files"""
