@@ -1722,8 +1722,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
         ------
             set of words containing invalid (illegal) characters.
         """
-        valid_initial_char = letters
-        valid_rest = set(letters+digits+'_:|')
+        valid_initial_char = ascii_letters
+        valid_rest = set(ascii_letters+digits+'_:|')
         invalid = []
         for s in column_names:
             if s[0] not in valid_initial_char:
