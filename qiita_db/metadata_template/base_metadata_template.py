@@ -823,7 +823,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             new_cols = set(headers).difference(self.categories())
 
             if not new_cols and not new_samples:
-                return
+                return None, None
 
             is_extendable, error_msg = self.can_be_extended(new_samples,
                                                             new_cols)
@@ -1722,8 +1722,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
         ------
             set of words containing invalid (illegal) characters.
         """
-        valid_initial_char = ascii_letters
-        valid_rest = set(ascii_letters+digits+'_')
+        valid_initial_char = letters
+        valid_rest = set(letters+digits+'_:|')
         invalid = []
         for s in column_names:
             if s[0] not in valid_initial_char:
