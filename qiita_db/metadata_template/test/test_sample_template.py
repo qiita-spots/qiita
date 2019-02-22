@@ -2232,7 +2232,7 @@ class TestSampleTemplate(TestCase):
             self.metadata, self.new_study)
         self.new_study.specimen_id_column = 'latitude'
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 qdb.exceptions.QiitaDBOperationNotPermittedError,
                 '"latitude" cannot be deleted, this column is currently '
                 r'selected as the tube identifier \(specimen_id_column\)'):
