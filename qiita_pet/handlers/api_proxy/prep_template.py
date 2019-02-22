@@ -372,7 +372,7 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
             # join all the warning messages into one. Note that this info
             # will be ignored if an exception is raised
             if warns:
-                msg = '\n'.join(set(str(w) for w in warns))
+                msg = '\n'.join(set(str(w.message) for w in warns))
                 status = 'warning'
     except Exception as e:
         # Some error occurred while processing the prep template

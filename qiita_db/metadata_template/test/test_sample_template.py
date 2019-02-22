@@ -1349,7 +1349,9 @@ class TestSampleTemplate(TestCase):
             ['%s.Sample1' % self.new_study.id, {
                 'bool_col': 'false', 'date_col': '2015-09-01 00:00:00'}],
             ['qiita_sample_column_names', {
-                'columns': ['bool_col', 'date_col']}]]
+                'columns': sorted(['bool_col', 'date_col'])}]]
+        # making sure they are always in the same order
+        obs[2][1]['columns'] = sorted(obs[2][1]['columns'])
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_generate_files(self):
@@ -2232,7 +2234,7 @@ class TestSampleTemplate(TestCase):
             self.metadata, self.new_study)
         self.new_study.specimen_id_column = 'latitude'
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 qdb.exceptions.QiitaDBOperationNotPermittedError,
                 '"latitude" cannot be deleted, this column is currently '
                 r'selected as the tube identifier \(specimen_id_column\)'):

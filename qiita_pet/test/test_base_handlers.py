@@ -26,12 +26,12 @@ class TestIFrame(TestHandlerBase):
     def test_get(self):
         response = self.get('/iframe/')
         self.assertEqual(response.code, 200)
-        self.assertIn("<b>No content</b>", response.body)
+        self.assertIn("<b>No content</b>", response.body.decode('ascii'))
 
         response = self.get('/iframe/?iframe=qiita-terms')
         self.assertEqual(response.code, 200)
         self.assertIn('src="/static/qiita_data_terms_of_use.html"',
-                      response.body)
+                      response.body.decode('ascii'))
 
 
 if __name__ == "__main__":

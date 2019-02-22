@@ -213,7 +213,7 @@ class Portal(qdb.base.QiitaObject):
             sql = "SELECT study_id FROM qiita.study WHERE study_id IN %s"
             qdb.sql_connection.TRN.add(sql, [tuple(studies)])
             existing = qdb.sql_connection.TRN.execute_fetchflatten()
-            if len(existing) != len(studies):
+            if len(existing) != len(list(studies)):
                 bad = map(str, set(studies).difference(existing))
                 raise qdb.exceptions.QiitaDBError(
                     "The following studies do not exist: %s" % ", ".join(bad))

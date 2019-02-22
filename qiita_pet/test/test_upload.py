@@ -55,7 +55,8 @@ class TestStudyUploadViaRemote(TestHandlerBase):
         response = self.post(
             '/study/upload/remote/1', data=body, headers=headers)
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, '{"status": "success", "message": ""}')
+        self.assertEqual(response.body.decode('ascii'),
+                         '{"status": "success", "message": ""}')
 
         # create a successful list job
         data = {'remote-request-type': 'transfer', 'inputURL': 'scp-url'}
@@ -63,7 +64,8 @@ class TestStudyUploadViaRemote(TestHandlerBase):
         response = self.post(
             '/study/upload/remote/1', data=body, headers=headers)
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, '{"status": "success", "message": ""}')
+        self.assertEqual(response.body.decode('ascii'),
+                         '{"status": "success", "message": ""}')
         # sleep to wait for jobs to finish, no need to check for it's status
         sleep(5)
 
@@ -73,8 +75,8 @@ class TestStudyUploadViaRemote(TestHandlerBase):
         response = self.post(
             '/study/upload/remote/1', data=body, headers=headers)
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, '{"status": "error", "message": '
-                         '"Not a valid method"}')
+        self.assertEqual(response.body.decode('ascii'), '{"status": "error", '
+                         '"message": "Not a valid method"}')
 
 
 if __name__ == "__main__":

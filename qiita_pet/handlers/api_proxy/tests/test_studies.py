@@ -347,8 +347,11 @@ class TestStudyAPI1(TestStudyAPI):
             'remaining': ['uploaded_file.txt'], 'message': '',
             'file_types': [
                 ('raw_forward_seqs', True,
-                 ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
+                 sorted(['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz'])),
                 ('raw_reverse_seqs', False, [])]}
+        # making sure they are always in the same order
+        oft = obs['file_types'][0]
+        obs['file_types'][0] = (oft[0], oft[1], sorted(oft[2]))
         self.assertEqual(obs, exp)
 
         # let's add reverse
@@ -361,10 +364,15 @@ class TestStudyAPI1(TestStudyAPI):
             'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
         exp = {'status': 'success', 'num_prefixes': 2, 'artifacts': [],
                'remaining': ['uploaded_file.txt'], 'message': '',
-               'file_types': [('raw_forward_seqs', True,
-                               ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
-                              ('raw_reverse_seqs', False,
-                              ['test_2.R2.fastq.gz', 'test_1.R2.fastq.gz'])]}
+               'file_types': [
+                   ('raw_forward_seqs', True, sorted(
+                       ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz'])),
+                   ('raw_reverse_seqs', False, sorted(
+                       ['test_2.R2.fastq.gz', 'test_1.R2.fastq.gz']))]}
+        # making sure they are always in the same order
+        oft = obs['file_types']
+        obs['file_types'][0] = (oft[0][0], oft[0][1], sorted(oft[0][2]))
+        obs['file_types'][1] = (oft[1][0], oft[1][1], sorted(oft[1][2]))
         self.assertEqual(obs, exp)
 
         # let's an extra file that matches
@@ -395,11 +403,15 @@ class TestStudyAPI1(TestStudyAPI):
                'artifacts': [(1, 'Identification of the Microbiomes for '
                                  'Cannabis Soils (1) - Raw data 1 (1)')],
                'file_types': [
-                ('raw_barcodes', True,
-                 ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
-                ('raw_forward_seqs', True,
-                 ['test_2.R2.fastq.gz', 'test_1.R2.fastq.gz']),
+                ('raw_barcodes', True, sorted(
+                    ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz'])),
+                ('raw_forward_seqs', True, sorted(
+                    ['test_2.R2.fastq.gz', 'test_1.R2.fastq.gz'])),
                 ('raw_reverse_seqs', False, ['test_1.R3.fastq.gz'])]}
+        # making sure they are always in the same order
+        oft = obs['file_types']
+        obs['file_types'][0] = (oft[0][0], oft[0][1], sorted(oft[0][2]))
+        obs['file_types'][1] = (oft[1][0], oft[1][1], sorted(oft[1][2]))
         self.assertEqual(obs, exp)
 
         PREP.delete(pt.id)

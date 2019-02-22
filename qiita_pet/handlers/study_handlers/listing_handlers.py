@@ -62,7 +62,8 @@ class AutocompleteHandler(BaseHandler):
         text = self.get_argument('text')
         vals = r_client.execute_command('zrangebylex', 'qiita-usernames',
                                         u'[%s' % text, u'[%s\xff' % text)
-        self.write({'results': [{'id': s, 'text': s} for s in vals]})
+        self.write({'results': [{'id': s.decode('utf-8'),
+                                 'text': s.decode('utf-8')} for s in vals]})
 
 
 class ShareStudyAJAX(BaseHandler):
