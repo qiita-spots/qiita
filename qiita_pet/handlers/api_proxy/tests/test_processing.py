@@ -114,7 +114,7 @@ class TestProcessingAPI(TestCase):
                   '"rev_comp_mapping_barcodes": false, '
                   '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
         obs = workflow_handler_post_req("test@foo.bar", 1, params)
-        self.assertRegexpMatches(
+        self.assertRegex(
             obs.pop('message'), 'Cannot create job because the parameters are '
             'the same as jobs that are queued, running or already have '
             'succeeded:\n')

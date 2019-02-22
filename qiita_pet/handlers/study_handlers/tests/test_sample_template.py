@@ -352,7 +352,7 @@ class TestHelpers(TestHandlerBase):
                'winter', 'winter', 'winter', 'winter', 'winter', 'winter',
                'winter', 'winter', 'winter', 'winter', 'winter', 'winter',
                'winter', 'winter', 'winter']
-        self.assertEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_build_sample_summary(self):
         cols, rows = _build_sample_summary(1, 'test@foo.bar')
@@ -530,7 +530,7 @@ class TestSampleAJAXReadOnly(TestHandlerBase):
         self.assertEqual(res.code, 200)
         # Make sure metadata read properly
         line = '<option value="altitude">altitude</option>'
-        self.assertIn(line, res.body)
+        self.assertIn(line, res.body.decode('ascii'))
 
 
 class TestSampleAJAX(TestHandlerBase):

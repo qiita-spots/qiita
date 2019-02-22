@@ -119,7 +119,7 @@ class TestPrepAPIReadOnly(TestCase):
             list(obs.keys()), ['status', 'message', 'template'])
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(obs['message'], '')
-        self.assertEqual(obs['template'].keys(), [
+        self.assertCountEqual(obs['template'].keys(), [
             '1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195', '1.SKB6.640176',
             '1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182', '1.SKM8.640201',
             '1.SKM2.640199', '1.SKD2.640178', '1.SKB7.640196', '1.SKD4.640185',
@@ -404,8 +404,8 @@ class TestPrepAPI(TestCase):
         self._wait_for_parallel_job('prep_template_%s' % pt.id)
         obs = prep_template_jobs_get_req(pt.id, 'test@foo.bar')
         self.assertEqual(len(obs), 1)
-        self.assertEqual(obs.values(),
-                         [{'error': '', 'status': 'success', 'step': None}])
+        self.assertCountEqual(
+            obs.values(), [{'error': '', 'status': 'success', 'step': None}])
 
         obs = prep_template_jobs_get_req(pt.id, 'demo@microbio.me')
         exp = {'status': 'error',
@@ -435,21 +435,20 @@ class TestPrepAPI(TestCase):
                                      '16S', name="  ")
         exp = {'status': 'warning',
                'message': [
-                    ('Some columns required to generate a QIIME-compliant '
-                     'mapping file are not present in the template. A '
-                     'placeholder value (XXQIITAXX) has been used to populate '
-                     'these columns. Missing columns: BarcodeSequence, '
-                     'LinkerPrimerSequence'),
-                    ('Some functionality will be disabled due to missing '
-                     'columns:'),
-                    ('\tDemultiplexing with multiple input files disabled.: '
-                     'barcode, primer, run_prefix;'),
-                    '\tDemultiplexing disabled.: barcode;',
-                    ('\tEBI submission disabled: center_name, '
-                     'experiment_design_description, instrument_model, '
-                     'library_construction_protocol, platform.'),
-                    ('See the Templates tutorial for a description of these '
-                     'fields.')],
+                   'Both a converter and dtype were specified for column '
+                   'sample_name - only the converter will be used', 'Some '
+                   'functionality will be disabled due to missing columns:',
+                   '\tEBI submission disabled: center_name, '
+                   'experiment_design_description, instrument_model, '
+                   'library_construction_protocol, platform;',
+                   '\tDemultiplexing disabled.: barcode;', '\tDemultiplexing '
+                   'with multiple input files disabled.: barcode, primer, '
+                   'run_prefix.', 'See the Templates tutorial for a '
+                   'description of these fields.', 'Some columns required to '
+                   'generate a QIIME-compliant mapping file are not present '
+                   'in the template. A placeholder value (XXQIITAXX) '
+                   'has been used to populate these columns. Missing columns: '
+                   'BarcodeSequence, LinkerPrimerSequence'],
                'file': 'update.txt',
                'id': 'ignored in test'}
 

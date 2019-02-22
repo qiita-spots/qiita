@@ -156,12 +156,12 @@ class TestCreateStudyAJAX(TestHandlerBase):
         response = self.get('/check_study/', {'study_title': 'notreal'})
         self.assertEqual(response.code, 200)
         # make sure responds properly
-        self.assertEqual(response.body, 'True')
+        self.assertEqual(response.body.decode('ascii'), 'True')
 
         response = self.get('/check_study/')
         self.assertEqual(response.code, 200)
         # make sure responds properly
-        self.assertEqual(response.body, 'False')
+        self.assertEqual(response.body.decode('ascii'), 'False')
 
         response = self.get(
             '/check_study/',
@@ -169,7 +169,7 @@ class TestCreateStudyAJAX(TestHandlerBase):
              'Identification of the Microbiomes for Cannabis Soils'})
         self.assertEqual(response.code, 200)
         # make sure responds properly
-        self.assertEqual(response.body, 'False')
+        self.assertEqual(response.body.decode('ascii'), 'False')
 
 
 if __name__ == "__main__":

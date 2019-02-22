@@ -1204,7 +1204,7 @@ class TestPrepTemplate(TestCase):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
         exp = join(qdb.util.get_mountpoint('templates')[0][1],
                    '1_prep_1_qiime_[0-9]*-[0-9]*.txt')
-        self.assertRegexpMatches(pt.qiime_map_fp, exp)
+        self.assertRegex(pt.qiime_map_fp, exp)
 
     def test_check_restrictions(self):
         obs = self.tester.check_restrictions(

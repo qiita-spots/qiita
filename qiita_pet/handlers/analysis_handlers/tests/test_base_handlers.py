@@ -111,7 +111,7 @@ class TestBaseHandlers(TestHandlerBase):
         args = {'name': 'New Test Analysis',
                 'description': 'Test Analysis Description'}
         response = self.post('/analysis/create/', args)
-        self.assertRegexpMatches(
+        self.assertRegex(
             response.effective_url,
             r"http://localhost:\d+/analysis/description/\d+/")
         self.assertEqual(response.code, 200)

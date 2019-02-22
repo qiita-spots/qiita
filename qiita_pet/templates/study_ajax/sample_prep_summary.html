@@ -32,7 +32,7 @@
       { 'name': '<input type="checkbox" onchange="toggleCheckboxes(this)">',
         'field': 'sample-delete', 'id': 'sample-delete', width: 69, sortable: false, formatter: linkFormatter },
       { 'name': 'sample_name', 'field': 'sample', 'id': 'sample_name', width: 200, sortable: true },
-      {% for k, v in columns.viewitems() %}
+      {% for k, v in columns.items() %}
         { 'name': '{% raw v %}', 'field': '{% raw k %}', 'id': '{% raw k %}', 'width': {{ len(v) }}*column_width_factor, 'sortable': true },
       {% end %}
   ];

@@ -393,7 +393,8 @@ class TestBaseHandlers(TestHandlerBase):
         summary = relpath(a.html_summary_fp[1], qiita_config.base_data_dir)
         response = self.get('/artifact/html_summary/%s' % summary)
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, '<b>HTML TEST - not important</b>\n')
+        self.assertEqual(response.body.decode('ascii'),
+                         '<b>HTML TEST - not important</b>\n')
 
 
 if __name__ == '__main__':
