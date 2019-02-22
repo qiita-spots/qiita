@@ -113,7 +113,7 @@ class TestBaseHandlers(TestHandlerBase):
         response = self.post('/analysis/create/', args)
         self.assertRegex(
             response.effective_url,
-            r"http://localhost:\d+/analysis/description/\d+/")
+            r"http://127.0.0.1:\d+/analysis/description/\d+/")
         self.assertEqual(response.code, 200)
 
         # The new analysis id is located at the -2 position (see regex above)

@@ -1008,9 +1008,9 @@ class ProcessingJobDuplicated(TestCase):
         job = _create_job()
         job._set_status('success')
         with self.assertRaisesRegex(ValueError, 'Cannot create job because '
-                                     'the parameters are the same as jobs '
-                                     'that are queued, running or already '
-                                     'have succeeded:') as context:
+                                    'the parameters are the same as jobs '
+                                    'that are queued, running or already '
+                                    'have succeeded:') as context:
             _create_job(False)
 
         # If it failed it's because we have jobs in non finished status so

@@ -85,20 +85,20 @@ class TestHelpers(TestHandlerBase):
 
         # Test user doesn't have access to the study
         with self.assertRaisesRegex(HTTPError,
-                                     'User does not have access to study'):
+                                    'User does not have access to study'):
             sample_template_checks(1, User('demo@microbio.me'))
 
         # Test sample template doesn't exist
         new_study = self._create_study('Test Sample Template Checks')
         with self.assertRaisesRegex(HTTPError,
-                                     "Study %s doesn't have sample information"
-                                     % new_study.id):
+                                    "Study %s doesn't have sample information"
+                                    % new_study.id):
             sample_template_checks(new_study.id, user, check_exists=True)
 
     def test_sample_template_handler_post_request(self):
         # Test user doesn't have access
         with self.assertRaisesRegex(HTTPError,
-                                     'User does not have access to study'):
+                                    'User does not have access to study'):
             sample_template_handler_post_request(
                 1, User('demo@microbio.me'), 'ignored')
 
@@ -140,7 +140,7 @@ class TestHelpers(TestHandlerBase):
 
         # Test user doesn't have access
         with self.assertRaisesRegex(HTTPError,
-                                     'User does not have access to study'):
+                                    'User does not have access to study'):
             sample_template_handler_patch_request(
                 User('demo@microbio.me'), "remove",
                 "/1/columns/season_environment/")
@@ -153,8 +153,8 @@ class TestHelpers(TestHandlerBase):
         # Test sample template doesn't exist
         new_study = self._create_study('Patching test')
         with self.assertRaisesRegex(HTTPError,
-                                     "Study %s doesn't have sample information"
-                                     % new_study.id):
+                                    "Study %s doesn't have sample information"
+                                    % new_study.id):
             sample_template_handler_patch_request(
                 user, "remove", "/%s/columns/season_environment/"
                                 % new_study.id)
@@ -206,8 +206,8 @@ class TestHelpers(TestHandlerBase):
 
         # Test missing value
         with self.assertRaisesRegex(HTTPError,
-                                     'Value is required when updating sample '
-                                     'information'):
+                                    'Value is required when updating sample '
+                                    'information'):
             sample_template_handler_patch_request(user, "replace", "/1/data")
 
         # Test file doesn't exist
@@ -228,7 +228,7 @@ class TestHelpers(TestHandlerBase):
     def test_sample_template_handler_delete_request(self):
         # Test user doesn't have access
         with self.assertRaisesRegex(HTTPError,
-                                     'User does not have access to study'):
+                                    'User does not have access to study'):
             sample_template_handler_delete_request(
                 1, User('demo@microbio.me'))
 
@@ -240,7 +240,7 @@ class TestHelpers(TestHandlerBase):
         # Test sample information doesn't exist
         new_study = self._create_study('Study for deleting test')
         with self.assertRaisesRegex(HTTPError, "Study %s doesn't have sample "
-                                                "information" % new_study.id):
+                                    "information" % new_study.id):
             sample_template_handler_delete_request(new_study.id, user)
 
         # Test success
@@ -256,7 +256,7 @@ class TestHelpers(TestHandlerBase):
     def test_sample_template_overview_handler_get_request(self):
         # Test user doesn't have access
         with self.assertRaisesRegex(HTTPError,
-                                     'User does not have access to study'):
+                                    'User does not have access to study'):
             sample_template_overview_handler_get_request(
                 1, User('demo@microbio.me'))
 
@@ -313,7 +313,7 @@ class TestHelpers(TestHandlerBase):
     def test_sample_template_columns_get_req(self):
         # Test user doesn't have access
         with self.assertRaisesRegex(HTTPError,
-                                     'User does not have access to study'):
+                                    'User does not have access to study'):
             sample_template_columns_get_req(1, None, User('demo@microbio.me'))
 
         # Test study doesn't exist
@@ -324,7 +324,7 @@ class TestHelpers(TestHandlerBase):
         # Test sample template doesn't exist
         new_study = self._create_study('New Study - Summary')
         with self.assertRaisesRegex(HTTPError, "Study %s doesn't have sample "
-                                                "information" % new_study.id):
+                                    "information" % new_study.id):
             sample_template_columns_get_req(new_study.id, None, user)
 
         # Test that if the column doesn't exist it raises an error

@@ -29,10 +29,12 @@ class TestRedbiom(TestHandlerBase):
 
         exp_artifact_biom_ids = {
             '5': ['1.SKD2.640178'],
-            '4': ['1.SKD2.640178', '1.SKD8.640184']}
+            '4': sorted(['1.SKD2.640178', '1.SKD8.640184'])}
         response_body = loads(response.body)
         obs_artifact_biom_ids = response_body['data'][0].pop(
             'artifact_biom_ids')
+        # making sure they are in the same order
+        obs_artifact_biom_ids['4'] = sorted(obs_artifact_biom_ids['4'])
         self.assertDictEqual(obs_artifact_biom_ids, exp_artifact_biom_ids)
         exp = {'status': 'success', 'message': '', 'data': DATA}
         self.assertEqual(response_body, exp)

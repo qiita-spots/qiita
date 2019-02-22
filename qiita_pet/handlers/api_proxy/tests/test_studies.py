@@ -347,8 +347,11 @@ class TestStudyAPI1(TestStudyAPI):
             'remaining': ['uploaded_file.txt'], 'message': '',
             'file_types': [
                 ('raw_forward_seqs', True,
-                 ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
+                 sorted(['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz'])),
                 ('raw_reverse_seqs', False, [])]}
+        # making sure they are always in the same order
+        oft = obs['file_types'][0]
+        obs['file_types'][0] = (oft[0], oft[1], sorted(oft[2]))
         self.assertEqual(obs, exp)
 
         # let's add reverse
