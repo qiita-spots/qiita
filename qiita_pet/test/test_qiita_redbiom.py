@@ -91,12 +91,17 @@ class TestRedbiom(TestHandlerBase):
         }
         data = deepcopy(DATA)
         data[0]['artifact_biom_ids'] = {
-            '5': ['1.SKD2.640178', '1.SKM3.640197'],
-            '4': ['1.SKM3.640197', '1.SKD2.640178']}
+            '5': sorted(['1.SKD2.640178', '1.SKM3.640197']),
+            '4': sorted(['1.SKM3.640197', '1.SKD2.640178'])}
         response = self.post('/redbiom/', post_args)
         exp = {'status': 'success', 'message': '', 'data': data}
+        # making sure they are in the same order
+        obs = loads(response.body)
+        obs['data'][0]['artifact_biom_ids'] = {
+            '4': sorted(obs['data'][0]['artifact_biom_ids'][4]),
+            '5': sorted(obs['data'][0]['artifact_biom_ids'][5])}
         self.assertEqual(response.code, 200)
-        self.assertEqual(loads(response.body), exp)
+        self.assertEqual(obs, exp)
 
         post_args = {
             'search': 'o_0319-7L14',
