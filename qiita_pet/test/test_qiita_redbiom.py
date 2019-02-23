@@ -98,8 +98,8 @@ class TestRedbiom(TestHandlerBase):
         # making sure they are in the same order
         obs = loads(response.body)
         obs['data'][0]['artifact_biom_ids'] = {
-            '4': sorted(obs['data'][0]['artifact_biom_ids'][4]),
-            '5': sorted(obs['data'][0]['artifact_biom_ids'][5])}
+            '4': sorted(obs['data'][0]['artifact_biom_ids']['4']),
+            '5': sorted(obs['data'][0]['artifact_biom_ids']['5'])}
         self.assertEqual(response.code, 200)
         self.assertEqual(obs, exp)
 
