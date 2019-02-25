@@ -1334,6 +1334,52 @@ class Artifact(qdb.base.QiitaObject):
             res = qdb.sql_connection.TRN.execute_fetchindex()
             return qdb.analysis.Analysis(res[0][0]) if res else None
 
+    @property
+    def merging_scheme(self):
+        """The merging scheme of this artifact_type
+
+        Returns
+        -------
+        str, str
+            The human readable merging scheme and the parent software
+            information for this artifact
+        """
+        processing_params = self.processing_parameters
+        if processing_params is None:
+            return '', ''
+
+        cmd_name = processing_params.command.name
+        ms = processing_params.command.merging_scheme
+        afps = [fp for _, fp, _ in self.filepaths if fp.endswith('biom')]
+
+        merging_schemes = []
+        parent_softwares = []
+        # this loop is necessary as in theory an artifact can be
+        # generated from multiple prep info files
+        for p in self.parents:
+            pparent = p.processing_parameters
+            # if parent is None, then is a direct upload; for example
+            # per_sample_FASTQ in shotgun data
+            if pparent is None:
+                parent_cmd_name = None
+                parent_merging_scheme = None
+                parent_pp = None
+                parent_software = 'N/A'
+            else:
+                parent_cmd_name = pparent.command.name
+                parent_merging_scheme = pparent.command.merging_scheme
+                parent_pp = pparent.values
+                psoftware = pparent.command.software
+                parent_software = '%s v%s' % (
+                    psoftware.name, psoftware.version)
+
+            merging_schemes.append(qdb.util.human_merging_scheme(
+                cmd_name, ms, parent_cmd_name, parent_merging_scheme,
+                processing_params.values, afps, parent_pp))
+            parent_softwares.append(parent_software)
+
+        return ', '.join(merging_schemes), ', '.join(parent_softwares)
+
     def jobs(self, cmd=None, status=None, show_hidden=False):
         """Jobs that used this artifact as input
 

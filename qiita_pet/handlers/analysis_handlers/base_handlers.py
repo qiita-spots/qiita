@@ -17,6 +17,7 @@ from qiita_pet.handlers.analysis_handlers import check_analysis_access
 from qiita_pet.handlers.util import to_int
 from qiita_pet.util import get_network_nodes_edges
 from qiita_db.analysis import Analysis
+from qiita_db.artifact import Artifact
 
 
 class CreateAnalysisHandler(BaseHandler):
@@ -61,6 +62,12 @@ def analysis_description_handler_get_request(analysis_id, user):
                     alert_type = redis_info['return']['status']
                     alert_msg = redis_info['return']['message'].replace(
                         '\n', '</br>')
+    artifacts = {}
+    for aid, samples in analysis.samples.items():
+        artifact = Artifact(aid)
+        study = artifact.study
+        artifacts[aid] = (
+            study.id, study.title, artifact.merging_scheme, samples)
 
     return {'analysis_name': analysis.name,
             'analysis_id': analysis.id,
@@ -68,6 +75,7 @@ def analysis_description_handler_get_request(analysis_id, user):
             'analysis_description': analysis.description,
             'analysis_mapping_id': analysis.mapping_file,
             'alert_type': alert_type,
+            'artifacts': artifacts,
             'alert_msg': alert_msg}
 
 
