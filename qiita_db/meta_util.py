@@ -373,40 +373,9 @@ def generate_biom_and_metadata_release(study_status='public'):
             if a.processing_parameters is None:
                 continue
 
-            processing_params = a.processing_parameters
-            cmd_name = processing_params.command.name
-            ms = processing_params.command.merging_scheme
-            software = processing_params.command.software
+            merging_schemes, parent_softwares = a.merging_scheme
+            software = a.processing_parameters.command.software
             software = '%s v%s' % (software.name, software.version)
-
-            # this loop is necessary as in theory an artifact can be
-            # generated from multiple prep info files
-            afps = [fp for _, fp, _ in a.filepaths if fp.endswith('biom')]
-            merging_schemes = []
-            parent_softwares = []
-            for p in a.parents:
-                pparent = p.processing_parameters
-                # if parent is None, then is a direct upload; for example
-                # per_sample_FASTQ in shotgun data
-                if pparent is None:
-                    parent_cmd_name = None
-                    parent_merging_scheme = None
-                    parent_pp = None
-                    parent_software = 'N/A'
-                else:
-                    parent_cmd_name = pparent.command.name
-                    parent_merging_scheme = pparent.command.merging_scheme
-                    parent_pp = pparent.values
-                    psoftware = pparent.command.software
-                    parent_software = '%s v%s' % (
-                        psoftware.name, psoftware.version)
-
-                merging_schemes.append(qdb.util.human_merging_scheme(
-                    cmd_name, ms, parent_cmd_name, parent_merging_scheme,
-                    processing_params.values, afps, parent_pp))
-                parent_softwares.append(parent_software)
-            merging_schemes = ', '.join(merging_schemes)
-            parent_softwares = ', '.join(parent_softwares)
 
             for _, fp, fp_type in a.filepaths:
                 if fp_type != 'biom' or 'only-16s' in fp:

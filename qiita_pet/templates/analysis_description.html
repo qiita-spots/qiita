@@ -18,6 +18,9 @@
     // starting share
     init_sharing("{% raw qiita_config.portal_dir %}");
     update_share();
+
+    $('#studies-artifacts-table').dataTable();
+
   });
 </script>
 <style>
@@ -35,21 +38,57 @@
     <form action="{% raw qiita_config.portal_dir %}/analysis/description/{{analysis_id}}/" method="post" id="make-public"><input name="analysis_id" value="{{analysis_id}}" type="hidden"></form>
     <h2>
       {{analysis_name}} - ID {{analysis_id}}
-      {% if analysis_is_public %}
-        <small><b>(Public)</b></small>
-      {% else %}
-        <small><b>(Private)</b></small>
-      {% end %}
-      {% if analysis_mapping_id is not None %}
-        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{analysis_mapping_id}}"><span class="glyphicon glyphicon-download-alt"></span> Mapping file</a>
-      {% end %}
-      {% if not analysis_is_public %}
-        <a class="btn btn-default" onclick="if (confirm('Are you sure you want to make this analysis public? Note that this will not allow you to delete your analysis later.')) { $('#make-public').submit(); }"><span class="glyphicon glyphicon-globe"></span> Make analysis public</a>
-      {% end %}
+      <small>
+        ({{analysis_description}}) -
+        {% if analysis_is_public %}
+          <b>Public</b>
+        {% else %}
+          <b>Private</b>
+        {% end %}
+        {% if analysis_mapping_id is not None %}
+          <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{analysis_mapping_id}}"><span class="glyphicon glyphicon-download-alt"></span> Mapping file</a>
+        {% end %}
+        {% if not analysis_is_public %}
+          <a class="btn btn-default" onclick="if (confirm('Are you sure you want to make this analysis public? Note that this will not allow you to delete your analysis later.')) { $('#make-public').submit(); }"><span class="glyphicon glyphicon-globe"></span> Make analysis public</a>
+        {% end %}
+      </small>
     </h2>
-    <h3>{{analysis_description}}</h3>
     <a class="btn btn-info" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"><span class=" glyphicon glyphicon-share"></span></a> Shared with: <span id="shared_html_{{analysis_id}}"></span>
+    <div class='row'>
+      <div class='col-md-12'>
+        <b>Studies and artifacts used in this analysis:</b>
+        <button class="btn btn-default" data-toggle="collapse" data-target="#studies-artifacts-div">
+          <span class="glyphicon glyphicon-eye-open"></span>
+          Show/Hide
+        </button>
+        <div id="studies-artifacts-div" class="collapse" style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
+          <table id="studies-artifacts-table" class="display table-bordered table-hover" style="width:100%">
+            <thead>
+              <tr>
+                <th>Artifact ID</th>
+                <th>Study Title</th>
+                <th>Parent Processing</th>
+                <th>Merging Scheme</th>
+                <th>Total Samples Selected</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for aid, data in artifacts.items() %}
+                <tr>
+                  <td>{{aid}}</td>
+                  <td><a href="{% raw qiita_config.portal_dir %}/study/description/{{data[0]}}" target="_blank">{{data[1]}}</a></td>
+                  <td>{{data[2][1]}}</td>
+                  <td>{{data[2][0]}}</td>
+                  <td>{{ len(data[3]) }}</td>
+                </tr>
+              {% end %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
+  <hr/>
 </div>
 <div id='analysis-graph-vue'>
   <processing-graph v-bind:is-analysis-pipeline='true' ref="procGraph" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/analysis/description/{{analysis_id}}/graph/" jobs-endpoint="/analysis/description/{{analysis_id}}/jobs/"></processing-graph>
