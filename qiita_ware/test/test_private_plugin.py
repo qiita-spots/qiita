@@ -145,7 +145,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         obs = r_client.get("sample_template_%d" % study.id)
         self.assertIsNotNone(obs)
         obs = loads(obs)
-        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertCountEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
         self.assertEqual(obs['job_id'], job.id)
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn(
@@ -160,12 +160,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
             'data_type': None})
         private_task(job.id)
         self.assertEqual(job.status, 'error')
-        self.assertIn(
-            'There are invalid (non UTF-8) characters in your information '
-            'file. The offending fields and their location (row, column) are '
-            'listed below, invalid characters are represented using '
-            '&#128062;: "&#128062;collection_timestamp" = (0, 13)',
-            job.log.msg)
+        self.assertIn("The 'SampleTemplate' object with attributes (id: 1) "
+                      "already exists.", job.log.msg)
 
     def test_update_sample_template(self):
         fd, fp = mkstemp(suffix=".txt")
@@ -183,7 +179,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         obs = r_client.get("sample_template_1")
         self.assertIsNotNone(obs)
         obs = loads(obs)
-        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertCountEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
         self.assertEqual(obs['job_id'], job.id)
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn('The following columns have been added to the existing '
@@ -243,7 +239,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         obs = r_client.get("prep_template_1")
         self.assertIsNotNone(obs)
         obs = loads(obs)
-        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertCountEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
         self.assertEqual(obs['job_id'], job.id)
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn('The following columns have been added to the existing '

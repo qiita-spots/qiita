@@ -142,7 +142,8 @@ class CompleteHandler(OauthBaseHandler):
             cmd = qiita_plugin.get_command('complete_job')
             params = qdb.software.Parameters.load(
                 cmd, values_dict={'job_id': job_id,
-                                  'payload': self.request.body})
+                                  'payload': self.request.body.decode(
+                                      'ascii')})
             job = qdb.processing_job.ProcessingJob.create(job.user, params)
             job.submit()
 

@@ -69,7 +69,7 @@ def create_templates_from_qiime_mapping_file(fp, study, data_type):
     pt_cols = set(col for col in _col_iterator(PREP_TEMPLATE_COLUMNS))
 
     data_type_str = (convert_from_id(data_type, "data_type")
-                     if isinstance(data_type, (int, long)) else data_type)
+                     if isinstance(data_type, int) else data_type)
 
     if data_type_str in TARGET_GENE_DATA_TYPES:
         pt_cols.update(

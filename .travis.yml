@@ -3,7 +3,7 @@ language: python
 sudo: false
 env:
   global:
-    - PYTHON_VERSION=3.5
+    - PYTHON_VERSION=3.6
   matrix:
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
     - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_pet
@@ -22,19 +22,16 @@ before_install:
 install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
-  - travis_retry conda create -q --yes -n qiita python=2.7 pip nose flake8
-    pyzmq 'networkx<2.0' pyparsing natsort mock future libgfortran seaborn nltk
-    'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
+  - travis_retry conda create -q --yes -n qiita python=3.6 pip libgfortran numpy
   - source activate qiita
-  - pip install pip==18.1
-  - pip install sphinx sphinx-bootstrap-theme nose-timer codecov 'Click==6.7'
-  - 'echo "backend: Agg" > matplotlibrc'
+  - 'echo "backend: Agg" > ~/matplotlibrc'
+  - pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
   - git clone https://github.com/nicolasff/webdis
   - pushd webdis
   - make
   - ./webdis &
   - popd
-  - travis_retry pip install . --process-dependency-links
+  - travis_retry pip install . --no-binary redbiom
   # loading redbiom with Qiita's test set
   # but first let's make sure redis is empty
   # following https://github.com/biocore/redbiom/blob/master/Makefile

@@ -402,7 +402,7 @@ class UserTest(TestCase):
             'sit amet, venenatis bibendum sem. Curabitur vel odio sed est '
             'rutrum rutrum. Quisque efficitur ut purus in ultrices. '
             'Pellentesque eu auctor justo.', 'message <a href="#">3</a>']
-        self.assertItemsEqual([(x[1]) for x in obs], exp_msg)
+        self.assertCountEqual([(x[1]) for x in obs], exp_msg)
         self.assertTrue(all(x[2] < datetime.now() for x in obs))
         self.assertFalse(all(x[3] for x in obs))
         self.assertEqual([x[4] for x in obs], [True, False, False, False])

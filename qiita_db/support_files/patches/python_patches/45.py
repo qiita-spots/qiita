@@ -40,7 +40,7 @@ if overlapping is not None:
     for table_name, cols in viewitems(overlapping):
         # leaving print so when we patch in the main system we know that
         # nothing was renamed or deal with that
-        print table_name
+        print(table_name)
         with TRN:
             for c in cols:
                 sql = 'ALTER TABLE qiita.%s RENAME COLUMN %s TO %s_renamed' % (

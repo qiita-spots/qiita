@@ -39,11 +39,6 @@ class DBUtilTests(TestCase):
             if exists(fp):
                 remove(fp)
 
-    def test_params_dict_to_json(self):
-        params_dict = {'opt1': '1', 'opt2': [2, '3'], 3: 9}
-        exp = '{"3":9,"opt1":"1","opt2":[2,"3"]}'
-        self.assertEqual(qdb.util.params_dict_to_json(params_dict), exp)
-
     def test_check_required_columns(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
         qdb.util.check_required_columns(self.required, self.table)
@@ -101,8 +96,8 @@ class DBUtilTests(TestCase):
         obs = qdb.util.get_artifact_types()
         exp = {'SFF': 1, 'FASTA_Sanger': 2, 'FASTQ': 3, 'FASTA': 4,
                'per_sample_FASTQ': 5, 'Demultiplexed': 6, 'BIOM': 7,
-               'beta_div_plots': 8L, 'rarefaction_curves': 9L,
-               'taxa_summary': 10L}
+               'beta_div_plots': 8, 'rarefaction_curves': 9,
+               'taxa_summary': 10}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_artifact_types(key_by_id=True)
@@ -668,7 +663,7 @@ class DBUtilTests(TestCase):
         obs = qdb.util.get_filepath_information(1)
         # This path is machine specific. Just checking that is not empty
         self.assertIsNotNone(obs.pop('fullpath'))
-        exp = {'filepath_id': 1L, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
+        exp = {'filepath_id': 1, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
                'filepath_type': 'raw_forward_seqs', 'checksum': '852952723',
                'data_type': 'raw_data', 'mountpoint': 'raw_data',
                'subdirectory': False, 'active': True}
@@ -762,7 +757,7 @@ class DBUtilTests(TestCase):
                                     datetime(2015, 8, 5, 19, 41))
         obs = [[x[0], x[1]] for x in user.messages()]
         exp = [[message_id, 'SYS MESSAGE']]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         qdb.util.clear_system_messages()
         obs = [[x[0], x[1]] for x in user.messages()]
@@ -776,11 +771,11 @@ class DBUtilTests(TestCase):
         obs = qdb.util.supported_filepath_types("FASTQ")
         exp = [["raw_forward_seqs", True], ["raw_reverse_seqs", False],
                ["raw_barcodes", True]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         obs = qdb.util.supported_filepath_types("BIOM")
         exp = [["biom", True], ["directory", False], ["log", False]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_generate_analysis_list(self):
         self.assertEqual(qdb.util.generate_analysis_list([]), [])
@@ -1068,7 +1063,7 @@ class UtilTests(TestCase):
              'name': 'noname', 'target_subfragment': [], 'parameters': {},
              'algorithm': '', 'deprecated': None, 'platform': 'not provided',
              'algorithm_az': '', 'prep_samples': 0}]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         # now let's test that the order given by the commands actually give the
         # correct results
@@ -1087,7 +1082,7 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1) '
                                    '| Split libraries FASTQ')
             exp[0]['algorithm_az'] = '33fed1b35728417d7ba4139b8f817d44'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # setting up database changes for also command output
             qdb.sql_connection.TRN.add(
@@ -1101,7 +1096,7 @@ class UtilTests(TestCase):
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom) | Split libraries FASTQ')
             exp[0]['algorithm_az'] = 'de5b794a2cacd428f36fea86df196bfd'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # let's test that we ignore the parent_info
             qdb.sql_connection.TRN.add("""UPDATE qiita.software_command
@@ -1115,7 +1110,7 @@ class UtilTests(TestCase):
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom)')
             exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # let's test that we ignore the parent_info
             qdb.sql_connection.TRN.add("""UPDATE qiita.software_command
@@ -1129,7 +1124,7 @@ class UtilTests(TestCase):
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom)')
             exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # returning database as it was
             qdb.sql_connection.TRN.add(

@@ -526,9 +526,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             params = []
             for k, v in viewitems(parameters.values):
                 # this is necessary in case we have an Iterable as a value
-                # but that is not unicode or string
-                if isinstance(v, Iterable) and not isinstance(v, (str,
-                                                                  unicode)):
+                # but that is string
+                if isinstance(v, Iterable) and not isinstance(v, str):
                     for vv in v:
                         params.extend([k, str(vv)])
                 else:
@@ -536,7 +535,7 @@ class ProcessingJob(qdb.base.QiitaObject):
 
             if params:
                 # divided by 2 as we have key-value pairs
-                len_params = len(params)/2
+                len_params = int(len(params)/2)
                 sql = sql.format(' AND ' + ' AND '.join(
                     ["command_parameters->>%s ILIKE %s"] * len_params))
                 params = [command.id] + params
@@ -1661,10 +1660,13 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
 
             # We can potentially access this information from the nodes
             # multiple times, so caching in here
-            all_nodes = {n: (n.command, n.parameters)
-                         for n in in_degrees}
-            roots = {n: (n.command, n.parameters)
-                     for n, d in viewitems(in_degrees) if d == 0}
+            # [0] in_degrees returns a tuple, where [0] is the element we want
+            all_nodes = {}
+            roots = {}
+            for node, position in in_degrees:
+                if position == 0:
+                    roots[node] = (node.command, node.parameters)
+                all_nodes[node] = (node.command, node.parameters)
 
             # Check that we have all the required parameters
             root_cmds = set(c for c, _ in viewvalues(roots))

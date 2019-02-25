@@ -7,9 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.utils import PY3, viewitems
 from six import StringIO
-from collections import defaultdict
 
 import pandas as pd
 import numpy as np
@@ -18,10 +16,7 @@ from skbio.util import find_duplicates
 
 import qiita_db as qdb
 
-if PY3:
-    from string import ascii_letters as letters, digits
-else:
-    from string import letters, digits
+from string import ascii_letters, digits
 
 
 def prefix_sample_names_with_id(md_template, study_id):
@@ -97,26 +92,9 @@ def load_template_to_dataframe(fn, index='sample_name'):
     """
     # Load in file lines
     holdfile = None
-    with qdb.util.open_file(fn, mode='U') as f:
-        errors = defaultdict(list)
+    with qdb.util.open_file(fn, newline=None,
+                            encoding="utf8", errors='ignore') as f:
         holdfile = f.readlines()
-        # here we are checking for non UTF-8 chars
-        for row, line in enumerate(holdfile):
-            for col, block in enumerate(line.split('\t')):
-                try:
-                    tblock = block.encode('utf-8')
-                except UnicodeDecodeError:
-                    tblock = unicode(block, errors='replace')
-                    tblock = tblock.replace(u'\ufffd', '&#128062;')
-                    errors[tblock].append('(%d, %d)' % (row, col))
-        if bool(errors):
-            raise ValueError(
-                "There are invalid (non UTF-8) characters in your information "
-                "file. The offending fields and their location (row, column) "
-                "are listed below, invalid characters are represented using "
-                "&#128062;: %s" % '; '.join(
-                    ['"%s" = %s' % (k, ', '.join(v))
-                     for k, v in viewitems(errors)]))
 
     if not holdfile:
         raise ValueError('Empty file passed!')
@@ -240,7 +218,7 @@ def get_invalid_sample_names(sample_names):
     """
 
     # from the QIIME mapping file documentation
-    valid = set(letters+digits+'.')
+    valid = set(ascii_letters+digits+'.')
     inv = []
 
     for s in sample_names:
@@ -272,7 +250,7 @@ def looks_like_qiime_mapping_file(fp):
     some other different column.
     """
     first_line = None
-    with qdb.util.open_file(fp, mode='U') as f:
+    with qdb.util.open_file(fp, newline=None) as f:
         first_line = f.readline()
     if not first_line:
         return False
@@ -354,7 +332,7 @@ def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
                 comments.append(line)
         else:
             # Will add empty string to empty fields
-            tmp_line = map(strip_f, line.split('\t'))
+            tmp_line = list(map(strip_f, line.split('\t')))
             if len(tmp_line) < len(header):
                 tmp_line.extend([''] * (len(header) - len(tmp_line)))
             mapping_data.append(tmp_line)

@@ -28,7 +28,7 @@ class UserInfoDBHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        self.assertEqual(obs.keys(), ['data'])
+        self.assertCountEqual(obs.keys(), ['data'])
 
         # for simplicity we will only test that the keys are the same
         # and that one of the key's info is correct

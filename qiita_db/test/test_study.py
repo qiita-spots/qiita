@@ -866,7 +866,7 @@ class TestStudy(TestCase):
 
         # testing that insertion went fine
         obs = qdb.study.Study.get_tags()
-        exp = {'user': ['this is my tag', 'I want GOLD!!'],
+        exp = {'user': ['I want GOLD!!', 'this is my tag'],
                'admin': ['actual GOLD!']}
         self.assertEqual(obs, exp)
 
@@ -874,11 +874,11 @@ class TestStudy(TestCase):
         study = qdb.study.Study(1)
         tags = ['this is my tag', 'actual GOLD!']
         message = study.update_tags(user, tags)
-        self.assertItemsEqual(study.tags, tags[:1])
+        self.assertCountEqual(study.tags, tags[:1])
         self.assertEqual(message, 'Only admins can assign: actual GOLD!')
         # now like admin
         message = study.update_tags(admin, tags)
-        self.assertItemsEqual(study.tags, tags)
+        self.assertCountEqual(study.tags, tags)
         self.assertEqual(message, '')
 
         # cleaning tags

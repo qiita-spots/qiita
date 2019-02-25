@@ -69,7 +69,7 @@ class TestPortal(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         exp = "Identification of the Microbiomes for Cannabis Soils"
-        self.assertIn(exp, response.body)
+        self.assertIn(exp, response.body.decode('ascii'))
 
     def test_get_AJAX_not_valid_user(self):
         page = '/admin/portals/studiesAJAX/'

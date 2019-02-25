@@ -73,7 +73,7 @@ class TestMetadataTemplateReadOnly(TestCase):
             'select',
             'column',
             'just_fine1'])
-        self.assertItemsEqual(set(results), {'column', 'select'})
+        self.assertCountEqual(set(results), {'column', 'select'})
 
     def test_identify_invalid_characters(self):
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
@@ -90,7 +90,7 @@ class TestMetadataTemplateReadOnly(TestCase):
             'this&is',
             '4column',
             'just_fine2'])
-        self.assertItemsEqual(set(results), {'tax on',
+        self.assertCountEqual(set(results), {'tax on',
                                              'bla.',
                                              '.',
                                              '{',

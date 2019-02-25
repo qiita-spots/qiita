@@ -130,8 +130,8 @@ class ForgotPasswordHandler(BaseHandler):
 class ChangeForgotPasswordHandler(BaseHandler):
     """Displays change password page and handles password reset"""
     def get(self, code):
-            self.render("change_lost_pass.html", user=None, message="",
-                        level="", code=code)
+        self.render("change_lost_pass.html", user=None, message="",
+                    level="", code=code)
 
     @execute_as_transaction
     def post(self, code):

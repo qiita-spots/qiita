@@ -140,7 +140,7 @@ class StudyUploadViaRemote(BaseHandler):
 
         create_nested_path(upload_folder)
 
-        with open(ssh_key_fp, 'w') as f:
+        with open(ssh_key_fp, 'wb') as f:
             f.write(ssh_key)
 
         qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')

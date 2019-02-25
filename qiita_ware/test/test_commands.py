@@ -80,7 +80,6 @@ class SSHTests(TestCase):
         self.assertEqual(local_files, self.exp_files)
 
     def test_download_sftp(self):
-        print self.remote_dir_path, self.temp_local_dir
         download_remote('sftp://localhost:'+self.remote_dir_path,
                         self.test_ssh_key, self.temp_local_dir)
         local_files = self._get_valid_files(self.temp_local_dir)

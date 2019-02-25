@@ -13,7 +13,6 @@ from datetime import datetime
 from os import remove
 from os.path import isfile, relpath
 from shutil import rmtree
-from functools import partial
 from collections import namedtuple
 from qiita_db.util import create_nested_path
 
@@ -1028,13 +1027,14 @@ class Artifact(qdb.base.QiitaObject):
                 # And from the filesystem only after the transaction is
                 # successfully completed (after commit)
 
-                def path_cleaner(fp):
-                    if isfile(fp):
-                        remove(fp)
-                    else:
-                        rmtree(fp)
+                def path_cleaner(fps):
+                    for fp in fps:
+                        if isfile(fp):
+                            remove(fp)
+                        else:
+                            rmtree(fp)
                 qdb.sql_connection.TRN.add_post_commit_func(
-                    partial(map, path_cleaner, to_delete_fps))
+                    path_cleaner, to_delete_fps)
 
             # Add the new HTML summary
             filepaths = [(html_fp, 'html_summary')]
@@ -1169,7 +1169,7 @@ class Artifact(qdb.base.QiitaObject):
             # status. Approach: Loop over all the artifacts and add all the
             # jobs that have been attached to them.
             visited = set()
-            queue = nodes.keys()
+            queue = list(nodes.keys())
             while queue:
                 current = queue.pop(0)
                 if current not in visited:

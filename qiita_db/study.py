@@ -426,7 +426,7 @@ class Study(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT qiita.user_level.name AS user_level,
-                        array_agg(study_tag)
+                        array_agg(study_tag ORDER BY study_tag)
                     FROM qiita.study_tags
                     LEFT JOIN qiita.qiita_user USING (email)
                     LEFT JOIN qiita.user_level USING (user_level_id)
@@ -1018,7 +1018,8 @@ class Study(qdb.base.QiitaObject):
             sql = """SELECT study_tag
                         FROM qiita.study_tags
                         LEFT JOIN qiita.per_study_tags USING (study_tag)
-                        WHERE study_id = {0}""".format(self._id)
+                        WHERE study_id = {0}
+                        ORDER BY study_tag""".format(self._id)
             qdb.sql_connection.TRN.add(sql)
             return [t[0] for t in qdb.sql_connection.TRN.execute_fetchindex()]
 

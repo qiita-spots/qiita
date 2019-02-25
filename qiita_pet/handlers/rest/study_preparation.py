@@ -41,7 +41,7 @@ class StudyPrepCreatorHandler(RESTHandler):
             p = PrepTemplate.create(data, study_id, data_type,
                                     investigation_type)
         except QiitaError as e:
-            self.fail(e.message, 406)
+            self.fail(str(e), 406)
             return
 
         self.write({'id': p.id})
@@ -80,7 +80,7 @@ class StudyPrepArtifactCreatorHandler(RESTHandler):
                                   artifact_deets['artifact_name'],
                                   p)
         except QiitaError as e:
-            self.fail(e.message, 406)
+            self.fail(str(e), 406)
             return
 
         self.write({'id': art.id})

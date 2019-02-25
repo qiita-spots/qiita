@@ -43,7 +43,7 @@ class APIAnalysisMetadataHandlerTests(OauthTestingBase):
         obs = loads(obs.body)
         exp = ['1.SKM4.640180', '1.SKB8.640193', '1.SKD8.640184',
                '1.SKM9.640192', '1.SKB7.640196']
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         exp = {'platform': 'Illumina', 'longitude': '95.5088566087',
                'experiment_center': 'ANL', 'center_name': 'ANL',

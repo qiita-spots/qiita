@@ -163,7 +163,7 @@ class TestSample(TestCase):
                'GAZ:United States of America', '6.94', 'SKB8', '5',
                'Burmese root', 'ENVO:plant-associated habitat',
                '74.0894932572', '65.3283470202', '1118232'}
-        self.assertItemsEqual(set(obs), exp)
+        self.assertCountEqual(set(obs), exp)
 
     def test_items(self):
         """items returns an iterator over the (key, value) tuples"""
@@ -486,7 +486,7 @@ class TestSampleTemplate(TestCase):
                'samp_salinity', 'sample_type', 'scientific_name',
                'season_environment', 'taxon_id', 'temp', 'texture',
                'tot_nitro', 'tot_org_carb', 'water_content_soil']
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""
@@ -547,7 +547,7 @@ class TestSampleTemplate(TestCase):
                'sample_type', 'collection_timestamp', 'host_subject_id',
                'description', 'latitude', 'longitude', 'scientific_name'}
         obs = set(self.tester.categories())
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_iter(self):
         """iter returns an iterator over the sample ids"""
@@ -765,7 +765,7 @@ class TestSampleTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_clean_validate_template(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
@@ -816,7 +816,7 @@ class TestSampleTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_clean_validate_template_no_pgsql_reserved_words(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
@@ -972,7 +972,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertItemsEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % new_id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1038,7 +1038,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertItemsEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.12.Sample1" % new_id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1104,7 +1104,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertItemsEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.foo.Sample1" % new_id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1170,7 +1170,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertItemsEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % new_id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1291,15 +1291,15 @@ class TestSampleTemplate(TestCase):
         # validating values
         exp = self.metadata_dict_updated_dict['Sample1'].values()
         obs = st.get('%s.Sample1' % self.new_study.id).values()
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         exp = self.metadata_dict_updated_dict['Sample2'].values()
         obs = st.get('%s.Sample2' % self.new_study.id).values()
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         exp = self.metadata_dict_updated_dict['Sample3'].values()
         obs = st.get('%s.Sample3' % self.new_study.id).values()
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         # checking errors
         with self.assertRaises(qdb.exceptions.QiitaDBError):
@@ -1349,7 +1349,9 @@ class TestSampleTemplate(TestCase):
             ['%s.Sample1' % self.new_study.id, {
                 'bool_col': 'false', 'date_col': '2015-09-01 00:00:00'}],
             ['qiita_sample_column_names', {
-                'columns': ['bool_col', 'date_col']}]]
+                'columns': sorted(['bool_col', 'date_col'])}]]
+        # making sure they are always in the same order
+        obs[2][1]['columns'] = sorted(obs[2][1]['columns'])
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_generate_files(self):
@@ -1368,7 +1370,7 @@ class TestSampleTemplate(TestCase):
             self.metadata, self.new_study)
         st.to_file(fp)
         self._clean_up_files.append(fp)
-        with open(fp, 'U') as f:
+        with open(fp, newline=None) as f:
             obs = f.read()
         self.assertEqual(obs, EXP_SAMPLE_TEMPLATE.format(self.new_study.id))
 
@@ -1378,7 +1380,7 @@ class TestSampleTemplate(TestCase):
                         '%s.Sample3' % self.new_study.id})
         self._clean_up_files.append(fp)
 
-        with open(fp, 'U') as f:
+        with open(fp, newline=None) as f:
             obs = f.read()
         self.assertEqual(
             obs, EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES.format(self.new_study.id))
@@ -1444,7 +1446,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertItemsEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1549,7 +1551,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertItemsEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1631,7 +1633,7 @@ class TestSampleTemplate(TestCase):
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id',
                           'texture', 'tot_nitro'}
-        self.assertItemsEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1717,7 +1719,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id', 'tot_nitro'}
-        self.assertItemsEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1816,7 +1818,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id', 'tot_nitro'}
-        self.assertItemsEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -2112,7 +2114,7 @@ class TestSampleTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_validate_template_warning_missing_restrictions(self):
         del self.metadata['collection_timestamp']
@@ -2190,7 +2192,7 @@ class TestSampleTemplate(TestCase):
             # warnings is a list of 1 element
             self.assertEqual(len(warn), 1)
             # the order might change so testing by elements
-            self.assertItemsEqual(str(warn[0].message).split('\n'),
+            self.assertCountEqual(str(warn[0].message).split('\n'),
                                   exp_message.split('\n'))
 
     def test_validate_errors_timestampB_year4digits(self):
@@ -2236,7 +2238,7 @@ class TestSampleTemplate(TestCase):
             self.metadata, self.new_study)
         self.new_study.specimen_id_column = 'latitude'
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 qdb.exceptions.QiitaDBOperationNotPermittedError,
                 '"latitude" cannot be deleted, this column is currently '
                 r'selected as the tube identifier \(specimen_id_column\)'):

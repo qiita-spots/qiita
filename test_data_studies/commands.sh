@@ -32,25 +32,25 @@ for i in ${studies[@]}; do
 
     # Insert the study
     echo "\tloading study... "
-    output="`qiita db load_study --owner demo@microbio.me --title "$title" --info $conf_fp`"
+    output="`qiita db load-study --owner demo@microbio.me --title "$title" --info $conf_fp`"
     study_id=`echo -e "${output}" | cut -d " " -f 9`
     echo "Ok"
 
     # Insert the sample template
     echo "\tloading sample template... "
-    qiita db load_sample_template $sample_file --study $study_id
+    qiita db load-sample-template $sample_file --study $study_id
     echo "Ok"
 
     # Loading prep template
     echo "\tloading prep template... "
-    output=`qiita db load_prep_template $prep_file --study $study_id --data_type "16S"`
+    output=`qiita db load-prep-template $prep_file --study $study_id --data_type "16S"`
     pt_id=`echo -e "${output}" | cut -d " " -f 10`
     echo "Ok"
 
     # Loading processed data
     echo "\tloading processed data... "
     cp $otu_table ${otu_table}_backup
-    output="`qiita db load_artifact --artifact_type BIOM --fp $otu_table --fp_type biom --prep_template $pt_id`"
+    output="`qiita db load-artifact --artifact_type BIOM --fp $otu_table --fp_type biom --prep_template $pt_id`"
     pd_id=`echo -e "${output}" | cut -d " " -f 2`
     mv ${otu_table}_backup $otu_table
     echo "Ok"
@@ -63,5 +63,5 @@ for i in ${studies[@]}; do
 done
 
 # Making sure the studies/artifacts are public
-aids=`echo -e "from qiita_db.study import Study\nstudies = Study.get_by_status('public')\naids = [a.id for s in studies for a in s.artifacts()]\nprint(aids)" | python`
+aids=`echo -e "from qiita_db.study import Study\nstudies = Study.get_by_status('public')\naids = sorted([a.id for s in studies for a in s.artifacts()])\nprint(aids)" | python`
 if [ "$aids" != "[10, 11, 12]" ]; then echo "ERROR: artifacts not created: ", aids; exit 1; fi
