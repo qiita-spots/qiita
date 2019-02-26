@@ -1331,9 +1331,20 @@ def generate_study_list(user, visibility):
                 WHERE study_id=qiita.study.study_id)
                 AS number_samples_collected]
     - all the BIOM artifact_ids sorted by artifact_id that belong to the study,
-      including their software deprecated value
-            (SELECT array_agg(row_to_json((artifact_id, qs.deprecated), true)
-                              ORDER BY artifact_id)
+      including their software deprecated value and their prep info file data
+      type values
+            (SELECT array_agg(row_to_json(
+                (artifact_id, qs.deprecated, (
+                    SELECT array_agg(DISTINCT data_type)
+                    FROM qiita.prep_template
+                    LEFT JOIN qiita.data_type USING (data_type_id)
+                    WHERE artifact_id IN (
+                        SELECT *
+                        FROM qiita.find_artifact_roots(
+                        artifact_id)
+                    )
+                    LIMIT 1)), true)
+                    ORDER BY artifact_id)
                 FROM qiita.study_artifact
                 LEFT JOIN qiita.artifact USING (artifact_id)
                 LEFT JOIN qiita.visibility USING (visibility_id)
@@ -1384,8 +1395,18 @@ def generate_study_list(user, visibility):
             (SELECT COUNT(sample_id) FROM qiita.study_sample
                 WHERE study_id=qiita.study.study_id)
                 AS number_samples_collected,
-            (SELECT array_agg(row_to_json((artifact_id, qs.deprecated), true)
-                              ORDER BY artifact_id)
+            (SELECT array_agg(row_to_json(
+                (artifact_id, qs.deprecated, (
+                    SELECT array_agg(DISTINCT data_type)
+                    FROM qiita.prep_template
+                    LEFT JOIN qiita.data_type USING (data_type_id)
+                    WHERE artifact_id IN (
+                        SELECT *
+                        FROM qiita.find_artifact_roots(
+                        artifact_id)
+                    )
+                    LIMIT 1)), true)
+                    ORDER BY artifact_id)
                 FROM qiita.study_artifact
                 LEFT JOIN qiita.artifact USING (artifact_id)
                 LEFT JOIN qiita.visibility USING (visibility_id)
@@ -1428,11 +1449,15 @@ def generate_study_list(user, visibility):
 
                 # cleaning aids_with_deprecation
                 info['artifact_biom_ids'] = []
+                info['preparation_data_types'] = []
                 if info['aids_with_deprecation'] is not None:
                     for x in info['aids_with_deprecation']:
                         # f1-2 are the default names given by pgsql
                         if not x['f2']:
                             info['artifact_biom_ids'].append(x['f1'])
+                        info['preparation_data_types'].extend(x['f3'])
+                    info['preparation_data_types'] = list(set(
+                        info['preparation_data_types']))
                 del info['aids_with_deprecation']
 
                 # publication info

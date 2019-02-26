@@ -897,6 +897,7 @@ class UtilTests(TestCase):
             'study_abstract': 'Some abstract goes here',
             'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
             'study_alias': 'TST', 'study_tags': None,
+            'preparation_data_types': [],
             'number_samples_collected': 0}
         exp1 = [STUDY_INFO]
         exp2 = [snew_info]
@@ -908,10 +909,13 @@ class UtilTests(TestCase):
 
         # owner of study
         obs = UTIL.generate_study_list(USER('test@foo.bar'), 'user')
-        self.assertEqual(obs, exp1)
+        self.assertEqual(len(obs), 1)
+        self.assertDictEqual(obs[0], exp1[0])
         # shared with
         obs = UTIL.generate_study_list(USER('shared@foo.bar'), 'user')
-        self.assertEqual(obs, exp_both)
+        self.assertEqual(len(obs), 2)
+        self.assertDictEqual(obs[0], exp_both[0])
+        self.assertDictEqual(obs[1], exp_both[1])
         # admin
         obs = UTIL.generate_study_list(USER('admin@foo.bar'), 'user')
         self.assertEqual(obs, exp_both)
@@ -1237,6 +1241,7 @@ STUDY_INFO = {
     'publication_pid': ['123456', '7891011'],
     'pi': ('PI_dude@foo.bar', 'PIDude'),
     'artifact_biom_ids': [4, 5, 6, 7],
+    'preparation_data_types': ['18S'],
     'study_tags': None,
 }
 
