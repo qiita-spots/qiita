@@ -1079,10 +1079,10 @@ class Analysis(qdb.base.QiitaObject):
 
                 # if we are not going to merge the duplicated samples
                 # append the aid to the sample name
+                qm['qiita_artifact_id'] = aid
                 if rename_dup_samples:
                     qm['original_SampleID'] = qm.index
                     qm['#SampleID'] = "%d." % aid + qm.index
-                    qm['qiita_aid'] = aid
                     samps = set(['%d.%s' % (aid, _id) for _id in samps])
                     qm.set_index('#SampleID', inplace=True, drop=True)
                 else:
