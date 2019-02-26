@@ -106,7 +106,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         private_task(job.id)
         self.assertEqual(job.status, 'error')
         obs = job.log.msg
-        exp = 'Cannot delete artifact 1: Artifact 2 has been submitted to EBI'
+        exp = ('Cannot delete artifact 1: it or one of its children has '
+               'been analyzed by')
         self.assertIn(exp, obs)
 
         job = self._create_job('delete_artifact', {'artifact': 3})
