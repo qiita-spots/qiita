@@ -438,6 +438,8 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
         self.assertEqual(job.status, 'error')
         self.assertIn("Cannot delete artifact 2: Artifact 2 has been "
                       "submitted to EBI", job.log.msg)
+        # makingn sure the analysis, first thing to delete, still exists
+        self.assertTrue(Analysis.exists(1))
 
         # delete everything from the EBI submissions and the processing job so
         # we can try again: test success (with tags)
