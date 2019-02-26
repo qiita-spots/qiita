@@ -25,8 +25,12 @@ class CreateAnalysisHandler(BaseHandler):
     def post(self):
         name = self.get_argument('name')
         desc = self.get_argument('description')
-        analysis = Analysis.create(self.current_user, name, desc,
-                                   from_default=True)
+        mdsi = self.get_argument('merge_duplicated_sample_ids', False)
+        if mdsi and mdsi[0] == b'on':
+            mdsi = True
+        analysis = Analysis.create(
+            self.current_user, name, desc, merge_duplicated_sample_ids=mdsi,
+            from_default=True)
 
         self.redirect(u"%s/analysis/description/%s/"
                       % (qiita_config.portal_dir, analysis.id))
