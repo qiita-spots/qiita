@@ -4,8 +4,6 @@ Qiita installation
 
 Qiita is pip installable, but depends on specific versions of python and non-python packages that must be installed first. We strongly recommend using virtual environments; a popular solution to manage them is [miniconda](http://conda.pydata.org/miniconda.html), a lightweight version of the virtual environment, python distribution, and package manager anaconda. These instructions will be based on miniconda.
 
-These instructions were tested successfully by [@HannesHolste](github.com/HannesHolste) on Mac OS X El Capitan 10.11.4 and a clean installation of Ubuntu 12.04 LTS (precise) using conda v4.0.7 and cloning from [qiita master branch commit #a9e4e03](https://github.com/biocore/qiita/commit/a9e4e03ecd781d3985abc03d15f2248143e565d7) on 5/27/2016.
-
 ## Install and setup miniconda
 
 Download the appropriate installer [here](http://conda.pydata.org/docs/install/quick.html) corresponding to your operating system and execute it.
@@ -21,10 +19,8 @@ conda update conda
 Setup a virtual environment in conda named `qiita` by executing the following:
 
 ```bash
-conda create --yes --name qiita python=3.6 pip==18.1 nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran seaborn 'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1' hdf5
+conda create -q --yes -n qiita python=3.6 pip libgfortran numpy
 ```
-
-If you receive an error message about conda being unable to find one of the specified packages in its repository, you will have to manually find the appropriate conda channel that they belong to (see troubleshooting section below).
 
 ### Brief introduction to managing conda environments
 
@@ -58,7 +54,7 @@ source deactivate
 Install the non-python dependencies
 -----------------------------------
 
-* [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.5, we have tested most extensively with 9.3.6)
+* [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.5.14, we have tested most extensively with 9.5.15)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
 * [webdis] (https://github.com/nicolasff/webdis) (latest version should be fine but we have tested the most with 9ee6fe2 - Feb 6, 2016)
 
@@ -70,12 +66,12 @@ There are several options to install these dependencies depending on your needs:
 
 ### PostgreSQL installation on Mac OS X
 
-For Mac OS X, you can either install postgres through the [Postgres.app](https://www.postgresql.org/download/macosx/). These instructions were tested with the Postgres.app v9.3.
+For Mac OS X, you can either install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5.
 
 You'll then need to ensure that the postgres binaries (for example, ``psql``) are in your executable search path (``$PATH`` environment variable). If you are using Postgres.app on OS X, you can do this by running the following, though you may have to replace`~/.bash_profile`with `~/.zshrc` if you're using zshell rather than the built-in bash, and you may have to change the version number `Versions/9.3/` to the exact one that you are installing:
 
 ```bash
-echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.3/bin/"' >> ~/.bash_profile
+echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.5/bin/"' >> ~/.bash_profile
 source ~/.bash_profile
 ```
 
@@ -129,7 +125,7 @@ source activate qiita
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
 
 ```bash
-pip install -e . --process-dependency-links
+pip install . --no-binary redbiom
 ```
 
 At this point, Qiita will be installed and the system will start. However,
