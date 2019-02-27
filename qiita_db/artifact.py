@@ -509,10 +509,9 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it is public")
 
-            children = instance.children
-            children_ids = [c.id for c in children]
-            all_ids = tuple(children_ids + [artifact_id])
-            all_artifacts = children + [instance]
+            all_artifacts = list(instance.descendants.nodes())
+            all_artifacts.reverse()
+            all_ids = tuple([a.id for a in all_artifacts])
 
             # Check if this or any of the children have been analyzed
             sql = """SELECT email, analysis_id

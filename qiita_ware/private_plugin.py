@@ -303,19 +303,24 @@ def delete_study(job):
         study_id = job.parameters.values['study']
         study = qdb.study.Study(study_id)
 
-        for a in study.analyses():
-            artifacts = sorted(
-                a.artifacts, key=lambda a: a.id, reverse=True)
-            for artifact in artifacts:
-                qdb.artifact.Artifact.delete(artifact.id)
-            qdb.analysis.Analysis.delete(a.id)
-
-        artifacts = sorted(
-            study.artifacts(), key=lambda a: a.id, reverse=True)
-        for a in artifacts:
-            qdb.artifact.Artifact.delete(a.id)
+        # deleting analyses
+        for analysis in study.analyses():
+            # selecting roots of the analysis, can be multiple
+            artifacts = [a for a in analysis.artifacts
+                         if a.processing_parameters is None]
+            # deleting each of the processing graphs
+            for a in artifacts:
+                to_delete = list(a.descendants.nodes())
+                to_delete.reverse()
+                for td in to_delete:
+                    qdb.artifact.Artifact.delete(td.id)
+            qdb.analysis.Analysis.delete(analysis.id)
 
         for pt in study.prep_templates():
+            to_delete = list(pt.artifact.descendants.nodes())
+            to_delete.reverse()
+            for td in to_delete:
+                qdb.artifact.Artifact.delete(td.id)
             MT.prep_template.PrepTemplate.delete(pt.id)
 
         if MT.sample_template.SampleTemplate.exists(study_id):
@@ -370,12 +375,15 @@ def delete_analysis(job):
         analysis_id = job.parameters.values['analysis_id']
         analysis = qdb.analysis.Analysis(analysis_id)
 
-        artifacts = sorted(
-            analysis.artifacts, key=lambda a: a.id, reverse=True)
-
-        for artifact in artifacts:
-            qdb.artifact.Artifact.delete(artifact.id)
-
+        # selecting roots of the analysis, can be multiple
+        artifacts = [a for a in analysis.artifacts
+                     if a.processing_parameters is None]
+        # deleting each of the processing graphs
+        for a in artifacts:
+            to_delete = list(a.descendants.nodes())
+            to_delete.reverse()
+            for td in to_delete:
+                qdb.artifact.Artifact.delete(td.id)
         qdb.analysis.Analysis.delete(analysis_id)
 
         r_client.delete('analysis_delete_%d' % analysis_id)

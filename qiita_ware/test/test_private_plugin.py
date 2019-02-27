@@ -106,7 +106,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         private_task(job.id)
         self.assertEqual(job.status, 'error')
         obs = job.log.msg
-        exp = 'Cannot delete artifact 1: Artifact 2 has been submitted to EBI'
+        exp = ('Cannot delete artifact 1: it or one of its children has '
+               'been analyzed by')
         self.assertIn(exp, obs)
 
         job = self._create_job('delete_artifact', {'artifact': 3})
@@ -438,6 +439,8 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
         self.assertEqual(job.status, 'error')
         self.assertIn("Cannot delete artifact 2: Artifact 2 has been "
                       "submitted to EBI", job.log.msg)
+        # making sure the analysis, first thing to delete, still exists
+        self.assertTrue(Analysis.exists(1))
 
         # delete everything from the EBI submissions and the processing job so
         # we can try again: test success (with tags)
