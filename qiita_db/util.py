@@ -49,7 +49,7 @@ from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
-from os.path import join, basename, isdir, exists
+from os.path import join, basename, isdir, exists, getsize
 from os import walk, remove, listdir, rename
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
@@ -61,7 +61,6 @@ from contextlib import contextmanager
 from future.builtins import bytes, str
 import h5py
 from humanize import naturalsize
-from os.path import getsize
 import hashlib
 
 from os import makedirs
@@ -422,7 +421,7 @@ def compute_checksum(path):
         filepaths.append(path)
 
     for fp in filepaths:
-        with open(fp, 'rb', newline=None) as f:
+        with open(fp, 'Ub') as f:
             # Go line by line so we don't need to load the entire file
             for line in f:
                 if crc is None:
@@ -623,17 +622,14 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
         def str_to_id(x):
             return (x if isinstance(x, int)
                     else convert_to_id(x, "filepath_type"))
-        paths_w_checksum = [(basename(path), str_to_id(id_),
-                            compute_checksum(path))
-                            for path, id_ in new_filepaths]
-        # Create the list of SQL values to add
-        values = [[path, pid, checksum, 1, dd_id]
-                  for path, pid, checksum in paths_w_checksum]
+        values = [[basename(path), str_to_id(id_), compute_checksum(path),
+                   getsize(path), 1, dd_id]
+                  for path, id_ in new_filepaths]
         # Insert all the filepaths at once and get the filepath_id back
         sql = """INSERT INTO qiita.filepath
-                    (filepath, filepath_type_id, checksum,
+                    (filepath, filepath_type_id, checksum, fp_size,
                      checksum_algorithm_id, data_directory_id)
-                 VALUES (%s, %s, %s, %s, %s)
+                 VALUES (%s, %s, %s, %s, %s, %s)
                  RETURNING filepath_id"""
         idx = qdb.sql_connection.TRN.index
         qdb.sql_connection.TRN.add(sql, values, many=True)
@@ -713,8 +709,8 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
         sql_args.append(fp_type)
 
     with qdb.sql_connection.TRN:
-        sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
-                        subdirectory
+        sql = """SELECT filepath_id, filepath, checksum, fp_size,
+                        filepath_type, mountpoint, subdirectory
                  FROM qiita.filepath
                     JOIN qiita.filepath_type USING (filepath_type_id)
                     JOIN qiita.data_directory USING (data_directory_id)
@@ -724,9 +720,11 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
         qdb.sql_connection.TRN.add(sql, sql_args)
         results = qdb.sql_connection.TRN.execute_fetchindex()
         db_dir = get_db_files_base_dir()
+        results = [(fpid, _path_builder(db_dir, fp, m, s, obj_id), checksum,
+                    fp_size, fp_type_)
+                   for fpid, fp, checksum, fp_size, fp_type_, m, s in results]
 
-        return [(fpid, _path_builder(db_dir, fp, m, s, obj_id), fp_type_)
-                for fpid, fp, fp_type_, m, s in results]
+        return results
 
 
 def _rm_files(TRN, fp):
@@ -943,7 +941,7 @@ def get_filepath_information(filepath_id):
     with qdb.sql_connection.TRN:
         sql = """SELECT filepath_id, filepath, filepath_type, checksum,
                         data_type, mountpoint, subdirectory, active,
-                        artifact_id
+                        artifact_id, fp_size as size
                  FROM qiita.filepath
                     JOIN qiita.filepath_type USING (filepath_type_id)
                     JOIN qiita.data_directory USING (data_directory_id)
@@ -956,6 +954,7 @@ def get_filepath_information(filepath_id):
         res['fullpath'] = _path_builder(get_db_files_base_dir(),
                                         res['filepath'], res['mountpoint'],
                                         res['subdirectory'], obj_id)
+        res['size_human_readable'] = naturalsize(res['size'])
         return res
 
 

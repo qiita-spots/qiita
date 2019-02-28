@@ -182,7 +182,7 @@ class DBUtilTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
         exp_fp = "2_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5, 1]]
         self.assertEqual(obs, exp)
 
         qdb.util.purge_filepaths()
@@ -212,7 +212,7 @@ class DBUtilTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
         exp_fp = "2_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5, 1]]
         self.assertEqual(obs, exp)
 
         qdb.util.purge_filepaths()
@@ -240,7 +240,7 @@ class DBUtilTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
         exp_fp = "2_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5, 1]]
         self.assertEqual(obs, exp)
 
         qdb.util.purge_filepaths()
@@ -251,9 +251,9 @@ class DBUtilTests(TestCase):
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
         exp = [(1, path_builder("1_s_G1_L001_sequences.fastq.gz"),
-                "raw_forward_seqs"),
+                '852952723', 58, "raw_forward_seqs"),
                (2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes")]
+                '852952723', 58, "raw_barcodes")]
         self.assertEqual(obs, exp)
 
     def test_retrieve_filepaths_sort(self):
@@ -262,9 +262,9 @@ class DBUtilTests(TestCase):
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
         exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes"),
+                '852952723', 58, "raw_barcodes"),
                (1, path_builder("1_s_G1_L001_sequences.fastq.gz"),
-                "raw_forward_seqs")]
+                '852952723', 58, "raw_forward_seqs")]
         self.assertEqual(obs, exp)
 
     def test_retrieve_filepaths_type(self):
@@ -274,7 +274,7 @@ class DBUtilTests(TestCase):
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
         exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes")]
+                '852952723', 58, "raw_barcodes")]
         self.assertEqual(obs, exp)
 
         obs = qdb.util.retrieve_filepaths(
@@ -282,7 +282,7 @@ class DBUtilTests(TestCase):
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
         exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes")]
+                '852952723', 58, "raw_barcodes",)]
         self.assertEqual(obs, exp)
 
         obs = qdb.util.retrieve_filepaths(
@@ -322,11 +322,12 @@ class DBUtilTests(TestCase):
         makedirs(removed_fps[-1])
 
         sql = """INSERT INTO qiita.filepath
-                    (filepath, filepath_type_id, checksum,
+                    (filepath, filepath_type_id, checksum, size,
                      checksum_algorithm_id, data_directory_id)
-                VALUES ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
-                       ('2_sequences.fastq.gz', 1, '852952723', 1, 5),
-                       ('directory_test', 8, '852952723', 1, 5)
+                VALUES ('2_sequences_barcodes.fastq.gz', 3, '852952723',
+                        1, 1, 5),
+                       ('2_sequences.fastq.gz', 1, '852952723', 1, 1, 5),
+                       ('directory_test', 8, '852952723', 1, 1, 5)
                 RETURNING filepath_id"""
         fp_ids = self.conn_handler.execute_fetchall(sql)
 

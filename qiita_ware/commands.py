@@ -6,11 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import basename, isdir, join
+from os.path import basename, isdir, join, getsize
 from shutil import rmtree
 from tarfile import open as taropen
 from tempfile import mkdtemp
-from os import environ, stat
+from os import environ
 from traceback import format_exc
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from scp import SCPClient
@@ -205,7 +205,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                  ebi_submission.experiment_xml_fp,
                  ebi_submission.run_xml_fp,
                  ebi_submission.submission_xml_fp]
-    total_size = sum([stat(tr).st_size for tr in to_review if tr is not None])
+    total_size = sum([getsize(tr) for tr in to_review if tr is not None])
     # note that the max for EBI is 10M but let's play it safe
     max_size = 8.5e+6 if not test_size else 6000
     if total_size > max_size:
@@ -234,7 +234,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
             ebi_submission.sample_xml_fp)
 
         # now let's recalculate the size to make sure it's fine
-        new_total_size = sum([stat(tr).st_size
+        new_total_size = sum([getsize(tr)
                               for tr in to_review if tr is not None])
         LogEntry.create(
             'Runtime', 'The submission: %d after cleaning is %d and was %d' % (

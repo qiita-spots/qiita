@@ -437,7 +437,7 @@ class Analysis(qdb.base.QiitaObject):
             if not generated
         """
         fp = [fp_id
-              for fp_id, _, fp_type in qdb.util.retrieve_filepaths(
+              for fp_id, _, fp_type, _, _ in qdb.util.retrieve_filepaths(
                 "analysis_filepath", "analysis_id", self._id)
               if fp_type == 'plain_text']
 
@@ -456,7 +456,7 @@ class Analysis(qdb.base.QiitaObject):
         str or None
             full filepath to the mapping file or None if not generated
         """
-        fp = [fp for _, fp, fp_type in qdb.util.retrieve_filepaths(
+        fp = [fp for _, fp, _, _, fp_type in qdb.util.retrieve_filepaths(
             "analysis_filepath", "analysis_id", self._id)
             if fp_type == 'tgz']
 
