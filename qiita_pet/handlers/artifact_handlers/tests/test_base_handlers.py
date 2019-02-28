@@ -82,8 +82,10 @@ class TestBaseHandlersUtils(TestCase):
         # Artifact w/o summary
         obs = artifact_summary_get_request(user, 1)
         exp_files = [
-            (1, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)'),
-            (2, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)')]
+            (1, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)',
+             '852952723', 58),
+            (2, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)',
+             '852952723', 58)]
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
                'artifact_type': 'FASTQ',
@@ -147,7 +149,7 @@ class TestBaseHandlersUtils(TestCase):
         self._files_to_remove.extend([fp, a.html_summary_fp[1]])
         exp_files.append(
             (a.html_summary_fp[0],
-             '%s (html summary)' % basename(a.html_summary_fp[1])))
+             '%s (html summary)' % basename(a.html_summary_fp[1])), 'XXx', 0)
         exp_summary_path = relpath(
             a.html_summary_fp[1], qiita_config.base_data_dir)
         obs = artifact_summary_get_request(user, 1)

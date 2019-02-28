@@ -648,7 +648,7 @@ class PrepTemplate(MetadataTemplate):
         str
             The filepath of the QIIME mapping file
         """
-        for _, fp, fp_type in qdb.util.retrieve_filepaths(
+        for _, fp, _, _, fp_type in qdb.util.retrieve_filepaths(
                 self._filepath_table, self._id_column, self.id,
                 sort='descending'):
             if fp_type == 'qiime_map':

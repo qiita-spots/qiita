@@ -8,6 +8,7 @@
 
 from os.path import basename, relpath
 from json import dumps
+from humanize import naturalsize
 
 from tornado.web import authenticated, StaticFileHandler
 
@@ -174,8 +175,9 @@ def artifact_summary_get_request(user, artifact_id):
                         '<span class="glyphicon glyphicon-export"></span>'
                         ' Submit to VAMPS</a>' % artifact_id)
 
-    files = [(f_id, "%s (%s)" % (basename(fp), f_type.replace('_', ' ')))
-             for f_id, fp, f_type in artifact.filepaths
+    files = [(f_id, "%s (%s)" % (basename(fp), f_type.replace('_', ' ')),
+              checksum, naturalsize(fpsize))
+             for f_id, fp, checksum, fpsize, f_type in artifact.filepaths
              if f_type != 'directory']
 
     # TODO: https://github.com/biocore/qiita/issues/1724 Remove this hardcoded
