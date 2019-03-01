@@ -1056,8 +1056,8 @@ class EBISubmission(object):
         # `preprocessed_demux`. Thus, we only use the first one
         # (the only one present)
         ar = self.artifact
-        demux = [path for _, path, ftype in ar.filepaths
-                 if ftype == 'preprocessed_demux'][0]
+        demux = [fp[1] for fp in ar.filepaths
+                 if fp[4] == 'preprocessed_demux'][0]
 
         demux_samples = set()
         with open_file(demux) as demux_fh:

@@ -442,7 +442,7 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
         self._clean_up_files.extend(
-            [afp for _, afp, _ in
+            [fp[1] for fp in
              qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
     def test_complete_success(self):
@@ -682,7 +682,7 @@ class ProcessingJobTest(TestCase):
         artifact = qdb.artifact.Artifact(exp_artifact_count)
         obs = job.outputs
         self.assertEqual(obs, {'OTU table': artifact})
-        self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
+        self._clean_up_files.extend([fp[1] for fp in artifact.filepaths])
         self.assertEqual(artifact.name, 'outArtifact')
 
     def test_processing_job_workflow(self):

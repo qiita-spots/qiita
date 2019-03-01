@@ -63,9 +63,9 @@ class ReferenceTests(TestCase):
                                 basename(self.tax_fp))
         exp_tree = "%s_%s_%s" % (self.name, self.version,
                                  basename(self.tree_fp))
-        exp = [[seqs_id, exp_seq, 10, '0', 1, 6],
-               [tax_id, exp_tax, 11, '0', 1, 6],
-               [tree_id, exp_tree, 12, '0', 1, 6]]
+        exp = [[seqs_id, exp_seq, 10, '0', 1, 6, 0],
+               [tax_id, exp_tax, 11, '0', 1, 6, 0],
+               [tree_id, exp_tree, 12, '0', 1, 6, 0]]
         self.assertEqual(obs, exp)
 
     def test_sequence_fp(self):

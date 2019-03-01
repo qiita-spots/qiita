@@ -107,7 +107,7 @@ class ArtifactHandler(OauthBaseHandler):
             # Instead of sending a list of files, provide the files as a
             # dictionary keyed by filepath type
             response['files'] = defaultdict(list)
-            for _, fp, fp_type in artifact.filepaths:
+            for _, fp, _, _, fp_type in artifact.filepaths:
                 response['files'][fp_type].append(fp)
 
         self.write(response)

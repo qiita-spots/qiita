@@ -83,9 +83,9 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp_files = [
             (1, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)',
-             '852952723', 58),
+             '852952723', '58 Bytes'),
             (2, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)',
-             '852952723', 58)]
+             '852952723', '58 Bytes')]
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
                'artifact_type': 'FASTQ',
@@ -149,7 +149,8 @@ class TestBaseHandlersUtils(TestCase):
         self._files_to_remove.extend([fp, a.html_summary_fp[1]])
         exp_files.append(
             (a.html_summary_fp[0],
-             '%s (html summary)' % basename(a.html_summary_fp[1])), 'XXx', 0)
+             '%s (html summary)' % basename(a.html_summary_fp[1]),
+             '1642196267', '33 Bytes'))
         exp_summary_path = relpath(
             a.html_summary_fp[1], qiita_config.base_data_dir)
         obs = artifact_summary_get_request(user, 1)
@@ -205,9 +206,9 @@ class TestBaseHandlersUtils(TestCase):
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
         exp_files = [
-            (3, '1_seqs.fna (preprocessed fasta)'),
-            (4, '1_seqs.qual (preprocessed fastq)'),
-            (5, '1_seqs.demux (preprocessed demux)')]
+            (3, '1_seqs.fna (preprocessed fasta)', '852952723', '0 Bytes'),
+            (4, '1_seqs.qual (preprocessed fastq)', '852952723', '0 Bytes'),
+            (5, '1_seqs.demux (preprocessed demux)', '852952723', '0 Bytes')]
         exp = {'name': 'Demultiplexed 1',
                'artifact_id': 2,
                'artifact_type': 'Demultiplexed',
@@ -258,7 +259,8 @@ class TestBaseHandlersUtils(TestCase):
                'editable': True,
                'buttons': '',
                'processing_info': {},
-               'files': [(22, 'biom_table.biom (biom)')],
+               'files': [(22, 'biom_table.biom (biom)', '3574395811',
+                          '1.2 MB')],
                'is_from_analysis': True,
                'summary': None,
                'job': None,

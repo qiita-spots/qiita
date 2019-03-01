@@ -411,7 +411,6 @@ def compute_checksum(path):
     int
         The file checksum
     """
-    crc = 0
     filepaths = []
     if isdir(path):
         for name, dirs, files in walk(path):
@@ -420,17 +419,18 @@ def compute_checksum(path):
     else:
         filepaths.append(path)
 
+    buffersize = 65536
+    crcvalue = 0
     for fp in filepaths:
-        with open(fp, 'Ub') as f:
-            # Go line by line so we don't need to load the entire file
-            for line in f:
-                if crc is None:
-                    crc = crc32(line)
-                else:
-                    crc = crc32(line, crc)
+        with open(fp, 'rb') as f:
+            buffr = f.read(buffersize)
+            while len(buffr) > 0:
+                crcvalue = crc32(buffr, crcvalue)
+                buffr = f.read(buffersize)
+
     # We need the & 0xffffffff in order to get the same numeric value across
     # all python versions and platforms
-    return crc & 0xffffffff
+    return crcvalue & 0xFFFFFFFF
 
 
 def get_files_from_uploads_folders(study_id):
@@ -909,7 +909,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
 
         # We can now go over and remove all the filepaths
         sql = """DELETE FROM qiita.filepath WHERE filepath_id=%s"""
-        for fp_id, fp, fp_type in filepaths:
+        for fp_id, fp, _, _, fp_type in filepaths:
             qdb.sql_connection.TRN.add(sql, [fp_id])
 
             if fp_type == 'html_summary':

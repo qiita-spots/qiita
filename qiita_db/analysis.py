@@ -934,7 +934,7 @@ class Analysis(qdb.base.QiitaObject):
                     # artifacts from multiple bioms and even then we might
                     # only have one biom
                     biom_table_fp = None
-                    for _, fp, fp_type in artifact.filepaths:
+                    for _, fp, _, _, fp_type in artifact.filepaths:
                         if fp_type == 'biom':
                             biom_table_fp = fp
                             break

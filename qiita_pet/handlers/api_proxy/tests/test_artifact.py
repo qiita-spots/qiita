@@ -296,7 +296,7 @@ class TestArtifactAPI(TestCase):
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
         a = Artifact(pt.artifact.id)
-        self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
+        self._files_to_remove.extend([fp[1] for fp in a.filepaths])
 
     def test_artifact_post_req_error(self):
         # Create a new prep template to attach the artifact to

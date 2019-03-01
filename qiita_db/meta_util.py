@@ -219,10 +219,10 @@ def update_redis_stats():
     for k, sts in viewitems(studies):
         for s in sts:
             for a in s.artifacts():
-                for _, fp, dt in a.filepaths:
+                for _, fp, checksum, fpsize, dt in a.filepaths:
                     try:
                         s = stat(fp)
-                        stats.append((dt, s.st_size, strftime('%Y-%m',
+                        stats.append((dt, fpsize, strftime('%Y-%m',
                                       localtime(s.st_ctime))))
                     except OSError:
                         missing_files.append(fp)

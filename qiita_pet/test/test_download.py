@@ -66,8 +66,9 @@ class TestDownloadHandler(TestHandlerBase):
             f.write('\n')
         self._clean_up_files.append(dirpath)
         a.set_html_summary(fp, support_dir=dirpath)
-        for fp_id, _, fp_type in a.filepaths:
-            if fp_type == 'html_summary_dir':
+        for fp in a.filepaths:
+            fp_id = fp[0]
+            if fp[4] == 'html_summary_dir':
                 break
         response = self.get('/download/%d' % fp_id)
         self.assertEqual(response.code, 200)
@@ -117,8 +118,8 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
             next(Command(3).default_parameter_sets), {'input_data': 1})
         a = Artifact.create(files_biom, "BIOM", parents=[Artifact(2)],
                             processing_parameters=params)
-        for _, fp, _ in a.filepaths:
-            self._clean_up_files.append(fp)
+        for fp in a.filepaths:
+            self._clean_up_files.append(fp[1])
 
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
@@ -207,8 +208,8 @@ class TestDownloadRawData(TestHandlerBase):
         # it's possible that one of the tests is deleting the raw data
         # so we will make sure that the files exists so this test passes
         study = Study(1)
-        all_files = [fp for a in study.artifacts()
-                     for _, fp, _ in a.filepaths]
+        all_files = [fp[1] for a in study.artifacts()
+                     for fp in a.filepaths]
         for fp in all_files:
             if not exists(fp):
                 with open(fp, 'w') as f:

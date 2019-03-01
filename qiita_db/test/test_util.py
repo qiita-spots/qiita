@@ -322,7 +322,7 @@ class DBUtilTests(TestCase):
         makedirs(removed_fps[-1])
 
         sql = """INSERT INTO qiita.filepath
-                    (filepath, filepath_type_id, checksum, size,
+                    (filepath, filepath_type_id, checksum, fp_size,
                      checksum_algorithm_id, data_directory_id)
                 VALUES ('2_sequences_barcodes.fastq.gz', 3, '852952723',
                         1, 1, 5),
@@ -461,9 +461,9 @@ class DBUtilTests(TestCase):
         filepaths = artifact.filepaths
         # deleting reference so we can directly call
         # move_filepaths_to_upload_folder
-        for fid, _, _ in filepaths:
+        for fd in filepaths:
             sql = "DELETE FROM qiita.artifact_filepath WHERE filepath_id=%s"
-            self.conn_handler.execute(sql, (fid,))
+            self.conn_handler.execute(sql, (fd[0],))
 
         # moving filepaths
         qdb.util.move_filepaths_to_upload_folder(st.id, filepaths)
@@ -471,7 +471,7 @@ class DBUtilTests(TestCase):
         # check that they do not exist in the old path but do in the new one
         path_for_removal = join(qdb.util.get_mountpoint("uploads")[0][1],
                                 str(st.id))
-        for _, fp, fp_type in filepaths:
+        for _, fp, _, _, fp_type in filepaths:
             self.assertFalse(exists(fp))
             new_fp = join(path_for_removal, basename(fp))
             if fp_type == 'html_summary':
@@ -666,8 +666,9 @@ class DBUtilTests(TestCase):
         self.assertIsNotNone(obs.pop('fullpath'))
         exp = {'filepath_id': 1, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
                'filepath_type': 'raw_forward_seqs', 'checksum': '852952723',
-               'data_type': 'raw_data', 'mountpoint': 'raw_data',
-               'subdirectory': False, 'active': True}
+               'data_type': 'raw_data', 'mountpoint': 'raw_data', 'size': 58,
+               'size_human_readable': '58 Bytes', 'subdirectory': False,
+               'active': True}
         self.assertEqual(obs, exp)
 
     def test_filepath_id_to_rel_path(self):

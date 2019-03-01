@@ -226,7 +226,7 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args)
 
             # Associate the artifact with its filepaths
-            filepaths = [(fp, f_type) for _, fp, f_type in artifact.filepaths]
+            filepaths = [(fp[1], fp[4]) for fp in artifact.filepaths]
             fp_ids = qdb.util.insert_filepaths(
                 filepaths, a_id, atype, copy=True)
             sql = """INSERT INTO qiita.artifact_filepath
@@ -1349,7 +1349,7 @@ class Artifact(qdb.base.QiitaObject):
 
         cmd_name = processing_params.command.name
         ms = processing_params.command.merging_scheme
-        afps = [fp for _, fp, _ in self.filepaths if fp.endswith('biom')]
+        afps = [fp[1] for fp in self.filepaths if fp.endswith('biom')]
 
         merging_schemes = []
         parent_softwares = []

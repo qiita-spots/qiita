@@ -96,7 +96,7 @@ def create_non_rarefied_biom_artifact(analysis, biom_data, rarefied_table):
             # Get the filepath of the BIOM table from the artifact
             artifact = Artifact(a_id)
             biom_fp = None
-            for _, fp, fp_type in artifact.filepaths:
+            for _, fp, _, _, fp_type in artifact.filepaths:
                 if fp_type == 'biom':
                     biom_fp = fp
             # Note that we are sure that the biom table exists for sure, so

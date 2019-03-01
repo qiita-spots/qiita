@@ -59,7 +59,7 @@ class TestSQL(TestCase):
             fp, "BIOM",
             parents=[qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)],
             processing_parameters=params)
-        self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
+        self._files_to_remove.extend([fp[1] for fp in new.filepaths])
         obs = self.conn_handler.execute_fetchall(sql, [new.id])
         exp = [[1]]
         self.assertEqual(obs, exp)
@@ -85,8 +85,7 @@ class TestSQL(TestCase):
             f.write("test")
         fp = [(fp, 1)]
         new_root = qdb.artifact.Artifact.create(fp, "FASTQ", prep_template=pt)
-        self._files_to_remove.extend(
-            [afp for _, afp, _ in new_root.filepaths])
+        self._files_to_remove.extend([fp[1] for fp in new_root.filepaths])
         return new_root
 
     def _create_child_artifact(self, parents):
@@ -135,7 +134,7 @@ class TestSQL(TestCase):
         new = qdb.artifact.Artifact.create(
             fp, "Demultiplexed", parents=[qdb.artifact.Artifact(1), new_root],
             processing_parameters=params)
-        self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
+        self._files_to_remove.extend([fp[1] for fp in new.filepaths])
         obs = self.conn_handler.execute_fetchall(sql, [new.id])
         exp = [[1], [new_root.id]]
         self.assertCountEqual(obs, exp)
