@@ -177,7 +177,7 @@
     </button>
     <div id="available-files-div" class="collapse {% if len(files) <= 10 %} in {% end %}" style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
       {% for f_id, f_name, checksum, size in files %}
-        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a> (CRC32: {{checksum}}) {{size}}
+        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a> (CRC32: {{format(int(checksum), '08x')}}) {{size}}
         </br>
       {% end %}
     </div>

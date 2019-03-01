@@ -372,8 +372,8 @@ class TestUpdateArtifactFromCmd(TestCase):
     def test_update_artifact_from_cmd(self):
         artifact = qdb.commands.update_artifact_from_cmd(
             self.filepaths, self.filepaths_types, 1)
-        for _, fp, _ in artifact.filepaths:
-            self._clean_up_files.append(fp)
+        for fp in artifact.filepaths:
+            self._clean_up_files.append(fp[1])
 
         for obs, exp in zip(sorted(artifact.filepaths, key=itemgetter(1)),
                             self.checksums):

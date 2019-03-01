@@ -83,9 +83,9 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp_files = [
             (1, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)',
-             '852952723', '58 Bytes'),
+             '2125826711', '58 Bytes'),
             (2, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)',
-             '852952723', '58 Bytes')]
+             '2125826711', '58 Bytes')]
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
                'artifact_type': 'FASTQ',
@@ -206,9 +206,9 @@ class TestBaseHandlersUtils(TestCase):
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
         exp_files = [
-            (3, '1_seqs.fna (preprocessed fasta)', '852952723', '0 Bytes'),
-            (4, '1_seqs.qual (preprocessed fastq)', '852952723', '0 Bytes'),
-            (5, '1_seqs.demux (preprocessed demux)', '852952723', '0 Bytes')]
+            (3, '1_seqs.fna (preprocessed fasta)', '2125826711', '0 Bytes'),
+            (4, '1_seqs.qual (preprocessed fastq)', '2125826711', '0 Bytes'),
+            (5, '1_seqs.demux (preprocessed demux)', '2125826711', '0 Bytes')]
         exp = {'name': 'Demultiplexed 1',
                'artifact_id': 2,
                'artifact_type': 'Demultiplexed',

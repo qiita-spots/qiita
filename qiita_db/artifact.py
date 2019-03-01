@@ -1012,7 +1012,7 @@ class Artifact(qdb.base.QiitaObject):
                 # Delete the current HTML summary
                 to_delete_ids = []
                 to_delete_fps = []
-                for fp_id, fp, fp_type in self.filepaths:
+                for fp_id, fp, _, _, fp_type in self.filepaths:
                     if fp_type in ('html_summary', 'html_summary_dir'):
                         to_delete_ids.append([fp_id])
                         to_delete_fps.append(fp)

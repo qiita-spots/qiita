@@ -52,10 +52,10 @@ class TestArtifactAPIReadOnly(TestCase):
                'parents': [],
                'filepaths': [
                    (1, join(get_mountpoint('raw_data')[0][1],
-                    '1_s_G1_L001_sequences.fastq.gz'), '852952723', 58,
+                    '1_s_G1_L001_sequences.fastq.gz'), '2125826711', 58,
                     'raw_forward_seqs'),
                    (2,  join(get_mountpoint('raw_data')[0][1],
-                    '1_s_G1_L001_sequences_barcodes.fastq.gz'), '852952723',
+                    '1_s_G1_L001_sequences_barcodes.fastq.gz'), '2125826711',
                     58, 'raw_barcodes')]
                }
         self.assertEqual(obs, exp)

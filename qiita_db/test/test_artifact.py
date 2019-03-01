@@ -225,9 +225,9 @@ class ArtifactTestsReadOnly(TestCase):
         path_builder = partial(join, db_test_raw_dir)
         exp_fps = [
             (1, path_builder('1_s_G1_L001_sequences.fastq.gz'),
-             '852952723', 58, "raw_forward_seqs"),
+             '2125826711', 58, "raw_forward_seqs"),
             (2, path_builder('1_s_G1_L001_sequences_barcodes.fastq.gz'),
-             '852952723', 58, "raw_barcodes")]
+             '2125826711', 58, "raw_barcodes")]
         self.assertEqual(qdb.artifact.Artifact(1).filepaths, exp_fps)
 
     def test_parents(self):
@@ -1046,7 +1046,7 @@ class ArtifactTests(TestCase):
             processing_parameters=parameters)
 
         self._clean_up_files.extend(
-            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
+            [join(uploads_fp, basename(fp[1])) for fp in test.filepaths])
         qdb.artifact.Artifact.delete(test.id)
 
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
