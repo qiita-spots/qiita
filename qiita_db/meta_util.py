@@ -377,7 +377,7 @@ def generate_biom_and_metadata_release(study_status='public'):
             software = a.processing_parameters.command.software
             software = '%s v%s' % (software.name, software.version)
 
-            for _, fp, fp_type in a.filepaths:
+            for _, fp, _, _, fp_type in a.filepaths:
                 if fp_type != 'biom' or 'only-16s' in fp:
                     continue
                 fp = relpath(fp, bdir)

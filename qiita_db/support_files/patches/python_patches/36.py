@@ -48,7 +48,7 @@ with TRN:
     for r in TRN.execute_fetchindex():
         to_tgz = None
         a = Artifact(r[0])
-        for _, fp, fp_type in a.filepaths:
+        for _, fp, _, _, fp_type in a.filepaths:
             if fp_type == 'directory':
                 # removing / from the path if it exists
                 to_tgz = fp[:-1] if fp[-1] == '/' else fp

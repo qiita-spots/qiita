@@ -33,57 +33,53 @@ class TestBaseHandlersUtils(TestCase):
 
     def test_analysis_description_handler_get_request(self):
         obs = analysis_description_handler_get_request(1, User('test@foo.bar'))
-        exp = {'analysis_name': 'SomeAnalysis',
-               'analysis_id': 1,
-               'analysis_description': 'A test analysis',
-               'analysis_mapping_id': 16,
-               'analysis_is_public': False,
-               'alert_type': 'info',
-               'artifacts': {
-                    4: (1, 'Identification of the Microbiomes for Cannabis '
-                        'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
-                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
-                    5: (1, 'Identification of the Microbiomes for Cannabis '
-                        'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
-                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
-                    6: (1, 'Identification of the Microbiomes for Cannabis '
-                        'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
-                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192'])},
-               'alert_msg': ''}
-        self.assertEqual(obs, exp)
+        exp = {
+            'analysis_name': 'SomeAnalysis', 'analysis_id': 1,
+            'analysis_is_public': False, 'analysis_description': 'A test '
+            'analysis', 'analysis_mapping_id': None, 'alert_type': 'info',
+            'artifacts': {
+                4: (1, 'Identification of the Microbiomes for Cannabis Soils',
+                    ('Pick closed-reference OTUs | Split libraries FASTQ',
+                     'QIIME v1.9.1'), [
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                        '1.SKM4.640180', '1.SKM9.640192']),
+                5: (1, 'Identification of the Microbiomes for Cannabis Soils',
+                    ('Pick closed-reference OTUs | Split libraries FASTQ',
+                     'QIIME v1.9.1'), [
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                        '1.SKM4.640180', '1.SKM9.640192']),
+                6: (1, 'Identification of the Microbiomes for Cannabis Soils',
+                    ('Pick closed-reference OTUs | Split libraries FASTQ',
+                     'QIIME v1.9.1'), [
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                        '1.SKM4.640180', '1.SKM9.640192'])},
+            'alert_msg': ''}
+        self.assertDictEqual(obs, exp)
 
         r_client.set('analysis_1', dumps({'job_id': 'job_id'}))
         r_client.set('job_id', dumps({'status_msg': 'running'}))
         obs = analysis_description_handler_get_request(1, User('test@foo.bar'))
-        exp = {'analysis_name': 'SomeAnalysis',
-               'analysis_id': 1,
-               'analysis_description': 'A test analysis',
-               'analysis_mapping_id': 16,
-               'analysis_is_public': False,
-               'alert_type': 'info',
-               'artifacts': {
-                    4: (1, 'Identification of the Microbiomes for Cannabis '
-                        'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
-                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
-                    5: (1, 'Identification of the Microbiomes for Cannabis '
-                        'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
-                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
-                    6: (1, 'Identification of the Microbiomes for Cannabis '
-                        'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
-                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192'])},
-               'alert_msg': 'An artifact is being deleted from this analysis'}
+        exp = {
+            'analysis_name': 'SomeAnalysis', 'analysis_id': 1,
+            'analysis_is_public': False, 'analysis_description': 'A test '
+            'analysis', 'analysis_mapping_id': None, 'alert_type': 'info',
+            'artifacts': {
+                4: (1, 'Identification of the Microbiomes for Cannabis Soils',
+                    ('Pick closed-reference OTUs | Split libraries FASTQ',
+                     'QIIME v1.9.1'), [
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                        '1.SKM4.640180', '1.SKM9.640192']),
+                5: (1, 'Identification of the Microbiomes for Cannabis Soils',
+                    ('Pick closed-reference OTUs | Split libraries FASTQ',
+                     'QIIME v1.9.1'), [
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                        '1.SKM4.640180', '1.SKM9.640192']),
+                6: (1, 'Identification of the Microbiomes for Cannabis Soils',
+                    ('Pick closed-reference OTUs | Split libraries FASTQ',
+                     'QIIME v1.9.1'), [
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                        '1.SKM4.640180', '1.SKM9.640192'])},
+            'alert_msg': 'An artifact is being deleted from this analysis'}
         self.assertEqual(obs, exp)
 
         r_client.set('job_id', dumps(
@@ -91,29 +87,27 @@ class TestBaseHandlersUtils(TestCase):
              'return': {'status': 'danger',
                         'message': 'Error deleting artifact'}}))
         obs = analysis_description_handler_get_request(1, User('test@foo.bar'))
-        exp = {'analysis_name': 'SomeAnalysis',
-               'analysis_id': 1,
-               'analysis_description': 'A test analysis',
-               'analysis_mapping_id': 16,
-               'analysis_is_public': False,
-               'alert_type': 'danger',
-               'artifacts': {
-                    4: (1, 'Identification of the Microbiomes for Cannabis '
-                        'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
-                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
-                    5: (1, 'Identification of the Microbiomes for Cannabis '
-                        'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
-                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
-                    6: (1, 'Identification of the Microbiomes for Cannabis '
-                        'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
-                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192'])},
-               'alert_msg': 'Error deleting artifact'}
+        exp = {
+            'analysis_name': 'SomeAnalysis', 'analysis_id': 1,
+            'analysis_is_public': False, 'analysis_description': 'A test '
+            'analysis', 'analysis_mapping_id': None, 'alert_type': 'danger',
+            'artifacts': {
+                4: (1, 'Identification of the Microbiomes for Cannabis Soils',
+                    ('Pick closed-reference OTUs | Split libraries FASTQ',
+                     'QIIME v1.9.1'), [
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                        '1.SKM4.640180', '1.SKM9.640192']),
+                5: (1, 'Identification of the Microbiomes for Cannabis Soils',
+                    ('Pick closed-reference OTUs | Split libraries FASTQ',
+                     'QIIME v1.9.1'), [
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                        '1.SKM4.640180', '1.SKM9.640192']),
+                6: (1, 'Identification of the Microbiomes for Cannabis Soils',
+                    ('Pick closed-reference OTUs | Split libraries FASTQ',
+                     'QIIME v1.9.1'), [
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                        '1.SKM4.640180', '1.SKM9.640192'])},
+            'alert_msg': 'Error deleting artifact'}
         self.assertEqual(obs, exp)
 
     def test_analyisis_graph_handler_get_request(self):
