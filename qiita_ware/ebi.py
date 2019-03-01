@@ -998,7 +998,7 @@ class EBISubmission(object):
 
         fwd_reads = []
         rev_reads = []
-        for _, fp, fpt in self.artifact.filepaths:
+        for _, fp, _, _, fpt in self.artifact.filepaths:
             if fpt == 'raw_forward_seqs':
                 fwd_reads.append((basename(fp), fp))
             elif fpt == 'raw_reverse_seqs':

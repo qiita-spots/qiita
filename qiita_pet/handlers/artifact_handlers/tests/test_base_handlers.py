@@ -260,7 +260,7 @@ class TestBaseHandlersUtils(TestCase):
                'buttons': '',
                'processing_info': {},
                'files': [(22, 'biom_table.biom (biom)', '3574395811',
-                          '1.2 MB')],
+                          '0 MB')],
                'is_from_analysis': True,
                'summary': None,
                'job': None,

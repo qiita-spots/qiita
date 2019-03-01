@@ -88,7 +88,7 @@ class BaseHandlerDownload(BaseHandler):
         basedir = get_db_files_base_dir()
         basedir_len = len(basedir) + 1
         to_download = []
-        for i, (fid, path, data_type) in enumerate(artifact.filepaths):
+        for i, (fid, path, _, _, data_type) in enumerate(artifact.filepaths):
             # ignore if tgz as they could create problems and the
             # raw data is in the folder
             if data_type == 'tgz':

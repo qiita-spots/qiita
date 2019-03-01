@@ -72,8 +72,8 @@ class EBISubmitHandler(BaseHandler):
                 ', '.join(VALID_SUBMISSION_TYPES), artifact_type)
             msg_level = 'danger'
         elif artifact_type == 'Demultiplexed':
-            demux = [path for _, path, ftype in artifact.filepaths
-                     if ftype == 'preprocessed_demux']
+            demux = [fp[1] for fp in artifact.filepaths
+                     if fp[4] == 'preprocessed_demux']
             demux_length = len(demux)
             if demux_length > 1:
                 msg = "Study appears to have multiple demultiplexed files!"

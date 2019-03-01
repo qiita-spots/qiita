@@ -666,9 +666,9 @@ class DBUtilTests(TestCase):
         self.assertIsNotNone(obs.pop('fullpath'))
         exp = {'filepath_id': 1, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
                'filepath_type': 'raw_forward_seqs', 'checksum': '852952723',
-               'data_type': 'raw_data', 'mountpoint': 'raw_data', 'size': 58,
-               'size_human_readable': '58 Bytes', 'subdirectory': False,
-               'active': True}
+               'data_type': 'raw_data', 'mountpoint': 'raw_data',
+               'fp_size': 58, 'size_human_readable': '58 Bytes',
+               'subdirectory': False, 'active': True}
         self.assertEqual(obs, exp)
 
     def test_filepath_id_to_rel_path(self):

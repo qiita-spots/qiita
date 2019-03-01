@@ -941,7 +941,7 @@ def get_filepath_information(filepath_id):
     with qdb.sql_connection.TRN:
         sql = """SELECT filepath_id, filepath, filepath_type, checksum,
                         data_type, mountpoint, subdirectory, active,
-                        artifact_id, fp_size as size
+                        artifact_id, fp_size
                  FROM qiita.filepath
                     JOIN qiita.filepath_type USING (filepath_type_id)
                     JOIN qiita.data_directory USING (data_directory_id)
@@ -954,7 +954,7 @@ def get_filepath_information(filepath_id):
         res['fullpath'] = _path_builder(get_db_files_base_dir(),
                                         res['filepath'], res['mountpoint'],
                                         res['subdirectory'], obj_id)
-        res['size_human_readable'] = naturalsize(res['size'])
+        res['size_human_readable'] = naturalsize(res['fp_size'])
         return res
 
 

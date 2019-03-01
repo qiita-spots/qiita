@@ -1349,7 +1349,7 @@ class Artifact(qdb.base.QiitaObject):
 
         cmd_name = processing_params.command.name
         ms = processing_params.command.merging_scheme
-        afps = [fp[1] for fp in self.filepaths if fp.endswith('biom')]
+        afps = [fp[1] for fp in self.filepaths if fp[1].endswith('biom')]
 
         merging_schemes = []
         parent_softwares = []
