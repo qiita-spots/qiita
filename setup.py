@@ -105,13 +105,13 @@ setup(name='qiita-spots',
       # psycopg2 2.7 has substantial changes to the code base so let's stick
       # to 2.6
       install_requires=['psycopg2<2.7', 'click', 'future', 'bcrypt', 'pandas',
-                        'biom-format', 'tornado<6.0', 'toredis', 'redis', 'six',
+                        'biom-format', 'tornado<6.0', 'toredis', 'redis',
                         'scp', 'pyparsing', 'h5py',  'natsort', 'nose', 'pep8',
                         'networkx', 'humanize', 'scikit-bio', 'wtforms',
                         'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx', 'nltk',
                         'gitpython', 'redbiom', 'pyzmq', 'sphinx_rtd_theme',
                         'paramiko', 'seaborn',  'matplotlib', 'scipy', 'nose',
-                        'flake8', 'qiita-files @ https://github.com/'
+                        'flake8', 'six', 'qiita-files @ https://github.com/'
                         'qiita-spots/qiita-files/archive/master.zip', 'mock'],
       classifiers=classifiers
       )
