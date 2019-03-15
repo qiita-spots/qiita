@@ -30,14 +30,14 @@ from time import strftime, localtime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from base64 import b64encode
-from urllib import quote
-from StringIO import StringIO
+from urllib.parse import quote
+from io import BytesIO
 from future.utils import viewitems
 from datetime import datetime
 from tarfile import open as topen, TarInfo
 from hashlib import md5
 from re import sub
-from json import loads, dump
+from json import loads, dump, dumps
 
 from qiita_db.util import create_nested_path
 from qiita_core.qiita_settings import qiita_config, r_client
@@ -207,7 +207,7 @@ def update_redis_stats():
     num_users = qdb.util.get_count('qiita.qiita_user')
     num_processing_jobs = qdb.util.get_count('qiita.processing_job')
 
-    lat_longs = get_lat_longs()
+    lat_longs = dumps(get_lat_longs())
 
     num_studies_ebi = len([k for k, v in viewitems(ebi_samples_prep)
                            if v >= 1])
@@ -284,10 +284,10 @@ def update_redis_stats():
     plt.xlabel('Date')
     plt.ylabel('Storage space per data type')
 
-    plot = StringIO()
+    plot = BytesIO()
     plt.savefig(plot, format='png')
     plot.seek(0)
-    img = 'data:image/png;base64,' + quote(b64encode(plot.buf))
+    img = 'data:image/png;base64,' + quote(b64encode(plot.getbuffer()))
 
     time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
 
@@ -296,7 +296,7 @@ def update_redis_stats():
         ('number_studies', number_studies, r_client.hmset),
         ('number_of_samples', number_of_samples, r_client.hmset),
         ('num_users', num_users, r_client.set),
-        ('lat_longs', lat_longs, r_client.set),
+        ('lat_longs', (lat_longs), r_client.set),
         ('num_studies_ebi', num_studies_ebi, r_client.set),
         ('num_samples_ebi', num_samples_ebi, r_client.set),
         ('number_samples_ebi_prep', number_samples_ebi_prep, r_client.set),
@@ -373,40 +373,9 @@ def generate_biom_and_metadata_release(study_status='public'):
             if a.processing_parameters is None:
                 continue
 
-            processing_params = a.processing_parameters
-            cmd_name = processing_params.command.name
-            ms = processing_params.command.merging_scheme
-            software = processing_params.command.software
+            merging_schemes, parent_softwares = a.merging_scheme
+            software = a.processing_parameters.command.software
             software = '%s v%s' % (software.name, software.version)
-
-            # this loop is necessary as in theory an artifact can be
-            # generated from multiple prep info files
-            afps = [fp for _, fp, _ in a.filepaths if fp.endswith('biom')]
-            merging_schemes = []
-            parent_softwares = []
-            for p in a.parents:
-                pparent = p.processing_parameters
-                # if parent is None, then is a direct upload; for example
-                # per_sample_FASTQ in shotgun data
-                if pparent is None:
-                    parent_cmd_name = None
-                    parent_merging_scheme = None
-                    parent_pp = None
-                    parent_software = 'N/A'
-                else:
-                    parent_cmd_name = pparent.command.name
-                    parent_merging_scheme = pparent.command.merging_scheme
-                    parent_pp = pparent.values
-                    psoftware = pparent.command.software
-                    parent_software = '%s v%s' % (
-                        psoftware.name, psoftware.version)
-
-                merging_schemes.append(qdb.util.human_merging_scheme(
-                    cmd_name, ms, parent_cmd_name, parent_merging_scheme,
-                    processing_params.values, afps, parent_pp))
-                parent_softwares.append(parent_software)
-            merging_schemes = ', '.join(merging_schemes)
-            parent_softwares = ', '.join(parent_softwares)
 
             for _, fp, fp_type in a.filepaths:
                 if fp_type != 'biom' or 'only-16s' in fp:
@@ -440,22 +409,22 @@ def generate_biom_and_metadata_release(study_status='public'):
     create_nested_path(tgz_dir)
     tgz_name = join(tgz_dir, '%s-%s-building.tgz' % (portal, study_status))
     tgz_name_final = join(tgz_dir, '%s-%s.tgz' % (portal, study_status))
-    txt_hd = StringIO()
+    txt_lines = [
+        "biom fp\tsample fp\tprep fp\tqiita artifact id\tplatform\t"
+        "target gene\tmerging scheme\tartifact software\tparent software"]
     with topen(tgz_name, "w|gz") as tgz:
-        txt_hd.write(
-            "biom fp\tsample fp\tprep fp\tqiita artifact id\tplatform\t"
-            "target gene\tmerging scheme\tartifact software\t"
-            "parent software\n")
         for biom_fp, sample_fp, prep_fp, aid, pform, tg, ms, asv, psv in data:
-            txt_hd.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
+            txt_lines.append("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (
                 biom_fp, sample_fp, prep_fp, aid, pform, tg, ms, asv, psv))
             tgz.add(join(bdir, biom_fp), arcname=biom_fp, recursive=False)
             tgz.add(join(bdir, sample_fp), arcname=sample_fp, recursive=False)
             tgz.add(join(bdir, prep_fp), arcname=prep_fp, recursive=False)
-
-        txt_hd.seek(0)
         info = TarInfo(name='%s-%s-%s.txt' % (portal, study_status, ts))
-        info.size = len(txt_hd.buf)
+        txt_hd = BytesIO()
+        txt_hd.write(bytes('\n'.join(txt_lines), 'ascii'))
+        txt_hd.seek(0)
+        info.size = len(txt_hd.read())
+        txt_hd.seek(0)
         tgz.addfile(tarinfo=info, fileobj=txt_hd)
 
     with open(tgz_name, "rb") as f:
@@ -494,7 +463,7 @@ def generate_plugin_releases():
     create_nested_path(tgz_dir_release)
     for cmd in commands:
         cmd_name = cmd.name
-        mschemes = [v for _, v in ARCHIVE.merging_schemes().iteritems()
+        mschemes = [v for _, v in ARCHIVE.merging_schemes().items()
                     if cmd_name in v]
         for ms in mschemes:
             ms_name = sub('[^0-9a-zA-Z]+', '', ms)
@@ -504,7 +473,7 @@ def generate_plugin_releases():
             pfp = join(ms_fp, 'archive.json')
             archives = {k: loads(v)
                         for k, v in ARCHIVE.retrieve_feature_values(
-                              archive_merging_scheme=ms).iteritems()
+                              archive_merging_scheme=ms).items()
                         if v != ''}
             with open(pfp, 'w') as f:
                 dump(archives, f)
@@ -522,7 +491,7 @@ def generate_plugin_releases():
             ppc_cmd = "%s %s %s" % (
                 ppc['script_env'], ppc['script_path'], params)
             p_out, p_err, rv = qdb.processing_job._system_call(ppc_cmd)
-            p_out = p_out.decode("utf-8").rstrip()
+            p_out = p_out.rstrip()
             if rv != 0:
                 raise ValueError('Error %d: %s' % (rv, p_out))
             p_out = loads(p_out)

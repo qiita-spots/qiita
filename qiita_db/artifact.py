@@ -13,7 +13,6 @@ from datetime import datetime
 from os import remove
 from os.path import isfile, relpath
 from shutil import rmtree
-from functools import partial
 from collections import namedtuple
 from qiita_db.util import create_nested_path
 
@@ -510,10 +509,9 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it is public")
 
-            children = instance.children
-            children_ids = [c.id for c in children]
-            all_ids = tuple(children_ids + [artifact_id])
-            all_artifacts = children + [instance]
+            all_artifacts = list(instance.descendants.nodes())
+            all_artifacts.reverse()
+            all_ids = tuple([a.id for a in all_artifacts])
 
             # Check if this or any of the children have been analyzed
             sql = """SELECT email, analysis_id
@@ -1028,13 +1026,14 @@ class Artifact(qdb.base.QiitaObject):
                 # And from the filesystem only after the transaction is
                 # successfully completed (after commit)
 
-                def path_cleaner(fp):
-                    if isfile(fp):
-                        remove(fp)
-                    else:
-                        rmtree(fp)
+                def path_cleaner(fps):
+                    for fp in fps:
+                        if isfile(fp):
+                            remove(fp)
+                        else:
+                            rmtree(fp)
                 qdb.sql_connection.TRN.add_post_commit_func(
-                    partial(map, path_cleaner, to_delete_fps))
+                    path_cleaner, to_delete_fps)
 
             # Add the new HTML summary
             filepaths = [(html_fp, 'html_summary')]
@@ -1169,7 +1168,7 @@ class Artifact(qdb.base.QiitaObject):
             # status. Approach: Loop over all the artifacts and add all the
             # jobs that have been attached to them.
             visited = set()
-            queue = nodes.keys()
+            queue = list(nodes.keys())
             while queue:
                 current = queue.pop(0)
                 if current not in visited:
@@ -1333,6 +1332,52 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()
             return qdb.analysis.Analysis(res[0][0]) if res else None
+
+    @property
+    def merging_scheme(self):
+        """The merging scheme of this artifact_type
+
+        Returns
+        -------
+        str, str
+            The human readable merging scheme and the parent software
+            information for this artifact
+        """
+        processing_params = self.processing_parameters
+        if processing_params is None:
+            return '', ''
+
+        cmd_name = processing_params.command.name
+        ms = processing_params.command.merging_scheme
+        afps = [fp for _, fp, _ in self.filepaths if fp.endswith('biom')]
+
+        merging_schemes = []
+        parent_softwares = []
+        # this loop is necessary as in theory an artifact can be
+        # generated from multiple prep info files
+        for p in self.parents:
+            pparent = p.processing_parameters
+            # if parent is None, then is a direct upload; for example
+            # per_sample_FASTQ in shotgun data
+            if pparent is None:
+                parent_cmd_name = None
+                parent_merging_scheme = None
+                parent_pp = None
+                parent_software = 'N/A'
+            else:
+                parent_cmd_name = pparent.command.name
+                parent_merging_scheme = pparent.command.merging_scheme
+                parent_pp = pparent.values
+                psoftware = pparent.command.software
+                parent_software = '%s v%s' % (
+                    psoftware.name, psoftware.version)
+
+            merging_schemes.append(qdb.util.human_merging_scheme(
+                cmd_name, ms, parent_cmd_name, parent_merging_scheme,
+                processing_params.values, afps, parent_pp))
+            parent_softwares.append(parent_software)
+
+        return ', '.join(merging_schemes), ', '.join(parent_softwares)
 
     def jobs(self, cmd=None, status=None, show_hidden=False):
         """Jobs that used this artifact as input

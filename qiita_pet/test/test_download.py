@@ -43,7 +43,7 @@ class TestDownloadHandler(TestHandlerBase):
         # check success
         response = self.get('/download/1')
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, (
+        self.assertEqual(response.body.decode('ascii'), (
             "This installation of Qiita was not equipped with nginx, so it "
             "is incapable of serving files. The file you attempted to "
             "download is located at raw_data/1_s_G1_L001_sequences.fastq.gz"))
@@ -74,9 +74,9 @@ class TestDownloadHandler(TestHandlerBase):
 
         fp_name = basename(fp2)
         dirname = basename(dirpath)
-        self.assertEqual(
-            response.body, "- 1 /protected/FASTQ/1/%s/%s FASTQ/1/%s/%s\n"
-                           % (dirname, fp_name, dirname, fp_name))
+        self.assertEqual(response.body.decode('ascii'),
+                         "- 1 /protected/FASTQ/1/%s/%s FASTQ/1/%s/%s\n" % (
+                            dirname, fp_name, dirname, fp_name))
 
 
 class TestDownloadStudyBIOMSHandler(TestHandlerBase):
@@ -114,7 +114,7 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         files_biom = [(biom_fp, 'biom'), (smr_dir, 'directory'), (tgz, 'tgz')]
 
         params = Parameters.from_default_params(
-            Command(3).default_parameter_sets.next(), {'input_data': 1})
+            next(Command(3).default_parameter_sets), {'input_data': 1})
         a = Artifact.create(files_biom, "BIOM", parents=[Artifact(2)],
                             processing_parameters=params)
         for _, fp, _ in a.filepaths:
@@ -146,7 +146,7 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
             '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
             'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
-        self.assertRegexpMatches(response.body, exp)
+        self.assertRegex(response.body.decode('ascii'), exp)
 
         response = self.get('/download_study_bioms/200')
         self.assertEqual(response.code, 405)
@@ -167,7 +167,7 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
             '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
             'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
-        self.assertRegexpMatches(response.body, exp)
+        self.assertRegex(response.body.decode('ascii'), exp)
 
 
 class TestDownloadRelease(TestHandlerBase):
@@ -185,7 +185,7 @@ class TestDownloadRelease(TestHandlerBase):
         self.assertIn(
             "This installation of Qiita was not equipped with nginx, so it is "
             "incapable of serving files. The file you attempted to download "
-            "is located at", response.body)
+            "is located at", response.body.decode('ascii'))
 
 
 class TestDownloadRawData(TestHandlerBase):
@@ -225,7 +225,7 @@ class TestDownloadRawData(TestHandlerBase):
             'mapping_files/1_mapping_file.txt\n'
             '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/7_mapping_file.txt\n')
-        self.assertRegexpMatches(response.body, exp)
+        self.assertRegex(response.body.decode('ascii'), exp)
 
         response = self.get('/download_study_bioms/200')
         self.assertEqual(response.code, 405)
@@ -253,7 +253,7 @@ class TestDownloadRawData(TestHandlerBase):
         exp = (
             '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/7_mapping_file.txt\n')
-        self.assertRegexpMatches(response.body, exp)
+        self.assertRegex(response.body.decode('ascii'), exp)
 
 
 class TestDownloadEBISampleAccessions(TestHandlerBase):
@@ -282,7 +282,10 @@ class TestDownloadEBISampleAccessions(TestHandlerBase):
                "1.SKD8.640184\tERS000001\n1.SKM5.640177\tERS000005\n"
                "1.SKM7.640188\tERS000010\n1.SKD7.640191\tERS000021")
         self.assertEqual(response.code, 200)
-        self.assertRegexpMatches(response.body, exp)
+        # testing as lists so we ignore order
+        obs = response.body.decode('ascii').split('\n')
+        exp = exp.split('\n')
+        self.assertCountEqual(obs, exp)
 
         # changing user so we can test the failures
         BaseHandler.get_current_user = Mock(
@@ -317,7 +320,10 @@ class TestDownloadEBIPrepAccessions(TestHandlerBase):
                "1.SKD8.640184\tERX0000001\n1.SKM5.640177\tERX0000005\n"
                "1.SKM7.640188\tERX0000010\n1.SKD7.640191\tERX0000021")
         self.assertEqual(response.code, 200)
-        self.assertRegexpMatches(response.body, exp)
+        # testing as lists so we ignore order
+        obs = response.body.decode('ascii').split('\n')
+        exp = exp.split('\n')
+        self.assertCountEqual(obs, exp)
 
         # changing user so we can test the failures
         BaseHandler.get_current_user = Mock(

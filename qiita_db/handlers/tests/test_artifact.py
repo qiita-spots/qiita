@@ -226,7 +226,7 @@ class ArtifactAPItestHandlerTests(OauthTestingBase):
         obs = self.post('/apitest/artifact/', headers=self.header, data=data)
         self.assertEqual(obs.code, 200)
         obs = loads(obs.body)
-        self.assertEqual(obs.keys(), ['artifact'])
+        self.assertCountEqual(obs.keys(), ['artifact'])
 
         a = qdb.artifact.Artifact(obs['artifact'])
         self._clean_up_files.extend([fp for _, fp, _ in a.filepaths])
@@ -247,7 +247,7 @@ class ArtifactAPItestHandlerTests(OauthTestingBase):
         obs = self.post('/apitest/artifact/', headers=self.header, data=data)
         self.assertEqual(obs.code, 200)
         obs = loads(obs.body)
-        self.assertEqual(obs.keys(), ['artifact'])
+        self.assertCountEqual(obs.keys(), ['artifact'])
 
         a = qdb.artifact.Artifact(obs['artifact'])
         self._clean_up_files.extend([afp for _, afp, _ in a.filepaths])
@@ -261,7 +261,7 @@ class ArtifactAPItestHandlerTests(OauthTestingBase):
         obs = self.post('/apitest/artifact/', headers=self.header, data=data)
         self.assertEqual(obs.code, 500)
         self.assertIn("Prep template 1 already has an artifact associated",
-                      obs.body)
+                      obs.body.decode('ascii'))
 
 
 class ArtifactTypeHandlerTests(OauthTestingBase):

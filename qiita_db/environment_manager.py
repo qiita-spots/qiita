@@ -65,20 +65,20 @@ def create_layout(test=False, verbose=False):
         if verbose:
             print('Building SQL layout')
         # Create the schema
-        with open(LAYOUT_FP, 'U') as f:
+        with open(LAYOUT_FP, newline=None) as f:
             qdb.sql_connection.TRN.add(f.read())
         qdb.sql_connection.TRN.execute()
 
 
 def _populate_test_db():
     with qdb.sql_connection.TRN:
-        with open(POPULATE_FP, 'U') as f:
+        with open(POPULATE_FP, newline=None) as f:
             qdb.sql_connection.TRN.add(f.read())
         qdb.sql_connection.TRN.execute()
 
 
 def _add_ontology_data():
-    print ('Loading Ontology Data')
+    print('Loading Ontology Data')
     if not exists(reference_base_dir):
         mkdir(reference_base_dir)
 
@@ -194,7 +194,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
     except ValueError as error:
         # if database exists ignore
         msg = 'database "%s" already exists' % qiita_config.database
-        if msg in error.message:
+        if msg in str(error):
             print("Database exits, let's make sure it's test")
             with qdb.sql_connection.TRN:
                 # Insert the settings values to the database
@@ -218,7 +218,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
         verbose = True
         if create_settings_table:
             # Build the SQL layout into the database
-            with open(SETTINGS_FP, 'U') as f:
+            with open(SETTINGS_FP, newline=None) as f:
                 qdb.sql_connection.TRN.add(f.read())
             qdb.sql_connection.TRN.execute()
 
@@ -309,8 +309,8 @@ def drop_environment(ask_for_confirmation):
         if ask_for_confirmation:
             confirm = ''
             while confirm not in ('Y', 'y', 'N', 'n'):
-                confirm = raw_input("THIS IS NOT A TEST ENVIRONMENT.\n"
-                                    "Proceed with drop? (y/n)")
+                confirm = input("THIS IS NOT A TEST ENVIRONMENT.\n"
+                                "Proceed with drop? (y/n)")
 
             do_drop = confirm in ('Y', 'y')
         else:
@@ -425,7 +425,7 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                 _populate_test_db()
 
         with qdb.sql_connection.TRN:
-            with open(sql_patch_fp, 'U') as patch_file:
+            with open(sql_patch_fp, newline=None) as patch_file:
                 if verbose:
                     print('\tApplying patch %s...' % sql_patch_filename)
                 qdb.sql_connection.TRN.add(patch_file.read())
@@ -438,7 +438,8 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                 if verbose:
                     print('\t\tApplying python patch %s...'
                           % py_patch_filename)
-                execfile(py_patch_fp, {})
+                with open(py_patch_fp) as py_patch:
+                    exec(py_patch.read(), globals())
 
         # before moving to jsonb for sample/prep info files (patch 69.sql),
         # one of the patches used to regenerate the sample information file

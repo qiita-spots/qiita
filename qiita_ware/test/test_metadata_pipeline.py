@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from StringIO import StringIO
+from io import StringIO
 from unittest import TestCase, main
 from os import remove
 from os.path import exists

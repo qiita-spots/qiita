@@ -39,6 +39,22 @@ class TestBaseHandlersUtils(TestCase):
                'analysis_mapping_id': 16,
                'analysis_is_public': False,
                'alert_type': 'info',
+               'artifacts': {
+                    4: (1, 'Identification of the Microbiomes for Cannabis '
+                        'Soils', ('Pick closed-reference OTUs | Split '
+                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                            '1.SKM4.640180', '1.SKM9.640192']),
+                    5: (1, 'Identification of the Microbiomes for Cannabis '
+                        'Soils', ('Pick closed-reference OTUs | Split '
+                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                            '1.SKM4.640180', '1.SKM9.640192']),
+                    6: (1, 'Identification of the Microbiomes for Cannabis '
+                        'Soils', ('Pick closed-reference OTUs | Split '
+                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                            '1.SKM4.640180', '1.SKM9.640192'])},
                'alert_msg': ''}
         self.assertEqual(obs, exp)
 
@@ -51,6 +67,22 @@ class TestBaseHandlersUtils(TestCase):
                'analysis_mapping_id': 16,
                'analysis_is_public': False,
                'alert_type': 'info',
+               'artifacts': {
+                    4: (1, 'Identification of the Microbiomes for Cannabis '
+                        'Soils', ('Pick closed-reference OTUs | Split '
+                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                            '1.SKM4.640180', '1.SKM9.640192']),
+                    5: (1, 'Identification of the Microbiomes for Cannabis '
+                        'Soils', ('Pick closed-reference OTUs | Split '
+                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                            '1.SKM4.640180', '1.SKM9.640192']),
+                    6: (1, 'Identification of the Microbiomes for Cannabis '
+                        'Soils', ('Pick closed-reference OTUs | Split '
+                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                            '1.SKM4.640180', '1.SKM9.640192'])},
                'alert_msg': 'An artifact is being deleted from this analysis'}
         self.assertEqual(obs, exp)
 
@@ -65,6 +97,22 @@ class TestBaseHandlersUtils(TestCase):
                'analysis_mapping_id': 16,
                'analysis_is_public': False,
                'alert_type': 'danger',
+               'artifacts': {
+                    4: (1, 'Identification of the Microbiomes for Cannabis '
+                        'Soils', ('Pick closed-reference OTUs | Split '
+                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                            '1.SKM4.640180', '1.SKM9.640192']),
+                    5: (1, 'Identification of the Microbiomes for Cannabis '
+                        'Soils', ('Pick closed-reference OTUs | Split '
+                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                            '1.SKM4.640180', '1.SKM9.640192']),
+                    6: (1, 'Identification of the Microbiomes for Cannabis '
+                        'Soils', ('Pick closed-reference OTUs | Split '
+                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                            '1.SKM4.640180', '1.SKM9.640192'])},
                'alert_msg': 'Error deleting artifact'}
         self.assertEqual(obs, exp)
 
@@ -79,22 +127,22 @@ class TestBaseHandlersUtils(TestCase):
                     ('artifact', 'BIOM', 9, 'noname\n(BIOM)', 'artifact'),
                     ('artifact', 'BIOM',   8, 'noname\n(BIOM)', 'artifact')],
                'workflow': None}
-        self.assertItemsEqual(obs, exp)
-        self.assertItemsEqual(obs['edges'], exp['edges'])
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs, exp)
+        self.assertCountEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
         self.assertIsNone(obs['workflow'])
 
         # An admin has full access to the analysis
         obs = analyisis_graph_handler_get_request(1, User('admin@foo.bar'))
-        self.assertItemsEqual(obs, exp)
-        self.assertItemsEqual(obs['edges'], exp['edges'])
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs, exp)
+        self.assertCountEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
 
         # If the analysis is shared with the user he also has access
         obs = analyisis_graph_handler_get_request(1, User('shared@foo.bar'))
-        self.assertItemsEqual(obs, exp)
-        self.assertItemsEqual(obs['edges'], exp['edges'])
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs, exp)
+        self.assertCountEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
 
         # The user doesn't have access to the analysis
         with self.assertRaises(HTTPError):
@@ -111,9 +159,9 @@ class TestBaseHandlers(TestHandlerBase):
         args = {'name': 'New Test Analysis',
                 'description': 'Test Analysis Description'}
         response = self.post('/analysis/create/', args)
-        self.assertRegexpMatches(
+        self.assertRegex(
             response.effective_url,
-            r"http://localhost:\d+/analysis/description/\d+/")
+            r"http://127.0.0.1:\d+/analysis/description/\d+/")
         self.assertEqual(response.code, 200)
 
         # The new analysis id is located at the -2 position (see regex above)
@@ -163,9 +211,9 @@ class TestAnalysisGraphHandler(TestHandlerBase):
                     ['artifact', 'BIOM', 9, 'noname\n(BIOM)', 'artifact'],
                     ['artifact', 'BIOM', 8, 'noname\n(BIOM)', 'artifact']],
                'workflow': None}
-        self.assertItemsEqual(obs, exp)
-        self.assertItemsEqual(obs['edges'], exp['edges'])
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs, exp)
+        self.assertCountEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
         self.assertIsNone(obs['workflow'])
 
         # Create a new analysis with 2 starting BIOMs to be able to test
@@ -197,7 +245,7 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         wf = ProcessingWorkflow.from_scratch(user, params)
 
         # There is only one job in the workflow
-        job_id = wf.graph.nodes()[0].id
+        job_id = list(wf.graph.nodes())[0].id
 
         response = self.get('/analysis/description/%s/graph/' % new_id)
         self.assertEqual(response.code, 200)
@@ -215,11 +263,11 @@ class TestAnalysisGraphHandler(TestHandlerBase):
                      'taxa_summary\n(taxa_summary)', 'type']],
                'workflow': wf.id}
         # Check that the keys are the same
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
         # Check the edges
-        self.assertItemsEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['edges'], exp['edges'])
         # Check the edges
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
         # Check the edges
         self.assertEqual(obs['workflow'], exp['workflow'])
 
@@ -252,11 +300,11 @@ class TestAnalysisGraphHandler(TestHandlerBase):
                      'rarefied_table\n(BIOM)', 'type']],
                'workflow': wf.id}
         # Check that the keys are the same
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
         # Check the edges
-        self.assertItemsEqual(obs['edges'], exp['edges'])
+        self.assertCountEqual(obs['edges'], exp['edges'])
         # Check the edges
-        self.assertItemsEqual(obs['nodes'], exp['nodes'])
+        self.assertCountEqual(obs['nodes'], exp['nodes'])
         # Check the edges
         self.assertEqual(obs['workflow'], exp['workflow'])
 

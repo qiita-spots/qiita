@@ -19,7 +19,7 @@ class BaseHandler(RequestHandler):
         username = self.get_secure_cookie("user")
         if username is not None:
             # strip off quotes added by get_secure_cookie
-            username = username.strip("\"' ")
+            username = username.decode('ascii').strip("\"' ")
             return User(username)
         else:
             self.clear_cookie("user")

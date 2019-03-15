@@ -155,7 +155,7 @@ class MetaUtilTests(TestCase):
     def test_get_lat_longs(self):
         # no public studies should return an empty array
         obs = qdb.meta_util.get_lat_longs()
-        self.assertItemsEqual(obs, [])
+        self.assertCountEqual(obs, [])
 
         old_visibility = {}
         for pt in qdb.study.Study(1).prep_templates():
@@ -188,9 +188,9 @@ class MetaUtilTests(TestCase):
             [1, 78.3634273709, 74.423907894],
             [1, 38.2627021402, 3.48274264219]]
         obs = qdb.meta_util.get_lat_longs()
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
-        for k, v in old_visibility.iteritems():
+        for k, v in old_visibility.items():
             k.artifact.visibility = v
 
     def test_get_lat_longs_EMP_portal(self):
@@ -234,7 +234,7 @@ class MetaUtilTests(TestCase):
         obs = qdb.meta_util.get_lat_longs()
         exp = []
 
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
         qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
         qdb.study.Study.delete(study.id)
 
@@ -242,21 +242,27 @@ class MetaUtilTests(TestCase):
         qdb.meta_util.update_redis_stats()
 
         portal = qiita_config.portal
+        # let's first test the dictionaries
         vals = [
-            ('number_studies', {'sandbox': '0', 'public': '0',
-                                'private': '1'}, r_client.hgetall),
-            ('number_of_samples', {'sandbox': '0', 'public': '0',
-                                   'private': '27'}, r_client.hgetall),
-            ('num_users', '4', r_client.get),
-            ('lat_longs', '[]', r_client.get),
-            ('num_studies_ebi', '1', r_client.get),
-            ('num_samples_ebi', '27', r_client.get),
-            ('number_samples_ebi_prep', '54', r_client.get),
-            ('num_processing_jobs', '14', r_client.get)
+            ('number_studies', {b'sandbox': b'0', b'public': b'0',
+                                b'private': b'1'}, r_client.hgetall),
+            ('number_of_samples', {b'sandbox': b'0', b'public': b'0',
+                                   b'private': b'27'}, r_client.hgetall)]
+        for k, exp, f in vals:
+            redis_key = '%s:stats:%s' % (portal, k)
+            self.assertDictEqual(f(redis_key), exp)
+        # then the unique values
+        vals = [
+            ('num_users', b'4', r_client.get),
+            ('lat_longs', b'[]', r_client.get),
+            ('num_studies_ebi', b'1', r_client.get),
+            ('num_samples_ebi', b'27', r_client.get),
+            ('number_samples_ebi_prep', b'54', r_client.get),
+            ('num_processing_jobs', b'14', r_client.get)
             # not testing img/time for simplicity
             # ('img', r_client.get),
             # ('time', r_client.get)
-            ]
+        ]
         for k, exp, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
             self.assertEqual(f(redis_key), exp)
@@ -274,7 +280,7 @@ class MetaUtilTests(TestCase):
         # we are storing the [0] filepath, [1] md5sum and [2] time but we are
         # only going to check the filepath contents so ignoring the others
         tgz = vals[0][1]('%s:release:%s:%s' % (portal, level, vals[0][0]))
-        tgz = join(working_dir, tgz)
+        tgz = join(working_dir, tgz.decode('ascii'))
 
         self.files_to_remove.extend([tgz])
 
@@ -320,7 +326,7 @@ class MetaUtilTests(TestCase):
 
         tmp = topen(tgz, "r:gz")
         fhd = tmp.extractfile(txt)
-        txt_obs = fhd.readlines()
+        txt_obs = [l.decode('ascii') for l in fhd.readlines()]
         tmp.close()
         txt_exp = [
             'biom fp\tsample fp\tprep fp\tqiita artifact id\tplatform\t'
@@ -337,7 +343,7 @@ class MetaUtilTests(TestCase):
             'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
             'm\t%s\t%s\t6\tIllumina\t16S rRNA\t'
             'Pick closed-reference OTUs | Split libraries FASTQ\t'
-            'QIIME v1.9.1\tQIIME v1.9.1\n' % (fn_sample, fn_prep)]
+            'QIIME v1.9.1\tQIIME v1.9.1' % (fn_sample, fn_prep)]
         self.assertEqual(txt_obs, txt_exp)
 
         # whatever the configuration was, we will change to settings so we can
@@ -359,7 +365,7 @@ class MetaUtilTests(TestCase):
         # we are storing the [0] filepath, [1] md5sum and [2] time but we are
         # only going to check the filepath contents so ignoring the others
         tgz = vals[0][1]('%s:release:%s:%s' % (portal, level, vals[0][0]))
-        tgz = join(working_dir, tgz)
+        tgz = join(working_dir, tgz.decode('ascii'))
 
         tmp = topen(tgz, "r:gz")
         tgz_obs = [ti.name for ti in tmp]
@@ -403,7 +409,7 @@ class MetaUtilTests(TestCase):
 
         tmp = topen(tgz, "r:gz")
         fhd = tmp.extractfile(txt)
-        txt_obs = fhd.readlines()
+        txt_obs = [l.decode('ascii') for l in fhd.readlines()]
         tmp.close()
 
         txt_exp = [
@@ -421,26 +427,26 @@ class MetaUtilTests(TestCase):
             'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
             'm\t%s\t%s\t6\tIllumina\t16S rRNA\t'
             'Pick closed-reference OTUs | Split libraries FASTQ'
-            '\tQIIME v1.9.1\tQIIME v1.9.1\n' % (fn_sample, fn_prep)]
+            '\tQIIME v1.9.1\tQIIME v1.9.1' % (fn_sample, fn_prep)]
         self.assertEqual(txt_obs, txt_exp)
 
         # returning configuration
         with qdb.sql_connection.TRN:
-                    qdb.sql_connection.TRN.add(
-                        "UPDATE settings SET base_data_dir = '%s'" % obdr)
-                    bdr = qdb.sql_connection.TRN.execute()
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET base_data_dir = '%s'" % obdr)
+            bdr = qdb.sql_connection.TRN.execute()
 
     def test_generate_plugin_releases(self):
         qdb.meta_util.generate_plugin_releases()
 
         working_dir = qiita_config.working_dir
         tgz = r_client.get('release-archive:filepath')
-        with topen(join(working_dir, tgz), "r:gz") as tmp:
+        with topen(join(working_dir, tgz.decode('ascii')), "r:gz") as tmp:
             tgz_obs = [ti.name for ti in tmp]
         # the expected folder/file in the tgz should be named as the time
         # when it was created so let's test that
-        time = r_client.get('release-archive:time').replace('-', '').replace(
-            ':', '').replace(' ', '-')
+        time = r_client.get('release-archive:time').decode('ascii').replace(
+            '-', '').replace(':', '').replace(' ', '-')
         self.assertEqual(tgz_obs, [time])
 
 

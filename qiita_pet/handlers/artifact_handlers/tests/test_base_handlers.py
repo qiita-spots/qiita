@@ -71,10 +71,10 @@ class TestBaseHandlersUtils(TestCase):
         "Utility function for testing the artifact summary get request"
         obs_files = obs.pop('files')
         exp_files = exp.pop('files')
-        self.assertItemsEqual(obs_files, exp_files)
+        self.assertCountEqual(obs_files, exp_files)
         obs_jobs = obs.pop('processing_jobs')
         exp_jobs = obs.pop('processing_jobs')
-        self.assertItemsEqual(obs_jobs, exp_jobs)
+        self.assertCountEqual(obs_jobs, exp_jobs)
         self.assertEqual(obs, exp)
 
     def test_artifact_summary_get_request(self):
@@ -82,8 +82,8 @@ class TestBaseHandlersUtils(TestCase):
         # Artifact w/o summary
         obs = artifact_summary_get_request(user, 1)
         exp_files = [
-            (1L, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)'),
-            (2L, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)')]
+            (1, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)'),
+            (2, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)')]
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
                'artifact_type': 'FASTQ',
@@ -203,9 +203,9 @@ class TestBaseHandlersUtils(TestCase):
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
         exp_files = [
-            (3L, '1_seqs.fna (preprocessed fasta)'),
-            (4L, '1_seqs.qual (preprocessed fastq)'),
-            (5L, '1_seqs.demux (preprocessed demux)')]
+            (3, '1_seqs.fna (preprocessed fasta)'),
+            (4, '1_seqs.qual (preprocessed fastq)'),
+            (5, '1_seqs.demux (preprocessed demux)')]
         exp = {'name': 'Demultiplexed 1',
                'artifact_id': 2,
                'artifact_type': 'Demultiplexed',
@@ -284,7 +284,7 @@ class TestBaseHandlersUtils(TestCase):
             artifact_post_req(User('demo@microbio.me'), 1)
 
         obs = artifact_post_req(User('test@foo.bar'), 2)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         # Wait until the job is completed
         wait_for_prep_information_job(1)
         # Check that the delete function has been actually called
@@ -393,7 +393,8 @@ class TestBaseHandlers(TestHandlerBase):
         summary = relpath(a.html_summary_fp[1], qiita_config.base_data_dir)
         response = self.get('/artifact/html_summary/%s' % summary)
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, '<b>HTML TEST - not important</b>\n')
+        self.assertEqual(response.body.decode('ascii'),
+                         '<b>HTML TEST - not important</b>\n')
 
 
 if __name__ == '__main__':

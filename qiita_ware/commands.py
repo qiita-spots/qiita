@@ -14,7 +14,7 @@ from os import environ, stat
 from traceback import format_exc
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from scp import SCPClient
-from urlparse import urlparse
+from urllib.parse import urlparse
 from functools import partial
 from future.utils import viewitems
 import pandas as pd
@@ -212,13 +212,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
         LogEntry.create(
             'Runtime', 'The submission: %d is larger than allowed (%d), will '
             'try to fix: %d' % (artifact_id, max_size, total_size))
-        # let's confirm that we are only dealing with the latest samples and
-        # then convert them to a DataFrame for easier cleanup
-        new_samples = {
-            sample for sample, accession in viewitems(
-                ebi_submission.prep_template.ebi_experiment_accessions)
-            if accession is None}
-        new_samples = new_samples.intersection(ebi_submission.samples)
+        # transform current metadata to dataframe for easier curation
         rows = {k: dict(v) for k, v in viewitems(ebi_submission.samples)}
         df = pd.DataFrame.from_dict(rows, orient='index')
         # remove unique columns and same value in all columns
@@ -226,21 +220,18 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
         nsamples = len(df.index)
         cols_to_drop = set(
             nunique[(nunique == 1) | (nunique == nsamples)].index)
+        # maximize deletion by removing also columns that are almost all the
+        # same or almost all unique
         cols_to_drop = set(
             nunique[(nunique <= int(nsamples * .01)) |
                     (nunique >= int(nsamples * .5))].index)
         cols_to_drop = cols_to_drop - {'taxon_id', 'scientific_name',
                                        'description'}
-        df.drop(columns=cols_to_drop, inplace=True)
-        # let's overwrite samples
-        ebi_submission.samples = {k: r.to_dict() for k, r in df.iterrows()}
+        all_samples = ebi_submission.sample_template.ebi_sample_accessions
+        samples = {k: all_samples[k] for k in ebi_submission.samples}
         ebi_submission.write_xml_file(
-            ebi_submission.generate_sample_xml(new_samples),
+            ebi_submission.generate_sample_xml(samples, cols_to_drop),
             ebi_submission.sample_xml_fp)
-        # let's do the same with the prep
-        ebi_submission.write_xml_file(
-            ebi_submission.generate_experiment_xml(new_samples),
-            ebi_submission.experiment_xml_fp)
 
         # now let's recalculate the size to make sure it's fine
         new_total_size = sum([stat(tr).st_size

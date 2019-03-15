@@ -72,7 +72,7 @@ class TestJobAJAX(TestHandlerBase):
             exp_user, exp_params, name=name, force=True)
 
         graph = wf.graph
-        nodes = graph.nodes()
+        nodes = list(graph.nodes())
         job_id = nodes[0].id
 
         response = self.patch('/study/process/job/',

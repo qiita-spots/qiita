@@ -142,7 +142,7 @@ class SQLConnectionHandler(object):
         except OperationalError as e:
             # catch threee known common exceptions and raise runtime errors
             try:
-                etype = e.message.split(':')[1].split()[0]
+                etype = str(e).split(':')[1].split()[0]
             except IndexError:
                 # we recieved a really unanticipated error without a colon
                 etype = ''
@@ -165,7 +165,7 @@ class SQLConnectionHandler(object):
             ebase = ('An OperationalError with the following message occured'
                      '\n\n\t%s\n%s For more information, review `INSTALL.md`'
                      ' in the Qiita installation base directory.')
-            raise RuntimeError(ebase % (e.message, etext))
+            raise RuntimeError(ebase % (str(e), etext))
         else:
             self._connection = getattr(SQLConnectionHandler, self._conn_attr)
 
@@ -285,7 +285,7 @@ class SQLConnectionHandler(object):
             except PostgresError as e:
                 self._connection.rollback()
                 raise ValueError("Error running SQL: %s. MSG: %s\n" % (
-                    errorcodes.lookup(e.pgcode), e.message))
+                    errorcodes.lookup(e.pgcode), str(e)))
             else:
                 self._connection.commit()
 
@@ -450,7 +450,7 @@ class Transaction(object):
         except OperationalError as e:
             # catch three known common exceptions and raise runtime errors
             try:
-                etype = e.message.split(':')[1].split()[0]
+                etype = str(e).split(':')[1].split()[0]
             except IndexError:
                 # we recieved a really unanticipated error without a colon
                 etype = ''
@@ -473,7 +473,7 @@ class Transaction(object):
             ebase = ('An OperationalError with the following message occured'
                      '\n\n\t%s\n%s For more information, review `INSTALL.md`'
                      ' in the Qiita installation base directory.')
-            raise RuntimeError(ebase % (e.message, etext))
+            raise RuntimeError(ebase % (str(e), etext))
 
     def close(self):
         if self._connection is not None:
@@ -550,9 +550,9 @@ class Transaction(object):
         try:
             ec_lu = errorcodes.lookup(error.pgcode)
             raise ValueError(
-                "Error running SQL: %s. MSG: %s\n" % (ec_lu, error.message))
+                "Error running SQL: %s. MSG: %s\n" % (ec_lu, str(error)))
         except (KeyError, AttributeError):
-            raise ValueError("Error running SQL query: %s" % error.message)
+            raise ValueError("Error running SQL query: %s" % str(error))
 
     @_checker
     def add(self, sql, sql_args=None, many=False):
@@ -611,7 +611,7 @@ class Transaction(object):
 
                 try:
                     res = cur.fetchall()
-                except ProgrammingError as e:
+                except ProgrammingError:
                     # At this execution point, we don't know if the sql query
                     # that we executed should retrieve values from the database
                     # If the query was not supposed to retrieve any value

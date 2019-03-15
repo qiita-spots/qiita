@@ -1044,7 +1044,7 @@ class Analysis(qdb.base.QiitaObject):
                     cmd = "%s %s %s" % (
                         pp_cmd['script_env'], pp_cmd['script_path'], params)
                     p_out, p_err, rv = qdb.processing_job._system_call(cmd)
-                    p_out = p_out.decode("utf-8").rstrip()
+                    p_out = p_out.rstrip()
                     # based on the set of commands ran, we could get a
                     # rv !=0 but still have a successful return from the
                     # command, thus checking both rv and p_out. Note that
@@ -1079,10 +1079,10 @@ class Analysis(qdb.base.QiitaObject):
 
                 # if we are not going to merge the duplicated samples
                 # append the aid to the sample name
+                qm['qiita_artifact_id'] = aid
                 if rename_dup_samples:
                     qm['original_SampleID'] = qm.index
                     qm['#SampleID'] = "%d." % aid + qm.index
-                    qm['qiita_aid'] = aid
                     samps = set(['%d.%s' % (aid, _id) for _id in samps])
                     qm.set_index('#SampleID', inplace=True, drop=True)
                 else:

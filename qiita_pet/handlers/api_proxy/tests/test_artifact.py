@@ -80,8 +80,8 @@ class TestArtifactAPIReadOnly(TestCase):
                'edge_list': [(1, 3), (1, 2), (2, 5), (2, 4), (2, 6)]}
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['status'], exp['status'])
-        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
-        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
+        self.assertCountEqual(obs['node_labels'], exp['node_labels'])
+        self.assertCountEqual(obs['edge_list'], exp['edge_list'])
 
     def test_artifact_graph_get_req_no_access(self):
         obs = artifact_graph_get_req(1, 'ancestors', 'demo@microbio.me')
@@ -115,7 +115,7 @@ class TestArtifactAPIReadOnly(TestCase):
 
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['status'], exp['status'])
-        self.assertItemsEqual(obs['types'], exp['types'])
+        self.assertCountEqual(obs['types'], exp['types'])
 
 
 @qiita_test_checker()
@@ -207,15 +207,15 @@ class TestArtifactAPI(TestCase):
     def test_artifact_get_prep_req(self):
         obs = artifact_get_prep_req('test@foo.bar', [4])
         exp = {'status': 'success', 'msg': '', 'data': {
-            4: ['1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195',
-                '1.SKB6.640176', '1.SKD6.640190', '1.SKM6.640187',
-                '1.SKD9.640182', '1.SKM8.640201', '1.SKM2.640199',
-                '1.SKD2.640178', '1.SKB7.640196', '1.SKD4.640185',
-                '1.SKB8.640193', '1.SKM3.640197', '1.SKD5.640186',
-                '1.SKB1.640202', '1.SKM1.640183', '1.SKD1.640179',
-                '1.SKD3.640198', '1.SKB5.640181', '1.SKB4.640189',
-                '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
-                '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191']}}
+            4: ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+                '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+                '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+                '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+                '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+                '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+                '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+                '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+                '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}}
         self.assertEqual(obs, exp)
 
         obs = artifact_get_prep_req('demo@microbio.me', [4])
@@ -257,10 +257,10 @@ class TestArtifactAPI(TestCase):
              'deprecated': None, 'platform': 'Illumina', 'algorithm_az': '',
              'prep_samples': 27}]
         exp = {'status': 'success', 'msg': '', 'data': data}
-        self.assertItemsEqual(obs.keys(), exp.keys())
+        self.assertCountEqual(list(obs.keys()), exp.keys())
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['msg'], exp['msg'])
-        self.assertItemsEqual(obs['data'], exp['data'])
+        self.assertCountEqual(obs['data'], exp['data'])
 
     def test_artifact_post_req(self):
         # Create new prep template to attach artifact to

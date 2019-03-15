@@ -55,8 +55,9 @@ class ArchiveTest(TestCase):
 
         # that we retrieve only one kind
         exp = dumps({
+            'featureA9': dumps({'valuesA': 'vA', 'int': 1}),
             'featureB9': dumps({'valuesB': 'vB', 'float': 1.1}),
-            'featureA9': dumps({'valuesA': 'vA', 'int': 1})})
+        })
         obs = qdb.archive.Archive.retrieve_feature_values(
             'Single Rarefaction | N/A')
         self.assertEqual(dumps(obs), exp)

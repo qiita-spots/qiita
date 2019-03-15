@@ -258,7 +258,7 @@ class TestPrepSample(TestCase):
                'primer', 'run_center', 'run_date', 'run_prefix', 'samp_size',
                'sample_center', 'sequencing_meth', 'study_center',
                'target_gene', 'target_subfragment']
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_setitem(self):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
@@ -739,7 +739,7 @@ class TestPrepTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_clean_validate_template_no_forbidden_words1(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
@@ -877,7 +877,7 @@ class TestPrepTemplate(TestCase):
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
-        self.assertItemsEqual(pt.categories(), exp_categories)
+        self.assertCountEqual(pt.categories(), exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
                 'barcode': 'CCTCTGAGAGCT',
@@ -972,10 +972,10 @@ class TestPrepTemplate(TestCase):
         exp = pd.read_csv(
             exp_fp, sep='\t', infer_datetime_format=False,
             parse_dates=False, index_col=False, comment='\t')
-        obs = obs.reindex_axis(sorted(obs.columns), axis=1)
-        exp = exp.reindex_axis(sorted(exp.columns), axis=1)
+        obs = obs.reindex(sorted(obs.columns), axis=1)
+        exp = exp.reindex(sorted(exp.columns), axis=1)
 
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
@@ -1010,7 +1010,7 @@ class TestPrepTemplate(TestCase):
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
-        self.assertItemsEqual(pt.categories(), exp_categories)
+        self.assertCountEqual(pt.categories(), exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
                 'ebi_submission_accession': None,
@@ -1134,7 +1134,7 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type)
         pt.to_file(fp)
         self._clean_up_files.append(fp)
-        with open(fp, 'U') as f:
+        with open(fp, newline=None) as f:
             obs = f.read()
         self.assertEqual(obs, EXP_PREP_TEMPLATE.format(pt.id))
 
@@ -1204,7 +1204,7 @@ class TestPrepTemplate(TestCase):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
         exp = join(qdb.util.get_mountpoint('templates')[0][1],
                    '1_prep_1_qiime_[0-9]*-[0-9]*.txt')
-        self.assertRegexpMatches(pt.qiime_map_fp, exp)
+        self.assertRegex(pt.qiime_map_fp, exp)
 
     def test_check_restrictions(self):
         obs = self.tester.check_restrictions(
@@ -1329,7 +1329,7 @@ class TestPrepTemplate(TestCase):
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP',
                 'new_col': 'val3'}}
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_extend_update(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
@@ -1388,7 +1388,7 @@ class TestPrepTemplate(TestCase):
                 'emp_status': 'EMP',
                 'new_col': 'val3'}}
 
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_ebi_experiment_accessions(self):
         obs = self.tester.ebi_experiment_accessions
@@ -1510,7 +1510,7 @@ class TestPrepTemplate(TestCase):
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp, check_like=True)
 
     def test_delete_column(self):
         QE = qdb.exceptions

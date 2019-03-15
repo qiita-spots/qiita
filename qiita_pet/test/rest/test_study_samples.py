@@ -209,7 +209,7 @@ class StudySamplesInfoHandlerTests(RESTHandlerTestCase):
         obs = json_decode(response.body)
         self.assertEqual(obs.keys(), exp.keys())
         self.assertEqual(obs['number-of-samples'], exp['number-of-samples'])
-        self.assertItemsEqual(obs['categories'], exp['categories'])
+        self.assertCountEqual(obs['categories'], exp['categories'])
 
     def test_get_study_does_not_exist(self):
         exp = {'message': 'Study not found'}
@@ -221,7 +221,7 @@ class StudySamplesInfoHandlerTests(RESTHandlerTestCase):
 
     def test_get_no_samples(self):
         # /api/v1/study/%d/samples/info -> {'number-of-samples':<int>,
-                                        #   'categories': [<str>]}
+        #                                   'categories': [<str>]}
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,
@@ -308,7 +308,7 @@ class StudySamplesCategoriesHandlerTests(RESTHandlerTestCase):
 
     def test_get_no_samples(self):
         # /api/v1/study/%d/samples/info -> {'number-of-samples':<int>,
-                                        #   'categories': [<str>]}
+        #                                   'categories': [<str>]}
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,

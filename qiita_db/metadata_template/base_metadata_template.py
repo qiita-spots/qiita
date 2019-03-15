@@ -50,7 +50,7 @@ import warnings
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 
-from string import letters, digits
+from string import ascii_letters, digits
 
 
 # this is the name of the sample where we store all columns for a sample/prep
@@ -823,7 +823,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             new_cols = set(headers).difference(self.categories())
 
             if not new_cols and not new_samples:
-                return
+                return None, None
 
             is_extendable, error_msg = self.can_be_extended(new_samples,
                                                             new_cols)
@@ -858,7 +858,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                     # that || is a jsonb to update or add a new key/value
                     md_filtered = md_template[new_cols].loc[existing_samples]
                     for sid, df in md_filtered.iterrows():
-                        values = dict(df.iteritems())
+                        values = dict(df.items())
                         sql = """UPDATE qiita.{0}
                                  SET sample_values = sample_values || %s
                                  WHERE sample_id = %s""".format(
@@ -1722,8 +1722,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
         ------
             set of words containing invalid (illegal) characters.
         """
-        valid_initial_char = letters
-        valid_rest = set(letters+digits+'_')
+        valid_initial_char = ascii_letters
+        valid_rest = set(ascii_letters+digits+'_:|')
         invalid = []
         for s in column_names:
             if s[0] not in valid_initial_char:

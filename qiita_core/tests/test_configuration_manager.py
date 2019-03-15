@@ -30,7 +30,7 @@ class ConfigurationManagerTests(TestCase):
         environ['QIITA_CONFIG_FP'] = self.conf_fp
 
         self.conf = ConfigParser()
-        with open(self.conf_fp, 'U') as f:
+        with open(self.conf_fp, newline=None) as f:
             self.conf.readfp(f)
 
     def tearDown(self):
@@ -138,7 +138,7 @@ class ConfigurationManagerTests(TestCase):
 
             obs_warns = [str(w.message) for w in warns]
             exp_warns = ['Random cookie secret generated.']
-            self.assertItemsEqual(obs_warns, exp_warns)
+            self.assertCountEqual(obs_warns, exp_warns)
 
         self.assertNotEqual(obs.cookie_secret, "SECRET")
         # Test default base_data_dir

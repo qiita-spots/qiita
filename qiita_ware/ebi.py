@@ -8,9 +8,9 @@
 
 from os.path import basename, join, isdir, isfile, exists
 from shutil import copyfile, rmtree
-from os import remove, listdir
+from os import remove, listdir, makedirs
 from datetime import date, timedelta
-from urllib import quote
+from urllib.parse import quote
 from itertools import zip_longest
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import ParseError
@@ -19,7 +19,7 @@ from gzip import GzipFile
 from functools import partial
 from h5py import File
 from future.utils import viewitems, viewkeys
-from skbio.util import safe_md5, create_dir
+from skbio.util import safe_md5
 from qiita_files.demux import to_per_sample_ascii
 
 from qiita_core.qiita_settings import qiita_config
@@ -47,7 +47,7 @@ def clean_whitespace(text):
     str
         fixed text
     """
-    return ' '.join(unicode(str(text), 'utf8').split())
+    return ' '.join(str(text).split())
 
 
 class EBISubmission(object):
@@ -380,7 +380,7 @@ class EBISubmission(object):
 
         return study_set
 
-    def generate_sample_xml(self, samples=None):
+    def generate_sample_xml(self, samples=None, ignore_columns=None):
         """Generates the sample XML file
 
         Parameters
@@ -388,6 +388,9 @@ class EBISubmission(object):
         samples : list of str, optional
             The list of samples to be included in the sample xml. If not
             provided or an empty list is provided, all the samples are used
+        ignore_columns : list of str, optional
+            The list of columns to ignore during submission; helful for when
+            the submissions are too large
 
         Returns
         -------
@@ -433,6 +436,9 @@ class EBISubmission(object):
             description.text = escape(clean_whitespace(text))
 
             if sample_info:
+                if ignore_columns is not None:
+                    for key in ignore_columns:
+                        del sample_info[key]
                 sample_attributes = ET.SubElement(sample, 'SAMPLE_ATTRIBUTES')
                 self._add_dict_as_tags_and_values(sample_attributes,
                                                   'SAMPLE_ATTRIBUTE',
@@ -446,7 +452,7 @@ class EBISubmission(object):
         Therefore, we can break it out into its own method.
         """
         # This section applies only to the LS454 platform
-        if platform is not 'LS454':
+        if platform != 'LS454':
             return
 
         # There is some hard-coded information in here, but this is what we
@@ -576,7 +582,7 @@ class EBISubmission(object):
             suffix = self.REV_READ_SUFFIX
 
         file_path = self.sample_demux_fps[sample_name] + suffix
-        with open(file_path) as fp:
+        with open(file_path, 'rb') as fp:
             md5 = safe_md5(fp).hexdigest()
 
         file_details = {'filetype': file_type,
@@ -704,8 +710,10 @@ class EBISubmission(object):
         fp : str
             The filepath to which the XML will be written
         """
-        create_dir(self.xml_dir)
-        ET.ElementTree(element).write(fp, encoding='UTF-8')
+        if not exists(self.xml_dir):
+            makedirs(self.xml_dir)
+        ET.ElementTree(element).write(
+            fp, encoding='UTF-8', xml_declaration=True)
 
     def generate_xml_files(self):
         """Generate all the XML files"""
@@ -1060,6 +1068,7 @@ class EBISubmission(object):
                 raise EBISubmissionError(error_msg)
             for s, i in to_per_sample_ascii(demux_fh,
                                             self.prep_template.keys()):
+                s = s.decode('ascii')
                 sample_fp = self.sample_demux_fps[s] + self.FWD_READ_SUFFIX
                 wrote_sequences = False
                 with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
