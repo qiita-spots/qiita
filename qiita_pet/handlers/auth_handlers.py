@@ -66,7 +66,18 @@ class AuthCreateHandler(BaseHandler):
                 self.redirect(u"%s/?level=danger&message=%s"
                               % (qiita_config.portal_dir, url_escape(msg)))
                 return
-            self.redirect(u"%s/" % qiita_config.portal_dir)
+
+            msg = ("<H1><p>User Successfully Created</H1>Your Qiita account "
+                   "has been successfully created. An email has been sent to "
+                   "the email address you provided. This email contains "
+                   "instructions on how to activate your account.</p>"
+                   "<p>If you don't receive your activation email within a "
+                   "couple of minutes, check your spam folder. If you still "
+                   "don't see it, send us an email at <a "
+                   "href=\"mailto:qiita.help@ucsd.edu\">qiita.help@ucsd.edu"
+                   "</a>.</p>")
+            self.redirect(u"%s/?level=success&message=%s" %
+                          (qiita_config.portal_dir, url_escape(msg)))
         else:
             error_msg = u"?error=" + url_escape(msg)
             self.redirect(u"%s/auth/create/%s"
