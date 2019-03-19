@@ -208,17 +208,11 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     # As processes are lighter weight than jobs, this should be fine.
     # This is how the current job model works locally.
     cmd = [start_script, url, job_id, job_dir]
-    print("ENV_SCRIPT: %s" % env_script)
-    print("START_SCRIPT: %s" % start_script)
-    print("URL: %s" % url)
-    print("JOB ID: %s" % job_id)
-    print("JOB DIR: %s" % job_dir)
 
     # When Popen() executes, the shell is not in interactive mode,
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
     cmd = "bash -c '%s; %s'" % (env_script, ' '.join(cmd))
-    print("CMD STRING: %s" % cmd)
 
     # Popen() may also need universal_newlines=True
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
@@ -226,15 +220,11 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     # Communicate pulls all stdout/stderr from the PIPEs
     # This call waits until cmd is done
     stdout, stderr = proc.communicate()
-    print("STDOUT: %s" % stdout)
-    print("STDERR: %s" % stderr)
 
     # proc.returncode will be equal to None if the process hasn't finished
     # yet. If cmd was terminated by a SIGNAL, it will be a negative value.
     # (*nix platforms only)
     error = None
-    print("RETURN CODE: %s" % proc.returncode)
-    print("JOB ID: %s" % job_id)
 
     if proc.returncode != 0:
         error = "error from launch_local when launching cmd='%s'" % cmd
