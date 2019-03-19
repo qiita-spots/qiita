@@ -77,7 +77,7 @@ class TestMetadataTemplateReadOnly(TestCase):
 
     def test_identify_qiime2_reserved_words(self):
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
-        results = MT._identify_pgsql_reserved_words_in_column_names([
+        results = MT._identify_qiime2_reserved_words_in_column_names([
             'feature id',
             'feature-id',
             'featureid',
