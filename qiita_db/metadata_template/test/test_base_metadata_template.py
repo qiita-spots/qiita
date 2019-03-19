@@ -75,6 +75,20 @@ class TestMetadataTemplateReadOnly(TestCase):
             'just_fine1'])
         self.assertCountEqual(set(results), {'column', 'select'})
 
+    def test_identify_qiime2_reserved_words(self):
+        MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
+        results = MT._identify_pgsql_reserved_words_in_column_names([
+            'feature id',
+            'feature-id',
+            'featureid',
+            'id',
+            'sample id',
+            'sample-id',
+            'sampleid'])
+        self.assertCountEqual(set(results), {'feature id', 'feature-id',
+                                             'featureid', 'id', 'sample id',
+                                             'sample-id', 'sampleid'})
+
     def test_identify_invalid_characters(self):
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
         results = MT._identify_column_names_with_invalid_characters([

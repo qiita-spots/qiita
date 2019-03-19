@@ -764,6 +764,12 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             PT._clean_validate_template(self.metadata, 2)
 
+    def test_clean_validate_template_no_qiime2_reserved_words(self):
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        self.metadata.rename(columns={'center_name': 'featureid'}, inplace=True)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            PT._clean_validate_template(self.metadata, 2)
+
     def test_clean_validate_template_no_invalid_chars(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
         self.metadata.rename(columns={'center_name': 'taxon id'}, inplace=True)
