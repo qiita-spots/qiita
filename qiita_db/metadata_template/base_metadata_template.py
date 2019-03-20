@@ -1753,4 +1753,3 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         return (qdb.metadata_template.util.get_qiime2_reserved_words() &
                 set(column_names))
-
