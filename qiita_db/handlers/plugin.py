@@ -249,8 +249,9 @@ class ReloadPluginAPItestHandler(OauthBaseHandler):
         """Reloads the plugins"""
         conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
         for fp in conf_files:
-            s = qdb.software.Software.from_file(fp, update=True)
-            s.activate()
-            s.register_commands()
+            software = qdb.software.Software.from_file(fp, update=True)
+            software.activate()
+
+            software.register_commands()
 
         self.finish()
