@@ -25,6 +25,9 @@ install:
   - source activate qiita
   # staring nginx
   - mkdir /home/travis/miniconda3/envs/qiita/var/run/nginx/
+  - ls -laht
+  - ls /home/travis/miniconda3/envs/qiita/lib/python3.6/site-packages/
+  - ls /home/travis/miniconda3/envs/qiita/lib/python3.6/qiita*
   - nginx -c ${PWD}/qiita_pet/nginx_example.conf
   - 'echo "backend: Agg" > ~/matplotlibrc'
   - pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
