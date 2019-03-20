@@ -67,7 +67,7 @@ class AuthCreateHandler(BaseHandler):
                               % (qiita_config.portal_dir, url_escape(msg)))
                 return
 
-            msg = ("<h3>User Successfully Created</h3>Your Qiita account "
+            msg = ("<h3>User Successfully Created</h3><p>Your Qiita account "
                    "has been successfully created. An email has been sent to "
                    "the email address you provided. This email contains "
                    "instructions on how to activate your account.</p>"
