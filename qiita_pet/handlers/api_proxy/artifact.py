@@ -403,6 +403,7 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
                   (int(artifact_id), pd.study_id)
 
         msg = '%s wants to make their artifact private' % user.email
+        #TODO: Replace w/option in config file
         send_email('qiita.help@gmail.com', subject, msg)
 
     return {'status': status,
