@@ -339,12 +339,6 @@ class TestArtifactAPI(TestCase):
                'message': 'Artifact visibility changed to sandbox'}
         self.assertEqual(obs, exp)
 
-    def test_artifact_status_put_req_awaiting(self):
-        obs = artifact_status_put_req(1, 'test@foo.bar', 'awaiting_approval')
-        exp = {'status': 'success',
-               'message': 'Artifact visibility changed to awaiting_approval'}
-        self.assertEqual(obs, exp)
-
     def test_artifact_status_put_req_private(self):
         obs = artifact_status_put_req(1, 'admin@foo.bar', 'private')
         exp = {'status': 'success',
@@ -367,6 +361,19 @@ class TestArtifactAPI(TestCase):
         obs = artifact_status_put_req(1, 'test@foo.bar', 'BADSTAT')
         exp = {'status': 'error',
                'message': 'Unknown visiblity value: BADSTAT'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_status_put_req_awaiting(self):
+        # change back to sandbox
+        obs = artifact_status_put_req(1, 'test@foo.bar', 'sandbox')
+        exp = {'status': 'success',
+               'message': 'Artifact visibility changed to sandbox'}
+        self.assertEqual(obs, exp)
+
+        # then change to awaiting approval
+        obs = artifact_status_put_req(1, 'test@foo.bar', 'awaiting_approval')
+        exp = {'status': 'success',
+               'message': 'Artifact visibility changed to awaiting_approval'}
         self.assertEqual(obs, exp)
 
 
