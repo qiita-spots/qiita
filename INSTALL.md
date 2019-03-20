@@ -19,7 +19,7 @@ conda update conda
 Setup a virtual environment in conda named `qiita` by executing the following:
 
 ```bash
-conda create -q --yes -n qiita python=3.6 pip libgfortran numpy
+conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx
 ```
 
 ### Brief introduction to managing conda environments
@@ -154,6 +154,9 @@ Move the Qiita sample configuration file to a different directory by executing:
  cp ./qiita_core/support_files/config_test.cfg ~/.qiita_config_test.cfg
 ```
 
+Note that you will need to change `BASE_URL = https://localhost:8383` to `BASE_URL = https://localhost:21174` if you are not using NGINX.
+
+
 Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.bashrc` if using bash; `.zshrc` if using zshell):
 
 ```bash
@@ -173,9 +176,24 @@ qiita-env make --no-load-ontologies
 
 Finally, redbiom relies on the REDBIOM_HOST environment variable to set the URL to query. By default is set to Qiita redbiom public repository. To change it you could do:
 
-
 ```bash
 export REDBIOM_HOST=http://my_host.com:7379
+```
+
+## Confirgure NGINX and supervisor
+
+(NGINX)[https://www.nginx.com/] is not a requirement for Qiita development but it's highly recommended for deploys as this will allow us
+to have multiple workers. Note that we are already installing (NGINX)[https://www.nginx.com/] within the Qiita conda environment; also,
+that Qiita comes with an example (NGINX)[https://www.nginx.com/]  config file: `qiita_pet/nginx_example.conf`, which is used in the Travis builds.
+
+Now, (supervisor)[https://github.com/Supervisor/supervisor] will allow us to start all the workers we want based on its configuration file; and we
+need that both the (NGINX)[https://www.nginx.com/] and (supervisor)[https://github.com/Supervisor/supervisor] config files to match. For our Travis
+testing we are creating 3 workers: 21174 for master and 21175-6 as a regular workers.
+
+If you are using (NGINX)[https://www.nginx.com/] via conda, you are going to need to create the NGINX folder within the environment; thus run:
+
+```bash
+mkdir -p ${CONDA_PREFIX}/var/run/nginx/
 ```
 
 ## Start Qiita
@@ -195,7 +213,8 @@ Start the qiita server:
 # alternatively: qiita pet webserver --no-build-docs start
 qiita pet webserver start
 ```
-If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
+
+If all the above commands executed correctly, you should be able to access Qiita by going in your browser to https://localhost:21174 if you are not using NGINX, or https://localhost:8383 if you are using NGINX, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
 
 
 

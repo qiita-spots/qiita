@@ -553,6 +553,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             current_headers)
         forbidden = cls._identify_forbidden_words_in_column_names(
             current_headers)
+        qiime2_reserved = cls._identify_qiime2_reserved_words_in_column_names(
+            current_headers)
 
         error = []
         if pgsql_reserved:
@@ -567,6 +569,10 @@ class MetadataTemplate(qdb.base.QiitaObject):
             error.append(
                 "The following column names in the template contain invalid "
                 "values: %s." % ", ".join(forbidden))
+        if qiime2_reserved:
+            error.append(
+                "The following column names in the template contain QIIME2 "
+                "reserved words: %s." % ", ".join(pgsql_reserved))
 
         if error:
             raise qdb.exceptions.QiitaDBColumnError(
@@ -1731,3 +1737,19 @@ class MetadataTemplate(qdb.base.QiitaObject):
             elif set(s) - valid_rest:
                 invalid.append(s)
         return set(invalid)
+
+    @classmethod
+    def _identify_qiime2_reserved_words_in_column_names(cls, column_names):
+        """Return a list of QIIME2-reserved words found in column_names.
+
+        Parameters
+        ----------
+        column_names : iterable
+            Iterable containing the column names to check.
+
+        Returns
+        ------
+            set of words containing QIIME2-reserved words.
+        """
+        return (qdb.metadata_template.util.get_qiime2_reserved_words() &
+                set(column_names))

@@ -358,3 +358,17 @@ def get_pgsql_reserved_words():
         sql = "SELECT word FROM pg_get_keywords() WHERE catcode = 'R';"
         qdb.sql_connection.TRN.add(sql)
         return set(qdb.sql_connection.TRN.execute_fetchflatten())
+
+
+def get_qiime2_reserved_words():
+    """Returns a list of the current reserved words in qiime2
+
+    Returns
+    -------
+    set: str
+        The reserved words
+    """
+    qiime2_reserved_column_names = ['feature id', 'feature-id', 'featureid',
+                                    'id', 'sample id', 'sample-id', 'sampleid']
+
+    return set(qiime2_reserved_column_names)
