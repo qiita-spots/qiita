@@ -31,7 +31,7 @@ install:
   - ./webdis &
   - popd
   - travis_retry pip install . --no-binary redbiom
-  # staring nginx
+  # starting nginx
   - mkdir /home/travis/miniconda3/envs/qiita/var/run/nginx/
   - nginx -c ${PWD}/qiita_pet/nginx_example.conf
   # loading redbiom with Qiita's test set
