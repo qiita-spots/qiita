@@ -309,6 +309,12 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.get_pgsql_reserved_words()
         self.assertIn('select', obs)
 
+    def test_get_qiime2_reserved_words(self):
+        # simply testing that at least one of the well know reserved words is
+        # in the list
+        obs = qdb.metadata_template.util.get_qiime2_reserved_words()
+        self.assertIn('featureid', obs)
+
 
 QIIME_TUTORIAL_MAP_SUBSET = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tTreatment\tDOB\t"
