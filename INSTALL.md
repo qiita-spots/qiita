@@ -205,7 +205,7 @@ Start the qiita server:
 # alternatively: qiita pet webserver --no-build-docs start
 qiita pet webserver start
 ```
-If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
+If all the above commands executed correctly, you should be able to go to https://localhost:21174 or just localhost if you are using nginx/supervisor in your browser, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
 
 
 

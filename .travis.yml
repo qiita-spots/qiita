@@ -1,6 +1,6 @@
 dist: precise
 language: python
-sudo: true
+sudo: false
 env:
   global:
     - PYTHON_VERSION=3.6
@@ -33,7 +33,7 @@ install:
   - travis_retry pip install . --no-binary redbiom
   # staring nginx
   - mkdir /home/travis/miniconda3/envs/qiita/var/run/nginx/
-  - sudo nginx -c ${PWD}/qiita_pet/nginx_example.conf
+  - nginx -c ${PWD}/qiita_pet/nginx_example.conf
   # loading redbiom with Qiita's test set
   # but first let's make sure redis is empty
   # following https://github.com/biocore/redbiom/blob/master/Makefile
