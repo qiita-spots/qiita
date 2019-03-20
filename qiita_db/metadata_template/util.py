@@ -359,6 +359,7 @@ def get_pgsql_reserved_words():
         qdb.sql_connection.TRN.add(sql)
         return set(qdb.sql_connection.TRN.execute_fetchflatten())
 
+
 def get_qiime2_reserved_words():
     """Returns a list of the current reserved words in qiime2
 

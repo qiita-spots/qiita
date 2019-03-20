@@ -399,11 +399,11 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
         pd.visibility = visibility
 
     if pd.visibility == 'awaiting_approval':
-        subject = 'QIITA: Artifact %d from Study %d awaiting approval' %
-                  (int(artifact_id), pd.study_id)
+        subject = 'QIITA: Artifact %d' % int(artifact_id)
+        subject = subject + ' from Study %d awaiting approval' % pd.study_id
 
         msg = '%s wants to make their artifact private' % user.email
-        #TODO: Replace w/option in config file
+        # TODO: Replace w/option in config file
         send_email('qiita.help@gmail.com', subject, msg)
 
     return {'status': status,
