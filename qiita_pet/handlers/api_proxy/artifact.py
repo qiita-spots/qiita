@@ -12,7 +12,7 @@ from json import dumps
 from future.utils import viewitems
 from itertools import chain
 
-from qiita_core.util import execute_as_transaction
+from qiita_core.util import send_email, execute_as_transaction
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.artifact import Artifact
@@ -397,6 +397,13 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
             msg = 'User does not have permissions to approve change'
     else:
         pd.visibility = visibility
+
+    if pd.visibility == 'awaiting_approval':
+        subject = 'QIITA: Artifact %d from Study %d awaiting approval' %
+                  (int(artifact_id), pd.study_id)
+
+        msg = '%s wants to make their artifact private' % user.email
+        send_email('qiita.help@gmail.com', subject, msg)
 
     return {'status': status,
             'message': msg}
