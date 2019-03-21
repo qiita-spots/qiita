@@ -113,6 +113,6 @@ setup(name='qiita-spots',
           'seaborn',  'matplotlib', 'scipy', 'nose', 'flake8', 'six',
           'qiita-files @ https://github.com/qiita-spots/qiita-files/archive/'
           'master.zip', 'mock', 'supervisor @ https://github.com/Supervisor/'
-          'supervisor'],
+          'supervisor/archive/master.zip'],
       classifiers=classifiers
       )
