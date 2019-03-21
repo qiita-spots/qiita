@@ -204,6 +204,10 @@ class TestAnalysisGraphHandler(TestHandlerBase):
 
         # making sure that all plugins are active
         _activate_or_update_plugins()
+        for software in Software.iter():
+            for cmd in software.commands:
+                print('-->', software.name, cmd.name, software.active,
+                      cmd.active)
         response = self.get('/analysis/description/1/graph/')
         self.assertEqual(response.code, 200)
         # The job id is randomly generated in the test environment. Gather
