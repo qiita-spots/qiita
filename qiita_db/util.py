@@ -50,6 +50,7 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, exists
+from glob import glob
 from os import walk, remove, listdir, rename
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
@@ -2010,3 +2011,23 @@ def human_merging_scheme(cname, merging_scheme,
         algorithm = '%s | %s' % (cname, palgorithm)
 
     return algorithm
+
+
+def _activate_or_update_plugins(update=False):
+    """Activates/updates the plugins
+
+    Parameters
+    ----------
+    update : bool, optional
+        If True will update the plugins. Otherwise will activate them.
+        Default: False.
+    """
+    conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
+    label = "{} plugin (%s/{}): %s... ".format(
+        "Updating" if update else "\tLoading", len(conf_files))
+    for i, fp in enumerate(conf_files):
+        print(label % (i + 1, basename(fp)), nl=False)
+        s = qdb.software.Software.from_file(fp, update=update)
+        if not update:
+            s.activate()
+        print("Ok")
