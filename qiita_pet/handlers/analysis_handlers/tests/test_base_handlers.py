@@ -197,6 +197,7 @@ class TestBaseHandlers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
 
+@qiita_test_checker()
 class TestAnalysisGraphHandler(TestHandlerBase):
     def test_get_analysis_graph_handler(self):
         response = self.get('/analysis/description/1/graph/')
