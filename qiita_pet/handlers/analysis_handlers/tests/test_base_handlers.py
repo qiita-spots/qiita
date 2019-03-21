@@ -18,7 +18,7 @@ from qiita_core.qiita_settings import r_client
 from qiita_core.testing import wait_for_processing_job
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
-from qiita_db.software import Software, Command, Parameters, DefaultParameters
+from qiita_db.software import Command, Parameters, DefaultParameters
 from qiita_db.processing_job import ProcessingWorkflow
 from qiita_db.util import _activate_or_update_plugins
 from qiita_pet.test.tornado_test_base import TestHandlerBase
@@ -201,13 +201,9 @@ class TestBaseHandlers(TestHandlerBase):
 @qiita_test_checker()
 class TestAnalysisGraphHandler(TestHandlerBase):
     def test_get_analysis_graph_handler(self):
-
         # making sure that all plugins are active
         _activate_or_update_plugins(True)
-        for software in Software.iter():
-            for cmd in software.commands:
-                print('-->', software.name, cmd.name, software.active,
-                      cmd.active)
+
         response = self.get('/analysis/description/1/graph/')
         self.assertEqual(response.code, 200)
         # The job id is randomly generated in the test environment. Gather
@@ -217,8 +213,8 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         exp = {'edges': [[8, job_id], [job_id, 9]],
                'nodes': [
                     ['job', 'job', job_id, 'Single Rarefaction', 'success'],
-                    ['artifact', 'BIOM', 9, 'noname\n(BIOM)', 'artifact'],
-                    ['artifact', 'BIOM', 8, 'noname\n(BIOM)', 'artifact']],
+                    ['artifact', 'BIOM', 9, 'noname\n(BIOM)', 'outdated'],
+                    ['artifact', 'BIOM', 8, 'noname\n(BIOM)', 'outdated']],
                'workflow': None}
         self.assertCountEqual(obs, exp)
         self.assertCountEqual(obs['edges'], exp['edges'])
