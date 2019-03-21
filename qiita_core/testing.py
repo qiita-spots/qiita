@@ -51,9 +51,10 @@ def wait_for_processing_job(job_id):
     """
     job = ProcessingJob(job_id)
     while job.status not in ('success', 'error'):
-        sleep(1)
+        sleep(0.8)
     # this print is useful for debugging
     if job.status == 'error':
+        print('----------------')
         print("==> %s: %s" % (job.id, job.log.msg))
-    # wait for 5 seconds so all DB transactions are completed
-    sleep(5)
+    # wait for 15 seconds so all DB transactions are completed
+    sleep(15)
