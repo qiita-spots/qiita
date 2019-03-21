@@ -18,7 +18,7 @@ from qiita_core.qiita_settings import r_client
 from qiita_core.testing import wait_for_processing_job
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
-from qiita_db.software import Command, Parameters, DefaultParameters
+from qiita_db.software import Software, Command, Parameters, DefaultParameters
 from qiita_db.processing_job import ProcessingWorkflow
 from qiita_db.util import _activate_or_update_plugins
 from qiita_pet.test.tornado_test_base import TestHandlerBase
