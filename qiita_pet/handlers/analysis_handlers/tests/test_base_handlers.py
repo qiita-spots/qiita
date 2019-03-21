@@ -203,7 +203,7 @@ class TestAnalysisGraphHandler(TestHandlerBase):
     def test_get_analysis_graph_handler(self):
 
         # making sure that all plugins are active
-        _activate_or_update_plugins()
+        _activate_or_update_plugins(True)
         for software in Software.iter():
             for cmd in software.commands:
                 print('-->', software.name, cmd.name, software.active,
