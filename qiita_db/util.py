@@ -2026,7 +2026,7 @@ def _activate_or_update_plugins(update=False):
     label = "{} plugin (%s/{}): %s... ".format(
         "Updating" if update else "\tLoading", len(conf_files))
     for i, fp in enumerate(conf_files):
-        print(label % (i + 1, basename(fp)), nl=False)
+        print(label % (i + 1, basename(fp)))
         s = qdb.software.Software.from_file(fp, update=update)
         if not update:
             s.activate()
