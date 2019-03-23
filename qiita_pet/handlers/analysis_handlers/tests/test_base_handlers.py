@@ -8,6 +8,7 @@
 
 from unittest import TestCase, main
 from json import loads, dumps
+from time import sleep
 
 from tornado.web import HTTPError
 from mock import Mock
@@ -203,6 +204,7 @@ class TestAnalysisGraphHandler(TestHandlerBase):
     def test_get_analysis_graph_handler(self):
         # making sure that all plugins are active
         _activate_or_update_plugins(True)
+        sleep(5)
 
         response = self.get('/analysis/description/1/graph/')
         self.assertEqual(response.code, 200)

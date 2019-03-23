@@ -82,7 +82,7 @@ class TestHandlerBase(AsyncHTTPTestCase):
                                body=data, headers=headers)
         # there is a random error in travis where a test takes longer than
         # expected thus using 25 seconds
-        return self.wait(timeout=25)
+        return self.wait(timeout=35)
 
 
 # adapted from: https://gist.github.com/crodjer/1e9989ab30fdc32db926
