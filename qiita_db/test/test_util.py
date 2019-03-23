@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from tempfile import mkstemp, NamedTemporaryFile, TemporaryFile
+from tempfile import mkstemp, mkdtemp, NamedTemporaryFile, TemporaryFile
 from os import close, remove, makedirs, mkdir
 from os.path import join, exists, basename
 from shutil import rmtree
@@ -433,13 +433,29 @@ class DBUtilTests(TestCase):
         self._common_purge_filepaths_test()
 
     def test_move_filepaths_to_upload_folder(self):
-        # setting up test, done here as this is the only test that uses these
-        # files
-        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
+        # we are going to test the move_filepaths_to_upload_folder indirectly
+        # by creating an artifact and deleting it. To acomplish this we need to
+        # create a new prep info file, attach a biom with html_summary and then
+        # deleting it. However, we will do this twice to assure that there are
+        # no conflicts with this
+        study_id = 1
+        # creating the 2 sets of files for the 2 artifacts
+        fd, seqs_fp1 = mkstemp(suffix='_seqs.fastq')
         close(fd)
-        fd, html_fp = mkstemp(suffix='.html')
+        html_fp1 = mkdtemp()
+        html_fp1 = join(html_fp1, 'support_files')
+        mkdir(html_fp1)
+        with open(join(html_fp1, 'index.html'), 'w') as fp:
+            fp.write(">AAA\nAAA")
+        fd, seqs_fp2 = mkstemp(suffix='_seqs.fastq')
         close(fd)
-        st = qdb.study.Study(1)
+        html_fp2 = mkdtemp()
+        html_fp2 = join(html_fp2, 'support_files')
+        mkdir(html_fp2)
+        with open(join(html_fp2, 'index.html'), 'w') as fp:
+            fp.write(">AAA\nAAA")
+
+        # creating new prep info file
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
@@ -449,27 +465,46 @@ class DBUtilTests(TestCase):
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
-                                          dtype=str)
-        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
-            metadata, qdb.study.Study(1), "16S")
+        metadata = pd.DataFrame.from_dict(
+            metadata_dict, orient='index', dtype=str)
+        pt1 = qdb.metadata_template.prep_template.PrepTemplate.create(
+            metadata, qdb.study.Study(study_id), "16S")
+        pt2 = qdb.metadata_template.prep_template.PrepTemplate.create(
+            metadata, qdb.study.Study(study_id), "16S")
 
-        artifact = qdb.artifact.Artifact.create(
-            [(seqs_fp, 1), (html_fp, 'html_summary')], "FASTQ",
-            prep_template=pt)
-        filepaths = artifact.filepaths
-        # deleting reference so we can directly call
-        # move_filepaths_to_upload_folder
-        for fid, _, _ in filepaths:
-            sql = "DELETE FROM qiita.artifact_filepath WHERE filepath_id=%s"
-            self.conn_handler.execute(sql, (fid,))
+        # inserting artifact 1
+        artifact1 = qdb.artifact.Artifact.create(
+            [(seqs_fp1, 1), (html_fp1, 'html_summary')], "FASTQ",
+            prep_template=pt1)
+        # inserting artifact 2
+        artifact2 = qdb.artifact.Artifact.create(
+            [(seqs_fp2, 1), (html_fp2, 'html_summary')], "FASTQ",
+            prep_template=pt2)
 
-        # moving filepaths
-        qdb.util.move_filepaths_to_upload_folder(st.id, filepaths)
+        # retrieving filepaths
+        filepaths = artifact1.filepaths
+        filepaths.extend(artifact2.filepaths)
+
+        # delete artifacts
+        qdb.artifact.Artifact.delete(artifact1.id)
+        qdb.artifact.Artifact.delete(artifact2.id)
+
+        # now let's create another artifact with the same filenames that
+        # artifact1 so we can test successfull overlapping of names
+        with open(seqs_fp1, 'w') as fp:
+            fp.write(">AAA\nAAA")
+        mkdir(html_fp1)
+        with open(join(html_fp1, 'index.html'), 'w') as fp:
+            fp.write(">AAA\nAAA")
+        artifact3 = qdb.artifact.Artifact.create(
+            [(seqs_fp1, 1), (html_fp1, 'html_summary')], "FASTQ",
+            prep_template=pt1)
+        filepaths.extend(artifact2.filepaths)
+        qdb.artifact.Artifact.delete(artifact3.id)
 
         # check that they do not exist in the old path but do in the new one
         path_for_removal = join(qdb.util.get_mountpoint("uploads")[0][1],
-                                str(st.id))
+                                str(study_id))
         for _, fp, fp_type in filepaths:
             self.assertFalse(exists(fp))
             new_fp = join(path_for_removal, basename(fp))

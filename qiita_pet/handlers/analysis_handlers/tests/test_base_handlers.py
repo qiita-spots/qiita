@@ -213,7 +213,7 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         exp = {'edges': [[8, job_id], [job_id, 9]],
                'nodes': [
                     ['job', 'job', job_id, 'Single Rarefaction', 'success'],
-                    ['artifact', 'BIOM', 9, 'noname\n(BIOM)', 'artifact'],
+                    ['artifact', 'BIOM', 9, 'noname\n(BIOM)', 'outdated'],
                     ['artifact', 'BIOM', 8, 'noname\n(BIOM)', 'artifact']],
                'workflow': None}
         self.assertCountEqual(obs, exp)

@@ -914,10 +914,8 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
         sql = """DELETE FROM qiita.filepath WHERE filepath_id=%s"""
         for fp_id, fp, fp_type in filepaths:
             qdb.sql_connection.TRN.add(sql, [fp_id])
-
             if fp_type == 'html_summary':
-                qdb.sql_connection.TRN.add_post_commit_func(
-                    remove, fp)
+                _rm_files(qdb.sql_connection.TRN, fp)
             else:
                 destination = path_builder(basename(fp))
 

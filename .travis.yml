@@ -80,6 +80,8 @@ script:
   - QIITA_PID=$!
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
   - kill $QIITA_PID
+  # waiting for system to come down
+  - sleep 10
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then all-qiita-cron-job; fi
   - flake8 qiita_* setup.py scripts/qiita*
