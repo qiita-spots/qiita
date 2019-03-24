@@ -1413,6 +1413,8 @@ class TestSampleTemplate(TestCase):
         """extend correctly works adding new samples"""
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata, self.new_study)
+        # we just created the sample info file so we should only have one filepath
+        self.assertEqual(len(st.get_filepaths()), 1)
 
         md_dict = {
             'Sample4': {'physical_specimen_location': 'location1',
@@ -1438,8 +1440,12 @@ class TestSampleTemplate(TestCase):
                         'taxon_id': '9606',
                         'scientific_name': 'homo sapiens'}}
         md_ext = pd.DataFrame.from_dict(md_dict, orient='index', dtype=str)
-
         npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend, md_ext)
+        # we just updated so we should have 2 files:
+        self.assertEqual(len(st.get_filepaths()), 2)
+        # let's extend again to tests that nothing really happened
+        st.extend(md_ext)
+        self.assertEqual(len(st.get_filepaths()), 2)
 
         # Test samples have been added correctly
         exp_sample_ids = {"%s.Sample1" % st.id, "%s.Sample2" % st.id,
