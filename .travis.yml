@@ -78,7 +78,9 @@ script:
   - supervisord -c qiita_pet/supervisor_example.conf
   - sleep 20
   - QIITA_PID=$!
+  - cat /tmp/supervisord.log
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+  - cat /tmp/supervisord.log
   - kill $QIITA_PID
   # waiting for system to come down
   - sleep 10
