@@ -1413,7 +1413,8 @@ class TestSampleTemplate(TestCase):
         """extend correctly works adding new samples"""
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata, self.new_study)
-        # we just created the sample info file so we should only have one filepath
+        # we just created the sample info file so we should only have one
+        # filepath
         self.assertEqual(len(st.get_filepaths()), 1)
 
         md_dict = {
@@ -1443,7 +1444,7 @@ class TestSampleTemplate(TestCase):
         npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend, md_ext)
         # we just updated so we should have 2 files:
         self.assertEqual(len(st.get_filepaths()), 2)
-        # let's extend again to tests that nothing really happened
+        # let's extend again to tests that a new file is not created
         st.extend(md_ext)
         self.assertEqual(len(st.get_filepaths()), 2)
 
