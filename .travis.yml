@@ -75,9 +75,11 @@ script:
   - if [ ${TRAVIS_BRANCH} == "master" ] && [ ${TRAVIS_PULL_REQUEST} == "false" ]; then ./travis_ebi_setup.sh ; fi
   - export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
   - ls $QIITA_CONFIG_FP
-  - qiita pet webserver --no-build-docs start &
+  - supervisord -c qiita_pet/supervisor_example.conf
   - sleep 5
   - QIITA_PID=$!
+  # check supervisord logs
+  - cat /tmp/supervisord.log
   - source deactivate
   - source activate qtp-biom
   - start_biom https://localhost:21174 register ignored
