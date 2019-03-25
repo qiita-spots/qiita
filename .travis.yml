@@ -76,13 +76,13 @@ script:
   - export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
   - ls $QIITA_CONFIG_FP
   - supervisord -c qiita_pet/supervisor_example.conf
-  - sleep 5
+  - sleep 10
   - QIITA_PID=$!
   # check supervisord logs
   - cat /tmp/supervisord.log
   - source deactivate
   - source activate qtp-biom
-  - start_biom https://localhost:21174 register ignored
+  - start_biom https://localhost:8383 register ignored
   - source deactivate
   - source activate qiita
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'

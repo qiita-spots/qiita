@@ -2,6 +2,8 @@
 
 export PGDATESTYLE="ISO, MDY"
 
+sleep 5
+
 studies=`ls test_data_studies/studies`
 
 echo "DROPPING ENV... "

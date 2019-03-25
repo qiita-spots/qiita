@@ -414,9 +414,9 @@ def start(port, master):
                     print(e)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
-                sleep(1)
+                sleep(.8)
             # sleep to make sure that all definitions are done
-            sleep(4)
+            sleep(3)
 
             print('Definition artifacts registration complete')
 
@@ -428,7 +428,7 @@ def start(port, master):
                     print(e)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
-                sleep(1)
+                sleep(.8)
 
             print('Command artifacts registration complete')
 
