@@ -21,7 +21,7 @@ from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.software import Command, Parameters, DefaultParameters
 from qiita_db.processing_job import ProcessingWorkflow
-from qiita_db.util import _activate_or_update_plugins
+from qiita_db.util import activate_or_update_plugins
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.analysis_handlers.base_handlers import (
     analyisis_graph_handler_get_request,
@@ -202,10 +202,6 @@ class TestBaseHandlers(TestHandlerBase):
 @qiita_test_checker()
 class TestAnalysisGraphHandler(TestHandlerBase):
     def test_get_analysis_graph_handler(self):
-        # making sure that all plugins are active
-        _activate_or_update_plugins(True)
-        sleep(5)
-
         response = self.get('/analysis/description/1/graph/')
         self.assertEqual(response.code, 200)
         # The job id is randomly generated in the test environment. Gather

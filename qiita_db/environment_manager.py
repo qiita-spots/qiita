@@ -355,6 +355,9 @@ def reset_test_database(wrapped_fn):
     def decorated_wrapped_fn(*args, **kwargs):
         # Reset the test database
         drop_and_rebuild_tst_database()
+
+        # making sure that all plugins are active
+        qdb.util.activate_or_update_plugins(True)
         # Execute the wrapped function
         return wrapped_fn(*args, **kwargs)
 

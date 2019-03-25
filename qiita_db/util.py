@@ -2011,7 +2011,7 @@ def human_merging_scheme(cname, merging_scheme,
     return algorithm
 
 
-def _activate_or_update_plugins(update=False):
+def activate_or_update_plugins(update=False):
     """Activates/updates the plugins
 
     Parameters

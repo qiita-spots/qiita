@@ -363,7 +363,7 @@ def start(port, master):
         # Deactivate all the plugins and only activate those that are currently
         # available in the config file folder
         qdb.software.Software.deactivate_all()
-        qdb.util._activate_or_update_plugins()
+        qdb.util.activate_or_update_plugins()
 
     # Create/repopulate the usernames key so we can do autocomplete for sharing
     r_client.delete('qiita-usernames')
@@ -458,7 +458,7 @@ def start(port, master):
 @plugins.command()
 def update():
     """Updates the plugins in the database"""
-    qdb.util._activate_or_update_plugins(update=True)
+    qdb.util.activate_or_update_plugins(update=True)
 
 
 if __name__ == '__main__':
