@@ -81,8 +81,8 @@ class TestHandlerBase(AsyncHTTPTestCase):
         self.http_client.fetch(self.get_url(url), self.stop, method=method,
                                body=data, headers=headers)
         # there is a random error in travis where a test takes longer than
-        # expected thus using 25 seconds
-        return self.wait(timeout=35)
+        # expected thus using 10 seconds
+        return self.wait(timeout=10)
 
 
 # adapted from: https://gist.github.com/crodjer/1e9989ab30fdc32db926
