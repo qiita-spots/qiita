@@ -5,8 +5,8 @@ env:
   global:
     - PYTHON_VERSION=3.6
   matrix:
-    - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
-    - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_pet qiita_core qiita_ware"
+    - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db QIITA_CLIENT_DEBUG_LEVEL=DEBUG
+    - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_pet qiita_core qiita_ware" QIITA_CLIENT_DEBUG_LEVEL=DEBUG
 before_install:
   - redis-server --version
   - redis-server --port 7777 &

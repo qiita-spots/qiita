@@ -392,12 +392,8 @@ def start(port, master):
             raise
     base_url = qiita_config.base_url
 
-    if search(r":\d+$", base_url):
-        tmp = "Qiita started on %s @ %s" % (base_url, ctime())
-    else:
-        tmp = "Qiita started on %s:%d @ %s" % (base_url, port, ctime())
-
-    click.echo(tmp)
+    click.echo("Qiita started on base_url: %s, port: %d @ %s" % (
+        base_url, port, ctime()))
 
     ioloop = tornado.ioloop.IOLoop.instance()
 
