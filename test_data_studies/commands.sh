@@ -2,7 +2,7 @@
 
 export PGDATESTYLE="ISO, MDY"
 
-sleep 5
+sleep 10
 
 studies=`ls test_data_studies/studies`
 
