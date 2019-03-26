@@ -434,10 +434,10 @@ class DBUtilTests(TestCase):
 
     def test_move_filepaths_to_upload_folder(self):
         # we are going to test the move_filepaths_to_upload_folder indirectly
-        # by creating an artifact and deleting it. To acomplish this we need to
-        # create a new prep info file, attach a biom with html_summary and then
-        # deleting it. However, we will do this twice to assure that there are
-        # no conflicts with this
+        # by creating an artifact and deleting it. To accomplish this we need
+        # to create a new prep info file, attach a biom with html_summary and
+        # then deleting it. However, we will do this twice to assure that
+        # there are no conflicts with this
         study_id = 1
         # creating the 2 sets of files for the 2 artifacts
         fd, seqs_fp1 = mkstemp(suffix='_seqs.fastq')
