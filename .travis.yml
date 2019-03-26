@@ -88,7 +88,9 @@ script:
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
   - kill $QIITA_PID
   - echo $QIITA_PID
-  - ps - elf | grep supervisor
+  - ps -elf | grep supervisor
+  - QID=`ps -elf | grep supervisor | head -n 1 | awk '{print $2}'`
+  - kill $QID
   - sleep 5
   # check supervisord logs
   - cat /tmp/supervisord.log
