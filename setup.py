@@ -112,6 +112,8 @@ setup(name='qiita-spots',
                         'gitpython', 'redbiom', 'pyzmq', 'sphinx_rtd_theme',
                         'paramiko', 'seaborn',  'matplotlib', 'scipy', 'nose',
                         'flake8', 'six', 'qiita-files @ https://github.com/'
-                        'qiita-spots/qiita-files/archive/master.zip', 'mock'],
+                        'qiita-spots/qiita-files/archive/master.zip', 'mock',
+                        'supervisor @ https://github.com/Supervisor/'
+                        'supervisor/archive/master.zip'],
       classifiers=classifiers
       )

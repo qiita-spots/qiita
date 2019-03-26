@@ -147,7 +147,7 @@ class Watcher(Process):
                 # qstat returned successfully with metadata on processes
                 # break up metadata into individual <Job></Job> elements
                 # for processing.
-                m = findall('<Job>(.*?)</Job>', stdout)
+                m = findall('<Job>(.*?)</Job>', stdout.decode('ascii'))
                 for item in m:
                     # filter out jobs that don't belong to owner
                     if search('<Job_Owner>%s</Job_Owner>' % self.owner, item):
