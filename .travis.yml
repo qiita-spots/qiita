@@ -76,8 +76,6 @@ script:
   - export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
   - ls $QIITA_CONFIG_FP
   - supervisord -c qiita_pet/supervisor_example.conf
-  - QIITA_PID=$!
-  - sleep 10
   # check supervisord logs
   - cat /tmp/supervisord.log
   - source deactivate
@@ -86,11 +84,8 @@ script:
   - source deactivate
   - source activate qiita
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+  - QIITA_PID=`cat /tmp/supervisord.pid`
   - kill $QIITA_PID
-  - echo $QIITA_PID
-  - ps -elf | grep supervisor
-  - QID=`ps -elf | grep supervisor | head -n 1 | awk '{print $2}'`
-  - kill $QID
   - sleep 5
   # check supervisord logs
   - cat /tmp/supervisord.log
