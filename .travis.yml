@@ -76,8 +76,8 @@ script:
   - export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
   - ls $QIITA_CONFIG_FP
   - supervisord -c qiita_pet/supervisor_example.conf
-  - sleep 10
   - QIITA_PID=$!
+  - sleep 10
   # check supervisord logs
   - cat /tmp/supervisord.log
   - source deactivate
