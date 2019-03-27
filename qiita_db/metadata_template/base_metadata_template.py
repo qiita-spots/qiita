@@ -1263,8 +1263,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
             md_template = self._clean_validate_template(
                 md_template, self.study_id, current_columns=self.categories())
             new_samples, new_columns = self._common_extend_steps(md_template)
-            self.validate(self.columns_restrictions)
-            self.generate_files(new_samples, new_columns)
+            if new_samples or new_columns:
+                self.validate(self.columns_restrictions)
+                self.generate_files(new_samples, new_columns)
 
     def _update(self, md_template):
         r"""Update values in the template

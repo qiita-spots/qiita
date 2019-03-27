@@ -5,8 +5,8 @@ env:
   global:
     - PYTHON_VERSION=3.6
   matrix:
-    - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db
-    - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_pet qiita_core qiita_ware"
+    - TEST_ADD_STUDIES=False COVER_PACKAGE=qiita_db QIITA_CLIENT_DEBUG_LEVEL=DEBUG
+    - TEST_ADD_STUDIES=True COVER_PACKAGE="qiita_pet qiita_core qiita_ware" QIITA_CLIENT_DEBUG_LEVEL=DEBUG
 before_install:
   - redis-server --version
   - redis-server --port 7777 &
@@ -48,7 +48,6 @@ install:
   - redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table-for_redbiom_tests.biom --context qiita-test --tag 5
   - mkdir ~/.qiita_plugins
   - export REDBIOM_HOST=http://127.0.0.1:7379
-  - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins/BIOM\ type_2.1.4\ -\ Qiime2.conf
   - touch ~/.bash_profile
   - ssh-keygen -t rsa -C "ssh test key" -f $PWD/qiita_ware/test/test_data/test_key -P ""
   - mv $PWD/qiita_ware/test/test_data/test_key.pub ~/.ssh/
@@ -63,6 +62,7 @@ install:
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
   - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+  - configure_biom --env-script "source ~/virtualenv/python2.7/bin/activate; export PATH=$HOME/miniconda3/bin/:$PATH; . activate qtp-biom" --server-cert $QIITA_SERVER_CERT
   - source deactivate
   - source activate qiita
 before_script:
@@ -75,11 +75,20 @@ script:
   - if [ ${TRAVIS_BRANCH} == "master" ] && [ ${TRAVIS_PULL_REQUEST} == "false" ]; then ./travis_ebi_setup.sh ; fi
   - export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
   - ls $QIITA_CONFIG_FP
-  - qiita pet webserver --no-build-docs start &
-  - sleep 5
-  - QIITA_PID=$!
+  - supervisord -c qiita_pet/supervisor_example.conf
+  # check supervisord logs
+  - cat /tmp/supervisord.log
+  - source deactivate
+  - source activate qtp-biom
+  - start_biom https://localhost:8383 register ignored
+  - source deactivate
+  - source activate qiita
   - nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+  - QIITA_PID=`cat /tmp/supervisord.pid`
   - kill $QIITA_PID
+  - sleep 5
+  # check supervisord logs
+  - cat /tmp/supervisord.log
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then all-qiita-cron-job; fi
   - flake8 qiita_* setup.py scripts/qiita*

@@ -52,4 +52,7 @@ def wait_for_processing_job(job_id):
     job = ProcessingJob(job_id)
     while job.status not in ('success', 'error'):
         sleep(0.8)
+    # this print is useful for debugging
+    if job.status == 'error':
+        print("==> %s: %s" % (job.id, job.log.msg))
     sleep(0.8)

@@ -16,6 +16,7 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import r_client
 from qiita_core.testing import wait_for_processing_job
+from qiita_db.util import activate_or_update_plugins
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.software import Command, Parameters, DefaultParameters
@@ -118,7 +119,7 @@ class TestBaseHandlersUtils(TestCase):
         exp = {'edges': [(8, job_id), (job_id, 9)],
                'nodes': [
                     ('job', 'job', job_id, 'Single Rarefaction', 'success'),
-                    ('artifact', 'BIOM', 9, 'noname\n(BIOM)', 'artifact'),
+                    ('artifact', 'BIOM', 9, 'noname\n(BIOM)', 'outdated'),
                     ('artifact', 'BIOM',   8, 'noname\n(BIOM)', 'artifact')],
                'workflow': None}
         self.assertCountEqual(obs, exp)
@@ -193,6 +194,9 @@ class TestBaseHandlers(TestHandlerBase):
 
 class TestAnalysisGraphHandler(TestHandlerBase):
     def test_get_analysis_graph_handler(self):
+        # making sure we load the plugins
+        activate_or_update_plugins(update=True)
+
         response = self.get('/analysis/description/1/graph/')
         self.assertEqual(response.code, 200)
         # The job id is randomly generated in the test environment. Gather

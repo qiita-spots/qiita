@@ -657,9 +657,10 @@ class SoftwareTests(TestCase):
         with open(fp, 'w') as f:
             f.write(CONF_TEMPLATE %
                     ('Target Gene type', '0.1.0',
-                     'Target gene artifact types plugin',
-                     'source activate qiita', 'start_target_gene_types',
-                     'artifact definition', '',
+                     'Target gene artifact types plugin', 'source '
+                     '~/virtualenv/python2.7/bin/activate; export '
+                     'PATH=$HOME/miniconda3/bin/:$PATH; source activate qiita',
+                     'start_target_gene_types', 'artifact definition', '',
                      '4MOBzUBHBtUmwhaC258H7PS0rBBLyGQrVxGPgc9g305bvVhf6h',
                      'rFb7jwAb3UmSUN57Bjlsi4DTl2owLwRpwCc0SggRNEVb2Ebae2p5Umnq'
                      '20rNMhmqN'))

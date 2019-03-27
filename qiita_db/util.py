@@ -51,6 +51,7 @@ from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, exists, getsize
 from os import walk, remove, listdir, rename
+from glob import glob
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
 from tempfile import mkstemp
@@ -913,8 +914,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
             qdb.sql_connection.TRN.add(sql, [fp_id])
 
             if fp_type == 'html_summary':
-                qdb.sql_connection.TRN.add_post_commit_func(
-                    remove, fp)
+                _rm_files(qdb.sql_connection.TRN, fp)
             else:
                 destination = path_builder(basename(fp))
 
@@ -2009,3 +2009,23 @@ def human_merging_scheme(cname, merging_scheme,
         algorithm = '%s | %s' % (cname, palgorithm)
 
     return algorithm
+
+
+def activate_or_update_plugins(update=False):
+    """Activates/updates the plugins
+
+    Parameters
+    ----------
+    update : bool, optional
+        If True will update the plugins. Otherwise will activate them.
+        Default: False.
+    """
+    conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
+    label = "{} plugin (%s/{}): %s... ".format(
+        "Updating" if update else "\tLoading", len(conf_files))
+    for i, fp in enumerate(conf_files):
+        print(label % (i + 1, basename(fp)), end=None)
+        s = qdb.software.Software.from_file(fp, update=update)
+        if not update:
+            s.activate()
+        print("Ok")
