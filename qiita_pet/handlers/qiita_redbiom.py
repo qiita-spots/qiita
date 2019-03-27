@@ -25,6 +25,10 @@ from .base_handlers import BaseHandler
 class RedbiomPublicSearch(BaseHandler):
     @execute_as_transaction
     def get(self, search):
+        # making sure that if someone from a portal forces entry to this URI
+        # we go to the main portal
+        if self.request.uri != '/redbiom/':
+            self.redirect('/redbiom/')
         self.render('redbiom.html')
 
     def _redbiom_metadata_search(self, query, contexts):
