@@ -327,15 +327,21 @@ def drop_environment(ask_for_confirmation):
         print('ABORTING')
 
 
-def drop_and_rebuild_tst_database():
+def drop_and_rebuild_tst_database(drop_labcontrol=False):
     """Drops the qiita schema and rebuilds the test database
+
+       Parameters
+       ----------
+       drop_labcontrol : bool
+           Whether or not to drop labcontrol
     """
     with qdb.sql_connection.TRN:
         r_client.flushdb()
         # Drop the schema, note that we are also going to drop labman because
         # if not it will raise an error if you have both systems on your
         # computer due to foreing keys
-        qdb.sql_connection.TRN.add("DROP SCHEMA IF EXISTS labman CASCADE")
+        if drop_labcontrol:
+            qdb.sql_connection.TRN.add("DROP SCHEMA IF EXISTS labman CASCADE")
         qdb.sql_connection.TRN.add("DROP SCHEMA IF EXISTS qiita CASCADE")
         # Set the database to unpatched
         qdb.sql_connection.TRN.add(
@@ -354,7 +360,7 @@ def reset_test_database(wrapped_fn):
 
     def decorated_wrapped_fn(*args, **kwargs):
         # Reset the test database
-        drop_and_rebuild_tst_database()
+        drop_and_rebuild_tst_database(True)
         # Execute the wrapped function
         return wrapped_fn(*args, **kwargs)
 
