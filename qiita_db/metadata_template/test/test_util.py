@@ -64,6 +64,17 @@ class TestUtil(TestCase):
         metadata_map.sort_index(inplace=True)
         assert_frame_equal(metadata_map, exp_df)
 
+        # making sure that samples with the same sample name than the study are
+        # actually prepended
+        metadata_dict = {
+            '1': {'int_col': 1, 'float_col': 2.1, 'str_col': 'str1'},
+            '2': {'int_col': 2, 'float_col': 3.1, 'str_col': '200'},
+        }
+        metadata_map = pd.DataFrame.from_dict(
+            metadata_dict, orient='index', dtype=str)
+        qdb.metadata_template.util.prefix_sample_names_with_id(metadata_map, 1)
+        self.assertCountEqual(metadata_map.index, ['1.1', '1.2'])
+
     def test_load_template_to_dataframe(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE))
