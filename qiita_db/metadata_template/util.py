@@ -30,8 +30,9 @@ def prefix_sample_names_with_id(md_template, study_id):
         The study to which the metadata belongs to
     """
     # loop over the samples and prefix those that aren't prefixed
+    sid = str(study_id)
     md_template['qiita_sample_name_with_id'] = pd.Series(
-        [idx if idx.split('.', 1)[0] == str(study_id)
+        [idx if idx.split('.', 1)[0] == sid and idx != sid
          else '%d.%s' % (study_id, idx)
          for idx in md_template.index], index=md_template.index)
 
