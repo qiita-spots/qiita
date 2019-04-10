@@ -131,18 +131,12 @@ pip install . --no-binary redbiom
 At this point, Qiita will be installed and the system will start. However,
 you will need to install plugins in order to process any kind of data. For a list
 of available plugins, visit the [Qiita Spots](https://github.com/qiita-spots)
-github organization. Currently, the `Type Plugins`
-[qtp-biom](https://github.com/qiita-spots/qtp-biom) and
-[qtp-target-gene](https://github.com/qiita-spots/qtp-target-gene) as well as
-the `Plugin` [qp-target-gene](https://github.com/qiita-spots/qp-target-gene) are
-required. To install these plugins, simply execute
-
-```bash
-pip install git+https://github.com/qiita-spots/qiita_client
-pip install git+https://github.com/qiita-spots/qtp-biom
-pip install git+https://github.com/qiita-spots/qtp-target-gene
-pip install git+https://github.com/qiita-spots/qp-target-gene
-```
+github organization. Each of the plugins have their own installation instructions, we
+suggest looking at each individual .travis.yml file to see detailed installation
+instructions. Note that the most common plugins are:
+- [qtp-biom](https://github.com/qiita-spots/qtp-biom)
+- [qtp-target-gene](https://github.com/qiita-spots/qtp-target-gene)
+- [qp-target-gene](https://github.com/qiita-spots/qp-target-gene)
 
 ## Configure Qiita
 
