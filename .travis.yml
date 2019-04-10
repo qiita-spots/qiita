@@ -60,7 +60,7 @@ install:
   - rm qiime2-2017.12-py35-linux-conda.yml
   - source activate qtp-biom
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
-  - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
+  - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip
   - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
   - configure_biom --env-script "source ~/virtualenv/python2.7/bin/activate; export PATH=$HOME/miniconda3/bin/:$PATH; . activate qtp-biom" --server-cert $QIITA_SERVER_CERT
   - source deactivate
