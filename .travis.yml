@@ -23,6 +23,7 @@ install:
   # when intalling scikit-bio
   - travis_retry conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx
   - source activate qiita
+  - pip install -U pip
   - 'echo "backend: Agg" > ~/matplotlibrc'
   - pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
   - git clone https://github.com/nicolasff/webdis
@@ -59,7 +60,7 @@ install:
   - travis_retry conda env create -q -n qtp-biom --file qiime2-2017.12-py35-linux-conda.yml
   - rm qiime2-2017.12-py35-linux-conda.yml
   - source activate qtp-biom
-  - pip --version
+  - pip install -U pip
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip
   - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
