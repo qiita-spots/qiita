@@ -2,7 +2,7 @@ dist: xenial
 addons:
   apt:
     packages:
-    - webdis
+    - libevent-dev
 language: python
 sudo: false
 env:
@@ -30,7 +30,11 @@ install:
   - pip install -U pip
   - 'echo "backend: Agg" > ~/matplotlibrc'
   - pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
+  - git clone https://github.com/nicolasff/webdis
+  - pushd webdis
+  - make
   - ./webdis &
+  - popd
   - travis_retry pip install . --no-binary redbiom
   # starting nginx
   - mkdir /home/travis/miniconda3/envs/qiita/var/run/nginx/
