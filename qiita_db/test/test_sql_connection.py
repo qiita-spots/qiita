@@ -119,29 +119,6 @@ class TestConnHandler(TestBase):
         with self.conn_handler.get_postgres_cursor() as cur:
             self.assertEqual(type(cur), DictCursor)
 
-    def test_autocommit(self):
-        self.assertFalse(self.conn_handler.autocommit)
-        self.conn_handler._connection.set_isolation_level(
-            ISOLATION_LEVEL_AUTOCOMMIT)
-        self.assertTrue(self.conn_handler.autocommit)
-        self.conn_handler._connection.set_isolation_level(
-            ISOLATION_LEVEL_READ_COMMITTED)
-        self.assertFalse(self.conn_handler.autocommit)
-
-    def test_autocommit_setter(self):
-        self.assertEqual(self.conn_handler._connection.isolation_level,
-                         ISOLATION_LEVEL_READ_COMMITTED)
-        self.conn_handler.autocommit = True
-        self.assertEqual(self.conn_handler._connection.isolation_level,
-                         ISOLATION_LEVEL_AUTOCOMMIT)
-        self.conn_handler.autocommit = False
-        self.assertEqual(self.conn_handler._connection.isolation_level,
-                         ISOLATION_LEVEL_READ_COMMITTED)
-
-    def test_autocommit_setter_error(self):
-        with self.assertRaises(TypeError):
-            self.conn_handler.autocommit = 'not a valid value'
-
     def test_check_sql_args(self):
         self.conn_handler._check_sql_args(['a', 'list'])
         self.conn_handler._check_sql_args(('a', 'tuple'))

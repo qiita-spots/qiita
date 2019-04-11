@@ -188,7 +188,6 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
     # Create the database
     print('Creating database')
     create_settings_table = True
-    admin_conn.autocommit = True
     try:
         admin_conn.execute('CREATE DATABASE %s' % qiita_config.database)
     except ValueError as error:
@@ -207,7 +206,6 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                 create_settings_table = False
         else:
             raise
-    admin_conn.autocommit = False
 
     del admin_conn
     qdb.sql_connection.SQLConnectionHandler.close()
@@ -320,9 +318,7 @@ def drop_environment(ask_for_confirmation):
         qdb.sql_connection.SQLConnectionHandler.close()
         admin_conn = qdb.sql_connection.SQLConnectionHandler(
             admin='admin_without_database')
-        admin_conn.autocommit = True
         admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
-        admin_conn.autocommit = False
     else:
         print('ABORTING')
 

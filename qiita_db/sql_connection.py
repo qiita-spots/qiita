@@ -201,32 +201,6 @@ class SQLConnectionHandler(object):
         except PostgresError as e:
             raise RuntimeError("Cannot get postgres cursor! %s" % e)
 
-    @property
-    def autocommit(self):
-        """If the isolation level of the DB connection is autocommit"""
-        return self._connection.isolation_level == ISOLATION_LEVEL_AUTOCOMMIT
-
-    @autocommit.setter
-    def autocommit(self, value):
-        """(De)activate the autocommit isolation level of the DB connection
-
-        Parameters
-        ----------
-        value : bool
-            If true, the isolation level of the DB connection is set to
-            autocommit. Otherwise, it is set to read committed.
-
-        Raises
-        ------
-        TypeError
-            If `value` is not a boolean
-        """
-        if not isinstance(value, bool):
-            raise TypeError("The value for autocommit should be a boolean")
-        level = (ISOLATION_LEVEL_AUTOCOMMIT if value
-                 else ISOLATION_LEVEL_READ_COMMITTED)
-        self._connection.set_isolation_level(level)
-
     def _check_sql_args(self, sql_args):
         """ Checks that sql_args have the correct type
 
