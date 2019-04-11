@@ -1,8 +1,4 @@
 dist: xenial
-addons:
-  apt:
-    packages:
-    - libevent-dev
 language: python
 sudo: false
 env:
@@ -101,6 +97,9 @@ script:
   - qiita pet webserver
 addons:
   postgresql: "9.5"
+  apt:
+    packages:
+      - libevent-dev
 services:
   - redis-server
   - postgresql
