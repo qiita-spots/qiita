@@ -2004,7 +2004,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             # In order to avoid potential race conditions, we are going to set
             # all the children in 'waiting' status before submitting
             # the root nodes
-            in_degrees = g.in_degree()
+            in_degrees = dict(g.in_degree())
             roots = []
             for job, degree in viewitems(in_degrees):
                 if degree == 0:
