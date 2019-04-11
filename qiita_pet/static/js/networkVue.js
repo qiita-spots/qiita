@@ -391,7 +391,7 @@ Vue.component('processing-graph', {
         rowsContent.push(['Status:', data['job_status'].replace('_', ' ')]);
 
         // Add the job step
-        if (data['job_step'] !== null) {
+        if (data['job_step'] !== null && data['job_status'] !== 'success') {
           rowsContent.push(['Current step:', data['job_step']]);
         }
 
