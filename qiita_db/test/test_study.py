@@ -25,8 +25,10 @@ class TestStudyPerson(TestCase):
             'SomeDude', 'somedude@foo.bar', 'affil', '111 fake street',
             '111-121-1313')
         self.assertEqual(new.id, 4)
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_person WHERE study_person_id = 4")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT * FROM qiita.study_person WHERE study_person_id = 4")
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, [[4, 'SomeDude', 'somedude@foo.bar', 'affil',
                          '111 fake street', '111-121-1313']])
 
@@ -210,8 +212,10 @@ class TestStudy(TestCase):
         # Change the status of the studies by changing the status of their
         # artifacts
         id_status = qdb.util.convert_to_id(new_status, 'visibility')
-        self.conn_handler.execute(
-            "UPDATE qiita.artifact SET visibility_id = %s", (id_status,))
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.artifact SET visibility_id = %s", (id_status,))
+            qdb.sql_connection.TRN.execute()
 
     def test_get_info(self):
         # Test get all info for single study
@@ -338,7 +342,9 @@ class TestStudy(TestCase):
     def test_share(self):
         # Clear all sharing associations
         self._change_processed_data_status('sandbox')
-        self.conn_handler.execute("delete from qiita.study_users")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("delete from qiita.study_users")
+            qdb.sql_connection.TRN.execute()
         self.assertEqual(self.study.shared_with, [])
 
         # Try to share with the owner, which should not work
@@ -462,8 +468,10 @@ class TestStudy(TestCase):
             qdb.investigation.Investigation(1))
 
         # make sure portal is associated
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * from qiita.study_portal WHERE study_id = %s", [s.id])
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT * from qiita.study_portal WHERE study_id = %s", [s.id])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, [[s.id, 2], [s.id, 1]])
         qdb.study.Study.delete(s.id)
 
@@ -473,9 +481,11 @@ class TestStudy(TestCase):
             qdb.user.User('test@foo.bar'), "Fried chicken microbiome 2",
             self.info, qdb.investigation.Investigation(1))
         # check the investigation was assigned
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * from qiita.investigation_study WHERE study_id = %s",
-            [new.id])
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT * from qiita.investigation_study WHERE study_id = %s",
+                [new.id])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, [[1, new.id]])
         qdb.study.Study.delete(new.id)
 

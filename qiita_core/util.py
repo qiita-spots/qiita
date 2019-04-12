@@ -70,10 +70,9 @@ def is_test_environment():
         - The config file indicates that this is a test environment
     """
     # Check that we are not in a production environment
-    conn_handler = qdb.sql_connection.SQLConnectionHandler()
-    # It is possible that we are connecting to a production database
-    test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
-    # Or the loaded configuration file belongs to a production environment
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT test FROM settings")
+        test_db = qdb.sql_connection.TRN.execute_fetchflatten()[0]
     return qiita_config.test_environment and test_db
 
 
@@ -101,7 +100,6 @@ def qiita_test_checker(test=False):
         class DecoratedClass(cls):
             def setUp(self):
                 super(DecoratedClass, self).setUp()
-                self.conn_handler = qdb.sql_connection.SQLConnectionHandler()
 
             @classmethod
             @qdb.environment_manager.reset_test_database

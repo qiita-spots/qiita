@@ -1,4 +1,4 @@
-dist: precise
+dist: xenial
 language: python
 sudo: false
 env:
@@ -78,6 +78,7 @@ script:
   - export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
   - ls $QIITA_CONFIG_FP
   - supervisord -c qiita_pet/supervisor_example.conf
+  - sleep 5
   # check supervisord logs
   - cat /tmp/supervisord.log
   - source deactivate
@@ -97,6 +98,9 @@ script:
   - qiita pet webserver
 addons:
   postgresql: "9.5"
+  apt:
+    packages:
+      - libevent-dev
 services:
   - redis-server
   - postgresql

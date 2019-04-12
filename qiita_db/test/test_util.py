@@ -23,7 +23,7 @@ import qiita_db as qdb
 
 
 @qiita_test_checker()
-class DBUtilTests(TestCase):
+class DBUtilTestsBase(TestCase):
     def setUp(self):
         self.table = 'study'
         self.required = [
@@ -39,6 +39,8 @@ class DBUtilTests(TestCase):
             if exists(fp):
                 remove(fp)
 
+
+class DBUtilTests(DBUtilTestsBase):
     def test_check_required_columns(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
         qdb.util.check_required_columns(self.required, self.table)
@@ -114,8 +116,10 @@ class DBUtilTests(TestCase):
                'reference_tax': 11, 'reference_tree': 12, 'log': 13,
                'sample_template': 14, 'prep_template': 15, 'qiime_map': 16,
                }
-        exp = dict(self.conn_handler.execute_fetchall(
-            "SELECT filepath_type,filepath_type_id FROM qiita.filepath_type"))
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT filepath_type,filepath_type_id "
+                                       "FROM qiita.filepath_type")
+            exp = dict(qdb.sql_connection.TRN.execute_fetchindex())
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_filepath_types(key='filepath_type_id')
@@ -166,8 +170,10 @@ class DBUtilTests(TestCase):
             f.write("\n")
         self.files_to_remove.append(fp)
 
-        exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT last_value FROM qiita.filepath_filepath_id_seq")
+            exp_new_id = 1 + qdb.sql_connection.TRN.execute_fetchflatten()[0]
         obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data")
         self.assertEqual(obs, [exp_new_id])
 
@@ -179,8 +185,10 @@ class DBUtilTests(TestCase):
         self.files_to_remove.append(exp_fp)
 
         # Check that the filepaths have been added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.filepath "
+                                       "WHERE filepath_id=%d" % exp_new_id)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp_fp = "2_%s" % basename(fp)
         exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
@@ -196,8 +204,10 @@ class DBUtilTests(TestCase):
 
         # The id's in the database are bigserials, i.e. they get
         # autoincremented for each element introduced.
-        exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT last_value FROM qiita.filepath_filepath_id_seq")
+            exp_new_id = 1 + qdb.sql_connection.TRN.execute_fetchflatten()[0]
         obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data", copy=True)
         self.assertEqual(obs, [exp_new_id])
 
@@ -209,8 +219,10 @@ class DBUtilTests(TestCase):
         self.files_to_remove.append(exp_fp)
 
         # Check that the filepaths have been added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.filepath "
+                                       "WHERE filepath_id=%d" % exp_new_id)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp_fp = "2_%s" % basename(fp)
         exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
@@ -224,8 +236,10 @@ class DBUtilTests(TestCase):
             f.write("\n")
         self.files_to_remove.append(fp)
 
-        exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT last_value FROM qiita.filepath_filepath_id_seq")
+            exp_new_id = 1 + qdb.sql_connection.TRN.execute_fetchflatten()[0]
         obs = qdb.util.insert_filepaths(
             [(fp, "raw_forward_seqs")], 2, "raw_data")
         self.assertEqual(obs, [exp_new_id])
@@ -237,8 +251,10 @@ class DBUtilTests(TestCase):
         self.files_to_remove.append(exp_fp)
 
         # Check that the filepaths have been added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.filepath "
+                                       "WHERE filepath_id=%d" % exp_new_id)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp_fp = "2_%s" % basename(fp)
         exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
@@ -296,115 +312,6 @@ class DBUtilTests(TestCase):
             qdb.util.retrieve_filepaths('artifact_filepath', 'artifact_id', 1,
                                         sort='Unknown')
 
-    def _common_purge_filepaths_test(self):
-        # Get all the filepaths so we can test if they've been removed or not
-        sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
-        fps = [join(qdb.util.get_mountpoint_path_by_id(dd_id), fp)
-               for fp, dd_id in self.conn_handler.execute_fetchall(sql_fp)]
-
-        # Make sure that the files exist - specially for travis
-        for fp in fps:
-            if not exists(fp):
-                with open(fp, 'w') as f:
-                    f.write('\n')
-                self.files_to_remove.append(fp)
-
-        _, raw_data_mp = qdb.util.get_mountpoint('raw_data')[0]
-
-        removed_fps = [
-            join(raw_data_mp, '2_sequences_barcodes.fastq.gz'),
-            join(raw_data_mp, '2_sequences.fastq.gz'),
-            join(raw_data_mp, 'directory_test')]
-
-        for fp in removed_fps[:-1]:
-            with open(fp, 'w') as f:
-                f.write('\n')
-        makedirs(removed_fps[-1])
-
-        sql = """INSERT INTO qiita.filepath
-                    (filepath, filepath_type_id, checksum,
-                     checksum_algorithm_id, data_directory_id)
-                VALUES ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
-                       ('2_sequences.fastq.gz', 1, '852952723', 1, 5),
-                       ('directory_test', 8, '852952723', 1, 5)
-                RETURNING filepath_id"""
-        fp_ids = self.conn_handler.execute_fetchall(sql)
-
-        fps = set(fps).difference(removed_fps)
-
-        # Check that the files exist
-        for fp in fps:
-            self.assertTrue(exists(fp))
-        for fp in removed_fps:
-            self.assertTrue(exists(fp))
-
-        exp_count = qdb.util.get_count("qiita.filepath") - 3
-
-        qdb.util.purge_filepaths()
-
-        obs_count = qdb.util.get_count("qiita.filepath")
-
-        # Check that only 2 rows have been removed
-        self.assertEqual(obs_count, exp_count)
-
-        # Check that the 2 rows that have been removed are the correct ones
-        sql = """SELECT EXISTS(
-                    SELECT * FROM qiita.filepath WHERE filepath_id = %s)"""
-        obs = self.conn_handler.execute_fetchone(sql, (fp_ids[0][0],))[0]
-        self.assertFalse(obs)
-        obs = self.conn_handler.execute_fetchone(sql, (fp_ids[1][0],))[0]
-        self.assertFalse(obs)
-
-        # Check that the files have been successfully removed
-        for fp in removed_fps:
-            self.assertFalse(exists(fp))
-
-        # Check that all the other files still exist
-        for fp in fps:
-            self.assertTrue(exists(fp))
-
-    def test_purge_filepaths(self):
-        self._common_purge_filepaths_test()
-
-    def test_purge_files_from_filesystem(self):
-        info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "number_samples_collected": 25,
-                "number_samples_promised": 28, "study_alias": "TST",
-                "study_description": "Some description of the study goes here",
-                "study_abstract": "Some abstract goes here",
-                "emp_person_id": qdb.study.StudyPerson(1),
-                "principal_investigator_id": qdb.study.StudyPerson(1),
-                "lab_person_id": qdb.study.StudyPerson(1)}
-
-        new_study = qdb.study.Study.create(
-            qdb.user.User('shared@foo.bar'),
-            'test_purge_files_from_filesystem', info=info)
-
-        metadata_dict = {
-            'SKB8.640193': {'center_name': 'ANL',
-                            'amzn_primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'bartab': 'GTCCGCAAGTTA',
-                            'frd_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
-                            'instrument_model': 'Illumina MiSeq',
-                            'library_construction_protocol': 'AAAA',
-                            'experiment_design_description': 'BBBB'}}
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
-                                          dtype=str)
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(
-            metadata, new_study)
-        fps = [fp for _, fp in st.get_filepaths()]
-        qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
-        qdb.study.Study.delete(new_study.id)
-
-        for fp in fps:
-            self.assertTrue(exists(fp))
-
-        qdb.util.purge_files_from_filesystem(True)
-
-        for fp in fps:
-            self.assertFalse(exists(fp))
-
     def test_empty_trash_upload_folder(self):
         # creating file to delete so we know it actually works
         study_id = '1'
@@ -418,19 +325,6 @@ class DBUtilTests(TestCase):
         self.assertTrue(exists(fp))
         qdb.util.empty_trash_upload_folder()
         self.assertFalse(exists(fp))
-
-    def test_purge_filepaths_null_cols(self):
-        # For more details about the source of the issue that motivates this
-        # test: http://www.depesz.com/2008/08/13/nulls-vs-not-in/
-        # In the current set up, the only place where we can actually have a
-        # null value in a filepath id is in the reference table. Add a new
-        # reference without tree and taxonomy:
-        fd, seqs_fp = mkstemp(suffix="_seqs.fna")
-        close(fd)
-        ref = qdb.reference.Reference.create("null_db", "13_2", seqs_fp)
-        self.files_to_remove.append(ref.sequence_fp)
-
-        self._common_purge_filepaths_test()
 
     def test_move_filepaths_to_upload_folder(self):
         # we are going to test the move_filepaths_to_upload_folder indirectly
@@ -531,15 +425,19 @@ class DBUtilTests(TestCase):
 
         # inserting new ones so we can test that it retrieves these and
         # doesn't alter other ones
-        self.conn_handler.execute(
-            "UPDATE qiita.data_directory SET active=false WHERE "
-            "data_directory_id=1")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.data_directory SET active=false WHERE "
+                "data_directory_id=1")
+            qdb.sql_connection.TRN.execute()
         count = qdb.util.get_count('qiita.data_directory')
         sql = """INSERT INTO qiita.data_directory (data_type, mountpoint,
                                                    subdirectory, active)
                  VALUES ('analysis', 'analysis_tmp', true, true),
                         ('raw_data', 'raw_data_tmp', true, false)"""
-        self.conn_handler.execute(sql)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            qdb.sql_connection.TRN.execute()
 
         # this should have been updated
         exp = [(count + 1, join(qdb.util.get_db_files_base_dir(),
@@ -587,15 +485,19 @@ class DBUtilTests(TestCase):
 
         # inserting new ones so we can test that it retrieves these and
         # doesn't alter other ones
-        self.conn_handler.execute(
-            "UPDATE qiita.data_directory SET active=false WHERE "
-            "data_directory_id=1")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.data_directory SET active=false WHERE "
+                "data_directory_id=1")
+            qdb.sql_connection.TRN.execute()
         count = qdb.util.get_count('qiita.data_directory')
         sql = """INSERT INTO qiita.data_directory (data_type, mountpoint,
                                                    subdirectory, active)
                  VALUES ('analysis', 'analysis_tmp', true, true),
                         ('raw_data', 'raw_data_tmp', true, false)"""
-        self.conn_handler.execute(sql)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            qdb.sql_connection.TRN.execute()
 
         # this should have been updated
         exp = join(qdb.util.get_db_files_base_dir(), 'analysis_tmp')
@@ -777,7 +679,9 @@ class DBUtilTests(TestCase):
         self.assertEqual(obs, exp)
 
         sql = "SELECT expiration from qiita.message WHERE message_id = %s"
-        obs = self.conn_handler.execute_fetchall(sql, [count])
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql, [count])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [[datetime(2015, 8, 5, 19, 41)]]
         self.assertEqual(obs, exp)
 
@@ -1246,6 +1150,145 @@ class TestFilePathOpening(TestCase):
                 self.assertTrue(isinstance(fh_inner, h5py.File))
 
         remove(name)
+
+
+class PurgeFilepathsTestBase(DBUtilTestsBase):
+
+    def _common_purge_filepaths_test(self):
+        # Get all the filepaths so we can test if they've been removed or not
+        sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql_fp)
+            results = qdb.sql_connection.TRN.execute_fetchindex()
+        exp_count = len(results)
+        fps = [join(qdb.util.get_mountpoint_path_by_id(dd_id), fp)
+               for fp, dd_id in results]
+
+        # Make sure that the files exist - specially for travis
+        for fp in fps:
+            if not exists(fp):
+                with open(fp, 'w') as f:
+                    f.write('\n')
+                self.files_to_remove.append(fp)
+
+        # let's insert some new filepaths in the raw_data mount
+        _, raw_data_mp = qdb.util.get_mountpoint('raw_data')[0]
+        removed_fps = [
+            join(raw_data_mp, '2_sequences_barcodes.fastq.gz'),
+            join(raw_data_mp, '2_sequences.fastq.gz'),
+            join(raw_data_mp, 'directory_test')]
+        # creating the files
+        for fp in removed_fps[:-1]:
+            with open(fp, 'w') as f:
+                f.write('\n')
+        makedirs(removed_fps[-1])
+        # inserting them in the database
+        sql = """INSERT INTO qiita.filepath
+                    (filepath, filepath_type_id, checksum,
+                     checksum_algorithm_id, data_directory_id)
+                VALUES ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
+                       ('2_sequences.fastq.gz', 1, '852952723', 1, 5),
+                       ('directory_test', 8, '852952723', 1, 5)
+                RETURNING filepath_id"""
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            fp_ids = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        fps = set(fps).difference(removed_fps)
+
+        # Before purging, let's check that the files exist
+        for fp in fps:
+            self.assertTrue(exists(fp))
+        for fp in removed_fps:
+            self.assertTrue(exists(fp))
+
+        qdb.util.purge_filepaths()
+        obs_count = qdb.util.get_count("qiita.filepath")
+        # the patching system moves some files around so 'job/1_job_result.txt'
+        # and 'job/2_test_folder' are also going to be removed; thus, we need
+        # to rest them
+        extra_rm_files = ['job/2_test_folder', 'job/1_job_result.txt']
+        self.assertEqual(obs_count, exp_count - len(extra_rm_files))
+
+        # Check that the 2 rows that have been removed are the correct ones
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.filepath WHERE filepath_id IN %s)"""
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql, [tuple(fp_ids)])
+            obs = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+        self.assertFalse(obs)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql, [tuple(fp_ids)])
+            obs = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+        self.assertFalse(obs)
+
+        # Check that the files have been successfully removed
+        for fp in removed_fps:
+            self.assertFalse(exists(fp))
+
+        # Check that all the other files still exist
+        for fp in fps:
+            if '/'.join(fp.split('/')[-2:]) not in extra_rm_files:
+                self.assertTrue(exists(fp))
+
+
+class PurgeFilepathsTestA(PurgeFilepathsTestBase):
+    def test_purge_files_from_filesystem(self):
+        info = {"timeseries_type_id": 1, "metadata_complete": True,
+                "mixs_compliant": True, "number_samples_collected": 25,
+                "number_samples_promised": 28, "study_alias": "TST",
+                "study_description": "Some description of the study goes here",
+                "study_abstract": "Some abstract goes here",
+                "emp_person_id": qdb.study.StudyPerson(1),
+                "principal_investigator_id": qdb.study.StudyPerson(1),
+                "lab_person_id": qdb.study.StudyPerson(1)}
+
+        new_study = qdb.study.Study.create(
+            qdb.user.User('shared@foo.bar'),
+            'test_purge_files_from_filesystem', info=info)
+
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'amzn_primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'bartab': 'GTCCGCAAGTTA',
+                            'frd_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            metadata, new_study)
+        fps = [fp for _, fp in st.get_filepaths()]
+        qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
+        qdb.study.Study.delete(new_study.id)
+
+        for fp in fps:
+            self.assertTrue(exists(fp))
+
+        qdb.util.purge_files_from_filesystem(True)
+
+        for fp in fps:
+            self.assertFalse(exists(fp))
+
+    def test_purge_filepaths(self):
+        self._common_purge_filepaths_test()
+
+
+class PurgeFilepathsTestB(PurgeFilepathsTestBase):
+    def test_purge_filepaths_null_cols(self):
+        # For more details about the source of the issue that motivates this
+        # test: http://www.depesz.com/2008/08/13/nulls-vs-not-in/
+        # In the current set up, the only place where we can actually have a
+        # null value in a filepath id is in the reference table. Add a new
+        # reference without tree and taxonomy:
+        fd, seqs_fp = mkstemp(suffix="_seqs.fna")
+        close(fd)
+        ref = qdb.reference.Reference.create("null_db", "13_2", seqs_fp)
+        self.files_to_remove.append(ref.sequence_fp)
+
+        self._common_purge_filepaths_test()
 
 
 STUDY_INFO = {

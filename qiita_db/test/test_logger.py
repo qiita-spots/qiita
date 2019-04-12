@@ -33,10 +33,14 @@ class LoggerTests(TestCase):
     def test_time_property(self):
         """"""
         sql = "SELECT localtimestamp"
-        before = self.conn_handler.execute_fetchone(sql)[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            before = qdb.sql_connection.TRN.execute_fetchflatten()[0]
         log_entry = qdb.logger.LogEntry.create(
             'Warning', 'warning test', info=None)
-        after = self.conn_handler.execute_fetchone(sql)[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            after = qdb.sql_connection.TRN.execute_fetchflatten()[0]
         self.assertTrue(before < log_entry.time < after)
 
     def test_info_property(self):

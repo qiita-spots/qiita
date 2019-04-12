@@ -37,22 +37,6 @@ POPULATE_FP = get_support_file('populate_test_db.sql')
 PATCHES_DIR = get_support_file('patches')
 
 
-def _check_db_exists(db, conn_handler):
-    r"""Checks if the database db exists on the postgres server
-
-    Parameters
-    ----------
-    db : str
-        The database
-    conn_handler : SQLConnectionHandler
-        The connection to the database
-    """
-    dbs = conn_handler.execute_fetchall('SELECT datname FROM pg_database')
-
-    # It's a list of tuples, so just create the tuple to check if exists
-    return (db,) in dbs
-
-
 def create_layout(test=False, verbose=False):
     r"""Builds the SQL layout
 
@@ -176,21 +160,24 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                                "configuration")
 
     # Connect to the postgres server
-    admin_conn = qdb.sql_connection.SQLConnectionHandler(
-        admin='admin_without_database')
+    with qdb.sql_connection.TRNADMIN:
+        sql = 'SELECT datname FROM pg_database WHERE datname = %s'
+        qdb.sql_connection.TRNADMIN.add(sql, [qiita_config.database])
 
-    # Check that it does not already exists
-    if _check_db_exists(qiita_config.database, admin_conn):
-        raise QiitaEnvironmentError(
-            "Database {0} already present on the system. You can drop it "
-            "by running 'qiita-env drop'".format(qiita_config.database))
+        if qdb.sql_connection.TRNADMIN.execute_fetchflatten():
+            raise QiitaEnvironmentError(
+                "Database {0} already present on the system. You can drop it "
+                "by running 'qiita-env drop'".format(qiita_config.database))
 
     # Create the database
     print('Creating database')
     create_settings_table = True
-    admin_conn.autocommit = True
     try:
-        admin_conn.execute('CREATE DATABASE %s' % qiita_config.database)
+        with qdb.sql_connection.TRNADMIN:
+            qdb.sql_connection.TRNADMIN.add(
+                'CREATE DATABASE %s' % qiita_config.database)
+            qdb.sql_connection.TRNADMIN.execute()
+        qdb.sql_connection.TRN.close()
     except ValueError as error:
         # if database exists ignore
         msg = 'database "%s" already exists' % qiita_config.database
@@ -207,10 +194,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                 create_settings_table = False
         else:
             raise
-    admin_conn.autocommit = False
-
-    del admin_conn
-    qdb.sql_connection.SQLConnectionHandler.close()
+    qdb.sql_connection.TRNADMIN.close()
 
     with qdb.sql_connection.TRN:
         print('Inserting database metadata')
@@ -297,11 +281,10 @@ def drop_environment(ask_for_confirmation):
     # to close it in order to drop the environment
     qdb.sql_connection.TRN.close()
     # Connect to the postgres server
-    conn = qdb.sql_connection.SQLConnectionHandler()
-    settings_sql = "SELECT test FROM settings"
-    is_test_environment = conn.execute_fetchone(settings_sql)[0]
-
-    del conn
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT test FROM settings")
+        is_test_environment = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+    qdb.sql_connection.TRN.close()
 
     if is_test_environment:
         do_drop = True
@@ -317,12 +300,10 @@ def drop_environment(ask_for_confirmation):
             do_drop = True
 
     if do_drop:
-        qdb.sql_connection.SQLConnectionHandler.close()
-        admin_conn = qdb.sql_connection.SQLConnectionHandler(
-            admin='admin_without_database')
-        admin_conn.autocommit = True
-        admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
-        admin_conn.autocommit = False
+        with qdb.sql_connection.TRNADMIN:
+            qdb.sql_connection.TRNADMIN.add(
+                'DROP DATABASE %s' % qiita_config.database)
+            qdb.sql_connection.TRNADMIN.execute()
     else:
         print('ABORTING')
 
@@ -375,10 +356,10 @@ def clean_test_environment():
     re-populating it.
     """
     # First, we check that we are not in a production environment
-    conn_handler = qdb.sql_connection.SQLConnectionHandler()
-    # It is possible that we are connecting to a production database
-    test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
-    # Or the loaded configuration file belongs to a production environment
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT test FROM settings")
+        test_db = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+
     if not qiita_config.test_environment or not test_db:
         raise RuntimeError("Working in a production environment. Not "
                            "executing the test cleanup to keep the production "

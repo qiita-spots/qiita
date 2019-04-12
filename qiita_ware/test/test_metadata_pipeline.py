@@ -13,6 +13,7 @@ from os.path import exists
 
 from qiita_core.util import qiita_test_checker
 from qiita_ware.exceptions import QiitaWareError
+from qiita_db.sql_connection import TRN
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_count
@@ -82,9 +83,10 @@ class TestMetadataPipeline(TestCase):
         self.assertEqual(set(obs_pt.categories()), exp)
 
     def test_create_templates_from_qiime_mapping_file_reverse_linker(self):
-        curr_id = self.conn_handler.execute_fetchone(
-            "SELECT last_value FROM "
-            "qiita.prep_template_prep_template_id_seq")[0]
+        with TRN:
+            TRN.add("SELECT last_value FROM "
+                    "qiita.prep_template_prep_template_id_seq")
+            curr_id = TRN.execute_fetchflatten()[0]
         obs_st, obs_pt = create_templates_from_qiime_mapping_file(
             StringIO(QIIME_MAP_WITH_REVERSE_LINKER_PRIMER),
             self.new_study, "16S")

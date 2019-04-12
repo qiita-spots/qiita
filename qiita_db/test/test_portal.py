@@ -34,16 +34,18 @@ class TestPortal(TestCase):
 
     def test_add_portal(self):
         obs = qdb.portal.Portal.create("NEWPORTAL", "SOMEDESC")
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.portal_type")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.portal_type")
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [[1, 'QIITA', 'QIITA portal. Access to all data stored '
                 'in database.'],
                [2, 'EMP', 'EMP portal'],
                [4, 'NEWPORTAL', 'SOMEDESC']]
         self.assertCountEqual(obs, exp)
 
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.analysis_portal")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.analysis_portal")
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 2], [8, 2],
                [9, 2], [10, 2], [11, 4], [12, 4], [13, 4], [14, 4]]
         self.assertCountEqual(obs, exp)
@@ -61,15 +63,17 @@ class TestPortal(TestCase):
         a.add_samples({1: ['1.SKB8.640193', '1.SKD5.640186']})
 
         qdb.portal.Portal.delete("NEWPORTAL")
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.portal_type")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.portal_type")
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [[1, 'QIITA', 'QIITA portal. Access to all data stored '
                 'in database.'],
                [2, 'EMP', 'EMP portal']]
         self.assertCountEqual(obs, exp)
 
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.analysis_portal")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.analysis_portal")
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 2], [8, 2],
                [9, 2], [10, 2]]
         self.assertCountEqual(obs, exp)

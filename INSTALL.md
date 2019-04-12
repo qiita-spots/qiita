@@ -233,8 +233,6 @@ If you get a traceback similar to this one when starting up Qiita
 ```python
 File "/home/jorge/code/qiita/scripts/qiita-env", line 71, in make
   make_environment(load_ontologies, download_reference, add_demo_user)
-File "/home/jorge/code/qiita/qiita_db/environment_manager.py", line 180, in make_environment
-  admin_conn = SQLConnectionHandler(admin='admin_without_database')
 File "/home/jorge/code/qiita/qiita_db/sql_connection.py", line 120, in __init__
   self._open_connection()
 File "/home/jorge/code/qiita/qiita_db/sql_connection.py", line 155, in _open_connection

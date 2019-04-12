@@ -1226,17 +1226,20 @@ class TestSampleTemplate(TestCase):
         """Deletes Sample template 1"""
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata, self.new_study)
-        st_id = st.id
         qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
 
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_sample WHERE study_id=%s" % st_id)
         exp = []
+        with qdb.sql_connection.TRN:
+            sql = """SELECT * FROM qiita.study_sample WHERE study_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [st.id])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, exp)
 
         with self.assertRaises(ValueError):
-            self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.sample_%s" % st_id)
+            with qdb.sql_connection.TRN:
+                sql = """SELECT *
+                         FROM qiita.sample_%d""" % st.id
+                qdb.sql_connection.TRN.add(sql)
 
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.metadata_template.sample_template.SampleTemplate.delete(1)
@@ -1347,8 +1350,10 @@ class TestSampleTemplate(TestCase):
                                           dtype=str)
         npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.update, metadata)
 
-        sql = "SELECT * FROM qiita.sample_{0}".format(st.id)
-        obs = self.conn_handler.execute_fetchall(sql)
+        with qdb.sql_connection.TRN:
+            sql = "SELECT * FROM qiita.sample_{0}".format(st.id)
+            qdb.sql_connection.TRN.add(sql)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [
             ['%s.Sample2' % self.new_study.id, {
                 'bool_col': 'true', 'date_col': '2015-09-01 00:00:00'}],
@@ -1395,8 +1400,11 @@ class TestSampleTemplate(TestCase):
         # we will check that there is a new id only because the path will
         # change based on time and the same functionality is being tested
         # in data.py
-        exp_id = self.conn_handler.execute_fetchone(
-            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0] + 1
+
+        with qdb.sql_connection.TRN:
+            sql = "SELECT last_value FROM qiita.filepath_filepath_id_seq"
+            qdb.sql_connection.TRN.add(sql)
+            exp_id = qdb.sql_connection.TRN.execute_fetchflatten()[0] + 1
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
