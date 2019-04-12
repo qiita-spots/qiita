@@ -39,11 +39,14 @@ class TestMakeStudyFromCmd(TestCase):
     def test_make_study_from_cmd(self):
         fh = StringIO(self.config1)
         qdb.commands.load_study_from_cmd('test@test.com', 'newstudy', fh)
-        sql = ("select study_id from qiita.study where email = %s and "
-               "study_title = %s")
-        study_id = self.conn_handler.execute_fetchone(sql, ('test@test.com',
-                                                            'newstudy'))
-        self.assertTrue(study_id is not None)
+
+        with qdb.sql_connection.TRN:
+            sql = """SELECT study_id
+                     FROM qiita.study
+                     WHERE email = %s AND study_title = %s"""
+            qdb.sql_connection.TRN.add(sql, ['test@test.com', 'newstudy'])
+            study_id = qdb.sql_connection.TRN.execute_fetchflatten()
+        self.assertEqual(study_id, [2])
 
         fh2 = StringIO(self.config2)
         with self.assertRaises(configparser.NoOptionError):
@@ -241,38 +244,48 @@ class TestPatch(TestCase):
         else:
             assertion_fn = self.assertFalse
 
-        obs = self.conn_handler.execute_fetchone(
-            """SELECT EXISTS(SELECT * FROM information_schema.tables
-               WHERE table_name = 'patchtest2')""")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("""SELECT EXISTS(SELECT *
+                                          FROM information_schema.tables
+                                          WHERE table_name = 'patchtest2')""")
+            obs = qdb.sql_connection.TRN.execute_fetchflatten()[0]
         assertion_fn(obs)
 
         if exists:
             exp = [[1], [9]]
-            obs = self.conn_handler.execute_fetchall(
-                """SELECT * FROM qiita.patchtest2 ORDER BY testing""")
+            with qdb.sql_connection.TRN:
+                qdb.sql_connection.TRN.add(
+                    """SELECT * FROM qiita.patchtest2 ORDER BY testing""")
+                obs = qdb.sql_connection.TRN.execute_fetchindex()
             self.assertEqual(obs, exp)
 
     def _check_patchtest10(self):
-        obs = self.conn_handler.execute_fetchone(
-            """SELECT EXISTS(SELECT * FROM information_schema.tables
-               WHERE table_name = 'patchtest10')""")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                """SELECT EXISTS(SELECT * FROM information_schema.tables
+                   WHERE table_name = 'patchtest10')""")
+            obs = qdb.sql_connection.TRN.execute_fetchflatten()[0]
         self.assertTrue(obs)
 
         exp = []
-        obs = self.conn_handler.execute_fetchall(
-            """SELECT * FROM qiita.patchtest10""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.patchtest10")
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, exp)
 
     def _assert_current_patch(self, patch_to_check):
-        current_patch = self.conn_handler.execute_fetchone(
-            """SELECT current_patch FROM settings""")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT current_patch FROM settings")
+            current_patch = qdb.sql_connection.TRN.execute_fetchflatten()[0]
         self.assertEqual(current_patch, patch_to_check)
 
     def test_unpatched(self):
         """Test patching from unpatched state"""
         # Reset the settings table to the unpatched state
-        self.conn_handler.execute(
-            """UPDATE settings SET current_patch = 'unpatched'""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET current_patch = 'unpatched'")
+            qdb.sql_connection.TRN.execute()
 
         self._assert_current_patch('unpatched')
         qdb.environment_manager.patch(self.patches_dir)
@@ -282,8 +295,10 @@ class TestPatch(TestCase):
 
     def test_skip_patch(self):
         """Test patching from a patched state"""
-        self.conn_handler.execute(
-            """UPDATE settings SET current_patch = '2.sql'""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET current_patch = '2.sql'")
+            qdb.sql_connection.TRN.execute()
         self._assert_current_patch('2.sql')
 
         # If it tried to apply patch 2.sql again, this will error
@@ -297,8 +312,10 @@ class TestPatch(TestCase):
 
     def test_nonexistent_patch(self):
         """Test case where current patch does not exist"""
-        self.conn_handler.execute(
-            """UPDATE settings SET current_patch = 'nope.sql'""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET current_patch = 'nope.sql'")
+            qdb.sql_connection.TRN.execute()
         self._assert_current_patch('nope.sql')
 
         with self.assertRaises(RuntimeError):
@@ -311,15 +328,18 @@ class TestPatch(TestCase):
             f.write(PY_PATCH)
 
         # Reset the settings table to the unpatched state
-        self.conn_handler.execute(
-            """UPDATE settings SET current_patch = 'unpatched'""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET current_patch = 'unpatched'")
+            qdb.sql_connection.TRN.execute()
 
         self._assert_current_patch('unpatched')
 
         qdb.environment_manager.patch(self.patches_dir)
 
-        obs = self.conn_handler.execute_fetchall(
-            """SELECT testing FROM qiita.patchtest10""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT testing FROM qiita.patchtest10")
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [[1], [100]]
         self.assertEqual(obs, exp)
 

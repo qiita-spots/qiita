@@ -859,10 +859,12 @@ class TestPrepTemplate(TestCase):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
 
-        obs = self.conn_handler.execute_fetchall(
-            """SELECT sample_id
-               FROM qiita.prep_%d
-               WHERE sample_id != '%s'""" % (pt.id, self.QCN))
+        with qdb.sql_connection.TRN:
+            sql = """SELECT sample_id
+                     FROM qiita.prep_%d
+                     WHERE sample_id != '%s'""" % (pt.id, self.QCN)
+            qdb.sql_connection.TRN.add(sql)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
         self.assertEqual(obs, exp)
 
@@ -1101,25 +1103,36 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type_id)
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template WHERE prep_template_id=%s",
-            (pt.id,))
         exp = []
+        with qdb.sql_connection.TRN:
+            sql = """SELECT *
+                     FROM qiita.prep_template
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [pt.id])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, exp)
 
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_prep_template "
-            "WHERE prep_template_id=%s", (pt.id,))
+        with qdb.sql_connection.TRN:
+            sql = """SELECT *
+                     FROM qiita.study_prep_template
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [pt.id])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
+        self.assertEqual(obs, exp)
 
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template_sample "
-            "WHERE prep_template_id=%s", (pt.id,))
-        exp = []
+        with qdb.sql_connection.TRN:
+            sql = """SELECT *
+                     FROM qiita.prep_template_sample
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [pt.id])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, exp)
 
         with self.assertRaises(ValueError):
-            self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.prep_%d" % pt.id)
+            with qdb.sql_connection.TRN:
+                sql = """SELECT *
+                         FROM qiita.prep_%d""" % pt.id
+                qdb.sql_connection.TRN.add(sql)
 
     def test_setitem(self):
         """setitem raises an error (currently not allowed)"""
@@ -1290,10 +1303,12 @@ class TestPrepTemplate(TestCase):
         npt.assert_warns(
             qdb.exceptions.QiitaDBWarning, pt.extend, self.metadata)
 
-        sql = """SELECT *
-                 FROM qiita.prep_{0}
-                 WHERE sample_id != '{1}'""".format(pt.id, self.QCN)
-        obs = dict(self.conn_handler.execute_fetchall(sql))
+        with qdb.sql_connection.TRN:
+            sql = """SELECT *
+                     FROM qiita.prep_{0}
+                     WHERE sample_id != '{1}'""".format(pt.id, self.QCN)
+            qdb.sql_connection.TRN.add(sql)
+            obs = dict(qdb.sql_connection.TRN.execute_fetchindex())
         exp = {'1.SKB7.640196': {
                 'barcode': 'CCTCTGAGAGCT',
                 'ebi_submission_accession': None,
@@ -1348,10 +1363,12 @@ class TestPrepTemplate(TestCase):
         npt.assert_warns(
             qdb.exceptions.QiitaDBWarning, pt.extend_and_update, self.metadata)
 
-        sql = """SELECT *
-                 FROM qiita.prep_{0}
-                 WHERE sample_id != '{1}'""".format(pt.id, self.QCN)
-        obs = dict(self.conn_handler.execute_fetchall(sql))
+        with qdb.sql_connection.TRN:
+            sql = """SELECT *
+                     FROM qiita.prep_{0}
+                     WHERE sample_id != '{1}'""".format(pt.id, self.QCN)
+            qdb.sql_connection.TRN.add(sql)
+            obs = dict(qdb.sql_connection.TRN.execute_fetchindex())
         exp = {'1.SKB7.640196': {
                 'barcode': 'CCTCTGAGAGCT',
                 'ebi_submission_accession': None,

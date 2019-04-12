@@ -144,7 +144,7 @@ if missing_deps_warnings:
 # of the file. These imports can only really happen if none of the core
 # dependencies are missing
 if True:
-    from qiita_db.sql_connection import SQLConnectionHandler
+    from qiita_db.sql_connection import TRN
     from redis import StrictRedis
 
 
@@ -153,9 +153,9 @@ class QiitaConfig(TestCase):
     def setUp(self):
         self.config = ConfigurationManager()
         try:
-            conn_handler = SQLConnectionHandler()
-            sql = "SELECT version();"
-            self.psql_version = conn_handler.execute_fetchone(sql)[0]
+            with TRN:
+                TRN.add("SELECT version()")
+                self.psql_version = TRN.execute_fetchflatten()[0]
         except Exception:
             self.psql_version = None
         try:
@@ -247,7 +247,7 @@ class QiitaConfig(TestCase):
                            string_acceptable_version))
 
     def test_redbiom_version(self):
-        acceptable_version = (0, 1, 0)
+        acceptable_version = (0, 3, 0)
         string_acceptable_version = '.'.join(map(str, acceptable_version))
         version = tuple(map(int, redbiom_lib_version.split('.')))
 
@@ -296,9 +296,9 @@ def main():
     for v in system_info:
         print("%*s:\t%s" % (max_len, v[0], v[1]))
 
-    conn_handler = SQLConnectionHandler()
-    current_patch = conn_handler.execute_fetchone(
-        "SELECT current_patch FROM settings")[0]
+    with TRN:
+        TRN.add("SELECT current_patch FROM settings")
+        current_patch = TRN.execute_fetchflatten()[0]
     qiita_db_patch_number = splitext(current_patch)[0]
 
     # Getting required environment variables
@@ -358,8 +358,8 @@ def main():
                          qiita_config.vamps_url != '' and
                          qiita_config.vamps_user != '')
     try:
-        SQLConnectionHandler()
-        psql_running = True
+        with TRN:
+            psql_running = True
     except Exception:
         psql_running = False
     try:

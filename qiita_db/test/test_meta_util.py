@@ -33,12 +33,16 @@ class MetaUtilTests(TestCase):
                 remove(fp)
 
     def _set_artifact_private(self):
-        self.conn_handler.execute(
-            "UPDATE qiita.artifact SET visibility_id=3")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.artifact SET visibility_id = 3")
+            qdb.sql_connection.TRN.execute()
 
     def _set_artifact_public(self):
-        self.conn_handler.execute(
-            "UPDATE qiita.artifact SET visibility_id=2")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.artifact SET visibility_id = 2")
+            qdb.sql_connection.TRN.execute()
 
     def test_validate_filepath_access_by_user(self):
         self._set_artifact_private()
@@ -105,8 +109,10 @@ class MetaUtilTests(TestCase):
                 self.assertTrue(obs)
 
         # test in case there is a prep template that failed
-        self.conn_handler.execute(
-            "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
+            qdb.sql_connection.TRN.execute()
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             obs = qdb.meta_util.validate_filepath_access_by_user(user, i)
             if i < 3:
@@ -116,11 +122,13 @@ class MetaUtilTests(TestCase):
 
         # admin should have access to everything
         admin = qdb.user.User('admin@foo.bar')
-        fids = self.conn_handler.execute_fetchall(
-            "SELECT filepath_id FROM qiita.filepath")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT filepath_id FROM qiita.filepath")
+            fids = qdb.sql_connection.TRN.execute_fetchflatten()
         for i in fids:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
-                admin, i[0]))
+                admin, i))
 
         # testing access to a prep info file without artifacts
         # returning artifacts to private

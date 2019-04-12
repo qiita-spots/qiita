@@ -46,7 +46,7 @@ def watcher_sigint_handler(sig, frame):
 
 
 try:
-    conn = qdb.sql_connection.SQLConnectionHandler()
+    conn = qdb.sql_connection.TRN
 except OperationalError:
     raise qdb.exceptions.QiitaDBConnectionError(
         "Database does not exist. See qiita-env make --help for more "
