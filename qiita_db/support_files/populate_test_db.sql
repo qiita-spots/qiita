@@ -516,7 +516,7 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
     VALUES (1, 1), (1, 2),
            (2, 3), (2, 4), (2, 5),
-           (4, 9), (5, 9), (6, 12),
+           (4, 9), (5, 9), (6, 12), (7, 22),
            (8, 22), (9, 15);
 
 -- Create some test messages

@@ -396,7 +396,8 @@ Vue.component('processing-graph', {
         }
 
         if (data['job_status'] === 'error' && data['job_error'] !== null) {
-          rowsContent.push(['Error message:', data['job_error']]);
+          // based on https://stackoverflow.com/a/14129989
+          rowsContent.push(['Error message:', $('<div>').text(data['job_error']).html()]);
         }
 
         // Create the DOM elements to add the rows content
