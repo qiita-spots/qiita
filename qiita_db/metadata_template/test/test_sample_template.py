@@ -243,8 +243,6 @@ class TestSampleTemplate(TestCase):
             "timeseries_type_id": '1',
             "metadata_complete": 'true',
             "mixs_compliant": 'true',
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",

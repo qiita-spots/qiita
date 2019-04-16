@@ -55,7 +55,6 @@ class TestStudyAPI1(TestStudyAPI):
             'study_info': {
                 'mixs_compliant': True, 'metadata_complete': True, 'level': '',
                 'reprocess': False, 'owner': 'test@foo.bar', 'message': '',
-                'number_samples_promised': 27,
                 'funding': None, 'show_biom_download_button': True,
                 'publication_pid': ['123456', '7891011'], 'vamps_id': None,
                 'first_contact': datetime(2014, 5, 19, 16, 10),
@@ -89,8 +88,7 @@ class TestStudyAPI1(TestStudyAPI):
                 'ebi_study_accession': 'EBI123456-BB', 'num_samples': 27,
                 'public_raw_download': False,
                 'study_title': (
-                    'Identification of the Microbiomes for Cannabis Soils'),
-                'number_samples_collected': 27},
+                    'Identification of the Microbiomes for Cannabis Soils')},
             'message': '',
             'editable': True}
         self.assertEqual(obs, exp)
@@ -100,8 +98,6 @@ class TestStudyAPI1(TestStudyAPI):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",
@@ -116,8 +112,7 @@ class TestStudyAPI1(TestStudyAPI):
         exp = {'status': 'success', 'study_info': {
             'mixs_compliant': True, 'metadata_complete': True,
             'reprocess': False, 'public_raw_download': False,
-            'owner': 'test@foo.bar', 'message': '',
-            'number_samples_promised': 28, 'funding': None,
+            'owner': 'test@foo.bar', 'message': '', 'funding': None,
             'show_biom_download_button': False, 'publication_pid': [],
             'vamps_id': None, 'first_contact': datetime(2015, 5, 19, 16, 10),
             'ebi_submission_status': 'not submitted',
@@ -132,8 +127,8 @@ class TestStudyAPI1(TestStudyAPI):
             'study_id': new_study.id,
             'most_recent_contact': datetime(2015, 5, 19, 16, 11),
             'ebi_study_accession': None, 'specimen_id_column': None,
-            'study_title': 'Some New Study for test',
-            'number_samples_collected': 25}, 'message': '', 'editable': True}
+            'study_title': 'Some New Study for test'}, 'message': '',
+            'editable': True}
         self.assertCountEqual(obs, exp)
         self.assertCountEqual(obs['study_info'], exp['study_info'])
 
@@ -162,8 +157,6 @@ class TestStudyAPI1(TestStudyAPI):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 3,
-            "number_samples_promised": 3,
             "study_alias": "Test EBI",
             "study_description": "Study for testing EBI",
             "study_abstract": "Study for testing EBI",
@@ -298,8 +291,6 @@ class TestStudyAPI1(TestStudyAPI):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",

@@ -1040,8 +1040,6 @@ Controlled Vocabulary]]></comment>
 			<column name="metadata_complete" type="bool" jt="-7" mandatory="y" />
 			<column name="mixs_compliant" type="bool" jt="-7" mandatory="y" />
 			<column name="most_recent_contact" type="timestamp" jt="93" />
-			<column name="number_samples_collected" type="integer" jt="4" />
-			<column name="number_samples_promised" type="integer" jt="4" />
 			<column name="portal_type_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="principal_investigator_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="reprocess" type="bool" jt="-7" mandatory="y" />

@@ -161,8 +161,6 @@ class TestLoadSampleTemplateFromCmd(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 4,
-            "number_samples_promised": 4,
             "study_alias": "TestStudy",
             "study_description": "Description of a test study",
             "study_abstract": "No abstract right now...",
@@ -410,8 +408,6 @@ study_description = 'test study description'
 study_abstract = 'study abstract'
 efo_ids = 1,2,3,4
 [optional]
-number_samples_collected = 50
-number_samples_promised = 25
 lab_person = SomeDude, somedude@foo.bar, some
 funding = 'funding source'
 vamps_id = vamps_id
@@ -427,8 +423,6 @@ study_description = 'test study description'
 study_abstract = 'study abstract'
 efo_ids = 1,2,3,4
 [optional]
-number_samples_collected = 50
-number_samples_promised = 25
 lab_person = SomeDude, somedude@foo.bar, some
 funding = 'funding source'
 vamps_id = vamps_id

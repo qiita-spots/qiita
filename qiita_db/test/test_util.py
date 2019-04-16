@@ -27,11 +27,10 @@ class DBUtilTestsBase(TestCase):
     def setUp(self):
         self.table = 'study'
         self.required = [
-            'number_samples_promised', 'study_title', 'mixs_compliant',
+            'study_title', 'mixs_compliant',
             'metadata_complete', 'study_description', 'first_contact',
             'reprocess', 'timeseries_type_id', 'study_alias',
-            'study_abstract', 'principal_investigator_id', 'email',
-            'number_samples_collected']
+            'study_abstract', 'principal_investigator_id', 'email']
         self.files_to_remove = []
 
     def tearDown(self):
@@ -816,8 +815,7 @@ class UtilTests(TestCase):
         # creating a new study to make sure that empty studies are also
         # returned
         info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "number_samples_collected": 25,
-                "number_samples_promised": 28, "study_alias": "TST",
+                "mixs_compliant": True, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
                 "principal_investigator_id": qdb.study.StudyPerson(1),
@@ -835,8 +833,7 @@ class UtilTests(TestCase):
             'study_abstract': 'Some abstract goes here',
             'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
             'study_alias': 'TST', 'study_tags': None,
-            'preparation_data_types': [],
-            'number_samples_collected': 0}
+            'preparation_data_types': []}
         exp1 = [STUDY_INFO]
         exp2 = [snew_info]
         exp_both = [STUDY_INFO, snew_info]
@@ -929,8 +926,7 @@ class UtilTests(TestCase):
         # creating a new study to make sure that empty studies are also
         # returned
         info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "number_samples_collected": 25,
-                "number_samples_promised": 28, "study_alias": "TST",
+                "mixs_compliant": True, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
                 "principal_investigator_id": qdb.study.StudyPerson(1),
@@ -956,14 +952,14 @@ class UtilTests(TestCase):
                 'same location at different time points in the plant '
                 'lifecycle.'), 'pi': ('PI_dude@foo.bar', 'PIDude'),
              'publication_doi': ['10.100/123456', '10.100/7891011'],
-             'study_alias': 'Cannabis Soils', 'number_samples_collected': 27},
+             'study_alias': 'Cannabis Soils'},
             {'status': 'sandbox', 'study_title': 'test_study_1',
              'metadata_complete': True, 'publication_pid': [],
              'ebi_submission_status': 'not submitted',
              'study_id': new_study.id, 'ebi_study_accession': None,
              'study_abstract': 'Some abstract goes here',
              'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
-             'study_alias': 'TST', 'number_samples_collected': 0}]
+             'study_alias': 'TST'}]
         obs_info = qdb.util.generate_study_list_without_artifacts([1, 2, 3, 4])
         self.assertEqual(obs_info, exp_info)
 
@@ -1233,8 +1229,7 @@ class PurgeFilepathsTestBase(DBUtilTestsBase):
 class PurgeFilepathsTestA(PurgeFilepathsTestBase):
     def test_purge_files_from_filesystem(self):
         info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "number_samples_collected": 25,
-                "number_samples_promised": 28, "study_alias": "TST",
+                "mixs_compliant": True, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
                 "principal_investigator_id": qdb.study.StudyPerson(1),
@@ -1310,7 +1305,6 @@ STUDY_INFO = {
     'ebi_submission_status': 'submitted',
     'study_title':
         'Identification of the Microbiomes for Cannabis Soils',
-    'number_samples_collected': 27,
     'shared': [('shared@foo.bar', 'Shared')],
     'publication_doi': ['10.100/123456', '10.100/7891011'],
     'publication_pid': ['123456', '7891011'],

@@ -49,7 +49,6 @@ def load_study_from_cmd(owner, title, info):
                        'study_description', 'study_abstract',
                        'metadata_complete', 'principal_investigator']
     optional_fields = ['funding', 'most_recent_contact', 'spatial_series',
-                       'number_samples_collected', 'number_samples_promised',
                        'vamps_id', 'study_id']
     infodict = {}
     for value in required_fields:
