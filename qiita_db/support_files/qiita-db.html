@@ -30,9 +30,9 @@
   <script type='text/ecmascript'>
   <![CDATA[
   function hghl(el) { for ( var i in el ){ var elem = document.getElementById(el[i]); if ( elem != null ) elem.setAttribute('class','highlight');  }  }
-  function uhghl(el) { for ( var i in el ){ var elem = document.getElementById(el[i]); if ( elem != null ) elem.setAttribute('class','scene'); }  } 
+  function uhghl(el) { for ( var i in el ){ var elem = document.getElementById(el[i]); if ( elem != null ) elem.setAttribute('class','scene'); }  }
   ]]>
-  </script> 
+  </script>
 
 <style type='text/css'>
   text                { fill:#000000; font-family: System, 'Trebuchet MS', Dialog; font-size:12px; }
@@ -55,16 +55,16 @@
   path.st0            { fill:#ececec;fill-opacity:1;stroke-width:0.6;stroke:#d0d0d0; }
 </style>
 <defs>
-  <pattern id='layoutBgA' patternUnits='userSpaceOnUse'  width='10' height='20' x='0' y='0' viewBox='0 0 5 10'>  
-     <line x1='-2' y1='1' x2='7' y2='10' stroke='#f3f3f3' stroke-width='.5'/>  
-     <line x1='-2' y1='6' x2='7' y2='15' stroke='#f3f3f3' stroke-width='.5'/>  
-     <line x1='-2' y1='-4' x2='7' y2='5' stroke='#f3f3f3' stroke-width='.5'/>  
-  </pattern>  
+  <pattern id='layoutBgA' patternUnits='userSpaceOnUse'  width='10' height='20' x='0' y='0' viewBox='0 0 5 10'>
+     <line x1='-2' y1='1' x2='7' y2='10' stroke='#f3f3f3' stroke-width='.5'/>
+     <line x1='-2' y1='6' x2='7' y2='15' stroke='#f3f3f3' stroke-width='.5'/>
+     <line x1='-2' y1='-4' x2='7' y2='5' stroke='#f3f3f3' stroke-width='.5'/>
+  </pattern>
   <radialGradient id='layoutBgB' gradientUnits='userSpaceOnUse' cx='50%' cy='50%' r='75%' fx='46%' fy='22%'>
-     <stop offset='0%' stop-opacity='.2' stop-color='#f2f2f2' />  
-     <stop offset='100%' stop-color='#eaeaea' />  
+     <stop offset='0%' stop-opacity='.2' stop-color='#f2f2f2' />
+     <stop offset='100%' stop-color='#eaeaea' />
   </radialGradient>
-  <pattern id='layoutBgTr' patternUnits='userSpaceOnUse'  width='300' height='300' x='0' y='0' viewBox='0 0 300 300'>  
+  <pattern id='layoutBgTr' patternUnits='userSpaceOnUse'  width='300' height='300' x='0' y='0' viewBox='0 0 300 300'>
   <path class='st0' d='m 62.011835,91.267143 c 3.536475,3.175214 2.262669,8.705999 -1.637711,11.015197 -3.594697,5.8423 -6.34682,-2.892623 -9.715478,-4.653898 -5.609222,-2.838926 2.050802,-6.680123 4.77004,-8.319046 2.334696,-0.724067 4.935143,0.312302 6.583149,1.957747 z m -2.720492,2.538595 c -2.698397,-3.517732 -9.282815,1.269287 -3.69635,3.568637 2.765331,5.605665 7.052809,-0.56184 3.69635,-3.568637 z' />
   <path class='st0' d='m 72.25864,84.624638 c 4.108046,3.143003 -0.737059,6.895259 -1.994918,8.323564 -3.586718,5.561143 -6.495079,-4.197379 -10.07759,-5.582178 -4.443422,-1.088878 1.349298,-7.249213 2.503526,-2.503449 2.464639,4.517161 2.304019,-3.70697 6.291113,-1.995914 1.280083,0.137865 2.410691,0.864819 3.277869,1.757977 z m -2.646109,2.323242 c -4.797162,-3.078383 -2.810517,6.305507 0.515161,1.990646 0.296432,-0.688582 0.01209,-1.493412 -0.515161,-1.990646 z' />
   <path class='st0' d='m 78.230641,79.436735 c 4.142121,3.027466 -2.020102,10.435276 -3.450543,5.477315 3.306312,-5.248112 -9.186019,-2.220094 -5.805994,-8.77679 -0.544141,-3.93011 6.797826,-2.102227 3.386015,0.245477 -0.181085,2.915838 4.637371,1.019311 5.870522,3.053982 z' />
@@ -78,23 +78,23 @@
   <path class='st0' d='m 136.85093,14.890174 c 2.31562,5.283511 -7.17975,1.771993 -1.29675,-0.475107 l 0.7108,0.08973 z m 4.867,5.317354 c 2.56912,1.439678 4.26517,4.725219 0.30678,5.233637 -1.56592,-3.098864 -9.51683,-5.749448 -3.64502,-8.633714 1.17746,0.325095 2.15375,2.591149 3.33824,3.400077 z' />
   <path class='st0' d='m 149.95578,11.976423 c 2.50679,1.334142 4.80455,4.94192 0.75041,5.297394 -0.4641,1.898604 -5.25368,5.602645 -8.0174,1.81545 -3.87347,-2.80918 -0.0676,-7.603844 2.30366,-8.133968 1.67949,-3.8530525 3.16695,-1.1993573 4.96333,1.021124 z m -2.24641,2.175828 c -4.80489,-2.992177 -3.08986,6.380343 0.42374,2.036167 0.33055,-0.677518 0.121,-1.52585 -0.42374,-2.036167 z' />
   <path class='st0' d='m 153.26135,7.538431 c 2.60497,1.5799548 6.03999,5.944272 1.08117,6.050232 -2.53319,-3.231828 -7.20316,-6.4304525 -8.84748,-9.4582682 1.89121,-2.8664883 3.78452,-2.247699 5.38514,0.8929426 0.78017,0.8503859 1.57195,1.6911437 2.38118,2.5150667 z' />
-  </pattern>  
+  </pattern>
   <linearGradient id='groupUnderTitleLine' x1='0%' y1='0%' x2='100%' y2='0%' >
-          <stop offset='0%' stop-color='#999999' stop-opacity='0.7'/> 
-          <stop offset='100%' stop-color='#999999' stop-opacity='0' /> 
+          <stop offset='0%' stop-color='#999999' stop-opacity='0.7'/>
+          <stop offset='100%' stop-color='#999999' stop-opacity='0' />
    </linearGradient>
   <radialGradient id='calloutGradient' cx='25%' cy='20%' r='80%' fx='10%' fy='10%'>
 	   <stop offset='0%' stop-color='#ffffff' />
     <stop offset='100%' stop-color='#f8f6d1' />
   </radialGradient>
-  <filter id='shadow' width='120%' height='120%'> 
-      <feOffset result='offOut' in='SourceGraphic' dx='1' dy='1' /> 
-      <feColorMatrix result='matrixOut' in='offOut' type='matrix' 
-      values='0.1 0 0 0 0 0 0.4 0 0 0 0 0 0.6 0 0 0 0 0 0.5 0' /> 
-      <feGaussianBlur result='blurOut' in='matrixOut' stdDeviation='3' /> 
-      <feBlend in='SourceGraphic' in2='blurOut' mode='normal' /> 
-    </filter> 
-  <filter id='fkShadow' height='130%'> 
+  <filter id='shadow' width='120%' height='120%'>
+      <feOffset result='offOut' in='SourceGraphic' dx='1' dy='1' />
+      <feColorMatrix result='matrixOut' in='offOut' type='matrix'
+      values='0.1 0 0 0 0 0 0.4 0 0 0 0 0 0.6 0 0 0 0 0 0.5 0' />
+      <feGaussianBlur result='blurOut' in='matrixOut' stdDeviation='3' />
+      <feBlend in='SourceGraphic' in2='blurOut' mode='normal' />
+    </filter>
+  <filter id='fkShadow' height='130%'>
     <feGaussianBlur in='SourceAlpha' stdDeviation='1.5'/> <!-- stdDeviation is how much to blur -->
     <feOffset dx='1.2' dy='1.2' result='offsetblur'/> <!-- how much to offset -->
     <feMerge>
@@ -103,8 +103,8 @@
     </feMerge>
   </filter>
   <radialGradient id='legendGradient' fx='5%' fy='5%' r='75%' spreadMethod='pad'>
-          <stop offset='0%' stop-color='#eefbf2' stop-opacity='1'/> 
-          <stop offset='100%' stop-color='#cff9cb' stop-opacity='1' /> 
+          <stop offset='0%' stop-color='#eefbf2' stop-opacity='1'/>
+          <stop offset='100%' stop-color='#cff9cb' stop-opacity='1' />
    </radialGradient>
   <symbol id='calloutArrowDown' overflow='visible' >
       <path d='M 0,0 L 8,12 L 16,0 z' style='fill:#f8f6d1;stroke:none; filter: url(#shadow);' />
@@ -212,34 +212,34 @@
     <path d='M 0.00,0.00 L 8.00,4.00 L 0.00,8.00' />
   </marker>
   <linearGradient id='tbg_D0DEF5' x1='0%' y1='0%' x2='0%' y2='100%' >
-     <stop offset='0%' stop-color='#E0E9F8' /> 
-     <stop offset='60%' stop-color='#C1D2EE' /> 
-     <stop offset='100%' stop-color='#E0E9F8' /> 
+     <stop offset='0%' stop-color='#E0E9F8' />
+     <stop offset='60%' stop-color='#C1D2EE' />
+     <stop offset='100%' stop-color='#E0E9F8' />
   </linearGradient>
   <linearGradient id='tbg_C0D4F3' x1='0%' y1='0%' x2='0%' y2='100%' >
-     <stop offset='0%' stop-color='#E0E9F8' /> 
-     <stop offset='60%' stop-color='#C1D2EE' /> 
-     <stop offset='100%' stop-color='#E0E9F8' /> 
+     <stop offset='0%' stop-color='#E0E9F8' />
+     <stop offset='60%' stop-color='#C1D2EE' />
+     <stop offset='100%' stop-color='#E0E9F8' />
   </linearGradient>
   <linearGradient id='tbg_A8C4EF' x1='0%' y1='0%' x2='0%' y2='100%' >
-     <stop offset='0%' stop-color='#E0E9F8' /> 
-     <stop offset='60%' stop-color='#C1D2EE' /> 
-     <stop offset='100%' stop-color='#E0E9F8' /> 
+     <stop offset='0%' stop-color='#E0E9F8' />
+     <stop offset='60%' stop-color='#C1D2EE' />
+     <stop offset='100%' stop-color='#E0E9F8' />
   </linearGradient>
   <linearGradient id='tbg_B2CDF7' x1='0%' y1='0%' x2='0%' y2='100%' >
-     <stop offset='0%' stop-color='#E0E9F8' /> 
-     <stop offset='60%' stop-color='#C1D2EE' /> 
-     <stop offset='100%' stop-color='#E0E9F8' /> 
+     <stop offset='0%' stop-color='#E0E9F8' />
+     <stop offset='60%' stop-color='#C1D2EE' />
+     <stop offset='100%' stop-color='#E0E9F8' />
   </linearGradient>
   <linearGradient id='tbg_B7C8E3' x1='0%' y1='0%' x2='0%' y2='100%' >
-     <stop offset='0%' stop-color='#E0E9F8' /> 
-     <stop offset='60%' stop-color='#C1D2EE' /> 
-     <stop offset='100%' stop-color='#E0E9F8' /> 
+     <stop offset='0%' stop-color='#E0E9F8' />
+     <stop offset='60%' stop-color='#C1D2EE' />
+     <stop offset='100%' stop-color='#E0E9F8' />
   </linearGradient>
   <linearGradient id='tbg_C1D8EE' x1='0%' y1='0%' x2='0%' y2='100%' >
-     <stop offset='0%' stop-color='#E0ECF8' /> 
-     <stop offset='60%' stop-color='#C1D8EE' /> 
-     <stop offset='100%' stop-color='#E0ECF8' /> 
+     <stop offset='0%' stop-color='#E0ECF8' />
+     <stop offset='60%' stop-color='#C1D8EE' />
+     <stop offset='100%' stop-color='#E0ECF8' />
   </linearGradient>
 </defs>
 
@@ -249,9 +249,9 @@
 
 <!-- == Legend == -->
 <g transform='translate(10,10)'>
-  <rect x='10' y='10' width='330' height='56' rx='6' ry='6' style='fill:url(#legendGradient);filter:url(#shadow);'/> 
-  <text x='20' y='43'>qiita</text> 
-  <text x='20' y='57' style='fill:#aaaaaa; font-size:11px;'><tspan>Move the mouse over tables &amp; columns to read the comments.</tspan></text> 
+  <rect x='10' y='10' width='330' height='56' rx='6' ry='6' style='fill:url(#legendGradient);filter:url(#shadow);'/>
+  <text x='20' y='43'>qiita</text>
+  <text x='20' y='57' style='fill:#aaaaaa; font-size:11px;'><tspan>Move the mouse over tables &amp; columns to read the comments.</tspan></text>
 <a xlink:href='https://www.dbschema.com'> <path class='logo' d='m 32.309685,20.963194 c 0.411708,4.732616 -4.298055,7.925636 -8.723583,6.970196 -6.616967,1.8448 -2.656457,-6.434594 -3.911969,-10.01566 -2.15469,-5.89407 6.06247,-3.508505 9.167655,-2.863689 2.199228,1.054873 3.389343,3.582089 3.467897,5.909153 z m -3.720955,0.01451 c 0.434195,-4.414565 -7.644142,-5.37533 -5.137307,0.107342 -1.812268,5.992146 5.532698,4.379388 5.137307,-0.107342 z' /> <path class='logo' d='m 44.329732,23.050637 c 0.850982,5.097305 -5.250434,4.558924 -7.144836,4.752415 -6.418993,1.64391 -1.872992,-7.49274 -3.541914,-10.942842 -2.499646,-3.817859 5.939283,-4.402698 3.538545,-0.13612 -1.287874,4.989123 4.215411,-1.154796 5.956717,2.809584 0.840273,0.970849 1.168829,2.272413 1.191488,3.516963 z m -3.519477,-0.09299 c -1.398216,-5.518069 -6.361061,2.717467 -0.984368,1.810718 0.686994,-0.30388 1.029454,-1.087638 0.984368,-1.810718 z' /> <path class='logo' d='m 52.234961,23.301163 c 0.954818,5.035675 -8.606408,6.284861 -6.262292,1.674914 6.000358,-1.604717 -5.188764,-7.870044 1.75972,-10.384908 2.288682,-3.253567 6.399287,3.075831 2.304111,2.48058 -2.124941,2.016587 2.688777,3.89858 2.198472,6.229403 z' /> <path class='logo' d='m 60.204336,21.349224 c -4.894917,-1.916474 -3.458707,5.391212 0.347494,3.37231 2.120589,6.821713 -10.599623,1.664746 -6.906229,-3.691132 0.354172,-3.663246 9.875349,-4.711252 6.558735,0.318822 z' /> <path class='logo' d='m 71.730617,20.654299 c 0.0013,2.316285 0.190131,4.655698 0.07825,6.958009 -6.532419,3.303565 -0.660423,-8.722256 -6.009639,-5.821653 -0.818815,2.024533 1.726403,6.746337 -1.95327,6.005484 -3.458346,-1.137537 -0.696275,-7.713407 -1.833252,-10.994208 -2.308916,-3.710131 5.93704,-4.164951 3.518609,0.0063 -1.462376,6.166445 5.169629,-2.857523 6.19931,3.846079 z' /> <path class='logo' d='m 82.245738,22.378957 c -0.24581,2.448954 -9.386766,0.8867 -3.885979,2.877055 3.312576,-2.99157 5.250902,3.334514 0.482647,2.665545 -7.415384,1.492275 -7.823196,-11.597641 -0.275476,-10.032117 2.068161,0.391458 3.682204,2.408824 3.678808,4.489517 z m -3.414436,-0.578473 c -1.124703,-4.072004 -5.087405,2.125488 -0.316922,0.156453 z' /> <path class='logo' d='m 98.936899,27.222794 c -4.73541,2.718339 -3.1239,-3.406557 -3.92611,-6.050494 -4.66985,-1.438471 0.21621,6.932413 -3.41219,6.438039 -4.46096,1.160054 -0.22824,-5.774711 -3.31526,-6.700429 -3.410722,1.082173 1.04451,9.536575 -4.745091,6.372895 0.746632,-3.355214 -2.776394,-10.269232 3.034971,-9.038963 -0.058,2.544602 5.00686,-2.785359 6.00342,1.37844 3.42021,-4.316316 7.851251,0.524966 6.24018,4.690538 0.0379,0.969988 0.0954,1.940046 0.12008,2.909974 z' /> <path class='logo' d='m 110.47859,22.686058 c 0.91826,2.682088 0.13016,6.890551 -3.0725,4.397004 -1.63641,1.077877 -7.664291,0.541832 -7.09365,-4.114836 -0.907891,-4.692933 5.14729,-5.625578 7.24058,-4.40354 3.85932,-1.686263 3.13176,1.271515 2.92557,4.121372 z m -3.12695,0.0704 c -1.46278,-5.460062 -6.61615,2.5826 -1.08221,1.782003 0.70431,-0.272594 1.13111,-1.037444 1.08221,-1.782003 z' /> </a>
 </g>
 
@@ -1062,14 +1062,6 @@ study ref qiita_user ( email )</title>
 <path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 1776,432L 752,432' ></path>
 <text x='1756' y='427' transform='rotate(0 1756,427)' title='Fk fk_study_user
 study ref qiita_user ( email )' class='relName' style='fill:#748EA7'>email</text>
-<!-- == Fk 'study_fk_study_study_emp_person' == -->
-<path id='study_fk_study_study_emp_person'  onmouseover="hghl(['study_fk_study_study_emp_person','qiita.study.emp_person_id','qiita.study_person.study_person_id'])" onmouseout="uhghl(['study_fk_study_study_emp_person','qiita.study.emp_person_id','qiita.study_person.study_person_id'])" transform='translate(8,0)' class='scene' d='M 1984,320L 2024,320Q 2032,320 2032,312L 2032,304' >
-	<title>Fk fk_study_study_emp_person
-study ref study_person ( emp_person_id -&gt; study_person_id )</title>
-</path>
-<path transform='translate(8,0)' marker-start='url(#foot0p)' marker-end='url(#arrow1)'  class='dotted '  d='M 1984,320L 2024,320Q 2032,320 2032,312L 2032,304' ></path>
-<text x='1993' y='315' transform='rotate(0 1993,315)' title='Fk fk_study_study_emp_person
-study ref study_person ( emp_person_id -&gt; study_person_id )' class='relName' style='fill:#748EA7'>emp_person_id</text>
 <!-- == Fk 'study_fk_study_study_lab_person' == -->
 <path id='study_fk_study_study_lab_person'  onmouseover="hghl(['study_fk_study_study_lab_person','qiita.study.lab_person_id','qiita.study_person.study_person_id'])" onmouseout="uhghl(['study_fk_study_study_lab_person','qiita.study.lab_person_id','qiita.study_person.study_person_id'])" transform='translate(8,0)' class='scene' d='M 1952,256L 1952,232Q 1952,224 1960,224L 2000,224' >
 	<title>Fk fk_study_study_lab_person
@@ -1172,7 +1164,7 @@ Links analyses to the users they are shared with</title></a>
   <use id='nn' x='978' y='1389' xlink:href='#nn'/><a xlink:href='#logging.logging_id'><use id='pk' x='978' y='1388' xlink:href='#pk'/><title>Pk pk_logging ( logging_id ) </title></a>
 <a xlink:href='#logging.logging_id'><text id='qiita.logging.logging_id' x='995' y='1399' onmouseover="hghl(['analysis_fk_analysis_logging','qiita.analysis.logging_id','processing_job_fk_processing_job_logging','qiita.processing_job.logging_id'])" onmouseout="uhghl(['analysis_fk_analysis_logging','qiita.analysis.logging_id','processing_job_fk_processing_job_logging','qiita.processing_job.logging_id'])">logging_id</text><title>logging_id
 * bigserial</title></a>
-<a xlink:href='#logging.logging_id'><use id='ref' x='1076' y='1388' xlink:href='#ref'/><title>Referred by analysis ( logging_id ) 
+<a xlink:href='#logging.logging_id'><use id='ref' x='1076' y='1388' xlink:href='#ref'/><title>Referred by analysis ( logging_id )
 Referred by processing_job ( logging_id ) </title></a>
   <use id='nn' x='978' y='1405' xlink:href='#nn'/><a xlink:href='#logging.time'><text id='qiita.logging.time' x='995' y='1415'>time</text><title>time
 * timestamp
@@ -1215,7 +1207,7 @@ bigint</title></a>
   <use id='nn' x='50' y='1277' xlink:href='#nn'/><a xlink:href='#controlled_vocab.controlled_vocab_id'><use id='pk' x='50' y='1276' xlink:href='#pk'/><title>Pk pk_controlled_vocabularies ( controlled_vocab_id ) </title></a>
 <a xlink:href='#controlled_vocab.controlled_vocab_id'><text id='qiita.controlled_vocab.controlled_vocab_id' x='67' y='1287' onmouseover="hghl(['column_controlled_vocabularies_fk_column_controlled_vocab2','qiita.column_controlled_vocabularies.controlled_vocab_id','controlled_vocab_values_fk_controlled_vocab_values','qiita.controlled_vocab_values.controlled_vocab_id'])" onmouseout="uhghl(['column_controlled_vocabularies_fk_column_controlled_vocab2','qiita.column_controlled_vocabularies.controlled_vocab_id','controlled_vocab_values_fk_controlled_vocab_values','qiita.controlled_vocab_values.controlled_vocab_id'])">controlled_vocab_id</text><title>controlled_vocab_id
 * bigserial</title></a>
-<a xlink:href='#controlled_vocab.controlled_vocab_id'><use id='ref' x='196' y='1276' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( controlled_vocab_id ) 
+<a xlink:href='#controlled_vocab.controlled_vocab_id'><use id='ref' x='196' y='1276' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( controlled_vocab_id )
 Referred by controlled_vocab_values ( controlled_vocab_id ) </title></a>
   <use id='nn' x='50' y='1293' xlink:href='#nn'/><a xlink:href='#controlled_vocab.controlled_vocab'><text id='qiita.controlled_vocab.controlled_vocab' x='67' y='1303'>controlled_vocab</text><title>controlled_vocab
 * varchar</title></a>
@@ -1229,13 +1221,13 @@ Holds all user information</title></a>
   <use id='nn' x='594' y='397' xlink:href='#nn'/><a xlink:href='#qiita_user.email'><use id='pk' x='594' y='396' xlink:href='#pk'/><title>Pk pk_user ( email ) </title></a>
 <a xlink:href='#qiita_user.email'><text id='qiita.qiita_user.email' x='611' y='407' onmouseover="hghl(['analysis_fk_analysis_user','qiita.analysis.email','analysis_users_fk_analysis_users_user','qiita.analysis_users.email','message_user_fk_message_user_0','qiita.message_user.email','processing_job_fk_processing_job_qiita_user','qiita.processing_job.email','processing_job_workflow_fk_processing_job_workflow','qiita.processing_job_workflow.email','study_fk_study_user','qiita.study.email','study_tags_fk_study_tags_qiita_user','qiita.study_tags.email','study_users_fk_study_users_user','qiita.study_users.email'])" onmouseout="uhghl(['analysis_fk_analysis_user','qiita.analysis.email','analysis_users_fk_analysis_users_user','qiita.analysis_users.email','message_user_fk_message_user_0','qiita.message_user.email','processing_job_fk_processing_job_qiita_user','qiita.processing_job.email','processing_job_workflow_fk_processing_job_workflow','qiita.processing_job_workflow.email','study_fk_study_user','qiita.study.email','study_tags_fk_study_tags_qiita_user','qiita.study_tags.email','study_users_fk_study_users_user','qiita.study_users.email'])">email</text><title>email
 * varchar</title></a>
-<a xlink:href='#qiita_user.email'><use id='ref' x='740' y='396' xlink:href='#ref'/><title>Referred by analysis ( email ) 
-Referred by analysis_users ( email ) 
-Referred by message_user ( email ) 
-Referred by processing_job ( email ) 
-Referred by processing_job_workflow ( email ) 
-Referred by study ( email ) 
-Referred by study_tags ( email ) 
+<a xlink:href='#qiita_user.email'><use id='ref' x='740' y='396' xlink:href='#ref'/><title>Referred by analysis ( email )
+Referred by analysis_users ( email )
+Referred by message_user ( email )
+Referred by processing_job ( email )
+Referred by processing_job_workflow ( email )
+Referred by study ( email )
+Referred by study_tags ( email )
 Referred by study_users ( email ) </title></a>
   <use id='nn' x='594' y='413' xlink:href='#nn'/><a xlink:href='#qiita_user.user_level_id'><use id='idx' x='594' y='412' xlink:href='#idx'/><title>idx_user ( user_level_id ) </title></a>
 <a xlink:href='#qiita_user.user_level_id'><text id='qiita.qiita_user.user_level_id' x='611' y='423' onmouseover="hghl(['qiita_user_fk_user_user_level','qiita.user_level.user_level_id'])" onmouseout="uhghl(['qiita_user_fk_user_user_level','qiita.user_level.user_level_id'])">user_level_id</text><title>user_level_id
@@ -1300,12 +1292,12 @@ One of the user levels (admin, user, guest, etc)</title></a>
   <use id='nn' x='626' y='861' xlink:href='#nn'/><a xlink:href='#filepath.filepath_id'><use id='pk' x='626' y='860' xlink:href='#pk'/><title>Pk pk_filepath ( filepath_id ) </title></a>
 <a xlink:href='#filepath.filepath_id'><text id='qiita.filepath.filepath_id' x='643' y='871' onmouseover="hghl(['analysis_filepath_fk_analysis_filepath_0','qiita.analysis_filepath.filepath_id','artifact_filepath_fk_artifact_filepath_filepath','qiita.artifact_filepath.filepath_id','prep_template_filepath_fk_filepath_id','qiita.prep_template_filepath.filepath_id','reference_fk_reference_sequence_filepath','qiita.reference.sequence_filepath','reference_fk_reference_taxonomy_filepath','qiita.reference.taxonomy_filepath','reference_fk_reference_tree_filepath','qiita.reference.tree_filepath','sample_template_filepath_fk_filepath_id','qiita.sample_template_filepath.filepath_id'])" onmouseout="uhghl(['analysis_filepath_fk_analysis_filepath_0','qiita.analysis_filepath.filepath_id','artifact_filepath_fk_artifact_filepath_filepath','qiita.artifact_filepath.filepath_id','prep_template_filepath_fk_filepath_id','qiita.prep_template_filepath.filepath_id','reference_fk_reference_sequence_filepath','qiita.reference.sequence_filepath','reference_fk_reference_taxonomy_filepath','qiita.reference.taxonomy_filepath','reference_fk_reference_tree_filepath','qiita.reference.tree_filepath','sample_template_filepath_fk_filepath_id','qiita.sample_template_filepath.filepath_id'])">filepath_id</text><title>filepath_id
 * bigserial</title></a>
-<a xlink:href='#filepath.filepath_id'><use id='ref' x='788' y='860' xlink:href='#ref'/><title>Referred by analysis_filepath ( filepath_id ) 
-Referred by artifact_filepath ( filepath_id ) 
-Referred by prep_template_filepath ( filepath_id ) 
-Referred by reference ( sequence_filepath -&gt; filepath_id ) 
-Referred by reference ( taxonomy_filepath -&gt; filepath_id ) 
-Referred by reference ( tree_filepath -&gt; filepath_id ) 
+<a xlink:href='#filepath.filepath_id'><use id='ref' x='788' y='860' xlink:href='#ref'/><title>Referred by analysis_filepath ( filepath_id )
+Referred by artifact_filepath ( filepath_id )
+Referred by prep_template_filepath ( filepath_id )
+Referred by reference ( sequence_filepath -&gt; filepath_id )
+Referred by reference ( taxonomy_filepath -&gt; filepath_id )
+Referred by reference ( tree_filepath -&gt; filepath_id )
 Referred by sample_template_filepath ( filepath_id ) </title></a>
   <use id='nn' x='626' y='877' xlink:href='#nn'/><a xlink:href='#filepath.filepath'><text id='qiita.filepath.filepath' x='643' y='887'>filepath</text><title>filepath
 * varchar</title></a>
@@ -1480,11 +1472,11 @@ Holds analysis information</title></a>
 <a xlink:href='#analysis.analysis_id'><text id='qiita.analysis.analysis_id' x='227' y='903' onmouseover="hghl(['analysis_artifact_fk_analysis_artifact_analysis','qiita.analysis_artifact.analysis_id','analysis_filepath_fk_analysis_filepath','qiita.analysis_filepath.analysis_id','analysis_portal_fk_analysis_portal','qiita.analysis_portal.analysis_id','analysis_processing_job_fk_analysis_processing_job','qiita.analysis_processing_job.analysis_id','analysis_sample_fk_analysis_sample_analysis','qiita.analysis_sample.analysis_id','analysis_users_fk_analysis_users_analysis','qiita.analysis_users.analysis_id'])" onmouseout="uhghl(['analysis_artifact_fk_analysis_artifact_analysis','qiita.analysis_artifact.analysis_id','analysis_filepath_fk_analysis_filepath','qiita.analysis_filepath.analysis_id','analysis_portal_fk_analysis_portal','qiita.analysis_portal.analysis_id','analysis_processing_job_fk_analysis_processing_job','qiita.analysis_processing_job.analysis_id','analysis_sample_fk_analysis_sample_analysis','qiita.analysis_sample.analysis_id','analysis_users_fk_analysis_users_analysis','qiita.analysis_users.analysis_id'])">analysis_id</text><title>analysis_id
 * bigserial
 Unique identifier for analysis</title></a>
-<a xlink:href='#analysis.analysis_id'><use id='ref' x='324' y='892' xlink:href='#ref'/><title>Referred by analysis_artifact ( analysis_id ) 
-Referred by analysis_filepath ( analysis_id ) 
-Referred by analysis_portal ( analysis_id ) 
-Referred by analysis_processing_job ( analysis_id ) 
-Referred by analysis_sample ( analysis_id ) 
+<a xlink:href='#analysis.analysis_id'><use id='ref' x='324' y='892' xlink:href='#ref'/><title>Referred by analysis_artifact ( analysis_id )
+Referred by analysis_filepath ( analysis_id )
+Referred by analysis_portal ( analysis_id )
+Referred by analysis_processing_job ( analysis_id )
+Referred by analysis_sample ( analysis_id )
 Referred by analysis_users ( analysis_id ) </title></a>
   <use id='nn' x='210' y='909' xlink:href='#nn'/><a xlink:href='#analysis.email'><use id='idx' x='210' y='908' xlink:href='#idx'/><title>idx_analysis_email ( email ) </title></a>
 <a xlink:href='#analysis.email'><text id='qiita.analysis.email' x='227' y='919' onmouseover="hghl(['analysis_fk_analysis_user','qiita.qiita_user.email'])" onmouseout="uhghl(['analysis_fk_analysis_user','qiita.qiita_user.email'])">email</text><title>email
@@ -1537,7 +1529,7 @@ bigint</title></a>
   <use id='nn' x='818' y='813' xlink:href='#nn'/><a xlink:href='#filepath_type.filepath_type_id'><use id='pk' x='818' y='812' xlink:href='#pk'/><title>Pk pk_filepath_type ( filepath_type_id ) </title></a>
 <a xlink:href='#filepath_type.filepath_type_id'><text id='qiita.filepath_type.filepath_type_id' x='835' y='823' onmouseover="hghl(['artifact_type_filepath_type_fk_artifact_type_filepath_type_0','qiita.artifact_type_filepath_type.filepath_type_id','filepath_fk_filepath','qiita.filepath.filepath_type_id'])" onmouseout="uhghl(['artifact_type_filepath_type_fk_artifact_type_filepath_type_0','qiita.artifact_type_filepath_type.filepath_type_id','filepath_fk_filepath','qiita.filepath.filepath_type_id'])">filepath_type_id</text><title>filepath_type_id
 * bigserial</title></a>
-<a xlink:href='#filepath_type.filepath_type_id'><use id='ref' x='932' y='812' xlink:href='#ref'/><title>Referred by artifact_type_filepath_type ( filepath_type_id ) 
+<a xlink:href='#filepath_type.filepath_type_id'><use id='ref' x='932' y='812' xlink:href='#ref'/><title>Referred by artifact_type_filepath_type ( filepath_type_id )
 Referred by filepath ( filepath_type_id ) </title></a>
   <a xlink:href='#filepath_type.filepath_type'><use id='unq' x='818' y='828' xlink:href='#unq'/><title>Unq idx_filepath_type ( filepath_type ) </title></a>
 <a xlink:href='#filepath_type.filepath_type'><text id='qiita.filepath_type.filepath_type' x='835' y='839'>filepath_type</text><title>filepath_type
@@ -1661,15 +1653,15 @@ Represents data in the system</title></a>
   <use id='nn' x='1186' y='957' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1186' y='956' xlink:href='#pk'/><title>Pk pk_artifact ( artifact_id ) </title></a>
 <a xlink:href='#artifact.artifact_id'><text id='qiita.artifact.artifact_id' x='1203' y='967' onmouseover="hghl(['analysis_artifact_fk_analysis_artifact_artifact','qiita.analysis_artifact.artifact_id','analysis_sample_fk_analysis_sample_artifact','qiita.analysis_sample.artifact_id','artifact_filepath_fk_artifact_filepath_artifact','qiita.artifact_filepath.artifact_id','artifact_output_processing_job_fk_artifact_output_processing_job','qiita.artifact_output_processing_job.artifact_id','artifact_processing_job_fk_artifact_processing_job','qiita.artifact_processing_job.artifact_id','ebi_run_accession_fk_ebi_run_accession_artifact','qiita.ebi_run_accession.artifact_id','parent_artifact_fk_parent_artifact_artifact','qiita.parent_artifact.artifact_id','parent_artifact_fk_parent_artifact_parent','qiita.parent_artifact.parent_id','prep_template_fk_prep_template_artifact','qiita.prep_template.artifact_id','study_artifact_fk_study_artifact_artifact','qiita.study_artifact.artifact_id'])" onmouseout="uhghl(['analysis_artifact_fk_analysis_artifact_artifact','qiita.analysis_artifact.artifact_id','analysis_sample_fk_analysis_sample_artifact','qiita.analysis_sample.artifact_id','artifact_filepath_fk_artifact_filepath_artifact','qiita.artifact_filepath.artifact_id','artifact_output_processing_job_fk_artifact_output_processing_job','qiita.artifact_output_processing_job.artifact_id','artifact_processing_job_fk_artifact_processing_job','qiita.artifact_processing_job.artifact_id','ebi_run_accession_fk_ebi_run_accession_artifact','qiita.ebi_run_accession.artifact_id','parent_artifact_fk_parent_artifact_artifact','qiita.parent_artifact.artifact_id','parent_artifact_fk_parent_artifact_parent','qiita.parent_artifact.parent_id','prep_template_fk_prep_template_artifact','qiita.prep_template.artifact_id','study_artifact_fk_study_artifact_artifact','qiita.study_artifact.artifact_id'])">artifact_id</text><title>artifact_id
 * bigserial</title></a>
-<a xlink:href='#artifact.artifact_id'><use id='ref' x='1332' y='956' xlink:href='#ref'/><title>Referred by analysis_artifact ( artifact_id ) 
-Referred by analysis_sample ( artifact_id ) 
-Referred by artifact_filepath ( artifact_id ) 
-Referred by artifact_output_processing_job ( artifact_id ) 
-Referred by artifact_processing_job ( artifact_id ) 
-Referred by ebi_run_accession ( artifact_id ) 
-Referred by parent_artifact ( artifact_id ) 
-Referred by parent_artifact ( parent_id -&gt; artifact_id ) 
-Referred by prep_template ( artifact_id ) 
+<a xlink:href='#artifact.artifact_id'><use id='ref' x='1332' y='956' xlink:href='#ref'/><title>Referred by analysis_artifact ( artifact_id )
+Referred by analysis_sample ( artifact_id )
+Referred by artifact_filepath ( artifact_id )
+Referred by artifact_output_processing_job ( artifact_id )
+Referred by artifact_processing_job ( artifact_id )
+Referred by ebi_run_accession ( artifact_id )
+Referred by parent_artifact ( artifact_id )
+Referred by parent_artifact ( parent_id -&gt; artifact_id )
+Referred by prep_template ( artifact_id )
 Referred by study_artifact ( artifact_id ) </title></a>
   <use id='nn' x='1186' y='973' xlink:href='#nn'/><a xlink:href='#artifact.name'><text id='qiita.artifact.name' x='1203' y='983'>name</text><title>name
 * varchar</title></a>
@@ -1725,8 +1717,8 @@ What portals are available to show a study in</title></a>
   <use id='nn' x='818' y='653' xlink:href='#nn'/><a xlink:href='#portal_type.portal_type_id'><use id='pk' x='818' y='652' xlink:href='#pk'/><title>Pk pk_portal_type ( portal_type_id ) </title></a>
 <a xlink:href='#portal_type.portal_type_id'><text id='qiita.portal_type.portal_type_id' x='835' y='663' onmouseover="hghl(['analysis_fk_analysis','qiita.analysis.portal_type_id','analysis_portal_fk_analysis_portal_0','qiita.analysis_portal.portal_type_id','study_portal_fk_study_portal_0','qiita.study_portal.portal_type_id'])" onmouseout="uhghl(['analysis_fk_analysis','qiita.analysis.portal_type_id','analysis_portal_fk_analysis_portal_0','qiita.analysis_portal.portal_type_id','study_portal_fk_study_portal_0','qiita.study_portal.portal_type_id'])">portal_type_id</text><title>portal_type_id
 * bigserial</title></a>
-<a xlink:href='#portal_type.portal_type_id'><use id='ref' x='948' y='652' xlink:href='#ref'/><title>Referred by analysis ( portal_type_id ) 
-Referred by analysis_portal ( portal_type_id ) 
+<a xlink:href='#portal_type.portal_type_id'><use id='ref' x='948' y='652' xlink:href='#ref'/><title>Referred by analysis ( portal_type_id )
+Referred by analysis_portal ( portal_type_id )
 Referred by study_portal ( portal_type_id ) </title></a>
   <use id='nn' x='818' y='669' xlink:href='#nn'/><a xlink:href='#portal_type.portal'><text id='qiita.portal_type.portal' x='835' y='679'>portal</text><title>portal
 * varchar</title></a>
@@ -1741,8 +1733,8 @@ Referred by study_portal ( portal_type_id ) </title></a>
   <use id='nn' x='690' y='1213' xlink:href='#nn'/><a xlink:href='#data_type.data_type_id'><use id='pk' x='690' y='1212' xlink:href='#pk'/><title>Pk pk_data_type ( data_type_id ) </title></a>
 <a xlink:href='#data_type.data_type_id'><text id='qiita.data_type.data_type_id' x='707' y='1223' onmouseover="hghl(['analysis_filepath_fk_analysis_filepath_1','qiita.analysis_filepath.data_type_id','artifact_fk_artifact_data_type','qiita.artifact.data_type_id','prep_template_fk_prep_template_data_type','qiita.prep_template.data_type_id'])" onmouseout="uhghl(['analysis_filepath_fk_analysis_filepath_1','qiita.analysis_filepath.data_type_id','artifact_fk_artifact_data_type','qiita.artifact.data_type_id','prep_template_fk_prep_template_data_type','qiita.prep_template.data_type_id'])">data_type_id</text><title>data_type_id
 * bigserial</title></a>
-<a xlink:href='#data_type.data_type_id'><use id='ref' x='788' y='1212' xlink:href='#ref'/><title>Referred by analysis_filepath ( data_type_id ) 
-Referred by artifact ( data_type_id ) 
+<a xlink:href='#data_type.data_type_id'><use id='ref' x='788' y='1212' xlink:href='#ref'/><title>Referred by analysis_filepath ( data_type_id )
+Referred by artifact ( data_type_id )
 Referred by prep_template ( data_type_id ) </title></a>
   <use id='nn' x='690' y='1229' xlink:href='#nn'/><a xlink:href='#data_type.data_type'><use id='unq' x='690' y='1228' xlink:href='#unq'/><title>Unq idx_data_type ( data_type ) </title></a>
 <a xlink:href='#data_type.data_type'><text id='qiita.data_type.data_type' x='707' y='1239'>data_type</text><title>data_type
@@ -1758,7 +1750,7 @@ Required info for each sample. One row is one sample.</title></a>
   <use id='nn' x='1346' y='301' xlink:href='#nn'/><a xlink:href='#study_sample.sample_id'><use id='pk' x='1346' y='300' xlink:href='#pk'/><title>Pk idx_required_sample_info_1 ( sample_id ) </title></a>
 <a xlink:href='#study_sample.sample_id'><text id='qiita.study_sample.sample_id' x='1363' y='311' onmouseover="hghl(['analysis_sample_fk_analysis_sample','qiita.analysis_sample.sample_id','ebi_run_accession_fk_ebi_run_accession','qiita.ebi_run_accession.sample_id'])" onmouseout="uhghl(['analysis_sample_fk_analysis_sample','qiita.analysis_sample.sample_id','ebi_run_accession_fk_ebi_run_accession','qiita.ebi_run_accession.sample_id'])">sample_id</text><title>sample_id
 * varchar</title></a>
-<a xlink:href='#study_sample.sample_id'><use id='ref' x='1492' y='300' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) 
+<a xlink:href='#study_sample.sample_id'><use id='ref' x='1492' y='300' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id )
 Referred by ebi_run_accession ( sample_id ) </title></a>
   <use id='nn' x='1346' y='317' xlink:href='#nn'/><a xlink:href='#study_sample.study_id'><use id='idx' x='1346' y='316' xlink:href='#idx'/><title>idx_required_sample_info ( study_id ) </title></a>
 <a xlink:href='#study_sample.study_id'><text id='qiita.study_sample.study_id' x='1363' y='327' onmouseover="hghl(['study_sample_fk_required_sample_info_study','qiita.study.study_id'])" onmouseout="uhghl(['study_sample_fk_required_sample_info_study','qiita.study.study_id'])">study_id</text><title>study_id
@@ -1792,9 +1784,9 @@ links study to its prep templates</title></a>
   <use id='nn' x='1234' y='525' xlink:href='#nn'/><a xlink:href='#prep_template.prep_template_id'><use id='pk' x='1234' y='524' xlink:href='#pk'/><title>Pk pk_prep_template ( prep_template_id ) </title></a>
 <a xlink:href='#prep_template.prep_template_id'><text id='qiita.prep_template.prep_template_id' x='1251' y='535' onmouseover="hghl(['prep_template_filepath_fk_prep_template_id','qiita.prep_template_filepath.prep_template_id','prep_template_processing_job_fk_prep_template_processing_job','qiita.prep_template_processing_job.prep_template_id','prep_template_sample_fk_prep_template','qiita.prep_template_sample.prep_template_id','study_prep_template_fk_study_prep_template_pt','qiita.study_prep_template.prep_template_id'])" onmouseout="uhghl(['prep_template_filepath_fk_prep_template_id','qiita.prep_template_filepath.prep_template_id','prep_template_processing_job_fk_prep_template_processing_job','qiita.prep_template_processing_job.prep_template_id','prep_template_sample_fk_prep_template','qiita.prep_template_sample.prep_template_id','study_prep_template_fk_study_prep_template_pt','qiita.study_prep_template.prep_template_id'])">prep_template_id</text><title>prep_template_id
 * bigserial</title></a>
-<a xlink:href='#prep_template.prep_template_id'><use id='ref' x='1380' y='524' xlink:href='#ref'/><title>Referred by prep_template_filepath ( prep_template_id ) 
-Referred by prep_template_processing_job ( prep_template_id ) 
-Referred by prep_template_sample ( prep_template_id ) 
+<a xlink:href='#prep_template.prep_template_id'><use id='ref' x='1380' y='524' xlink:href='#ref'/><title>Referred by prep_template_filepath ( prep_template_id )
+Referred by prep_template_processing_job ( prep_template_id )
+Referred by prep_template_sample ( prep_template_id )
 Referred by study_prep_template ( prep_template_id ) </title></a>
   <use id='nn' x='1234' y='541' xlink:href='#nn'/><a xlink:href='#prep_template.data_type_id'><use id='idx' x='1234' y='540' xlink:href='#idx'/><title>idx_prep_template ( data_type_id ) </title></a>
 <a xlink:href='#prep_template.data_type_id'><text id='qiita.prep_template.data_type_id' x='1251' y='551' onmouseover="hghl(['prep_template_fk_prep_template_data_type','qiita.data_type.data_type_id'])" onmouseout="uhghl(['prep_template_fk_prep_template_data_type','qiita.data_type.data_type_id'])">data_type_id</text><title>data_type_id
@@ -1876,12 +1868,8 @@ Contains the name of the table that contains the pre-defined metadata columns fo
 <a xlink:href='#study_person'><text x='2038' y='172'>study_person</text><title>Table qiita.study_person
 Contact information for the various people involved in a study</title></a>
   <use id='nn' x='2018' y='189' xlink:href='#nn'/><a xlink:href='#study_person.study_person_id'><use id='pk' x='2018' y='188' xlink:href='#pk'/><title>Pk pk_study_person ( study_person_id ) </title></a>
-<a xlink:href='#study_person.study_person_id'><text id='qiita.study_person.study_person_id' x='2035' y='199' onmouseover="hghl(['investigation_fk_investigation_study_person','qiita.investigation.contact_person_id','study_fk_study_study_emp_person','qiita.study.emp_person_id','study_fk_study_study_lab_person','qiita.study.lab_person_id','study_fk_study_study_pi_person','qiita.study.principal_investigator_id'])" onmouseout="uhghl(['investigation_fk_investigation_study_person','qiita.investigation.contact_person_id','study_fk_study_study_emp_person','qiita.study.emp_person_id','study_fk_study_study_lab_person','qiita.study.lab_person_id','study_fk_study_study_pi_person','qiita.study.principal_investigator_id'])">study_person_id</text><title>study_person_id
+<a xlink:href='#study_person.study_person_id'><text id='qiita.study_person.study_person_id' x='2035' y='199' onmouseover="hghl(['investigation_fk_investigation_study_person','qiita.investigation.contact_person_id','study_fk_study_study_lab_person','qiita.study.lab_person_id','study_fk_study_study_pi_person','qiita.study.principal_investigator_id'])" onmouseout="uhghl(['investigation_fk_investigation_study_person','qiita.investigation.contact_person_id','study_fk_study_study_lab_person','qiita.study.lab_person_id','study_fk_study_study_pi_person','qiita.study.principal_investigator_id'])">study_person_id</text><title>study_person_id
 * bigserial</title></a>
-<a xlink:href='#study_person.study_person_id'><use id='ref' x='2132' y='188' xlink:href='#ref'/><title>Referred by investigation ( contact_person_id -&gt; study_person_id ) 
-Referred by study ( emp_person_id -&gt; study_person_id ) 
-Referred by study ( lab_person_id -&gt; study_person_id ) 
-Referred by study ( principal_investigator_id -&gt; study_person_id ) </title></a>
   <use id='nn' x='2018' y='205' xlink:href='#nn'/><a xlink:href='#study_person.name'><use id='unq' x='2018' y='204' xlink:href='#unq'/><title>Unq idx_study_person ( name, affiliation ) </title></a>
 <a xlink:href='#study_person.name'><text id='qiita.study_person.name' x='2035' y='215'>name</text><title>name
 * varchar</title></a>
@@ -1991,7 +1979,7 @@ varchar</title></a>
   <use id='nn' x='1762' y='1229' xlink:href='#nn'/><a xlink:href='#command_output.command_output_id'><use id='pk' x='1762' y='1228' xlink:href='#pk'/><title>Pk pk_command_output ( command_output_id ) </title></a>
 <a xlink:href='#command_output.command_output_id'><text id='qiita.command_output.command_output_id' x='1779' y='1239' onmouseover="hghl(['artifact_output_processing_job_fk_artifact_output_processing_job_1','qiita.artifact_output_processing_job.command_output_id','default_workflow_edge_connections_fk_default_workflow_edge_connections','qiita.default_workflow_edge_connections.parent_output_id'])" onmouseout="uhghl(['artifact_output_processing_job_fk_artifact_output_processing_job_1','qiita.artifact_output_processing_job.command_output_id','default_workflow_edge_connections_fk_default_workflow_edge_connections','qiita.default_workflow_edge_connections.parent_output_id'])">command_output_id</text><title>command_output_id
 * bigserial</title></a>
-<a xlink:href='#command_output.command_output_id'><use id='ref' x='1908' y='1228' xlink:href='#ref'/><title>Referred by artifact_output_processing_job ( command_output_id ) 
+<a xlink:href='#command_output.command_output_id'><use id='ref' x='1908' y='1228' xlink:href='#ref'/><title>Referred by artifact_output_processing_job ( command_output_id )
 Referred by default_workflow_edge_connections ( parent_output_id -&gt; command_output_id ) </title></a>
   <use id='nn' x='1762' y='1245' xlink:href='#nn'/><a xlink:href='#command_output.name'><use id='unq' x='1762' y='1244' xlink:href='#unq'/><title>Unq idx_command_output ( name, command_id ) </title></a>
 <a xlink:href='#command_output.name'><text id='qiita.command_output.name' x='1779' y='1255'>name</text><title>name
@@ -2062,7 +2050,7 @@ In case that the software is of type "type plugin", it holds the artifact types 
   <use id='nn' x='2178' y='1069' xlink:href='#nn'/><a xlink:href='#command_parameter.command_parameter_id'><use id='pk' x='2178' y='1068' xlink:href='#pk'/><title>Pk pk_command_parameter ( command_parameter_id ) </title></a>
 <a xlink:href='#command_parameter.command_parameter_id'><text id='qiita.command_parameter.command_parameter_id' x='2195' y='1079' onmouseover="hghl(['default_workflow_edge_connections_fk_default_workflow_edge_connections_0','qiita.default_workflow_edge_connections.child_input_id','parameter_artifact_type_fk_parameter_artifact_type','qiita.parameter_artifact_type.command_parameter_id'])" onmouseout="uhghl(['default_workflow_edge_connections_fk_default_workflow_edge_connections_0','qiita.default_workflow_edge_connections.child_input_id','parameter_artifact_type_fk_parameter_artifact_type','qiita.parameter_artifact_type.command_parameter_id'])">command_parameter_id</text><title>command_parameter_id
 * bigserial</title></a>
-<a xlink:href='#command_parameter.command_parameter_id'><use id='ref' x='2340' y='1068' xlink:href='#ref'/><title>Referred by default_workflow_edge_connections ( child_input_id -&gt; command_parameter_id ) 
+<a xlink:href='#command_parameter.command_parameter_id'><use id='ref' x='2340' y='1068' xlink:href='#ref'/><title>Referred by default_workflow_edge_connections ( child_input_id -&gt; command_parameter_id )
 Referred by parameter_artifact_type ( command_parameter_id ) </title></a>
   <use id='nn' x='2178' y='1085' xlink:href='#nn'/><a xlink:href='#command_parameter.command_id'><use id='unq' x='2178' y='1084' xlink:href='#unq'/><title>idx_command_parameter ( command_id ) Unq idx_command_parameter_0 ( command_id, parameter_name ) </title></a>
 <a xlink:href='#command_parameter.command_id'><text id='qiita.command_parameter.command_id' x='2195' y='1095' onmouseover="hghl(['command_parameter_fk_command_parameter','qiita.software_command.command_id'])" onmouseout="uhghl(['command_parameter_fk_command_parameter','qiita.software_command.command_id'])">command_id</text><title>command_id
@@ -2110,7 +2098,7 @@ This is a varchar here - but is of type JSON in postgresql.</title></a>
   <use id='nn' x='2402' y='1309' xlink:href='#nn'/><a xlink:href='#default_workflow_node.default_workflow_node_id'><use id='pk' x='2402' y='1308' xlink:href='#pk'/><title>Pk pk_default_workflow_command ( default_workflow_node_id ) </title></a>
 <a xlink:href='#default_workflow_node.default_workflow_node_id'><text id='qiita.default_workflow_node.default_workflow_node_id' x='2419' y='1319' onmouseover="hghl(['default_workflow_edge_fk_default_workflow_edge','qiita.default_workflow_edge.parent_id','default_workflow_edge_fk_default_workflow_edge_0','qiita.default_workflow_edge.child_id'])" onmouseout="uhghl(['default_workflow_edge_fk_default_workflow_edge','qiita.default_workflow_edge.parent_id','default_workflow_edge_fk_default_workflow_edge_0','qiita.default_workflow_edge.child_id'])">default_workflow_node_id</text><title>default_workflow_node_id
 * bigserial</title></a>
-<a xlink:href='#default_workflow_node.default_workflow_node_id'><use id='ref' x='2580' y='1308' xlink:href='#ref'/><title>Referred by default_workflow_edge ( parent_id -&gt; default_workflow_node_id ) 
+<a xlink:href='#default_workflow_node.default_workflow_node_id'><use id='ref' x='2580' y='1308' xlink:href='#ref'/><title>Referred by default_workflow_edge ( parent_id -&gt; default_workflow_node_id )
 Referred by default_workflow_edge ( child_id -&gt; default_workflow_node_id ) </title></a>
   <use id='nn' x='2402' y='1325' xlink:href='#nn'/><a xlink:href='#default_workflow_node.default_workflow_id'><use id='idx' x='2402' y='1324' xlink:href='#idx'/><title>idx_default_workflow_command_0 ( default_workflow_id ) </title></a>
 <a xlink:href='#default_workflow_node.default_workflow_id'><text id='qiita.default_workflow_node.default_workflow_id' x='2419' y='1335' onmouseover="hghl(['default_workflow_node_fk_default_workflow_command_1','qiita.default_workflow.default_workflow_id'])" onmouseout="uhghl(['default_workflow_node_fk_default_workflow_command_1','qiita.default_workflow.default_workflow_id'])">default_workflow_id</text><title>default_workflow_id
@@ -2274,7 +2262,7 @@ varchar</title></a>
   <use id='nn' x='258' y='1373' xlink:href='#nn'/><a xlink:href='#mixs_field_description.column_name'><use id='pk' x='258' y='1372' xlink:href='#pk'/><title>Pk pk_mixs_field_description ( column_name ) </title></a>
 <a xlink:href='#mixs_field_description.column_name'><text id='qiita.mixs_field_description.column_name' x='275' y='1383' onmouseover="hghl(['column_controlled_vocabularies_fk_column_controlled_vocabularies','qiita.column_controlled_vocabularies.column_name','column_ontology_fk_column_ontology','qiita.column_ontology.column_name'])" onmouseout="uhghl(['column_controlled_vocabularies_fk_column_controlled_vocabularies','qiita.column_controlled_vocabularies.column_name','column_ontology_fk_column_ontology','qiita.column_ontology.column_name'])">column_name</text><title>column_name
 * varchar</title></a>
-<a xlink:href='#mixs_field_description.column_name'><use id='ref' x='388' y='1372' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( column_name ) 
+<a xlink:href='#mixs_field_description.column_name'><use id='ref' x='388' y='1372' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( column_name )
 Referred by column_ontology ( column_name ) </title></a>
   <use id='nn' x='258' y='1389' xlink:href='#nn'/><a xlink:href='#mixs_field_description.data_type'><text id='qiita.mixs_field_description.data_type' x='275' y='1399'>data_type</text><title>data_type
 * varchar</title></a>
@@ -2412,10 +2400,10 @@ Type of artifact</title></a>
   <use id='nn' x='1394' y='957' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type_id'><use id='pk' x='1394' y='956' xlink:href='#pk'/><title>Pk pk_filetype ( artifact_type_id ) </title></a>
 <a xlink:href='#artifact_type.artifact_type_id'><text id='qiita.artifact_type.artifact_type_id' x='1411' y='967' onmouseover="hghl(['artifact_fk_artifact_filetype','qiita.artifact.artifact_type_id','artifact_type_filepath_type_fk_artifact_type_filepath_type','qiita.artifact_type_filepath_type.artifact_type_id','command_output_fk_command_output_0','qiita.command_output.artifact_type_id','parameter_artifact_type_fk_parameter_artifact_type_0','qiita.parameter_artifact_type.artifact_type_id','software_artifact_type_fk_software_artifact_type','qiita.software_artifact_type.artifact_type_id'])" onmouseout="uhghl(['artifact_fk_artifact_filetype','qiita.artifact.artifact_type_id','artifact_type_filepath_type_fk_artifact_type_filepath_type','qiita.artifact_type_filepath_type.artifact_type_id','command_output_fk_command_output_0','qiita.command_output.artifact_type_id','parameter_artifact_type_fk_parameter_artifact_type_0','qiita.parameter_artifact_type.artifact_type_id','software_artifact_type_fk_software_artifact_type','qiita.software_artifact_type.artifact_type_id'])">artifact_type_id</text><title>artifact_type_id
 * bigserial</title></a>
-<a xlink:href='#artifact_type.artifact_type_id'><use id='ref' x='1588' y='956' xlink:href='#ref'/><title>Referred by artifact ( artifact_type_id ) 
-Referred by artifact_type_filepath_type ( artifact_type_id ) 
-Referred by command_output ( artifact_type_id ) 
-Referred by parameter_artifact_type ( artifact_type_id ) 
+<a xlink:href='#artifact_type.artifact_type_id'><use id='ref' x='1588' y='956' xlink:href='#ref'/><title>Referred by artifact ( artifact_type_id )
+Referred by artifact_type_filepath_type ( artifact_type_id )
+Referred by command_output ( artifact_type_id )
+Referred by parameter_artifact_type ( artifact_type_id )
 Referred by software_artifact_type ( artifact_type_id ) </title></a>
   <use id='nn' x='1394' y='973' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type'><use id='unq' x='1394' y='972' xlink:href='#unq'/><title>Unq idx_filetype ( artifact_type ) </title></a>
 <a xlink:href='#artifact_type.artifact_type'><text id='qiita.artifact_type.artifact_type' x='1411' y='983'>artifact_type</text><title>artifact_type
@@ -2438,14 +2426,14 @@ bool</title></a>
 <a xlink:href='#processing_job.processing_job_id'><text id='qiita.processing_job.processing_job_id' x='1971' y='1191' onmouseover="hghl(['analysis_processing_job_fk_analysis_processing_job_pj','qiita.analysis_processing_job.processing_job_id','artifact_output_processing_job_fk_artifact_output_processing_job_0','qiita.artifact_output_processing_job.processing_job_id','artifact_processing_job_fk_artifact_processing_job_0','qiita.artifact_processing_job.processing_job_id','parent_processing_job_fk_parent_processing_job','qiita.parent_processing_job.parent_id','parent_processing_job_fk_parent_processing_job_0','qiita.parent_processing_job.child_id','prep_template_processing_job_fk_prep_template_processing_job_0','qiita.prep_template_processing_job.processing_job_id','processing_job_validator_fk_processing_job_validator','qiita.processing_job_validator.processing_job_id','processing_job_validator_fk_processing_job_validator_0','qiita.processing_job_validator.validator_id','processing_job_workflow_root_fk_processing_job_workflow_roots_0','qiita.processing_job_workflow_root.processing_job_id'])" onmouseout="uhghl(['analysis_processing_job_fk_analysis_processing_job_pj','qiita.analysis_processing_job.processing_job_id','artifact_output_processing_job_fk_artifact_output_processing_job_0','qiita.artifact_output_processing_job.processing_job_id','artifact_processing_job_fk_artifact_processing_job_0','qiita.artifact_processing_job.processing_job_id','parent_processing_job_fk_parent_processing_job','qiita.parent_processing_job.parent_id','parent_processing_job_fk_parent_processing_job_0','qiita.parent_processing_job.child_id','prep_template_processing_job_fk_prep_template_processing_job_0','qiita.prep_template_processing_job.processing_job_id','processing_job_validator_fk_processing_job_validator','qiita.processing_job_validator.processing_job_id','processing_job_validator_fk_processing_job_validator_0','qiita.processing_job_validator.validator_id','processing_job_workflow_root_fk_processing_job_workflow_roots_0','qiita.processing_job_workflow_root.processing_job_id'])">processing_job_id</text><title>processing_job_id
 * bigserial
 Using bigserial in DBSchema - however in the postgres DB this column is of type UUID.</title></a>
-<a xlink:href='#processing_job.processing_job_id'><use id='ref' x='2116' y='1180' xlink:href='#ref'/><title>Referred by analysis_processing_job ( processing_job_id ) 
-Referred by artifact_output_processing_job ( processing_job_id ) 
-Referred by artifact_processing_job ( processing_job_id ) 
-Referred by parent_processing_job ( parent_id -&gt; processing_job_id ) 
-Referred by parent_processing_job ( child_id -&gt; processing_job_id ) 
-Referred by prep_template_processing_job ( processing_job_id ) 
-Referred by processing_job_validator ( processing_job_id ) 
-Referred by processing_job_validator ( validator_id -&gt; processing_job_id ) 
+<a xlink:href='#processing_job.processing_job_id'><use id='ref' x='2116' y='1180' xlink:href='#ref'/><title>Referred by analysis_processing_job ( processing_job_id )
+Referred by artifact_output_processing_job ( processing_job_id )
+Referred by artifact_processing_job ( processing_job_id )
+Referred by parent_processing_job ( parent_id -&gt; processing_job_id )
+Referred by parent_processing_job ( child_id -&gt; processing_job_id )
+Referred by prep_template_processing_job ( processing_job_id )
+Referred by processing_job_validator ( processing_job_id )
+Referred by processing_job_validator ( validator_id -&gt; processing_job_id )
 Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
   <use id='nn' x='1954' y='1197' xlink:href='#nn'/><a xlink:href='#processing_job.email'><use id='idx' x='1954' y='1196' xlink:href='#idx'/><title>idx_processing_job ( email ) </title></a>
 <a xlink:href='#processing_job.email'><text id='qiita.processing_job.email' x='1971' y='1207' onmouseover="hghl(['processing_job_fk_processing_job_qiita_user','qiita.qiita_user.email'])" onmouseout="uhghl(['processing_job_fk_processing_job_qiita_user','qiita.qiita_user.email'])">email</text><title>email
@@ -2490,10 +2478,10 @@ Store an external job ID (e.g. Torque job ID) associated this Qiita job</title><
   <use id='nn' x='2402' y='1005' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='2402' y='1004' xlink:href='#pk'/><title>Pk pk_software ( software_id ) </title></a>
 <a xlink:href='#software.software_id'><text id='qiita.software.software_id' x='2419' y='1015' onmouseover="hghl(['default_workflow_fk_default_workflow_software','qiita.default_workflow.software_id','oauth_software_fk_oauth_software_software','qiita.oauth_software.software_id','software_artifact_type_fk_software_artifact_type_sw','qiita.software_artifact_type.software_id','software_command_fk_soft_command_software','qiita.software_command.software_id','software_publication_fk_software_publication','qiita.software_publication.software_id'])" onmouseout="uhghl(['default_workflow_fk_default_workflow_software','qiita.default_workflow.software_id','oauth_software_fk_oauth_software_software','qiita.oauth_software.software_id','software_artifact_type_fk_software_artifact_type_sw','qiita.software_artifact_type.software_id','software_command_fk_soft_command_software','qiita.software_command.software_id','software_publication_fk_software_publication','qiita.software_publication.software_id'])">software_id</text><title>software_id
 * bigserial</title></a>
-<a xlink:href='#software.software_id'><use id='ref' x='2532' y='1004' xlink:href='#ref'/><title>Referred by default_workflow ( software_id ) 
-Referred by oauth_software ( software_id ) 
-Referred by software_artifact_type ( software_id ) 
-Referred by software_command ( software_id ) 
+<a xlink:href='#software.software_id'><use id='ref' x='2532' y='1004' xlink:href='#ref'/><title>Referred by default_workflow ( software_id )
+Referred by oauth_software ( software_id )
+Referred by software_artifact_type ( software_id )
+Referred by software_command ( software_id )
 Referred by software_publication ( software_id ) </title></a>
   <use id='nn' x='2402' y='1021' xlink:href='#nn'/><a xlink:href='#software.name'><text id='qiita.software.name' x='2419' y='1031'>name</text><title>name
 * varchar</title></a>
@@ -2523,25 +2511,21 @@ bool default False</title></a>
 <a xlink:href='#study.study_id'><text id='qiita.study.study_id' x='1811' y='311' onmouseover="hghl(['investigation_study_fk_investigation_study_study','qiita.investigation_study.study_id','per_study_tags_fk_per_study_tags_study','qiita.per_study_tags.study_id','sample_template_filepath_fk_study_id','qiita.sample_template_filepath.study_id','study_artifact_fk_study_artifact_study','qiita.study_artifact.study_id','study_environmental_package_fk_study_environmental_package','qiita.study_environmental_package.study_id','study_portal_fk_study_portal','qiita.study_portal.study_id','study_prep_template_fk_study_prep_template_study','qiita.study_prep_template.study_id','study_publication_fk_study_publication_study','qiita.study_publication.study_id','study_sample_fk_required_sample_info_study','qiita.study_sample.study_id','study_users_fk_study_users_study','qiita.study_users.study_id'])" onmouseout="uhghl(['investigation_study_fk_investigation_study_study','qiita.investigation_study.study_id','per_study_tags_fk_per_study_tags_study','qiita.per_study_tags.study_id','sample_template_filepath_fk_study_id','qiita.sample_template_filepath.study_id','study_artifact_fk_study_artifact_study','qiita.study_artifact.study_id','study_environmental_package_fk_study_environmental_package','qiita.study_environmental_package.study_id','study_portal_fk_study_portal','qiita.study_portal.study_id','study_prep_template_fk_study_prep_template_study','qiita.study_prep_template.study_id','study_publication_fk_study_publication_study','qiita.study_publication.study_id','study_sample_fk_required_sample_info_study','qiita.study_sample.study_id','study_users_fk_study_users_study','qiita.study_users.study_id'])">study_id</text><title>study_id
 * bigserial
 Unique name for study</title></a>
-<a xlink:href='#study.study_id'><use id='ref' x='1972' y='300' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
-Referred by per_study_tags ( study_id ) 
-Referred by sample_template_filepath ( study_id ) 
-Referred by study_artifact ( study_id ) 
-Referred by study_environmental_package ( study_id ) 
-Referred by study_portal ( study_id ) 
-Referred by study_prep_template ( study_id ) 
-Referred by study_publication ( study_id ) 
-Referred by study_sample ( study_id ) 
+<a xlink:href='#study.study_id'><use id='ref' x='1972' y='300' xlink:href='#ref'/><title>Referred by investigation_study ( study_id )
+Referred by per_study_tags ( study_id )
+Referred by sample_template_filepath ( study_id )
+Referred by study_artifact ( study_id )
+Referred by study_environmental_package ( study_id )
+Referred by study_portal ( study_id )
+Referred by study_prep_template ( study_id )
+Referred by study_publication ( study_id )
+Referred by study_sample ( study_id )
 Referred by study_users ( study_id ) </title></a>
   <use id='nn' x='1794' y='317' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1794' y='316' xlink:href='#idx'/><title>idx_study ( email ) </title></a>
 <a xlink:href='#study.email'><text id='qiita.study.email' x='1811' y='327' onmouseover="hghl(['study_fk_study_user','qiita.qiita_user.email'])" onmouseout="uhghl(['study_fk_study_user','qiita.qiita_user.email'])">email</text><title>email
 * varchar
 Email of study owner</title></a>
 <a xlink:href='#study.email'><use id='fk' x='1972' y='316' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
-  <a xlink:href='#study.emp_person_id'><use id='idx' x='1794' y='332' xlink:href='#idx'/><title>idx_study_1 ( emp_person_id ) </title></a>
-<a xlink:href='#study.emp_person_id'><text id='qiita.study.emp_person_id' x='1811' y='343' onmouseover="hghl(['study_fk_study_study_emp_person','qiita.study_person.study_person_id'])" onmouseout="uhghl(['study_fk_study_study_emp_person','qiita.study_person.study_person_id'])">emp_person_id</text><title>emp_person_id
-bigint</title></a>
-<a xlink:href='#study.emp_person_id'><use id='fk' x='1972' y='332' xlink:href='#fk'/><title>References study_person ( emp_person_id -&gt; study_person_id ) </title></a>
   <use id='nn' x='1794' y='349' xlink:href='#nn'/><a xlink:href='#study.first_contact'><text id='qiita.study.first_contact' x='1811' y='359'>first_contact</text><title>first_contact
 * timestamp default current_timestamp</title></a>
 <text x='1981' y='356' text-anchor='end' class='colType'>d</text>  <a xlink:href='#study.funding'><text id='qiita.study.funding' x='1811' y='375'>funding</text><title>funding
@@ -2703,11 +2687,11 @@ varchar</title></a>
   <use id='nn' x='2178' y='1293' xlink:href='#nn'/><a xlink:href='#software_command.command_id'><use id='pk' x='2178' y='1292' xlink:href='#pk'/><title>Pk pk_soft_command ( command_id ) </title></a>
 <a xlink:href='#software_command.command_id'><text id='qiita.software_command.command_id' x='2195' y='1303' onmouseover="hghl(['artifact_fk_artifact_soft_command','qiita.artifact.command_id','command_output_fk_command_output','qiita.command_output.command_id','command_parameter_fk_command_parameter','qiita.command_parameter.command_id','default_parameter_set_fk_default_parameter_set','qiita.default_parameter_set.command_id','default_workflow_node_fk_default_workflow_command','qiita.default_workflow_node.command_id','processing_job_fk_processing_job','qiita.processing_job.command_id'])" onmouseout="uhghl(['artifact_fk_artifact_soft_command','qiita.artifact.command_id','command_output_fk_command_output','qiita.command_output.command_id','command_parameter_fk_command_parameter','qiita.command_parameter.command_id','default_parameter_set_fk_default_parameter_set','qiita.default_parameter_set.command_id','default_workflow_node_fk_default_workflow_command','qiita.default_workflow_node.command_id','processing_job_fk_processing_job','qiita.processing_job.command_id'])">command_id</text><title>command_id
 * bigserial</title></a>
-<a xlink:href='#software_command.command_id'><use id='ref' x='2340' y='1292' xlink:href='#ref'/><title>Referred by artifact ( command_id ) 
-Referred by command_output ( command_id ) 
-Referred by command_parameter ( command_id ) 
-Referred by default_parameter_set ( command_id ) 
-Referred by default_workflow_node ( command_id ) 
+<a xlink:href='#software_command.command_id'><use id='ref' x='2340' y='1292' xlink:href='#ref'/><title>Referred by artifact ( command_id )
+Referred by command_output ( command_id )
+Referred by command_parameter ( command_id )
+Referred by default_parameter_set ( command_id )
+Referred by default_workflow_node ( command_id )
 Referred by processing_job ( command_id ) </title></a>
   <use id='nn' x='2178' y='1309' xlink:href='#nn'/><a xlink:href='#software_command.name'><text id='qiita.software_command.name' x='2195' y='1319'>name</text><title>name
 * varchar</title></a>
@@ -6121,12 +6105,6 @@ Store information on additional post-processing steps for merged BIOMs, if any.<
 		<td> Email of study owner </td>
 	</tr>
 	<tr>
-		<td><svg width='14' height='14'><use xlink:href='#idx'/></svg><svg width='14' height='14'><use xlink:href='#fk'/></svg></td>
-		<td><a name='study.emp_person_id'>emp&#95;person&#95;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
 		<td>*</td>
 		<td><a name='study.first_contact'>first&#95;contact</a></td>
 		<td> timestamp   DEFAULT current_timestamp </td>
@@ -6280,11 +6258,6 @@ Controlled Vocabulary </td>
 	<tr>
 		<td><svg width='14' height='14'><use xlink:href='#fk'/></svg></td><td>fk_study_user</td>
 		<td > ( email ) ref <a href='#qiita&#95;user'>qiita&#95;user</a> (email) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><svg width='14' height='14'><use xlink:href='#fk'/></svg></td><td>fk_study_study_emp_person</td>
-		<td > ( emp&#95;person&#95;id ) ref <a href='#study&#95;person'>study&#95;person</a> (study&#95;person&#95;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>

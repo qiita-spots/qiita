@@ -33,7 +33,6 @@ class TestSampleAPI(TestCase):
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }

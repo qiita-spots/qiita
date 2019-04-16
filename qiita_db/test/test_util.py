@@ -820,7 +820,6 @@ class UtilTests(TestCase):
                 "number_samples_promised": 28, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
-                "emp_person_id": qdb.study.StudyPerson(1),
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
         new_study = STUDY.create(
@@ -934,7 +933,6 @@ class UtilTests(TestCase):
                 "number_samples_promised": 28, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
-                "emp_person_id": qdb.study.StudyPerson(1),
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
         new_study = qdb.study.Study.create(
@@ -1239,7 +1237,6 @@ class PurgeFilepathsTestA(PurgeFilepathsTestBase):
                 "number_samples_promised": 28, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
-                "emp_person_id": qdb.study.StudyPerson(1),
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
 

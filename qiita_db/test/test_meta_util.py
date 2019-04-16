@@ -95,7 +95,6 @@ class MetaUtilTests(TestCase):
             "study_alias": "TestStudy",
             "study_description": "Description of a test study",
             "study_abstract": "No abstract right now...",
-            "emp_person_id": 1,
             "principal_investigator_id": 1,
             "lab_person_id": 1
         }

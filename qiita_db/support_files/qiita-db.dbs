@@ -1367,7 +1367,6 @@
 			<column name="email" type="varchar" jt="12" mandatory="y" >
 				<comment><![CDATA[Email of study owner]]></comment>
 			</column>
-			<column name="emp_person_id" type="bigint" jt="-5" />
 			<column name="first_contact" type="timestamp" jt="93" mandatory="y" >
 				<defo>current_timestamp</defo>
 			</column>
@@ -1403,9 +1402,6 @@ Controlled Vocabulary]]></comment>
 			<index name="idx_study" unique="NORMAL" >
 				<column name="email" />
 			</index>
-			<index name="idx_study_1" unique="NORMAL" >
-				<column name="emp_person_id" />
-			</index>
 			<index name="idx_study_2" unique="NORMAL" >
 				<column name="lab_person_id" />
 			</index>
@@ -1420,9 +1416,6 @@ Controlled Vocabulary]]></comment>
 			</index>
 			<fk name="fk_study_user" to_schema="qiita" to_table="qiita_user" >
 				<fk_column name="email" pk="email" />
-			</fk>
-			<fk name="fk_study_study_emp_person" to_schema="qiita" to_table="study_person" >
-				<fk_column name="emp_person_id" pk="study_person_id" />
 			</fk>
 			<fk name="fk_study_study_lab_person" to_schema="qiita" to_table="study_person" >
 				<fk_column name="lab_person_id" pk="study_person_id" />

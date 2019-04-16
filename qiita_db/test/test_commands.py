@@ -166,7 +166,6 @@ class TestLoadSampleTemplateFromCmd(TestCase):
             "study_alias": "TestStudy",
             "study_description": "Description of a test study",
             "study_abstract": "No abstract right now...",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }

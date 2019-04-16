@@ -387,7 +387,6 @@ class TestEBISubmission(TestCase):
             "study_alias": "Test EBI",
             "study_description": "Study for testing EBI",
             "study_abstract": "Study for testing EBI",
-            "emp_person_id": StudyPerson(2),
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)
         }

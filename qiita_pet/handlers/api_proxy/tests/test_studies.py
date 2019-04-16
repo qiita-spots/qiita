@@ -55,7 +55,7 @@ class TestStudyAPI1(TestStudyAPI):
             'study_info': {
                 'mixs_compliant': True, 'metadata_complete': True, 'level': '',
                 'reprocess': False, 'owner': 'test@foo.bar', 'message': '',
-                'emp_person_id': 2, 'number_samples_promised': 27,
+                'number_samples_promised': 27,
                 'funding': None, 'show_biom_download_button': True,
                 'publication_pid': ['123456', '7891011'], 'vamps_id': None,
                 'first_contact': datetime(2014, 5, 19, 16, 10),
@@ -116,7 +116,7 @@ class TestStudyAPI1(TestStudyAPI):
         exp = {'status': 'success', 'study_info': {
             'mixs_compliant': True, 'metadata_complete': True,
             'reprocess': False, 'public_raw_download': False,
-            'owner': 'test@foo.bar', 'message': '', 'emp_person_id': None,
+            'owner': 'test@foo.bar', 'message': '',
             'number_samples_promised': 28, 'funding': None,
             'show_biom_download_button': False, 'publication_pid': [],
             'vamps_id': None, 'first_contact': datetime(2015, 5, 19, 16, 10),
@@ -167,7 +167,6 @@ class TestStudyAPI1(TestStudyAPI):
             "study_alias": "Test EBI",
             "study_description": "Study for testing EBI",
             "study_abstract": "Study for testing EBI",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }
@@ -304,7 +303,6 @@ class TestStudyAPI1(TestStudyAPI):
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }

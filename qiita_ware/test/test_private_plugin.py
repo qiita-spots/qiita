@@ -473,7 +473,6 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
                                  "fried chicken",
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
-            "emp_person_id": StudyPerson(2),
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)}
         new_study = Study.create(User('test@foo.bar'),

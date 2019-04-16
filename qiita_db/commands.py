@@ -61,12 +61,6 @@ def load_study_from_cmd(owner, title, info):
             infodict[value] = optvalue
 
     with qdb.sql_connection.TRN:
-        emp_person_name_email = get_optional('emp_person_name')
-        if emp_person_name_email is not None:
-            emp_name, emp_email, emp_affiliation = \
-                emp_person_name_email.split(',')
-            infodict['emp_person_id'] = qdb.study.StudyPerson.create(
-                emp_name.strip(), emp_email.strip(), emp_affiliation.strip())
         lab_name_email = get_optional('lab_person')
         if lab_name_email is not None:
             lab_name, lab_email, lab_affiliation = lab_name_email.split(',')
