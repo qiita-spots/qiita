@@ -24,15 +24,16 @@ class TestStudyPerson(TestCase):
         new = qdb.study.StudyPerson.create(
             'SomeDude', 'somedude@foo.bar', 'affil', '111 fake street',
             '111-121-1313')
-        self.assertEqual(new.id, 4)
+        nid = new.id
+        self.assertEqual(nid, 4)
         with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "SELECT * FROM qiita.study_person WHERE study_person_id = 4")
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.study_person "
+                                       "WHERE study_person_id = %d" % nid)
             obs = qdb.sql_connection.TRN.execute_fetchindex()
-        self.assertEqual(obs, [[4, 'SomeDude', 'somedude@foo.bar', 'affil',
+        self.assertEqual(obs, [[nid, 'SomeDude', 'somedude@foo.bar', 'affil',
                          '111 fake street', '111-121-1313']])
 
-        qdb.study.StudyPerson.delete(new.id)
+        qdb.study.StudyPerson.delete(nid)
 
     def test_delete(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
@@ -240,11 +241,12 @@ class TestStudy(TestCase):
             'study_id': 1,
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person_id': 1,
-            'study_title': 'Identification of the Microbiomes for Cannabis ',
+            'study_title': 'Identification of the Microbiomes for Cannabis '
+            'Soils',
             'ebi_submission_status': 'submitted',
             'ebi_study_accession': 'EBI123456-BB',
             'specimen_id_column': None}
-        self.assertEqual(obs, exp)
+        self.assertDictEqual(obs, exp)
 
         # Test get specific keys for single study
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',

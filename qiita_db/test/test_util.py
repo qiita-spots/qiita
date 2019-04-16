@@ -833,7 +833,7 @@ class UtilTests(TestCase):
             'study_abstract': 'Some abstract goes here',
             'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
             'study_alias': 'TST', 'study_tags': None,
-            'preparation_data_types': []}
+            'preparation_data_types': [], 'number_samples_collected': 0}
         exp1 = [STUDY_INFO]
         exp2 = [snew_info]
         exp_both = [STUDY_INFO, snew_info]
@@ -952,14 +952,14 @@ class UtilTests(TestCase):
                 'same location at different time points in the plant '
                 'lifecycle.'), 'pi': ('PI_dude@foo.bar', 'PIDude'),
              'publication_doi': ['10.100/123456', '10.100/7891011'],
-             'study_alias': 'Cannabis Soils'},
+             'study_alias': 'Cannabis Soils', 'number_samples_collected': 27},
             {'status': 'sandbox', 'study_title': 'test_study_1',
              'metadata_complete': True, 'publication_pid': [],
              'ebi_submission_status': 'not submitted',
              'study_id': new_study.id, 'ebi_study_accession': None,
              'study_abstract': 'Some abstract goes here',
              'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
-             'study_alias': 'TST'}]
+             'study_alias': 'TST', 'number_samples_collected': 0}]
         obs_info = qdb.util.generate_study_list_without_artifacts([1, 2, 3, 4])
         self.assertEqual(obs_info, exp_info)
 
@@ -1305,6 +1305,7 @@ STUDY_INFO = {
     'ebi_submission_status': 'submitted',
     'study_title':
         'Identification of the Microbiomes for Cannabis Soils',
+    'number_samples_collected': 27,
     'shared': [('shared@foo.bar', 'Shared')],
     'publication_doi': ['10.100/123456', '10.100/7891011'],
     'publication_pid': ['123456', '7891011'],
