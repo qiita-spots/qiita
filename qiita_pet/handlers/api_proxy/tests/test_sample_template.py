@@ -28,12 +28,9 @@ class TestSampleAPI(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }

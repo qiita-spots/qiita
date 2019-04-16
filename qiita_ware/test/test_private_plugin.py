@@ -130,8 +130,6 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         info = {"timeseries_type_id": '1',
                 "metadata_complete": 'true',
                 "mixs_compliant": 'true',
-                "number_samples_collected": 25,
-                "number_samples_promised": 28,
                 "study_alias": "TDST",
                 "study_description": "Test create sample template",
                 "study_abstract": "Test create sample template",
@@ -198,8 +196,6 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         info = {"timeseries_type_id": '1',
                 "metadata_complete": 'true',
                 "mixs_compliant": 'true',
-                "number_samples_collected": 25,
-                "number_samples_promised": 28,
                 "study_alias": "TDST",
                 "study_description": "Test delete sample template",
                 "study_abstract": "Test delete sample template",
@@ -466,14 +462,11 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
             "timeseries_type_id": '1',
             "metadata_complete": 'true',
             "mixs_compliant": 'true',
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
-            "emp_person_id": StudyPerson(2),
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)}
         new_study = Study.create(User('test@foo.bar'),

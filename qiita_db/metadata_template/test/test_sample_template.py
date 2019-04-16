@@ -243,14 +243,11 @@ class TestSampleTemplate(TestCase):
             "timeseries_type_id": '1',
             "metadata_complete": 'true',
             "mixs_compliant": 'true',
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }

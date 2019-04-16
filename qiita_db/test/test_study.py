@@ -24,15 +24,16 @@ class TestStudyPerson(TestCase):
         new = qdb.study.StudyPerson.create(
             'SomeDude', 'somedude@foo.bar', 'affil', '111 fake street',
             '111-121-1313')
-        self.assertEqual(new.id, 4)
+        nid = new.id
+        self.assertEqual(nid, 4)
         with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "SELECT * FROM qiita.study_person WHERE study_person_id = 4")
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.study_person "
+                                       "WHERE study_person_id = %d" % nid)
             obs = qdb.sql_connection.TRN.execute_fetchindex()
-        self.assertEqual(obs, [[4, 'SomeDude', 'somedude@foo.bar', 'affil',
+        self.assertEqual(obs, [[nid, 'SomeDude', 'somedude@foo.bar', 'affil',
                          '111 fake street', '111-121-1313']])
 
-        qdb.study.StudyPerson.delete(new.id)
+        qdb.study.StudyPerson.delete(nid)
 
     def test_delete(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
@@ -143,14 +144,11 @@ class TestStudy(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1),
             'specimen_id_column': None
@@ -160,14 +158,11 @@ class TestStudy(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
-            "emp_person_id": 2,
             "principal_investigator": qdb.study.StudyPerson(3),
             "lab_person": qdb.study.StudyPerson(1),
             'specimen_id_column': None,
@@ -178,8 +173,6 @@ class TestStudy(TestCase):
             'mixs_compliant': True,
             'metadata_complete': True,
             'reprocess': False,
-            'number_samples_promised': 27,
-            'emp_person_id': 2,
             'funding': None,
             'vamps_id': None,
             'first_contact': datetime(2014, 5, 19, 16, 10),
@@ -201,8 +194,7 @@ class TestStudy(TestCase):
             'study_alias': 'Cannabis Soils',
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person': qdb.study.StudyPerson(1),
-            'specimen_id_column': None,
-            'number_samples_collected': 27}
+            'specimen_id_column': None}
 
     def tearDown(self):
         qiita_config.portal = self.portal
@@ -226,7 +218,6 @@ class TestStudy(TestCase):
         exp = {
             'mixs_compliant': True, 'metadata_complete': True,
             'reprocess': False, 'timeseries_type': 'None',
-            'number_samples_promised': 27, 'emp_person_id': 2,
             'funding': None, 'vamps_id': None, 'public_raw_download': False,
             'first_contact': datetime(2014, 5, 19, 16, 10),
             'principal_investigator_id': 3, 'timeseries_type_id': 1,
@@ -251,11 +242,11 @@ class TestStudy(TestCase):
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person_id': 1,
             'study_title': 'Identification of the Microbiomes for Cannabis '
-            'Soils', 'number_samples_collected': 27,
+            'Soils',
             'ebi_submission_status': 'submitted',
             'ebi_study_accession': 'EBI123456-BB',
             'specimen_id_column': None}
-        self.assertEqual(obs, exp)
+        self.assertDictEqual(obs, exp)
 
         # Test get specific keys for single study
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
@@ -431,7 +422,6 @@ class TestStudy(TestCase):
         insertion_timestamp = obs_info.pop('first_contact')
         exp = {'mixs_compliant': True, 'metadata_complete': True,
                'reprocess': False, 'public_raw_download': False,
-               'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': None, 'vamps_id': None,
                'principal_investigator': qdb.study.StudyPerson(3),
                'timeseries_type_id': 1,
@@ -443,7 +433,6 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
-               'number_samples_collected': 25,
                'specimen_id_column': None}
         self.assertEqual(obs_info, exp)
         # Check the timestamp separately, since it is set by the database
@@ -508,7 +497,6 @@ class TestStudy(TestCase):
         self.assertEqual(obs.title, "Fried chicken microbiome 3")
         exp = {'mixs_compliant': True, 'metadata_complete': False,
                'reprocess': True, 'public_raw_download': False,
-               'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': 'FundAgency', 'vamps_id': 'MBE_1111111',
                'first_contact': datetime(2014, 10, 24, 12, 47),
                'principal_investigator': qdb.study.StudyPerson(3),
@@ -521,7 +509,6 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
-               'number_samples_collected': 25,
                'specimen_id_column': None}
         self.assertEqual(obs.info, exp)
         self.assertEqual(obs.shared_with, [])
@@ -650,7 +637,6 @@ class TestStudy(TestCase):
         newinfo = {
             "timeseries_type_id": 2,
             "metadata_complete": False,
-            "number_samples_collected": 28,
             "lab_person_id": qdb.study.StudyPerson(2),
             "vamps_id": 'MBE_111222',
         }
