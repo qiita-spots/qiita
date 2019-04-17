@@ -90,12 +90,9 @@ class MetaUtilTests(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 4,
-            "number_samples_promised": 4,
             "study_alias": "TestStudy",
             "study_description": "Description of a test study",
             "study_abstract": "No abstract right now...",
-            "emp_person_id": 1,
             "principal_investigator_id": 1,
             "lab_person_id": 1
         }

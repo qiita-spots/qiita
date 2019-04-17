@@ -27,11 +27,10 @@ class DBUtilTestsBase(TestCase):
     def setUp(self):
         self.table = 'study'
         self.required = [
-            'number_samples_promised', 'study_title', 'mixs_compliant',
+            'study_title', 'mixs_compliant',
             'metadata_complete', 'study_description', 'first_contact',
             'reprocess', 'timeseries_type_id', 'study_alias',
-            'study_abstract', 'principal_investigator_id', 'email',
-            'number_samples_collected']
+            'study_abstract', 'principal_investigator_id', 'email']
         self.files_to_remove = []
 
     def tearDown(self):
@@ -816,11 +815,9 @@ class UtilTests(TestCase):
         # creating a new study to make sure that empty studies are also
         # returned
         info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "number_samples_collected": 25,
-                "number_samples_promised": 28, "study_alias": "TST",
+                "mixs_compliant": True, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
-                "emp_person_id": qdb.study.StudyPerson(1),
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
         new_study = STUDY.create(
@@ -836,8 +833,7 @@ class UtilTests(TestCase):
             'study_abstract': 'Some abstract goes here',
             'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
             'study_alias': 'TST', 'study_tags': None,
-            'preparation_data_types': [],
-            'number_samples_collected': 0}
+            'preparation_data_types': [], 'number_samples_collected': 0}
         exp1 = [STUDY_INFO]
         exp2 = [snew_info]
         exp_both = [STUDY_INFO, snew_info]
@@ -930,11 +926,9 @@ class UtilTests(TestCase):
         # creating a new study to make sure that empty studies are also
         # returned
         info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "number_samples_collected": 25,
-                "number_samples_promised": 28, "study_alias": "TST",
+                "mixs_compliant": True, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
-                "emp_person_id": qdb.study.StudyPerson(1),
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
         new_study = qdb.study.Study.create(
@@ -1235,11 +1229,9 @@ class PurgeFilepathsTestBase(DBUtilTestsBase):
 class PurgeFilepathsTestA(PurgeFilepathsTestBase):
     def test_purge_files_from_filesystem(self):
         info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "number_samples_collected": 25,
-                "number_samples_promised": 28, "study_alias": "TST",
+                "mixs_compliant": True, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
-                "emp_person_id": qdb.study.StudyPerson(1),
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
 

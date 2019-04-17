@@ -167,7 +167,6 @@ class TestListStudiesAJAX(TestHandlerBase):
                     'rhizospheres from the same location at different time '
                     'points in the plant lifecycle.'),
                 'artifact_biom_ids': [4, 5, 6, 7],
-                'number_samples_collected': 27,
                 'study_tags': None}],
             'sEcho': 1021,
             'iTotalDisplayRecords': 1}

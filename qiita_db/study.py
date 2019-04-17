@@ -1414,15 +1414,13 @@ class StudyPerson(qdb.base.QiitaObject):
                         SELECT *
                         FROM qiita.study
                         WHERE lab_person_id = %s OR
-                            principal_investigator_id = %s OR
-                            emp_person_id = %s)"""
-            qdb.sql_connection.TRN.add(sql, [id_, id_, id_])
+                            principal_investigator_id = %s)"""
+            qdb.sql_connection.TRN.add(sql, [id_, id_])
             if qdb.sql_connection.TRN.execute_fetchlast():
                 sql = """SELECT study_id
                          FROM qiita.study
                          WHERE {} = %s"""
-                cols = ['lab_person_id', 'principal_investigator_id',
-                        'emp_person_id']
+                cols = ['lab_person_id', 'principal_investigator_id']
                 rel = {}
                 for c in cols:
                     qdb.sql_connection.TRN.add(sql.format(c), [id_])
