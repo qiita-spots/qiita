@@ -138,6 +138,8 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
             '/1_study_1001_closed_reference_otu_table_Silva.biom\n'
             '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/6_mapping_file.txt\n'
+            '- 1093210 /protected/BIOM/7/biom_table.biom '
+            'BIOM/7/biom_table.biom\n'
             '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/7_mapping_file.txt\n'
             '- [0-9]* /protected/BIOM/{0}/otu_table.biom '
@@ -223,6 +225,8 @@ class TestDownloadRawData(TestHandlerBase):
             'raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
             '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/1_mapping_file.txt\n'
+            '- 1093210 /protected/BIOM/7/biom_table.biom '
+            'BIOM/7/biom_table.biom\n'
             '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/7_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)

@@ -27,9 +27,14 @@ class ArchiveTest(TestCase):
             str(err.exception), 'To archive artifact must be BIOM but FASTQ')
 
         # 7 - to test error due to not filepath biom
+        aid = 7
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("DELETE FROM qiita.artifact_filepath "
+                                       "WHERE artifact_id = %d" % aid)
+            qdb.sql_connection.TRN.execute()
         with self.assertRaises(ValueError) as err:
             qdb.archive.Archive.insert_from_artifact(
-                qdb.artifact.Artifact(7), {})
+                qdb.artifact.Artifact(aid), {})
         self.assertEqual(
             str(err.exception), 'The artifact has no biom files')
 
