@@ -33,15 +33,17 @@ class MetaUtilTests(TestCase):
                 remove(fp)
 
     def _set_artifact_private(self):
+        id_status = qdb.util.convert_to_id('private', 'visibility')
         with qdb.sql_connection.TRN:
             qdb.sql_connection.TRN.add(
-                "UPDATE qiita.artifact SET visibility_id = 3")
+                "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
             qdb.sql_connection.TRN.execute()
 
     def _set_artifact_public(self):
+        id_status = qdb.util.convert_to_id('public', 'visibility')
         with qdb.sql_connection.TRN:
             qdb.sql_connection.TRN.add(
-                "UPDATE qiita.artifact SET visibility_id = 2")
+                "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
             qdb.sql_connection.TRN.execute()
 
     def test_validate_filepath_access_by_user(self):
