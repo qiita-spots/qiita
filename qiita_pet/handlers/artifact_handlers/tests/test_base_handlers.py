@@ -197,6 +197,24 @@ class TestBaseHandlersUtils(TestCase):
                'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
+        # testing sandbox
+        a.visibility = 'sandbox'
+        obs = artifact_summary_get_request(user, 1)
+        exp = {'name': 'Raw data 1',
+               'artifact_id': 1,
+               'artifact_type': 'FASTQ',
+               'artifact_timestamp': '2012-10-01 09:10',
+               'visibility': 'sandbox',
+               'editable': True,
+               'buttons': '',
+               'processing_info': {},
+               'files': exp_files,
+               'is_from_analysis': False,
+               'summary': exp_summary_path,
+               'job': None,
+               'errored_summary_jobs': []}
+        self.assertEqual(obs, exp)
+
         # returnig to private
         a.visibility = 'private'
 
