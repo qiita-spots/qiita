@@ -136,7 +136,7 @@ def artifact_summary_get_request(user, artifact_id):
         # If the artifact is part of a study, the buttons shown depend in
         # multiple factors (see each if statement for an explanation of those)
         if qiita_config.require_approval:
-            if visibility == 'sandbox':
+            if visibility == 'sandbox' and artifact.parents:
                 # The request approval button only appears if the artifact is
                 # sandboxed and the qiita_config specifies that the approval
                 # should be requested
