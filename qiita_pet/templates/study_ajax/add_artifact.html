@@ -76,6 +76,10 @@
             populate_data_type_menu_div();
             populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
           }
+        },
+        error: function(object, status, error_msg) {
+          // Something went wrong, show the message
+          bootstrapAlert("Error: " + error_msg + "  " + status, "danger");
         }
       });
     });

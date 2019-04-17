@@ -211,9 +211,12 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             return {'status': 'error',
                     'message': "Can't create artifact, no files provided."}
 
-        # TODO: It might be good to have an API call that wraps to a lower
-        # level method that creates this job.
-        command = Command.get_validator(artifact_type)
+        # This try/except will catch the case when the plugins are not
+        # activated so there is no Validate for the given artifact_type
+        try:
+            command = Command.get_validator(artifact_type)
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}
         job = ProcessingJob.create(
             user,
             Parameters.load(command, values_dict={
