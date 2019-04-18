@@ -48,7 +48,15 @@
       },
       error: function(object, status, error_msg) {
         // Something went wrong, show the message
-        bootstrapAlert("Error changing artifact visiblity: " + error_msg, "danger");
+        var message = "Error changing artifact visibility: ";
+        var level = "danger";
+
+        if (error_msg.includes("Couldn't send email to admins")) {
+          message = "";
+          level = "warning";
+        }
+        message = message + error_msg;
+        bootstrapAlert(message, level);
       }
     });
   }

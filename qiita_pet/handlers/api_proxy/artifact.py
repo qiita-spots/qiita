@@ -375,7 +375,7 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
     """
     if visibility not in get_visibilities():
         return {'status': 'error',
-                'message': 'Unknown visiblity value: %s' % visibility}
+                'message': 'Unknown visibility value: %s' % visibility}
 
     pd = Artifact(int(artifact_id))
     access_error = check_access(pd.study.id, user_id)
