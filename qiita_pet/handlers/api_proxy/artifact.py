@@ -22,6 +22,7 @@ from qiita_db.util import (
     get_mountpoint, get_visibilities, get_artifacts_information)
 from qiita_db.software import Command, Parameters, Software
 from qiita_db.processing_job import ProcessingJob
+from qiita_db.exceptions import QiitaDBError
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
@@ -215,7 +216,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         # activated so there is no Validate for the given artifact_type
         try:
             command = Command.get_validator(artifact_type)
-        except Exception as e:
+        except QiitaDBError as e:
             return {'status': 'error', 'message': str(e)}
         job = ProcessingJob.create(
             user,
