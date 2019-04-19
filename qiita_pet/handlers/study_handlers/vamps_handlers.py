@@ -52,8 +52,8 @@ class VAMPSHandler(BaseHandler):
                  ('Number of metadata headers',
                   len(sample_template.categories()))]
 
-        demux = [path for _, path, ftype in preprocessed_data.filepaths
-                 if ftype == 'preprocessed_demux']
+        demux = [x['fp'] for x in preprocessed_data.filepaths
+                 if x['fp_type'] == 'preprocessed_demux']
         demux_length = len(demux)
 
         if not demux_length:

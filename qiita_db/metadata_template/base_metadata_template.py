@@ -1224,8 +1224,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
     def get_filepaths(self):
         r"""Retrieves the list of (filepath_id, filepath)"""
         with qdb.sql_connection.TRN:
-            return [(fp_id, fp)
-                    for fp_id, fp, _ in qdb.util.retrieve_filepaths(
+            return [(x['fp_id'], x['fp'])
+                    for x in qdb.util.retrieve_filepaths(
                         self._filepath_table, self._id_column, self.id,
                         sort='descending')]
 

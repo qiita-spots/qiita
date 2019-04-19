@@ -219,13 +219,14 @@ def update_redis_stats():
     for k, sts in viewitems(studies):
         for s in sts:
             for a in s.artifacts():
-                for _, fp, dt in a.filepaths:
+                for x in a.filepaths:
                     try:
-                        s = stat(fp)
-                        stats.append((dt, s.st_size, strftime('%Y-%m',
-                                      localtime(s.st_ctime))))
+                        s = stat(x['fp'])
+                        stats.append(
+                            (x['fp_type'], s.st_size, strftime('%Y-%m',
+                             localtime(s.st_ctime))))
                     except OSError:
-                        missing_files.append(fp)
+                        missing_files.append(x['fp'])
 
     summary = {}
     all_dates = []
@@ -377,10 +378,10 @@ def generate_biom_and_metadata_release(study_status='public'):
             software = a.processing_parameters.command.software
             software = '%s v%s' % (software.name, software.version)
 
-            for _, fp, fp_type in a.filepaths:
-                if fp_type != 'biom' or 'only-16s' in fp:
+            for x in a.filepaths:
+                if x['fp_type'] != 'biom' or 'only-16s' in x['fp']:
                     continue
-                fp = relpath(fp, bdir)
+                fp = relpath(x['fp'], bdir)
                 for pt in a.prep_templates:
                     categories = pt.categories()
                     platform = ''

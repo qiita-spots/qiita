@@ -10,6 +10,7 @@ from os.path import join, exists
 from os import remove, close
 from datetime import datetime
 from tempfile import mkstemp
+from functools import partial
 
 import pandas as pd
 import numpy.testing as npt
@@ -38,6 +39,7 @@ class TestArtifactAPIReadOnly(TestCase):
 
     def test_artifact_get_req(self):
         obs = artifact_get_req('test@foo.bar', 1)
+        path_builder = partial(join, get_mountpoint('raw_data')[0][1])
         exp = {'id': 1,
                'type': 'FASTQ',
                'study': 1,
@@ -51,11 +53,17 @@ class TestArtifactAPIReadOnly(TestCase):
                'is_submitted_vamps': False,
                'parents': [],
                'filepaths': [
-                   (1, join(get_mountpoint('raw_data')[0][1],
-                    '1_s_G1_L001_sequences.fastq.gz'), 'raw_forward_seqs'),
-                   (2,  join(get_mountpoint('raw_data')[0][1],
-                    '1_s_G1_L001_sequences_barcodes.fastq.gz'),
-                    'raw_barcodes')]
+                   {'fp_id': 1,
+                    'fp': path_builder("1_s_G1_L001_sequences.fastq.gz"),
+                    'fp_type': "raw_forward_seqs",
+                    'checksum': '2125826711',
+                    'fp_size': 58},
+                   {'fp_id': 2,
+                    'fp': path_builder(
+                        "1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                    'fp_type': "raw_barcodes",
+                    'checksum': '2125826711',
+                    'fp_size': 58}]
                }
         self.assertEqual(obs, exp)
 
@@ -297,7 +305,7 @@ class TestArtifactAPI(TestCase):
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
         a = Artifact(pt.artifact.id)
-        self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
+        self._files_to_remove.extend([x['fp'] for x in a.filepaths])
 
     def test_artifact_post_req_error(self):
         # Create a new prep template to attach the artifact to

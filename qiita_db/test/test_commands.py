@@ -14,7 +14,6 @@ from unittest import TestCase, main
 from six import StringIO
 from future import standard_library
 from functools import partial
-from operator import itemgetter
 
 import pandas as pd
 
@@ -106,7 +105,7 @@ class TestLoadArtifactFromCmd(TestCase):
             metadata, qdb.study.Study(1), "16S")
         obs = qdb.commands.load_artifact_from_cmd(
             fps, ftypes, 'FASTQ', prep_template=pt.id)
-        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
             qdb.util.check_count('qiita.filepath', self.fp_count + 5))
@@ -127,7 +126,7 @@ class TestLoadArtifactFromCmd(TestCase):
             fps, ftypes, 'Demultiplexed', parents=[1], dflt_params_id=1,
             required_params='{"input_data": 1}',
             optional_params='{"min_per_read_length_fraction": 0.80}')
-        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
             qdb.util.check_count('qiita.filepath', self.fp_count + 2))
@@ -144,7 +143,7 @@ class TestLoadArtifactFromCmd(TestCase):
         obs = qdb.commands.load_artifact_from_cmd(
             fps, ftypes, 'BIOM', parents=[3], dflt_params_id=10,
             required_params='{"input_data": 3}')
-        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
             qdb.util.check_count('qiita.filepath', self.fp_count + 1))
@@ -361,10 +360,10 @@ class TestUpdateArtifactFromCmd(TestCase):
         self.uploaded_files = qdb.util.get_files_from_uploads_folders("1")
 
         # The files for the Artifact 1 doesn't exist, create them
-        for _, fp, _ in qdb.artifact.Artifact(1).filepaths:
-            with open(fp, 'w') as f:
+        for x in qdb.artifact.Artifact(1).filepaths:
+            with open(x['fp'], 'w') as f:
                 f.write('\n')
-            self._clean_up_files.append(fp)
+            self._clean_up_files.append(x['fp'])
 
     def tearDown(self):
         new_uploaded_files = qdb.util.get_files_from_uploads_folders("1")
@@ -389,12 +388,12 @@ class TestUpdateArtifactFromCmd(TestCase):
     def test_update_artifact_from_cmd(self):
         artifact = qdb.commands.update_artifact_from_cmd(
             self.filepaths, self.filepaths_types, 1)
-        for _, fp, _ in artifact.filepaths:
-            self._clean_up_files.append(fp)
+        for x in artifact.filepaths:
+            self._clean_up_files.append(x['fp'])
 
-        for obs, exp in zip(sorted(artifact.filepaths, key=itemgetter(1)),
+        for obs, exp in zip(sorted(artifact.filepaths, key=lambda x: x['fp']),
                             self.checksums):
-            self.assertEqual(qdb.util.compute_checksum(obs[1]), exp)
+            self.assertEqual(qdb.util.compute_checksum(obs['fp']), exp)
 
 
 CONFIG_1 = """[required]
