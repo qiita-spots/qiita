@@ -245,13 +245,14 @@ class Command(qdb.base.QiitaObject):
         parameters : dict
             The description of the parameters that this command received. The
             format is: {parameter_name: (parameter_type, default, name_order,
-            check_biom_merge)},
+            check_biom_merge, qiita_optional_parameter (optional))},
             where parameter_name, parameter_type and default are strings,
             name_order is an optional integer value and check_biom_merge is
             an optional boolean value. name_order is used to specify the order
             of the parameter when automatically naming the artifacts.
             check_biom_merge is used when merging artifacts in the analysis
-            pipeline.
+            pipeline. qiita_optional_parameter is am optional bool to "force"
+            the parameter to be optional
         outputs : dict, optional
             The description of the outputs that this command generated. The
             format is either {output_name: artifact_type} or
@@ -291,6 +292,10 @@ class Command(qdb.base.QiitaObject):
         sql_param_values = []
         sql_artifact_params = []
         for pname, vals in parameters.items():
+            qiita_optional_parameter = False
+            if 'qiita_optional_parameter' in vals:
+                qiita_optional_parameter = True
+                vals.remove('qiita_optional_parameter')
             lenvals = len(vals)
             if lenvals == 2:
                 ptype, dflt = vals
@@ -339,9 +344,9 @@ class Command(qdb.base.QiitaObject):
                 sql_artifact_params.append(
                     [pname, 'artifact', atypes])
             else:
-                sql_param_values.append(
-                    [pname, ptype, dflt is None, dflt, name_order,
-                     check_biom_merge])
+                required = not qiita_optional_parameter and dflt is None
+                sql_param_values.append([pname, ptype, required, dflt,
+                                         name_order, check_biom_merge])
 
         with qdb.sql_connection.TRN:
             if cls.exists(software, name):
