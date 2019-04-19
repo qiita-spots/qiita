@@ -826,13 +826,14 @@ def purge_files_from_filesystem(delete_files=True):
 
     missing_db = actual_paths - db_paths
     if missing_db:
-        print('paths without db entries: %s' % ', '.join(missing_db))
+        print('\n\npaths without db entries: %s\n\n' % ', '.join(missing_db))
     missing_paths = [x for x in db_paths - actual_paths if not isdir(x)]
     if missing_paths:
-        print('paths without actual mounts: %s' % ', '.join(missing_paths))
+        print('\n\npaths without actual mounts: %s\n\n' % ', '.join(
+            missing_paths))
 
     # Step 2, clean based on the 2 main group: True/False subdirectory
-    # -> subdirectory True
+    # subdirectory True, the artifacts are stored within their own folders
     paths = {fp for mt in mount_types
              for x, fp, sp in get_mountpoint(mt, True, True) if sp}
     for pt in paths:
@@ -840,21 +841,31 @@ def purge_files_from_filesystem(delete_files=True):
             for aid in listdir(pt):
                 _rm_exists(
                     join(pt, aid), qdb.artifact.Artifact, aid, delete_files)
-    # -> subdirectory False
+    # subdirectory False - this are the legacy folders, the files are stored
+    # in the base folder prepended with the element id, which are:
+    #  *** ignored or not in use anymore ***
+    # - job
+    # - preprocessed_data
+    # - processed_data
+    # - raw_data
+    # - reference
+    # - working_dir
+    #  *** dealing ***
+    # - analysis
+    # - templates
+    # - uploads
     data_types = {
         'analysis': qdb.analysis.Analysis,
-        'preprocessed_data': qdb.artifact.Artifact,
-        'processed_data': qdb.artifact.Artifact,
-        'raw_data': qdb.artifact.Artifact,
         'templates': qdb.study.Study,
-        'job': qdb.analysis.Analysis
+        'uploads': qdb.study.Study
     }
     for dt, obj in data_types.items():
         for _, pt in get_mountpoint(dt, True):
             if isdir(pt):
                 for ppt in listdir(pt):
-                    _rm_exists(join(pt, ppt), obj, ppt.split('_')[0],
-                               delete_files)
+                    obj_id = ppt.split('_')[0]
+                    print (dt, obj_id)
+                    _rm_exists(join(pt, ppt), obj, obj_id, delete_files)
 
 
 def empty_trash_upload_folder(delete_files=True):
