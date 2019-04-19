@@ -22,6 +22,7 @@ from qiita_db.util import (
     get_mountpoint, get_visibilities, get_artifacts_information)
 from qiita_db.software import Command, Parameters, Software
 from qiita_db.processing_job import ProcessingJob
+from qiita_db.exceptions import QiitaDBError
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
@@ -211,9 +212,12 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             return {'status': 'error',
                     'message': "Can't create artifact, no files provided."}
 
-        # TODO: It might be good to have an API call that wraps to a lower
-        # level method that creates this job.
-        command = Command.get_validator(artifact_type)
+        # This try/except will catch the case when the plugins are not
+        # activated so there is no Validate for the given artifact_type
+        try:
+            command = Command.get_validator(artifact_type)
+        except QiitaDBError as e:
+            return {'status': 'error', 'message': str(e)}
         job = ProcessingJob.create(
             user,
             Parameters.load(command, values_dict={
@@ -375,7 +379,7 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
     """
     if visibility not in get_visibilities():
         return {'status': 'error',
-                'message': 'Unknown visiblity value: %s' % visibility}
+                'message': 'Unknown visibility value: %s' % visibility}
 
     pd = Artifact(int(artifact_id))
     access_error = check_access(pd.study.id, user_id)

@@ -361,7 +361,7 @@ class TestArtifactAPI(TestCase):
     def test_artifact_status_put_req_unknown_status(self):
         obs = artifact_status_put_req(1, 'test@foo.bar', 'BADSTAT')
         exp = {'status': 'error',
-               'message': 'Unknown visiblity value: BADSTAT'}
+               'message': 'Unknown visibility value: BADSTAT'}
         self.assertEqual(obs, exp)
 
 

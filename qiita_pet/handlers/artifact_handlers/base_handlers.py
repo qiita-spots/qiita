@@ -12,6 +12,7 @@ from json import dumps
 from tornado.web import authenticated, StaticFileHandler
 
 from qiita_core.qiita_settings import qiita_config, r_client
+from qiita_core.util import send_email
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import safe_execution
 from qiita_pet.exceptions import QiitaHTTPError
@@ -136,7 +137,7 @@ def artifact_summary_get_request(user, artifact_id):
         # If the artifact is part of a study, the buttons shown depend in
         # multiple factors (see each if statement for an explanation of those)
         if qiita_config.require_approval:
-            if visibility == 'sandbox':
+            if visibility == 'sandbox' and artifact.parents:
                 # The request approval button only appears if the artifact is
                 # sandboxed and the qiita_config specifies that the approval
                 # should be requested
@@ -339,6 +340,23 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
                                               'to approve change')
             else:
                 artifact.visibility = req_value
+
+            if artifact.visibility == 'awaiting_approval':
+                email_to = 'qiita.help@gmail.com'
+                sid = artifact.study.id
+                subject = ('QIITA: Artifact %s awaiting_approval. Study %d, '
+                           'Prep %d' % (artifact_id, sid,
+                                        artifact.prep_templates[0].id))
+                message = ('%s requested approval. <a '
+                           'href="https://qiita.ucsd.edu/study/description/'
+                           '%d">Study %d</a>.' % (user.email, sid, sid))
+                try:
+                    send_email(email_to, subject, message)
+                except Exception:
+                    msg = ("Couldn't send email to admins, please email us "
+                           "directly to <a href='mailto:{0}'>{0}</a>.".format(
+                               email_to))
+                    raise QiitaHTTPError(400, msg)
         else:
             # We don't understand the attribute so return an error
             raise QiitaHTTPError(404, 'Attribute "%s" not found. Please, '
