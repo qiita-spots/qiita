@@ -359,12 +359,6 @@ class TestUpdateArtifactFromCmd(TestCase):
         self._clean_up_files = [seqs_fp, barcodes_fp]
         self.uploaded_files = qdb.util.get_files_from_uploads_folders("1")
 
-        # The files for the Artifact 1 doesn't exist, create them
-        for x in qdb.artifact.Artifact(1).filepaths:
-            with open(x['fp'], 'w') as f:
-                f.write('\n')
-            self._clean_up_files.append(x['fp'])
-
     def tearDown(self):
         new_uploaded_files = qdb.util.get_files_from_uploads_folders("1")
         new_files = set(new_uploaded_files).difference(self.uploaded_files)
@@ -386,9 +380,46 @@ class TestUpdateArtifactFromCmd(TestCase):
                 self.filepaths, self.filepaths_types[1:], 1)
 
     def test_update_artifact_from_cmd(self):
-        artifact = qdb.commands.update_artifact_from_cmd(
-            self.filepaths, self.filepaths_types, 1)
+        # Generate some files for an artifact
+        fd, fp1 = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        with open(fp1, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 1:N:0:\n"
+                    "NACGTAGGGTGCAAGCGTTGTCCGGAATNA\n"
+                    "+\n"
+                    "#1=DDFFFHHHHHJJJJJJJJJJJJGII#0\n")
+
+        fd, fp2 = mkstemp(suffix='_barcodes.fastq')
+        close(fd)
+        with open(fp2, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 2:N:0:\n"
+                    "NNNCNNNNNNNNN\n"
+                    "+\n"
+                    "#############\n")
+        filepaths = [(fp1, 1), (fp2, 3)]
+        # Create a new prep template
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
+        self.prep_template = \
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                metadata, qdb.study.Study(1), "16S")
+        artifact = qdb.artifact.Artifact.create(
+            filepaths, "FASTQ", prep_template=self.prep_template)
         for x in artifact.filepaths:
+            self._clean_up_files.append(x['fp'])
+
+        new_artifact = qdb.commands.update_artifact_from_cmd(
+            self.filepaths, self.filepaths_types, artifact.id)
+        for x in new_artifact.filepaths:
             self._clean_up_files.append(x['fp'])
 
         for obs, exp in zip(sorted(artifact.filepaths, key=lambda x: x['fp']),

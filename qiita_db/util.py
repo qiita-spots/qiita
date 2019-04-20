@@ -864,7 +864,6 @@ def purge_files_from_filesystem(delete_files=True):
             if isdir(pt):
                 for ppt in listdir(pt):
                     obj_id = ppt.split('_')[0]
-                    print (dt, obj_id)
                     _rm_exists(join(pt, ppt), obj, obj_id, delete_files)
 
 

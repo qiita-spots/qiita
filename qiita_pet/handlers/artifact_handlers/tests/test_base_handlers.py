@@ -224,9 +224,9 @@ class TestBaseHandlersUtils(TestCase):
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
         exp_files = [
-            (3, '1_seqs.fna (preprocessed fasta)', '0', '0 Bytes'),
-            (4, '1_seqs.qual (preprocessed fastq)', '0', '0 Bytes'),
-            (5, '1_seqs.demux (preprocessed demux)', '0', '0 Bytes')]
+            (3, '1_seqs.fna (preprocessed fasta)', '', '0 Bytes'),
+            (4, '1_seqs.qual (preprocessed fastq)', '', '0 Bytes'),
+            (5, '1_seqs.demux (preprocessed demux)', '', '0 Bytes')]
         exp = {'name': 'Demultiplexed 1',
                'artifact_id': 2,
                'artifact_type': 'Demultiplexed',
