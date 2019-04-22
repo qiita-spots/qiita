@@ -40,6 +40,22 @@ class DBUtilTestsBase(TestCase):
 
 
 class DBUtilTests(DBUtilTestsBase):
+    def test_filepath_id_to_object_id(self):
+        # filepaths 1, 2 belongs to artifact 1
+        self.assertEqual(qdb.util.filepath_id_to_object_id(1), 1)
+        self.assertEqual(qdb.util.filepath_id_to_object_id(2), 1)
+        # filepaths 3, 4 belongs to artifact 2
+        self.assertEqual(qdb.util.filepath_id_to_object_id(3), 2)
+        self.assertEqual(qdb.util.filepath_id_to_object_id(4), 2)
+        # filepaths 9 belongs to artifact 4
+        self.assertEqual(qdb.util.filepath_id_to_object_id(9), 4)
+        # filepath 16 belongs to anlaysis 1
+        self.assertEqual(qdb.util.filepath_id_to_object_id(16), 1)
+        # filepath 18 belongs to study 1
+        self.assertIsNone(qdb.util.filepath_id_to_object_id(18))
+        # filepath 22 belongs to analysis/artifact 7
+        self.assertEqual(qdb.util.filepath_id_to_object_id(22), 7)
+
     def test_check_required_columns(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
         qdb.util.check_required_columns(self.required, self.table)

@@ -18,7 +18,8 @@ from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
-                           get_filepath_information, get_mountpoint)
+                           get_filepath_information, get_mountpoint,
+                           filepath_id_to_object_id)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -186,6 +187,9 @@ class DownloadHandler(BaseHandlerDownload):
             self.set_header('Content-Type', 'application/octet-stream')
             self.set_header('Content-Transfer-Encoding', 'binary')
             self.set_header('X-Accel-Redirect', '/protected/' + relpath)
+            aid = filepath_id_to_object_id(fid)
+            if aid is not None:
+                fname = '%d_%s' % (aid, fname)
 
         self._set_nginx_headers(fname)
         self.finish()

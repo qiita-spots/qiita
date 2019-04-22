@@ -18,6 +18,8 @@ Methods
     get_db_files_base_dir
     compute_checksum
     get_files_from_uploads_folders
+    filepath_id_to_rel_path
+    filepath_id_to_object_id
     get_mountpoint
     insert_filepaths
     check_table_cols
@@ -986,6 +988,36 @@ def filepath_id_to_rel_path(filepath_id):
         else:
             result = join(mp, fp)
         return result
+
+
+def filepath_id_to_object_id(filepath_id):
+    """Gets the object id to which the filepath id belongs to
+
+    Returns
+    -------
+    int
+        The object id the filepath id belongs to or None if not found
+
+    Notes
+    -----
+    This helper function is intended to be used with the download handler so
+    we can prepend downloads with the artifact id; thus, we will only look for
+    filepath ids in qiita.analysis_filepath and qiita.artifact_filepath as
+    search in qiita.reference, qiita.prep_template_filepath and
+    qiita.sample_template_filepath will make the naming redundat (those already
+    have the study_id in their filename)
+    """
+    with qdb.sql_connection.TRN:
+        sql = """
+            SELECT analysis_id FROM qiita.analysis_filepath
+                WHERE filepath_id = %s UNION
+            SELECT artifact_id FROM qiita.artifact_filepath
+                WHERE filepath_id = %s"""
+        qdb.sql_connection.TRN.add(sql, [filepath_id, filepath_id])
+        fids = sorted(qdb.sql_connection.TRN.execute_fetchflatten())
+        if fids:
+            return fids[0]
+        return None
 
 
 def filepath_ids_to_rel_paths(filepath_ids):

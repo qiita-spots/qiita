@@ -47,6 +47,26 @@ class TestDownloadHandler(TestHandlerBase):
             "This installation of Qiita was not equipped with nginx, so it "
             "is incapable of serving files. The file you attempted to "
             "download is located at raw_data/1_s_G1_L001_sequences.fastq.gz"))
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=1_1_s_G1_L001_sequences.fastq.gz")
+        # other tests to validate the filename
+        response = self.get('/download/2')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=1_1_s_G1_L001_sequences_barcodes.fastq.gz")
+        response = self.get('/download/3')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=2_1_seqs.fna")
+        response = self.get('/download/18')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=1_prep_1_19700101-000000.txt")
+        response = self.get('/download/22')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=7_biom_table.biom")
 
         # failure
         response = self.get('/download/1000')
