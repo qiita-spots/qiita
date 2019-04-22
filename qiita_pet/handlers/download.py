@@ -69,7 +69,7 @@ class BaseHandlerDownload(BaseHandler):
                 spath = fullpath
                 if fullpath.startswith(basedir):
                     spath = fullpath[basedir_len:]
-                to_download.append((fullpath, spath, spath))
+                to_download.append((spath, spath, '-', str(getsize(fullpath))))
         return to_download
 
     def _list_artifact_files_nginx(self, artifact):
@@ -100,9 +100,11 @@ class BaseHandlerDownload(BaseHandler):
                 to_download.extend(self._list_dir_files_nginx(x['fp']))
             elif x['fp'].startswith(basedir):
                 spath = x['fp'][basedir_len:]
-                to_download.append((x['fp'], spath, spath))
+                to_download.append(
+                    (spath, spath, str(x['checksum']), str(x['fp_size'])))
             else:
-                to_download.append((x['fp'], x['fp'], x['fp']))
+                to_download.append(
+                    (x['fp'], x['fp'], str(x['checksum']), str(x['fp_size'])))
 
         for pt in artifact.prep_templates:
             qmf = pt.qiime_map_fp
@@ -110,9 +112,8 @@ class BaseHandlerDownload(BaseHandler):
                 sqmf = qmf
                 if qmf.startswith(basedir):
                     sqmf = qmf[basedir_len:]
-                to_download.append(
-                    (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
-                                % artifact.id))
+                fname = 'mapping_files/%s_mapping_file.txt' % artifact.id
+                to_download.append((sqmf, fname, '-', str(getsize(qmf))))
         return to_download
 
     def _write_nginx_file_list(self, to_download):
@@ -120,12 +121,12 @@ class BaseHandlerDownload(BaseHandler):
 
         Parameters
         ----------
-        to_download : list of (str, str, str)
+        to_download : list of (str, str, str, str)
             The file list information
         """
         all_files = '\n'.join(
-            ["- %s /protected/%s %s" % (getsize(fp), sfp, n)
-             for fp, sfp, n in to_download])
+            ["%s %s /protected/%s %s" % (fp_checksum, fp_size, fp, fp_name)
+             for fp, fp_name, fp_checksum, fp_size in to_download])
 
         self.set_header('X-Archive-Files', 'zip')
         self.write("%s\n" % all_files)
