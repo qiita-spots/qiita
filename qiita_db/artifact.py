@@ -226,7 +226,7 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args)
 
             # Associate the artifact with its filepaths
-            filepaths = [(fp, f_type) for _, fp, f_type in artifact.filepaths]
+            filepaths = [(x['fp'], x['fp_type']) for x in artifact.filepaths]
             fp_ids = qdb.util.insert_filepaths(
                 filepaths, a_id, atype, copy=True)
             sql = """INSERT INTO qiita.artifact_filepath
@@ -596,8 +596,9 @@ class Artifact(qdb.base.QiitaObject):
                      WHERE artifact_id IN %s"""
             qdb.sql_connection.TRN.add(sql, [all_ids])
 
-            # If the artifacts don't have parents and study is not None (is an
-            # analysis), we move the files to the uploads folder. We also need
+            # If the first artifact to be deleted, instance, doesn't have
+            # parents and study is not None (None means is an analysis), we
+            # move the files to the uploads folder. We also need
             # to nullify the column in the prep template table
             if not instance.parents and study is not None:
                 qdb.util.move_filepaths_to_upload_folder(
@@ -966,9 +967,8 @@ class Artifact(qdb.base.QiitaObject):
 
         Returns
         -------
-        list of (int, str, str)
-            A list of (filepath_id, path, filetype) of all the files associated
-            with the artifact
+        list of dict
+            A list of dict as defined by qiita_db.util.retrieve_filepaths
         """
         return qdb.util.retrieve_filepaths(
             "artifact_filepath", "artifact_id", self.id, sort='ascending')
@@ -990,7 +990,7 @@ class Artifact(qdb.base.QiitaObject):
             # filepath id, the filepath and the filepath type. We don't want
             # to return the filepath type here, so just grabbing the first and
             # second element of the list
-            res = (fps[0][0], fps[0][1])
+            res = (fps[0]['fp_id'], fps[0]['fp'])
         else:
             res = None
 
@@ -1012,10 +1012,10 @@ class Artifact(qdb.base.QiitaObject):
                 # Delete the current HTML summary
                 to_delete_ids = []
                 to_delete_fps = []
-                for fp_id, fp, fp_type in self.filepaths:
-                    if fp_type in ('html_summary', 'html_summary_dir'):
-                        to_delete_ids.append([fp_id])
-                        to_delete_fps.append(fp)
+                for x in self.filepaths:
+                    if x['fp_type'] in ('html_summary', 'html_summary_dir'):
+                        to_delete_ids.append([x['fp_id']])
+                        to_delete_fps.append(x['fp'])
                 # From the artifact_filepath table
                 sql = """DELETE FROM qiita.artifact_filepath
                          WHERE filepath_id = %s"""
@@ -1349,7 +1349,7 @@ class Artifact(qdb.base.QiitaObject):
 
         cmd_name = processing_params.command.name
         ms = processing_params.command.merging_scheme
-        afps = [fp for _, fp, _ in self.filepaths if fp.endswith('biom')]
+        afps = [x['fp'] for x in self.filepaths if x['fp'].endswith('biom')]
 
         merging_schemes = []
         parent_softwares = []

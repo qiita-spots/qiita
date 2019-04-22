@@ -32,8 +32,8 @@ class TestEBISubmitHandler(TestHandlerBase):
                 remove(fp)
 
     def test_get(self):
-        demux_fp = [fp for _, fp, fp_type in Artifact(2).filepaths
-                    if fp_type == 'preprocessed_demux'][0]
+        demux_fp = [x['fp'] for x in Artifact(2).filepaths
+                    if x['fp_type'] == 'preprocessed_demux'][0]
         fd, fna_fp = mkstemp(suffix='_seqs.fna')
         close(fd)
         self._clean_up_files.extend([fna_fp, demux_fp])

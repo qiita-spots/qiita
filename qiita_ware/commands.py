@@ -363,9 +363,9 @@ def submit_VAMPS(artifact_id):
     targz.add(prep_fp, arcname='prep_metadata.txt')
 
     # adding preprocessed data
-    for _, fp, fp_type in artifact.filepaths:
-        if fp_type == 'preprocessed_fasta':
-            targz.add(fp, arcname='preprocessed_fasta.fna')
+    for x in artifact.filepaths:
+        if x['fp_type'] == 'preprocessed_fasta':
+            targz.add(x['fp'], arcname='preprocessed_fasta.fna')
 
     targz.close()
 

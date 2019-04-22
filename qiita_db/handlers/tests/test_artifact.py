@@ -139,8 +139,8 @@ class ArtifactHandlerTests(OauthTestingBase):
                          data=arguments)
         self.assertEqual(obs.code, 200)
         self.assertIsNotNone(artifact.html_summary_fp)
-        html_dir = [fp for _, fp, fp_type in artifact.filepaths
-                    if fp_type == 'html_summary_dir']
+        html_dir = [x['fp'] for x in artifact.filepaths
+                    if x['fp_type'] == 'html_summary_dir']
         self.assertEqual(len(html_dir), 1)
 
         # Wrong operation
@@ -229,7 +229,7 @@ class ArtifactAPItestHandlerTests(OauthTestingBase):
         self.assertCountEqual(obs.keys(), ['artifact'])
 
         a = qdb.artifact.Artifact(obs['artifact'])
-        self._clean_up_files.extend([fp for _, fp, _ in a.filepaths])
+        self._clean_up_files.extend([x['fp'] for x in a.filepaths])
         self.assertEqual(a.name, "New test artifact")
 
     def test_post_analysis(self):
@@ -250,7 +250,7 @@ class ArtifactAPItestHandlerTests(OauthTestingBase):
         self.assertCountEqual(obs.keys(), ['artifact'])
 
         a = qdb.artifact.Artifact(obs['artifact'])
-        self._clean_up_files.extend([afp for _, afp, _ in a.filepaths])
+        self._clean_up_files.extend([x['fp'] for x in a.filepaths])
         self.assertEqual(a.name, "New biom artifact")
 
     def test_post_error(self):

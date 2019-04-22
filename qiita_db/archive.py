@@ -88,7 +88,8 @@ class Archive(qdb.base.QiitaObject):
                 raise ValueError(
                     "To archive artifact must be BIOM but %s" % atype)
 
-            bfps = [fp for _, fp, fpt in artifact.filepaths if fpt == 'biom']
+            bfps = [x['fp'] for x in artifact.filepaths
+                    if x['fp_type'] == 'biom']
             if not bfps:
                 raise ValueError("The artifact has no biom files")
 

@@ -89,21 +89,21 @@ class BaseHandlerDownload(BaseHandler):
         basedir = get_db_files_base_dir()
         basedir_len = len(basedir) + 1
         to_download = []
-        for i, (fid, path, data_type) in enumerate(artifact.filepaths):
+        for i, x in enumerate(artifact.filepaths):
             # ignore if tgz as they could create problems and the
             # raw data is in the folder
-            if data_type == 'tgz':
+            if x['fp_type'] == 'tgz':
                 continue
-            if isdir(path):
+            if isdir(x['fp']):
                 # If we have a directory, we actually need to list all the
                 # files from the directory so NGINX can actually download all
                 # of them
-                to_download.extend(self._list_dir_files_nginx(path))
-            elif path.startswith(basedir):
-                spath = path[basedir_len:]
-                to_download.append((path, spath, spath))
+                to_download.extend(self._list_dir_files_nginx(x['fp']))
+            elif x['fp'].startswith(basedir):
+                spath = x['fp'][basedir_len:]
+                to_download.append((x['fp'], spath, spath))
             else:
-                to_download.append((path, path, path))
+                to_download.append((x['fp'], x['fp'], x['fp']))
 
         for pt in artifact.prep_templates:
             qmf = pt.qiime_map_fp

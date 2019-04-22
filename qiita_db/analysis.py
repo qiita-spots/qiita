@@ -436,10 +436,9 @@ class Analysis(qdb.base.QiitaObject):
             The filepath id of the analysis mapping file or None
             if not generated
         """
-        fp = [fp_id
-              for fp_id, _, fp_type in qdb.util.retrieve_filepaths(
+        fp = [x['fp_id'] for x in qdb.util.retrieve_filepaths(
                 "analysis_filepath", "analysis_id", self._id)
-              if fp_type == 'plain_text']
+              if x['fp_type'] == 'plain_text']
 
         if fp:
             # returning the actual filepath id vs. an array
@@ -456,9 +455,9 @@ class Analysis(qdb.base.QiitaObject):
         str or None
             full filepath to the mapping file or None if not generated
         """
-        fp = [fp for _, fp, fp_type in qdb.util.retrieve_filepaths(
+        fp = [x['fp'] for x in qdb.util.retrieve_filepaths(
             "analysis_filepath", "analysis_id", self._id)
-            if fp_type == 'tgz']
+            if x['fp_type'] == 'tgz']
 
         if fp:
             # returning the actual path vs. an array
@@ -934,9 +933,9 @@ class Analysis(qdb.base.QiitaObject):
                     # artifacts from multiple bioms and even then we might
                     # only have one biom
                     biom_table_fp = None
-                    for _, fp, fp_type in artifact.filepaths:
-                        if fp_type == 'biom':
-                            biom_table_fp = fp
+                    for x in artifact.filepaths:
+                        if x['fp_type'] == 'biom':
+                            biom_table_fp = x['fp']
                             break
                     if not biom_table_fp:
                         raise RuntimeError(
