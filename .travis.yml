@@ -57,7 +57,7 @@ install:
   - scp -i $PWD/qiita_ware/test/test_data/test_key localhost:$PWD/qiita_ware/test/test_data/random_key $PWD/qiita_ware/test/test_data/random_key_copy
   # Install the biom plugin so we can run the analysis tests
   - wget https://data.qiime2.org/distro/core/qiime2-2019.1-py36-linux-conda.yml
-  - travis_retry conda env create -q -n qtp-biom --file qiime2-2019.1-py36-linux-conda.ym
+  - travis_retry conda env create -q -n qtp-biom --file qiime2-2019.1-py36-linux-conda.yml
   - rm qiime2-2019.1-py36-linux-conda.yml
   - source activate qtp-biom
   - pip install -U pip
