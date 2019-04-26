@@ -736,11 +736,12 @@ class Artifact(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             # first let's check that this is a valid visibility
             vis_id = qdb.util.convert_to_id(value, "visibility")
+            study = self.study
 
             # then let's check that the sample/prep info files have the correct
             # restrictions
-            if value in ('public', 'private'):
-                reply = self.study.sample_template.validate_restrictions()
+            if value in ('public', 'private') and study is not None:
+                reply = study.sample_template.validate_restrictions()
                 success = [not reply[0]]
                 message = [reply[1]]
                 for pt in self.prep_templates:
