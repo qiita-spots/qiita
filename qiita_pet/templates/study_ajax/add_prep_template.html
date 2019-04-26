@@ -111,7 +111,6 @@ $(document).ready(function () {
     <label class="col-sm-2 col-form-label">User defined investigation type:</label>
     <div class="col-sm-3">
       <select id="user-ontology" name="user-ontology" value="user-ontology" class="form-control">
-        <option value=""></option>
         {% for o in ontology['User'] %}
           <option value="{{o}}">{{o}}</option>
         {% end %}
