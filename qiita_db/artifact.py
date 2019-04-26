@@ -734,6 +734,23 @@ class Artifact(qdb.base.QiitaObject):
         only applies when the new visibility is more open than before.
         """
         with qdb.sql_connection.TRN:
+            # first let's check that this is a valid visibility
+            vis_id = qdb.util.convert_to_id(value, "visibility")
+
+            # then let's check that the sample/prep info files have the correct
+            # restrictions
+            if value in ('public', 'private'):
+                reply = self.study.sample_template.validate_restrictions()
+                success = [not reply[0]]
+                message = [reply[1]]
+                for pt in self.prep_templates:
+                    reply = pt.validate_restrictions()
+                    success.append(not reply[0])
+                    message.append(reply[1])
+                if any(success):
+                    raise ValueError(
+                        "Errors in your info files:\n%s" % '\n'.join(message))
+
             # In order to correctly propagate the visibility we need to find
             # the root of this artifact and then propagate to all the artifacts
             sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
@@ -746,7 +763,6 @@ class Artifact(qdb.base.QiitaObject):
             sql = """UPDATE qiita.artifact
                      SET visibility_id = %s
                      WHERE artifact_id IN %s"""
-            vis_id = qdb.util.convert_to_id(value, "visibility")
             qdb.sql_connection.TRN.add(sql, [vis_id, tuple(ids)])
             qdb.sql_connection.TRN.execute()
 

@@ -124,6 +124,7 @@ CREATE TABLE qiita.sample_1 (
     physical_specimen_remaining     varchar,
     dna_extracted                   varchar,
     sample_type                     varchar,
+    env_package                     varchar default 'soil',
     collection_timestamp            varchar,
     host_subject_id                 varchar,
     description                     varchar,

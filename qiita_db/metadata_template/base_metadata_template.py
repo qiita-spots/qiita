@@ -1754,3 +1754,60 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         return (qdb.metadata_template.util.get_qiime2_reserved_words() &
                 set(column_names))
+
+    @property
+    def restrictions(cls):
+        r"""Retrieves the restrictions based on the class._table
+
+        Returns
+        -------
+        dict
+            {restriction: values, ...}
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name, valid_values
+                     FROM qiita.restrictions
+                     WHERE table_name = %s"""
+            qdb.sql_connection.TRN.add(sql, [cls._table])
+            return dict(qdb.sql_connection.TRN.execute_fetchindex())
+
+    def validate_restrictions(self):
+        r"""Validates the restrictions
+
+        Returns
+        -------
+        success, boolean
+            If the validation was successful
+        message, string
+            Message if success is not True
+        """
+        with qdb.sql_connection.TRN:
+            # [:-1] removing last _
+            name = '%s %d' % (self._table_prefix[:-1], self.id)
+            success = True
+            message = []
+            restrictions = self.restrictions
+            categories = self.categories()
+
+            difference = sorted(set(restrictions.keys()) - set(categories))
+            if difference:
+                success = False
+                message.append(
+                    '%s is missing columns "%s"' % (name, ', '.join(
+                        difference)))
+
+            to_review = set(restrictions.keys()) & set(categories)
+            for key in to_review:
+                info_vals = set(self.get_category(key).values())
+                msg = []
+                for v in info_vals:
+                    if v not in restrictions[key]:
+                        msg.append(v)
+                if msg:
+                    success = False
+                    message.append(
+                        '%s has a no valid values: "%s", valid values are: '
+                        '"%s"' % (name, ', '.join(msg),
+                                  ', '.join(restrictions[key])))
+
+            return success, '\n'.join(message)
