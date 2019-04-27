@@ -1510,7 +1510,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             if category not in self.categories():
                 raise qdb.exceptions.QiitaDBColumnError(category)
-            sql = """SELECT sample_id, sample_values->>'{0}' as {0}
+            sql = """SELECT sample_id,
+                        COALESCE(sample_values->>'{0}', 'None') AS {0}
                      FROM qiita.{1}
                      WHERE sample_id != '{2}'""".format(
                 category, self._table_name(self._id), QIITA_COLUMN_NAME)
