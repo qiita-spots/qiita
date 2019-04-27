@@ -301,7 +301,7 @@ def prep_template_summary_get_req(prep_id, user_id):
 
     cols = sorted(list(df.columns))
     for column in cols:
-        counts = df[column].value_counts()
+        counts = df[column].value_counts(dropna=False)
         out['summary'].append(
             (str(column), [(str(key), counts[key])
                            for key in natsorted(counts.index)]))
