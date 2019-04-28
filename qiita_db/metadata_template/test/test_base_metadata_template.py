@@ -111,6 +111,27 @@ class TestMetadataTemplateReadOnly(TestCase):
                                              'this&is',
                                              '4column'})
 
+    def test_restrictions(self):
+        MT = qdb.metadata_template
+        obs = MT.sample_template.SampleTemplate(1).restrictions
+        exp = {
+            'env_package': [
+                'air', 'built environment', 'host-associated',
+                'human-amniotic-fluid', 'human-associated', 'human-blood',
+                'human-gut', 'human-oral', 'human-skin', 'human-urine',
+                'human-vaginal', 'microbial mat/biofilm',
+                'miscellaneous natural or artificial environment',
+                'plant-associated', 'sediment', 'soil', 'wastewater/sludge',
+                'water']}
+        self.assertEqual(obs, exp)
+        obs = MT.prep_template.PrepTemplate(1).restrictions
+        exp = {
+            'target_gene': ['16S rRNA', '18S rRNA', 'ITS'],
+            'platform': ['Ion Torrent', 'LS454', 'Illumina'],
+            'target_subfragment': [
+                'V1', 'V2', 'V3', 'V4', 'V6', 'V9', 'ITS1', 'ITS2']}
+        self.assertEqual(obs, exp)
+
 
 if __name__ == '__main__':
     main()

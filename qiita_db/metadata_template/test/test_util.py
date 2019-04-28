@@ -831,11 +831,11 @@ EXP_PREP_TEMPLATE = (
     'library_construction_protocol\tlinkerprimersequence\tplatform\t'
     'run_prefix\tstr_column\n'
     '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L002_sequences\tValue for sample 3\n'
+    'GTGCCAGCMGCCGCGGTAA\tIllumina\ts_G1_L002_sequences\tValue for sample 3\n'
     '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 1\n'
+    'GTGCCAGCMGCCGCGGTAA\tIllumina\ts_G1_L001_sequences\tValue for sample 1\n'
     '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 2\n')
+    'GTGCCAGCMGCCGCGGTAA\tIllumina\ts_G1_L001_sequences\tValue for sample 2\n')
 
 EXP_QIIMP = {
     'asfaewf': {'sample': 'f', 'oijnmk': 'f'},
