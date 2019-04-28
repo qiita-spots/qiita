@@ -54,6 +54,8 @@
         if (error_msg.includes("Couldn't send email to admins")) {
           message = "";
           level = "warning";
+        } else if (error_msg.includes("Errors in your info files:")) {
+          message = "";
         }
         message = message + error_msg;
         bootstrapAlert(message, level);

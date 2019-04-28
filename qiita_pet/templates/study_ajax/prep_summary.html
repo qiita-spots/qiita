@@ -349,6 +349,13 @@
       {% if editable %}
         <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}
+      {% if prep_restrictions %}
+        <h5>
+          <div class="alert alert-warning" role="alert">
+            {{prep_restrictions}}
+          </div>
+        </h5>
+      {% end %}
     </h4>
   </div>
 </div>
