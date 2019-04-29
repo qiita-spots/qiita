@@ -146,27 +146,27 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
             '1579715020 1256812 /protected/processed_data/1_study_1001_closed_'
             'reference_otu_table.biom processed_data/1_study_1001_closed_'
             'reference_otu_table.biom\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/4_mapping_file.txt\n'
             '1579715020 1256812 /protected/processed_data/'
             '1_study_1001_closed_reference_otu_table.biom processed_data/'
             '1_study_1001_closed_reference_otu_table.biom\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/5_mapping_file.txt\n'
             '1579715020 1256812 /protected/processed_data/'
             '1_study_1001_closed_reference_otu_table_Silva.biom processed_data'
             '/1_study_1001_closed_reference_otu_table_Silva.biom\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/6_mapping_file.txt\n'
             '1756512010 1093210 /protected/BIOM/7/biom_table.biom '
             'BIOM/7/biom_table.biom\n'
-            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/7_mapping_file.txt\n'
             '[0-9]* [0-9]* /protected/BIOM/{0}/otu_table.biom '
             'BIOM/{0}/otu_table.biom\n'
             '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
             'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
         self.assertRegex(response.body.decode('ascii'), exp)
 
@@ -245,11 +245,11 @@ class TestDownloadRawData(TestHandlerBase):
             '2125826711 58 /protected/raw_data/'
             '1_s_G1_L001_sequences_barcodes.fastq.gz '
             'raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/1_mapping_file.txt\n'
             '1756512010 1093210 /protected/BIOM/7/biom_table.biom '
             'BIOM/7/biom_table.biom\n'
-            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/7_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
@@ -277,7 +277,7 @@ class TestDownloadRawData(TestHandlerBase):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         exp = (
-            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/7_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 

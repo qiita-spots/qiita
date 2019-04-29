@@ -106,6 +106,7 @@ class TestSampleAPI(TestCase):
             'samp_salinity': '7.15',
             'host_subject_id': '1001:B4',
             'season_environment': 'winter',
+            'env_package': 'soil',
             'temp': '15',
             'qiita_study_id': '1',
             'country': 'GAZ:United States of America',
@@ -284,12 +285,13 @@ class TestSampleAPI(TestCase):
                    'altitude', 'anonymized_name', 'assigned_from_geo',
                    'collection_timestamp', 'common_name', 'country', 'depth',
                    'description', 'description_duplicate', 'dna_extracted',
-                   'elevation', 'env_biome', 'env_feature', 'host_subject_id',
-                   'host_taxid', 'latitude', 'longitude', 'ph',
-                   'physical_specimen_location', 'physical_specimen_remaining',
-                   'samp_salinity', 'sample_type', 'scientific_name',
-                   'season_environment', 'taxon_id', 'temp', 'texture',
-                   'tot_nitro', 'tot_org_carb', 'water_content_soil']}
+                   'elevation', 'env_biome', 'env_feature', 'env_package',
+                   'host_subject_id', 'host_taxid', 'latitude', 'longitude',
+                   'ph', 'physical_specimen_location',
+                   'physical_specimen_remaining', 'samp_salinity',
+                   'sample_type', 'scientific_name', 'season_environment',
+                   'taxon_id', 'temp', 'texture', 'tot_nitro', 'tot_org_carb',
+                   'water_content_soil']}
         self.assertEqual(obs, exp)
 
     def test_sample_template_meta_cats_get_req_no_access(self):

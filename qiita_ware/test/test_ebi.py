@@ -320,11 +320,11 @@ class TestEBISubmission(TestCase):
                                 'center_project_name': 'Test Project'},
                 'SKM6.640187': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
-                                'platform': 'ILLUMINA',
+                                'platform': 'Illumina',
                                 'instrument_model': 'Not valid'},
                 'SKD9.640182': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
-                                'platform': 'ILLUMINA',
+                                'platform': 'Illumina',
                                 'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
@@ -337,7 +337,7 @@ class TestEBISubmission(TestCase):
             metadata_dict = {
                 'SKD6.640190': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
-                                'platform': 'ILLUMINA',
+                                'platform': 'Illumina',
                                 'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
@@ -346,7 +346,7 @@ class TestEBISubmission(TestCase):
                                     'PMID: 22402401'},
                 'SKM6.640187': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
-                                'platform': 'ILLUMINA',
+                                'platform': 'Illumina',
                                 'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
@@ -356,7 +356,7 @@ class TestEBISubmission(TestCase):
                                 'extra_value': 1.2},
                 'SKD9.640182': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
-                                'platform': 'ILLUMINA',
+                                'platform': 'Illumina',
                                 'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
@@ -415,21 +415,21 @@ class TestEBISubmission(TestCase):
             'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTC',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 1"},
             'Sample2': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTA',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 2"},
             'Sample3': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTT',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 3"},
@@ -720,7 +720,7 @@ class TestEBISubmission(TestCase):
         metadata_dict = {
             'SKB2.640194': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'experiment_design_description':
                                 'microbiome of soil and rhizosphere',
@@ -729,7 +729,7 @@ class TestEBISubmission(TestCase):
                             'run_prefix': '1.SKB2.640194'},
             'SKM4.640180': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'experiment_design_description':
                                 'microbiome of soil and rhizosphere',
@@ -815,7 +815,7 @@ class TestEBISubmission(TestCase):
                             'primer': 'CCCC',
                             'center_name': 'ANL',
                             'center_project_name': 'Test Project',
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'experiment_design_description':
                                 'microbiome of soil and rhizosphere',
@@ -826,7 +826,7 @@ class TestEBISubmission(TestCase):
                             'primer': 'AAAA',
                             'center_name': 'ANL',
                             'center_project_name': 'Test Project',
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'experiment_design_description':
                                 'microbiome of soil and rhizosphere',
@@ -1140,6 +1140,9 @@ shrubland biome</VALUE>
         <TAG>env_feature</TAG><VALUE>ENVO:plant-associated habitat</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
+        <TAG>env_package</TAG><VALUE>soil</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
         <TAG>host_subject_id</TAG><VALUE>1001:B4</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
@@ -1229,6 +1232,9 @@ shrubland biome</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>env_feature</TAG><VALUE>ENVO:plant-associated habitat</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>env_package</TAG><VALUE>soil</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>host_subject_id</TAG><VALUE>1001:M6</VALUE>

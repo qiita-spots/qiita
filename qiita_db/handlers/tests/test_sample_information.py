@@ -61,6 +61,7 @@ class SampleInfoDBHandlerTests(OauthTestingBase):
                'physical_specimen_remaining': 'true', 'dna_extracted': 'true',
                'taxon_id': '410658', 'samp_salinity': '7.15',
                'host_subject_id': '1001:M2', 'sample_type': 'ENVO:soil',
+               'env_package': 'soil',
                'season_environment': 'winter', 'temp': '15',
                'country': 'GAZ:United States of America',
                'longitude': '63.5115213108', 'tot_nitro': '1.41',

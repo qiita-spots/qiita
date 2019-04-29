@@ -36,7 +36,7 @@ class TestSample(TestCase):
             self.sample_id, self.sample_template)
         self.exp_categories = {'physical_specimen_location',
                                'physical_specimen_remaining',
-                               'dna_extracted', 'sample_type',
+                               'dna_extracted', 'sample_type', 'env_package',
                                'collection_timestamp', 'host_subject_id',
                                'description', 'season_environment',
                                'assigned_from_geo', 'texture', 'taxon_id',
@@ -109,7 +109,7 @@ class TestSample(TestCase):
 
     def test_len(self):
         """Len returns the correct number of categories"""
-        self.assertEqual(len(self.tester), 30)
+        self.assertEqual(len(self.tester), 31)
 
     def test_getitem_required(self):
         """Get item returns the correct metadata value from the required table
@@ -162,7 +162,7 @@ class TestSample(TestCase):
                'ENVO:Temperate grasslands, savannas, and shrubland biome',
                'GAZ:United States of America', '6.94', 'SKB8', '5',
                'Burmese root', 'ENVO:plant-associated habitat',
-               '74.0894932572', '65.3283470202', '1118232'}
+               '74.0894932572', '65.3283470202', '1118232', 'soil'}
         self.assertCountEqual(set(obs), exp)
 
     def test_items(self):
@@ -176,6 +176,7 @@ class TestSample(TestCase):
                ('collection_timestamp', '2011-11-11 13:00:00'),
                ('host_subject_id', '1001:M7'),
                ('description', 'Cannabis Soil Microbiome'),
+               ('env_package', 'soil'),
                ('season_environment', 'winter'), ('assigned_from_geo', 'n'),
                ('texture', '64.6 sand, 17.6 silt, 17.8 clay'),
                ('taxon_id', '1118232'), ('depth', '0.15'),
@@ -478,7 +479,7 @@ class TestSampleTemplate(TestCase):
                'collection_timestamp', 'common_name', 'country', 'depth',
                'description', 'description_duplicate', 'dna_extracted',
                'elevation', 'env_biome', 'env_feature', 'host_subject_id',
-               'host_taxid', 'latitude', 'longitude', 'ph',
+               'host_taxid', 'latitude', 'longitude', 'ph', 'env_package',
                'physical_specimen_location', 'physical_specimen_remaining',
                'samp_salinity', 'sample_type', 'scientific_name',
                'season_environment', 'taxon_id', 'temp', 'texture',
@@ -539,7 +540,7 @@ class TestSampleTemplate(TestCase):
                'temp', 'tot_nitro', 'samp_salinity', 'altitude',
                'env_biome', 'country', 'ph', 'anonymized_name',
                'tot_org_carb', 'description_duplicate', 'env_feature',
-               'physical_specimen_location',
+               'physical_specimen_location', 'env_package',
                'physical_specimen_remaining', 'dna_extracted',
                'sample_type', 'collection_timestamp', 'host_subject_id',
                'description', 'latitude', 'longitude', 'scientific_name'}
@@ -1970,7 +1971,7 @@ class TestSampleTemplate(TestCase):
             'dna_extracted', 'sample_type', 'collection_timestamp',
             'host_subject_id', 'description', 'latitude', 'longitude',
             'season_environment', 'assigned_from_geo', 'texture',
-            'taxon_id', 'depth', 'host_taxid', 'common_name',
+            'taxon_id', 'depth', 'host_taxid', 'common_name', 'env_package',
             'water_content_soil', 'elevation', 'temp', 'tot_nitro',
             'samp_salinity', 'altitude', 'env_biome', 'country', 'ph',
             'anonymized_name', 'tot_org_carb', 'description_duplicate',

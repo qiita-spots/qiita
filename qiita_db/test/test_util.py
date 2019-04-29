@@ -388,7 +388,7 @@ class DBUtilTests(DBUtilTestsBase):
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
@@ -1279,7 +1279,7 @@ class PurgeFilepathsTestA(PurgeFilepathsTestBase):
                             'amzn_primer': 'GTGCCAGCMGCCGCGGTAA',
                             'bartab': 'GTCCGCAAGTTA',
                             'frd_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
