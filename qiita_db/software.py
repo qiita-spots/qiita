@@ -251,7 +251,7 @@ class Command(qdb.base.QiitaObject):
             an optional boolean value. name_order is used to specify the order
             of the parameter when automatically naming the artifacts.
             check_biom_merge is used when merging artifacts in the analysis
-            pipeline. qiita_optional_parameter is am optional bool to "force"
+            pipeline. qiita_optional_parameter is an optional bool to "force"
             the parameter to be optional
         outputs : dict, optional
             The description of the outputs that this command generated. The
@@ -344,6 +344,9 @@ class Command(qdb.base.QiitaObject):
                 sql_artifact_params.append(
                     [pname, 'artifact', atypes])
             else:
+                # a parameter will be required (not optional) if
+                # qiita_optional_parameter is false and there is the default
+                # value (dflt) is None
                 required = not qiita_optional_parameter and dflt is None
                 sql_param_values.append([pname, ptype, required, dflt,
                                          name_order, check_biom_merge])
