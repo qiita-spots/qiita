@@ -402,6 +402,13 @@ Vue.component('sample-template-page', {
         }
       }
 
+      // Adding the alert for restrictions
+      if (vm.sample_restrictions !== '') {
+        $row = $('<div>').addClass('row').appendTo('#sample-template-contents');
+        $col = $('<h5>').appendTo($row);
+        $('<div>').addClass('alert').addClass('alert-warning').append(vm.sample_restrictions).appendTo($row)
+      }
+
       // After adding the buttons we can add the two tabs - one holding the Sample Information
       // and the other one holding the Sample and preparation summary
       $row = $('<div>').addClass('row').appendTo('#sample-template-contents');
@@ -562,6 +569,12 @@ Vue.component('sample-template-page', {
         vm.numColumns = data['num_columns'];
         vm.columns = data['columns'];
         vm.specimenIDColumn = data['specimen_id_column'];
+        vm.sample_restrictions = data['sample_restrictions'];
+
+        // fixing message for nicer display
+        if (vm.sample_restrictions !== '') {
+          vm.sample_restrictions = "Sample Info " + vm.sample_restrictions.split(" ").slice(2).join(" ");
+        }
 
         // Populate the sample-template-contents
         $('#title-h3').empty();

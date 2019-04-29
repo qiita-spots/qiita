@@ -498,6 +498,7 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                            'sample_type', 'collection_timestamp',
                            'host_subject_id', 'description', 'latitude',
                            'longitude', 'scientific_name', 'env_package']),
+               'sample_restrictions': '',
                'specimen_id_column': None}
         self.assertDictEqual(obs, exp)
 
