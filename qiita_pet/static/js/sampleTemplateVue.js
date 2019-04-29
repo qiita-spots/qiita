@@ -80,7 +80,7 @@ Vue.component('sample-template-page', {
           // Hide the processing div
           $('#st-processsing-div').hide();
           // Enable interaction bits
-          $('#update-btn-div').show();
+          $('#update-st-div').show();
           $('.st-interactive').prop('disabled', false);
           if (jobStatus === 'error') {
             // The job errored - show the error
@@ -116,7 +116,7 @@ Vue.component('sample-template-page', {
       $('#st-processsing-div').show();
       // Disable interaction bits
       $('.st-interactive').prop('disabled', true);
-      $('#update-btn-div').hide();
+      $('#update-st-div').hide();
       // Force the first check to happen now
       vm.checkJob();
       // Set the interval for further checking - this jobs tend to be way faster
@@ -164,7 +164,8 @@ Vue.component('sample-template-page', {
 
       // We can have 2 scenarios: direct file upload or path from upload
       // folder. The former is sent via PATCH using defauls, the latter
-      // via POST using "processData: false, contentType: false"
+      // via POST using "processData: false, contentType: false"; taken from:
+      // https://stackoverflow.com/a/5976031
       if (file !== undefined) {
         var fd = new FormData();
         fd.append('theFile', file);
@@ -467,7 +468,7 @@ Vue.component('sample-template-page', {
         // Add the direct upload field
         $('<label>')
           .addClass('btn btn-default')
-            .append('Direct upload file <small>(< 2M)</small>')
+            .append('Direct upload file <small>(< 2MB)</small>')
             .appendTo($row)
             .append('<input type="file" style="display: none;" id="st-direct-upload">');
         $('#st-direct-upload').on('change', function() {
@@ -476,7 +477,7 @@ Vue.component('sample-template-page', {
             return false;
           }
           if (this.files[0].size > 2097152) {
-            alert('You can only upload files smaller than 2M; please use the regular uploader.');
+            alert('You can only upload files smaller than 2MB; please use "Upload Files" button on the left.');
             return false;
           }
           vm.updateSampleTemplate()

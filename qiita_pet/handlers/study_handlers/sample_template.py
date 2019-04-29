@@ -283,9 +283,9 @@ class SampleTemplateHandler(BaseHandler):
         study_id = int(self.get_argument('study_id'))
         filepath = self.get_argument('filepath')
         data_type = self.get_argument('data_type')
-        direct_upload = self.get_argument('data_type', False)
+        direct_upload = self.get_argument('direct_upload', False)
 
-        if direct_upload:
+        if direct_upload and direct_upload == 'true':
             direct_upload = True
             fd, filepath = mkstemp(suffix='.txt')
             close(fd)
