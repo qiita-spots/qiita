@@ -273,7 +273,7 @@ class TestHelpers(TestHandlerBase):
                'download_id': 23,
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
-               'num_columns': 30,
+               'num_columns': 31,
                'columns': sorted(
                           ['season_environment', 'assigned_from_geo',
                            'texture', 'taxon_id', 'depth', 'host_taxid',
@@ -285,7 +285,8 @@ class TestHelpers(TestHandlerBase):
                            'physical_specimen_remaining', 'dna_extracted',
                            'sample_type', 'collection_timestamp',
                            'host_subject_id', 'description', 'latitude',
-                           'longitude', 'scientific_name']),
+                           'longitude', 'scientific_name', 'env_package']),
+               'sample_restrictions': '',
                'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
@@ -305,6 +306,7 @@ class TestHelpers(TestHandlerBase):
                'num_samples': 0,
                'num_columns': 0,
                'columns': [],
+               'sample_restrictions': '',
                'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
@@ -337,7 +339,7 @@ class TestHelpers(TestHandlerBase):
             'depth', 'host_taxid', 'common_name', 'water_content_soil',
             'elevation', 'temp', 'tot_nitro', 'samp_salinity', 'altitude',
             'env_biome', 'country', 'ph', 'anonymized_name', 'tot_org_carb',
-            'description_duplicate', 'env_feature',
+            'description_duplicate', 'env_feature', 'env_package',
             'physical_specimen_location', 'physical_specimen_remaining',
             'dna_extracted', 'sample_type', 'collection_timestamp',
             'host_subject_id', 'description', 'latitude', 'longitude',
@@ -485,7 +487,7 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                'download_id': 23,
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
-               'num_columns': 30,
+               'num_columns': 31,
                'columns': sorted(
                           ['season_environment', 'assigned_from_geo',
                            'texture', 'taxon_id', 'depth', 'host_taxid',
@@ -497,7 +499,8 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                            'physical_specimen_remaining', 'dna_extracted',
                            'sample_type', 'collection_timestamp',
                            'host_subject_id', 'description', 'latitude',
-                           'longitude', 'scientific_name']),
+                           'longitude', 'scientific_name', 'env_package']),
+               'sample_restrictions': '',
                'specimen_id_column': None}
         self.assertDictEqual(obs, exp)
 
@@ -514,7 +517,7 @@ class TestSampleTemplateColumnsHandler(TestHandlerBase):
             'depth', 'host_taxid', 'common_name', 'water_content_soil',
             'elevation', 'temp', 'tot_nitro', 'samp_salinity', 'altitude',
             'env_biome', 'country', 'ph', 'anonymized_name', 'tot_org_carb',
-            'description_duplicate', 'env_feature',
+            'description_duplicate', 'env_feature', 'env_package',
             'physical_specimen_location', 'physical_specimen_remaining',
             'dna_extracted', 'sample_type', 'collection_timestamp',
             'host_subject_id', 'description', 'latitude', 'longitude',

@@ -18,6 +18,8 @@ Methods
     get_db_files_base_dir
     compute_checksum
     get_files_from_uploads_folders
+    filepath_id_to_rel_path
+    filepath_id_to_object_id
     get_mountpoint
     insert_filepaths
     check_table_cols
@@ -49,7 +51,7 @@ from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
-from os.path import join, basename, isdir, exists
+from os.path import join, basename, isdir, exists, getsize
 from os import walk, remove, listdir, rename
 from glob import glob
 from shutil import move, rmtree, copy as shutil_copy
@@ -62,7 +64,6 @@ from contextlib import contextmanager
 from future.builtins import bytes, str
 import h5py
 from humanize import naturalsize
-from os.path import getsize
 import hashlib
 
 from os import makedirs
@@ -413,7 +414,6 @@ def compute_checksum(path):
     int
         The file checksum
     """
-    crc = 0
     filepaths = []
     if isdir(path):
         for name, dirs, files in walk(path):
@@ -422,17 +422,17 @@ def compute_checksum(path):
     else:
         filepaths.append(path)
 
+    buffersize = 65536
+    crcvalue = 0
     for fp in filepaths:
-        with open(fp, 'rb', newline=None) as f:
-            # Go line by line so we don't need to load the entire file
-            for line in f:
-                if crc is None:
-                    crc = crc32(line)
-                else:
-                    crc = crc32(line, crc)
-    # We need the & 0xffffffff in order to get the same numeric value across
+        with open(fp, 'rb') as f:
+            buffr = f.read(buffersize)
+            while len(buffr) > 0:
+                crcvalue = crc32(buffr, crcvalue)
+                buffr = f.read(buffersize)
+    # We need the & 0xFFFFFFFF in order to get the same numeric value across
     # all python versions and platforms
-    return crc & 0xffffffff
+    return crcvalue & 0xFFFFFFFF
 
 
 def get_files_from_uploads_folders(study_id):
@@ -624,17 +624,14 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
         def str_to_id(x):
             return (x if isinstance(x, int)
                     else convert_to_id(x, "filepath_type"))
-        paths_w_checksum = [(basename(path), str_to_id(id_),
-                            compute_checksum(path))
-                            for path, id_ in new_filepaths]
-        # Create the list of SQL values to add
-        values = [[path, pid, checksum, 1, dd_id]
-                  for path, pid, checksum in paths_w_checksum]
+        # 1 is the checksum algorithm, which we only have one implemented
+        values = [[basename(path), str_to_id(id_), compute_checksum(path),
+                   getsize(path), 1, dd_id] for path, id_ in new_filepaths]
         # Insert all the filepaths at once and get the filepath_id back
         sql = """INSERT INTO qiita.filepath
-                    (filepath, filepath_type_id, checksum,
+                    (filepath, filepath_type_id, checksum, fp_size,
                      checksum_algorithm_id, data_directory_id)
-                 VALUES (%s, %s, %s, %s, %s)
+                 VALUES (%s, %s, %s, %s, %s, %s)
                  RETURNING filepath_id"""
         idx = qdb.sql_connection.TRN.index
         qdb.sql_connection.TRN.add(sql, values, many=True)
@@ -691,9 +688,8 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
 
     Returns
     -------
-    list of (int, str, str)
-        The list of (filepath id, filepath, filepath_type) attached to the
-        object id
+    list of dict {fp_id, fp, ft_type, checksum, fp_size}
+        The list of dict with the properties of the filepaths
     """
 
     sql_sort = ""
@@ -715,7 +711,7 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
 
     with qdb.sql_connection.TRN:
         sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
-                        subdirectory
+                        subdirectory, checksum, fp_size
                  FROM qiita.filepath
                     JOIN qiita.filepath_type USING (filepath_type_id)
                     JOIN qiita.data_directory USING (data_directory_id)
@@ -726,8 +722,9 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
         results = qdb.sql_connection.TRN.execute_fetchindex()
         db_dir = get_db_files_base_dir()
 
-        return [(fpid, _path_builder(db_dir, fp, m, s, obj_id), fp_type_)
-                for fpid, fp, fp_type_, m, s in results]
+        return [{'fp_id': fpid, 'fp': _path_builder(db_dir, fp, m, s, obj_id),
+                 'fp_type': fp_type_, 'checksum': c, 'fp_size': fpsize}
+                for fpid, fp, fp_type_, m, s, c, fpsize in results]
 
 
 def _rm_files(TRN, fp):
@@ -831,13 +828,14 @@ def purge_files_from_filesystem(delete_files=True):
 
     missing_db = actual_paths - db_paths
     if missing_db:
-        print('paths without db entries: %s' % ', '.join(missing_db))
+        print('\n\npaths without db entries: %s\n\n' % ', '.join(missing_db))
     missing_paths = [x for x in db_paths - actual_paths if not isdir(x)]
     if missing_paths:
-        print('paths without actual mounts: %s' % ', '.join(missing_paths))
+        print('\n\npaths without actual mounts: %s\n\n' % ', '.join(
+            missing_paths))
 
     # Step 2, clean based on the 2 main group: True/False subdirectory
-    # -> subdirectory True
+    # subdirectory True, the artifacts are stored within their own folders
     paths = {fp for mt in mount_types
              for x, fp, sp in get_mountpoint(mt, True, True) if sp}
     for pt in paths:
@@ -845,21 +843,30 @@ def purge_files_from_filesystem(delete_files=True):
             for aid in listdir(pt):
                 _rm_exists(
                     join(pt, aid), qdb.artifact.Artifact, aid, delete_files)
-    # -> subdirectory False
+    # subdirectory False - this are the legacy folders, the files are stored
+    # in the base folder prepended with the element id, which are:
+    #  *** ignored or not in use anymore ***
+    # - job
+    # - preprocessed_data
+    # - processed_data
+    # - raw_data
+    # - reference
+    # - working_dir
+    #  *** dealing ***
+    # - analysis
+    # - templates
+    # - uploads
     data_types = {
         'analysis': qdb.analysis.Analysis,
-        'preprocessed_data': qdb.artifact.Artifact,
-        'processed_data': qdb.artifact.Artifact,
-        'raw_data': qdb.artifact.Artifact,
         'templates': qdb.study.Study,
-        'job': qdb.analysis.Analysis
+        'uploads': qdb.study.Study
     }
     for dt, obj in data_types.items():
         for _, pt in get_mountpoint(dt, True):
             if isdir(pt):
                 for ppt in listdir(pt):
-                    _rm_exists(join(pt, ppt), obj, ppt.split('_')[0],
-                               delete_files)
+                    obj_id = ppt.split('_')[0]
+                    _rm_exists(join(pt, ppt), obj, obj_id, delete_files)
 
 
 def empty_trash_upload_folder(delete_files=True):
@@ -911,18 +918,18 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
         path_builder = partial(join, uploads_fp)
 
         # We can now go over and remove all the filepaths
-        sql = """DELETE FROM qiita.filepath WHERE filepath_id=%s"""
-        for fp_id, fp, fp_type in filepaths:
-            qdb.sql_connection.TRN.add(sql, [fp_id])
+        sql = """DELETE FROM qiita.filepath WHERE filepath_id = %s"""
+        for x in filepaths:
+            qdb.sql_connection.TRN.add(sql, [x['fp_id']])
 
-            if fp_type == 'html_summary':
-                _rm_files(qdb.sql_connection.TRN, fp)
+            if x['fp_type'] == 'html_summary':
+                _rm_files(qdb.sql_connection.TRN, x['fp'])
             else:
-                destination = path_builder(basename(fp))
+                destination = path_builder(basename(x['fp']))
 
                 qdb.sql_connection.TRN.add_post_rollback_func(
-                    move, destination, fp)
-                move(fp, destination)
+                    move, destination, x['fp'])
+                move(x['fp'], destination)
 
         qdb.sql_connection.TRN.execute()
 
@@ -981,6 +988,36 @@ def filepath_id_to_rel_path(filepath_id):
         else:
             result = join(mp, fp)
         return result
+
+
+def filepath_id_to_object_id(filepath_id):
+    """Gets the object id to which the filepath id belongs to
+
+    Returns
+    -------
+    int
+        The object id the filepath id belongs to or None if not found
+
+    Notes
+    -----
+    This helper function is intended to be used with the download handler so
+    we can prepend downloads with the artifact id; thus, we will only look for
+    filepath ids in qiita.analysis_filepath and qiita.artifact_filepath as
+    search in qiita.reference, qiita.prep_template_filepath and
+    qiita.sample_template_filepath will make the naming redundat (those already
+    have the study_id in their filename)
+    """
+    with qdb.sql_connection.TRN:
+        sql = """
+            SELECT analysis_id FROM qiita.analysis_filepath
+                WHERE filepath_id = %s UNION
+            SELECT artifact_id FROM qiita.artifact_filepath
+                WHERE filepath_id = %s"""
+        qdb.sql_connection.TRN.add(sql, [filepath_id, filepath_id])
+        fids = sorted(qdb.sql_connection.TRN.execute_fetchflatten())
+        if fids:
+            return fids[0]
+        return None
 
 
 def filepath_ids_to_rel_paths(filepath_ids):

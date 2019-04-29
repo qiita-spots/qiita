@@ -14,7 +14,6 @@ from unittest import TestCase, main
 from six import StringIO
 from future import standard_library
 from functools import partial
-from operator import itemgetter
 
 import pandas as pd
 
@@ -97,7 +96,7 @@ class TestLoadArtifactFromCmd(TestCase):
                              'primer': 'GTGCCAGCMGCCGCGGTAA',
                              'barcode': 'GTCCGCAAGTTA',
                              'run_prefix': "s_G1_L001_sequences",
-                             'platform': 'ILLUMINA',
+                             'platform': 'Illumina',
                              'instrument_model': 'Illumina MiSeq',
                              'library_construction_protocol': 'AAAA',
                              'experiment_design_description': 'BBBB'}},
@@ -106,7 +105,7 @@ class TestLoadArtifactFromCmd(TestCase):
             metadata, qdb.study.Study(1), "16S")
         obs = qdb.commands.load_artifact_from_cmd(
             fps, ftypes, 'FASTQ', prep_template=pt.id)
-        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
             qdb.util.check_count('qiita.filepath', self.fp_count + 5))
@@ -127,7 +126,7 @@ class TestLoadArtifactFromCmd(TestCase):
             fps, ftypes, 'Demultiplexed', parents=[1], dflt_params_id=1,
             required_params='{"input_data": 1}',
             optional_params='{"min_per_read_length_fraction": 0.80}')
-        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
             qdb.util.check_count('qiita.filepath', self.fp_count + 2))
@@ -144,7 +143,7 @@ class TestLoadArtifactFromCmd(TestCase):
         obs = qdb.commands.load_artifact_from_cmd(
             fps, ftypes, 'BIOM', parents=[3], dflt_params_id=10,
             required_params='{"input_data": 3}')
-        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
             qdb.util.check_count('qiita.filepath', self.fp_count + 1))
@@ -360,12 +359,6 @@ class TestUpdateArtifactFromCmd(TestCase):
         self._clean_up_files = [seqs_fp, barcodes_fp]
         self.uploaded_files = qdb.util.get_files_from_uploads_folders("1")
 
-        # The files for the Artifact 1 doesn't exist, create them
-        for _, fp, _ in qdb.artifact.Artifact(1).filepaths:
-            with open(fp, 'w') as f:
-                f.write('\n')
-            self._clean_up_files.append(fp)
-
     def tearDown(self):
         new_uploaded_files = qdb.util.get_files_from_uploads_folders("1")
         new_files = set(new_uploaded_files).difference(self.uploaded_files)
@@ -387,14 +380,51 @@ class TestUpdateArtifactFromCmd(TestCase):
                 self.filepaths, self.filepaths_types[1:], 1)
 
     def test_update_artifact_from_cmd(self):
-        artifact = qdb.commands.update_artifact_from_cmd(
-            self.filepaths, self.filepaths_types, 1)
-        for _, fp, _ in artifact.filepaths:
-            self._clean_up_files.append(fp)
+        # Generate some files for an artifact
+        fd, fp1 = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        with open(fp1, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 1:N:0:\n"
+                    "NACGTAGGGTGCAAGCGTTGTCCGGAATNA\n"
+                    "+\n"
+                    "#1=DDFFFHHHHHJJJJJJJJJJJJGII#0\n")
 
-        for obs, exp in zip(sorted(artifact.filepaths, key=itemgetter(1)),
+        fd, fp2 = mkstemp(suffix='_barcodes.fastq')
+        close(fd)
+        with open(fp2, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 2:N:0:\n"
+                    "NNNCNNNNNNNNN\n"
+                    "+\n"
+                    "#############\n")
+        filepaths = [(fp1, 1), (fp2, 3)]
+        # Create a new prep template
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'Illumina',
+                            'instrument_model': 'Illumina MiSeq',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
+        self.prep_template = \
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                metadata, qdb.study.Study(1), "16S")
+        artifact = qdb.artifact.Artifact.create(
+            filepaths, "FASTQ", prep_template=self.prep_template)
+        for x in artifact.filepaths:
+            self._clean_up_files.append(x['fp'])
+
+        new_artifact = qdb.commands.update_artifact_from_cmd(
+            self.filepaths, self.filepaths_types, artifact.id)
+        for x in new_artifact.filepaths:
+            self._clean_up_files.append(x['fp'])
+
+        for obs, exp in zip(sorted(artifact.filepaths, key=lambda x: x['fp']),
                             self.checksums):
-            self.assertEqual(qdb.util.compute_checksum(obs[1]), exp)
+            self.assertEqual(qdb.util.compute_checksum(obs['fp']), exp)
 
 
 CONFIG_1 = """[required]

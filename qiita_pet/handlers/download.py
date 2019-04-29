@@ -18,7 +18,8 @@ from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
-                           get_filepath_information, get_mountpoint)
+                           get_filepath_information, get_mountpoint,
+                           filepath_id_to_object_id)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -69,7 +70,7 @@ class BaseHandlerDownload(BaseHandler):
                 spath = fullpath
                 if fullpath.startswith(basedir):
                     spath = fullpath[basedir_len:]
-                to_download.append((fullpath, spath, spath))
+                to_download.append((spath, spath, '-', str(getsize(fullpath))))
         return to_download
 
     def _list_artifact_files_nginx(self, artifact):
@@ -88,21 +89,23 @@ class BaseHandlerDownload(BaseHandler):
         basedir = get_db_files_base_dir()
         basedir_len = len(basedir) + 1
         to_download = []
-        for i, (fid, path, data_type) in enumerate(artifact.filepaths):
+        for i, x in enumerate(artifact.filepaths):
             # ignore if tgz as they could create problems and the
             # raw data is in the folder
-            if data_type == 'tgz':
+            if x['fp_type'] == 'tgz':
                 continue
-            if isdir(path):
+            if isdir(x['fp']):
                 # If we have a directory, we actually need to list all the
                 # files from the directory so NGINX can actually download all
                 # of them
-                to_download.extend(self._list_dir_files_nginx(path))
-            elif path.startswith(basedir):
-                spath = path[basedir_len:]
-                to_download.append((path, spath, spath))
+                to_download.extend(self._list_dir_files_nginx(x['fp']))
+            elif x['fp'].startswith(basedir):
+                spath = x['fp'][basedir_len:]
+                to_download.append(
+                    (spath, spath, str(x['checksum']), str(x['fp_size'])))
             else:
-                to_download.append((path, path, path))
+                to_download.append(
+                    (x['fp'], x['fp'], str(x['checksum']), str(x['fp_size'])))
 
         for pt in artifact.prep_templates:
             qmf = pt.qiime_map_fp
@@ -110,9 +113,8 @@ class BaseHandlerDownload(BaseHandler):
                 sqmf = qmf
                 if qmf.startswith(basedir):
                     sqmf = qmf[basedir_len:]
-                to_download.append(
-                    (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
-                                % artifact.id))
+                fname = 'mapping_files/%s_mapping_file.txt' % artifact.id
+                to_download.append((sqmf, fname, '-', str(getsize(qmf))))
         return to_download
 
     def _write_nginx_file_list(self, to_download):
@@ -120,12 +122,12 @@ class BaseHandlerDownload(BaseHandler):
 
         Parameters
         ----------
-        to_download : list of (str, str, str)
+        to_download : list of (str, str, str, str)
             The file list information
         """
         all_files = '\n'.join(
-            ["- %s /protected/%s %s" % (getsize(fp), sfp, n)
-             for fp, sfp, n in to_download])
+            ["%s %s /protected/%s %s" % (fp_checksum, fp_size, fp, fp_name)
+             for fp, fp_name, fp_checksum, fp_size in to_download])
 
         self.set_header('X-Archive-Files', 'zip')
         self.write("%s\n" % all_files)
@@ -185,6 +187,9 @@ class DownloadHandler(BaseHandlerDownload):
             self.set_header('Content-Type', 'application/octet-stream')
             self.set_header('Content-Transfer-Encoding', 'binary')
             self.set_header('X-Accel-Redirect', '/protected/' + relpath)
+            aid = filepath_id_to_object_id(fid)
+            if aid is not None:
+                fname = '%d_%s' % (aid, fname)
 
         self._set_nginx_headers(fname)
         self.finish()

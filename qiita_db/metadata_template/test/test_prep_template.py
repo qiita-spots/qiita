@@ -10,7 +10,7 @@ from future.builtins import zip
 from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
-from os.path import join
+from os.path import join, exists
 from collections import Iterable
 from copy import deepcopy
 
@@ -295,7 +295,7 @@ class TestPrepTemplate(TestCase):
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'qiita_prep_id': 1000,
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
@@ -308,7 +308,7 @@ class TestPrepTemplate(TestCase):
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'qiita_prep_id': 1000,
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
@@ -321,7 +321,7 @@ class TestPrepTemplate(TestCase):
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'qiita_prep_id': 1000,
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
@@ -339,7 +339,7 @@ class TestPrepTemplate(TestCase):
                               'primer': 'GTGCCAGCMGCCGCGGTAA',
                               'barcode': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
-                              'platform': 'ILLUMINA',
+                              'platform': 'Illumina',
                               'qiita_prep_id': 1000,
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
@@ -352,7 +352,7 @@ class TestPrepTemplate(TestCase):
                               'primer': 'GTGCCAGCMGCCGCGGTAA',
                               'barcode': 'CGTAGAGCTCTC',
                               'run_prefix': "s_G1_L001_sequences",
-                              'platform': 'ILLUMINA',
+                              'platform': 'Illumina',
                               'qiita_prep_id': 1000,
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
@@ -365,7 +365,7 @@ class TestPrepTemplate(TestCase):
                               'primer': 'GTGCCAGCMGCCGCGGTAA',
                               'barcode': 'CCTCTGAGAGCT',
                               'run_prefix': "s_G1_L002_sequences",
-                              'platform': 'ILLUMINA',
+                              'platform': 'Illumina',
                               'qiita_prep_id': 1000,
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
@@ -388,11 +388,28 @@ class TestPrepTemplate(TestCase):
             '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
             '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'}
 
-        self._clean_up_files = []
+        # Generate some files for new artifact
+        fd, fp1 = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        with open(fp1, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 1:N:0:\n"
+                    "NACGTAGGGTGCAAGCGTTGTCCGGAATNA\n"
+                    "+\n"
+                    "#1=DDFFFHHHHHJJJJJJJJJJJJGII#0\n")
+        fd, fp2 = mkstemp(suffix='_barcodes.fastq')
+        close(fd)
+        with open(fp2, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 2:N:0:\n"
+                    "NNNCNNNNNNNNN\n"
+                    "+\n"
+                    "#############\n")
+        self.filepaths = [(fp1, 1), (fp2, 3)]
+        self._clean_up_files = [fp1, fp2]
 
     def tearDown(self):
         for f in self._clean_up_files:
-            remove(f)
+            if exists(f):
+                remove(f)
 
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""
@@ -705,7 +722,7 @@ class TestPrepTemplate(TestCase):
                               'primer': 'GTGCCAGCMGCCGCGGTAA',
                               'barcode': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
-                              'platform': 'ILLUMINA',
+                              'platform': 'Illumina',
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'},
@@ -717,7 +734,7 @@ class TestPrepTemplate(TestCase):
                               'primer': 'GTGCCAGCMGCCGCGGTAA',
                               'barcode': 'CGTAGAGCTCTC',
                               'run_prefix': "s_G1_L001_sequences",
-                              'platform': 'ILLUMINA',
+                              'platform': 'Illumina',
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'},
@@ -729,7 +746,7 @@ class TestPrepTemplate(TestCase):
                               'primer': 'GTGCCAGCMGCCGCGGTAA',
                               'barcode': 'CCTCTGAGAGCT',
                               'run_prefix': "s_G1_L002_sequences",
-                              'platform': 'ILLUMINA',
+                              'platform': 'Illumina',
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'}
@@ -867,6 +884,8 @@ class TestPrepTemplate(TestCase):
             obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
         self.assertEqual(obs, exp)
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def _common_creation_checks(self, pt, fp_count, name):
         self.assertEqual(pt.name, name)
@@ -894,7 +913,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L002_sequences',
                 'str_column': 'Value for sample 3',
@@ -907,7 +926,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 1',
@@ -920,7 +939,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 2',
@@ -935,6 +954,35 @@ class TestPrepTemplate(TestCase):
         filepaths = pt.get_filepaths()
         self.assertEqual(len(filepaths), 2)
 
+    def test_validate_restrictions(self):
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        pt = PT.create(self.metadata, self.test_study, self.data_type,
+                       name='New Prep For Test')
+        success, message = pt.validate_restrictions()
+        self.assertEqual(message, 'prep %d is missing columns "target_gene, '
+                         'target_subfragment"' % pt.id)
+        self.assertFalse(success)
+
+        metadata = self.metadata.copy()
+        metadata['target_gene'] = 'Should Warn'
+        metadata['target_subfragment'] = 'V4'
+        pt.extend(metadata)
+        success, message = pt.validate_restrictions()
+        self.assertEqual(message, 'prep %d has a no valid values: "Should '
+                         'Warn", valid values are: "16S rRNA, 18S rRNA, ITS"'
+                         % pt.id)
+        self.assertFalse(success)
+
+        metadata['target_gene'] = '16S rRNA'
+        pt.update(metadata)
+        success, message = pt.validate_restrictions()
+        success, message = pt.validate_restrictions()
+        self.assertEqual(message, '')
+        self.assertTrue(success)
+
+        # cleaning
+        PT.delete(pt.id)
+
     def test_create(self):
         """Creates a new PrepTemplate"""
         fp_count = qdb.util.get_count('qiita.filepath')
@@ -942,6 +990,8 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type,
             name='New Prep For Test')
         self._common_creation_checks(pt, fp_count, "New Prep For Test")
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
@@ -950,6 +1000,8 @@ class TestPrepTemplate(TestCase):
             self.metadata_prefixed, self.test_study, self.data_type)
         self._common_creation_checks(pt, fp_count,
                                      "Prep information %s" % pt.id)
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_empty_prep(self):
         """Creates a new PrepTemplate"""
@@ -993,6 +1045,8 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type_id)
         self._common_creation_checks(pt, fp_count,
                                      "Prep information %s" % pt.id)
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_create_warning(self):
         """Warns if a required columns is missing for a given functionality
@@ -1026,7 +1080,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L002_sequences',
                 'str_column': 'Value for sample 3',
@@ -1038,7 +1092,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 1',
@@ -1050,7 +1104,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 2',
@@ -1064,6 +1118,9 @@ class TestPrepTemplate(TestCase):
         # prep and qiime files have been created
         filepaths = pt.get_filepaths()
         self.assertEqual(len(filepaths), 2)
+
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_create_investigation_type_error(self):
         """Create raises an error if the investigation_type does not exists"""
@@ -1093,9 +1150,14 @@ class TestPrepTemplate(TestCase):
         """Try to delete a prep template with a raw data attached to id"""
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type_id)
-        pt.artifact = qdb.artifact.Artifact(1)
+        artifact = qdb.artifact.Artifact.create(
+            self.filepaths, "FASTQ", prep_template=pt)
+
         with self.assertRaises(qdb.exceptions.QiitaDBExecutionError):
             qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
+        # cleaning
+        qdb.artifact.Artifact.delete(artifact.id)
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_delete(self):
         """Deletes prep template 2"""
@@ -1158,6 +1220,9 @@ class TestPrepTemplate(TestCase):
             obs = f.read()
         self.assertEqual(obs, EXP_PREP_TEMPLATE.format(pt.id))
 
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
+
     def test_investigation_type_setter(self):
         """Able to update the investigation type"""
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
@@ -1167,6 +1232,9 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(pt.investigation_type, 'Other')
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             pt.investigation_type = "should fail"
+
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_investigation_type_instance_setter(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
@@ -1188,6 +1256,9 @@ class TestPrepTemplate(TestCase):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type_id)
         self.assertEqual(pt.status, 'sandbox')
+
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_update_category(self):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
@@ -1242,6 +1313,8 @@ class TestPrepTemplate(TestCase):
              qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS_TARGET_GENE[
                 'demultiplex']])
         self.assertEqual(obs, set())
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_artifact(self):
         """Returns the artifact associated with the prep template"""
@@ -1250,6 +1323,8 @@ class TestPrepTemplate(TestCase):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type_id)
         self.assertEqual(pt.artifact, None)
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_artifact_setter_error(self):
         a = qdb.artifact.Artifact(1)
@@ -1257,12 +1332,15 @@ class TestPrepTemplate(TestCase):
             self.tester.artifact = a
 
     def test_artifact_setter(self):
-        a = qdb.artifact.Artifact(1)
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type_id)
         self.assertEqual(pt.artifact, None)
-        pt.artifact = a
-        self.assertEqual(pt.artifact, a)
+        artifact = qdb.artifact.Artifact.create(
+            self.filepaths, "FASTQ", prep_template=pt)
+        self.assertEqual(pt.artifact, artifact)
+        # cleaning
+        qdb.artifact.Artifact.delete(artifact.id)
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_can_be_updated_on_new(self):
         """test if the template can be updated"""
@@ -1270,6 +1348,8 @@ class TestPrepTemplate(TestCase):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
         self.assertTrue(pt.can_be_updated({'barcode'}))
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_extend_add_samples(self):
         """extend correctly works adding new samples"""
@@ -1284,6 +1364,8 @@ class TestPrepTemplate(TestCase):
                           '%s.SKD8.640184' % self.test_study.id,
                           '%s.SKB7.640196' % self.test_study.id}
         self.assertEqual(pt._get_sample_ids(), exp_sample_ids)
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_extend_add_samples_error(self):
         """extend fails adding samples to an already preprocessed template"""
@@ -1315,7 +1397,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L002_sequences',
                 'str_column': 'Value for sample 3',
@@ -1329,7 +1411,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 1',
@@ -1343,7 +1425,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 2',
@@ -1352,6 +1434,8 @@ class TestPrepTemplate(TestCase):
                 'emp_status': 'EMP',
                 'new_col': 'val3'}}
         self.assertCountEqual(obs, exp)
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_extend_update(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
@@ -1375,7 +1459,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L002_sequences',
                 'str_column': 'NEW VAL',
@@ -1389,7 +1473,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 1',
@@ -1403,7 +1487,7 @@ class TestPrepTemplate(TestCase):
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
-                'platform': 'ILLUMINA',
+                'platform': 'Illumina',
                 'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 2',
@@ -1445,13 +1529,16 @@ class TestPrepTemplate(TestCase):
                '1.SKM1.640183': 'ERX0000026'}
         self.assertEqual(obs, exp)
 
-        obs = qdb.metadata_template.prep_template.PrepTemplate.create(
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study,
-            self.data_type).ebi_experiment_accessions
+            self.data_type)
+        obs = pt.ebi_experiment_accessions
         exp = {'%s.SKB8.640193' % self.test_study.id: None,
                '%s.SKD8.640184' % self.test_study.id: None,
                '%s.SKB7.640196' % self.test_study.id: None}
         self.assertEqual(obs, exp)
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_ebi_experiment_accessions_setter(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
@@ -1474,6 +1561,8 @@ class TestPrepTemplate(TestCase):
         def f():
             pt.ebi_experiment_accessions = exp_acc
         npt.assert_warns(qdb.exceptions.QiitaDBWarning, f)
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_ebi_experiment_accessions_setter_common_samples(self):
         # If 2 different prep templates have common samples, setting the
@@ -1490,12 +1579,17 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(pt1.ebi_experiment_accessions, exp_acc1)
         exp_acc2 = {k: None for k in exp_acc1.keys()}
         self.assertEqual(pt2.ebi_experiment_accessions, exp_acc2)
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt1.id)
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt2.id)
 
     def test_is_submitted_to_ebi(self):
         self.assertTrue(self.tester.is_submitted_to_ebi)
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
         self.assertFalse(pt.is_submitted_to_ebi)
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_validate_template_warning_missing(self):
         """Raises an error if the template is missing a required column"""
@@ -1506,7 +1600,7 @@ class TestPrepTemplate(TestCase):
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}
@@ -1523,7 +1617,7 @@ class TestPrepTemplate(TestCase):
                               'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                               'barcodesequence': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
-                              'platform': 'ILLUMINA',
+                              'platform': 'Illumina',
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'}
@@ -1581,6 +1675,10 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
             pt.delete_samples(['1.SKM5.640177'])
 
+        # cleaning
+        qdb.metadata_template.prep_template.PrepTemplate.delete(ptA.id)
+        qdb.metadata_template.prep_template.PrepTemplate.delete(ptB.id)
+
     def test_name_setter(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
         self.assertEqual(pt.name, 'Prep information 1')
@@ -1596,13 +1694,13 @@ EXP_PREP_TEMPLATE = (
     'instrument_model\tlibrary_construction_protocol\tplatform\tprimer\t'
     'qiita_prep_id\trun_prefix\tstr_column\n'
     '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
+    'Illumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
     's_G1_L002_sequences\tValue for sample 3\n'
     '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
+    'Illumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
     's_G1_L001_sequences\tValue for sample 1\n'
     '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
+    'Illumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
     's_G1_L001_sequences\tValue for sample 2\n')
 
 

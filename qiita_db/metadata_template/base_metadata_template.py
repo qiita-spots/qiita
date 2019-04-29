@@ -1224,8 +1224,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
     def get_filepaths(self):
         r"""Retrieves the list of (filepath_id, filepath)"""
         with qdb.sql_connection.TRN:
-            return [(fp_id, fp)
-                    for fp_id, fp, _ in qdb.util.retrieve_filepaths(
+            return [(x['fp_id'], x['fp'])
+                    for x in qdb.util.retrieve_filepaths(
                         self._filepath_table, self._id_column, self.id,
                         sort='descending')]
 
@@ -1510,7 +1510,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             if category not in self.categories():
                 raise qdb.exceptions.QiitaDBColumnError(category)
-            sql = """SELECT sample_id, sample_values->>'{0}' as {0}
+            sql = """SELECT sample_id,
+                        COALESCE(sample_values->>'{0}', 'None') AS {0}
                      FROM qiita.{1}
                      WHERE sample_id != '{2}'""".format(
                 category, self._table_name(self._id), QIITA_COLUMN_NAME)
@@ -1754,3 +1755,60 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         return (qdb.metadata_template.util.get_qiime2_reserved_words() &
                 set(column_names))
+
+    @property
+    def restrictions(cls):
+        r"""Retrieves the restrictions based on the class._table
+
+        Returns
+        -------
+        dict
+            {restriction: values, ...}
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name, valid_values
+                     FROM qiita.restrictions
+                     WHERE table_name = %s"""
+            qdb.sql_connection.TRN.add(sql, [cls._table])
+            return dict(qdb.sql_connection.TRN.execute_fetchindex())
+
+    def validate_restrictions(self):
+        r"""Validates the restrictions
+
+        Returns
+        -------
+        success, boolean
+            If the validation was successful
+        message, string
+            Message if success is not True
+        """
+        with qdb.sql_connection.TRN:
+            # [:-1] removing last _
+            name = '%s %d' % (self._table_prefix[:-1], self.id)
+            success = True
+            message = []
+            restrictions = self.restrictions
+            categories = self.categories()
+
+            difference = sorted(set(restrictions.keys()) - set(categories))
+            if difference:
+                success = False
+                message.append(
+                    '%s is missing columns "%s"' % (name, ', '.join(
+                        difference)))
+
+            to_review = set(restrictions.keys()) & set(categories)
+            for key in to_review:
+                info_vals = set(self.get_category(key).values())
+                msg = []
+                for v in info_vals:
+                    if v not in restrictions[key]:
+                        msg.append(v)
+                if msg:
+                    success = False
+                    message.append(
+                        '%s has a no valid values: "%s", valid values are: '
+                        '"%s"' % (name, ', '.join(msg),
+                                  ', '.join(restrictions[key])))
+
+            return success, '\n'.join(message)

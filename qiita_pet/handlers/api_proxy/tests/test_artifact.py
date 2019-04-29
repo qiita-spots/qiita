@@ -10,6 +10,7 @@ from os.path import join, exists
 from os import remove, close
 from datetime import datetime
 from tempfile import mkstemp
+from functools import partial
 
 import pandas as pd
 import numpy.testing as npt
@@ -25,8 +26,8 @@ from qiita_db.software import Parameters, DefaultParameters
 from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
-    artifact_types_get_req, artifact_post_req, artifact_patch_request,
-    artifact_get_prep_req, artifact_get_info)
+    artifact_types_get_req, artifact_post_req, artifact_get_prep_req,
+    artifact_get_info)
 
 
 class TestArtifactAPIReadOnly(TestCase):
@@ -38,6 +39,7 @@ class TestArtifactAPIReadOnly(TestCase):
 
     def test_artifact_get_req(self):
         obs = artifact_get_req('test@foo.bar', 1)
+        path_builder = partial(join, get_mountpoint('raw_data')[0][1])
         exp = {'id': 1,
                'type': 'FASTQ',
                'study': 1,
@@ -51,11 +53,17 @@ class TestArtifactAPIReadOnly(TestCase):
                'is_submitted_vamps': False,
                'parents': [],
                'filepaths': [
-                   (1, join(get_mountpoint('raw_data')[0][1],
-                    '1_s_G1_L001_sequences.fastq.gz'), 'raw_forward_seqs'),
-                   (2,  join(get_mountpoint('raw_data')[0][1],
-                    '1_s_G1_L001_sequences_barcodes.fastq.gz'),
-                    'raw_barcodes')]
+                   {'fp_id': 1,
+                    'fp': path_builder("1_s_G1_L001_sequences.fastq.gz"),
+                    'fp_type': "raw_forward_seqs",
+                    'checksum': '2125826711',
+                    'fp_size': 58},
+                   {'fp_id': 2,
+                    'fp': path_builder(
+                        "1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                    'fp_type': "raw_barcodes",
+                    'checksum': '2125826711',
+                    'fp_size': 58}]
                }
         self.assertEqual(obs, exp)
 
@@ -162,48 +170,6 @@ class TestArtifactAPI(TestCase):
 
         r_client.flushdb()
 
-    def test_artifact_patch_request(self):
-        obs = artifact_patch_request('test@foo.bar', 'replace',
-                                     '/%d/name/' % self.artifact.id,
-                                     req_value='NEW_NAME')
-        exp = {'status': 'success', 'message': ''}
-        self.assertEqual(obs, exp)
-
-        self.assertEqual(Artifact(self.artifact.id).name, 'NEW_NAME')
-
-    def test_artifact_patch_request_errors(self):
-        # No access to the study
-        obs = artifact_patch_request('demo@microbio.me', 'replace',
-                                     '/1/name/', req_value='NEW_NAME')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-        # Incorrect path parameter
-        obs = artifact_patch_request('test@foo.bar', 'replace',
-                                     '/1/name/oops/', req_value='NEW_NAME')
-        exp = {'status': 'error',
-               'message': 'Incorrect path parameter'}
-        self.assertEqual(obs, exp)
-        # Missing value
-        obs = artifact_patch_request('test@foo.bar', 'replace', '/1/name/')
-        exp = {'status': 'error',
-               'message': 'A value is required'}
-        self.assertEqual(obs, exp)
-        # Wrong attribute
-        obs = artifact_patch_request('test@foo.bar', 'replace', '/1/oops/',
-                                     req_value='NEW_NAME')
-        exp = {'status': 'error',
-               'message': 'Attribute "oops" not found. Please, check the '
-                          'path parameter'}
-        self.assertEqual(obs, exp)
-        # Wrong operation
-        obs = artifact_patch_request('test@foo.bar', 'add', '/1/name/',
-                                     req_value='NEW_NAME')
-        exp = {'status': 'error',
-               'message': 'Operation "add" not supported. Current supported '
-                          'operations: replace'}
-        self.assertEqual(obs, exp)
-
     def test_artifact_get_prep_req(self):
         obs = artifact_get_prep_req('test@foo.bar', [4])
         exp = {'status': 'success', 'msg': '', 'data': {
@@ -297,7 +263,7 @@ class TestArtifactAPI(TestCase):
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
         a = Artifact(pt.artifact.id)
-        self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
+        self._files_to_remove.extend([x['fp'] for x in a.filepaths])
 
     def test_artifact_post_req_error(self):
         # Create a new prep template to attach the artifact to

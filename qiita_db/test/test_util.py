@@ -40,6 +40,22 @@ class DBUtilTestsBase(TestCase):
 
 
 class DBUtilTests(DBUtilTestsBase):
+    def test_filepath_id_to_object_id(self):
+        # filepaths 1, 2 belongs to artifact 1
+        self.assertEqual(qdb.util.filepath_id_to_object_id(1), 1)
+        self.assertEqual(qdb.util.filepath_id_to_object_id(2), 1)
+        # filepaths 3, 4 belongs to artifact 2
+        self.assertEqual(qdb.util.filepath_id_to_object_id(3), 2)
+        self.assertEqual(qdb.util.filepath_id_to_object_id(4), 2)
+        # filepaths 9 belongs to artifact 4
+        self.assertEqual(qdb.util.filepath_id_to_object_id(9), 4)
+        # filepath 16 belongs to anlaysis 1
+        self.assertEqual(qdb.util.filepath_id_to_object_id(16), 1)
+        # filepath 18 belongs to study 1
+        self.assertIsNone(qdb.util.filepath_id_to_object_id(18))
+        # filepath 22 belongs to analysis/artifact 7
+        self.assertEqual(qdb.util.filepath_id_to_object_id(22), 7)
+
     def test_check_required_columns(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
         qdb.util.check_required_columns(self.required, self.table)
@@ -189,7 +205,7 @@ class DBUtilTests(DBUtilTestsBase):
                                        "WHERE filepath_id=%d" % exp_new_id)
             obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp_fp = "2_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5, 1]]
         self.assertEqual(obs, exp)
 
         qdb.util.purge_filepaths()
@@ -223,7 +239,7 @@ class DBUtilTests(DBUtilTestsBase):
                                        "WHERE filepath_id=%d" % exp_new_id)
             obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp_fp = "2_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5, 1]]
         self.assertEqual(obs, exp)
 
         qdb.util.purge_filepaths()
@@ -255,7 +271,7 @@ class DBUtilTests(DBUtilTestsBase):
                                        "WHERE filepath_id=%d" % exp_new_id)
             obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp_fp = "2_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5, 1]]
         self.assertEqual(obs, exp)
 
         qdb.util.purge_filepaths()
@@ -265,10 +281,16 @@ class DBUtilTests(DBUtilTestsBase):
                                           'artifact_id', 1)
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
-        exp = [(1, path_builder("1_s_G1_L001_sequences.fastq.gz"),
-                "raw_forward_seqs"),
-               (2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes")]
+        exp = [{'fp_id': 1,
+                'fp': path_builder("1_s_G1_L001_sequences.fastq.gz"),
+                'fp_type': "raw_forward_seqs",
+                'checksum': '2125826711',
+                'fp_size': 58},
+               {'fp_id': 2,
+                'fp': path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                'fp_type': "raw_barcodes",
+                'checksum': '2125826711',
+                'fp_size': 58}]
         self.assertEqual(obs, exp)
 
     def test_retrieve_filepaths_sort(self):
@@ -276,10 +298,16 @@ class DBUtilTests(DBUtilTestsBase):
             'artifact_filepath', 'artifact_id', 1, sort='descending')
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
-        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes"),
-               (1, path_builder("1_s_G1_L001_sequences.fastq.gz"),
-                "raw_forward_seqs")]
+        exp = [{'fp_id': 2,
+                'fp': path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                'fp_type': "raw_barcodes",
+                'checksum': '2125826711',
+                'fp_size': 58},
+               {'fp_id': 1,
+                'fp': path_builder("1_s_G1_L001_sequences.fastq.gz"),
+                'fp_type': "raw_forward_seqs",
+                'checksum': '2125826711',
+                'fp_size': 58}]
         self.assertEqual(obs, exp)
 
     def test_retrieve_filepaths_type(self):
@@ -288,16 +316,22 @@ class DBUtilTests(DBUtilTestsBase):
             fp_type='raw_barcodes')
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
-        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes")]
+        exp = [{'fp_id': 2,
+                'fp': path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                'fp_type': "raw_barcodes",
+                'checksum': '2125826711',
+                'fp_size': 58}]
         self.assertEqual(obs, exp)
 
         obs = qdb.util.retrieve_filepaths(
             'artifact_filepath', 'artifact_id', 1, fp_type='raw_barcodes')
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
-        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes")]
+        exp = [{'fp_id': 2,
+                'fp': path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                'fp_type': "raw_barcodes",
+                'checksum': '2125826711',
+                'fp_size': 58}]
         self.assertEqual(obs, exp)
 
         obs = qdb.util.retrieve_filepaths(
@@ -354,7 +388,7 @@ class DBUtilTests(DBUtilTestsBase):
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
@@ -398,10 +432,10 @@ class DBUtilTests(DBUtilTestsBase):
         # check that they do not exist in the old path but do in the new one
         path_for_removal = join(qdb.util.get_mountpoint("uploads")[0][1],
                                 str(study_id))
-        for _, fp, fp_type in filepaths:
-            self.assertFalse(exists(fp))
-            new_fp = join(path_for_removal, basename(fp))
-            if fp_type == 'html_summary':
+        for x in filepaths:
+            self.assertFalse(exists(x['fp']))
+            new_fp = join(path_for_removal, basename(x['fp']))
+            if x['fp_type'] == 'html_summary':
                 # The html summary gets removed, not moved
                 self.assertFalse(exists(new_fp))
             else:
@@ -600,7 +634,7 @@ class DBUtilTests(DBUtilTestsBase):
         # This path is machine specific. Just checking that is not empty
         self.assertIsNotNone(obs.pop('fullpath'))
         exp = {'filepath_id': 1, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
-               'filepath_type': 'raw_forward_seqs', 'checksum': '852952723',
+               'filepath_type': 'raw_forward_seqs', 'checksum': '2125826711',
                'data_type': 'raw_data', 'mountpoint': 'raw_data',
                'subdirectory': False, 'active': True}
         self.assertEqual(obs, exp)
@@ -1245,7 +1279,7 @@ class PurgeFilepathsTestA(PurgeFilepathsTestBase):
                             'amzn_primer': 'GTGCCAGCMGCCGCGGTAA',
                             'bartab': 'GTCCGCAAGTTA',
                             'frd_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}

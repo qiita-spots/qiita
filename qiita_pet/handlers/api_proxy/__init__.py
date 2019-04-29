@@ -29,7 +29,7 @@ from .studies import (
 from .artifact import (artifact_graph_get_req, artifact_types_get_req,
                        artifact_post_req, artifact_get_req,
                        artifact_status_put_req, artifact_get_prep_req,
-                       artifact_patch_request, artifact_get_info)
+                       artifact_get_info)
 from .ontology import ontology_patch_handler
 from .processing import (
     list_commands_handler_get_req, list_options_handler_get_req,
@@ -61,6 +61,6 @@ __all__ = ['prep_template_summary_get_req', 'data_types_get_req',
            'list_commands_handler_get_req',
            'list_options_handler_get_req', 'workflow_handler_post_req',
            'workflow_handler_patch_req', 'workflow_run_post_req',
-           'job_ajax_get_req', 'artifact_patch_request',
+           'job_ajax_get_req',
            'get_sample_template_processing_status', 'user_jobs_get_req',
            'job_ajax_patch_req', 'check_access', 'check_fp']

@@ -998,11 +998,11 @@ class EBISubmission(object):
 
         fwd_reads = []
         rev_reads = []
-        for _, fp, fpt in self.artifact.filepaths:
-            if fpt == 'raw_forward_seqs':
-                fwd_reads.append((basename(fp), fp))
-            elif fpt == 'raw_reverse_seqs':
-                rev_reads.append((basename(fp), fp))
+        for x in self.artifact.filepaths:
+            if x['fp_type'] == 'raw_forward_seqs':
+                fwd_reads.append((basename(x['fp']), x['fp']))
+            elif x['fp_type'] == 'raw_reverse_seqs':
+                rev_reads.append((basename(x['fp']), x['fp']))
         fwd_reads.sort(key=lambda x: x[1])
         rev_reads.sort(key=lambda x: x[1])
         if rev_reads:
@@ -1056,8 +1056,8 @@ class EBISubmission(object):
         # `preprocessed_demux`. Thus, we only use the first one
         # (the only one present)
         ar = self.artifact
-        demux = [path for _, path, ftype in ar.filepaths
-                 if ftype == 'preprocessed_demux'][0]
+        demux = [x['fp'] for x in ar.filepaths
+                 if x['fp_type'] == 'preprocessed_demux'][0]
 
         demux_samples = set()
         with open_file(demux) as demux_fh:

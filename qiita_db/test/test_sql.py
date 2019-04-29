@@ -62,7 +62,7 @@ class TestSQL(TestCase):
             fp, "BIOM",
             parents=[qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)],
             processing_parameters=params)
-        self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
+        self._files_to_remove.extend([x['fp'] for x in new.filepaths])
         with qdb.sql_connection.TRN:
             sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
             qdb.sql_connection.TRN.add(sql, [new.id])
@@ -77,7 +77,9 @@ class TestSQL(TestCase):
                              'primer': 'GTGCCAGCMGCCGCGGTAA',
                              'barcode': 'GTCCGCAAGTTA',
                              'run_prefix': "s_G1_L001_sequences",
-                             'platform': 'ILLUMINA',
+                             'platform': 'Illumina',
+                             'target_gene': '16S rRNA',
+                             'target_subfragment': 'V4',
                              'instrument_model': 'Illumina MiSeq',
                              'library_construction_protocol': 'AAAA',
                              'experiment_design_description': 'BBBB'}},
@@ -91,8 +93,7 @@ class TestSQL(TestCase):
             f.write("test")
         fp = [(fp, 1)]
         new_root = qdb.artifact.Artifact.create(fp, "FASTQ", prep_template=pt)
-        self._files_to_remove.extend(
-            [afp for _, afp, _ in new_root.filepaths])
+        self._files_to_remove.extend([x['fp'] for x in new_root.filepaths])
         return new_root
 
     def _create_child_artifact(self, parents):
@@ -143,7 +144,7 @@ class TestSQL(TestCase):
         new = qdb.artifact.Artifact.create(
             fp, "Demultiplexed", parents=[qdb.artifact.Artifact(1), new_root],
             processing_parameters=params)
-        self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
+        self._files_to_remove.extend([x['fp'] for x in new.filepaths])
         with qdb.sql_connection.TRN:
             qdb.sql_connection.TRN.add(sql, [new.id])
             obs = qdb.sql_connection.TRN.execute_fetchindex()

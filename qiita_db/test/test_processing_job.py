@@ -421,7 +421,7 @@ class ProcessingJobTest(TestCase):
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
@@ -442,7 +442,7 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
         self._clean_up_files.extend(
-            [afp for _, afp, _ in
+            [x['fp'] for x in
              qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
     def test_complete_success(self):
@@ -682,7 +682,7 @@ class ProcessingJobTest(TestCase):
         artifact = qdb.artifact.Artifact(exp_artifact_count)
         obs = job.outputs
         self.assertEqual(obs, {'OTU table': artifact})
-        self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
+        self._clean_up_files.extend([x['fp'] for x in artifact.filepaths])
         self.assertEqual(artifact.name, 'outArtifact')
 
     def test_processing_job_workflow(self):

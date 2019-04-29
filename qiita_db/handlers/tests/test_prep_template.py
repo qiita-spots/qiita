@@ -136,11 +136,11 @@ class PrepTemplateAPItestHandlerTests(OauthTestingBase):
         metadata_dict = {
             'SKB8.640193': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'GTCCGCAAGTTA',
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq'},
             'SKD8.640184': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'GTCCGCAAGTTA',
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq'}}
         data = {'prep_info': dumps(metadata_dict),
                 'study': 1,

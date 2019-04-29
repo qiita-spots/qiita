@@ -47,6 +47,26 @@ class TestDownloadHandler(TestHandlerBase):
             "This installation of Qiita was not equipped with nginx, so it "
             "is incapable of serving files. The file you attempted to "
             "download is located at raw_data/1_s_G1_L001_sequences.fastq.gz"))
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=1_1_s_G1_L001_sequences.fastq.gz")
+        # other tests to validate the filename
+        response = self.get('/download/2')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=1_1_s_G1_L001_sequences_barcodes.fastq.gz")
+        response = self.get('/download/3')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=2_1_seqs.fna")
+        response = self.get('/download/18')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=1_prep_1_19700101-000000.txt")
+        response = self.get('/download/22')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=7_biom_table.biom")
 
         # failure
         response = self.get('/download/1000')
@@ -66,10 +86,10 @@ class TestDownloadHandler(TestHandlerBase):
             f.write('\n')
         self._clean_up_files.append(dirpath)
         a.set_html_summary(fp, support_dir=dirpath)
-        for fp_id, _, fp_type in a.filepaths:
-            if fp_type == 'html_summary_dir':
+        for x in a.filepaths:
+            if x['fp_type'] == 'html_summary_dir':
                 break
-        response = self.get('/download/%d' % fp_id)
+        response = self.get('/download/%d' % x['fp_id'])
         self.assertEqual(response.code, 200)
 
         fp_name = basename(fp2)
@@ -117,36 +137,36 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
             next(Command(3).default_parameter_sets), {'input_data': 1})
         a = Artifact.create(files_biom, "BIOM", parents=[Artifact(2)],
                             processing_parameters=params)
-        for _, fp, _ in a.filepaths:
-            self._clean_up_files.append(fp)
+        for x in a.filepaths:
+            self._clean_up_files.append(x['fp'])
 
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         exp = (
-            '- 1256812 /protected/processed_data/1_study_1001_closed_'
+            '1579715020 1256812 /protected/processed_data/1_study_1001_closed_'
             'reference_otu_table.biom processed_data/1_study_1001_closed_'
             'reference_otu_table.biom\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/4_mapping_file.txt\n'
-            '- 1256812 /protected/processed_data/'
+            '1579715020 1256812 /protected/processed_data/'
             '1_study_1001_closed_reference_otu_table.biom processed_data/'
             '1_study_1001_closed_reference_otu_table.biom\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/5_mapping_file.txt\n'
-            '- 1256812 /protected/processed_data/'
+            '1579715020 1256812 /protected/processed_data/'
             '1_study_1001_closed_reference_otu_table_Silva.biom processed_data'
             '/1_study_1001_closed_reference_otu_table_Silva.biom\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/6_mapping_file.txt\n'
-            '- 1093210 /protected/BIOM/7/biom_table.biom '
+            '1756512010 1093210 /protected/BIOM/7/biom_table.biom '
             'BIOM/7/biom_table.biom\n'
-            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/7_mapping_file.txt\n'
-            '- [0-9]* /protected/BIOM/{0}/otu_table.biom '
+            '[0-9]* [0-9]* /protected/BIOM/{0}/otu_table.biom '
             'BIOM/{0}/otu_table.biom\n'
             '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
             'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
         self.assertRegex(response.body.decode('ascii'), exp)
 
@@ -161,14 +181,15 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
 
         a.visibility = 'public'
         response = self.get('/download_study_bioms/1')
+        # returning visibility
+        a.visibility = 'private'
         self.assertEqual(response.code, 200)
-        exp = (
-            '- [0-9]* /protected/BIOM/{0}/otu_table.biom '
-            'BIOM/{0}/otu_table.biom\n'
-            '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
-            'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
-            'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
+        # we should have the same files than the previous test, except artifact
+        # and mapping file 7: position 6 and 7; thus removing 6 twice
+        exp = exp.split('\n')
+        exp.pop(6)
+        exp.pop(6)
+        exp = '\n'.join(exp)
         self.assertRegex(response.body.decode('ascii'), exp)
 
 
@@ -209,8 +230,8 @@ class TestDownloadRawData(TestHandlerBase):
         # it's possible that one of the tests is deleting the raw data
         # so we will make sure that the files exists so this test passes
         study = Study(1)
-        all_files = [fp for a in study.artifacts()
-                     for _, fp, _ in a.filepaths]
+        all_files = [x['fp'] for a in study.artifacts()
+                     for x in a.filepaths]
         for fp in all_files:
             if not exists(fp):
                 with open(fp, 'w') as f:
@@ -219,15 +240,16 @@ class TestDownloadRawData(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         exp = (
-            '- 58 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
+            '2125826711 58 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
             'raw_data/1_s_G1_L001_sequences.fastq.gz\n'
-            '- 58 /protected/raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz '
+            '2125826711 58 /protected/raw_data/'
+            '1_s_G1_L001_sequences_barcodes.fastq.gz '
             'raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/1_mapping_file.txt\n'
-            '- 1093210 /protected/BIOM/7/biom_table.biom '
+            '1756512010 1093210 /protected/BIOM/7/biom_table.biom '
             'BIOM/7/biom_table.biom\n'
-            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/7_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
@@ -255,7 +277,7 @@ class TestDownloadRawData(TestHandlerBase):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         exp = (
-            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/7_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
