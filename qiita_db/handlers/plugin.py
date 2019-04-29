@@ -126,6 +126,9 @@ class CommandListHandler(OauthBaseHandler):
                             "default, name_order, check_biom_merge)}. Found: "
                             "%s for parameter name %s"
                             % (vals, p_name))
+                # adding an extra element to make sure the parser knows this is
+                # an optional parameter
+                opt_params[p_name].extend(['qiita_optional_parameter'])
 
             outputs = self.get_argument('outputs', None)
             if outputs:
