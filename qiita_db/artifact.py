@@ -740,7 +740,7 @@ class Artifact(qdb.base.QiitaObject):
 
             # then let's check that the sample/prep info files have the correct
             # restrictions
-            if value in ('public', 'private') and study is not None:
+            if value != 'sandboxed' and study is not None:
                 reply = study.sample_template.validate_restrictions()
                 success = [not reply[0]]
                 message = [reply[1]]
@@ -750,7 +750,7 @@ class Artifact(qdb.base.QiitaObject):
                     message.append(reply[1])
                 if any(success):
                     raise ValueError(
-                        "Errors in your info files:\n%s" % '\n'.join(message))
+                        "Errors in your info files:%s" % '\n'.join(message))
 
             # In order to correctly propagate the visibility we need to find
             # the root of this artifact and then propagate to all the artifacts

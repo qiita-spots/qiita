@@ -329,19 +329,16 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
             if req_value not in get_visibilities():
                 raise QiitaHTTPError(400, 'Unknown visibility value: %s'
                                           % req_value)
-            # Set the approval to private if needs approval and admin
-            if req_value == 'private':
-                if not qiita_config.require_approval:
-                    artifact.visibility = 'private'
-                # Set the approval to private if approval not required
-                elif user.level == 'admin':
-                    artifact.visibility = 'private'
-                # Trying to set approval without admin privileges
-                else:
-                    raise QiitaHTTPError(403, 'User does not have permissions '
-                                              'to approve change')
-            else:
+
+            if (req_value == 'private' and qiita_config.require_approval
+                    and not user.level == 'admin'):
+                raise QiitaHTTPError(403, 'User does not have permissions '
+                                          'to approve change')
+
+            try:
                 artifact.visibility = req_value
+            except Exception as e:
+                raise QiitaHTTPError(403, str(e).replace('\n', '<br/>'))
 
             if artifact.visibility == 'awaiting_approval':
                 email_to = 'qiita.help@gmail.com'

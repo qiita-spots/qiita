@@ -94,6 +94,7 @@ class TestPrepAPIReadOnly(TestCase):
                'data_type': '18S',
                'alert_type': '',
                'is_submitted_to_ebi': True,
+               'prep_restrictions': '',
                'alert_message': ''}
         self.assertEqual(obs, exp)
 
