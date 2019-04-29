@@ -286,6 +286,7 @@ class TestHelpers(TestHandlerBase):
                            'sample_type', 'collection_timestamp',
                            'host_subject_id', 'description', 'latitude',
                            'longitude', 'scientific_name', 'env_package']),
+               'sample_restrictions': '',
                'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
@@ -305,6 +306,7 @@ class TestHelpers(TestHandlerBase):
                'num_samples': 0,
                'num_columns': 0,
                'columns': [],
+               'sample_restrictions': '',
                'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
