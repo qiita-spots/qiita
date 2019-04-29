@@ -163,7 +163,7 @@ Vue.component('sample-template-page', {
       var file = $('#st-direct-upload')[0].files[0];
 
       // We can have 2 scenarios: direct file upload or path from upload
-      // folder. The former is sent via PATCH using defauls, the latter
+      // folder. The former is sent via PATCH using defaults, the latter
       // via POST using "processData: false, contentType: false"; taken from:
       // https://stackoverflow.com/a/5976031
       if (file !== undefined) {
@@ -477,7 +477,7 @@ Vue.component('sample-template-page', {
             return false;
           }
           if (this.files[0].size > 2097152) {
-            alert('You can only upload files smaller than 2MB; please use "Upload Files" button on the left.');
+            alert('You can only upload files smaller than 2MB. For larger files please use the "Upload Files" button on the left.'');
             return false;
           }
           vm.updateSampleTemplate()
