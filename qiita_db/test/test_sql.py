@@ -78,6 +78,8 @@ class TestSQL(TestCase):
                              'barcode': 'GTCCGCAAGTTA',
                              'run_prefix': "s_G1_L001_sequences",
                              'platform': 'Illumina',
+                             'target_gene': '16S rRNA',
+                             'target_subfragment': 'V4',
                              'instrument_model': 'Illumina MiSeq',
                              'library_construction_protocol': 'AAAA',
                              'experiment_design_description': 'BBBB'}},
