@@ -102,25 +102,28 @@
    * prep information
    *
    */
-  function delete_prep_sample(prep_id, row_id, sample_name) {
-    if(confirm("Are you sure you want to delete '" + sample_name + "?")) {
+  function delete_prep_sample(prep_id) {
+    var sample_names = Array();
+    $('.prep-sample-delete:checkbox:checked').each(function(){
+      sample_names.push($(this).val());
+    });
+    sample_names = sample_names.join(',')
+    if(confirm("Are you sure you want to delete '" + sample_names + "?")) {
       $.ajax({
         url: '{% raw qiita_config.portal_dir %}/prep_template/',
         type: 'PATCH',
-        data: {'op': 'remove', 'path': '/' + prep_id + '/' + row_id + '/samples/' + sample_name},
+        data: {'op': 'remove', 'path': '/' + prep_id + '/1/samples/' + sample_names},
         success: function(data) {
           if(data.status == 'error') {
             bootstrapAlert(data.message, "danger");
           }
           else {
-            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}}, row_id: row_id });
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}} });
           }
         }
       });
     }
   }
-
-
 
   /*
    *
@@ -363,8 +366,15 @@
       $('#new-prep-name').focus();
       $('#new-prep-name').select();
     });
-
   });
+
+  function toggleCheckboxes(element){
+    var checked = element.checked ? 'checked' : '';
+    $('.prep-sample-delete').each(function(){
+      $(this).prop('checked', element.checked);
+    });
+  }
+
 </script>
 
 <!-- Prep template title and buttons -->
@@ -403,16 +413,26 @@
     <div class="tab-content">
       <div id="sample-listing-tab-div" class="tab-pane fade">
         <div class="panel panel-default">
-          <div class="panel-heading">
-            Samples
-          </div>
+          {% if not artifact_attached %}
+            <button class="btn btn-danger st-interactive" onclick="delete_prep_sample({{prep_id}});">
+                <span class="glyphicon glyphicon-trash"></span> Delete Selected
+            </button>
+          {% end %}
           <div>
             <table class="table">
-              {% for i, sid in enumerate(samples) %}
-                <tr id="row_{{i}}">
+              <thead>
+                <tr>
+                  {% if not artifact_attached %}
+                    <th><input type="checkbox" onchange="toggleCheckboxes(this)"></th>
+                  {% end %}
+                  <th>Samples</th>
+                </tr>
+              </thead>
+              {% for sid in samples %}
+                <tr id="row">
                   {% if not artifact_attached %}
                     <td>
-                      <a class="btn btn-danger" onclick="delete_prep_sample({{prep_id}}, {{i}}, '{{sid}}');"><span class="glyphicon glyphicon-trash"></span></a>
+                      <input type="checkbox" class="prep-sample-delete" value="{{sid}}">
                     </td>
                   {% end %}
                   <td>{{sid}}</td>

@@ -702,6 +702,17 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(sql2, [sn, self.id])
             qdb.sql_connection.TRN.execute()
 
+            # making sure we don't delete all the samples
+            qdb.sql_connection.TRN.add(
+                "SELECT COUNT(*) FROM qiita.{0}".format(
+                    self._table_name(self._id)))
+
+            # 1 as the JSON formated tables have an extra "sample" where we
+            # store the column information
+            if qdb.sql_connection.TRN.execute_fetchlast() <= 1:
+                raise ValueError(
+                    'You cannot delete all samples from an information file')
+
             self.generate_files(samples=sample_names)
 
     def delete_column(self, column_name):
