@@ -177,6 +177,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'alert_type': alert_type,
             'is_submitted_to_ebi': pt.is_submitted_to_ebi,
             'prep_restrictions': restrictions,
+            'samples': list(pt.keys()),
             'alert_message': alert_msg}
 
 

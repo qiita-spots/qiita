@@ -92,6 +92,38 @@
 
   /*
    *
+   * Deletes a sample from the prep template
+   *
+   * @param prep_id the prep template id
+   * @param prep_id the row id
+   * @param sample_name the prep template id
+   *
+   * This function executes an AJAX call to remove the given sample from the
+   * prep information
+   *
+   */
+  function delete_prep_sample(prep_id, row_id, sample_name) {
+    if(confirm("Are you sure you want to delete '" + sample_name + "?")) {
+      $.ajax({
+        url: '{% raw qiita_config.portal_dir %}/prep_template/',
+        type: 'PATCH',
+        data: {'op': 'remove', 'path': '/' + prep_id + '/' + row_id + '/samples/' + sample_name},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}}, row_id: row_id });
+          }
+        }
+      });
+    }
+  }
+
+
+
+  /*
+   *
    * Deletes a column from the prep template
    *
    * @param prep_id the prep template id
@@ -112,7 +144,7 @@
             bootstrapAlert(data.message, "danger");
           }
           else {
-            populate_main_div('/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}}, row_id: row_id });
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}}, row_id: row_id });
           }
         }
       });
@@ -363,11 +395,33 @@
 <div class="row">
   <div class="col-md-12">
     <ul class="nav nav-pills">
+      <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#sample-listing-tab-div">Sample Listing</a></li>
       <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
       <li style="border: 1px solid #428bca; border-radius: 5px" class="active"><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn">Processing</a></li>
     </ul>
 
     <div class="tab-content">
+      <div id="sample-listing-tab-div" class="tab-pane fade">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            Samples
+          </div>
+          <div>
+            <table class="table">
+              {% for i, sid in enumerate(samples) %}
+                <tr id="row_{{i}}">
+                  {% if not artifact_attached %}
+                    <td>
+                      <a class="btn btn-danger" onclick="delete_prep_sample({{prep_id}}, {{i}}, '{{sid}}');"><span class="glyphicon glyphicon-trash"></span></a>
+                    </td>
+                  {% end %}
+                  <td>{{sid}}</td>
+                </tr>
+              {% end %}
+            </table>
+          </div>
+        </div>
+      </div>
       <div id="summary-tab-div" class="tab-pane fade">
         <b>Number of samples: </b>{{num_samples}}</br>
         <b>Number of columns: </b>{{num_columns}}</br>
