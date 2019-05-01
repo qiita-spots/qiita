@@ -80,7 +80,7 @@ Vue.component('sample-template-page', {
           // Hide the processing div
           $('#st-processsing-div').hide();
           // Enable interaction bits
-          $('#update-btn-div').show();
+          $('#update-st-div').show();
           $('.st-interactive').prop('disabled', false);
           if (jobStatus === 'error') {
             // The job errored - show the error
@@ -116,7 +116,7 @@ Vue.component('sample-template-page', {
       $('#st-processsing-div').show();
       // Disable interaction bits
       $('.st-interactive').prop('disabled', true);
-      $('#update-btn-div').hide();
+      $('#update-st-div').hide();
       // Force the first check to happen now
       vm.checkJob();
       // Set the interval for further checking - this jobs tend to be way faster
@@ -160,17 +160,46 @@ Vue.component('sample-template-page', {
      **/
     updateSampleTemplate: function() {
       let vm = this;
-      $.ajax({
-        url: vm.portal + '/study/description/sample_template/',
-        type: 'PATCH',
-        data: {'op': 'replace', 'path': vm.studyId + '/data/', 'value': $('#file-select').val()},
-        success: function(data) {
-          vm.startJobCheckInterval(data['job']);
-        },
-        error: function (object, status, error_msg) {
-          bootstrapAlert("Error updating sample template: " + error_msg, "danger")
-        }
-      });
+      var file = $('#st-direct-upload')[0].files[0];
+
+      // We can have 2 scenarios: direct file upload or path from upload
+      // folder. The former is sent via PATCH using defaults, the latter
+      // via POST using "processData: false, contentType: false"; taken from:
+      // https://stackoverflow.com/a/5976031
+      if (file !== undefined) {
+        var fd = new FormData();
+        fd.append('theFile', file);
+        fd.append('direct_upload', true);
+        fd.append('study_id', vm.studyId);
+        fd.append('filepath', undefined);
+        fd.append('data_type', undefined);
+        value = fd;
+        $.ajax({
+          url: vm.portal + '/study/description/sample_template/',
+          type: 'POST',
+          processData: false,
+          contentType: false,
+          data: fd,
+          success: function(data) {
+            vm.startJobCheckInterval(data['job']);
+          },
+          error: function (object, status, error_msg) {
+            bootstrapAlert("Error updating sample template: " + error_msg, "danger")
+          }
+        });
+      } else {
+        $.ajax({
+          url: vm.portal + '/study/description/sample_template/',
+          type: 'PATCH',
+          data: {'op': 'replace', 'path': vm.studyId + '/data/', 'value': $('#file-select').val()},
+          success: function(data) {
+            vm.startJobCheckInterval(data['job']);
+          },
+          error: function (object, status, error_msg) {
+            bootstrapAlert("Error updating sample template: " + error_msg, "danger")
+          }
+        });
+      }
     },
 
     /**
@@ -442,6 +471,26 @@ Vue.component('sample-template-page', {
         // Add the select to update the sample information
         $row = $('<div>').attr('id', 'update-st-div').addClass('row form-group').appendTo($tab);
         $('<label>').addClass('col-sm-2 col-form-label').append('Update sample information:').appendTo($row);
+
+        // Add the direct upload field
+        $('<label>')
+          .addClass('btn btn-default')
+            .append('Direct upload file <small>(< 2MB)</small>')
+            .appendTo($row)
+            .append('<input type="file" style="display: none;" id="st-direct-upload">');
+        $('#st-direct-upload').on('change', function() {
+          if (this.files.length != 1) {
+            alert('You can only upload one file.')
+            return false;
+          }
+          if (this.files[0].size > 2097152) {
+            alert('You can only upload files smaller than 2MB. For larger files please use the "Upload Files" button on the left.'');
+            return false;
+          }
+          vm.updateSampleTemplate()
+        });
+
+
         $col = $('<div>').addClass('col-sm-3').appendTo($row);
         $select = $('<select>').attr('id', 'file-select').addClass('form-control').appendTo($col);
         $('<option>').attr('value', "").append('Choose file...').appendTo($select);

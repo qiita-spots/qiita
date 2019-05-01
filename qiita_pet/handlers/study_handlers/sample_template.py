@@ -6,8 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from os import close
 from os.path import basename
 from json import loads, dumps
+from tempfile import mkstemp
 
 from tornado.web import authenticated, HTTPError
 
@@ -65,7 +67,7 @@ def sample_template_checks(study_id, user, check_exists=False):
 
 
 def sample_template_handler_post_request(study_id, user, filepath,
-                                         data_type=None):
+                                         data_type=None, direct_upload=False):
     """Creates a new sample template
 
     Parameters
@@ -79,6 +81,9 @@ def sample_template_handler_post_request(study_id, user, filepath,
     data_type: str, optional
         If filepath is a QIIME mapping file, the data type of the prep
         information file
+    direct_upload: boolean, optional
+        If filepath is a direct upload; if False we need to process the
+        filepath as part of the study upload folder
 
     Returns
     -------
@@ -94,10 +99,11 @@ def sample_template_handler_post_request(study_id, user, filepath,
     sample_template_checks(study_id, user)
 
     # Check if the file exists
-    fp_rsp = check_fp(study_id, filepath)
-    if fp_rsp['status'] != 'success':
-        raise HTTPError(404, reason='Filepath not found')
-    filepath = fp_rsp['file']
+    if not direct_upload:
+        fp_rsp = check_fp(study_id, filepath)
+        if fp_rsp['status'] != 'success':
+            raise HTTPError(404, reason='Filepath not found')
+        filepath = fp_rsp['file']
 
     is_mapping_file = looks_like_qiime_mapping_file(filepath)
     if is_mapping_file and not data_type:
@@ -277,9 +283,19 @@ class SampleTemplateHandler(BaseHandler):
         study_id = int(self.get_argument('study_id'))
         filepath = self.get_argument('filepath')
         data_type = self.get_argument('data_type')
+        direct_upload = self.get_argument('direct_upload', False)
+
+        if direct_upload and direct_upload == 'true':
+            direct_upload = True
+            fd, filepath = mkstemp(suffix='.txt')
+            close(fd)
+            with open(filepath, 'w') as f:
+                f.write(
+                    self.request.files['theFile'][0]['body'].decode('ascii'))
 
         self.write(sample_template_handler_post_request(
-            study_id, self.current_user, filepath, data_type=data_type))
+            study_id, self.current_user, filepath, data_type=data_type,
+            direct_upload=direct_upload))
 
     @authenticated
     def patch(self):

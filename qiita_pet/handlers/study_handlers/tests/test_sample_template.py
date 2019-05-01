@@ -133,6 +133,16 @@ class TestHelpers(TestHandlerBase):
         # Wait until the job is done
         wait_for_processing_job(loads(job_info)['job_id'])
 
+        # Test direct upload
+        obs = sample_template_handler_post_request(
+            1, user, fp, data_type='16S', direct_upload=True)
+        self.assertCountEqual(obs.keys(), ['job'])
+        job_info = r_client.get('sample_template_1')
+        self.assertIsNotNone(job_info)
+
+        # Wait until the job is done
+        wait_for_processing_job(loads(job_info)['job_id'])
+
     def test_sample_template_handler_patch_request(self):
         user = User('test@foo.bar')
 
