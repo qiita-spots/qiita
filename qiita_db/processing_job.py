@@ -18,7 +18,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import create_nested_path
 from re import search, findall
 from subprocess import Popen, PIPE
-from time import sleep
+from time import sleep, time
 from uuid import UUID
 from os.path import join
 from threading import Thread
@@ -292,7 +292,13 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
 
     # wait for qsub_cmd to finish, but not longer than the number of
     # seconds specified below.
-    q.join(2)
+    init_time = time()
+    q.join(5)
+    total_time = time() - init_time
+    # for internal use, logging if the time is larger than 2 seconds
+    if total_time > 2:
+        qdb.logger.LogEntry.create('Runtime', 'qsub return time', info={
+            'time_in_seconds': str(total_time)})
 
     # if q.returncode is None, it's because qsub did not return.
     if q.returncode is None:
