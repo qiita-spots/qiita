@@ -1,5 +1,32 @@
 # Qiita changelog
 
+Version 042019
+--------------
+
+* Qiita code and Travis builds have been moved to Python 3.6, we no longer support 2.7 and use the Xenial distribution
+* Qiita relies on the latest versions of all its dependencies
+* Fixed bug preventing to just update values within a Sample Information file: https://github.com/biocore/qiita/issues/2806
+* Analyses now display the artifact and processing information that were used to create it
+* Study listing now shows preparation type and allows to filter by it
+* Fixed bug preventing deletion of multiple artifacts at once: https://github.com/biocore/qiita/issues/2734
+* Analysis metadata will have the artifact id in the `qiita_artifact_id` column
+* Adding new samples to a sample information file will only regenerate prep info files that have them; if no overlap, nothing will be generated except sample information file
+* In Travis, we now generate a real configuration file for the BIOM plugin (needed for analysis testing) vs. having it hardcoded
+* Qiita now can be ran via supervisord, which is being used in Travis together with nginx for regular testing
+* redbiom in Qiita only works with main site; portal redirect to main site
+* Qiita now stores QZA (Qiime Zip Artifacts) as part of the artifacts and they are used as input when present; this provides Qiime2 provenance and references for those artifacts
+* Removed legacy SQLConnectionHandler code and moved everything to the TRN method
+* Removed emp_person and number_samples_promised as study requirements
+* We only show the "Request approval" button starting on the second artifact in the processing, preventing users to request revision of unprocessed data
+* "Request approval" will send an email to qiita.help@gmail.com so we can keep better track of these requests
+* All single filepaths in Qiita now display their CRC32 and file size
+* Artifact id is now prepended to the downloaded filepaths
+* Large download will resume using nginx/mod_zip CRC32 features
+* Sample information files can be uploaded/updated directly from the Sample Information page
+* Qiime2 reserved sample/feature id column names are not allowed in information files
+* New table and restrictions were added to Qiita's sample and prep info files. See new documentation for details
+* Added Qiime2 2019.05.0
+
 Version 012019
 --------------
 
