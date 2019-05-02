@@ -1655,10 +1655,9 @@ class TestPrepTemplate(TestCase):
 
         # first let's test that we cannot delete all samples from one of the
         # preps
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaisesRegex(ValueError, "You cannot delete all "
+                                    "samples from an information file"):
             ptA.delete_samples(list(ptA.keys()))
-        self.assertIn("You cannot delete all samples from an information file",
-                      str(e.exception))
 
         # then continue with the regular testing
         sample1 = '%s.SKB8.640193' % sid

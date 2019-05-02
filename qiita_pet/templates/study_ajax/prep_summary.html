@@ -102,6 +102,7 @@
    */
   function delete_prep_sample(prep_id) {
     var sample_names = Array();
+    var message = '';
     $('.prep-sample-delete:checkbox:checked').each(function(){
       sample_names.push($(this).val());
     });
@@ -435,7 +436,7 @@
                 </tr>
               </thead>
               {% for sid in samples %}
-                <tr id="row">
+                <tr>
                   {% if not artifact_attached %}
                     <td>
                       <input type="checkbox" class="prep-sample-delete" value="{{sid}}">
