@@ -1652,6 +1652,14 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type)
         ptB = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
+
+        # first let's test that we cannot delete all samples from one of the
+        # preps
+        with self.assertRaisesRegex(ValueError, "You cannot delete all "
+                                    "samples from an information file"):
+            ptA.delete_samples(list(ptA.keys()))
+
+        # then continue with the regular testing
         sample1 = '%s.SKB8.640193' % sid
         sample2 = '%s.SKD8.640184' % sid
         sample3 = '%s.SKB7.640196' % sid

@@ -484,7 +484,7 @@ Vue.component('sample-template-page', {
             return false;
           }
           if (this.files[0].size > 2097152) {
-            alert('You can only upload files smaller than 2MB. For larger files please use the "Upload Files" button on the left.'');
+            alert('You can only upload files smaller than 2MB. For larger files please use the "Upload Files" button on the left.');
             return false;
           }
           vm.updateSampleTemplate()
