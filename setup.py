@@ -112,6 +112,6 @@ setup(name='qiita-spots',
                         'flake8', 'six', 'qiita-files @ https://github.com/'
                         'qiita-spots/qiita-files/archive/master.zip', 'mock',
                         'supervisor @ https://github.com/Supervisor/'
-                        'supervisor/archive/master.zip'],
+                        'supervisor/archive/master.zip', 'joblib'],
       classifiers=classifiers
       )
