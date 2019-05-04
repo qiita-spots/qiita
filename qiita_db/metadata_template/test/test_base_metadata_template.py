@@ -117,19 +117,29 @@ class TestMetadataTemplateReadOnly(TestCase):
         exp = {
             'env_package': [
                 'air', 'built environment', 'host-associated',
-                'human-amniotic-fluid', 'human-associated', 'human-blood',
-                'human-gut', 'human-oral', 'human-skin', 'human-urine',
-                'human-vaginal', 'microbial mat/biofilm',
-                'miscellaneous natural or artificial environment',
-                'plant-associated', 'sediment', 'soil', 'wastewater/sludge',
-                'water']}
+                'human-associated', 'human-skin', 'human-oral',
+                'human-gut', 'human-vaginal', 'microbial mat/biofilm',
+                'misc environment', 'plant-associated', 'sediment', 'soil',
+                'wastewater/sludge', 'water']}
         self.assertEqual(obs, exp)
         obs = MT.prep_template.PrepTemplate(1).restrictions
         exp = {
-            'target_gene': ['16S rRNA', '18S rRNA', 'ITS'],
-            'platform': ['Ion Torrent', 'LS454', 'Illumina'],
-            'target_subfragment': [
-                'V1', 'V2', 'V3', 'V4', 'V6', 'V9', 'ITS1', 'ITS2']}
+            'target_gene': ['16S rRNA', '18S rRNA', 'ITS1/2', 'LSU'],
+            'platform': ['FASTA', 'Illumina', 'Ion Torrent', 'LS454',
+                         'Oxford Nanopore'],
+            'target_subfragment': ['V3', 'V4', 'V6', 'V9', 'ITS1/2'],
+            'instrument_model': [
+                '454 GS', '454 GS 20', '454 GS FLX', '454 GS FLX+',
+                '454 GS FLX Titanium', '454 GS Junior',
+                'Illumina Genome Analyzer', 'Illumina Genome Analyzer II',
+                'Illumina Genome Analyzer IIx', 'Illumina HiScanSQ',
+                'Illumina HiSeq 1000', 'Illumina HiSeq 1500',
+                'Illumina HiSeq 2000', 'Illumina HiSeq 2500',
+                'Illumina HiSeq 3000', 'Illumina HiSeq 4000', 'Illumina MiSeq',
+                'Illumina MiniSeq', 'Illumina NovaSeq 6000', 'NextSeq 500',
+                'NextSeq 550', 'Ion Torrent PGM', 'Ion Torrent Proton',
+                'Ion Torrent S5', 'Ion Torrent S5 XL', 'MinION', 'GridION',
+                'PromethION', 'unspecified']}
         self.assertEqual(obs, exp)
 
 

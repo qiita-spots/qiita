@@ -969,8 +969,8 @@ class TestPrepTemplate(TestCase):
         pt.extend(metadata)
         success, message = pt.validate_restrictions()
         self.assertEqual(message, 'prep %d has a no valid values: "Should '
-                         'Warn", valid values are: "16S rRNA, 18S rRNA, ITS"'
-                         % pt.id)
+                         'Warn", valid values are: "16S rRNA, 18S rRNA, '
+                         'ITS1/2, LSU"' % pt.id)
         self.assertFalse(success)
 
         metadata['target_gene'] = '16S rRNA'
