@@ -25,7 +25,7 @@ Version 042019
 * Sample information files can be uploaded/updated directly from the Sample Information page
 * Qiime2 reserved sample/feature id column names are not allowed in information files
 * New table and restrictions were added to Qiita's sample and prep info files. See new documentation for details
-* Added Qiime2 2019.05.0
+* Added Qiime2 2019.4.0
 
 Version 012019
 --------------
