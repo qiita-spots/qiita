@@ -9,13 +9,10 @@ from qiita_db.sql_connection import TRN
 def calculate(finfo):
     try:
         size = getsize(finfo['fullpath'])
-    except FileNotFoundError:
-        size = 0
+    except (FileNotFoundError, PermissionError):
+        return finfo, None, None
 
-    try:
-        checksum = compute_checksum(finfo['fullpath'])
-    except FileNotFoundError:
-        checksum = ''
+    checksum = compute_checksum(finfo['fullpath'])
 
     return finfo['filepath_id'], checksum, size
 
@@ -48,6 +45,9 @@ files_chunks = [files_curr[i * fids:(i + 1) * fids]
 with Parallel(n_jobs=processors, verbose=100) as parallel:
     for fc in files_chunks:
         results = parallel(delayed(calculate)(finfo) for finfo in fc)
+
         with open(fpath, 'a') as f:
-            f.write(
-                '%s\n' % '\n'.join(['\t'.join(map(str, r)) for r in results]))
+            f.write('%s\n' % '\n'.join(['\t'.join(
+                [str(fid), str(cs), str(fsize)])
+                for fid, cs, fsize in results
+                if cs is not None and fsize is not None]))
