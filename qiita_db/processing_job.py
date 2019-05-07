@@ -311,7 +311,7 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
         raise AssertionError("Error Torque could not launch %s (%d)" %
                              (qsub_cmd, q.returncode))
 
-    torque_job_id = q.stdout.strip('\n')
+    torque_job_id = q.stdout.decode('ascii').strip('\n')
 
     return torque_job_id
 
