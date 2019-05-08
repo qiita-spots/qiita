@@ -448,7 +448,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # assume an empty string for name is preferable to None
                 name = ''
                 if v['artifacts'] is not None:
-                    name = v['artifacts'].values()[0]['artifact_type']
+                    an_element = list(v['artifacts'].keys())[0]
+                    name = v['artifacts'][an_element]['artifact_type']
             elif self.command.name == 'release_validators':
                 jtype = 'RELEASE_VALIDATORS_RESOURCE_PARAM'
                 tmp = ProcessingJob(self.parameters.values['job'])
