@@ -60,7 +60,7 @@ class NewArtifactHandler(BaseHandler):
                 # array transformation
                 if arg_name.endswith('[]'):
                     arg_name = arg_name[:-2]
-                files[arg] = self.get_argument(arg)
+                files[arg_name] = self.get_argument(arg)
 
         artifact = artifact_post_req(
             self.current_user.id, files, artifact_type, name, prep_id,

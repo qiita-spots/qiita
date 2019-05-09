@@ -41,7 +41,8 @@ def _submit_jobs(jids_to_recover, recover_type):
 
 
 def _retrieve_queue_jobs():
-    qiita_jobs = [line.split()[0] for line in check_output("qstat").split("\n")
+    qiita_jobs = [line.split()[0]
+                  for line in check_output("qstat").decode('ascii').split("\n")
                   # just retriving 'qiita' and ignoring [] (ipython workers)
                   if 'qiita' in line and '[]' not in line and
                   # and private jobs
@@ -54,7 +55,7 @@ def _retrieve_queue_jobs():
         args = ["qstat", "-f", "%s.ucsd.edu" % qj]
         # the name is the last string of the line and has .txt prepended
         qji = [line.split()[-1].split(".")[0]
-               for line in check_output(args).split("\n")
+               for line in check_output(args).decode('ascii').split("\n")
                if 'Job_Name' in line]
         qiita_jids.extend(qji)
 
