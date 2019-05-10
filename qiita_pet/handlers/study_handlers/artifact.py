@@ -56,7 +56,7 @@ class NewArtifactHandler(BaseHandler):
             if arg not in ['name', 'prep-template-id', 'artifact-type',
                            'import-artifact']:
                 arg_name = arg
-                # removing ending [], in case they exists, necessary for JS
+                # removing ending [], in case they exist, necessary for JS
                 # array transformation
                 if arg_name.endswith('[]'):
                     arg_name = arg_name[:-2]

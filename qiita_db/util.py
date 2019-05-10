@@ -1490,7 +1490,7 @@ def generate_study_list(user, visibility):
                 info['artifact_biom_ids'] = []
                 if info['aids_with_deprecation'] is not None:
                     for x in info['aids_with_deprecation']:
-                        # f1-3 are the default names given by pgsql
+                        # f1-2 are the default names given by pgsql
                         if not x['f2']:
                             info['artifact_biom_ids'].append(x['f1'])
                 del info['aids_with_deprecation']
