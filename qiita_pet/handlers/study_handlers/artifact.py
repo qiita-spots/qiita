@@ -51,9 +51,16 @@ class NewArtifactHandler(BaseHandler):
         artifact_id = self.get_argument('import-artifact')
 
         # Request the rest of the arguments, which will be the files
-        files = {arg: self.get_argument(arg) for arg in self.request.arguments
-                 if arg not in ['name', 'prep-template-id', 'artifact-type',
-                                'import-artifact']}
+        files = dict()
+        for arg in self.request.arguments:
+            if arg not in ['name', 'prep-template-id', 'artifact-type',
+                           'import-artifact']:
+                arg_name = arg
+                # removing ending [], in case they exist, necessary for JS
+                # array transformation
+                if arg_name.endswith('[]'):
+                    arg_name = arg_name[:-2]
+                files[arg_name] = self.get_argument(arg)
 
         artifact = artifact_post_req(
             self.current_user.id, files, artifact_type, name, prep_id,

@@ -311,7 +311,7 @@ def launch_torque(env_script, start_script, url, job_id, job_dir,
         raise AssertionError("Error Torque could not launch %s (%d)" %
                              (qsub_cmd, q.returncode))
 
-    torque_job_id = q.stdout.strip('\n')
+    torque_job_id = q.stdout.decode('ascii').strip('\n')
 
     return torque_job_id
 
@@ -448,7 +448,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # assume an empty string for name is preferable to None
                 name = ''
                 if v['artifacts'] is not None:
-                    name = v['artifacts'].values()[0]['artifact_type']
+                    an_element = list(v['artifacts'].keys())[0]
+                    name = v['artifacts'][an_element]['artifact_type']
             elif self.command.name == 'release_validators':
                 jtype = 'RELEASE_VALIDATORS_RESOURCE_PARAM'
                 tmp = ProcessingJob(self.parameters.values['job'])

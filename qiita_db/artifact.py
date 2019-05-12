@@ -740,7 +740,7 @@ class Artifact(qdb.base.QiitaObject):
 
             # then let's check that the sample/prep info files have the correct
             # restrictions
-            if value != 'sandboxed' and study is not None:
+            if value != 'sandbox' and study is not None:
                 reply = study.sample_template.validate_restrictions()
                 success = [not reply[0]]
                 message = [reply[1]]

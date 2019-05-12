@@ -68,7 +68,6 @@ $(document).ready(function() {
 {% end %}
 
 {% block content %}
-&nbsp;<br/>
 <h1>Selected Samples</h1>
 <span id="ws-error" style="color:red"></span>
 <div id="no-selected" class="jumbotron">
@@ -76,7 +75,7 @@ $(document).ready(function() {
   <h3><a href="{% raw qiita_config.portal_dir %}/study/list/">Please select at least one sample to continue</a><h3>
 </div>
 {% if sel_data %}
-<div class="row topfloat">
+<div class="row">
   <div class="col-lg-12">
     <button type="button" class="btn btn-success btn-sm" id="create-button" name="create-button" data-toggle="modal" data-target="#create-analysis-modal-view">
       Create Analysis
@@ -86,6 +85,7 @@ $(document).ready(function() {
     </button>
   </div>
 </div>
+<br/>
 {% end %}
 
 {% for study, proc_datas in viewitems(sel_data) %}

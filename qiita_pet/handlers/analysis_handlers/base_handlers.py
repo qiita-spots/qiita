@@ -26,7 +26,7 @@ class CreateAnalysisHandler(BaseHandler):
         name = self.get_argument('name')
         desc = self.get_argument('description')
         mdsi = self.get_argument('merge_duplicated_sample_ids', False)
-        if mdsi and mdsi[0] == b'on':
+        if mdsi in (b'on', 'on'):
             mdsi = True
         analysis = Analysis.create(
             self.current_user, name, desc, merge_duplicated_sample_ids=mdsi,
