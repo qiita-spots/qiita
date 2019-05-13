@@ -95,16 +95,16 @@ How to solve download or unzip errors?
 
 Dealing with large files might be daunting but, in general, following these
 instructions should make things easier. First, make sure that you have enough space
-for the zip download file; for the American Gut, you should have at least close to 700Gb
-but having close to a Tera (1000Gb) should be better as you will need to uncompress
+for the zip download file; for the American Gut, you should have at least close to 900Gb
+but having close to 2 Tb (2000Gb) should be better as you will need to uncompress
 the zip file. Second, make sure that your computer has all the sleep settings turned off;
 for example, in a Mac, got to System Preferences, Energy Saver, Power Adapter and unselect
 the option of "Put hard disks to sleep when possible"; don't forget to save the settings.
 Third, download the file but point to the storage that you want to save your file in; using
 Chrome, right click on the download button and select "Save Link As ..."; and select the
 location where you have enough space (see point 1). Fourth, wait for the download to finish,
-around 13hrs in an OK USA Internet connection for the AGP but this will depend on your Internet
-service. Finally, unzip de file with a newer version of zip.
+this will depend on your Internet service. Finally, unzip the file with a newer version
+of zip (see below).
 
 By the way, if you are a developer and would like to add to Qiita the possibility of resumable
 downloads, we would happily welcome this contribution.
