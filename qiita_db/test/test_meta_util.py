@@ -443,6 +443,32 @@ class MetaUtilTests(TestCase):
                 "UPDATE settings SET base_data_dir = '%s'" % obdr)
             bdr = qdb.sql_connection.TRN.execute()
 
+        # testing public/default release
+        qdb.meta_util.generate_biom_and_metadata_release()
+        # we are storing the [0] filepath, [1] md5sum and [2] time but we are
+        # only going to check the filepath contents so ignoring the others
+        tgz = vals[0][1]('%s:release:%s:%s' % (portal, 'public', vals[0][0]))
+        tgz = join(working_dir, tgz.decode('ascii'))
+
+        tmp = topen(tgz, "r:gz")
+        tgz_obs = [ti.name for ti in tmp]
+        tmp.close()
+        # the public release should only have the txt file
+        self.assertEqual(len(tgz_obs), 1)
+        txt = tgz_obs.pop()
+
+        tmp = topen(tgz, "r:gz")
+        fhd = tmp.extractfile(txt)
+        txt_obs = [l.decode('ascii') for l in fhd.readlines()]
+        tmp.close()
+
+        # we should only get the header
+        txt_exp = [
+            'biom fp\tsample fp\tprep fp\tqiita artifact id\tplatform\t'
+            'target gene\tmerging scheme\tartifact software\t'
+            'parent software']
+        self.assertEqual(txt_obs, txt_exp)
+
     def test_generate_plugin_releases(self):
         qdb.meta_util.generate_plugin_releases()
 

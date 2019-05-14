@@ -371,7 +371,7 @@ def generate_biom_and_metadata_release(study_status='public'):
         sample_fp = relpath(s.sample_template.get_filepaths()[0][1], bdir)
 
         for a in s.artifacts(artifact_type='BIOM'):
-            if a.processing_parameters is None:
+            if a.processing_parameters is None or a.visibility != study_status:
                 continue
 
             merging_schemes, parent_softwares = a.merging_scheme
