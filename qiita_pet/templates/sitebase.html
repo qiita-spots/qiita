@@ -13,7 +13,7 @@
 {% set message = globals().get('message', '') %}
 {% if sysmessage is not None %}
   {# since this is a systemwide message, allow regular messages as well #}
-  {% set message = sysmessage + "<br />" + str(message) %}
+  {% set message = sysmessage.decode('ascii') + "<br />" + str(message) %}
 {% end %}
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

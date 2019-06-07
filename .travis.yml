@@ -74,7 +74,7 @@ before_script:
 script:
   # Some of the tests rely on the plugin system to complete successfuly.
   # Thus, we need a qiita webserver running to be able to execute the tests.
-  - if [ ${TRAVIS_BRANCH} == "master" ] && [ ${TRAVIS_PULL_REQUEST} == "false" ]; then ./travis_ebi_setup.sh ; fi
+  # - if [ ${TRAVIS_BRANCH} == "master" ] && [ ${TRAVIS_PULL_REQUEST} == "false" ]; then ./travis_ebi_setup.sh ; fi
   - export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
   - ls $QIITA_CONFIG_FP
   - supervisord -c qiita_pet/supervisor_example.conf

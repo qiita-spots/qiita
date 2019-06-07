@@ -418,7 +418,7 @@ def sample_template_columns_get_req(study_id, column, user):
     if column is None:
         reply = SampleTemplate(study_id).categories()
     else:
-        reply = SampleTemplate(study_id).get_category(column).values()
+        reply = list(SampleTemplate(study_id).get_category(column).values())
 
     return reply
 
