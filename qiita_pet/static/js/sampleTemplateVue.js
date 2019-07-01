@@ -270,14 +270,10 @@ Vue.component('sample-template-page', {
         alert('No samples selected!');
       } else {
         if (confirm('Are you sure you want to delete ' + total_samples + ' samples?')) {
-          var sample_names = [];
-          samples.each(function(){
-            sample_names.push($(this).prop('name'));
-          });
           $.ajax({
             url: vm.portal + '/study/description/sample_template/',
             type: 'PATCH',
-            data: {'op': 'remove', 'path': vm.studyId + '/samples/' + sample_names},
+            data: {'op': 'remove', 'path': vm.studyId + '/samples/' + samples},
             success: function(data) {
               vm.rowId = 0;
               vm.rowType = 'sample';
