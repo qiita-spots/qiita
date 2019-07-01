@@ -37,8 +37,8 @@
     });
     sampleTemplatePage.$refs.stElem.deleteSamples(sample_names);
   }
-  function deleteNotOverlappingSamplePrepSamples(){
-    if (confirm('Are you sure you want to delete all samples that have _not_ being linked to a preparation?')){
+  function deleteNonOverlappingSamplePrepSamples(){
+    if (confirm('Are you sure you want to delete all samples that have _not_ been linked to a preparation?')){
       var to_delete = [];
       $.each(rows, function(i, row){
         var sample_delete = jQuery.map(
@@ -272,8 +272,8 @@
         <button class="btn btn-danger st-interactive" onclick="deleteIndividualSamples($('.sample-delete:checkbox:checked'))">
             <span class="glyphicon glyphicon-trash"></span> Delete Selected
         </button>
-        <button class="btn btn-danger st-interactive" onclick="deleteNotOverlappingSamplePrepSamples()">
-            <span class="glyphicon glyphicon-trash"></span> Delete Not Overlapping Samples
+        <button class="btn btn-danger st-interactive" onclick="deleteNonOverlappingSamplePrepSamples()">
+            <span class="glyphicon glyphicon-trash"></span> Delete Non Overlapping Samples
         </button>
       </td>
       <td style="text-align: right">
