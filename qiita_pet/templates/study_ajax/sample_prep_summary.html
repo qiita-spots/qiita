@@ -6,14 +6,16 @@
   var column_width_factor = 10;
   var rows = {% raw list(rows.values()) %};
   // setting up checkboxes
+  var prep_colums = jQuery.map(
+    Object.keys(rows[0]), function(e) { if (e.startsWith("prep")) return e });
   for(var i=0;i<rows.length;i++) {
     rows[i]['sample-delete'] = '';
   }
   function toggleCheckboxes(element){
     var checked = element.checked ? 'checked' : '';
-    $('.sample-delete').each(function(){
-        $(this).prop('checked', element.checked);
-        rows[$(this).prop('value')]['sample-delete'] = checked;
+    $.each(rows, function(i, d){
+      $('.sample-delete[name="' + d['sample'] + '"]').prop('checked', checked);
+      rows[i]['sample-delete'] = checked;
     });
   }
   function toggleCheckbox(element){
@@ -27,6 +29,26 @@
     {% else %}
       return ""
     {% end %}
+  }
+  function deleteIndividualSamples(samples){
+    var sample_names = [];
+    samples.each(function(){
+      sample_names.push($(this).prop('name'));
+    });
+    sampleTemplatePage.$refs.stElem.deleteSamples(sample_names);
+  }
+  function deleteNonOverlappingSamplePrepSamples(){
+    if (confirm('Are you sure you want to delete all samples that have _not_ been linked to a preparation?')){
+      var to_delete = [];
+      $.each(rows, function(i, row){
+        var sample_delete = jQuery.map(
+          prep_colums, function(pc) { if (row[pc] === 'X') return pc });
+        if (sample_delete.length === 0){
+          to_delete.push(row['sample'])
+        }
+      });
+      sampleTemplatePage.$refs.stElem.deleteSamples(to_delete);
+    }
   }
   var columns = [
       { 'name': '<input type="checkbox" onchange="toggleCheckboxes(this)">',
@@ -247,8 +269,11 @@
     <tr>
       <td>
         <h3>Sample Summary</h3><br/>
-        <button class="btn btn-danger st-interactive" onclick="sampleTemplatePage.$refs.stElem.deleteSamples($('.sample-delete:checkbox:checked'));">
+        <button class="btn btn-danger st-interactive" onclick="deleteIndividualSamples($('.sample-delete:checkbox:checked'))">
             <span class="glyphicon glyphicon-trash"></span> Delete Selected
+        </button>
+        <button class="btn btn-danger st-interactive" onclick="deleteNonOverlappingSamplePrepSamples()">
+            <span class="glyphicon glyphicon-trash"></span> Delete Non Overlapping Samples
         </button>
       </td>
       <td style="text-align: right">
