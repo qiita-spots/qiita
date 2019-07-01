@@ -47,12 +47,12 @@ class UserProfileHandler(BaseHandler):
             # FORM INPUT NAMES MUST MATCH DB COLUMN NAMES
             form_data = UserProfile()
             form_data.process(data=self.request.arguments)
-            profile = {name: data[0] for name, data in
+            profile = {name: data[0].decode('ascii') for name, data in
                        viewitems(form_data.data)}
 
             # Turn default value as list into default strings
             for field in form_data:
-                field.data = field.data[0]
+                field.data = field.data[0].decode('ascii')
             try:
                 user.info = profile
                 msg = "Profile updated successfully"
