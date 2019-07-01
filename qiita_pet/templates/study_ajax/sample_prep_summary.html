@@ -11,9 +11,9 @@
   }
   function toggleCheckboxes(element){
     var checked = element.checked ? 'checked' : '';
-    $('.sample-delete').each(function(){
-        $(this).prop('checked', element.checked);
-        rows[$(this).prop('value')]['sample-delete'] = checked;
+    $.each(rows, function(i, d){
+      $('.sample-delete[name="' + d['sample'] + '"]').prop('checked', checked);
+      rows[i]['sample-delete'] = checked;
     });
   }
   function toggleCheckbox(element){
