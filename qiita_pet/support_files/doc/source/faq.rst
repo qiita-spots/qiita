@@ -172,8 +172,8 @@ Please visit the `Transferring Qiita Artifacts to Qiime2 Tutorial <https://forum
 in the `QIIME2 forum <https://forum.qiime2.org>`__. Note that all feature table (bioms) and analytical steps will generate qza and qzv, which are QIIME2 artifacts.
 
 
-How to download raw or all BIOM files from a give study?
---------------------------------------------------------
+How to download raw or all BIOM files from a given study?
+---------------------------------------------------------
 
 We provide direct access to public data via a single end point. This end point can download, do not forget to replace `study-id` for your study of interest:
 

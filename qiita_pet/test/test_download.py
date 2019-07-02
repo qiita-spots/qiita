@@ -399,7 +399,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
 
         response = self.get('/download_public/?data=raw&study_id=1')
         self.assertEqual(response.code, 405)
-        self.assertEqual(response.reason, 'Study is not public, if this is a '
+        self.assertEqual(response.reason, 'Study is not public. If this is a '
                          'mistake contact: qiita.help@gmail.com')
 
         # 7 is an uploaded biom, which should now be available but as it's a
@@ -407,7 +407,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
         Artifact(7).visibility = 'public'
         response = self.get('/download_public/?data=raw&study_id=1')
         self.assertEqual(response.code, 405)
-        self.assertEqual(response.reason, 'No raw data access, if this is a '
+        self.assertEqual(response.reason, 'No raw data access. If this is a '
                          'mistake contact: qiita.help@gmail.com')
 
         # check success

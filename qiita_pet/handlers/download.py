@@ -351,21 +351,21 @@ class DownloadPublicHandler(BaseHandlerDownload):
                             'data type you want to download - raw/biom) and '
                             'study_id')
 
-        # checking that study exists and that is public
+        # checking that study exists and that it is public
         study_id = int(study_id)
         try:
             study = Study(int(study_id))
         except QiitaDBUnknownIDError:
             raise HTTPError(405, reason='Study does not exist')
         if study.status != 'public':
-            raise HTTPError(405, reason='Study is not public, if this is a '
+            raise HTTPError(405, reason='Study is not public. If this is a '
                             'mistake contact: qiita.help@gmail.com')
 
         to_download = []
         if data == 'raw':
             public_raw_download = study.public_raw_download
             if not public_raw_download:
-                raise HTTPError(405, reason='No raw data access, if this is a '
+                raise HTTPError(405, reason='No raw data access. If this is a '
                                 'mistake contact: qiita.help@gmail.com')
 
             # loop over artifacts and retrieve raw data (no parents)
