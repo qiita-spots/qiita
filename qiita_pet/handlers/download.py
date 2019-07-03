@@ -23,6 +23,7 @@ from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_core.util import execute_as_transaction, get_release_info
 
 
@@ -335,4 +336,53 @@ class DownloadUpload(BaseHandlerDownload):
         self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('X-Accel-Redirect', '/protected/' + relpath)
         self._set_nginx_headers(basename(relpath))
+        self.finish()
+
+
+class DownloadPublicHandler(BaseHandlerDownload):
+    @coroutine
+    @execute_as_transaction
+    def get(self):
+        data = self.get_argument("data", None)
+        study_id = self.get_argument("study_id",  None)
+
+        if data is None or study_id is None or data not in ('raw', 'biom'):
+            raise HTTPError(405, reason='You need to specify both data (the '
+                            'data type you want to download - raw/biom) and '
+                            'study_id')
+
+        # checking that study exists and that it is public
+        study_id = int(study_id)
+        try:
+            study = Study(int(study_id))
+        except QiitaDBUnknownIDError:
+            raise HTTPError(405, reason='Study does not exist')
+        if study.status != 'public':
+            raise HTTPError(405, reason='Study is not public. If this is a '
+                            'mistake contact: qiita.help@gmail.com')
+
+        to_download = []
+        if data == 'raw':
+            public_raw_download = study.public_raw_download
+            if not public_raw_download:
+                raise HTTPError(405, reason='No raw data access. If this is a '
+                                'mistake contact: qiita.help@gmail.com')
+
+            # loop over artifacts and retrieve raw data (no parents)
+            for a in study.artifacts():
+                if not a.parents:
+                    if a.visibility != 'public':
+                        continue
+                    to_download.extend(self._list_artifact_files_nginx(a))
+        else:
+            for a in study.artifacts(artifact_type='BIOM'):
+                if a.visibility == 'public':
+                    to_download.extend(self._list_artifact_files_nginx(a))
+
+        self._write_nginx_file_list(to_download)
+
+        zip_fn = 'study_%d_%s_%s.zip' % (
+            study_id, data, datetime.now().strftime('%m%d%y-%H%M%S'))
+
+        self._set_nginx_headers(zip_fn)
         self.finish()

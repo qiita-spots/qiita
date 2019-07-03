@@ -377,5 +377,56 @@ class TestDownloadUpload(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
 
+class TestDownloadPublicHandler(TestHandlerBase):
+
+    def setUp(self):
+        super(TestDownloadPublicHandler, self).setUp()
+
+    def tearDown(self):
+        super(TestDownloadPublicHandler, self).tearDown()
+
+    def test_download(self):
+        # check failures
+        response = self.get('/download_public/')
+        self.assertEqual(response.code, 405)
+        self.assertEqual(response.reason, 'You need to specify both data (the '
+                         'data type you want to download - raw/biom) and '
+                         'study_id')
+
+        response = self.get('/download_public/?data=raw&study_id=10000')
+        self.assertEqual(response.code, 405)
+        self.assertEqual(response.reason, 'Study does not exist')
+
+        response = self.get('/download_public/?data=raw&study_id=1')
+        self.assertEqual(response.code, 405)
+        self.assertEqual(response.reason, 'Study is not public. If this is a '
+                         'mistake contact: qiita.help@gmail.com')
+
+        # 7 is an uploaded biom, which should now be available but as it's a
+        # biom, only the prep info file will be retrieved
+        Artifact(7).visibility = 'public'
+        response = self.get('/download_public/?data=raw&study_id=1')
+        self.assertEqual(response.code, 405)
+        self.assertEqual(response.reason, 'No raw data access. If this is a '
+                         'mistake contact: qiita.help@gmail.com')
+
+        # check success
+        response = self.get('/download_public/?data=biom&study_id=1')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/7_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        Study(1).public_raw_download = True
+        # check success
+        response = self.get('/download_public/?data=raw&study_id=1')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/7_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+
 if __name__ == '__main__':
     main()
