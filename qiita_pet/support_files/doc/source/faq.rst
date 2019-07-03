@@ -175,11 +175,17 @@ in the `QIIME2 forum <https://forum.qiime2.org>`__. Note that all feature table 
 How to download raw or all BIOM files from a given study?
 ---------------------------------------------------------
 
-We provide direct access to public data via a single end point. This end point can download, do not forget to replace `study-id` for your study of interest:
+We provide direct access to public data via a single end point. This end point can be used to download BIOMs or raw data,
+in specific (do not forget to replace `study-id` and/or `data_type` for your study or data type of interest ):
 
-- Raw data: https://qiita.ucsd.edu/download_public/?data=raw&study_id=study-id
+- All raw data: https://qiita.ucsd.edu/download_public/?data=raw&study_id=study-id
 
-- BIOMs + mapping files: https://qiita.ucsd.edu/download_public/?data=biom&study_id=study-id
+- All BIOMs + mapping files: https://qiita.ucsd.edu/download_public/?data=biom&study_id=study-id
+
+- Only 16S raw data: https://qiita.ucsd.edu/download_public/?data=raw&study_id=study-id&data_type=16S
+
+- Only Metagenomic BIOMs + mapping files: https://qiita.ucsd.edu/download_public/?data=biom&study_id=study-id&data_type=Metagenomic
+
 
 How to cite Qiita?
 ------------------

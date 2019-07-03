@@ -19,7 +19,7 @@ from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
                            get_filepath_information, get_mountpoint,
-                           filepath_id_to_object_id)
+                           filepath_id_to_object_id, get_data_types)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -345,11 +345,17 @@ class DownloadPublicHandler(BaseHandlerDownload):
     def get(self):
         data = self.get_argument("data", None)
         study_id = self.get_argument("study_id",  None)
+        data_type = self.get_argument("data_type",  None)
 
         if data is None or study_id is None or data not in ('raw', 'biom'):
             raise HTTPError(405, reason='You need to specify both data (the '
                             'data type you want to download - raw/biom) and '
                             'study_id')
+        if data_type is not None:
+            dtypes = get_data_types().keys()
+            if data_type not in dtypes:
+                raise HTTPError(405, reason='Not a valid data_type. Valid '
+                                'types are: %s' % ', '.join(dtypes))
 
         # checking that study exists and that it is public
         study_id = int(study_id)
@@ -369,15 +375,19 @@ class DownloadPublicHandler(BaseHandlerDownload):
                                 'mistake contact: qiita.help@gmail.com')
 
             # loop over artifacts and retrieve raw data (no parents)
-            for a in study.artifacts():
+            for a in study.artifacts(dtype=data_type):
                 if not a.parents:
                     if a.visibility != 'public':
                         continue
                     to_download.extend(self._list_artifact_files_nginx(a))
         else:
-            for a in study.artifacts(artifact_type='BIOM'):
+            for a in study.artifacts(artifact_type='BIOM', dtype=data_type):
                 if a.visibility == 'public':
                     to_download.extend(self._list_artifact_files_nginx(a))
+
+        if not to_download:
+            raise HTTPError(405, reason='Nothing to download. If this is a '
+                            'mistake contact: qiita.help@gmail.com')
 
         self._write_nginx_file_list(to_download)
 
