@@ -720,7 +720,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             new_status = qdb.util.convert_to_id(
                 value, "processing_job_status")
 
-            if (new_status in ('running', 'success', 'error') and
+            if (value in ('running', 'success', 'error') and
                     not self.command.analysis_only and
                     self.user.level == 'admin'):
                 subject = ('Job status change: %s (%s)' % (
