@@ -427,6 +427,52 @@ class TestDownloadPublicHandler(TestHandlerBase):
             'mapping_files/7_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
+        # testing data_type
+        response = self.get(
+            '/download_public/?data=raw&study_id=1&data_type=X')
+        self.assertEqual(response.code, 405)
+        self.assertEqual(response.reason, 'Not a valid data_type. Valid types '
+                         'are: 16S, 18S, ITS, Proteomic, Metabolomic, '
+                         'Metagenomic, Multiomic, Metatranscriptomics, '
+                         'Viromics, Genomics, Transcriptomics')
+
+        response = self.get(
+            '/download_public/?data=raw&study_id=1&data_type=Genomics')
+        self.assertEqual(response.code, 405)
+        self.assertEqual(response.reason, 'Nothing to download. If this is a '
+                         'mistake contact: qiita.help@gmail.com')
+        response = self.get(
+            '/download_public/?data=biom&study_id=1&data_type=Genomics')
+        self.assertEqual(response.code, 405)
+        self.assertEqual(response.reason, 'Nothing to download. If this is a '
+                         'mistake contact: qiita.help@gmail.com')
+
+        # check succcess
+        Artifact(5).visibility = 'public'
+        response = self.get(
+            '/download_public/?data=raw&study_id=1&data_type=18S')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '[0-9]* [0-9]* /protected/raw_data/1_s_G1_L001_sequences_barcodes'
+            '.fastq.gz raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
+            '- 36762 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/1_mapping_file.txt')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        response = self.get(
+            '/download_public/?data=biom&study_id=1&data_type=18S')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '[0-9]* [0-9]* /protected/processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom\n- [0-9]* /protected/templates/1_prep_'
+            '1_qiime_[0-9]*-[0-9]*.txt mapping_files/4_mapping_file.txt\n'
+            '[0-9]* [0-9]* /protected/processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom\n- [0-9]* /protected/templates/1_prep_1'
+            '_qiime_[0-9]*-[0-9]*.txt mapping_files/5_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
 
 if __name__ == '__main__':
     main()
