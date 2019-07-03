@@ -10,9 +10,10 @@ from tornado.escape import url_escape, json_encode
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config, r_client
-from qiita_core.util import send_email, execute_as_transaction
+from qiita_core.util import execute_as_transaction
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
+from qiita_db.util import send_email
 from qiita_db.user import User
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBDuplicateError,
                                  QiitaDBError)

@@ -22,7 +22,6 @@ from time import sleep, time
 from uuid import UUID
 from os.path import join
 from threading import Thread
-from qiita_core.util import send_email
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 
@@ -720,13 +719,13 @@ class ProcessingJob(qdb.base.QiitaObject):
             new_status = qdb.util.convert_to_id(
                 value, "processing_job_status")
 
-            if (value in ('running', 'success', 'error') and
+            if (new_status in ('running', 'success', 'error') and
                     not self.command.analysis_only and
                     self.user.level == 'admin'):
                 subject = ('Job status change: %s (%s)' % (
                     self.command.name, self.id))
                 message = ('New status: %s' % (new_status))
-                send_email(self.user.email, subject, message)
+                qdb.util.send_email(self.user.email, subject, message)
             sql = """UPDATE qiita.processing_job
                      SET processing_job_status_id = %s
                      WHERE processing_job_id = %s"""

@@ -13,14 +13,13 @@ from humanize import naturalsize
 from tornado.web import authenticated, StaticFileHandler
 
 from qiita_core.qiita_settings import qiita_config, r_client
-from qiita_core.util import send_email
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import safe_execution
 from qiita_pet.exceptions import QiitaHTTPError
 from qiita_db.artifact import Artifact
 from qiita_db.software import Command, Software, Parameters
 from qiita_db.processing_job import ProcessingJob
-from qiita_db.util import get_visibilities
+from qiita_db.util import get_visibilities, send_email
 
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'

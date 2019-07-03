@@ -12,11 +12,12 @@ from wtforms import Form, StringField, validators
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import user_jobs_get_req
+from qiita_db.util import send_email
 from qiita_db.user import User
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBError
 from qiita_core.exceptions import IncorrectPasswordError
-from qiita_core.util import send_email, execute_as_transaction
+from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 
 

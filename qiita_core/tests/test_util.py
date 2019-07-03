@@ -11,7 +11,7 @@ from __future__ import division
 from unittest import TestCase, main
 
 from qiita_core.util import (
-    send_email, qiita_test_checker, execute_as_transaction, get_qiita_version,
+    qiita_test_checker, execute_as_transaction, get_qiita_version,
     is_test_environment, get_release_info)
 from qiita_db.meta_util import (
     generate_biom_and_metadata_release, generate_plugin_releases)
@@ -28,8 +28,8 @@ class UtilTests(TestCase):
         """testing send email functionality"""
         # the default configuration is not correct and should fail
         with self.assertRaises(IOError):
-            send_email("antgonza@gmail.com", "This is a test",
-                       "This is the body of the test")
+            qdb.util.send_email("antgonza@gmail.com", "This is a test",
+                                "This is the body of the test")
 
     def test_is_test_environment(self):
         self.assertTrue(is_test_environment())
