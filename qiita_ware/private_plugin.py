@@ -10,11 +10,12 @@ from json import dumps, loads
 from sys import exc_info
 from time import sleep
 from os import remove
+from os.path import join
 import traceback
 import warnings
 
 import qiita_db as qdb
-from qiita_core.qiita_settings import r_client
+from qiita_core.qiita_settings import r_client, qiita_config
 from qiita_ware.commands import (download_remote, list_remote,
                                  submit_VAMPS, submit_EBI)
 from qiita_ware.metadata_pipeline import (
@@ -436,6 +437,31 @@ def download_remote_files(job):
             job._set_status('success')
 
 
+def INSDC_download(job):
+    """Download an accession from INSDC
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        param_vals = job.parameters.values
+        download_source = param_vals['download_source']
+        accession = param_vals['accession']
+
+        if job.user.level != 'admin':
+            job._set_error('INSDC_download is only for administrators')
+
+        job_dir = join(qiita_config.working_dir, job.id)
+        qdb.util.create_nested_path(job_dir)
+
+        # code doing something
+        print(download_source, accession)
+
+        job._set_status('success')
+
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
              'submit_to_VAMPS': submit_to_VAMPS,
@@ -451,7 +477,8 @@ TASK_DICT = {'build_analysis_files': build_analysis_files,
              'complete_job': complete_job,
              'delete_analysis': delete_analysis,
              'list_remote_files': list_remote_files,
-             'download_remote_files': download_remote_files}
+             'download_remote_files': download_remote_files,
+             'INSDC_download': INSDC_download}
 
 
 def private_task(job_id):
