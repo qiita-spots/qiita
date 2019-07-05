@@ -65,12 +65,19 @@ from future.builtins import bytes, str
 import h5py
 from humanize import naturalsize
 import hashlib
+from smtplib import SMTP, SMTP_SSL, SMTPException
 
 from os import makedirs
 from errno import EEXIST
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
+
+from future import standard_library
+
+with standard_library.hooks():
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
 
 
 def scrub_data(s):
@@ -2068,3 +2075,37 @@ def activate_or_update_plugins(update=False):
         if not update:
             s.activate()
         print("Ok")
+
+
+def send_email(to, subject, body):
+    # create email
+    msg = MIMEMultipart()
+    msg['From'] = qiita_config.smtp_email
+    msg['To'] = to
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    # connect to smtp server, using ssl if needed
+    if qiita_config.smtp_ssl:
+        smtp = SMTP_SSL()
+    else:
+        smtp = SMTP()
+    smtp.set_debuglevel(False)
+    smtp.connect(qiita_config.smtp_host, qiita_config.smtp_port)
+    # try tls, if not available on server just ignore error
+    try:
+        smtp.starttls()
+    except SMTPException:
+        pass
+    smtp.ehlo_or_helo_if_needed()
+
+    if qiita_config.smtp_user:
+        smtp.login(qiita_config.smtp_user, qiita_config.smtp_password)
+
+    # send email
+    try:
+        smtp.sendmail(qiita_config.smtp_email, to, msg.as_string())
+    except Exception:
+        raise RuntimeError("Can't send email!")
+    finally:
+        smtp.close()
