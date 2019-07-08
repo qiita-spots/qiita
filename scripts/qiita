@@ -361,8 +361,9 @@ def start(port, master):
     if master:
         # Create/repopulate the usernames key so we can do autocomplete for
         # sharing. Note that we only do it in master so this is not created in
-        # all workers and possibly hit this error: redis.exceptions.
-        # ResponseError: OOM command not allowed when used memory > 'maxmemory'.
+        # all workers and possibly hit this error:
+        # redis.exceptions.ResponseError: OOM command not allowed when
+        # used memory > 'maxmemory'.
         r_client.delete('qiita-usernames')
         users = [email for email, name in qdb.user.User.iter()]
 
@@ -373,7 +374,6 @@ def start(port, master):
         # available in the config file folder
         qdb.software.Software.deactivate_all()
         qdb.util.activate_or_update_plugins()
-
 
     if qiita_config.log_dir:
         options.log_file_prefix = join(qiita_config.log_dir,
