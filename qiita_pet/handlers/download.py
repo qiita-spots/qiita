@@ -349,25 +349,28 @@ class DownloadPublicHandler(BaseHandlerDownload):
         dtypes = get_data_types().keys()
 
         if data is None or study_id is None or data not in ('raw', 'biom'):
-            self.write('You need to specify both data (the data type you want '
-                       'to download - raw/biom) and study_id')
+            raise HTTPError(422, reason='You need to specify both data (the '
+                            'data type you want to download - raw/biom) and '
+                            'study_id')
         elif data_type is not None and data_type not in dtypes:
-            self.write('Not a valid data_type. Valid types are: '
-                       '%s' % ', '.join(dtypes))
+            raise HTTPError(422, reason='Not a valid data_type. Valid types '
+                            'are: %s' % ', '.join(dtypes))
         else:
             study_id = int(study_id)
             try:
-                study = Study(int(study_id))
+                study = Study(study_id)
             except QiitaDBUnknownIDError:
-                self.write('Study does not exist')
+                raise HTTPError(422, reason='Study does not exist')
             else:
                 public_raw_download = study.public_raw_download
                 if study.status != 'public':
-                    self.write('Study is not public. If this is a mistake '
-                               'contact: qiita.help@gmail.com')
+                    raise HTTPError(422, reason='Study is not public. If this '
+                                    'is a mistake contact: '
+                                    'qiita.help@gmail.com')
                 elif data == 'raw' and not public_raw_download:
-                    self.write('No raw data access. If this is a mistake '
-                               'contact: qiita.help@gmail.com')
+                    raise HTTPError(422, reason='No raw data access. If this '
+                                    'is a mistake contact: '
+                                    'qiita.help@gmail.com')
                 else:
                     to_download = []
                     for a in study.artifacts(dtype=data_type,
@@ -378,8 +381,9 @@ class DownloadPublicHandler(BaseHandlerDownload):
                         to_download.extend(self._list_artifact_files_nginx(a))
 
                     if not to_download:
-                        self.write('Nothing to download. If this is a mistake '
-                                   'contact: qiita.help@gmail.com')
+                        raise HTTPError(422, reason='Nothing to download. If '
+                                        'this is a mistake contact: '
+                                        'qiita.help@gmail.com')
                     else:
                         self._write_nginx_file_list(to_download)
 

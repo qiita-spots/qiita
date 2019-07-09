@@ -388,26 +388,26 @@ class TestDownloadPublicHandler(TestHandlerBase):
     def test_download(self):
         # check failures
         response = self.get('/public_download/')
-        self.assertEqual(response.code, 200)
-        self.assertEqual(response.body.decode('ascii'), 'You need to specify '
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'You need to specify '
                          'both data (the data type you want to download - '
                          'raw/biom) and study_id')
 
         response = self.get('/public_download/?data=raw&study_id=10000')
-        self.assertEqual(response.code, 200)
-        self.assertEqual(response.body.decode('ascii'), 'Study does not exist')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Study does not exist')
 
         response = self.get('/public_download/?data=raw&study_id=1')
-        self.assertEqual(response.code, 200)
-        self.assertEqual(response.body.decode('ascii'), 'Study is not public. '
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Study is not public. '
                          'If this is a mistake contact: qiita.help@gmail.com')
 
         # 7 is an uploaded biom, which should now be available but as it's a
         # biom, only the prep info file will be retrieved
         Artifact(7).visibility = 'public'
         response = self.get('/public_download/?data=raw&study_id=1')
-        self.assertEqual(response.code, 200)
-        self.assertEqual(response.body.decode('ascii'), 'No raw data access. '
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'No raw data access. '
                          'If this is a mistake contact: qiita.help@gmail.com')
 
         # check success
@@ -430,24 +430,21 @@ class TestDownloadPublicHandler(TestHandlerBase):
         # testing data_type
         response = self.get(
             '/public_download/?data=raw&study_id=1&data_type=X')
-        self.assertEqual(response.code, 200)
-        self.assertEqual(response.body.decode('ascii'),
-                         'Not a valid data_type. Valid types '
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Not a valid data_type. Valid types '
                          'are: 16S, 18S, ITS, Proteomic, Metabolomic, '
                          'Metagenomic, Multiomic, Metatranscriptomics, '
                          'Viromics, Genomics, Transcriptomics')
 
         response = self.get(
             '/public_download/?data=raw&study_id=1&data_type=Genomics')
-        self.assertEqual(response.code, 200)
-        self.assertEqual(response.body.decode('ascii'),
-                         'Nothing to download. If this is a '
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Nothing to download. If this is a '
                          'mistake contact: qiita.help@gmail.com')
         response = self.get(
             '/public_download/?data=biom&study_id=1&data_type=Genomics')
-        self.assertEqual(response.code, 200)
-        self.assertEqual(response.body.decode('ascii'),
-                         'Nothing to download. If this is a '
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Nothing to download. If this is a '
                          'mistake contact: qiita.help@gmail.com')
 
         # check succcess

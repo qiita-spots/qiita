@@ -45,9 +45,6 @@ class BaseHandler(RequestHandler):
                 # Any issue with this check leaves default as not admin
                 pass
 
-        # render error page
-        self.render('error.html', status_code=status_code, is_admin=is_admin)
-
         # log the error
         from traceback import format_exception
         exc_info = kwargs["exc_info"]
@@ -59,7 +56,12 @@ class BaseHandler(RequestHandler):
         request_info = ''.join(["<strong>%s</strong>: %s\n" %
                                (k, req_dict[k]) for k in
                                 req_dict.keys() if k != 'files'])
-        error = exc_info[1]
+        error = str(exc_info[1]).split(':', 1)[1]
+
+        # render error page
+        self.render('error.html', status_code=status_code, is_admin=is_admin,
+                    error=error)
+
         LogEntry.create(
             'Runtime',
             'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
