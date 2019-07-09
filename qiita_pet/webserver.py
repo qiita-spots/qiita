@@ -184,7 +184,7 @@ class Application(tornado.web.Application):
                 DownloadEBIPrepAccessions),
             (r"/download_upload/(.*)", DownloadUpload),
             (r"/release/download/(.*)", DownloadRelease),
-            (r"/download_public/", DownloadPublicHandler),
+            (r"/public_download/", DownloadPublicHandler),
             (r"/vamps/(.*)", VAMPSHandler),
             (r"/redbiom/(.*)", RedbiomPublicSearch),
             (r"/iframe/", IFrame),
