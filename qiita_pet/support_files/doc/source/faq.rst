@@ -118,6 +118,18 @@ To update your unzip for most operating systems you can simply use your regular 
 admin program. However, for Mac we suggest using
 `this version of unzip <ftp://ftp.microbio.me/pub/qiita/unzip>`__.
 
+Additionally, there is a chance that you will see an error/warning message like this:
+``extracting: BIOM/57457/all.biom bad CRC f6b2a86b (should be 38903659)``. These
+messages are consequence of the zip library we are using internally and are fine to
+ignore. If you want to check them, we suggest taking any of the files and generating their
+CRC32 checksum; in MAC's you can run ``crc32 [filename]`` and should get the first number
+in that message; for example:
+
+.. code-block:: bash
+
+   $ crc32 57457_all.biom
+   f6b2a86b
+
 Do you have general analytical questions?
 -----------------------------------------
 
