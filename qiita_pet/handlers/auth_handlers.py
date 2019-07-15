@@ -10,9 +10,10 @@ from tornado.escape import url_escape, json_encode
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config, r_client
-from qiita_core.util import send_email, execute_as_transaction
+from qiita_core.util import execute_as_transaction
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
+from qiita_db.util import send_email
 from qiita_db.user import User
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBDuplicateError,
                                  QiitaDBError)
@@ -101,7 +102,7 @@ class AuthVerifyHandler(BaseHandler):
         if code_is_valid:
             msg = "Successfully verified user. You are now free to log in."
             color = "black"
-            r_client.zadd('qiita-usernames', email, 0)
+            r_client.zadd('qiita-usernames', {email: 0})
         else:
             color = "red"
 

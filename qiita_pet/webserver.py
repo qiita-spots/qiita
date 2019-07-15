@@ -50,7 +50,7 @@ from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import (
     DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease,
     DownloadRawData, DownloadEBISampleAccessions, DownloadEBIPrepAccessions,
-    DownloadUpload)
+    DownloadUpload, DownloadPublicHandler)
 from qiita_pet.handlers.prep_template import (
     PrepTemplateHandler, PrepTemplateGraphHandler, PrepTemplateJobHandler)
 from qiita_pet.handlers.ontology import OntologyHandler
@@ -184,6 +184,7 @@ class Application(tornado.web.Application):
                 DownloadEBIPrepAccessions),
             (r"/download_upload/(.*)", DownloadUpload),
             (r"/release/download/(.*)", DownloadRelease),
+            (r"/public_download/", DownloadPublicHandler),
             (r"/vamps/(.*)", VAMPSHandler),
             (r"/redbiom/(.*)", RedbiomPublicSearch),
             (r"/iframe/", IFrame),

@@ -100,10 +100,10 @@ def _parse_queue_values(d):
 
 def _qiita_queue_log_parse(jids_to_recover):
     df = pd.read_csv(QIITA_QUEUE_LOG, sep='\t',
-                     index_col=None, header=None, dtype=str)
-    # renaming columns so they are easier to manipulate
-    df.columns = ['bjid', 'user', 'group', 'jid', 'session', 'resource-list',
-                  'resource-used', 'queue', 'account', 'exit-code']
+                     index_col=None, header=None, dtype=str, names=[
+                        'bjid', 'user', 'group', 'jid', 'session',
+                        'resource-list', 'resource-used', 'queue', 'account',
+                        'exit-code', 'node'])
     # remove the register and empty fields to avoid errors
     df = df[(df.bjid != '0') &
             (~df.bjid.isnull()) &

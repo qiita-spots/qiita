@@ -169,7 +169,23 @@ How to convert Qiita files to QIIME2 artifacts?
 -----------------------------------------------
 
 Please visit the `Transferring Qiita Artifacts to Qiime2 Tutorial <https://forum.qiime2.org/t/transferring-qiita-artifacts-to-qiime2/4790>`__
-in the `QIIME2 forum <https://forum.qiime2.org>`__.
+in the `QIIME2 forum <https://forum.qiime2.org>`__. Note that all feature table (bioms) and analytical steps will generate qza and qzv, which are QIIME2 artifacts.
+
+
+How to download raw or all BIOM files from a given study?
+---------------------------------------------------------
+
+We provide direct access to public data via a single end point. This end point can be used to download BIOMs or raw data,
+in specific (do not forget to replace `study-id` and/or `data_type` for your study or data type of interest ):
+
+- All raw data: https://qiita.ucsd.edu/public_download/?data=raw&study_id=study-id
+
+- All BIOMs + mapping files: https://qiita.ucsd.edu/public_download/?data=biom&study_id=study-id
+
+- Only 16S raw data: https://qiita.ucsd.edu/public_download/?data=raw&study_id=study-id&data_type=16S
+
+- Only Metagenomic BIOMs + mapping files: https://qiita.ucsd.edu/public_download/?data=biom&study_id=study-id&data_type=Metagenomic
+
 
 How to cite Qiita?
 ------------------

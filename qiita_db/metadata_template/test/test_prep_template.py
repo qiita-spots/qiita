@@ -968,7 +968,7 @@ class TestPrepTemplate(TestCase):
         metadata['target_subfragment'] = 'V4'
         pt.extend(metadata)
         success, message = pt.validate_restrictions()
-        self.assertEqual(message, 'prep %d has a no valid values: "Should '
+        self.assertEqual(message, 'prep %d has invalid values: "Should '
                          'Warn", valid values are: "16S rRNA, 18S rRNA, '
                          'ITS1/2, LSU"' % pt.id)
         self.assertFalse(success)

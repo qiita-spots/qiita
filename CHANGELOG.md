@@ -1,5 +1,13 @@
 # Qiita changelog
 
+Version 072019
+--------------
+
+* Fixed annoying bugs due to Python 2->3 conversion: https://github.com/biocore/qiita/issues/2901
+* Created a new all/per-data-type raw/biom endpoint; see FAQs in help page
+* Added a new button to reconcile sample and prep info files within study (delete all samples in the sample information file that has no preparation)
+* Fixed but where trying to delete multiple samples within the sample information file will fail
+
 Version 042019
 --------------
 

@@ -1818,7 +1818,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 if msg:
                     success = False
                     message.append(
-                        '%s has a no valid values: "%s", valid values are: '
+                        '%s has invalid values: "%s", valid values are: '
                         '"%s"' % (name, ', '.join(msg),
                                   ', '.join(restrictions[key])))
 

@@ -12,11 +12,12 @@ from wtforms import Form, StringField, validators
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import user_jobs_get_req
+from qiita_db.util import send_email
 from qiita_db.user import User
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBError
 from qiita_core.exceptions import IncorrectPasswordError
-from qiita_core.util import send_email, execute_as_transaction
+from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -47,12 +48,12 @@ class UserProfileHandler(BaseHandler):
             # FORM INPUT NAMES MUST MATCH DB COLUMN NAMES
             form_data = UserProfile()
             form_data.process(data=self.request.arguments)
-            profile = {name: data[0] for name, data in
+            profile = {name: data[0].decode('ascii') for name, data in
                        viewitems(form_data.data)}
 
             # Turn default value as list into default strings
             for field in form_data:
-                field.data = field.data[0]
+                field.data = field.data[0].decode('ascii')
             try:
                 user.info = profile
                 msg = "Profile updated successfully"

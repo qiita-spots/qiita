@@ -5,8 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from smtplib import SMTP, SMTP_SSL, SMTPException
-from future import standard_library
 from functools import wraps
 from os.path import dirname
 from git import Repo
@@ -14,45 +12,8 @@ from git.exc import InvalidGitRepositoryError
 
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_pet import __version__ as qiita_pet_lib_version
-import qiita_db as qdb
-
-with standard_library.hooks():
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-
-
-def send_email(to, subject, body):
-    # create email
-    msg = MIMEMultipart()
-    msg['From'] = qiita_config.smtp_email
-    msg['To'] = to
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
-
-    # connect to smtp server, using ssl if needed
-    if qiita_config.smtp_ssl:
-        smtp = SMTP_SSL()
-    else:
-        smtp = SMTP()
-    smtp.set_debuglevel(False)
-    smtp.connect(qiita_config.smtp_host, qiita_config.smtp_port)
-    # try tls, if not available on server just ignore error
-    try:
-        smtp.starttls()
-    except SMTPException:
-        pass
-    smtp.ehlo_or_helo_if_needed()
-
-    if qiita_config.smtp_user:
-        smtp.login(qiita_config.smtp_user, qiita_config.smtp_password)
-
-    # send email
-    try:
-        smtp.sendmail(qiita_config.smtp_email, to, msg.as_string())
-    except Exception:
-        raise RuntimeError("Can't send email!")
-    finally:
-        smtp.close()
+from qiita_db.sql_connection import TRN
+from qiita_db.environment_manager import reset_test_database
 
 
 def is_test_environment():
@@ -70,9 +31,9 @@ def is_test_environment():
         - The config file indicates that this is a test environment
     """
     # Check that we are not in a production environment
-    with qdb.sql_connection.TRN:
-        qdb.sql_connection.TRN.add("SELECT test FROM settings")
-        test_db = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+    with TRN:
+        TRN.add("SELECT test FROM settings")
+        test_db = TRN.execute_fetchflatten()[0]
     return qiita_config.test_environment and test_db
 
 
@@ -102,7 +63,7 @@ def qiita_test_checker(test=False):
                 super(DecoratedClass, self).setUp()
 
             @classmethod
-            @qdb.environment_manager.reset_test_database
+            @reset_test_database
             def tearDownClass(cls):
                 pass
 

@@ -377,5 +377,102 @@ class TestDownloadUpload(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
 
+class TestDownloadPublicHandler(TestHandlerBase):
+
+    def setUp(self):
+        super(TestDownloadPublicHandler, self).setUp()
+
+    def tearDown(self):
+        super(TestDownloadPublicHandler, self).tearDown()
+
+    def test_download(self):
+        # check failures
+        response = self.get('/public_download/')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'You need to specify '
+                         'both data (the data type you want to download - '
+                         'raw/biom) and study_id')
+
+        response = self.get('/public_download/?data=raw&study_id=10000')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Study does not exist')
+
+        response = self.get('/public_download/?data=raw&study_id=1')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Study is not public. '
+                         'If this is a mistake contact: qiita.help@gmail.com')
+
+        # 7 is an uploaded biom, which should now be available but as it's a
+        # biom, only the prep info file will be retrieved
+        Artifact(7).visibility = 'public'
+        response = self.get('/public_download/?data=raw&study_id=1')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'No raw data access. '
+                         'If this is a mistake contact: qiita.help@gmail.com')
+
+        # check success
+        response = self.get('/public_download/?data=biom&study_id=1')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/7_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        Study(1).public_raw_download = True
+        # check success
+        response = self.get('/public_download/?data=raw&study_id=1')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/7_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        # testing data_type
+        response = self.get(
+            '/public_download/?data=raw&study_id=1&data_type=X')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Not a valid data_type. Valid types '
+                         'are: 16S, 18S, ITS, Proteomic, Metabolomic, '
+                         'Metagenomic, Multiomic, Metatranscriptomics, '
+                         'Viromics, Genomics, Transcriptomics')
+
+        response = self.get(
+            '/public_download/?data=raw&study_id=1&data_type=Genomics')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Nothing to download. If this is a '
+                         'mistake contact: qiita.help@gmail.com')
+        response = self.get(
+            '/public_download/?data=biom&study_id=1&data_type=Genomics')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Nothing to download. If this is a '
+                         'mistake contact: qiita.help@gmail.com')
+
+        # check succcess
+        Artifact(5).visibility = 'public'
+        response = self.get(
+            '/public_download/?data=raw&study_id=1&data_type=18S')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '[0-9]* [0-9]* /protected/raw_data/1_s_G1_L001_sequences_barcodes'
+            '.fastq.gz raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
+            '- 36762 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/1_mapping_file.txt')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        response = self.get(
+            '/public_download/?data=biom&study_id=1&data_type=18S')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '[0-9]* [0-9]* /protected/processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom\n- [0-9]* /protected/templates/1_prep_'
+            '1_qiime_[0-9]*-[0-9]*.txt mapping_files/4_mapping_file.txt\n'
+            '[0-9]* [0-9]* /protected/processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom\n- [0-9]* /protected/templates/1_prep_1'
+            '_qiime_[0-9]*-[0-9]*.txt mapping_files/5_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+
 if __name__ == '__main__':
     main()

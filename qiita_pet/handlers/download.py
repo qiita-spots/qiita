@@ -19,10 +19,11 @@ from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
                            get_filepath_information, get_mountpoint,
-                           filepath_id_to_object_id)
+                           filepath_id_to_object_id, get_data_types)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_core.util import execute_as_transaction, get_release_info
 
 
@@ -335,4 +336,60 @@ class DownloadUpload(BaseHandlerDownload):
         self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('X-Accel-Redirect', '/protected/' + relpath)
         self._set_nginx_headers(basename(relpath))
+        self.finish()
+
+
+class DownloadPublicHandler(BaseHandlerDownload):
+    @coroutine
+    @execute_as_transaction
+    def get(self):
+        data = self.get_argument("data", None)
+        study_id = self.get_argument("study_id",  None)
+        data_type = self.get_argument("data_type",  None)
+        dtypes = get_data_types().keys()
+
+        if data is None or study_id is None or data not in ('raw', 'biom'):
+            raise HTTPError(422, reason='You need to specify both data (the '
+                            'data type you want to download - raw/biom) and '
+                            'study_id')
+        elif data_type is not None and data_type not in dtypes:
+            raise HTTPError(422, reason='Not a valid data_type. Valid types '
+                            'are: %s' % ', '.join(dtypes))
+        else:
+            study_id = int(study_id)
+            try:
+                study = Study(study_id)
+            except QiitaDBUnknownIDError:
+                raise HTTPError(422, reason='Study does not exist')
+            else:
+                public_raw_download = study.public_raw_download
+                if study.status != 'public':
+                    raise HTTPError(422, reason='Study is not public. If this '
+                                    'is a mistake contact: '
+                                    'qiita.help@gmail.com')
+                elif data == 'raw' and not public_raw_download:
+                    raise HTTPError(422, reason='No raw data access. If this '
+                                    'is a mistake contact: '
+                                    'qiita.help@gmail.com')
+                else:
+                    to_download = []
+                    for a in study.artifacts(dtype=data_type,
+                                             artifact_type='BIOM'
+                                             if data == 'biom' else None):
+                        if a.visibility != 'public':
+                            continue
+                        to_download.extend(self._list_artifact_files_nginx(a))
+
+                    if not to_download:
+                        raise HTTPError(422, reason='Nothing to download. If '
+                                        'this is a mistake contact: '
+                                        'qiita.help@gmail.com')
+                    else:
+                        self._write_nginx_file_list(to_download)
+
+                        zip_fn = 'study_%d_%s_%s.zip' % (
+                            study_id, data, datetime.now().strftime(
+                                '%m%d%y-%H%M%S'))
+
+                        self._set_nginx_headers(zip_fn)
         self.finish()
