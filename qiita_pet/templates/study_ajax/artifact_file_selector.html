@@ -129,7 +129,7 @@
     $(".fileListParam").each( function(i, cont) {
       var files = [];
       $("#"+cont.id+"-list").children().each( function(j, c_cont) {
-          files.push(c_cont.id);
+        files.push(c_cont.id);
       });
       $(cont).val(files);
     });
@@ -245,7 +245,7 @@
   </div>
   {% for ft, req, files in file_types %}
     <div class="col-md-3" id="{{ft}}-div">
-      <input type="hidden" name="{{ft}}" id="{{ft}}" value="" class="fileListParam">
+      <input type="hidden" name="{{ft}}[]" id="{{ft}}" value="" class="fileListParam">
       <p style="text-align: center;"><i>{{ ft.replace('_', ' ') }}</i></p>
       <ul id="{{ft}}-list" data-file-required="{{req}}" data-file-count="{{num_prefixes}}" data-correct="true" class="connectedSortable checkable">
         {% for fp in files %}

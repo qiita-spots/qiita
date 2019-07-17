@@ -10,11 +10,11 @@ from __future__ import division
 from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
-from os import remove, makedirs
-from os.path import isfile, exists, relpath
+from os import remove
+from os.path import isfile, relpath
 from shutil import rmtree
-from functools import partial
 from collections import namedtuple
+from qiita_db.util import create_nested_path
 
 import networkx as nx
 
@@ -179,9 +179,7 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [name, mp, True, True])
 
             # We are intersted in the dirpath
-            dp = qdb.util.get_mountpoint(name)[0][1]
-            if not exists(dp):
-                makedirs(dp)
+            create_nested_path(qdb.util.get_mountpoint(name)[0][1])
 
             qdb.sql_connection.TRN.execute()
 
@@ -228,7 +226,7 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args)
 
             # Associate the artifact with its filepaths
-            filepaths = [(fp, f_type) for _, fp, f_type in artifact.filepaths]
+            filepaths = [(x['fp'], x['fp_type']) for x in artifact.filepaths]
             fp_ids = qdb.util.insert_filepaths(
                 filepaths, a_id, atype, copy=True)
             sql = """INSERT INTO qiita.artifact_filepath
@@ -511,10 +509,9 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it is public")
 
-            children = instance.children
-            children_ids = [c.id for c in children]
-            all_ids = tuple(children_ids + [artifact_id])
-            all_artifacts = children + [instance]
+            all_artifacts = list(instance.descendants.nodes())
+            all_artifacts.reverse()
+            all_ids = tuple([a.id for a in all_artifacts])
 
             # Check if this or any of the children have been analyzed
             sql = """SELECT email, analysis_id
@@ -599,8 +596,9 @@ class Artifact(qdb.base.QiitaObject):
                      WHERE artifact_id IN %s"""
             qdb.sql_connection.TRN.add(sql, [all_ids])
 
-            # If the artifacts don't have parents and study is not None (is an
-            # analysis), we move the files to the uploads folder. We also need
+            # If the first artifact to be deleted, instance, doesn't have
+            # parents and study is not None (None means is an analysis), we
+            # move the files to the uploads folder. We also need
             # to nullify the column in the prep template table
             if not instance.parents and study is not None:
                 qdb.util.move_filepaths_to_upload_folder(
@@ -736,6 +734,24 @@ class Artifact(qdb.base.QiitaObject):
         only applies when the new visibility is more open than before.
         """
         with qdb.sql_connection.TRN:
+            # first let's check that this is a valid visibility
+            vis_id = qdb.util.convert_to_id(value, "visibility")
+            study = self.study
+
+            # then let's check that the sample/prep info files have the correct
+            # restrictions
+            if value != 'sandbox' and study is not None:
+                reply = study.sample_template.validate_restrictions()
+                success = [not reply[0]]
+                message = [reply[1]]
+                for pt in self.prep_templates:
+                    reply = pt.validate_restrictions()
+                    success.append(not reply[0])
+                    message.append(reply[1])
+                if any(success):
+                    raise ValueError(
+                        "Errors in your info files:%s" % '\n'.join(message))
+
             # In order to correctly propagate the visibility we need to find
             # the root of this artifact and then propagate to all the artifacts
             sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
@@ -748,7 +764,6 @@ class Artifact(qdb.base.QiitaObject):
             sql = """UPDATE qiita.artifact
                      SET visibility_id = %s
                      WHERE artifact_id IN %s"""
-            vis_id = qdb.util.convert_to_id(value, "visibility")
             qdb.sql_connection.TRN.add(sql, [vis_id, tuple(ids)])
             qdb.sql_connection.TRN.execute()
 
@@ -969,9 +984,8 @@ class Artifact(qdb.base.QiitaObject):
 
         Returns
         -------
-        list of (int, str, str)
-            A list of (filepath_id, path, filetype) of all the files associated
-            with the artifact
+        list of dict
+            A list of dict as defined by qiita_db.util.retrieve_filepaths
         """
         return qdb.util.retrieve_filepaths(
             "artifact_filepath", "artifact_id", self.id, sort='ascending')
@@ -993,7 +1007,7 @@ class Artifact(qdb.base.QiitaObject):
             # filepath id, the filepath and the filepath type. We don't want
             # to return the filepath type here, so just grabbing the first and
             # second element of the list
-            res = (fps[0][0], fps[0][1])
+            res = (fps[0]['fp_id'], fps[0]['fp'])
         else:
             res = None
 
@@ -1015,10 +1029,10 @@ class Artifact(qdb.base.QiitaObject):
                 # Delete the current HTML summary
                 to_delete_ids = []
                 to_delete_fps = []
-                for fp_id, fp, fp_type in self.filepaths:
-                    if fp_type in ('html_summary', 'html_summary_dir'):
-                        to_delete_ids.append([fp_id])
-                        to_delete_fps.append(fp)
+                for x in self.filepaths:
+                    if x['fp_type'] in ('html_summary', 'html_summary_dir'):
+                        to_delete_ids.append([x['fp_id']])
+                        to_delete_fps.append(x['fp'])
                 # From the artifact_filepath table
                 sql = """DELETE FROM qiita.artifact_filepath
                          WHERE filepath_id = %s"""
@@ -1029,13 +1043,14 @@ class Artifact(qdb.base.QiitaObject):
                 # And from the filesystem only after the transaction is
                 # successfully completed (after commit)
 
-                def path_cleaner(fp):
-                    if isfile(fp):
-                        remove(fp)
-                    else:
-                        rmtree(fp)
+                def path_cleaner(fps):
+                    for fp in fps:
+                        if isfile(fp):
+                            remove(fp)
+                        else:
+                            rmtree(fp)
                 qdb.sql_connection.TRN.add_post_commit_func(
-                    partial(map, path_cleaner, to_delete_fps))
+                    path_cleaner, to_delete_fps)
 
             # Add the new HTML summary
             filepaths = [(html_fp, 'html_summary')]
@@ -1170,7 +1185,7 @@ class Artifact(qdb.base.QiitaObject):
             # status. Approach: Loop over all the artifacts and add all the
             # jobs that have been attached to them.
             visited = set()
-            queue = nodes.keys()
+            queue = list(nodes.keys())
             while queue:
                 current = queue.pop(0)
                 if current not in visited:
@@ -1334,6 +1349,52 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()
             return qdb.analysis.Analysis(res[0][0]) if res else None
+
+    @property
+    def merging_scheme(self):
+        """The merging scheme of this artifact_type
+
+        Returns
+        -------
+        str, str
+            The human readable merging scheme and the parent software
+            information for this artifact
+        """
+        processing_params = self.processing_parameters
+        if processing_params is None:
+            return '', ''
+
+        cmd_name = processing_params.command.name
+        ms = processing_params.command.merging_scheme
+        afps = [x['fp'] for x in self.filepaths if x['fp'].endswith('biom')]
+
+        merging_schemes = []
+        parent_softwares = []
+        # this loop is necessary as in theory an artifact can be
+        # generated from multiple prep info files
+        for p in self.parents:
+            pparent = p.processing_parameters
+            # if parent is None, then is a direct upload; for example
+            # per_sample_FASTQ in shotgun data
+            if pparent is None:
+                parent_cmd_name = None
+                parent_merging_scheme = None
+                parent_pp = None
+                parent_software = 'N/A'
+            else:
+                parent_cmd_name = pparent.command.name
+                parent_merging_scheme = pparent.command.merging_scheme
+                parent_pp = pparent.values
+                psoftware = pparent.command.software
+                parent_software = '%s v%s' % (
+                    psoftware.name, psoftware.version)
+
+            merging_schemes.append(qdb.util.human_merging_scheme(
+                cmd_name, ms, parent_cmd_name, parent_merging_scheme,
+                processing_params.values, afps, parent_pp))
+            parent_softwares.append(parent_software)
+
+        return ', '.join(merging_schemes), ', '.join(parent_softwares)
 
     def jobs(self, cmd=None, status=None, show_hidden=False):
         """Jobs that used this artifact as input

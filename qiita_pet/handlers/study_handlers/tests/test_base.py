@@ -55,7 +55,7 @@ class TestStudyGetTags(TestHandlerBase):
         exp = ('{"status": "success", "message": "", "tags": '
                '{"admin": [], "user": []}}')
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, exp)
+        self.assertEqual(response.body.decode('ascii'), exp)
 
 
 class TestStudyTags(OauthTestingBase):
@@ -63,7 +63,7 @@ class TestStudyTags(OauthTestingBase):
         response = self.get('/study/tags/1')
         exp = ('{"status": "success", "message": "", "tags": []}')
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, exp)
+        self.assertEqual(response.body.decode('ascii'), exp)
 
         # test error
         response = self.get('/study/tags/bla')
@@ -78,7 +78,8 @@ class TestStudy(OauthTestingBase):
                          data=arguments, asjson=True)
 
         self.assertEqual(obs.code, 200)
-        self.assertEqual(obs.body, '{"status": "success", "message": ""}')
+        self.assertEqual(obs.body.decode('ascii'),
+                         '{"status": "success", "message": ""}')
 
         # checking the tags were added
         response = self.get('/study/tags/1')

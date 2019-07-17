@@ -61,16 +61,8 @@ Accepted raw files
 
 * Multiplexed SFF
 * Multiplexed FASTQ: forward, reverse (optional), and barcodes
-* Per sample FASTQ: forward
+* Per sample FASTQ: forward and reverse (optional)
 * Multiplexed FASTA/qual files
-
-Known issues
-------------
-
-* The metadata search is broken
-* Analysis will fail for non 16S datasets and/or multiple processed data from
-  the same study
-* https is down for *.microbio.me
 
 Roadmap
 -------
@@ -78,7 +70,6 @@ Roadmap
 The following is a non-exhaustive list of features that we plan to add in the
 future.
 
-* Allow to update any kind of biom for data analysis and visualization
 * Integration of other pipelines via artifacts. Processing of raw data in
   external sources. For example, metabolomics processing in
   `GNPS <http://gnps.ucsd.edu>`__ and data visualization in Qiita.

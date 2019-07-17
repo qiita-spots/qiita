@@ -104,13 +104,13 @@ def workflow_handler_post_req(user_id, command_id, params):
         wf_id = None
         job_info = None
         status = 'error'
-        message = str(exc.message)
+        message = str(exc)
 
     if wf is not None:
         # this is safe as we are creating the workflow for the first time
         # and there is only one node. Remember networkx doesn't assure order
         # of nodes
-        job = wf.graph.nodes()[0]
+        job = list(wf.graph.nodes())[0]
         inputs = [a.id for a in job.input_artifacts]
         job_cmd = job.command
         wf_id = wf.id
@@ -168,7 +168,7 @@ def workflow_handler_patch_req(req_op, req_path, req_value=None,
         return {'status': 'success',
                 'message': '',
                 'job': {'id': job.id,
-                        'inputs': req_value['connections'].keys(),
+                        'inputs': list(req_value['connections'].keys()),
                         'label': job_cmd.name,
                         'outputs': job_cmd.outputs}}
     elif req_op == 'remove':
@@ -283,7 +283,7 @@ def job_ajax_patch_req(req_op, req_path, req_value=None, req_from=None):
         job_id = req_path[0]
         try:
             job = ProcessingJob(job_id)
-        except QiitaDBUnknownIDError as e:
+        except QiitaDBUnknownIDError:
             return {'status': 'error',
                     'message': 'Incorrect path parameter: '
                                '%s is not a recognized job id' % job_id}

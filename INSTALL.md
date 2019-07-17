@@ -4,8 +4,6 @@ Qiita installation
 
 Qiita is pip installable, but depends on specific versions of python and non-python packages that must be installed first. We strongly recommend using virtual environments; a popular solution to manage them is [miniconda](http://conda.pydata.org/miniconda.html), a lightweight version of the virtual environment, python distribution, and package manager anaconda. These instructions will be based on miniconda.
 
-These instructions were tested successfully by [@HannesHolste](github.com/HannesHolste) on Mac OS X El Capitan 10.11.4 and a clean installation of Ubuntu 12.04 LTS (precise) using conda v4.0.7 and cloning from [qiita master branch commit #a9e4e03](https://github.com/biocore/qiita/commit/a9e4e03ecd781d3985abc03d15f2248143e565d7) on 5/27/2016.
-
 ## Install and setup miniconda
 
 Download the appropriate installer [here](http://conda.pydata.org/docs/install/quick.html) corresponding to your operating system and execute it.
@@ -21,10 +19,8 @@ conda update conda
 Setup a virtual environment in conda named `qiita` by executing the following:
 
 ```bash
-conda create --yes --name qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran seaborn 'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1' hdf5
+conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx
 ```
-
-If you receive an error message about conda being unable to find one of the specified packages in its repository, you will have to manually find the appropriate conda channel that they belong to (see troubleshooting section below).
 
 ### Brief introduction to managing conda environments
 
@@ -58,7 +54,7 @@ source deactivate
 Install the non-python dependencies
 -----------------------------------
 
-* [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.5, we have tested most extensively with 9.3.6)
+* [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.5.14, we have tested most extensively with 9.5.15)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
 * [webdis] (https://github.com/nicolasff/webdis) (latest version should be fine but we have tested the most with 9ee6fe2 - Feb 6, 2016)
 
@@ -70,12 +66,12 @@ There are several options to install these dependencies depending on your needs:
 
 ### PostgreSQL installation on Mac OS X
 
-For Mac OS X, you can either install postgres through the [Postgres.app](https://www.postgresql.org/download/macosx/). These instructions were tested with the Postgres.app v9.3.
+For Mac OS X, you can either install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5.
 
 You'll then need to ensure that the postgres binaries (for example, ``psql``) are in your executable search path (``$PATH`` environment variable). If you are using Postgres.app on OS X, you can do this by running the following, though you may have to replace`~/.bash_profile`with `~/.zshrc` if you're using zshell rather than the built-in bash, and you may have to change the version number `Versions/9.3/` to the exact one that you are installing:
 
 ```bash
-echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.3/bin/"' >> ~/.bash_profile
+echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.5/bin/"' >> ~/.bash_profile
 source ~/.bash_profile
 ```
 
@@ -90,7 +86,7 @@ brew install homebrew/versions/redis28
 
 ### webdis
 
-Note that this is the only package that assumes that Qiita is already installed (due to library dependencies). Also, that the general suggestion is to have 2 redis servers running, one for webdis/redbiom and the other for Qiita. The reason for multiple redis servers is so that the redbiom cache can be flushed without impacting the operation of the qiita server itself.
+Note that this package is OPTIONAL and this is the only package that assumes that Qiita is already installed (due to library dependencies). Also, that the general suggestion is to have 2 redis servers running, one for webdis/redbiom and the other for Qiita. The reason for multiple redis servers is so that the redbiom cache can be flushed without impacting the operation of the qiita server itself.
 
 The following instructions install, compile and pre-populates the redbiom redis DB so we assume that redis is running on the default port and that Qiita is fully installed as the redbiom package is installed with Qiita.
 
@@ -129,24 +125,18 @@ source activate qiita
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
 
 ```bash
-pip install -e . --process-dependency-links
+pip install . --no-binary redbiom
 ```
 
 At this point, Qiita will be installed and the system will start. However,
 you will need to install plugins in order to process any kind of data. For a list
 of available plugins, visit the [Qiita Spots](https://github.com/qiita-spots)
-github organization. Currently, the `Type Plugins`
-[qtp-biom](https://github.com/qiita-spots/qtp-biom) and
-[qtp-target-gene](https://github.com/qiita-spots/qtp-target-gene) as well as
-the `Plugin` [qp-target-gene](https://github.com/qiita-spots/qp-target-gene) are
-required. To install these plugins, simply execute
-
-```bash
-pip install git+https://github.com/qiita-spots/qiita_client
-pip install git+https://github.com/qiita-spots/qtp-biom
-pip install git+https://github.com/qiita-spots/qtp-target-gene
-pip install git+https://github.com/qiita-spots/qp-target-gene
-```
+github organization. Each of the plugins have their own installation instructions, we
+suggest looking at each individual .travis.yml file to see detailed installation
+instructions. Note that the most common plugins are:
+- [qtp-biom](https://github.com/qiita-spots/qtp-biom)
+- [qtp-target-gene](https://github.com/qiita-spots/qtp-target-gene)
+- [qp-target-gene](https://github.com/qiita-spots/qp-target-gene)
 
 ## Configure Qiita
 
@@ -157,6 +147,9 @@ Move the Qiita sample configuration file to a different directory by executing:
 ```bash
  cp ./qiita_core/support_files/config_test.cfg ~/.qiita_config_test.cfg
 ```
+
+Note that you will need to change `BASE_URL = https://localhost:8383` to `BASE_URL = https://localhost:21174` if you are not using NGINX.
+
 
 Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.bashrc` if using bash; `.zshrc` if using zshell):
 
@@ -177,9 +170,24 @@ qiita-env make --no-load-ontologies
 
 Finally, redbiom relies on the REDBIOM_HOST environment variable to set the URL to query. By default is set to Qiita redbiom public repository. To change it you could do:
 
-
 ```bash
 export REDBIOM_HOST=http://my_host.com:7379
+```
+
+## Confirgure NGINX and supervisor
+
+(NGINX)[https://www.nginx.com/] is not a requirement for Qiita development but it's highly recommended for deploys as this will allow us
+to have multiple workers. Note that we are already installing (NGINX)[https://www.nginx.com/] within the Qiita conda environment; also,
+that Qiita comes with an example (NGINX)[https://www.nginx.com/]  config file: `qiita_pet/nginx_example.conf`, which is used in the Travis builds.
+
+Now, (supervisor)[https://github.com/Supervisor/supervisor] will allow us to start all the workers we want based on its configuration file; and we
+need that both the (NGINX)[https://www.nginx.com/] and (supervisor)[https://github.com/Supervisor/supervisor] config files to match. For our Travis
+testing we are creating 3 workers: 21174 for master and 21175-6 as a regular workers.
+
+If you are using (NGINX)[https://www.nginx.com/] via conda, you are going to need to create the NGINX folder within the environment; thus run:
+
+```bash
+mkdir -p ${CONDA_PREFIX}/var/run/nginx/
 ```
 
 ## Start Qiita
@@ -189,7 +197,7 @@ Start postgres (instructions vary depending on operating system and install meth
 Next, start redis server (the command may differ depending on your operating system and install location):
 
 ```bash
-redis-server
+redis-server --port 7777
 ```
 
 Start the qiita server:
@@ -199,7 +207,8 @@ Start the qiita server:
 # alternatively: qiita pet webserver --no-build-docs start
 qiita pet webserver start
 ```
-If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
+
+If all the above commands executed correctly, you should be able to access Qiita by going in your browser to https://localhost:21174 if you are not using NGINX, or https://localhost:8383 if you are using NGINX, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
 
 
 
@@ -224,8 +233,6 @@ If you get a traceback similar to this one when starting up Qiita
 ```python
 File "/home/jorge/code/qiita/scripts/qiita-env", line 71, in make
   make_environment(load_ontologies, download_reference, add_demo_user)
-File "/home/jorge/code/qiita/qiita_db/environment_manager.py", line 180, in make_environment
-  admin_conn = SQLConnectionHandler(admin='admin_without_database')
 File "/home/jorge/code/qiita/qiita_db/sql_connection.py", line 120, in __init__
   self._open_connection()
 File "/home/jorge/code/qiita/qiita_db/sql_connection.py", line 155, in _open_connection
@@ -323,8 +330,7 @@ Now you can re-run your `conda create` command:
 
 ### python
 
-As a general rule of thumb you will want to have an updated version of Python
-2.7 and an updated version of pip (`pip install -U pip` will do the trick).
+As a general rule of thumb you will want to have an updated version of Python 3.6.
 
 H5PY is known to cause a few problems, however their [installation
 instructions](http://docs.h5py.org/en/latest/build.html) are a great resource

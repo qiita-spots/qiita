@@ -18,10 +18,12 @@ from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
-                           get_filepath_information, get_mountpoint)
+                           get_filepath_information, get_mountpoint,
+                           filepath_id_to_object_id, get_data_types)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_core.util import execute_as_transaction, get_release_info
 
 
@@ -69,7 +71,7 @@ class BaseHandlerDownload(BaseHandler):
                 spath = fullpath
                 if fullpath.startswith(basedir):
                     spath = fullpath[basedir_len:]
-                to_download.append((fullpath, spath, spath))
+                to_download.append((spath, spath, '-', str(getsize(fullpath))))
         return to_download
 
     def _list_artifact_files_nginx(self, artifact):
@@ -88,21 +90,23 @@ class BaseHandlerDownload(BaseHandler):
         basedir = get_db_files_base_dir()
         basedir_len = len(basedir) + 1
         to_download = []
-        for i, (fid, path, data_type) in enumerate(artifact.filepaths):
+        for i, x in enumerate(artifact.filepaths):
             # ignore if tgz as they could create problems and the
             # raw data is in the folder
-            if data_type == 'tgz':
+            if x['fp_type'] == 'tgz':
                 continue
-            if isdir(path):
+            if isdir(x['fp']):
                 # If we have a directory, we actually need to list all the
                 # files from the directory so NGINX can actually download all
                 # of them
-                to_download.extend(self._list_dir_files_nginx(path))
-            elif path.startswith(basedir):
-                spath = path[basedir_len:]
-                to_download.append((path, spath, spath))
+                to_download.extend(self._list_dir_files_nginx(x['fp']))
+            elif x['fp'].startswith(basedir):
+                spath = x['fp'][basedir_len:]
+                to_download.append(
+                    (spath, spath, str(x['checksum']), str(x['fp_size'])))
             else:
-                to_download.append((path, path, path))
+                to_download.append(
+                    (x['fp'], x['fp'], str(x['checksum']), str(x['fp_size'])))
 
         for pt in artifact.prep_templates:
             qmf = pt.qiime_map_fp
@@ -110,9 +114,8 @@ class BaseHandlerDownload(BaseHandler):
                 sqmf = qmf
                 if qmf.startswith(basedir):
                     sqmf = qmf[basedir_len:]
-                to_download.append(
-                    (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
-                                % artifact.id))
+                fname = 'mapping_files/%s_mapping_file.txt' % artifact.id
+                to_download.append((sqmf, fname, '-', str(getsize(qmf))))
         return to_download
 
     def _write_nginx_file_list(self, to_download):
@@ -120,12 +123,12 @@ class BaseHandlerDownload(BaseHandler):
 
         Parameters
         ----------
-        to_download : list of (str, str, str)
+        to_download : list of (str, str, str, str)
             The file list information
         """
         all_files = '\n'.join(
-            ["- %s /protected/%s %s" % (getsize(fp), sfp, n)
-             for fp, sfp, n in to_download])
+            ["%s %s /protected/%s %s" % (fp_checksum, fp_size, fp, fp_name)
+             for fp, fp_name, fp_checksum, fp_size in to_download])
 
         self.set_header('X-Archive-Files', 'zip')
         self.write("%s\n" % all_files)
@@ -185,6 +188,9 @@ class DownloadHandler(BaseHandlerDownload):
             self.set_header('Content-Type', 'application/octet-stream')
             self.set_header('Content-Transfer-Encoding', 'binary')
             self.set_header('X-Accel-Redirect', '/protected/' + relpath)
+            aid = filepath_id_to_object_id(fid)
+            if aid is not None:
+                fname = '%d_%s' % (aid, fname)
 
         self._set_nginx_headers(fname)
         self.finish()
@@ -228,7 +234,11 @@ class DownloadStudyBIOMSHandler(BaseHandlerDownload):
 class DownloadRelease(BaseHandlerDownload):
     @coroutine
     def get(self, extras):
-        _, relpath, _ = get_release_info()
+        biom_metadata_release, archive_release = get_release_info()
+        if extras == 'archive':
+            relpath = archive_release[1]
+        else:
+            relpath = biom_metadata_release[1]
 
         # If we don't have nginx, write a file that indicates this
         # Note that this configuration will automatically create and download
@@ -326,4 +336,60 @@ class DownloadUpload(BaseHandlerDownload):
         self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('X-Accel-Redirect', '/protected/' + relpath)
         self._set_nginx_headers(basename(relpath))
+        self.finish()
+
+
+class DownloadPublicHandler(BaseHandlerDownload):
+    @coroutine
+    @execute_as_transaction
+    def get(self):
+        data = self.get_argument("data", None)
+        study_id = self.get_argument("study_id",  None)
+        data_type = self.get_argument("data_type",  None)
+        dtypes = get_data_types().keys()
+
+        if data is None or study_id is None or data not in ('raw', 'biom'):
+            raise HTTPError(422, reason='You need to specify both data (the '
+                            'data type you want to download - raw/biom) and '
+                            'study_id')
+        elif data_type is not None and data_type not in dtypes:
+            raise HTTPError(422, reason='Not a valid data_type. Valid types '
+                            'are: %s' % ', '.join(dtypes))
+        else:
+            study_id = int(study_id)
+            try:
+                study = Study(study_id)
+            except QiitaDBUnknownIDError:
+                raise HTTPError(422, reason='Study does not exist')
+            else:
+                public_raw_download = study.public_raw_download
+                if study.status != 'public':
+                    raise HTTPError(422, reason='Study is not public. If this '
+                                    'is a mistake contact: '
+                                    'qiita.help@gmail.com')
+                elif data == 'raw' and not public_raw_download:
+                    raise HTTPError(422, reason='No raw data access. If this '
+                                    'is a mistake contact: '
+                                    'qiita.help@gmail.com')
+                else:
+                    to_download = []
+                    for a in study.artifacts(dtype=data_type,
+                                             artifact_type='BIOM'
+                                             if data == 'biom' else None):
+                        if a.visibility != 'public':
+                            continue
+                        to_download.extend(self._list_artifact_files_nginx(a))
+
+                    if not to_download:
+                        raise HTTPError(422, reason='Nothing to download. If '
+                                        'this is a mistake contact: '
+                                        'qiita.help@gmail.com')
+                    else:
+                        self._write_nginx_file_list(to_download)
+
+                        zip_fn = 'study_%d_%s_%s.zip' % (
+                            study_id, data, datetime.now().strftime(
+                                '%m%d%y-%H%M%S'))
+
+                        self._set_nginx_headers(zip_fn)
         self.finish()

@@ -11,7 +11,7 @@ from __future__ import division
 import qiita_db as qdb
 
 
-class Archive(object):
+class Archive(qdb.base.QiitaObject):
     r"""Extra information for any features stored in a BIOM Artifact
 
     Methods
@@ -25,6 +25,25 @@ class Archive(object):
     --------
     qiita_db.QiitaObject
     """
+
+    @classmethod
+    def merging_schemes(cls):
+        r"""Returns the available merging schemes
+
+        Returns
+        -------
+        Iterator
+            Iterator over the sample ids
+
+        See Also
+        --------
+        keys
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT archive_merging_scheme_id, archive_merging_scheme
+                     FROM qiita.archive_merging_scheme"""
+            qdb.sql_connection.TRN.add(sql)
+            return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
     @classmethod
     def _inserting_main_steps(cls, ms, features):
@@ -69,7 +88,8 @@ class Archive(object):
                 raise ValueError(
                     "To archive artifact must be BIOM but %s" % atype)
 
-            bfps = [fp for _, fp, fpt in artifact.filepaths if fpt == 'biom']
+            bfps = [x['fp'] for x in artifact.filepaths
+                    if x['fp_type'] == 'biom']
             if not bfps:
                 raise ValueError("The artifact has no biom files")
 
@@ -97,47 +117,22 @@ class Archive(object):
         """
         with qdb.sql_connection.TRN:
             acmd = job.command
-            ms = acmd.merging_scheme
-
-            # 1. cleaning aparams - the parameters of the main artifact/job
-            temp = acmd.optional_parameters.copy()
-            temp.update(acmd.required_parameters)
-            # list: cause it can be tuple or lists
-            # [0]: the first value is the parameter type
-            tparams = job.parameters.values
-            aparams = ','.join(
-                ['%s: %s' % (k, tparams[k]) for k, v in temp.items()
-                 if list(v)[0] != 'artifact' and k in ms['parameters']])
-            # in theory we could check here for the filepath merging but
-            # as the files haven't been creted we don't have this info.
-            # Additionally, based on the current funtionality, this is not
-            # important as normally the difference between files is just
-            # an additional filtering step
-            cname = acmd.name
-            if aparams:
-                cname = "%s (%s)" % (cname, aparams)
-
-            # 2. cleaning pparams - the parameters of the parent artifact
-            # [0] getting the atributes from the first parent
-            ppp = job.input_artifacts[0].processing_parameters
-            pcmd = None if ppp is None else ppp.command
-            if ms['ignore_parent_command']:
-                algorithm = cname
+            parent = job.input_artifacts[0]
+            parent_pparameters = parent.processing_parameters
+            if parent_pparameters is None:
+                parent_cmd_name = None
+                parent_parameters = None
+                parent_merging_scheme = None
             else:
-                palgorithm = 'N/A'
-                if pcmd is not None:
-                    pms = pcmd.merging_scheme
-                    palgorithm = pcmd.name
-                    if pms['parameters']:
-                        ppms = pms['parameters']
-                        pparams = ','.join(
-                            ['%s: %s' % (k, v) for k, v in ppp.values.items()
-                             if list(str(v))[0] != 'artifact' and k in ppms])
-                        if pparams:
-                            palgorithm = "%s (%s)" % (palgorithm, pparams)
-                algorithm = '%s | %s' % (cname, palgorithm)
+                pcmd = parent_pparameters.command
+                parent_cmd_name = pcmd.name
+                parent_parameters = parent_pparameters.values
+                parent_merging_scheme = pcmd.merging_scheme
 
-            return algorithm
+            return qdb.util.human_merging_scheme(
+                acmd.name, acmd.merging_scheme,
+                parent_cmd_name, parent_merging_scheme,
+                job.parameters.values, [], parent_parameters)
 
     @classmethod
     def retrieve_feature_values(cls, archive_merging_scheme=None,
@@ -164,7 +159,12 @@ class Archive(object):
                 vals.append(archive_merging_scheme)
             if features is not None:
                 extras.append("""archive_feature IN %s""")
-                vals.append(tuple(features))
+                # depending on the method calling test retrieve_feature_values
+                # the features elements can be string or bytes; making sure
+                # everything is string for SQL
+                vals.append(
+                    tuple([f.decode('ascii') if isinstance(f, bytes) else f
+                           for f in features]))
 
             sql = """SELECT archive_feature, archive_feature_value
                      FROM qiita.archive_feature_value
@@ -178,10 +178,10 @@ class Archive(object):
             else:
                 qdb.sql_connection.TRN.add(sql.format(''))
 
-            return {k: v for k, v in
-                    qdb.sql_connection.TRN.execute_fetchindex()}
+            return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
-    def insert_features(self, merging_scheme, features):
+    @classmethod
+    def insert_features(cls, merging_scheme, features):
         r"""Inserts new features to the database based on a given artifact
 
         Parameters
@@ -196,9 +196,9 @@ class Archive(object):
         dict, feature: value
             The inserted new values
         """
-        self._inserting_main_steps(merging_scheme, features)
+        cls._inserting_main_steps(merging_scheme, features)
 
-        inserted = self.retrieve_feature_values(
+        inserted = cls.retrieve_feature_values(
             archive_merging_scheme=merging_scheme, features=features.keys())
 
         return inserted

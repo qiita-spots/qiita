@@ -44,8 +44,10 @@ class ReferenceTests(TestCase):
         self.assertEqual(obs.id, 3)
 
         # Check that the information on the database is correct
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.reference WHERE reference_id=3")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT * FROM qiita.reference WHERE reference_id=3")
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs[0][1], self.name)
         self.assertEqual(obs[0][2], self.version)
 
@@ -54,18 +56,21 @@ class ReferenceTests(TestCase):
         tree_id = obs[0][5]
 
         # Check that the filepaths have been correctly added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%s or "
-            "filepath_id=%s or filepath_id=%s", (seqs_id, tax_id, tree_id))
+        with qdb.sql_connection.TRN:
+            sql = """SELECT * FROM qiita.filepath
+                     WHERE filepath_id=%s OR filepath_id=%s
+                        OR filepath_id=%s"""
+            qdb.sql_connection.TRN.add(sql, [seqs_id, tax_id, tree_id])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp_seq = "%s_%s_%s" % (self.name, self.version,
                                 basename(self.seqs_fp))
         exp_tax = "%s_%s_%s" % (self.name, self.version,
                                 basename(self.tax_fp))
         exp_tree = "%s_%s_%s" % (self.name, self.version,
                                  basename(self.tree_fp))
-        exp = [[seqs_id, exp_seq, 10, '0', 1, 6],
-               [tax_id, exp_tax, 11, '0', 1, 6],
-               [tree_id, exp_tree, 12, '0', 1, 6]]
+        exp = [[seqs_id, exp_seq, 10, '0', 1, 6, 0],
+               [tax_id, exp_tax, 11, '0', 1, 6, 0],
+               [tree_id, exp_tree, 12, '0', 1, 6, 0]]
         self.assertEqual(obs, exp)
 
     def test_sequence_fp(self):

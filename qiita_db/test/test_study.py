@@ -24,13 +24,16 @@ class TestStudyPerson(TestCase):
         new = qdb.study.StudyPerson.create(
             'SomeDude', 'somedude@foo.bar', 'affil', '111 fake street',
             '111-121-1313')
-        self.assertEqual(new.id, 4)
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_person WHERE study_person_id = 4")
-        self.assertEqual(obs, [[4, 'SomeDude', 'somedude@foo.bar', 'affil',
+        nid = new.id
+        self.assertEqual(nid, 4)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.study_person "
+                                       "WHERE study_person_id = %d" % nid)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
+        self.assertEqual(obs, [[nid, 'SomeDude', 'somedude@foo.bar', 'affil',
                          '111 fake street', '111-121-1313']])
 
-        qdb.study.StudyPerson.delete(new.id)
+        qdb.study.StudyPerson.delete(nid)
 
     def test_delete(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
@@ -141,14 +144,11 @@ class TestStudy(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1),
             'specimen_id_column': None
@@ -158,14 +158,11 @@ class TestStudy(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
-            "emp_person_id": 2,
             "principal_investigator": qdb.study.StudyPerson(3),
             "lab_person": qdb.study.StudyPerson(1),
             'specimen_id_column': None,
@@ -176,8 +173,6 @@ class TestStudy(TestCase):
             'mixs_compliant': True,
             'metadata_complete': True,
             'reprocess': False,
-            'number_samples_promised': 27,
-            'emp_person_id': 2,
             'funding': None,
             'vamps_id': None,
             'first_contact': datetime(2014, 5, 19, 16, 10),
@@ -199,8 +194,7 @@ class TestStudy(TestCase):
             'study_alias': 'Cannabis Soils',
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person': qdb.study.StudyPerson(1),
-            'specimen_id_column': None,
-            'number_samples_collected': 27}
+            'specimen_id_column': None}
 
     def tearDown(self):
         qiita_config.portal = self.portal
@@ -210,8 +204,10 @@ class TestStudy(TestCase):
         # Change the status of the studies by changing the status of their
         # artifacts
         id_status = qdb.util.convert_to_id(new_status, 'visibility')
-        self.conn_handler.execute(
-            "UPDATE qiita.artifact SET visibility_id = %s", (id_status,))
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE qiita.artifact SET visibility_id = %s", (id_status,))
+            qdb.sql_connection.TRN.execute()
 
     def test_get_info(self):
         # Test get all info for single study
@@ -222,7 +218,6 @@ class TestStudy(TestCase):
         exp = {
             'mixs_compliant': True, 'metadata_complete': True,
             'reprocess': False, 'timeseries_type': 'None',
-            'number_samples_promised': 27, 'emp_person_id': 2,
             'funding': None, 'vamps_id': None, 'public_raw_download': False,
             'first_contact': datetime(2014, 5, 19, 16, 10),
             'principal_investigator_id': 3, 'timeseries_type_id': 1,
@@ -247,11 +242,11 @@ class TestStudy(TestCase):
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person_id': 1,
             'study_title': 'Identification of the Microbiomes for Cannabis '
-            'Soils', 'number_samples_collected': 27,
+            'Soils',
             'ebi_submission_status': 'submitted',
             'ebi_study_accession': 'EBI123456-BB',
             'specimen_id_column': None}
-        self.assertEqual(obs, exp)
+        self.assertDictEqual(obs, exp)
 
         # Test get specific keys for single study
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
@@ -338,7 +333,9 @@ class TestStudy(TestCase):
     def test_share(self):
         # Clear all sharing associations
         self._change_processed_data_status('sandbox')
-        self.conn_handler.execute("delete from qiita.study_users")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("delete from qiita.study_users")
+            qdb.sql_connection.TRN.execute()
         self.assertEqual(self.study.shared_with, [])
 
         # Try to share with the owner, which should not work
@@ -425,7 +422,6 @@ class TestStudy(TestCase):
         insertion_timestamp = obs_info.pop('first_contact')
         exp = {'mixs_compliant': True, 'metadata_complete': True,
                'reprocess': False, 'public_raw_download': False,
-               'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': None, 'vamps_id': None,
                'principal_investigator': qdb.study.StudyPerson(3),
                'timeseries_type_id': 1,
@@ -437,7 +433,6 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
-               'number_samples_collected': 25,
                'specimen_id_column': None}
         self.assertEqual(obs_info, exp)
         # Check the timestamp separately, since it is set by the database
@@ -462,8 +457,10 @@ class TestStudy(TestCase):
             qdb.investigation.Investigation(1))
 
         # make sure portal is associated
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * from qiita.study_portal WHERE study_id = %s", [s.id])
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT * from qiita.study_portal WHERE study_id = %s", [s.id])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, [[s.id, 2], [s.id, 1]])
         qdb.study.Study.delete(s.id)
 
@@ -473,9 +470,11 @@ class TestStudy(TestCase):
             qdb.user.User('test@foo.bar'), "Fried chicken microbiome 2",
             self.info, qdb.investigation.Investigation(1))
         # check the investigation was assigned
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * from qiita.investigation_study WHERE study_id = %s",
-            [new.id])
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT * from qiita.investigation_study WHERE study_id = %s",
+                [new.id])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, [[1, new.id]])
         qdb.study.Study.delete(new.id)
 
@@ -498,7 +497,6 @@ class TestStudy(TestCase):
         self.assertEqual(obs.title, "Fried chicken microbiome 3")
         exp = {'mixs_compliant': True, 'metadata_complete': False,
                'reprocess': True, 'public_raw_download': False,
-               'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': 'FundAgency', 'vamps_id': 'MBE_1111111',
                'first_contact': datetime(2014, 10, 24, 12, 47),
                'principal_investigator': qdb.study.StudyPerson(3),
@@ -511,7 +509,6 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
-               'number_samples_collected': 25,
                'specimen_id_column': None}
         self.assertEqual(obs.info, exp)
         self.assertEqual(obs.shared_with, [])
@@ -640,7 +637,6 @@ class TestStudy(TestCase):
         newinfo = {
             "timeseries_type_id": 2,
             "metadata_complete": False,
-            "number_samples_collected": 28,
             "lab_person_id": qdb.study.StudyPerson(2),
             "vamps_id": 'MBE_111222',
         }
@@ -866,7 +862,7 @@ class TestStudy(TestCase):
 
         # testing that insertion went fine
         obs = qdb.study.Study.get_tags()
-        exp = {'user': ['this is my tag', 'I want GOLD!!'],
+        exp = {'user': ['I want GOLD!!', 'this is my tag'],
                'admin': ['actual GOLD!']}
         self.assertEqual(obs, exp)
 
@@ -874,11 +870,11 @@ class TestStudy(TestCase):
         study = qdb.study.Study(1)
         tags = ['this is my tag', 'actual GOLD!']
         message = study.update_tags(user, tags)
-        self.assertItemsEqual(study.tags, tags[:1])
+        self.assertCountEqual(study.tags, tags[:1])
         self.assertEqual(message, 'Only admins can assign: actual GOLD!')
         # now like admin
         message = study.update_tags(admin, tags)
-        self.assertItemsEqual(study.tags, tags)
+        self.assertCountEqual(study.tags, tags)
         self.assertEqual(message, '')
 
         # cleaning tags

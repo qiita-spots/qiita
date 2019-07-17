@@ -30,7 +30,7 @@ class ConfigurationManagerTests(TestCase):
         environ['QIITA_CONFIG_FP'] = self.conf_fp
 
         self.conf = ConfigParser()
-        with open(self.conf_fp, 'U') as f:
+        with open(self.conf_fp, newline=None) as f:
             self.conf.readfp(f)
 
     def tearDown(self):
@@ -60,6 +60,11 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.certificate_file, "/tmp/server.cert")
         self.assertEqual(obs.cookie_secret, "SECRET")
         self.assertEqual(obs.key_file, "/tmp/server.key")
+
+        # Torque section
+        self.assertEqual(obs.trq_owner, "torque_user@somewhere.org")
+        self.assertEqual(obs.trq_poll_val, 15)
+        self.assertEqual(obs.trq_dependency_q_cnt, 2)
 
         # Postgres section
         self.assertEqual(obs.user, "postgres")
@@ -133,7 +138,7 @@ class ConfigurationManagerTests(TestCase):
 
             obs_warns = [str(w.message) for w in warns]
             exp_warns = ['Random cookie secret generated.']
-            self.assertItemsEqual(obs_warns, exp_warns)
+            self.assertCountEqual(obs_warns, exp_warns)
 
         self.assertNotEqual(obs.cookie_secret, "SECRET")
         # Test default base_data_dir
@@ -174,6 +179,14 @@ class ConfigurationManagerTests(TestCase):
 
         self.assertEqual(obs.qiita_env, "")
 
+    def test_get_torque(self):
+        obs = ConfigurationManager()
+
+        conf_setter = partial(self.conf.set, 'torque')
+        conf_setter('TORQUE_JOB_OWNER', '')
+        obs._get_torque(self.conf)
+        self.assertIsNone(obs.trq_owner)
+
     def test_get_postgres(self):
         obs = ConfigurationManager()
 
@@ -207,7 +220,8 @@ CONF = """
 # Change to FALSE in a production system
 TEST_ENVIRONMENT = TRUE
 
-# Absolute path to write log file to. If not given, no log file will be created
+# Absolute path to the directory where log files are saved. If not given, no
+# log file will be created
 LOG_DIR = /tmp/
 
 # Whether studies require admin approval to be made available
@@ -310,6 +324,17 @@ PASSWORD = andanotherpwd
 
 # The postgres password for the admin_user
 ADMIN_PASSWORD = thishastobesecure
+
+# ----------------------------- Torque settings -----------------------------
+[torque]
+# The email address of the submitter of Torque jobs
+TORQUE_JOB_OWNER = torque_user@somewhere.org
+
+# The number of seconds to wait between successive qstat calls
+TORQUE_POLLING_VALUE = 15
+
+# Hard upper-limit on concurrently running validator jobs
+TORQUE_PROCESSING_QUEUE_COUNT = 2
 
 # ----------------------------- EBI settings -----------------------------
 [ebi]

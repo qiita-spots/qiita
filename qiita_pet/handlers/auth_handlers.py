@@ -10,9 +10,10 @@ from tornado.escape import url_escape, json_encode
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config, r_client
-from qiita_core.util import send_email, execute_as_transaction
+from qiita_core.util import execute_as_transaction
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
+from qiita_db.util import send_email
 from qiita_db.user import User
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBDuplicateError,
                                  QiitaDBError)
@@ -66,7 +67,18 @@ class AuthCreateHandler(BaseHandler):
                 self.redirect(u"%s/?level=danger&message=%s"
                               % (qiita_config.portal_dir, url_escape(msg)))
                 return
-            self.redirect(u"%s/" % qiita_config.portal_dir)
+
+            msg = ("<h3>User Successfully Created</h3><p>Your Qiita account "
+                   "has been successfully created. An email has been sent to "
+                   "the email address you provided. This email contains "
+                   "instructions on how to activate your account.</p>"
+                   "<p>If you don't receive your activation email within a "
+                   "couple of minutes, check your spam folder. If you still "
+                   "don't see it, send us an email at <a "
+                   "href=\"mailto:qiita.help@ucsd.edu\">qiita.help@ucsd.edu"
+                   "</a>.</p>")
+            self.redirect(u"%s/?level=success&message=%s" %
+                          (qiita_config.portal_dir, url_escape(msg)))
         else:
             error_msg = u"?error=" + url_escape(msg)
             self.redirect(u"%s/auth/create/%s"
@@ -90,7 +102,7 @@ class AuthVerifyHandler(BaseHandler):
         if code_is_valid:
             msg = "Successfully verified user. You are now free to log in."
             color = "black"
-            r_client.zadd('qiita-usernames', email, 0)
+            r_client.zadd('qiita-usernames', {email: 0})
         else:
             color = "red"
 

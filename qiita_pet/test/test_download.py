@@ -43,10 +43,30 @@ class TestDownloadHandler(TestHandlerBase):
         # check success
         response = self.get('/download/1')
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, (
+        self.assertEqual(response.body.decode('ascii'), (
             "This installation of Qiita was not equipped with nginx, so it "
             "is incapable of serving files. The file you attempted to "
             "download is located at raw_data/1_s_G1_L001_sequences.fastq.gz"))
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=1_1_s_G1_L001_sequences.fastq.gz")
+        # other tests to validate the filename
+        response = self.get('/download/2')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=1_1_s_G1_L001_sequences_barcodes.fastq.gz")
+        response = self.get('/download/3')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=2_1_seqs.fna")
+        response = self.get('/download/18')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=1_prep_1_19700101-000000.txt")
+        response = self.get('/download/22')
+        self.assertEqual(
+            response.headers['Content-Disposition'],
+            "attachment; filename=7_biom_table.biom")
 
         # failure
         response = self.get('/download/1000')
@@ -66,17 +86,17 @@ class TestDownloadHandler(TestHandlerBase):
             f.write('\n')
         self._clean_up_files.append(dirpath)
         a.set_html_summary(fp, support_dir=dirpath)
-        for fp_id, _, fp_type in a.filepaths:
-            if fp_type == 'html_summary_dir':
+        for x in a.filepaths:
+            if x['fp_type'] == 'html_summary_dir':
                 break
-        response = self.get('/download/%d' % fp_id)
+        response = self.get('/download/%d' % x['fp_id'])
         self.assertEqual(response.code, 200)
 
         fp_name = basename(fp2)
         dirname = basename(dirpath)
-        self.assertEqual(
-            response.body, "- 1 /protected/FASTQ/1/%s/%s FASTQ/1/%s/%s\n"
-                           % (dirname, fp_name, dirname, fp_name))
+        self.assertEqual(response.body.decode('ascii'),
+                         "- 1 /protected/FASTQ/1/%s/%s FASTQ/1/%s/%s\n" % (
+                            dirname, fp_name, dirname, fp_name))
 
 
 class TestDownloadStudyBIOMSHandler(TestHandlerBase):
@@ -114,39 +134,41 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         files_biom = [(biom_fp, 'biom'), (smr_dir, 'directory'), (tgz, 'tgz')]
 
         params = Parameters.from_default_params(
-            Command(3).default_parameter_sets.next(), {'input_data': 1})
+            next(Command(3).default_parameter_sets), {'input_data': 1})
         a = Artifact.create(files_biom, "BIOM", parents=[Artifact(2)],
                             processing_parameters=params)
-        for _, fp, _ in a.filepaths:
-            self._clean_up_files.append(fp)
+        for x in a.filepaths:
+            self._clean_up_files.append(x['fp'])
 
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         exp = (
-            '- 1256812 /protected/processed_data/1_study_1001_closed_'
+            '1579715020 1256812 /protected/processed_data/1_study_1001_closed_'
             'reference_otu_table.biom processed_data/1_study_1001_closed_'
             'reference_otu_table.biom\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/4_mapping_file.txt\n'
-            '- 1256812 /protected/processed_data/'
+            '1579715020 1256812 /protected/processed_data/'
             '1_study_1001_closed_reference_otu_table.biom processed_data/'
             '1_study_1001_closed_reference_otu_table.biom\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/5_mapping_file.txt\n'
-            '- 1256812 /protected/processed_data/'
+            '1579715020 1256812 /protected/processed_data/'
             '1_study_1001_closed_reference_otu_table_Silva.biom processed_data'
             '/1_study_1001_closed_reference_otu_table_Silva.biom\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/6_mapping_file.txt\n'
-            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-'
+            '1756512010 1093210 /protected/BIOM/7/biom_table.biom '
+            'BIOM/7/biom_table.biom\n'
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/7_mapping_file.txt\n'
-            '- [0-9]* /protected/BIOM/{0}/otu_table.biom '
+            '[0-9]* [0-9]* /protected/BIOM/{0}/otu_table.biom '
             'BIOM/{0}/otu_table.biom\n'
             '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
             'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
-        self.assertRegexpMatches(response.body, exp)
+        self.assertRegex(response.body.decode('ascii'), exp)
 
         response = self.get('/download_study_bioms/200')
         self.assertEqual(response.code, 405)
@@ -159,15 +181,16 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
 
         a.visibility = 'public'
         response = self.get('/download_study_bioms/1')
+        # returning visibility
+        a.visibility = 'private'
         self.assertEqual(response.code, 200)
-        exp = (
-            '- [0-9]* /protected/BIOM/{0}/otu_table.biom '
-            'BIOM/{0}/otu_table.biom\n'
-            '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
-            'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
-            'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
-        self.assertRegexpMatches(response.body, exp)
+        # we should have the same files than the previous test, except artifact
+        # and mapping file 7: position 6 and 7; thus removing 6 twice
+        exp = exp.split('\n')
+        exp.pop(6)
+        exp.pop(6)
+        exp = '\n'.join(exp)
+        self.assertRegex(response.body.decode('ascii'), exp)
 
 
 class TestDownloadRelease(TestHandlerBase):
@@ -185,7 +208,7 @@ class TestDownloadRelease(TestHandlerBase):
         self.assertIn(
             "This installation of Qiita was not equipped with nginx, so it is "
             "incapable of serving files. The file you attempted to download "
-            "is located at", response.body)
+            "is located at", response.body.decode('ascii'))
 
 
 class TestDownloadRawData(TestHandlerBase):
@@ -207,8 +230,8 @@ class TestDownloadRawData(TestHandlerBase):
         # it's possible that one of the tests is deleting the raw data
         # so we will make sure that the files exists so this test passes
         study = Study(1)
-        all_files = [fp for a in study.artifacts()
-                     for _, fp, _ in a.filepaths]
+        all_files = [x['fp'] for a in study.artifacts()
+                     for x in a.filepaths]
         for fp in all_files:
             if not exists(fp):
                 with open(fp, 'w') as f:
@@ -217,15 +240,18 @@ class TestDownloadRawData(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         exp = (
-            '- 58 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
+            '2125826711 58 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
             'raw_data/1_s_G1_L001_sequences.fastq.gz\n'
-            '- 58 /protected/raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz '
+            '2125826711 58 /protected/raw_data/'
+            '1_s_G1_L001_sequences_barcodes.fastq.gz '
             'raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
-            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/1_mapping_file.txt\n'
-            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            '1756512010 1093210 /protected/BIOM/7/biom_table.biom '
+            'BIOM/7/biom_table.biom\n'
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/7_mapping_file.txt\n')
-        self.assertRegexpMatches(response.body, exp)
+        self.assertRegex(response.body.decode('ascii'), exp)
 
         response = self.get('/download_study_bioms/200')
         self.assertEqual(response.code, 405)
@@ -251,9 +277,9 @@ class TestDownloadRawData(TestHandlerBase):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         exp = (
-            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/7_mapping_file.txt\n')
-        self.assertRegexpMatches(response.body, exp)
+        self.assertRegex(response.body.decode('ascii'), exp)
 
 
 class TestDownloadEBISampleAccessions(TestHandlerBase):
@@ -282,7 +308,10 @@ class TestDownloadEBISampleAccessions(TestHandlerBase):
                "1.SKD8.640184\tERS000001\n1.SKM5.640177\tERS000005\n"
                "1.SKM7.640188\tERS000010\n1.SKD7.640191\tERS000021")
         self.assertEqual(response.code, 200)
-        self.assertRegexpMatches(response.body, exp)
+        # testing as lists so we ignore order
+        obs = response.body.decode('ascii').split('\n')
+        exp = exp.split('\n')
+        self.assertCountEqual(obs, exp)
 
         # changing user so we can test the failures
         BaseHandler.get_current_user = Mock(
@@ -317,7 +346,10 @@ class TestDownloadEBIPrepAccessions(TestHandlerBase):
                "1.SKD8.640184\tERX0000001\n1.SKM5.640177\tERX0000005\n"
                "1.SKM7.640188\tERX0000010\n1.SKD7.640191\tERX0000021")
         self.assertEqual(response.code, 200)
-        self.assertRegexpMatches(response.body, exp)
+        # testing as lists so we ignore order
+        obs = response.body.decode('ascii').split('\n')
+        exp = exp.split('\n')
+        self.assertCountEqual(obs, exp)
 
         # changing user so we can test the failures
         BaseHandler.get_current_user = Mock(
@@ -343,6 +375,103 @@ class TestDownloadUpload(TestHandlerBase):
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
         response = self.get('/download_upload/1/uploaded_file.txt')
         self.assertEqual(response.code, 200)
+
+
+class TestDownloadPublicHandler(TestHandlerBase):
+
+    def setUp(self):
+        super(TestDownloadPublicHandler, self).setUp()
+
+    def tearDown(self):
+        super(TestDownloadPublicHandler, self).tearDown()
+
+    def test_download(self):
+        # check failures
+        response = self.get('/public_download/')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'You need to specify '
+                         'both data (the data type you want to download - '
+                         'raw/biom) and study_id')
+
+        response = self.get('/public_download/?data=raw&study_id=10000')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Study does not exist')
+
+        response = self.get('/public_download/?data=raw&study_id=1')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Study is not public. '
+                         'If this is a mistake contact: qiita.help@gmail.com')
+
+        # 7 is an uploaded biom, which should now be available but as it's a
+        # biom, only the prep info file will be retrieved
+        Artifact(7).visibility = 'public'
+        response = self.get('/public_download/?data=raw&study_id=1')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'No raw data access. '
+                         'If this is a mistake contact: qiita.help@gmail.com')
+
+        # check success
+        response = self.get('/public_download/?data=biom&study_id=1')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/7_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        Study(1).public_raw_download = True
+        # check success
+        response = self.get('/public_download/?data=raw&study_id=1')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/7_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        # testing data_type
+        response = self.get(
+            '/public_download/?data=raw&study_id=1&data_type=X')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Not a valid data_type. Valid types '
+                         'are: 16S, 18S, ITS, Proteomic, Metabolomic, '
+                         'Metagenomic, Multiomic, Metatranscriptomics, '
+                         'Viromics, Genomics, Transcriptomics')
+
+        response = self.get(
+            '/public_download/?data=raw&study_id=1&data_type=Genomics')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Nothing to download. If this is a '
+                         'mistake contact: qiita.help@gmail.com')
+        response = self.get(
+            '/public_download/?data=biom&study_id=1&data_type=Genomics')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Nothing to download. If this is a '
+                         'mistake contact: qiita.help@gmail.com')
+
+        # check succcess
+        Artifact(5).visibility = 'public'
+        response = self.get(
+            '/public_download/?data=raw&study_id=1&data_type=18S')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '[0-9]* [0-9]* /protected/raw_data/1_s_G1_L001_sequences_barcodes'
+            '.fastq.gz raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
+            '- 36762 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/1_mapping_file.txt')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        response = self.get(
+            '/public_download/?data=biom&study_id=1&data_type=18S')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '[0-9]* [0-9]* /protected/processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom\n- [0-9]* /protected/templates/1_prep_'
+            '1_qiime_[0-9]*-[0-9]*.txt mapping_files/4_mapping_file.txt\n'
+            '[0-9]* [0-9]* /protected/processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom\n- [0-9]* /protected/templates/1_prep_1'
+            '_qiime_[0-9]*-[0-9]*.txt mapping_files/5_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,6 @@ from unittest import TestCase, main
 from six import StringIO
 from future import standard_library
 from functools import partial
-from operator import itemgetter
 
 import pandas as pd
 
@@ -39,11 +38,14 @@ class TestMakeStudyFromCmd(TestCase):
     def test_make_study_from_cmd(self):
         fh = StringIO(self.config1)
         qdb.commands.load_study_from_cmd('test@test.com', 'newstudy', fh)
-        sql = ("select study_id from qiita.study where email = %s and "
-               "study_title = %s")
-        study_id = self.conn_handler.execute_fetchone(sql, ('test@test.com',
-                                                            'newstudy'))
-        self.assertTrue(study_id is not None)
+
+        with qdb.sql_connection.TRN:
+            sql = """SELECT study_id
+                     FROM qiita.study
+                     WHERE email = %s AND study_title = %s"""
+            qdb.sql_connection.TRN.add(sql, ['test@test.com', 'newstudy'])
+            study_id = qdb.sql_connection.TRN.execute_fetchflatten()
+        self.assertEqual(study_id, [2])
 
         fh2 = StringIO(self.config2)
         with self.assertRaises(configparser.NoOptionError):
@@ -94,7 +96,7 @@ class TestLoadArtifactFromCmd(TestCase):
                              'primer': 'GTGCCAGCMGCCGCGGTAA',
                              'barcode': 'GTCCGCAAGTTA',
                              'run_prefix': "s_G1_L001_sequences",
-                             'platform': 'ILLUMINA',
+                             'platform': 'Illumina',
                              'instrument_model': 'Illumina MiSeq',
                              'library_construction_protocol': 'AAAA',
                              'experiment_design_description': 'BBBB'}},
@@ -103,7 +105,7 @@ class TestLoadArtifactFromCmd(TestCase):
             metadata, qdb.study.Study(1), "16S")
         obs = qdb.commands.load_artifact_from_cmd(
             fps, ftypes, 'FASTQ', prep_template=pt.id)
-        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
             qdb.util.check_count('qiita.filepath', self.fp_count + 5))
@@ -124,7 +126,7 @@ class TestLoadArtifactFromCmd(TestCase):
             fps, ftypes, 'Demultiplexed', parents=[1], dflt_params_id=1,
             required_params='{"input_data": 1}',
             optional_params='{"min_per_read_length_fraction": 0.80}')
-        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
             qdb.util.check_count('qiita.filepath', self.fp_count + 2))
@@ -141,7 +143,7 @@ class TestLoadArtifactFromCmd(TestCase):
         obs = qdb.commands.load_artifact_from_cmd(
             fps, ftypes, 'BIOM', parents=[3], dflt_params_id=10,
             required_params='{"input_data": 3}')
-        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
             qdb.util.check_count('qiita.filepath', self.fp_count + 1))
@@ -158,12 +160,9 @@ class TestLoadSampleTemplateFromCmd(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 4,
-            "number_samples_promised": 4,
             "study_alias": "TestStudy",
             "study_description": "Description of a test study",
             "study_abstract": "No abstract right now...",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }
@@ -241,38 +240,48 @@ class TestPatch(TestCase):
         else:
             assertion_fn = self.assertFalse
 
-        obs = self.conn_handler.execute_fetchone(
-            """SELECT EXISTS(SELECT * FROM information_schema.tables
-               WHERE table_name = 'patchtest2')""")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("""SELECT EXISTS(SELECT *
+                                          FROM information_schema.tables
+                                          WHERE table_name = 'patchtest2')""")
+            obs = qdb.sql_connection.TRN.execute_fetchflatten()[0]
         assertion_fn(obs)
 
         if exists:
             exp = [[1], [9]]
-            obs = self.conn_handler.execute_fetchall(
-                """SELECT * FROM qiita.patchtest2 ORDER BY testing""")
+            with qdb.sql_connection.TRN:
+                qdb.sql_connection.TRN.add(
+                    """SELECT * FROM qiita.patchtest2 ORDER BY testing""")
+                obs = qdb.sql_connection.TRN.execute_fetchindex()
             self.assertEqual(obs, exp)
 
     def _check_patchtest10(self):
-        obs = self.conn_handler.execute_fetchone(
-            """SELECT EXISTS(SELECT * FROM information_schema.tables
-               WHERE table_name = 'patchtest10')""")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                """SELECT EXISTS(SELECT * FROM information_schema.tables
+                   WHERE table_name = 'patchtest10')""")
+            obs = qdb.sql_connection.TRN.execute_fetchflatten()[0]
         self.assertTrue(obs)
 
         exp = []
-        obs = self.conn_handler.execute_fetchall(
-            """SELECT * FROM qiita.patchtest10""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.patchtest10")
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, exp)
 
     def _assert_current_patch(self, patch_to_check):
-        current_patch = self.conn_handler.execute_fetchone(
-            """SELECT current_patch FROM settings""")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT current_patch FROM settings")
+            current_patch = qdb.sql_connection.TRN.execute_fetchflatten()[0]
         self.assertEqual(current_patch, patch_to_check)
 
     def test_unpatched(self):
         """Test patching from unpatched state"""
         # Reset the settings table to the unpatched state
-        self.conn_handler.execute(
-            """UPDATE settings SET current_patch = 'unpatched'""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET current_patch = 'unpatched'")
+            qdb.sql_connection.TRN.execute()
 
         self._assert_current_patch('unpatched')
         qdb.environment_manager.patch(self.patches_dir)
@@ -282,8 +291,10 @@ class TestPatch(TestCase):
 
     def test_skip_patch(self):
         """Test patching from a patched state"""
-        self.conn_handler.execute(
-            """UPDATE settings SET current_patch = '2.sql'""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET current_patch = '2.sql'")
+            qdb.sql_connection.TRN.execute()
         self._assert_current_patch('2.sql')
 
         # If it tried to apply patch 2.sql again, this will error
@@ -297,8 +308,10 @@ class TestPatch(TestCase):
 
     def test_nonexistent_patch(self):
         """Test case where current patch does not exist"""
-        self.conn_handler.execute(
-            """UPDATE settings SET current_patch = 'nope.sql'""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET current_patch = 'nope.sql'")
+            qdb.sql_connection.TRN.execute()
         self._assert_current_patch('nope.sql')
 
         with self.assertRaises(RuntimeError):
@@ -311,15 +324,18 @@ class TestPatch(TestCase):
             f.write(PY_PATCH)
 
         # Reset the settings table to the unpatched state
-        self.conn_handler.execute(
-            """UPDATE settings SET current_patch = 'unpatched'""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET current_patch = 'unpatched'")
+            qdb.sql_connection.TRN.execute()
 
         self._assert_current_patch('unpatched')
 
         qdb.environment_manager.patch(self.patches_dir)
 
-        obs = self.conn_handler.execute_fetchall(
-            """SELECT testing FROM qiita.patchtest10""")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT testing FROM qiita.patchtest10")
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [[1], [100]]
         self.assertEqual(obs, exp)
 
@@ -343,12 +359,6 @@ class TestUpdateArtifactFromCmd(TestCase):
         self._clean_up_files = [seqs_fp, barcodes_fp]
         self.uploaded_files = qdb.util.get_files_from_uploads_folders("1")
 
-        # The files for the Artifact 1 doesn't exist, create them
-        for _, fp, _ in qdb.artifact.Artifact(1).filepaths:
-            with open(fp, 'w') as f:
-                f.write('\n')
-            self._clean_up_files.append(fp)
-
     def tearDown(self):
         new_uploaded_files = qdb.util.get_files_from_uploads_folders("1")
         new_files = set(new_uploaded_files).difference(self.uploaded_files)
@@ -370,14 +380,51 @@ class TestUpdateArtifactFromCmd(TestCase):
                 self.filepaths, self.filepaths_types[1:], 1)
 
     def test_update_artifact_from_cmd(self):
-        artifact = qdb.commands.update_artifact_from_cmd(
-            self.filepaths, self.filepaths_types, 1)
-        for _, fp, _ in artifact.filepaths:
-            self._clean_up_files.append(fp)
+        # Generate some files for an artifact
+        fd, fp1 = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        with open(fp1, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 1:N:0:\n"
+                    "NACGTAGGGTGCAAGCGTTGTCCGGAATNA\n"
+                    "+\n"
+                    "#1=DDFFFHHHHHJJJJJJJJJJJJGII#0\n")
 
-        for obs, exp in zip(sorted(artifact.filepaths, key=itemgetter(1)),
+        fd, fp2 = mkstemp(suffix='_barcodes.fastq')
+        close(fd)
+        with open(fp2, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 2:N:0:\n"
+                    "NNNCNNNNNNNNN\n"
+                    "+\n"
+                    "#############\n")
+        filepaths = [(fp1, 1), (fp2, 3)]
+        # Create a new prep template
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'Illumina',
+                            'instrument_model': 'Illumina MiSeq',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
+        self.prep_template = \
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                metadata, qdb.study.Study(1), "16S")
+        artifact = qdb.artifact.Artifact.create(
+            filepaths, "FASTQ", prep_template=self.prep_template)
+        for x in artifact.filepaths:
+            self._clean_up_files.append(x['fp'])
+
+        new_artifact = qdb.commands.update_artifact_from_cmd(
+            self.filepaths, self.filepaths_types, artifact.id)
+        for x in new_artifact.filepaths:
+            self._clean_up_files.append(x['fp'])
+
+        for obs, exp in zip(sorted(artifact.filepaths, key=lambda x: x['fp']),
                             self.checksums):
-            self.assertEqual(qdb.util.compute_checksum(obs[1]), exp)
+            self.assertEqual(qdb.util.compute_checksum(obs['fp']), exp)
 
 
 CONFIG_1 = """[required]
@@ -391,8 +438,6 @@ study_description = 'test study description'
 study_abstract = 'study abstract'
 efo_ids = 1,2,3,4
 [optional]
-number_samples_collected = 50
-number_samples_promised = 25
 lab_person = SomeDude, somedude@foo.bar, some
 funding = 'funding source'
 vamps_id = vamps_id
@@ -408,8 +453,6 @@ study_description = 'test study description'
 study_abstract = 'study abstract'
 efo_ids = 1,2,3,4
 [optional]
-number_samples_collected = 50
-number_samples_promised = 25
 lab_person = SomeDude, somedude@foo.bar, some
 funding = 'funding source'
 vamps_id = vamps_id

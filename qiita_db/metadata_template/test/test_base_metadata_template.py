@@ -73,7 +73,21 @@ class TestMetadataTemplateReadOnly(TestCase):
             'select',
             'column',
             'just_fine1'])
-        self.assertItemsEqual(set(results), {'column', 'select'})
+        self.assertCountEqual(set(results), {'column', 'select'})
+
+    def test_identify_qiime2_reserved_words(self):
+        MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
+        results = MT._identify_qiime2_reserved_words_in_column_names([
+            'feature id',
+            'feature-id',
+            'featureid',
+            'id',
+            'sample id',
+            'sample-id',
+            'sampleid'])
+        self.assertCountEqual(set(results), {'feature id', 'feature-id',
+                                             'featureid', 'id', 'sample id',
+                                             'sample-id', 'sampleid'})
 
     def test_identify_invalid_characters(self):
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
@@ -84,15 +98,49 @@ class TestMetadataTemplateReadOnly(TestCase):
             'sampleid',
             'sample_id',
             '{',
-            'this|is',
+            'bla:1',
+            'bla|2',
+            'bla1:2|3',
+            'this&is',
             '4column',
             'just_fine2'])
-        self.assertItemsEqual(set(results), {'tax on',
+        self.assertCountEqual(set(results), {'tax on',
                                              'bla.',
                                              '.',
                                              '{',
-                                             'this|is',
+                                             'this&is',
                                              '4column'})
+
+    def test_restrictions(self):
+        MT = qdb.metadata_template
+        obs = MT.sample_template.SampleTemplate(1).restrictions
+        exp = {
+            'env_package': [
+                'air', 'built environment', 'host-associated',
+                'human-associated', 'human-skin', 'human-oral',
+                'human-gut', 'human-vaginal', 'microbial mat/biofilm',
+                'misc environment', 'plant-associated', 'sediment', 'soil',
+                'wastewater/sludge', 'water']}
+        self.assertEqual(obs, exp)
+        obs = MT.prep_template.PrepTemplate(1).restrictions
+        exp = {
+            'target_gene': ['16S rRNA', '18S rRNA', 'ITS1/2', 'LSU'],
+            'platform': ['FASTA', 'Illumina', 'Ion Torrent', 'LS454',
+                         'Oxford Nanopore'],
+            'target_subfragment': ['V3', 'V4', 'V6', 'V9', 'ITS1/2'],
+            'instrument_model': [
+                '454 GS', '454 GS 20', '454 GS FLX', '454 GS FLX+',
+                '454 GS FLX Titanium', '454 GS Junior',
+                'Illumina Genome Analyzer', 'Illumina Genome Analyzer II',
+                'Illumina Genome Analyzer IIx', 'Illumina HiScanSQ',
+                'Illumina HiSeq 1000', 'Illumina HiSeq 1500',
+                'Illumina HiSeq 2000', 'Illumina HiSeq 2500',
+                'Illumina HiSeq 3000', 'Illumina HiSeq 4000', 'Illumina MiSeq',
+                'Illumina MiniSeq', 'Illumina NovaSeq 6000', 'NextSeq 500',
+                'NextSeq 550', 'Ion Torrent PGM', 'Ion Torrent Proton',
+                'Ion Torrent S5', 'Ion Torrent S5 XL', 'MinION', 'GridION',
+                'PromethION', 'unspecified']}
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':

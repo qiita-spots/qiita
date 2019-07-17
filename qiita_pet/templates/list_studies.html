@@ -66,6 +66,7 @@ $(document).ready(function() {
         { "data": "study_abstract" },
         { "data": "study_id" },
         { "data": "number_samples_collected" },
+        { "data": "preparation_data_types" },
         { "data": "shared" },
         { "data": "pi" },
         { "data": "pubs" },
@@ -111,7 +112,7 @@ $(document).ready(function() {
             result += "<b>Owner:</b> " + row.owner + "</br>";
             result += "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span>";
             return result;
-        }, targets: [5]},
+        }, targets: [6]},
         ],
       "language": {
           "loadingRecords": "Please wait - loading information ...",
@@ -140,6 +141,7 @@ $(document).ready(function() {
         { "data": "study_abstract" },
         { "data": "study_id" },
         { "data": "number_samples_collected" },
+        { "data": "preparation_data_types" },
         { "data": "pi" },
         { "data": "pubs" },
         { "data": "ebi_info" }
@@ -369,6 +371,7 @@ function add_metacat(metacat) {
           <th>Abstract</th>
           <th>Study ID</th>
           <th>Samples</th>
+          <th>Preparation Data Types</th>
           <th>Shared With These Users</th>
           <th>Principal Investigator</th>
           <th>Publications</th>
@@ -387,6 +390,7 @@ function add_metacat(metacat) {
           <th>Abstract</th>
           <th>Study ID</th>
           <th>Samples</th>
+          <th>Preparation Data Types</th>
           <th>Principal Investigator</th>
           <th>Publications</th>
           <th>Qiita EBI submission</th>

@@ -9,7 +9,6 @@
 from json import dumps, loads
 from copy import deepcopy
 from future import standard_library
-from multiprocessing import Process
 import inspect
 import warnings
 
@@ -246,13 +245,14 @@ class Command(qdb.base.QiitaObject):
         parameters : dict
             The description of the parameters that this command received. The
             format is: {parameter_name: (parameter_type, default, name_order,
-            check_biom_merge)},
+            check_biom_merge, qiita_optional_parameter (optional))},
             where parameter_name, parameter_type and default are strings,
             name_order is an optional integer value and check_biom_merge is
             an optional boolean value. name_order is used to specify the order
             of the parameter when automatically naming the artifacts.
             check_biom_merge is used when merging artifacts in the analysis
-            pipeline.
+            pipeline. qiita_optional_parameter is an optional bool to "force"
+            the parameter to be optional
         outputs : dict, optional
             The description of the outputs that this command generated. The
             format is either {output_name: artifact_type} or
@@ -292,6 +292,10 @@ class Command(qdb.base.QiitaObject):
         sql_param_values = []
         sql_artifact_params = []
         for pname, vals in parameters.items():
+            qiita_optional_parameter = False
+            if 'qiita_optional_parameter' in vals:
+                qiita_optional_parameter = True
+                vals.remove('qiita_optional_parameter')
             lenvals = len(vals)
             if lenvals == 2:
                 ptype, dflt = vals
@@ -340,9 +344,12 @@ class Command(qdb.base.QiitaObject):
                 sql_artifact_params.append(
                     [pname, 'artifact', atypes])
             else:
-                sql_param_values.append(
-                    [pname, ptype, dflt is None, dflt, name_order,
-                     check_biom_merge])
+                # a parameter will be required (not optional) if
+                # qiita_optional_parameter is false and there is the default
+                # value (dflt) is None
+                required = not qiita_optional_parameter and dflt is None
+                sql_param_values.append([pname, ptype, required, dflt,
+                                         name_order, check_biom_merge])
 
         with qdb.sql_connection.TRN:
             if cls.exists(software, name):
@@ -784,8 +791,8 @@ class Software(qdb.base.QiitaObject):
             file doesn't match
         """
         config = ConfigParser()
-        with open(fp, 'U') as conf_file:
-            config.readfp(conf_file)
+        with open(fp, newline=None) as conf_file:
+            config.read_file(conf_file)
 
         name = config.get('main', 'NAME')
         version = config.get('main', 'VERSION')
@@ -1303,14 +1310,24 @@ class Software(qdb.base.QiitaObject):
     def register_commands(self):
         """Registers the software commands"""
         url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
-        cmd = '%s "%s" "%s" "%s" "register" "ignored"' % (
-            qiita_config.plugin_launcher, self.environment_script,
-            self.start_script, url)
-        # this print is intentional as it will be stored in the internal
-        # Qiita logs
-        print 'Registering: %s, via %s' % (self.name, cmd)
-        p = Process(target=qdb.processing_job._system_call, args=(cmd,))
-        p.start()
+        cmd = '%s; %s "%s" "register" "ignored"' % (
+            self.environment_script, self.start_script, url)
+
+        # it can be assumed that any command beginning with 'source'
+        # is calling 'source', an internal command of 'bash' and hence
+        # should be executed from bash, instead of sh.
+        # TODO: confirm that exit_code propagates from bash to sh to
+        # rv.
+        if cmd.startswith('source'):
+            cmd = "bash -c '%s'" % cmd
+
+        p_out, p_err, rv = qdb.processing_job._system_call(cmd)
+
+        if rv != 0:
+            s = "cmd: %s\nexit status: %d\n" % (cmd, rv)
+            s += "stdout: %s\nstderr: %s\n" % (p_out, p_err)
+
+            raise ValueError(s)
 
 
 class DefaultParameters(qdb.base.QiitaObject):

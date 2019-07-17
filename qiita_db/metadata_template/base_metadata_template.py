@@ -50,7 +50,7 @@ import warnings
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 
-from string import letters, digits
+from string import ascii_letters, digits
 
 
 # this is the name of the sample where we store all columns for a sample/prep
@@ -553,6 +553,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             current_headers)
         forbidden = cls._identify_forbidden_words_in_column_names(
             current_headers)
+        qiime2_reserved = cls._identify_qiime2_reserved_words_in_column_names(
+            current_headers)
 
         error = []
         if pgsql_reserved:
@@ -567,6 +569,10 @@ class MetadataTemplate(qdb.base.QiitaObject):
             error.append(
                 "The following column names in the template contain invalid "
                 "values: %s." % ", ".join(forbidden))
+        if qiime2_reserved:
+            error.append(
+                "The following column names in the template contain QIIME2 "
+                "reserved words: %s." % ", ".join(pgsql_reserved))
 
         if error:
             raise qdb.exceptions.QiitaDBColumnError(
@@ -696,6 +702,17 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(sql2, [sn, self.id])
             qdb.sql_connection.TRN.execute()
 
+            # making sure we don't delete all the samples
+            qdb.sql_connection.TRN.add(
+                "SELECT COUNT(*) FROM qiita.{0}".format(
+                    self._table_name(self._id)))
+
+            # 1 as the JSON formated tables have an extra "sample" where we
+            # store the column information
+            if qdb.sql_connection.TRN.execute_fetchlast() <= 1:
+                raise ValueError(
+                    'You cannot delete all samples from an information file')
+
             self.generate_files(samples=sample_names)
 
     def delete_column(self, column_name):
@@ -823,7 +840,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             new_cols = set(headers).difference(self.categories())
 
             if not new_cols and not new_samples:
-                return
+                return None, None
 
             is_extendable, error_msg = self.can_be_extended(new_samples,
                                                             new_cols)
@@ -858,7 +875,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                     # that || is a jsonb to update or add a new key/value
                     md_filtered = md_template[new_cols].loc[existing_samples]
                     for sid, df in md_filtered.iterrows():
-                        values = dict(df.iteritems())
+                        values = dict(df.items())
                         sql = """UPDATE qiita.{0}
                                  SET sample_values = sample_values || %s
                                  WHERE sample_id = %s""".format(
@@ -1218,8 +1235,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
     def get_filepaths(self):
         r"""Retrieves the list of (filepath_id, filepath)"""
         with qdb.sql_connection.TRN:
-            return [(fp_id, fp)
-                    for fp_id, fp, _ in qdb.util.retrieve_filepaths(
+            return [(x['fp_id'], x['fp'])
+                    for x in qdb.util.retrieve_filepaths(
                         self._filepath_table, self._id_column, self.id,
                         sort='descending')]
 
@@ -1257,8 +1274,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
             md_template = self._clean_validate_template(
                 md_template, self.study_id, current_columns=self.categories())
             new_samples, new_columns = self._common_extend_steps(md_template)
-            self.validate(self.columns_restrictions)
-            self.generate_files(new_samples, new_columns)
+            if new_samples or new_columns:
+                self.validate(self.columns_restrictions)
+                self.generate_files(new_samples, new_columns)
 
     def _update(self, md_template):
         r"""Update values in the template
@@ -1503,7 +1521,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             if category not in self.categories():
                 raise qdb.exceptions.QiitaDBColumnError(category)
-            sql = """SELECT sample_id, sample_values->>'{0}' as {0}
+            sql = """SELECT sample_id,
+                        COALESCE(sample_values->>'{0}', 'None') AS {0}
                      FROM qiita.{1}
                      WHERE sample_id != '{2}'""".format(
                 category, self._table_name(self._id), QIITA_COLUMN_NAME)
@@ -1722,8 +1741,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
         ------
             set of words containing invalid (illegal) characters.
         """
-        valid_initial_char = letters
-        valid_rest = set(letters+digits+'_')
+        valid_initial_char = ascii_letters
+        valid_rest = set(ascii_letters+digits+'_:|')
         invalid = []
         for s in column_names:
             if s[0] not in valid_initial_char:
@@ -1731,3 +1750,76 @@ class MetadataTemplate(qdb.base.QiitaObject):
             elif set(s) - valid_rest:
                 invalid.append(s)
         return set(invalid)
+
+    @classmethod
+    def _identify_qiime2_reserved_words_in_column_names(cls, column_names):
+        """Return a list of QIIME2-reserved words found in column_names.
+
+        Parameters
+        ----------
+        column_names : iterable
+            Iterable containing the column names to check.
+
+        Returns
+        ------
+            set of words containing QIIME2-reserved words.
+        """
+        return (qdb.metadata_template.util.get_qiime2_reserved_words() &
+                set(column_names))
+
+    @property
+    def restrictions(cls):
+        r"""Retrieves the restrictions based on the class._table
+
+        Returns
+        -------
+        dict
+            {restriction: values, ...}
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name, valid_values
+                     FROM qiita.restrictions
+                     WHERE table_name = %s"""
+            qdb.sql_connection.TRN.add(sql, [cls._table])
+            return dict(qdb.sql_connection.TRN.execute_fetchindex())
+
+    def validate_restrictions(self):
+        r"""Validates the restrictions
+
+        Returns
+        -------
+        success, boolean
+            If the validation was successful
+        message, string
+            Message if success is not True
+        """
+        with qdb.sql_connection.TRN:
+            # [:-1] removing last _
+            name = '%s %d' % (self._table_prefix[:-1], self.id)
+            success = True
+            message = []
+            restrictions = self.restrictions
+            categories = self.categories()
+
+            difference = sorted(set(restrictions.keys()) - set(categories))
+            if difference:
+                success = False
+                message.append(
+                    '%s is missing columns "%s"' % (name, ', '.join(
+                        difference)))
+
+            to_review = set(restrictions.keys()) & set(categories)
+            for key in to_review:
+                info_vals = set(self.get_category(key).values())
+                msg = []
+                for v in info_vals:
+                    if v not in restrictions[key]:
+                        msg.append(v)
+                if msg:
+                    success = False
+                    message.append(
+                        '%s has invalid values: "%s", valid values are: '
+                        '"%s"' % (name, ', '.join(msg),
+                                  ', '.join(restrictions[key])))
+
+            return success, '\n'.join(message)

@@ -44,11 +44,11 @@ class CommandTests(TestCase):
         cmd.activate()
         obs = list(qdb.software.Command.get_commands_by_input_type(['FASTQ']))
         exp = [cmd]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         obs = list(qdb.software.Command.get_commands_by_input_type(
             ['FASTQ', 'per_sample_FASTQ']))
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         obs = list(qdb.software.Command.get_commands_by_input_type(
             ['FASTQ', 'SFF']))
@@ -57,7 +57,7 @@ class CommandTests(TestCase):
         obs = list(qdb.software.Command.get_commands_by_input_type(
             ['FASTQ', 'SFF'], active_only=False))
         exp = [qdb.software.Command(1), qdb.software.Command(2)]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         new_cmd = qdb.software.Command.create(
             self.software, "Analysis Only Command",
@@ -67,12 +67,12 @@ class CommandTests(TestCase):
         obs = list(qdb.software.Command.get_commands_by_input_type(
             ['FASTQ', 'SFF'], active_only=False))
         exp = [qdb.software.Command(1), qdb.software.Command(2)]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         obs = list(qdb.software.Command.get_commands_by_input_type(
             ['FASTQ', 'SFF'], active_only=False, exclude_analysis=False))
         exp = [qdb.software.Command(1), qdb.software.Command(2), new_cmd]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_get_html_artifact(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
@@ -212,17 +212,17 @@ class CommandTests(TestCase):
         exp_params = {
             'input_data': ('artifact', ['FASTQ', 'per_sample_FASTQ'])}
         obs = qdb.software.Command(1).required_parameters
-        self.assertItemsEqual(obs.keys(), exp_params.keys())
+        self.assertCountEqual(list(obs.keys()), exp_params.keys())
         self.assertEqual(obs['input_data'][0],  exp_params['input_data'][0])
-        self.assertItemsEqual(obs['input_data'][1],
+        self.assertCountEqual(obs['input_data'][1],
                               exp_params['input_data'][1])
 
         exp_params = {
             'input_data': ('artifact', ['SFF', 'FASTA', 'FASTA_Sanger'])}
         obs = qdb.software.Command(2).required_parameters
-        self.assertItemsEqual(obs.keys(), exp_params.keys())
+        self.assertCountEqual(list(obs.keys()), exp_params.keys())
         self.assertEqual(obs['input_data'][0],  exp_params['input_data'][0])
-        self.assertItemsEqual(obs['input_data'][1],
+        self.assertCountEqual(obs['input_data'][1],
                               exp_params['input_data'][1])
 
     def test_optional_parameters(self):
@@ -603,7 +603,7 @@ class SoftwareTests(TestCase):
                          ' or run "qiita plugin update" to update the plugin '
                          'information. Offending values: description, '
                          'environment_script, start_script']
-            self.assertItemsEqual(obs_warns, exp_warns)
+            self.assertCountEqual(obs_warns, exp_warns)
 
         self.assertEqual(obs, exp)
         self.assertEqual(
@@ -657,9 +657,10 @@ class SoftwareTests(TestCase):
         with open(fp, 'w') as f:
             f.write(CONF_TEMPLATE %
                     ('Target Gene type', '0.1.0',
-                     'Target gene artifact types plugin',
-                     'source activate qiita', 'start_target_gene_types',
-                     'artifact definition', '',
+                     'Target gene artifact types plugin', 'source '
+                     '~/virtualenv/python2.7/bin/activate; export '
+                     'PATH=$HOME/miniconda3/bin/:$PATH; source activate qiita',
+                     'start_target_gene_types', 'artifact definition', '',
                      '4MOBzUBHBtUmwhaC258H7PS0rBBLyGQrVxGPgc9g305bvVhf6h',
                      'rFb7jwAb3UmSUN57Bjlsi4DTl2owLwRpwCc0SggRNEVb2Ebae2p5Umnq'
                      '20rNMhmqN'))
@@ -667,7 +668,7 @@ class SoftwareTests(TestCase):
             obs = qdb.software.Software.from_file(fp)
             obs_warns = [str(w.message) for w in warns]
             exp_warns = []
-            self.assertItemsEqual(obs_warns, exp_warns)
+            self.assertCountEqual(obs_warns, exp_warns)
 
         self.assertEqual(obs, qdb.software.Software(3))
         self.assertEqual(obs.publications, [])
@@ -775,11 +776,11 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.publications, [])
         obs.add_publications([['10.1000/nmeth.f.101', '12345678']])
         exp = [['10.1000/nmeth.f.101', '12345678']]
-        self.assertItemsEqual(obs.publications, exp)
+        self.assertCountEqual(obs.publications, exp)
 
         # Add a publication that already exists
         obs.add_publications([['10.1000/nmeth.f.101', '12345678']])
-        self.assertItemsEqual(obs.publications, exp)
+        self.assertCountEqual(obs.publications, exp)
 
     def test_activate(self):
         qdb.software.Software.deactivate_all()
@@ -872,7 +873,7 @@ class ParametersTests(TestCase):
         self.assertFalse(a == b)
         # Test difference due to command
         b = qdb.software.Parameters.from_default_params(
-            qdb.software.Command(2).default_parameter_sets.next(),
+            next(qdb.software.Command(2).default_parameter_sets),
             {'input_data': 1})
         self.assertFalse(a == b)
         # Test difference due to values
@@ -1056,21 +1057,21 @@ class DefaultWorkflowTests(TestCase):
         self.assertTrue(isinstance(obs, nx.DiGraph))
         exp = [qdb.software.DefaultWorkflowNode(1),
                qdb.software.DefaultWorkflowNode(2)]
-        self.assertItemsEqual(obs.nodes(), exp)
+        self.assertCountEqual(obs.nodes(), exp)
         exp = [(qdb.software.DefaultWorkflowNode(1),
                 qdb.software.DefaultWorkflowNode(2),
                 {'connections': qdb.software.DefaultWorkflowEdge(1)})]
-        self.assertItemsEqual(obs.edges(data=True), exp)
+        self.assertCountEqual(obs.edges(data=True), exp)
 
         obs = qdb.software.DefaultWorkflow(2).graph
         self.assertTrue(isinstance(obs, nx.DiGraph))
         exp = [qdb.software.DefaultWorkflowNode(3),
                qdb.software.DefaultWorkflowNode(4)]
-        self.assertItemsEqual(obs.nodes(), exp)
+        self.assertCountEqual(obs.nodes(), exp)
         exp = [(qdb.software.DefaultWorkflowNode(3),
                 qdb.software.DefaultWorkflowNode(4),
                 {'connections': qdb.software.DefaultWorkflowEdge(2)})]
-        self.assertItemsEqual(obs.edges(data=True), exp)
+        self.assertCountEqual(obs.edges(data=True), exp)
 
 
 CONF_TEMPLATE = """[main]

@@ -72,8 +72,8 @@ class EBISubmitHandler(BaseHandler):
                 ', '.join(VALID_SUBMISSION_TYPES), artifact_type)
             msg_level = 'danger'
         elif artifact_type == 'Demultiplexed':
-            demux = [path for _, path, ftype in artifact.filepaths
-                     if ftype == 'preprocessed_demux']
+            demux = [x['fp'] for x in artifact.filepaths
+                     if x['fp_type'] == 'preprocessed_demux']
             demux_length = len(demux)
             if demux_length > 1:
                 msg = "Study appears to have multiple demultiplexed files!"
@@ -86,11 +86,11 @@ class EBISubmitHandler(BaseHandler):
         elif artifact_type == 'per_sample_FASTQ':
             raw_forward_seqs = []
             raw_reverse_seqs = []
-            for _, path, ftype in artifact.filepaths:
-                if ftype == 'raw_forward_seqs':
-                    raw_forward_seqs.append(path)
-                elif ftype == 'raw_reverse_seqs':
-                    raw_reverse_seqs.append(path)
+            for x in artifact.filepaths:
+                if x['fp_type'] == 'raw_forward_seqs':
+                    raw_forward_seqs.append(x['fp'])
+                elif x['fp_type'] == 'raw_reverse_seqs':
+                    raw_reverse_seqs.append(x['fp'])
             stats['Total forward'] = len(raw_forward_seqs)
             stats['Total reverse'] = len(raw_reverse_seqs)
             msg_level = 'success'

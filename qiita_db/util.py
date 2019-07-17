@@ -18,6 +18,8 @@ Methods
     get_db_files_base_dir
     compute_checksum
     get_files_from_uploads_folders
+    filepath_id_to_rel_path
+    filepath_id_to_object_id
     get_mountpoint
     insert_filepaths
     check_table_cols
@@ -32,6 +34,7 @@ Methods
     add_message
     get_pubmed_ids_from_dois
     generate_analysis_list
+    human_merging_scheme
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -48,36 +51,33 @@ from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
-from os.path import join, basename, isdir, exists
-from os import walk, remove, listdir, makedirs, rename
+from os.path import join, basename, isdir, exists, getsize
+from os import walk, remove, listdir, rename
+from glob import glob
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
 from tempfile import mkstemp
 from csv import writer as csv_writer
-from json import dumps
 from datetime import datetime
 from itertools import chain
 from contextlib import contextmanager
 from future.builtins import bytes, str
 import h5py
 from humanize import naturalsize
-from os.path import getsize
 import hashlib
+from smtplib import SMTP, SMTP_SSL, SMTPException
 
+from os import makedirs
+from errno import EEXIST
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
+from future import standard_library
 
-def params_dict_to_json(options):
-    """Convert a dict of parameter key-value pairs to JSON string
-
-    Parameters
-    ----------
-    options : dict
-        The dict of options
-    """
-    return dumps(options, sort_keys=True, separators=(',', ':'))
+with standard_library.hooks():
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
 
 
 def scrub_data(s):
@@ -239,7 +239,7 @@ def create_rand_string(length, punct=True):
     if punct:
         chars += punctuation
     sr = SystemRandom()
-    return ''.join(sr.choice(chars) for i in xrange(length))
+    return ''.join(sr.choice(chars) for i in range(length))
 
 
 def hash_password(password, hashedpw=None):
@@ -421,7 +421,6 @@ def compute_checksum(path):
     int
         The file checksum
     """
-    crc = 0
     filepaths = []
     if isdir(path):
         for name, dirs, files in walk(path):
@@ -430,17 +429,17 @@ def compute_checksum(path):
     else:
         filepaths.append(path)
 
+    buffersize = 65536
+    crcvalue = 0
     for fp in filepaths:
-        with open(fp, "Ub") as f:
-            # Go line by line so we don't need to load the entire file
-            for line in f:
-                if crc is None:
-                    crc = crc32(line)
-                else:
-                    crc = crc32(line, crc)
-    # We need the & 0xffffffff in order to get the same numeric value across
+        with open(fp, 'rb') as f:
+            buffr = f.read(buffersize)
+            while len(buffr) > 0:
+                crcvalue = crc32(buffr, crcvalue)
+                buffr = f.read(buffersize)
+    # We need the & 0xFFFFFFFF in order to get the same numeric value across
     # all python versions and platforms
-    return crc & 0xffffffff
+    return crcvalue & 0xFFFFFFFF
 
 
 def get_files_from_uploads_folders(study_id):
@@ -503,8 +502,7 @@ def move_upload_files_to_trash(study_id, files_to_move):
                 "The upload folder for study id: %d doesn't exist" % study_id)
 
         trashpath = join(foldername, trash_folder)
-        if not exists(trashpath):
-            makedirs(trashpath)
+        create_nested_path(trashpath)
 
         fullpath = join(foldername, filename)
         new_fullpath = join(foldername, trash_folder, filename)
@@ -611,8 +609,7 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
                 # Generate the new filepaths, format:
                 # mountpoint/obj_id/original_name
                 dirname = db_path(str(obj_id))
-                if not exists(dirname):
-                    makedirs(dirname)
+                create_nested_path(dirname)
                 new_filepaths = [
                     (join(dirname, basename(path)), id_)
                     for path, id_ in filepaths]
@@ -625,26 +622,23 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
             # Move the original files to the controlled DB directory
             transfer_function = shutil_copy if copy else move
             for old_fp, new_fp in zip(filepaths, new_filepaths):
-                    transfer_function(old_fp[0], new_fp[0])
-                    # In case the transaction executes a rollback, we need to
-                    # make sure the files have not been moved
-                    qdb.sql_connection.TRN.add_post_rollback_func(
-                        move, new_fp[0], old_fp[0])
+                transfer_function(old_fp[0], new_fp[0])
+                # In case the transaction executes a rollback, we need to
+                # make sure the files have not been moved
+                qdb.sql_connection.TRN.add_post_rollback_func(
+                    move, new_fp[0], old_fp[0])
 
         def str_to_id(x):
-            return (x if isinstance(x, (int, long))
+            return (x if isinstance(x, int)
                     else convert_to_id(x, "filepath_type"))
-        paths_w_checksum = [(basename(path), str_to_id(id_),
-                            compute_checksum(path))
-                            for path, id_ in new_filepaths]
-        # Create the list of SQL values to add
-        values = [[path, pid, checksum, 1, dd_id]
-                  for path, pid, checksum in paths_w_checksum]
+        # 1 is the checksum algorithm, which we only have one implemented
+        values = [[basename(path), str_to_id(id_), compute_checksum(path),
+                   getsize(path), 1, dd_id] for path, id_ in new_filepaths]
         # Insert all the filepaths at once and get the filepath_id back
         sql = """INSERT INTO qiita.filepath
-                    (filepath, filepath_type_id, checksum,
+                    (filepath, filepath_type_id, checksum, fp_size,
                      checksum_algorithm_id, data_directory_id)
-                 VALUES (%s, %s, %s, %s, %s)
+                 VALUES (%s, %s, %s, %s, %s, %s)
                  RETURNING filepath_id"""
         idx = qdb.sql_connection.TRN.index
         qdb.sql_connection.TRN.add(sql, values, many=True)
@@ -701,9 +695,8 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
 
     Returns
     -------
-    list of (int, str, str)
-        The list of (filepath id, filepath, filepath_type) attached to the
-        object id
+    list of dict {fp_id, fp, ft_type, checksum, fp_size}
+        The list of dict with the properties of the filepaths
     """
 
     sql_sort = ""
@@ -725,7 +718,7 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
 
     with qdb.sql_connection.TRN:
         sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
-                        subdirectory
+                        subdirectory, checksum, fp_size
                  FROM qiita.filepath
                     JOIN qiita.filepath_type USING (filepath_type_id)
                     JOIN qiita.data_directory USING (data_directory_id)
@@ -736,8 +729,9 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
         results = qdb.sql_connection.TRN.execute_fetchindex()
         db_dir = get_db_files_base_dir()
 
-        return [(fpid, _path_builder(db_dir, fp, m, s, obj_id), fp_type_)
-                for fpid, fp, fp_type_, m, s in results]
+        return [{'fp_id': fpid, 'fp': _path_builder(db_dir, fp, m, s, obj_id),
+                 'fp_type': fp_type_, 'checksum': c, 'fp_size': fpsize}
+                for fpid, fp, fp_type_, m, s, c, fpsize in results]
 
 
 def _rm_files(TRN, fp):
@@ -798,7 +792,7 @@ def purge_filepaths(delete_files=True):
                 fp = join(get_mountpoint_path_by_id(dd_id), fp)
                 _rm_files(qdb.sql_connection.TRN, fp)
             else:
-                print fp, fp_type
+                print(fp, fp_type)
 
         if delete_files:
             qdb.sql_connection.TRN.execute()
@@ -815,7 +809,7 @@ def _rm_exists(fp, obj, _id, delete_files):
                 _rm_files(qdb.sql_connection.TRN, fp)
                 qdb.sql_connection.TRN.execute()
         else:
-            print "Remove %s" % fp
+            print("Remove %s" % fp)
 
 
 def purge_files_from_filesystem(delete_files=True):
@@ -841,13 +835,14 @@ def purge_files_from_filesystem(delete_files=True):
 
     missing_db = actual_paths - db_paths
     if missing_db:
-        print 'paths without db entries: %s' % ', '.join(missing_db)
+        print('\n\npaths without db entries: %s\n\n' % ', '.join(missing_db))
     missing_paths = [x for x in db_paths - actual_paths if not isdir(x)]
     if missing_paths:
-        print 'paths without actual mounts: %s' % ', '.join(missing_paths)
+        print('\n\npaths without actual mounts: %s\n\n' % ', '.join(
+            missing_paths))
 
     # Step 2, clean based on the 2 main group: True/False subdirectory
-    # -> subdirectory True
+    # subdirectory True, the artifacts are stored within their own folders
     paths = {fp for mt in mount_types
              for x, fp, sp in get_mountpoint(mt, True, True) if sp}
     for pt in paths:
@@ -855,21 +850,30 @@ def purge_files_from_filesystem(delete_files=True):
             for aid in listdir(pt):
                 _rm_exists(
                     join(pt, aid), qdb.artifact.Artifact, aid, delete_files)
-    # -> subdirectory False
+    # subdirectory False - this are the legacy folders, the files are stored
+    # in the base folder prepended with the element id, which are:
+    #  *** ignored or not in use anymore ***
+    # - job
+    # - preprocessed_data
+    # - processed_data
+    # - raw_data
+    # - reference
+    # - working_dir
+    #  *** dealing ***
+    # - analysis
+    # - templates
+    # - uploads
     data_types = {
         'analysis': qdb.analysis.Analysis,
-        'preprocessed_data': qdb.artifact.Artifact,
-        'processed_data': qdb.artifact.Artifact,
-        'raw_data': qdb.artifact.Artifact,
         'templates': qdb.study.Study,
-        'job': qdb.analysis.Analysis
+        'uploads': qdb.study.Study
     }
     for dt, obj in data_types.items():
         for _, pt in get_mountpoint(dt, True):
             if isdir(pt):
                 for ppt in listdir(pt):
-                    _rm_exists(join(pt, ppt), obj, ppt.split('_')[0],
-                               delete_files)
+                    obj_id = ppt.split('_')[0]
+                    _rm_exists(join(pt, ppt), obj, obj_id, delete_files)
 
 
 def empty_trash_upload_folder(delete_files=True):
@@ -896,7 +900,7 @@ def empty_trash_upload_folder(delete_files=True):
                             fp = join(path, f)
                             _rm_files(qdb.sql_connection.TRN, fp)
                     else:
-                        print files
+                        print(files)
 
         if delete_files:
             qdb.sql_connection.TRN.execute()
@@ -916,25 +920,23 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
     with qdb.sql_connection.TRN:
         uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
 
-        if not exists(uploads_fp):
-            makedirs(uploads_fp)
+        create_nested_path(uploads_fp)
 
         path_builder = partial(join, uploads_fp)
 
         # We can now go over and remove all the filepaths
-        sql = """DELETE FROM qiita.filepath WHERE filepath_id=%s"""
-        for fp_id, fp, fp_type in filepaths:
-            qdb.sql_connection.TRN.add(sql, [fp_id])
+        sql = """DELETE FROM qiita.filepath WHERE filepath_id = %s"""
+        for x in filepaths:
+            qdb.sql_connection.TRN.add(sql, [x['fp_id']])
 
-            if fp_type == 'html_summary':
-                qdb.sql_connection.TRN.add_post_commit_func(
-                    remove, fp)
+            if x['fp_type'] == 'html_summary':
+                _rm_files(qdb.sql_connection.TRN, x['fp'])
             else:
-                destination = path_builder(basename(fp))
+                destination = path_builder(basename(x['fp']))
 
                 qdb.sql_connection.TRN.add_post_rollback_func(
-                    move, destination, fp)
-                move(fp, destination)
+                    move, destination, x['fp'])
+                move(x['fp'], destination)
 
         qdb.sql_connection.TRN.execute()
 
@@ -993,6 +995,36 @@ def filepath_id_to_rel_path(filepath_id):
         else:
             result = join(mp, fp)
         return result
+
+
+def filepath_id_to_object_id(filepath_id):
+    """Gets the object id to which the filepath id belongs to
+
+    Returns
+    -------
+    int
+        The object id the filepath id belongs to or None if not found
+
+    Notes
+    -----
+    This helper function is intended to be used with the download handler so
+    we can prepend downloads with the artifact id; thus, we will only look for
+    filepath ids in qiita.analysis_filepath and qiita.artifact_filepath as
+    search in qiita.reference, qiita.prep_template_filepath and
+    qiita.sample_template_filepath will make the naming redundat (those already
+    have the study_id in their filename)
+    """
+    with qdb.sql_connection.TRN:
+        sql = """
+            SELECT analysis_id FROM qiita.analysis_filepath
+                WHERE filepath_id = %s UNION
+            SELECT artifact_id FROM qiita.artifact_filepath
+                WHERE filepath_id = %s"""
+        qdb.sql_connection.TRN.add(sql, [filepath_id, filepath_id])
+        fids = sorted(qdb.sql_connection.TRN.execute_fetchflatten())
+        if fids:
+            return fids[0]
+        return None
 
 
 def filepath_ids_to_rel_paths(filepath_ids):
@@ -1342,18 +1374,31 @@ def generate_study_list(user, visibility):
             (SELECT COUNT(sample_id) FROM qiita.study_sample
                 WHERE study_id=qiita.study.study_id)
                 AS number_samples_collected]
+    - retrieve all the prep data types for all the artifacts depending on their
+      visibility
+            (SELECT array_agg(DISTINCT data_type)
+             FROM qiita.study_prep_template
+             LEFT JOIN qiita.prep_template USING (prep_template_id)
+             LEFT JOIN qiita.data_type USING (data_type_id)
+             LEFT JOIN qiita.artifact USING (artifact_id)
+             LEFT JOIN qiita.visibility USING (visibility_id)
+             LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+             WHERE {0} study_id = qiita.study.study_id)
+                 AS preparation_data_types,
     - all the BIOM artifact_ids sorted by artifact_id that belong to the study,
-      including their software deprecated value
-            (SELECT array_agg(row_to_json((artifact_id, qs.deprecated), true)
-                              ORDER BY artifact_id)
-                FROM qiita.study_artifact
-                LEFT JOIN qiita.artifact USING (artifact_id)
-                LEFT JOIN qiita.visibility USING (visibility_id)
-                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                LEFT JOIN qiita.software_command USING (command_id)
-                LEFT JOIN qiita.software qs USING (software_id)
-                WHERE artifact_type='BIOM' AND {0}
-                    study_id = qiita.study.study_id) AS aids_with_deprecation,
+      including their software deprecated value and their prep info file data
+      type values
+            (SELECT array_agg(row_to_json(
+             (m_aid.artifact_id, qs.deprecated), true)
+                 ORDER BY artifact_id)
+             FROM qiita.study_artifact
+             LEFT JOIN qiita.artifact AS m_aid USING (artifact_id)
+             LEFT JOIN qiita.visibility USING (visibility_id)
+             LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+             LEFT JOIN qiita.software_command USING (command_id)
+             LEFT JOIN qiita.software qs USING (software_id)
+             WHERE artifact_type='BIOM' AND {0}
+                 study_id = qiita.study.study_id) AS aids_with_deprecation,
     - all the publications that belong to the study
             (SELECT array_agg((publication, is_doi)))
                 FROM qiita.study_publication
@@ -1396,10 +1441,20 @@ def generate_study_list(user, visibility):
             (SELECT COUNT(sample_id) FROM qiita.study_sample
                 WHERE study_id=qiita.study.study_id)
                 AS number_samples_collected,
-            (SELECT array_agg(row_to_json((artifact_id, qs.deprecated), true)
-                              ORDER BY artifact_id)
-                FROM qiita.study_artifact
+            (SELECT array_agg(DISTINCT data_type)
+                FROM qiita.study_prep_template
+                LEFT JOIN qiita.prep_template USING (prep_template_id)
+                LEFT JOIN qiita.data_type USING (data_type_id)
                 LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.visibility USING (visibility_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                WHERE {0} study_id = qiita.study.study_id)
+                    AS preparation_data_types,
+            (SELECT array_agg(row_to_json(
+                (m_aid.artifact_id, qs.deprecated), true)
+                    ORDER BY artifact_id)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact AS m_aid USING (artifact_id)
                 LEFT JOIN qiita.visibility USING (visibility_id)
                 LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                 LEFT JOIN qiita.software_command USING (command_id)
@@ -1446,6 +1501,9 @@ def generate_study_list(user, visibility):
                         if not x['f2']:
                             info['artifact_biom_ids'].append(x['f1'])
                 del info['aids_with_deprecation']
+
+                if info['preparation_data_types'] is None:
+                    info['preparation_data_types'] = []
 
                 # publication info
                 info['publication_doi'] = []
@@ -1569,198 +1627,190 @@ def generate_study_list_without_artifacts(study_ids, portal=None):
 
 
 def get_artifacts_information(artifact_ids, only_biom=True):
-        """Returns processing information about the artifact ids
+    """Returns processing information about the artifact ids
 
-        Parameters
-        ----------
-        artifact_ids : list of ints
-            The artifact ids to look for. Non-existing ids will be ignored
-        only_biom : bool
-            If true only the biom artifacts are retrieved
+    Parameters
+    ----------
+    artifact_ids : list of ints
+        The artifact ids to look for. Non-existing ids will be ignored
+    only_biom : bool
+        If true only the biom artifacts are retrieved
 
-        Returns
-        -------
-        dict
-            The info of the artifacts
-        """
-        if not artifact_ids:
-            return {}
+    Returns
+    -------
+    dict
+        The info of the artifacts
+    """
+    if not artifact_ids:
+        return {}
 
-        sql = """
-            WITH main_query AS (
-                SELECT a.artifact_id, a.name, a.command_id as cid, sc.name,
-                       a.generated_timestamp, array_agg(a.command_parameters),
-                       dt.data_type, parent_id,
-                       parent_info.command_id, parent_info.name,
-                       array_agg(parent_info.command_parameters),
-                       array_agg(filepaths.filepath),
-                       qiita.find_artifact_roots(a.artifact_id) AS root_id
-                FROM qiita.artifact a
-                LEFT JOIN qiita.software_command sc USING (command_id)"""
-        if only_biom:
-            sql += """
-                JOIN qiita.artifact_type at ON (
-                    a.artifact_type_id = at .artifact_type_id
-                        AND artifact_type = 'BIOM')"""
+    sql = """
+        WITH main_query AS (
+            SELECT a.artifact_id, a.name, a.command_id as cid, sc.name,
+                   a.generated_timestamp, array_agg(a.command_parameters),
+                   dt.data_type, parent_id,
+                   parent_info.command_id, parent_info.name,
+                   array_agg(parent_info.command_parameters),
+                   array_agg(filepaths.filepath),
+                   qiita.find_artifact_roots(a.artifact_id) AS root_id
+            FROM qiita.artifact a
+            LEFT JOIN qiita.software_command sc USING (command_id)"""
+    if only_biom:
         sql += """
-                LEFT JOIN qiita.parent_artifact pa ON (
-                    a.artifact_id = pa.artifact_id)
-                LEFT JOIN qiita.data_type dt USING (data_type_id)
-                LEFT OUTER JOIN LATERAL (
-                    SELECT command_id, sc.name, command_parameters
-                    FROM qiita.artifact ap
-                    LEFT JOIN qiita.software_command sc USING (command_id)
-                    WHERE ap.artifact_id = pa.parent_id) parent_info ON true
-                LEFT OUTER JOIN LATERAL (
-                    SELECT filepath
-                    FROM qiita.artifact_filepath af
-                    JOIN qiita.filepath USING (filepath_id)
-                    WHERE af.artifact_id = a.artifact_id) filepaths ON true
-                WHERE a.artifact_id IN %s
-                GROUP BY a.artifact_id, a.name, a.command_id, sc.name,
-                         a.generated_timestamp, dt.data_type, parent_id,
-                         parent_info.command_id, parent_info.name
-                ORDER BY a.command_id, artifact_id),
-              has_target_subfragment AS (
-                SELECT main_query.*, prep_template_id
-                FROM main_query
-                LEFT JOIN qiita.prep_template pt ON (
-                    main_query.root_id = pt.artifact_id)
-            )
-            SELECT * FROM has_target_subfragment
-            ORDER BY cid, data_type, artifact_id
-            """
+            JOIN qiita.artifact_type at ON (
+                a.artifact_type_id = at .artifact_type_id
+                    AND artifact_type = 'BIOM')"""
+    sql += """
+            LEFT JOIN qiita.parent_artifact pa ON (
+                a.artifact_id = pa.artifact_id)
+            LEFT JOIN qiita.data_type dt USING (data_type_id)
+            LEFT OUTER JOIN LATERAL (
+                SELECT command_id, sc.name, command_parameters
+                FROM qiita.artifact ap
+                LEFT JOIN qiita.software_command sc USING (command_id)
+                WHERE ap.artifact_id = pa.parent_id) parent_info ON true
+            LEFT OUTER JOIN LATERAL (
+                SELECT filepath
+                FROM qiita.artifact_filepath af
+                JOIN qiita.filepath USING (filepath_id)
+                WHERE af.artifact_id = a.artifact_id) filepaths ON true
+            WHERE a.artifact_id IN %s
+            GROUP BY a.artifact_id, a.name, a.command_id, sc.name,
+                     a.generated_timestamp, dt.data_type, parent_id,
+                     parent_info.command_id, parent_info.name
+            ORDER BY a.command_id, artifact_id),
+          has_target_subfragment AS (
+            SELECT main_query.*, prep_template_id
+            FROM main_query
+            LEFT JOIN qiita.prep_template pt ON (
+                main_query.root_id = pt.artifact_id)
+        )
+        SELECT * FROM has_target_subfragment
+        ORDER BY cid, data_type, artifact_id
+        """
 
-        sql_params = """SELECT command_id, array_agg(parameter_name)
-                        FROM qiita.command_parameter
-                        WHERE parameter_type = 'artifact'
-                        GROUP BY command_id"""
+    sql_params = """SELECT command_id, array_agg(parameter_name)
+                    FROM qiita.command_parameter
+                    WHERE parameter_type = 'artifact'
+                    GROUP BY command_id"""
 
-        QCN = qdb.metadata_template.base_metadata_template.QIITA_COLUMN_NAME
-        sql_ts = """SELECT DISTINCT sample_values->>'target_subfragment'
-                    FROM qiita.prep_%s
-                    WHERE sample_id != '{0}'""".format(QCN)
+    QCN = qdb.metadata_template.base_metadata_template.QIITA_COLUMN_NAME
+    sql_ts = """SELECT DISTINCT sample_values->>'target_subfragment'
+                FROM qiita.prep_%s
+                WHERE sample_id != '{0}'""".format(QCN)
 
-        with qdb.sql_connection.TRN:
-            results = []
+    with qdb.sql_connection.TRN:
+        results = []
 
-            # getting all commands and their artifact parameters so we can
-            # delete from the results below
-            commands = {}
-            qdb.sql_connection.TRN.add(sql_params)
-            for cid, params in qdb.sql_connection.TRN.execute_fetchindex():
-                cmd = qdb.software.Command(cid)
-                commands[cid] = {
-                    'params': params,
-                    'merging_scheme': cmd.merging_scheme,
-                    'deprecated': cmd.software.deprecated}
+        # getting all commands and their artifact parameters so we can
+        # delete from the results below
+        commands = {}
+        qdb.sql_connection.TRN.add(sql_params)
+        for cid, params in qdb.sql_connection.TRN.execute_fetchindex():
+            cmd = qdb.software.Command(cid)
+            commands[cid] = {
+                'params': params,
+                'merging_scheme': cmd.merging_scheme,
+                'active': cmd.active,
+                'deprecated': cmd.software.deprecated}
 
-            # Now let's get the actual artifacts. Note that ts is a cache
-            # (prep id : target subfragment) so we don't have to query
-            # multiple times the target subfragment for a prep info file.
-            # However, some artifacts (like analysis) do not have a prep info
-            # file; thus we can have a None prep id (key)
-            ts = {None: []}
-            ps = {}
-            algorithm_az = {'': ''}
-            PT = qdb.metadata_template.prep_template.PrepTemplate
-            qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
-            for row in qdb.sql_connection.TRN.execute_fetchindex():
-                aid, name, cid, cname, gt, aparams, dt, pid, pcid, pname, \
-                    pparams, filepaths, _, prep_template_id = row
+        # Now let's get the actual artifacts. Note that ts is a cache
+        # (prep id : target subfragment) so we don't have to query
+        # multiple times the target subfragment for a prep info file.
+        # However, some artifacts (like analysis) do not have a prep info
+        # file; thus we can have a None prep id (key)
+        ts = {None: []}
+        ps = {}
+        algorithm_az = {'': ''}
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
+        for row in qdb.sql_connection.TRN.execute_fetchindex():
+            aid, name, cid, cname, gt, aparams, dt, pid, pcid, pname, \
+                pparams, filepaths, _, prep_template_id = row
 
-                # cleaning up aparams
-                # - [0] due to the array_agg
-                aparams = aparams[0]
-                if aparams is None:
-                    aparams = {}
+            # cleaning up aparams & pparams
+            # - [0] due to the array_agg
+            aparams = aparams[0]
+            pparams = pparams[0]
+            if aparams is None:
+                aparams = {}
+            else:
+                # we are going to remove any artifacts from the parameters
+                for ti in commands[cid]['params']:
+                    del aparams[ti]
+
+            # - ignoring empty filepaths
+            if filepaths == [None]:
+                filepaths = []
+            else:
+                filepaths = [fp for fp in filepaths if fp.endswith('biom')]
+
+            # generating algorithm, by default is ''
+            algorithm = ''
+            # set to False because if there is no cid, it means that it
+            # was a direct upload
+            deprecated = None
+            active = None
+            if cid is not None:
+                deprecated = commands[cid]['deprecated']
+                active = commands[cid]['active']
+                if pcid is None:
+                    parent_merging_scheme = None
                 else:
-                    # we are going to remove any artifacts from the parameters
-                    for ti in commands[cid]['params']:
-                        del aparams[ti]
+                    parent_merging_scheme = commands[pcid][
+                        'merging_scheme']
 
-                # - ignoring empty filepaths
-                if filepaths == [None]:
-                    filepaths = []
-                else:
-                    filepaths = [fp for fp in filepaths if fp.endswith('biom')]
+                algorithm = human_merging_scheme(
+                    cname, commands[cid]['merging_scheme'],
+                    pname, parent_merging_scheme,
+                    aparams, filepaths, pparams)
 
-                # generating algorithm, by default is ''
-                algorithm = ''
-                # set to False because if there is no cid, it means that it
-                # was a direct upload
-                deprecated = False
-                if cid is not None:
-                    ms = commands[cid]['merging_scheme']
-                    deprecated = commands[cid]['deprecated']
-                    eparams = []
-                    if ms['parameters']:
-                        eparams.append(','.join(['%s: %s' % (k, aparams[k])
-                                                 for k in ms['parameters']]))
-                    if ms['outputs'] and filepaths:
-                        eparams.append('BIOM: %s' % ', '.join(filepaths))
-                    if eparams:
-                        cname = "%s (%s)" % (cname, ', '.join(eparams))
+                if algorithm not in algorithm_az:
+                    algorithm_az[algorithm] = hashlib.md5(
+                        algorithm.encode('utf-8')).hexdigest()
 
-                    if ms['ignore_parent_command']:
-                        algorithm = cname
-                    else:
-                        palgorithm = 'N/A'
-                        if pcid is not None:
-                            palgorithm = pname
-                            ms = commands[pcid]['merging_scheme']
-                            if ms['parameters']:
-                                pparams = pparams[0]
-                                params = ','.join(['%s: %s' % (k, pparams[k])
-                                                   for k in ms['parameters']])
-                                palgorithm = "%s (%s)" % (palgorithm, params)
+            if prep_template_id not in ts:
+                qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])
+                ts[prep_template_id] = \
+                    qdb.sql_connection.TRN.execute_fetchflatten()
+            target = ts[prep_template_id]
 
-                        algorithm = '%s | %s' % (cname, palgorithm)
-                    if algorithm not in algorithm_az:
-                        algorithm_az[algorithm] = hashlib.md5(
-                            algorithm).hexdigest()
+            prep_samples = 0
+            platform = 'not provided'
+            target_gene = 'not provided'
+            if prep_template_id is not None:
+                if prep_template_id not in ps:
+                    pt = PT(prep_template_id)
+                    categories = pt.categories()
+                    if 'platform' in categories:
+                        platform = ', '.join(
+                            set(pt.get_category('platform').values()))
+                    if 'target_gene' in categories:
+                        target_gene = ', '.join(
+                            set(pt.get_category('target_gene').values()))
 
-                if prep_template_id not in ts:
-                    qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])
-                    ts[prep_template_id] = \
-                        qdb.sql_connection.TRN.execute_fetchflatten()
-                target = ts[prep_template_id]
+                    ps[prep_template_id] = [
+                        len(list(pt.keys())), platform, target_gene]
 
-                prep_samples = 0
-                platform = 'not provided'
-                target_gene = 'not provided'
-                if prep_template_id is not None:
-                    if prep_template_id not in ps:
-                        pt = PT(prep_template_id)
-                        categories = pt.categories()
-                        if 'platform' in categories:
-                            platform = ', '.join(
-                                set(pt.get_category('platform').values()))
-                        if 'target_gene' in categories:
-                            target_gene = ', '.join(
-                                set(pt.get_category('target_gene').values()))
+                prep_samples, patform, target_gene = ps[prep_template_id]
 
-                        ps[prep_template_id] = [
-                            len(list(pt.keys())), platform, target_gene]
+            results.append({
+                'artifact_id': aid,
+                'target_subfragment': target,
+                'prep_samples': prep_samples,
+                'platform': platform,
+                'target_gene': target_gene,
+                'name': name,
+                'data_type': dt,
+                'timestamp': str(gt),
+                'parameters': aparams,
+                'algorithm': algorithm,
+                'algorithm_az': algorithm_az[algorithm],
+                'deprecated': deprecated,
+                'active': active,
+                'files': filepaths})
 
-                    prep_samples, patform, target_gene = ps[prep_template_id]
-
-                results.append({
-                    'artifact_id': aid,
-                    'target_subfragment': target,
-                    'prep_samples': prep_samples,
-                    'platform': platform,
-                    'target_gene': target_gene,
-                    'name': name,
-                    'data_type': dt,
-                    'timestamp': str(gt),
-                    'parameters': aparams,
-                    'algorithm': algorithm,
-                    'algorithm_az': algorithm_az[algorithm],
-                    'deprecated': deprecated,
-                    'files': filepaths})
-
-            return results
+        return results
 
 
 def _is_string_or_bytes(s):
@@ -1914,3 +1964,148 @@ def generate_analysis_list(analysis_ids, public_only=False):
                 'mapping_files': mapping_files})
 
     return results
+
+
+def create_nested_path(path):
+    """Wraps makedirs() to make it safe to use across multiple concurrent calls.
+    Returns successfully if the path was created, or if it already exists.
+    (Note, this alters the normal makedirs() behavior, where False is returned
+    if the full path already exists.)
+
+    Parameters
+    ----------
+    path : str
+        The path to be created. The path can contain multiple levels that do
+        not currently exist on the filesystem.
+
+    Raises
+    ------
+    OSError
+        If the operation failed for whatever reason (likely because the caller
+        does not have permission to create new directories in the part of the
+        filesystem requested
+    """
+    # TODO: catching errno=EEXIST (17 usually) will suffice for now, to avoid
+    # stomping when multiple artifacts are being manipulated within a study.
+    # In the future, employ a process-spanning mutex to serialize.
+    # With Python3, the try/except wrapper can be replaced with a call to
+    # makedirs with exist_ok=True
+    try:
+        # try creating the directory specified. if the directory already exists
+        # , or if qiita does not have permissions to create/modify the path, an
+        # exception will be thrown.
+        makedirs(path)
+    except OSError as e:
+        # if the directory already exists, treat as success (idempotent)
+        if e.errno != EEXIST:
+            raise
+
+
+def human_merging_scheme(cname, merging_scheme,
+                         pname, parent_merging_scheme,
+                         artifact_parameters, artifact_filepaths,
+                         parent_parameters):
+    """From the artifact and its parent features format the merging scheme
+
+    Parameters
+    ----------
+    cname : str
+        The artifact command name
+    merging_scheme : dict, from qdb.artifact.Artifact.merging_scheme
+        The artifact merging scheme
+    pname : str
+        The artifact parent command name
+    parent_merging_scheme : dict, from qdb.artifact.Artifact.merging_scheme
+        The artifact parent merging scheme
+    artifact_parameters : dict
+        The artfiact processing parameters
+    artifact_filepaths : list of str
+        The artifact filepaths
+    parent_parameters :
+        The artifact parents processing parameters
+
+    Returns
+    -------
+    str
+        The merging scheme
+    """
+    eparams = []
+    if merging_scheme['parameters']:
+        eparams.append(','.join(['%s: %s' % (k, artifact_parameters[k])
+                                 for k in merging_scheme['parameters']]))
+    if (merging_scheme['outputs'] and
+            artifact_filepaths is not None and
+            artifact_filepaths):
+        eparams.append('BIOM: %s' % ', '.join(artifact_filepaths))
+    if eparams:
+        cname = "%s (%s)" % (cname, ', '.join(eparams))
+
+    if merging_scheme['ignore_parent_command']:
+        algorithm = cname
+    else:
+        palgorithm = 'N/A'
+        if pname is not None:
+            palgorithm = pname
+            if parent_merging_scheme['parameters']:
+                params = ','.join(
+                    ['%s: %s' % (k, parent_parameters[k])
+                     for k in parent_merging_scheme['parameters']])
+                palgorithm = "%s (%s)" % (palgorithm, params)
+
+        algorithm = '%s | %s' % (cname, palgorithm)
+
+    return algorithm
+
+
+def activate_or_update_plugins(update=False):
+    """Activates/updates the plugins
+
+    Parameters
+    ----------
+    update : bool, optional
+        If True will update the plugins. Otherwise will activate them.
+        Default: False.
+    """
+    conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
+    label = "{} plugin (%s/{}): %s... ".format(
+        "Updating" if update else "\tLoading", len(conf_files))
+    for i, fp in enumerate(conf_files):
+        print(label % (i + 1, basename(fp)), end=None)
+        s = qdb.software.Software.from_file(fp, update=update)
+        if not update:
+            s.activate()
+        print("Ok")
+
+
+def send_email(to, subject, body):
+    # create email
+    msg = MIMEMultipart()
+    msg['From'] = qiita_config.smtp_email
+    msg['To'] = to
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    # connect to smtp server, using ssl if needed
+    if qiita_config.smtp_ssl:
+        smtp = SMTP_SSL()
+    else:
+        smtp = SMTP()
+    smtp.set_debuglevel(False)
+    smtp.connect(qiita_config.smtp_host, qiita_config.smtp_port)
+    # try tls, if not available on server just ignore error
+    try:
+        smtp.starttls()
+    except SMTPException:
+        pass
+    smtp.ehlo_or_helo_if_needed()
+
+    if qiita_config.smtp_user:
+        smtp.login(qiita_config.smtp_user, qiita_config.smtp_password)
+
+    # send email
+    try:
+        smtp.sendmail(qiita_config.smtp_email, to, msg.as_string())
+    except Exception:
+        raise RuntimeError("Can't send email!")
+    finally:
+        smtp.close()

@@ -12,7 +12,7 @@
 # qiita documentation build configuration file, created by
 # sphinx-quickstart on Mon May 18 17:59:39 2015.
 #
-# This file is execfile()d with the current directory set to its
+# This file is executed with the current directory set to its
 # containing dir.
 #
 # Note that not all possible configuration values are present in this

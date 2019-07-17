@@ -198,8 +198,11 @@ def get_network_nodes_edges(graph, full_access, nodes=None, edges=None):
             status = 'artifact'
             pp = n[1].processing_parameters
             if pp is not None:
-                if pp.command.software.deprecated:
+                cmd = pp.command
+                if cmd.software.deprecated:
                     status = 'deprecated'
+                elif not cmd.active:
+                    status = 'outdated'
             if full_access or n[1].visibility == 'public':
                 name = '%s\n(%s)' % (n[1].name, n[1].artifact_type)
             else:

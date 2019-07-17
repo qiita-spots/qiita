@@ -157,6 +157,8 @@ def prep_template_ajax_get_req(user_id, prep_id):
 
     editable = Study(study_id).can_edit(User(user_id)) and not processing
 
+    success, restrictions = pt.validate_restrictions()
+
     return {'status': 'success',
             'message': '',
             'name': name,
@@ -174,6 +176,8 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'data_type': pt.data_type(),
             'alert_type': alert_type,
             'is_submitted_to_ebi': pt.is_submitted_to_ebi,
+            'prep_restrictions': restrictions,
+            'samples': sorted(list(pt.keys())),
             'alert_message': alert_msg}
 
 
@@ -301,7 +305,7 @@ def prep_template_summary_get_req(prep_id, user_id):
 
     cols = sorted(list(df.columns))
     for column in cols:
-        counts = df[column].value_counts()
+        counts = df[column].value_counts(dropna=False)
         out['summary'].append(
             (str(column), [(str(key), counts[key])
                            for key in natsorted(counts.index)]))

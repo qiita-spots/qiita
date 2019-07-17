@@ -24,19 +24,22 @@ Methods
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from os import stat, makedirs, rename
-from os.path import join, relpath, exists
+from os import stat, rename
+from os.path import join, relpath, basename
 from time import strftime, localtime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from base64 import b64encode
-from urllib import quote
-from StringIO import StringIO
+from urllib.parse import quote
+from io import BytesIO
 from future.utils import viewitems
 from datetime import datetime
 from tarfile import open as topen, TarInfo
 from hashlib import md5
+from re import sub
+from json import loads, dump, dumps
 
+from qiita_db.util import create_nested_path
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
@@ -107,7 +110,16 @@ def validate_filepath_access_by_user(user, filepath_id):
         if arid:
             # [0] cause we should only have 1
             artifact = qdb.artifact.Artifact(arid[0])
+
             if artifact.visibility == 'public':
+                # TODO: https://github.com/biocore/qiita/issues/1724
+                if artifact.artifact_type in ['SFF', 'FASTQ', 'FASTA',
+                                              'FASTA_Sanger',
+                                              'per_sample_FASTQ']:
+                    study = artifact.study
+                    has_access = study.has_access(user, no_public=True)
+                    if (not study.public_raw_download and not has_access):
+                        return False
                 return True
             else:
                 study = artifact.study
@@ -195,7 +207,7 @@ def update_redis_stats():
     num_users = qdb.util.get_count('qiita.qiita_user')
     num_processing_jobs = qdb.util.get_count('qiita.processing_job')
 
-    lat_longs = get_lat_longs()
+    lat_longs = dumps(get_lat_longs())
 
     num_studies_ebi = len([k for k, v in viewitems(ebi_samples_prep)
                            if v >= 1])
@@ -207,13 +219,14 @@ def update_redis_stats():
     for k, sts in viewitems(studies):
         for s in sts:
             for a in s.artifacts():
-                for _, fp, dt in a.filepaths:
+                for x in a.filepaths:
                     try:
-                        s = stat(fp)
-                        stats.append((dt, s.st_size, strftime('%Y-%m',
-                                      localtime(s.st_ctime))))
+                        s = stat(x['fp'])
+                        stats.append(
+                            (x['fp_type'], s.st_size, strftime('%Y-%m',
+                             localtime(s.st_ctime))))
                     except OSError:
-                        missing_files.append(fp)
+                        missing_files.append(x['fp'])
 
     summary = {}
     all_dates = []
@@ -272,10 +285,10 @@ def update_redis_stats():
     plt.xlabel('Date')
     plt.ylabel('Storage space per data type')
 
-    plot = StringIO()
+    plot = BytesIO()
     plt.savefig(plot, format='png')
     plot.seek(0)
-    img = 'data:image/png;base64,' + quote(b64encode(plot.buf))
+    img = 'data:image/png;base64,' + quote(b64encode(plot.getbuffer()))
 
     time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
 
@@ -284,7 +297,7 @@ def update_redis_stats():
         ('number_studies', number_studies, r_client.hmset),
         ('number_of_samples', number_of_samples, r_client.hmset),
         ('num_users', num_users, r_client.set),
-        ('lat_longs', lat_longs, r_client.set),
+        ('lat_longs', (lat_longs), r_client.set),
         ('num_studies_ebi', num_studies_ebi, r_client.set),
         ('num_samples_ebi', num_samples_ebi, r_client.set),
         ('number_samples_ebi_prep', number_samples_ebi_prep, r_client.set),
@@ -318,12 +331,14 @@ def get_lat_longs():
             # latigute and longitude of all available studies. Note that
             # UNION in PostgreSQL automatically removes duplicates
             sql_query = """
-                SELECT CAST(sample_values->>'latitude' AS FLOAT),
+                SELECT {0}, CAST(sample_values->>'latitude' AS FLOAT),
                        CAST(sample_values->>'longitude' AS FLOAT)
-                FROM qiita.sample_%d
-                WHERE isnumeric(sample_values->>'latitude') AND
+                FROM qiita.sample_{0}
+                WHERE sample_values->>'latitude' != 'NaN' AND
+                      sample_values->>'longitude' != 'NaN' AND
+                      isnumeric(sample_values->>'latitude') AND
                       isnumeric(sample_values->>'longitude')"""
-            sql = [sql_query % s.id for s in studies]
+            sql = [sql_query.format(s.id) for s in studies]
             sql = ' UNION '.join(sql)
             qdb.sql_connection.TRN.add(sql)
 
@@ -356,64 +371,61 @@ def generate_biom_and_metadata_release(study_status='public'):
         sample_fp = relpath(s.sample_template.get_filepaths()[0][1], bdir)
 
         for a in s.artifacts(artifact_type='BIOM'):
-            if a.processing_parameters is None:
+            if a.processing_parameters is None or a.visibility != study_status:
                 continue
 
-            cmd_name = a.processing_parameters.command.name
+            merging_schemes, parent_softwares = a.merging_scheme
+            software = a.processing_parameters.command.software
+            software = '%s v%s' % (software.name, software.version)
 
-            # this loop is necessary as in theory an artifact can be
-            # generated from multiple prep info files
-            human_cmd = []
-            for p in a.parents:
-                pp = p.processing_parameters
-                # parent is a direct upload; for example per_sample_FASTQ in
-                # shotgun data
-                if pp is None:
-                    pp_cmd_name = ''
-                else:
-                    pp_cmd_name = pp.command.name
-                if pp_cmd_name == 'Trimming':
-                    human_cmd.append('%s @ %s' % (
-                        cmd_name, str(pp.values['length'])))
-                else:
-                    human_cmd.append('%s, %s' % (cmd_name, pp_cmd_name))
-            human_cmd = ', '.join(human_cmd)
-
-            for _, fp, fp_type in a.filepaths:
-                if fp_type != 'biom' or 'only-16s' in fp:
+            for x in a.filepaths:
+                if x['fp_type'] != 'biom' or 'only-16s' in x['fp']:
                     continue
-                fp = relpath(fp, bdir)
-                # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
-                #          human readable name)
+                fp = relpath(x['fp'], bdir)
                 for pt in a.prep_templates:
+                    categories = pt.categories()
+                    platform = ''
+                    target_gene = ''
+                    if 'platform' in categories:
+                        platform = ', '.join(
+                            set(pt.get_category('platform').values()))
+                    if 'target_gene' in categories:
+                        target_gene = ', '.join(
+                            set(pt.get_category('target_gene').values()))
                     for _, prep_fp in pt.get_filepaths():
                         if 'qiime' not in prep_fp:
                             break
                     prep_fp = relpath(prep_fp, bdir)
-                    data.append((fp, sample_fp, prep_fp, a.id, human_cmd))
+                    # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
+                    #          platform, target gene, merging schemes,
+                    #          artifact software/version,
+                    #          parent sofware/version)
+                    data.append((fp, sample_fp, prep_fp, a.id, platform,
+                                 target_gene, merging_schemes, software,
+                                 parent_softwares))
 
     # writing text and tgz file
     ts = datetime.now().strftime('%m%d%y-%H%M%S')
     tgz_dir = join(working_dir, 'releases')
-    if not exists(tgz_dir):
-        makedirs(tgz_dir)
+    create_nested_path(tgz_dir)
     tgz_name = join(tgz_dir, '%s-%s-building.tgz' % (portal, study_status))
     tgz_name_final = join(tgz_dir, '%s-%s.tgz' % (portal, study_status))
-    txt_hd = StringIO()
+    txt_lines = [
+        "biom fp\tsample fp\tprep fp\tqiita artifact id\tplatform\t"
+        "target gene\tmerging scheme\tartifact software\tparent software"]
     with topen(tgz_name, "w|gz") as tgz:
-        # writing header for txt
-        txt_hd.write(
-            "biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n")
-        for biom_fp, sample_fp, prep_fp, artifact_id, human_cmd in data:
-            txt_hd.write("%s\t%s\t%s\t%s\t%s\n" % (
-                biom_fp, sample_fp, prep_fp, artifact_id, human_cmd))
+        for biom_fp, sample_fp, prep_fp, aid, pform, tg, ms, asv, psv in data:
+            txt_lines.append("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (
+                biom_fp, sample_fp, prep_fp, aid, pform, tg, ms, asv, psv))
             tgz.add(join(bdir, biom_fp), arcname=biom_fp, recursive=False)
             tgz.add(join(bdir, sample_fp), arcname=sample_fp, recursive=False)
             tgz.add(join(bdir, prep_fp), arcname=prep_fp, recursive=False)
-
-        txt_hd.seek(0)
         info = TarInfo(name='%s-%s-%s.txt' % (portal, study_status, ts))
-        info.size = len(txt_hd.buf)
+        txt_hd = BytesIO()
+        txt_hd.write(bytes('\n'.join(txt_lines), 'ascii'))
+        txt_hd.seek(0)
+        info.size = len(txt_hd.read())
+        txt_hd.seek(0)
         tgz.addfile(tarinfo=info, fileobj=txt_hd)
 
     with open(tgz_name, "rb") as f:
@@ -429,6 +441,79 @@ def generate_biom_and_metadata_release(study_status='public'):
         ('time', time, r_client.set)]
     for k, v, f in vals:
         redis_key = '%s:release:%s:%s' % (portal, study_status, k)
+        # important to "flush" variables to avoid errors
+        r_client.delete(redis_key)
+        f(redis_key, v)
+
+
+def generate_plugin_releases():
+    """Generate releases for plugins
+    """
+    ARCHIVE = qdb.archive.Archive
+    qiita_config = ConfigurationManager()
+    working_dir = qiita_config.working_dir
+
+    commands = [c for s in qdb.software.Software.iter(active=True)
+                for c in s.commands if c.post_processing_cmd is not None]
+
+    tnow = datetime.now()
+    ts = tnow.strftime('%m%d%y-%H%M%S')
+    tgz_dir = join(working_dir, 'releases', 'archive')
+    create_nested_path(tgz_dir)
+    tgz_dir_release = join(tgz_dir, ts)
+    create_nested_path(tgz_dir_release)
+    for cmd in commands:
+        cmd_name = cmd.name
+        mschemes = [v for _, v in ARCHIVE.merging_schemes().items()
+                    if cmd_name in v]
+        for ms in mschemes:
+            ms_name = sub('[^0-9a-zA-Z]+', '', ms)
+            ms_fp = join(tgz_dir_release, ms_name)
+            create_nested_path(ms_fp)
+
+            pfp = join(ms_fp, 'archive.json')
+            archives = {k: loads(v)
+                        for k, v in ARCHIVE.retrieve_feature_values(
+                              archive_merging_scheme=ms).items()
+                        if v != ''}
+            with open(pfp, 'w') as f:
+                dump(archives, f)
+
+            # now let's run the post_processing_cmd
+            ppc = cmd.post_processing_cmd
+
+            # concatenate any other parameters into a string
+            params = ' '.join(["%s=%s" % (k, v) for k, v in
+                              ppc['script_params'].items()])
+            # append archives file and output dir parameters
+            params = ("%s --fp_archive=%s --output_dir=%s" % (
+                params, pfp, ms_fp))
+
+            ppc_cmd = "%s %s %s" % (
+                ppc['script_env'], ppc['script_path'], params)
+            p_out, p_err, rv = qdb.processing_job._system_call(ppc_cmd)
+            p_out = p_out.rstrip()
+            if rv != 0:
+                raise ValueError('Error %d: %s' % (rv, p_out))
+            p_out = loads(p_out)
+
+    # tgz-ing all files
+    tgz_name = join(tgz_dir, 'archive-%s-building.tgz' % ts)
+    tgz_name_final = join(tgz_dir, 'archive.tgz')
+    with topen(tgz_name, "w|gz") as tgz:
+        tgz.add(tgz_dir_release, arcname=basename(tgz_dir_release))
+    # getting the release md5
+    with open(tgz_name, "rb") as f:
+        md5sum = md5()
+        for c in iter(lambda: f.read(4096), b""):
+            md5sum.update(c)
+    rename(tgz_name, tgz_name_final)
+    vals = [
+        ('filepath', tgz_name_final[len(working_dir):], r_client.set),
+        ('md5sum', md5sum.hexdigest(), r_client.set),
+        ('time', tnow.strftime('%m-%d-%y %H:%M:%S'), r_client.set)]
+    for k, v, f in vals:
+        redis_key = 'release-archive:%s' % k
         # important to "flush" variables to avoid errors
         r_client.delete(redis_key)
         f(redis_key, v)

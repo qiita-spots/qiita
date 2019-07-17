@@ -92,6 +92,49 @@
 
   /*
    *
+   * Deletes a sample from the prep template
+   *
+   * @param prep_id the prep template id
+   *
+   * This function executes an AJAX call to remove the given sample from the
+   * prep information
+   *
+   */
+  function delete_prep_sample(prep_id) {
+    var sample_names = Array();
+    var message = '';
+    $('.prep-sample-delete:checkbox:checked').each(function(){
+      sample_names.push($(this).val());
+    });
+    if (sample_names.length == 0) {
+      alert('No samples selected');
+      return false;
+    }
+    if (sample_names.length > 10) {
+      message = sample_names.length + ' samples';
+    } else {
+      message = "'" + sample_names.join(', ') + "'";
+    }
+    if(confirm("Are you sure you want to delete " + message + "?")) {
+      sample_names = sample_names.join(',')
+      $.ajax({
+        url: '{% raw qiita_config.portal_dir %}/prep_template/',
+        type: 'PATCH',
+        data: {'op': 'remove', 'path': '/' + prep_id + '/1/samples/' + sample_names},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}} });
+          }
+        }
+      });
+    }
+  }
+
+  /*
+   *
    * Deletes a column from the prep template
    *
    * @param prep_id the prep template id
@@ -112,7 +155,7 @@
             bootstrapAlert(data.message, "danger");
           }
           else {
-            populate_main_div('/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}}, row_id: row_id });
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}}, row_id: row_id });
           }
         }
       });
@@ -331,8 +374,14 @@
       $('#new-prep-name').focus();
       $('#new-prep-name').select();
     });
-
   });
+
+  function toggleCheckboxes(element){
+    $('.prep-sample-delete').each(function(){
+      $(this).prop('checked', element.checked);
+    });
+  }
+
 </script>
 
 <!-- Prep template title and buttons -->
@@ -349,6 +398,13 @@
       {% if editable %}
         <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}
+      {% if prep_restrictions %}
+        <h5>
+          <div class="alert alert-warning" role="alert">
+            {{prep_restrictions}}
+          </div>
+        </h5>
+      {% end %}
     </h4>
   </div>
 </div>
@@ -356,11 +412,43 @@
 <div class="row">
   <div class="col-md-12">
     <ul class="nav nav-pills">
+      <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#sample-listing-tab-div">Sample Listing</a></li>
       <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
       <li style="border: 1px solid #428bca; border-radius: 5px" class="active"><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn">Processing</a></li>
     </ul>
 
     <div class="tab-content">
+      <div id="sample-listing-tab-div" class="tab-pane fade">
+        <div class="panel panel-default">
+          {% if not artifact_attached %}
+            <button class="btn btn-danger st-interactive" onclick="delete_prep_sample({{prep_id}});">
+                <span class="glyphicon glyphicon-trash"></span> Delete Selected
+            </button>
+          {% end %}
+          <div>
+            <table class="table">
+              <thead>
+                <tr>
+                  {% if not artifact_attached %}
+                    <th><input type="checkbox" onchange="toggleCheckboxes(this)"></th>
+                  {% end %}
+                  <th>Samples</th>
+                </tr>
+              </thead>
+              {% for sid in samples %}
+                <tr>
+                  {% if not artifact_attached %}
+                    <td>
+                      <input type="checkbox" class="prep-sample-delete" value="{{sid}}">
+                    </td>
+                  {% end %}
+                  <td>{{sid}}</td>
+                </tr>
+              {% end %}
+            </table>
+          </div>
+        </div>
+      </div>
       <div id="summary-tab-div" class="tab-pane fade">
         <b>Number of samples: </b>{{num_samples}}</br>
         <b>Number of columns: </b>{{num_columns}}</br>

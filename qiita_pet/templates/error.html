@@ -2,6 +2,7 @@
 {% autoescape None %}
 {% block content%}
     <h1 style="text-align:center">ERROR: CODE {{status_code}}!</h1>
+    <h2 style="text-align:center">{{error}}!</h2>
     <p style="text-align:center">The error has been logged and will be looked at.</p>
     <p style="text-align:center">Need help? Send us an <a href="mailto:qiita.help@gmail.com">email</a>.</p>
     {% if is_admin %}

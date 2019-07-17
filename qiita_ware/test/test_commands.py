@@ -66,25 +66,24 @@ class SSHTests(TestCase):
     def test_list_scp(self):
         read_file_list = list_remote('scp://localhost:'+self.remote_dir_path,
                                      self.test_ssh_key)
-        self.assertEqual(read_file_list, self.exp_files)
+        self.assertCountEqual(read_file_list, self.exp_files)
 
     def test_list_sftp(self):
         read_file_list = list_remote('sftp://localhost:'+self.remote_dir_path,
                                      self.test_ssh_key)
-        self.assertEqual(read_file_list, self.exp_files)
+        self.assertCountEqual(read_file_list, self.exp_files)
 
     def test_download_scp(self):
         download_remote('scp://localhost:'+self.remote_dir_path,
                         self.test_ssh_key, self.temp_local_dir)
         local_files = self._get_valid_files(self.temp_local_dir)
-        self.assertEqual(local_files, self.exp_files)
+        self.assertCountEqual(local_files, self.exp_files)
 
     def test_download_sftp(self):
-        print self.remote_dir_path, self.temp_local_dir
         download_remote('sftp://localhost:'+self.remote_dir_path,
                         self.test_ssh_key, self.temp_local_dir)
         local_files = self._get_valid_files(self.temp_local_dir)
-        self.assertEqual(local_files, self.exp_files)
+        self.assertCountEqual(local_files, self.exp_files)
 
 
 class CommandsTests(TestCase):
@@ -125,12 +124,9 @@ class CommandsTests(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 3,
-            "number_samples_promised": 3,
             "study_alias": "Test EBI",
             "study_description": "Study for testing EBI",
             "study_abstract": "Study for testing EBI",
-            "emp_person_id": StudyPerson(2),
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)
         }
@@ -159,21 +155,21 @@ class CommandsTests(TestCase):
             'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTC',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 1"},
             'Sample2': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTA',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 2"},
             'Sample3': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTT',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 3"},

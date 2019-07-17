@@ -4,7 +4,7 @@
 {% set sysmessage = r_client.get('sysmessage') %}
 {% set user = current_user %}
 {% set qiita_version, qiita_sha = get_qiita_version() %}
-{% set public_md5, _, public_timestamp = get_release_info() %}
+{% set biom_metadata_release, archive_release = get_release_info() %}
 
 {% set level = globals().get('level', '') %}
 {% if level not in {'danger', 'success', 'info', 'warning'} %}
@@ -13,7 +13,7 @@
 {% set message = globals().get('message', '') %}
 {% if sysmessage is not None %}
   {# since this is a systemwide message, allow regular messages as well #}
-  {% set message = sysmessage + "<br />" + str(message) %}
+  {% set message = sysmessage.decode('ascii') + "<br />" + str(message) %}
 {% end %}
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -254,7 +254,7 @@
                   processing_jobs_vue.update_processing_job_data();
                 },
                 error: function(object, status, error_msg) {
-                  bootstrapAlert("Error while hiding `" + jid + "` artifact visiblity: " + error_msg, "danger");
+                  bootstrapAlert("Error while hiding `" + jid + "` artifact visibility: " + error_msg, "danger");
                 }
               });
             }
@@ -454,7 +454,7 @@
             {% end %}
             <ul class="nav navbar-nav">
               <li>
-                <a href="{% raw qiita_config.portal_dir %}/redbiom/">redbiom</a>
+                <a href="/redbiom/">redbiom</a>
               </li>
             </ul>
             <ul class="nav navbar-nav">
@@ -490,12 +490,23 @@
                   <li>
                     <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
                   </li>
+                  <li role="separator" class="divider"></li>
                   <li>
                     <a type="button" data-toggle="modal" data-target=".qiita_pet_download_confirm">
                       Download public BIOM and metadata files
                       <small>
-                        <br/><b>MD5:</b> {{public_md5}}
-                        <br/><b>Last update:</b> {{public_timestamp}}
+                        <br/><b>MD5:</b> {{biom_metadata_release[0]}}
+                        <br/><b>Last update:</b> {{biom_metadata_release[2]}}
+                      </small>
+                    </a>
+                  </li>
+                  <li role="separator" class="divider"></li>
+                  <li>
+                    <a type="button" href="{% raw qiita_config.portal_dir %}/release/download/archive">
+                      BETA: Download Archive files (for example, deblur trees)
+                      <small>
+                        <br/><b>MD5:</b> {{archive_release[0]}}
+                        <br/><b>Last update:</b> {{archive_release[2]}}
                       </small>
                     </a>
                   </li>

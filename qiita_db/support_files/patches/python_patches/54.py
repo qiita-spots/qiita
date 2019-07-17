@@ -96,9 +96,9 @@ def create_non_rarefied_biom_artifact(analysis, biom_data, rarefied_table):
             # Get the filepath of the BIOM table from the artifact
             artifact = Artifact(a_id)
             biom_fp = None
-            for _, fp, fp_type in artifact.filepaths:
-                if fp_type == 'biom':
-                    biom_fp = fp
+            for x in artifact.filepaths:
+                if x['fp_type'] == 'biom':
+                    biom_fp = x['fp']
             # Note that we are sure that the biom table exists for sure, so
             # no need to check if biom_fp is undefined
             biom_table = load_table(biom_fp)
@@ -564,7 +564,7 @@ with TRN:
 # At this point we are ready to start transferring the data from the old
 # structures to the new structures. Overview of the procedure:
 # Step 1: Add initial set of artifacts up to rarefied table
-# Step 2: Transfer the "analisys jobs" to processing jobs and create
+# Step 2: Transfer the "analysis jobs" to processing jobs and create
 #         the analysis artifacts
 db_dir = get_db_files_base_dir()
 with TRN:
@@ -696,4 +696,4 @@ except Exception as e:
     errors.append("Error purging filepaths: %s" % str(e))
 
 if errors:
-    print "\n".join(errors)
+    print("\n".join(errors))

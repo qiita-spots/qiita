@@ -10,7 +10,7 @@
 from setuptools import setup
 from glob import glob
 
-__version__ = "0.2.0-dev"
+__version__ = "072019"
 
 
 classes = """
@@ -20,7 +20,7 @@ classes = """
     Topic :: Software Development :: Libraries :: Application Frameworks
     Topic :: Software Development :: Libraries :: Python Modules
     Programming Language :: Python
-    Programming Language :: Python :: 2.7
+    Programming Language :: Python :: 3.6
     Programming Language :: Python :: Implementation :: CPython
     Operating System :: POSIX :: Linux
     Operating System :: MacOS :: MacOS X
@@ -100,20 +100,18 @@ setup(name='qiita-spots',
               'support_files/doc/source/_static/*.png'
               ]},
       scripts=glob('scripts/*'),
-      extras_require={'test': ["nose >= 0.10.1", "pep8", 'mock']},
-      install_requires=['psycopg2 < 2.7', 'click >= 3.3', 'future',
-                        'bcrypt', 'pandas >= 0.17', 'numpy >= 1.7',
-                        'tornado==3.1.1', 'toredis', 'redis <= 2.10.6', 'six',
-                        'pyparsing', 'h5py >= 2.3.1', 'biom-format',
-                        'natsort', 'networkx < 2.0', 'humanize',
-                        'scikit-bio == 0.4.2', 'wtforms == 2.0.1', 'openpyxl',
-                        'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
-                        'gitpython', 'qiita-files', 'redbiom==0.3.0',
-                        'sphinx_rtd_theme', 'paramiko', 'scp'],
-      dependency_links=[
-        'https://github.com/qiita-spots/qiita-files/archive/master.zip#'
-        'egg=qiita-files-0.1.0-dev',
-        'https://github.com/biocore/redbiom/archive/0.3.0.zip#'
-        'egg=redbiom-0.3.0'],
+      # making sure that numpy is installed before biom
+      setup_requires=['numpy'],
+      install_requires=['psycopg2', 'click', 'future', 'bcrypt', 'pandas',
+                        'biom-format', 'tornado<6.0', 'toredis', 'redis',
+                        'scp', 'pyparsing', 'h5py',  'natsort', 'nose', 'pep8',
+                        'networkx', 'humanize', 'scikit-bio', 'wtforms',
+                        'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx', 'nltk',
+                        'gitpython', 'redbiom', 'pyzmq', 'sphinx_rtd_theme',
+                        'paramiko', 'seaborn',  'matplotlib', 'scipy', 'nose',
+                        'flake8', 'six', 'qiita-files @ https://github.com/'
+                        'qiita-spots/qiita-files/archive/master.zip', 'mock',
+                        'supervisor @ https://github.com/Supervisor/'
+                        'supervisor/archive/master.zip', 'joblib'],
       classifiers=classifiers
       )

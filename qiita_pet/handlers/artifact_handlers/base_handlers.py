@@ -8,6 +8,7 @@
 
 from os.path import basename, relpath
 from json import dumps
+from humanize import naturalsize
 
 from tornado.web import authenticated, StaticFileHandler
 
@@ -18,7 +19,7 @@ from qiita_pet.exceptions import QiitaHTTPError
 from qiita_db.artifact import Artifact
 from qiita_db.software import Command, Software, Parameters
 from qiita_db.processing_job import ProcessingJob
-from qiita_db.util import get_visibilities
+from qiita_db.util import get_visibilities, send_email
 
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
@@ -136,7 +137,7 @@ def artifact_summary_get_request(user, artifact_id):
         # If the artifact is part of a study, the buttons shown depend in
         # multiple factors (see each if statement for an explanation of those)
         if qiita_config.require_approval:
-            if visibility == 'sandbox':
+            if visibility == 'sandbox' and artifact.parents:
                 # The request approval button only appears if the artifact is
                 # sandboxed and the qiita_config specifies that the approval
                 # should be requested
@@ -174,9 +175,10 @@ def artifact_summary_get_request(user, artifact_id):
                         '<span class="glyphicon glyphicon-export"></span>'
                         ' Submit to VAMPS</a>' % artifact_id)
 
-    files = [(f_id, "%s (%s)" % (basename(fp), f_type.replace('_', ' ')))
-             for f_id, fp, f_type in artifact.filepaths
-             if f_type != 'directory']
+    files = [(x['fp_id'], "%s (%s)" % (basename(x['fp']),
+                                       x['fp_type'].replace('_', ' ')),
+              x['checksum'], naturalsize(x['fp_size']))
+             for x in artifact.filepaths if x['fp_type'] != 'directory']
 
     # TODO: https://github.com/biocore/qiita/issues/1724 Remove this hardcoded
     # values to actually get the information from the database once it stores
@@ -185,7 +187,9 @@ def artifact_summary_get_request(user, artifact_id):
                          'per_sample_FASTQ']:
         # If the artifact is one of the "raw" types, only the owner of the
         # study and users that has been shared with can see the files
-        if not artifact.study.has_access(user, no_public=True):
+        study = artifact.study
+        has_access = study.has_access(user, no_public=True)
+        if (not study.public_raw_download and not has_access):
             files = []
 
     proc_params = artifact.processing_parameters
@@ -197,7 +201,7 @@ def artifact_summary_get_request(user, artifact_id):
             'software': sw.name,
             'software_version': sw.version,
             'processing_parameters': proc_params.values,
-            'software_active': sw.active,
+            'command_active': cmd.active,
             'software_deprecated': sw.deprecated,
             }
     else:
@@ -324,19 +328,33 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
             if req_value not in get_visibilities():
                 raise QiitaHTTPError(400, 'Unknown visibility value: %s'
                                           % req_value)
-            # Set the approval to private if needs approval and admin
-            if req_value == 'private':
-                if not qiita_config.require_approval:
-                    artifact.visibility = 'private'
-                # Set the approval to private if approval not required
-                elif user.level == 'admin':
-                    artifact.visibility = 'private'
-                # Trying to set approval without admin privileges
-                else:
-                    raise QiitaHTTPError(403, 'User does not have permissions '
-                                              'to approve change')
-            else:
+
+            if (req_value == 'private' and qiita_config.require_approval
+                    and not user.level == 'admin'):
+                raise QiitaHTTPError(403, 'User does not have permissions '
+                                          'to approve change')
+
+            try:
                 artifact.visibility = req_value
+            except Exception as e:
+                raise QiitaHTTPError(403, str(e).replace('\n', '<br/>'))
+
+            if artifact.visibility == 'awaiting_approval':
+                email_to = 'qiita.help@gmail.com'
+                sid = artifact.study.id
+                subject = ('QIITA: Artifact %s awaiting_approval. Study %d, '
+                           'Prep %d' % (artifact_id, sid,
+                                        artifact.prep_templates[0].id))
+                message = ('%s requested approval. <a '
+                           'href="https://qiita.ucsd.edu/study/description/'
+                           '%d">Study %d</a>.' % (user.email, sid, sid))
+                try:
+                    send_email(email_to, subject, message)
+                except Exception:
+                    msg = ("Couldn't send email to admins, please email us "
+                           "directly to <a href='mailto:{0}'>{0}</a>.".format(
+                               email_to))
+                    raise QiitaHTTPError(400, msg)
         else:
             # We don't understand the attribute so return an error
             raise QiitaHTTPError(404, 'Attribute "%s" not found. Please, '

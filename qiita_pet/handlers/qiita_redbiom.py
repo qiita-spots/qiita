@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from requests import ConnectionError
-from future.utils import viewitems
 from collections import defaultdict
 import redbiom.summarize
 import redbiom.search
@@ -15,10 +14,10 @@ import redbiom._requests
 import redbiom.util
 import redbiom.fetch
 from tornado.gen import coroutine, Task
+from tornado.web import HTTPError
 
 from qiita_core.util import execute_as_transaction
 from qiita_db.util import generate_study_list_without_artifacts
-from qiita_db.study import Study
 
 from .base_handlers import BaseHandler
 
@@ -26,13 +25,17 @@ from .base_handlers import BaseHandler
 class RedbiomPublicSearch(BaseHandler):
     @execute_as_transaction
     def get(self, search):
+        # making sure that if someone from a portal forces entry to this URI
+        # we go to the main portal
+        if self.request.uri != '/redbiom/':
+            self.redirect('/redbiom/')
         self.render('redbiom.html')
 
     def _redbiom_metadata_search(self, query, contexts):
-        study_artifacts = defaultdict(list)
+        study_artifacts = defaultdict(lambda: defaultdict(list))
         message = ''
         try:
-            samples = redbiom.search.metadata_full(query, False)
+            redbiom_samples = redbiom.search.metadata_full(query, False)
         except ValueError:
             message = (
                 'Not a valid search: "%s", your query is too small '
@@ -43,13 +46,16 @@ class RedbiomPublicSearch(BaseHandler):
                 'check the search help for more information on the queries.'
                 % query)
         if not message:
-            study_samples = defaultdict(list)
-            for s in samples:
-                study_samples[s.split('.', 1)[0]].append(s)
-            for sid, samps in viewitems(study_samples):
-                study_artifacts[sid] = {
-                    a.id: samps for a in Study(sid).artifacts(
-                        artifact_type='BIOM')}
+            study_artifacts = defaultdict(lambda: defaultdict(list))
+            for ctx in contexts:
+                # redbiom.fetch.data_from_samples returns a biom, which we
+                # will ignore, and a dict
+                _, data = redbiom.fetch.data_from_samples(ctx, redbiom_samples)
+                for vals in data.values():
+                    for idx in vals:
+                        aid, sample_id = idx.split('_', 1)
+                        sid = sample_id.split('.', 1)[0]
+                        study_artifacts[sid][aid].append(sample_id)
 
         return message, study_artifacts
 
@@ -57,7 +63,7 @@ class RedbiomPublicSearch(BaseHandler):
         study_artifacts = defaultdict(lambda: defaultdict(list))
         query = [f for f in query.split(' ')]
         for ctx in contexts:
-            for idx in redbiom.util.ids_from(query, True, 'feature', ctx):
+            for idx in redbiom.util.ids_from(query, False, 'feature', ctx):
                 aid, sample_id = idx.split('_', 1)
                 sid = sample_id.split('.', 1)[0]
                 study_artifacts[sid][aid].append(sample_id)
@@ -70,8 +76,12 @@ class RedbiomPublicSearch(BaseHandler):
             # find the features with those taxonomies and then search
             # those features in the samples
             features = redbiom.fetch.taxon_descendents(ctx, query)
-            for idx in redbiom.util.ids_from(features, True, 'feature',
-                                             ctx):
+            # from empirical evidence we saw that when we return more than 600
+            # features we'll reach issue #2312 so avoiding saturating the
+            # workers and raise this error quickly
+            if len(features) > 600:
+                raise HTTPError(504)
+            for idx in redbiom.util.ids_from(features, False, 'feature', ctx):
                 aid, sample_id = idx.split('_', 1)
                 sid = sample_id.split('.', 1)[0]
                 study_artifacts[sid][aid].append(sample_id)

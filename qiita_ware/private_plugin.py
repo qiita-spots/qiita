@@ -10,11 +10,12 @@ from json import dumps, loads
 from sys import exc_info
 from time import sleep
 from os import remove
+from os.path import join
 import traceback
 import warnings
 
 import qiita_db as qdb
-from qiita_core.qiita_settings import r_client
+from qiita_core.qiita_settings import r_client, qiita_config
 from qiita_ware.commands import (download_remote, list_remote,
                                  submit_VAMPS, submit_EBI)
 from qiita_ware.metadata_pipeline import (
@@ -173,7 +174,7 @@ def create_sample_template(job):
             remove(fp)
 
             if warns:
-                msg = '\n'.join(set(str(w.message) for w in warns))
+                msg = '\n'.join(set(str(w) for w in warns))
                 r_client.set("sample_template_%s" % study.id,
                              dumps({'job_id': job.id, 'alert_type': 'warning',
                                     'alert_msg': msg}))
@@ -202,7 +203,7 @@ def update_sample_template(job):
             # Join all the warning messages into one. Note that this info
             # will be ignored if an exception is raised
             if warns:
-                msg = '\n'.join(set(str(w.message) for w in warns))
+                msg = '\n'.join(set(str(w) for w in warns))
                 r_client.set("sample_template_%s" % study_id,
                              dumps({'job_id': job.id, 'alert_type': 'warning',
                                     'alert_msg': msg}))
@@ -246,7 +247,7 @@ def update_prep_template(job):
             # Join all the warning messages into one. Note that this info
             # will be ignored if an exception is raised
             if warns:
-                msg = '\n'.join(set(str(w.message) for w in warns))
+                msg = '\n'.join(set(str(w) for w in warns))
                 r_client.set("prep_template_%s" % prep_id,
                              dumps({'job_id': job.id, 'alert_type': 'warning',
                                     'alert_msg': msg}))
@@ -303,19 +304,24 @@ def delete_study(job):
         study_id = job.parameters.values['study']
         study = qdb.study.Study(study_id)
 
-        for a in study.analyses():
-            artifacts = sorted(
-                a.artifacts, key=lambda a: a.id, reverse=True)
-            for artifact in artifacts:
-                qdb.artifact.Artifact.delete(artifact.id)
-            qdb.analysis.Analysis.delete(a.id)
-
-        artifacts = sorted(
-            study.artifacts(), key=lambda a: a.id, reverse=True)
-        for a in artifacts:
-            qdb.artifact.Artifact.delete(a.id)
+        # deleting analyses
+        for analysis in study.analyses():
+            # selecting roots of the analysis, can be multiple
+            artifacts = [a for a in analysis.artifacts
+                         if a.processing_parameters is None]
+            # deleting each of the processing graphs
+            for a in artifacts:
+                to_delete = list(a.descendants.nodes())
+                to_delete.reverse()
+                for td in to_delete:
+                    qdb.artifact.Artifact.delete(td.id)
+            qdb.analysis.Analysis.delete(analysis.id)
 
         for pt in study.prep_templates():
+            to_delete = list(pt.artifact.descendants.nodes())
+            to_delete.reverse()
+            for td in to_delete:
+                qdb.artifact.Artifact.delete(td.id)
             MT.prep_template.PrepTemplate.delete(pt.id)
 
         if MT.sample_template.SampleTemplate.exists(study_id):
@@ -370,12 +376,15 @@ def delete_analysis(job):
         analysis_id = job.parameters.values['analysis_id']
         analysis = qdb.analysis.Analysis(analysis_id)
 
-        artifacts = sorted(
-            analysis.artifacts, key=lambda a: a.id, reverse=True)
-
-        for artifact in artifacts:
-            qdb.artifact.Artifact.delete(artifact.id)
-
+        # selecting roots of the analysis, can be multiple
+        artifacts = [a for a in analysis.artifacts
+                     if a.processing_parameters is None]
+        # deleting each of the processing graphs
+        for a in artifacts:
+            to_delete = list(a.descendants.nodes())
+            to_delete.reverse()
+            for td in to_delete:
+                qdb.artifact.Artifact.delete(td.id)
         qdb.analysis.Analysis.delete(analysis_id)
 
         r_client.delete('analysis_delete_%d' % analysis_id)
@@ -428,6 +437,31 @@ def download_remote_files(job):
             job._set_status('success')
 
 
+def INSDC_download(job):
+    """Download an accession from INSDC
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        param_vals = job.parameters.values
+        download_source = param_vals['download_source']
+        accession = param_vals['accession']
+
+        if job.user.level != 'admin':
+            job._set_error('INSDC_download is only for administrators')
+
+        job_dir = join(qiita_config.working_dir, job.id)
+        qdb.util.create_nested_path(job_dir)
+
+        # code doing something
+        print(download_source, accession)
+
+        job._set_status('success')
+
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
              'submit_to_VAMPS': submit_to_VAMPS,
@@ -443,7 +477,8 @@ TASK_DICT = {'build_analysis_files': build_analysis_files,
              'complete_job': complete_job,
              'delete_analysis': delete_analysis,
              'list_remote_files': list_remote_files,
-             'download_remote_files': download_remote_files}
+             'download_remote_files': download_remote_files,
+             'INSDC_download': INSDC_download}
 
 
 def private_task(job_id):

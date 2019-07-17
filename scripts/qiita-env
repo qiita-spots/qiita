@@ -35,10 +35,6 @@ def env():
                                   '"password"')
 def make(load_ontologies, download_reference, add_demo_user):
     """Creates the database specified in config"""
-    # TODO: use password from config, see issue #363
-    # Or figure out a way to use
-    # http://click.pocoo.org/3/options/#password-prompts
-    # and have it work with Travis...
     qdb.environment_manager.make_environment(
         load_ontologies, download_reference, add_demo_user)
 
@@ -49,10 +45,6 @@ def make(load_ontologies, download_reference, add_demo_user):
               'dropping the production environment.')
 def drop(ask_for_confirmation):
     """Drops the database specified in config"""
-    # TODO: use password from config, see issue #363
-    # Or figure out a way to use
-    # http://click.pocoo.org/3/options/#password-prompts
-    # and have it work with Travis...
     try:
         qdb.environment_manager.drop_environment(ask_for_confirmation)
     except RuntimeError as e:

@@ -48,7 +48,17 @@
       },
       error: function(object, status, error_msg) {
         // Something went wrong, show the message
-        bootstrapAlert("Error changing artifact visiblity: " + error_msg, "danger");
+        var message = "Error changing artifact visibility: ";
+        var level = "danger";
+
+        if (error_msg.includes("Couldn't send email to admins")) {
+          message = "";
+          level = "warning";
+        } else if (error_msg.includes("Errors in your info files:")) {
+          message = "";
+        }
+        message = message + error_msg;
+        bootstrapAlert(message, level);
       }
     });
   }
@@ -111,10 +121,16 @@
 <div class='row'>
   <div class='col-md-12'>
     <h4>
-      {% if processing_info and not processing_info['software_active'] %}
-        <div class="alert alert-warning" role="alert">
-          Warning, the software that generated this artifact is deprecated as a new version is available.
-        </div>
+      {% if processing_info %}
+        {% if processing_info['software_deprecated'] %}
+          <div class="alert alert-danger" role="alert">
+            Danger, the software that generated this artifact was produced by a software version with a known bug and the results are wrong, please re-run with the newer version.
+          </div>
+        {% elif not processing_info['command_active'] %}
+          <div class="alert alert-warning" role="alert">
+            Warning, a newer version of the software that generated this artifact is available, which may or may not change results.
+          </div>
+        {% end %}
       {% end %}
       <i id='summary-title'>{{name}}</i><i> (ID: {{artifact_id}}) Visibility: {{visibility}}</i>
       {% if editable %}
@@ -170,8 +186,8 @@
       Show/Hide
     </button>
     <div id="available-files-div" class="collapse {% if len(files) <= 10 %} in {% end %}" style="padding: 10px 10px 10px 10px; border-radius: 10px; background: #EEE;">
-      {% for f_id, f_name in files %}
-        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a>
+      {% for f_id, f_name, cs, f_size in files %}
+        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a> (CRC32: {{format(int(cs), '08x')}}) {{f_size}}
         </br>
       {% end %}
     </div>
