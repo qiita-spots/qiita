@@ -1,7 +1,7 @@
 -- Jun 17 2019
 -- Drop the study_person table and connect tables related to study_person with qiita_user
 
-ALTER TABLE qiita.qiita_user ADD COLUMN test BIGSERIAL;
+-- ALTER TABLE qiita.qiita_user ADD COLUMN test BIGSERIAL;
 
 -- -- Drop the PK in qiita_user
 -- ALTER TABLE qiita.qiita_user DROP CONSTRAINT pk_user CASCADE;
