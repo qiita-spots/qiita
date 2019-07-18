@@ -33,4 +33,4 @@ UPDATE qiita.study_users SET user_id = qiita.qiita_user.qiita_user_id FROM qiita
 -- ALTER TABLE qiita.study_users DROP COLUMN email CASCADE;
 
 -- Drop table study_person
-DROP TABLE qiita.study_person CASCADE;
+-- DROP TABLE qiita.study_person CASCADE;
