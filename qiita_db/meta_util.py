@@ -224,7 +224,7 @@ def update_redis_stats():
                         s = stat(x['fp'])
                         stats.append(
                             (x['fp_type'], s.st_size, strftime('%Y-%m',
-                             localtime(s.st_ctime))))
+                             localtime(s.st_mtime))))
                     except OSError:
                         missing_files.append(x['fp'])
 
