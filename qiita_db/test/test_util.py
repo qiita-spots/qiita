@@ -1221,31 +1221,38 @@ class PurgeFilepathsTests(DBUtilTestsBase):
         # testing study filepath delete by inserting a new study sample info
         # and make sure it gets deleted
         mp_id, mp = qdb.util.get_mountpoint('templates')[0]
-        txt_id = qdb.util.convert_to_id('plain_text', "filepath_type")
+        txt_id = qdb.util.convert_to_id('sample_template', "filepath_type")
         self._create_files([[mp_id, txt_id, '100_filepath.txt']])
         qdb.util.purge_filepaths()
         fps_viewed = self._get_current_filepaths()
         self.assertCountEqual(fps_expected, fps_viewed)
 
-        # testing artifact filepath delete by filepaths for 2 different files
-        # and making sure they get deleted
+        # testing artifact [A], creating a folder with an artifact that
+        # doesn't exist
+        _, mp = qdb.util.get_mountpoint('per_sample_FASTQ')[0]
+        not_an_artifact_fp = join(mp, '10000')
+        mkdir(not_an_artifact_fp)
+        # now let's add test for [B] by creating 2 filepaths without a
+        # link to the artifacts tables
         mp_id, mp = qdb.util.get_mountpoint('BIOM')[0]
         biom_id = qdb.util.convert_to_id('biom', "filepath_type")
         self._create_files([
             [mp_id, txt_id, 'artifact_filepath.txt'],
             [mp_id, biom_id, 'my_biom.biom']
         ])
+        # adding files to tests
         qdb.util.purge_filepaths()
         fps_viewed = self._get_current_filepaths()
         self.assertCountEqual(fps_expected, fps_viewed)
+        self.assertFalse(exists(not_an_artifact_fp))
 
         # testing analysis filepath delete by filepaths for 2 different files
         # and making sure they get deleted
         mp_id, mp = qdb.util.get_mountpoint('analysis')[0]
         biom_id = qdb.util.convert_to_id('biom', "filepath_type")
         self._create_files([
-            [mp_id, txt_id, 'my_analysis_map.txt'],
-            [mp_id, biom_id, 'my_analysis_biom.biom']
+            [mp_id, txt_id, '10000_my_analysis_map.txt'],
+            [mp_id, biom_id, '10000_my_analysis_biom.biom']
         ])
         qdb.util.purge_filepaths()
         fps_viewed = self._get_current_filepaths()

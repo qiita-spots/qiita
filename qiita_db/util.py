@@ -763,17 +763,21 @@ def purge_filepaths(delete_files=True):
         #    keep when a user uploads a new file) and all info files from
         #    studies that no longer exist. We want to keep the old templates
         #    so we can recover them (this has happened before) but let's remove
-        #    those from deleted studies
-        pt_id = qdb.util.convert_to_id('plain_text', "filepath_type")
+        #    those from deleted studies. Note that we need to check for sample,
+        #    prep and qiime info files
+        st_id = qdb.util.convert_to_id('sample_template', "filepath_type")
+        pt_id = qdb.util.convert_to_id('prep_template', "filepath_type")
+        qt_id = qdb.util.convert_to_id('qiime_map', "filepath_type")
         sql = """SELECT filepath_id, filepath FROM qiita.filepath
-                 WHERE filepath_type_id = %s AND filepath ~ '^[0-9]' AND
+                 WHERE filepath_type_id IN %s AND filepath ~ '^[0-9]' AND
                     data_directory_id = %s AND filepath_id NOT IN (
                         SELECT filepath_id FROM qiita.prep_template_filepath
                         UNION
                         SELECT filepath_id FROM qiita.sample_template_filepath)
               """
         for mp_id, mp in get_mountpoint('templates'):
-            qdb.sql_connection.TRN.add(sql, [pt_id, mp_id])
+            qdb.sql_connection.TRN.add(
+                sql, [tuple([st_id, pt_id, qt_id]), mp_id])
             studies_exits = []
             studies_erased = []
             for fid, fp in qdb.sql_connection.TRN.execute_fetchindex():
@@ -797,12 +801,32 @@ def purge_filepaths(delete_files=True):
                     else:
                         studies_exits.append(study_id)
 
-        # 3. artifacts: we need to select all the filepaths that are not in
-        #    the artifact_filepath, this will return both all filepaths not
-        #    from artifacts and those that are not being used, thus, we need
-        #    to also not select those files that are not part of the artifacts
-        #    by ignoring those files paths not stored in a data_directory from
-        #    an artifact
+        # 3. artifacts: [A] the difficulty of deleting artifacts is that (1)
+        #    they live in different mounts, (2) as inidividual folders [the
+        #    artifact id], (3) and the artifact id within the database has
+        #    been lost. Thus, the easiest is to loop over the different data
+        #    directories (mounts), get the folder names (artifact ids), and
+        #    check if they exist; if they don't let's delete them. [B] As an
+        #    additional and final step, we need to purge these filepaths from
+        #    the DB.
+        #    [A]
+        main_sql = """SELECT data_directory_id FROM qiita.artifact_type at
+                        LEFT JOIN qiita.data_directory dd ON (
+                            dd.data_type = at.artifact_type)
+                        WHERE subdirectory = true"""
+        qdb.sql_connection.TRN.add(main_sql)
+        for mp_id in qdb.sql_connection.TRN.execute_fetchflatten():
+            mount = get_mountpoint_path_by_id(mp_id)
+            for fpath in listdir(mount):
+                full_fpath = join(mount, fpath)
+                if isdir(full_fpath):
+                    try:
+                        qdb.artifact.Artifact(int(fpath))
+                    except qdb.exceptions.QiitaDBUnknownIDError:
+                        files_to_remove.append([None, full_fpath])
+                    else:
+                        continue
+        #    [B]
         sql = """SELECT filepath_id FROM qiita.filepath
                  WHERE filepath_id not in (
                     SELECT filepath_id FROM qiita.artifact_filepath) AND
@@ -815,7 +839,10 @@ def purge_filepaths(delete_files=True):
         qdb.sql_connection.TRN.add(sql)
         for fid in qdb.sql_connection.TRN.execute_fetchflatten():
             fpath = qdb.util.get_filepath_information(fid)['fullpath']
-            files_to_remove.append([fid, fpath])
+            aid = fpath.split('/')[-2]
+            # making sure the artifact doesn't exist any more
+            if aid == 'None':
+                files_to_remove.append([fid, None])
 
         # 4. analysis: we need to select all the filepaths that are not in
         #    the analysis_filepath, this will return both all filepaths not
@@ -832,19 +859,26 @@ def purge_filepaths(delete_files=True):
               """
         qdb.sql_connection.TRN.add(sql)
         for fid in qdb.sql_connection.TRN.execute_fetchflatten():
-            fpath = qdb.util.get_filepath_information(fid)['fullpath']
-            files_to_remove.append([fid, fpath])
+            fdata = qdb.util.get_filepath_information(fid)
+            analysis_id = int(fdata['filepath'].split('_')[0])
+            # making sure the Analysis doesn't exist
+            if not qdb.analysis.Analysis.exists(analysis_id):
+                fpath = fdata['fullpath']
+                files_to_remove.append([fid, fpath])
 
-        # 5. working directory:
+        # 5. working directory: this is done internally in the Qiita system via
+        #    a cron job
 
         # Deleting the files!
         sql = "DELETE FROM qiita.filepath WHERE filepath_id = %s"
         for fid, fpath in files_to_remove:
             if delete_files:
-                qdb.sql_connection.TRN.add(sql, [fid])
-                _rm_files(qdb.sql_connection.TRN, fpath)
+                if fid is not None:
+                    qdb.sql_connection.TRN.add(sql, [fid])
+                if fpath is not None:
+                    _rm_files(qdb.sql_connection.TRN, fpath)
             else:
-                print(fpath)
+                print('%s: %s' % (fid, fpath))
 
         if delete_files:
             qdb.sql_connection.TRN.execute()
