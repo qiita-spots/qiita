@@ -47,4 +47,4 @@
 -- -- Drop table study_person
 -- -- DROP TABLE qiita.study_person CASCADE;
 
-INSERT INTO qiita.filetype (type) VALUES ('test');
+SELECT 42;
