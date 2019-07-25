@@ -184,12 +184,16 @@ def update_redis_stats():
     number_of_samples = {}
     ebi_samples_prep = {}
     num_samples_ebi = 0
+
     for k, sts in viewitems(studies):
         number_of_samples[k] = 0
         for s in sts:
             st = s.sample_template
             if st is not None:
-                number_of_samples[k] += len(list(st.keys()))
+                for p in s.prep_templates():
+                    if p.artifact is not None and p.artifact.visibility == k:
+                        n = len(list(p.keys()))
+                        number_of_samples[k] += n
 
             ebi_samples_prep_count = 0
             for pt in s.prep_templates():
