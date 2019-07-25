@@ -881,6 +881,11 @@ def purge_filepaths(delete_files=True):
                 print('%s: %s' % (fid, fpath))
 
         if delete_files:
+            # there is a chance that we will never enter the above
+            # "if fid is not None" statement so we will add an extra SQL
+            # command just to make sure that something gets executed
+            qdb.sql_connection.TRN.add("SELECT 42")
+
             qdb.sql_connection.TRN.execute()
 
 
