@@ -250,7 +250,7 @@ class DownloadRelease(BaseHandlerDownload):
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('X-Accel-Redirect',
-                        '/protected-working_dir/' + relpath)
+                        '/protected-working_dir/' + relpath.encode('ascii'))
         self.finish()
 
 
