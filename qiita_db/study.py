@@ -88,6 +88,24 @@ class Study(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBStatusError(
                 "Illegal operation on non-sandbox study!")
 
+    @classmethod
+    def iter(cls):
+        """Iterate over all studies in the database
+
+        Returns
+        -------
+        generator
+            Yields a `Study` object for each study in the database,
+            in order of ascending study_id
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT study_id FROM qiita.{}
+                     ORDER BY study_id""".format(cls._table)
+            qdb.sql_connection.TRN.add(sql)
+
+            for id_ in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield Study(id_)
+
     @property
     def status(self):
         r"""The status is inferred by the status of its artifacts"""

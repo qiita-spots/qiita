@@ -136,6 +136,7 @@
       <tr>
         <th>Studies</th>
         <th>Samples</th>
+        <th>Samples per data type</th>
         <th>Users</th>
         <th>Jobs</th>
       </tr>
@@ -158,6 +159,11 @@
           {% end %}
           {% if number_samples_ebi_prep and number_samples_ebi_prep is not None %}
             <i>submitted to EBI (prep)</i>: {{ "{:,}".format(int(number_samples_ebi_prep)) }}
+          {% end %}
+        </td>
+        <td>
+          {% for k in per_data_type_stats %}
+            <i>{{k}}</i>: {{ "{:,}".format(int(number_of_samples[k])) }} <br/>
           {% end %}
         </td>
 
