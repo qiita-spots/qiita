@@ -33,7 +33,7 @@ from base64 import b64encode
 from urllib.parse import quote
 from io import BytesIO
 from datetime import datetime
-from collections import defaultdict
+from collections import defaultdict, Counter
 from tarfile import open as topen, TarInfo
 from hashlib import md5
 from re import sub
@@ -184,31 +184,30 @@ def update_redis_stats():
     number_samples_ebi_prep = 0
     stats = []
     missing_files = []
-    per_data_type_stats = defaultdict(lambda: 0)
+    per_data_type_stats = Counter()
     for study in STUDY.iter():
         st = study.sample_template
         if st is None:
-            number_studies['sandbox'] += 1
             continue
 
         # counting samples submitted to EBI-ENA
-        len_samples_ebi = len([
-            True for esa in st.ebi_sample_accessions.values()
-            if esa is not None])
+        len_samples_ebi = sum([esa is not None
+                               for esa in st.ebi_sample_accessions.values()])
         if len_samples_ebi != 0:
             num_studies_ebi += 1
             num_samples_ebi += len_samples_ebi
 
-        samples = set(st.keys())
         samples_status = defaultdict(set)
         for pt in study.prep_templates():
             pt_samples = list(pt.keys())
-            per_data_type_stats[pt.data_type()] += len(pt_samples)
-            samples_status[pt.status].update(pt_samples)
+            pt_status = pt.status
+            if pt_status == 'public':
+                per_data_type_stats[pt.data_type()] += len(pt_samples)
+            samples_status[pt_status].update(pt_samples)
             # counting experiments (samples in preps) submitted to EBI-ENA
-            number_samples_ebi_prep += len(
-                [True for esa in pt.ebi_experiment_accessions.values()
-                 if esa is not None])
+            number_samples_ebi_prep += sum([
+                esa is not None
+                for esa in pt.ebi_experiment_accessions.values()])
 
         # counting studies
         if 'public' in samples_status:
@@ -222,22 +221,22 @@ def update_redis_stats():
         # the block above but I decided to split it in 2 for clarity
         if 'public' in samples_status:
             number_of_samples['public'] += len(samples_status['public'])
-            samples = samples - samples_status['public']
         if 'private' in samples_status:
             number_of_samples['private'] += len(samples_status['private'])
-            samples = samples - samples_status['private']
-        number_of_samples['sandbox'] += len(samples)
+        if 'sandbox' in samples_status:
+            number_of_samples['sandbox'] += len(samples_status['sandbox'])
 
         # processing filepaths
         for artifact in study.artifacts():
             for adata in artifact.filepaths:
                 try:
                     s = stat(adata['fp'])
+                except OSError:
+                    missing_files.append(adata['fp'])
+                else:
                     stats.append(
                         (adata['fp_type'], s.st_size, strftime('%Y-%m',
                          localtime(s.st_mtime))))
-                except OSError:
-                    missing_files.append(adata['fp'])
 
     num_users = qdb.util.get_count('qiita.qiita_user')
     num_processing_jobs = qdb.util.get_count('qiita.processing_job')
@@ -248,9 +247,9 @@ def update_redis_stats():
     all_dates = []
     # these are some filetypes that are too small to plot alone so we'll merge
     # in other
-    group_other = ['html_summary', 'tgz', 'directory', 'raw_fasta', 'log',
+    group_other = {'html_summary', 'tgz', 'directory', 'raw_fasta', 'log',
                    'biom', 'raw_sff', 'raw_qual', 'qza', 'html_summary_dir',
-                   'qza', 'plain_text', 'raw_barcodes']
+                   'qza', 'plain_text', 'raw_barcodes'}
     for ft, size, ym in stats:
         if ft in group_other:
             ft = 'other'
@@ -312,10 +311,14 @@ def update_redis_stats():
     time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
 
     portal = qiita_config.portal
+    # making sure per_data_type_stats has some data so hmset doesn't fail
+    if per_data_type_stats == {}:
+        per_data_type_stats['No data'] = 0
+
     vals = [
         ('number_studies', number_studies, r_client.hmset),
         ('number_of_samples', number_of_samples, r_client.hmset),
-        ('per_data_type_stats', per_data_type_stats, r_client.hmset),
+        ('per_data_type_stats', dict(per_data_type_stats), r_client.hmset),
         ('num_users', num_users, r_client.set),
         ('lat_longs', (lat_longs), r_client.set),
         ('num_studies_ebi', num_studies_ebi, r_client.set),

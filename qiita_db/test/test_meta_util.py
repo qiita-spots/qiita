@@ -255,7 +255,7 @@ class MetaUtilTests(TestCase):
                                 b'private': b'1'}, r_client.hgetall),
             ('number_of_samples', {b'sandbox': b'0', b'public': b'0',
                                    b'private': b'27'}, r_client.hgetall),
-            ('per_data_type_stats', {b'18S': b'54'}, r_client.hgetall)]
+            ('per_data_type_stats', {b'No data': b'0'}, r_client.hgetall)]
         for k, exp, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
             self.assertDictEqual(f(redis_key), exp)

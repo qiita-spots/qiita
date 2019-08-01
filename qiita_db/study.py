@@ -103,8 +103,10 @@ class Study(qdb.base.QiitaObject):
                      ORDER BY study_id""".format(cls._table)
             qdb.sql_connection.TRN.add(sql)
 
-            for id_ in qdb.sql_connection.TRN.execute_fetchflatten():
-                yield Study(id_)
+            ids = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        for id_ in ids:
+            yield Study(id_)
 
     @property
     def status(self):
