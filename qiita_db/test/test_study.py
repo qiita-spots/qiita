@@ -476,6 +476,11 @@ class TestStudy(TestCase):
                 [new.id])
             obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, [[1, new.id]])
+
+        # testing Study.iter()
+        self.assertCountEqual(list(qdb.study.Study.iter()),
+                              [qdb.study.Study(1), new])
+
         qdb.study.Study.delete(new.id)
 
     def test_create_study_all_data(self):
@@ -521,6 +526,11 @@ class TestStudy(TestCase):
         self.assertEqual(obs._portals, ['QIITA'])
         self.assertEqual(obs.ebi_study_accession, None)
         self.assertEqual(obs.ebi_submission_status, "not submitted")
+
+        # testing Study.iter()
+        self.assertCountEqual(list(qdb.study.Study.iter()),
+                              [qdb.study.Study(1), obs])
+
         qdb.study.Study.delete(obs.id)
 
     def test_create_missing_required(self):
