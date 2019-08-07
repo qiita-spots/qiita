@@ -10,9 +10,9 @@ These new technologies are generating vast amounts of data, even from a single
 study or sample, leading to challenges in storage, representation, analysis,
 and integration of the disparate data types. Qiita was designed to allow users
 address these new challenges by keeping track of multiple studies with multiple
-‘omics data. Additionally, Qiita is capable of supporting multiple analytical
+'omics data. Additionally, Qiita is capable of supporting multiple analytical
 pipelines through a 3rd-party plugin system, allowing the user to have a single
-entry point for all their analyses. Qiita’s main site provides database and
+entry point for all their analyses. Qiita's main site provides database and
 compute resources to the global community, alleviating the technical burdens,
 such as familiarity with the command line or access to compute power, that are
 typically limiting for researchers studying microbial ecology.
@@ -76,7 +76,7 @@ future.
 * Creation of a REST API to query and access the data hosted by Qiita.
 * Improved analysis pipeline for target gene datasets.
 * Crowd-sourced metadata curation of existing studies: improve the metadata of
-  existing studies by submitting “fix proposals” to the authors of the study.
+  existing studies by submitting a fix proposals to the authors of the study.
 
 
 .. |Build Status| image:: https://travis-ci.org/biocore/qiita.png?branch=master
