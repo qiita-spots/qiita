@@ -230,11 +230,15 @@ class ConfigurationManager(object):
         if not self.key_file:
             self.key_file = join(install_dir, 'qiita_core', 'support_files',
                                  'server.key')
+
     def _get_oauth2(self, config):
         """Get the configuration of the oauth2 section"""
-        self.globus_client_key = config.get('oauth2', 'GLOBUS_OAUTH2_CLIENT_KEY')
-        self.globus_client_secret = config.get('oauth2', 'GLOBUS_OAUTH2_CLIENT_SECRET')
-        self.globus_redirect_uri = config.get('oauth2', 'GLOBUS_OAUTH2_REDIRECT_URI')
+        self.globus_client_key = config.get('oauth2',
+                                            'GLOBUS_OAUTH2_CLIENT_KEY')
+        self.globus_client_secret = config.get('oauth2',
+                                               'GLOBUS_OAUTH2_CLIENT_SECRET')
+        self.globus_redirect_uri = config.get('oauth2',
+                                              'GLOBUS_OAUTH2_REDIRECT_URI')
         self.globus_scope = config.get('oauth2', 'GLOBUS_OAUTH2_SCOPE')
 
     def _get_torque(self, config):

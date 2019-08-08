@@ -184,12 +184,17 @@ class GlobusOAuth2LoginHandler(BaseHandler, GlobusOAuth2Mixin):
         self.authorize_redirect(
             redirect_uri=qiita_config.globus_redirect_uri,
             client_id=qiita_config.globus_client_key,
-            scope=["openid", "profile", "email", "urn:globus:auth:scope:transfer.api.globus.org:all"],
+            scope=["openid",
+                   "profile",
+                   "email",
+                   "urn:globus:auth:scope:transfer.api.globus.org:all"],
             response_type="code",
             extra_params={"access_type": "offline"})
 
-    # Process a redirect from Globus Auth, exchange the code to
-    # access/refresh tokens,and get userinfo
+    """
+    Process a redirect from Globus Auth, exchange the code to
+    access/refresh tokens,and get userinfo
+    """
     async def get(self):
         if self.get_argument("code", False):
             nextpage = self.get_argument("next", None)
@@ -217,15 +222,15 @@ class GlobusOAuth2LoginHandler(BaseHandler, GlobusOAuth2Mixin):
                 #"email": user_info.get("email")
             }
             try:
-                created = User.create(username, password, info)
+                User.create(username, password, info)
             except QiitaDBDuplicateError:
                 pass
             # Set current  user
             self.set_current_user(username)
 
             # Update tokens
-            #self.set_secure_cookie("access_token", tokens["access_token"])
-            #self.set_secure_cookie("refresh_token", tokens["refresh_token"])
+            self.set_secure_cookie("access_token", tokens["access_token"])
+            self.set_secure_cookie("refresh_token", tokens["refresh_token"])
 
             self.redirect(nextpage)
 

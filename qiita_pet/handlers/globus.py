@@ -3,8 +3,7 @@ import urllib.parse as urllib_parse
 from tornado import escape
 from tornado.concurrent import future_set_result_unless_cancelled
 from tornado.stack_context import wrap
-from tornado.auth import OAuth2Mixin
-from tornado.auth import _auth_return_future
+from tornado.auth import (AuthError, OAuth2Mixin, _auth_return_future)
 
 
 class GlobusOAuth2Mixin(OAuth2Mixin):
@@ -23,11 +22,13 @@ class GlobusOAuth2Mixin(OAuth2Mixin):
             "client_secret": secret,
             "grant_type": "authorization_code"
         })
-        fut = http.fetch(self._OAUTH_ACCESS_TOKEN_URL,
-                         method="POST",
-                         headers={"Content-Type": "application/x-www-form-urlencoded"},
-                         body=body)
-        fut.add_done_callback(wrap(functools.partial(self._on_access_token, callback)))
+        fut = http.fetch(
+            self._OAUTH_ACCESS_TOKEN_URL,
+            method="POST",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            body=body)
+        fut.add_done_callback(wrap(functools.partial(self._on_access_token,
+                                                     callback)))
 
     def _on_access_token(self, future, response_fut):
         """Callback function for the exchange to the access token."""

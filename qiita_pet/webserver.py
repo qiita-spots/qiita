@@ -20,7 +20,8 @@ from qiita_core.util import is_test_environment
 from qiita_pet.handlers.base_handlers import (
     MainHandler, NoPageHandler, IFrame)
 from qiita_pet.handlers.auth_handlers import (
-    AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler, GlobusOAuth2LoginHandler)
+    AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler,
+    GlobusOAuth2LoginHandler)
 from qiita_pet.handlers.user_handlers import (
     ChangeForgotPasswordHandler, ForgotPasswordHandler, UserProfileHandler,
     UserMessagesHander, UserJobs)
