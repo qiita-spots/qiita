@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import secrets
 from tornado.escape import url_escape, json_encode
 
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -214,12 +215,10 @@ class GlobusOAuth2LoginHandler(BaseHandler, GlobusOAuth2Mixin):
 
             # Check if the user exists. If it does not, create the user
             username = user_info.get("preferred_username")
-            password = 'RviwFvie83!#'
+            password = secrets.token_urlsafe(16)
             info = {
-                # "sub": user_info.get("sub"),
                 "name": user_info.get("name"),
                 "affiliation": user_info.get("organization")
-                # "email": user_info.get("email")
             }
             try:
                 User.create(username, password, info)
