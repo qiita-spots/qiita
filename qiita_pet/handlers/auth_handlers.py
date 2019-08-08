@@ -9,6 +9,7 @@
 from tornado.escape import url_escape, json_encode
 
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.handlers.globus import GlobusOAuth2Mixin
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.util import execute_as_transaction
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
@@ -175,3 +176,61 @@ class AuthLogoutHandler(BaseHandler):
     def get(self):
         self.clear_cookie("user")
         self.redirect("%s/" % qiita_config.portal_dir)
+
+
+class GlobusOAuth2LoginHandler(BaseHandler, GlobusOAuth2Mixin):
+    # Redirect to Globus Auth
+    def post(self):
+        self.authorize_redirect(
+            redirect_uri=qiita_config.globus_redirect_uri,
+            client_id=qiita_config.globus_client_key,
+            scope=["openid", "profile", "email", "urn:globus:auth:scope:transfer.api.globus.org:all"],
+            response_type="code",
+            extra_params={"access_type": "offline"})
+
+    # Process a redirect from Globus Auth, exchange the code to
+    # access/refresh tokens,and get userinfo
+    async def get(self):
+        if self.get_argument("code", False):
+            nextpage = self.get_argument("next", None)
+            if nextpage is None:
+                if "auth/" not in self.request.headers["Referer"]:
+                    nextpage = self.request.headers["Referer"]
+                else:
+                    nextpage = "%s/" % qiita_config.portal.portal_dir
+            # Exchange the code to access/refresh tokens
+            tokens = await self.get_tokens(
+                key=qiita_config.globus_client_key,
+                secret=qiita_config.globus_client_secret,
+                redirect_uri=qiita_config.globus_redirect_uri,
+                code=self.get_argument("code"))
+            # Get userinfo from Globus Auth
+            user_info = await self.get_user_info(tokens["access_token"])
+
+            # Check if the user exists. If it does not, create the user
+            username = user_info.get("preferred_username")
+            password = 'RviwFvie83!#'
+            info = {
+                #"sub": user_info.get("sub"),
+                "name": user_info.get("name"),
+                "affiliation": user_info.get("organization")
+                #"email": user_info.get("email")
+            }
+            try:
+                created = User.create(username, password, info)
+            except QiitaDBDuplicateError:
+                pass
+            # Set current  user
+            self.set_current_user(username)
+
+            # Update tokens
+            #self.set_secure_cookie("access_token", tokens["access_token"])
+            #self.set_secure_cookie("refresh_token", tokens["refresh_token"])
+
+            self.redirect(nextpage)
+
+    def set_current_user(self, user):
+        if user:
+            self.set_secure_cookie("user", json_encode(user))
+        else:
+            self.clear_cookie("user")

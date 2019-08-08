@@ -439,17 +439,13 @@
                 <a href="{% raw qiita_config.portal_dir %}/auth/forgot/">Forgot Password</a>
               </li>
             </ul>
+            <!--
             <form action="{% raw qiita_config.portal_dir %}/auth/create/" class="navbar-form navbar-right">
               <input type="submit" value="Sign up" class="btn btn-info">
             </form>
-            <form class="navbar-form navbar-right" role="form" action="{% raw qiita_config.portal_dir %}/auth/login/" method="post">
-              <div class="form-group">
-                <input tabindex="1" type="text" id="username" name="username" placeholder="Email" class="form-control">
-              </div>
-              <div class="form-group">
-                <input tabindex="2" type="password" id="password" name="password" placeholder="Password" class="form-control">
-              </div>
-              <button tabindex="3" type="submit" class="btn btn-success">Sign in</button>
+            -->
+            <form class="navbar-form navbar-right" role="form" action="{% raw qiita_config.portal_dir %}/auth/globus/" method="post">
+              <button tabindex="3" type="submit" class="btn btn-success">Sign in with Globus</button>
             </form>
             {% end %}
             <ul class="nav navbar-nav">
