@@ -56,7 +56,8 @@ class GlobusOAuth2Mixin(OAuth2Mixin):
         callback = wrap(functools.partial(self._on_oauth2_request, callback))
         http = self.get_auth_http_client()
         if post_args is not None:
-            fut = http.fetch(url, method="POST", headers=headers, body=urllib_parse.urlencode(post_args))
+            fut = http.fetch(url, method="POST", headers=headers,
+                             body=urllib_parse.urlencode(post_args))
         else:
             fut = http.fetch(url, headers=headers)
         fut.add_done_callback(callback)

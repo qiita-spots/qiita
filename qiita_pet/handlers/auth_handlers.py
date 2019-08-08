@@ -216,10 +216,10 @@ class GlobusOAuth2LoginHandler(BaseHandler, GlobusOAuth2Mixin):
             username = user_info.get("preferred_username")
             password = 'RviwFvie83!#'
             info = {
-                #"sub": user_info.get("sub"),
+                # "sub": user_info.get("sub"),
                 "name": user_info.get("name"),
                 "affiliation": user_info.get("organization")
-                #"email": user_info.get("email")
+                # "email": user_info.get("email")
             }
             try:
                 User.create(username, password, info)
