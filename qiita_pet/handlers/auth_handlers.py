@@ -180,7 +180,7 @@ class AuthLogoutHandler(BaseHandler):
 
 
 class GlobusOAuth2LoginHandler(BaseHandler, GlobusOAuth2Mixin):
-    # Redirect to Globus Auth
+    """Globus Auth OAuth2 authentication handler"""
     def post(self):
         self.authorize_redirect(
             redirect_uri=qiita_config.globus_redirect_uri,
@@ -192,25 +192,17 @@ class GlobusOAuth2LoginHandler(BaseHandler, GlobusOAuth2Mixin):
             response_type="code",
             extra_params={"access_type": "offline"})
 
-    """
-    Process a redirect from Globus Auth, exchange the code to
-    access/refresh tokens,and get userinfo
-    """
     async def get(self):
         if self.get_argument("code", False):
             nextpage = self.get_argument("next", None)
             if nextpage is None:
                 nextpage = "%s/" % qiita_config.portal_dir
-            # Exchange the code to access/refresh tokens
             tokens = await self.get_tokens(
                 key=qiita_config.globus_client_key,
                 secret=qiita_config.globus_client_secret,
                 redirect_uri=qiita_config.globus_redirect_uri,
                 code=self.get_argument("code"))
-            # Get userinfo from Globus Auth
             user_info = await self.get_user_info(tokens["access_token"])
-
-            # Check if the user exists. If it does not, create the user
             username = user_info.get("preferred_username")
             password = secrets.token_urlsafe(16)
             info = {
@@ -221,13 +213,9 @@ class GlobusOAuth2LoginHandler(BaseHandler, GlobusOAuth2Mixin):
                 User.create(username, password, info)
             except QiitaDBDuplicateError:
                 pass
-            # Set current  user
             self.set_current_user(username)
-
-            # Update tokens
             self.set_secure_cookie("access_token", tokens["access_token"])
             self.set_secure_cookie("refresh_token", tokens["refresh_token"])
-
             self.redirect(nextpage)
 
     def set_current_user(self, user):
