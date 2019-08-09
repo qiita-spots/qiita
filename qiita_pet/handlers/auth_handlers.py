@@ -200,10 +200,7 @@ class GlobusOAuth2LoginHandler(BaseHandler, GlobusOAuth2Mixin):
         if self.get_argument("code", False):
             nextpage = self.get_argument("next", None)
             if nextpage is None:
-                if "auth/" not in self.request.headers["Referer"]:
-                    nextpage = self.request.headers["Referer"]
-                else:
-                    nextpage = "%s/" % qiita_config.portal.portal_dir
+                nextpage = "%s/" % qiita_config.portal_dir
             # Exchange the code to access/refresh tokens
             tokens = await self.get_tokens(
                 key=qiita_config.globus_client_key,
