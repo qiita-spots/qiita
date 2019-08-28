@@ -310,6 +310,14 @@ def update_redis_stats():
         r_client.delete(redis_key)
         f(redis_key, v)
 
+    # preparing vals to insert into DB
+    vals = dumps(dict([x[:-1] for x in vals]))
+    with qdb.sql_connection.TRN:
+        sql = """INSERT INTO qiita.stats_daily (stats, stats_timestamp)
+                 VALUES (%s, NOW())"""
+        qdb.sql_connection.TRN.add(sql, [vals])
+        qdb.sql_connection.TRN.execute()
+
     return missing_files
 
 

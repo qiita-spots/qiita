@@ -1368,6 +1368,11 @@
 				<column name="software_type_id" />
 			</index>
 		</table>
+		<table name="stats_daily" >
+			<comment>stores the daily stats</comment>
+			<column name="stats" type="varchar" jt="12" mandatory="y" />
+			<column name="stats_timestamp" type="timestamp" jt="93" mandatory="y" />
+		</table>
 		<table name="study" >
 			<column name="study_id" type="bigserial" jt="-5" mandatory="y" >
 				<comment><![CDATA[Unique name for study]]></comment>
@@ -1750,6 +1755,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="filepath" color="c0d4f3" x="630" y="795" />
 		<entity schema="qiita" name="study" color="d0def5" x="1785" y="240" />
 		<entity schema="qiita" name="restrictions" color="b2cdf7" x="1530" y="360" />
+		<entity schema="qiita" name="stats_daily" color="b2cdf7" x="2490" y="330" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1854,6 +1860,9 @@ Controlled Vocabulary]]></comment>
 		<group name="Group_archive" color="9999ff" >
 			<entity schema="qiita" name="archive_feature_value" />
 			<entity schema="qiita" name="archive_merging_scheme" />
+		</group>
+		<group name="Group_stats" color="ffcccc" >
+			<entity schema="qiita" name="stats_daily" />
 		</group>
 		<script name="Sql" id="SQL5888335" confirmed="y" >
 			<string><![CDATA[CREATE TABLE oauth_software (
