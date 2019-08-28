@@ -1,0 +1,65 @@
+{% extends sitebase.html %}
+
+{% block head %}
+<script type="text/javascript">
+  $(document).ready(function() {
+      $('#artifacts-table').dataTable({"caption": "Artifacts", "order": [[ 1, "asc" ]]});
+  });
+</script>
+{% end %}
+
+{% block content %}
+
+<div class="col-md-12">
+  {% if user is not None %}
+    <h2><a href="{% raw qiita_config.portal_dir %}/study/description/{{study_info['study_id']}}">{{study_info['study_title']}} - ID {{study_info['study_id']}}</a></h2>
+  {% else %}
+    <h2>{{study_info['study_title']}} - ID {{study_info['study_id']}}</h2>
+  {% end %}
+
+  <table border="0">
+    <tr>
+      <td valign="top">
+        <b>Alias:</b> {{study_info['study_alias']}}<br />
+        <b>Abstract:</b> {{study_info['study_abstract']}}<br />
+        <b>Description:</b> {{study_info['study_description']}}<br />
+        <b>Owner:</b> {{study_info['owner']}}<br />
+        <b>Publications:</b> {% raw study_info['publications'] %}<br />
+        <b>PI:</b> {% raw study_info['principal_investigator'] %}<br />
+        <b>EBI:</b> {% raw study_info['ebi_study_accession'] %}<br />
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<div class="col-md-12">
+  <hr/>
+  <table id='artifacts-table' class="display table-bordered table-hover">
+    <caption>Artifacts</caption>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Data Type</th>
+        <th>Platform</th>
+        <th>Target Gene</th>
+        <th>Target Subfragment</th>
+        <th>Algorithm</th>
+      </tr>
+    </thead>
+    {% for ainfo in artifacts_info %}
+      {% if not ainfo['deprecated'] and ainfo['active'] %}
+        <tr>
+          <td>{{ainfo['artifact_id']}}</td>
+          <td>{{ainfo['data_type']}}</td>
+          <td>{{ainfo['platform']}}</td>
+          <td>{{ainfo['target_gene']}}</td>
+          <td>{{','.join(ainfo['target_subfragment'])}}</td>
+          <td>{{ainfo['algorithm']}}</td>
+        </tr>
+      {% end %}
+    {% end %}
+  </table>
+</div>
+
+{% end %}
