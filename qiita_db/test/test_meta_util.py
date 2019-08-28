@@ -246,6 +246,16 @@ class MetaUtilTests(TestCase):
         qdb.study.Study.delete(study.id)
 
     def test_update_redis_stats(self):
+        # helper function to get the values in the stats_daily table
+        def _get_daily_stats():
+            with qdb.sql_connection.TRN:
+                qdb.sql_connection.TRN.add('SELECT * FROM qiita.stats_daily')
+                return qdb.sql_connection.TRN.execute_fetchindex()
+
+        # checking empty status of stats in DB
+        self.assertEqual([], _get_daily_stats())
+
+        # generate daily stats
         qdb.meta_util.update_redis_stats()
 
         portal = qiita_config.portal
@@ -271,9 +281,27 @@ class MetaUtilTests(TestCase):
             # ('img', r_client.get),
             # ('time', r_client.get)
         ]
+        # checking empty status of stats in DB
+        db_stats = _get_daily_stats()
+        # there should be only one set of values
+        self.assertEqual(1, len(db_stats))
+        db_stats = dict(db_stats[0])
+
         for k, exp, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
+            # checking redis values
             self.assertEqual(f(redis_key), exp)
+            # checking DB values; note that redis stores all values as bytes,
+            # thus we have to convert what's in the DB to bytes
+            self.assertEqual(
+                f(redis_key), str.encode(str(db_stats['stats'][k])))
+
+        # regenerating stats to make sure that we have 2 rows in the DB
+        qdb.meta_util.update_redis_stats()
+
+        db_stats = _get_daily_stats()
+        # there should be only one set of values
+        self.assertEqual(2, len(db_stats))
 
     def test_generate_biom_and_metadata_release(self):
         level = 'private'
