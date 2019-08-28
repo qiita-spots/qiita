@@ -215,6 +215,8 @@ def update_redis_stats():
         elif 'private' in samples_status:
             number_studies['private'] += 1
         else:
+            # note that this is a catch all for other status; at time of
+            # writing there is status: awaiting_approval
             number_studies['sandbox'] += 1
 
         # counting samples; note that some of these lines could be merged with
