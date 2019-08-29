@@ -76,6 +76,7 @@ from qiita_db.handlers.archive import APIArchiveObservations
 from qiita_db.util import get_mountpoint
 from qiita_pet.handlers.rest import ENDPOINTS as REST_ENDPOINTS
 from qiita_pet.handlers.qiita_redbiom import RedbiomPublicSearch
+from qiita_pet.handlers.public import PublicHandler
 
 if qiita_config.portal == "QIITA":
     from qiita_pet.handlers.portal import (
@@ -185,6 +186,7 @@ class Application(tornado.web.Application):
             (r"/download_upload/(.*)", DownloadUpload),
             (r"/release/download/(.*)", DownloadRelease),
             (r"/public_download/", DownloadPublicHandler),
+            (r"/public/", PublicHandler),
             (r"/vamps/(.*)", VAMPSHandler),
             (r"/redbiom/(.*)", RedbiomPublicSearch),
             (r"/iframe/", IFrame),

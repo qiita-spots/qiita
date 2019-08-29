@@ -88,6 +88,17 @@ A few more instructions: for the example above the workflow should be:
    be quite time consuming depending on the number of samples and the depth
    of sequencing.
 
+
+Access to a public study or artifact
+------------------------------------
+
+Access to Qiita resources is limited for non registered users; however, if you want
+to point to a given study or artifact you can use (do not forget to replace `study-id` or `artifact-id`):
+
+- Study: https://qiita.ucsd.edu/public/?study_id=study-id
+
+- Artifact: https://qiita.ucsd.edu/public/?artifact_id=artifact-id
+
 .. _issues_unzip:
 
 How to solve download or unzip errors?
