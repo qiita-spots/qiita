@@ -44,8 +44,8 @@ Current features
   * Target gene data: we support deblur against GreenGenes (13_8) and close
     reference picking against GreenGenes (13_8) and Silva.
   * Metagenoic/Shotgun data: we support Shogun processing. Note that this data
-    is suitable for download and further down analyses but we don't recommend
-    analysis within Qiita.
+    is suitable for download and further down stream analyses but we don't recommend
+    meta-analysis within Qiita (only single study).
   * biom files can be added as new preparation templates for downstream
     analyses; however, this cannot be made public.
 
