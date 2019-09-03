@@ -3,6 +3,7 @@
 Version 092019
 --------------
 
+* Improved stats Qiita page
 * Fixed Glossary Terms in Help pages (thanks, @JTFouquier)
 * Fixed redbiom Help pages that prevented from copy/pasting examples
 * Fixed broken code that prevented downloading biom/archive releases
