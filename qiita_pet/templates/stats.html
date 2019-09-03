@@ -151,8 +151,8 @@
           {% end %}
         </td>
         <td>
-          {% for k in number_of_samples %}
-            <i>{{k}}</i>: {{ "{:,}".format(int(number_of_samples[k])) }} <br/>
+          {% for k, v in number_of_samples.items() %}
+            <i>{{k}}</i>: {{ "{:,}".format(int(v)) }} <br/>
           {% end %}
           {% if num_samples_ebi and num_samples_ebi is not None %}
             <i>submitted to EBI</i>: {{ "{:,}".format(int(num_samples_ebi)) }} <br/>
@@ -162,8 +162,8 @@
           {% end %}
         </td>
         <td>
-          {% for k in per_data_type_stats %}
-            <i>{{k}}</i>: {{ "{:,}".format(int(number_of_samples[k])) }} <br/>
+          {% for k, v in per_data_type_stats.items() %}
+            <i>{{k}}</i>: {{ "{:,}".format(int(v)) }} <br/>
           {% end %}
         </td>
 

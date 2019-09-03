@@ -54,7 +54,11 @@
           <td>{{ainfo['data_type']}}</td>
           <td>{{ainfo['platform']}}</td>
           <td>{{ainfo['target_gene']}}</td>
-          <td>{{','.join(ainfo['target_subfragment'])}}</td>
+          <td>
+            {% if ainfo['target_subfragment'] != [None] %}
+              {{','.join(ainfo['target_subfragment'])}}
+            {% end %}
+          </td>
           <td>{{ainfo['algorithm']}}</td>
         </tr>
       {% end %}
