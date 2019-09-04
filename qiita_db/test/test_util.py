@@ -1007,35 +1007,46 @@ class UtilTests(TestCase):
     def test_get_artifacts_information(self):
         # we are going to test that it ignores 1 and 2 cause they are not biom,
         # 4 has all information and 7 and 8 don't
-        obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
+        obs = qdb.util.get_artifacts_information([1, 2, 4, 6, 7, 8])
         # not testing timestamp
         for i in range(len(obs)):
             del obs[i]['timestamp']
 
         exp = [
-            {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'artifact_id': 4, 'data_type': '18S', 'active': True,
-             'target_gene': '16S rRNA', 'name': 'BIOM',
-             'target_subfragment': ['V4'], 'parameters': {
-                'reference': '1', 'similarity': '0.97',
-                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                'threads': '1', 'sortmerna_coverage': '0.97'},
+            {'artifact_id': 6, 'target_subfragment': ['V4'],
+             'prep_samples': 27, 'platform': 'Illumina',
+             'target_gene': '16S rRNA', 'name': 'BIOM', 'data_type': '16S',
+             'parameters': {'reference': '2', 'similarity': '0.97',
+                            'sortmerna_e_value': '1',
+                            'sortmerna_max_pos': '10000', 'threads': '1',
+                            'sortmerna_coverage': '0.97'},
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-             'deprecated': False, 'platform': 'Illumina',
              'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
-             'prep_samples': 27},
-            {'files': ['biom_table.biom'], 'artifact_id': 7,
-             'data_type': '16S', 'active': None,
-             'target_gene': '16S rRNA', 'name': 'BIOM',
-             'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
-             'deprecated': None, 'platform': 'Illumina', 'algorithm_az': '',
-             'prep_samples': 27},
-            {'files': ['biom_table.biom'], 'artifact_id': 8,
-             'data_type': '18S', 'active': None, 'target_gene': 'not provided',
-             'name': 'noname', 'target_subfragment': [], 'parameters': {},
-             'algorithm': '', 'deprecated': None, 'platform': 'not provided',
-             'algorithm_az': '', 'prep_samples': 0}]
+             'deprecated': False, 'active': True,
+             'files': ['1_study_1001_closed_reference_otu_table_Silva.biom']},
+            {'artifact_id': 4, 'target_subfragment': ['V4'],
+             'prep_samples': 27, 'platform': 'Illumina',
+             'target_gene': '16S rRNA', 'name': 'BIOM', 'data_type': '18S',
+             'parameters': {'reference': '1', 'similarity': '0.97',
+                            'sortmerna_e_value': '1',
+                            'sortmerna_max_pos': '10000', 'threads': '1',
+                            'sortmerna_coverage': '0.97'},
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
+             'deprecated': False, 'active': True,
+             'files': ['1_study_1001_closed_reference_otu_table.biom']},
+            {'artifact_id': 7, 'target_subfragment': ['V4'],
+             'prep_samples': 27, 'platform': 'Illumina',
+             'target_gene': '16S rRNA', 'name': 'BIOM', 'data_type': '16S',
+             'parameters': {}, 'algorithm': '', 'algorithm_az': '',
+             'deprecated': None, 'active': None, 'files': ['biom_table.biom']},
+            {'artifact_id': 8, 'target_subfragment': [], 'prep_samples': 0,
+             'platform': 'not provided', 'target_gene': 'not provided', 'name':
+             'noname', 'data_type': '18S', 'parameters': {}, 'algorithm': '',
+             'algorithm_az': '', 'deprecated': None, 'active': None,
+             'files': ['biom_table.biom']}]
         self.assertCountEqual(obs, exp)
+        exp = exp[1:]
 
         # now let's test that the order given by the commands actually give the
         # correct results

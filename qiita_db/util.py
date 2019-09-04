@@ -1819,7 +1819,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                     ps[prep_template_id] = [
                         len(list(pt.keys())), platform, target_gene]
 
-                prep_samples, patform, target_gene = ps[prep_template_id]
+                prep_samples, platform, target_gene = ps[prep_template_id]
 
             results.append({
                 'artifact_id': aid,

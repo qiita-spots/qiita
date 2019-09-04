@@ -17,6 +17,7 @@ from datetime import datetime
 from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
+from qiita_db.artifact import Artifact
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
                            get_filepath_information, get_mountpoint,
                            filepath_id_to_object_id, get_data_types)
@@ -364,7 +365,7 @@ class DownloadPublicHandler(BaseHandlerDownload):
             else:
                 public_raw_download = study.public_raw_download
                 if study.status != 'public':
-                    raise HTTPError(422, reason='Study is not public. If this '
+                    raise HTTPError(404, reason='Study is not public. If this '
                                     'is a mistake contact: '
                                     'qiita.help@gmail.com')
                 elif data == 'raw' and not public_raw_download:
@@ -389,6 +390,41 @@ class DownloadPublicHandler(BaseHandlerDownload):
 
                         zip_fn = 'study_%d_%s_%s.zip' % (
                             study_id, data, datetime.now().strftime(
+                                '%m%d%y-%H%M%S'))
+
+                        self._set_nginx_headers(zip_fn)
+        self.finish()
+
+
+class DownloadPublicArtifactHandler(BaseHandlerDownload):
+    @coroutine
+    @execute_as_transaction
+    def get(self):
+        artifact_id = self.get_argument("artifact_id", None)
+
+        if artifact_id is None:
+            raise HTTPError(422, reason='You need to specify an artifact id')
+        else:
+            try:
+                artifact = Artifact(artifact_id)
+            except QiitaDBUnknownIDError:
+                raise HTTPError(404, reason='Artifact does not exist')
+            else:
+                if artifact.visibility != 'public':
+                    raise HTTPError(404, reason='Artifact is not public. If '
+                                    'this is a mistake contact: '
+                                    'qiita.help@gmail.com')
+                else:
+                    to_download = self._list_artifact_files_nginx(artifact)
+                    if not to_download:
+                        raise HTTPError(422, reason='Nothing to download. If '
+                                        'this is a mistake contact: '
+                                        'qiita.help@gmail.com')
+                    else:
+                        self._write_nginx_file_list(to_download)
+
+                        zip_fn = 'artifact_%s_%s.zip' % (
+                            artifact_id, datetime.now().strftime(
                                 '%m%d%y-%H%M%S'))
 
                         self._set_nginx_headers(zip_fn)
