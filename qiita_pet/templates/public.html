@@ -50,7 +50,9 @@
     {% for ainfo in artifacts_info %}
       {% if not ainfo['deprecated'] and ainfo['active'] %}
         <tr>
-          <td>{{ainfo['artifact_id']}}</td>
+          <td>
+            {{ainfo['artifact_id']}} &nbsp; &nbsp;<a class="btn btn-default glyphicon glyphicon-download-alt" href="/public_artifact_download/?artifact_id={{ainfo['artifact_id']}}" style="word-spacing: -10px;"></a>
+          </td>
           <td>{{ainfo['data_type']}}</td>
           <td>{{ainfo['platform']}}</td>
           <td>{{ainfo['target_gene']}}</td>

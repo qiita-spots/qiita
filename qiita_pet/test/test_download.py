@@ -447,7 +447,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
         self.assertEqual(response.reason, 'Nothing to download. If this is a '
                          'mistake contact: qiita.help@gmail.com')
 
-        # check succcess
+        # check success
         Artifact(5).visibility = 'public'
         response = self.get(
             '/public_download/?data=raw&study_id=1&data_type=18S')
@@ -471,6 +471,42 @@ class TestDownloadPublicHandler(TestHandlerBase):
             'reference_otu_table.biom processed_data/1_study_1001_closed_'
             'reference_otu_table.biom\n- [0-9]* /protected/templates/1_prep_1'
             '_qiime_[0-9]*-[0-9]*.txt mapping_files/5_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+
+class TestDownloadPublicArtifactHandler(TestHandlerBase):
+
+    def setUp(self):
+        super(TestDownloadPublicArtifactHandler, self).setUp()
+
+    def tearDown(self):
+        super(TestDownloadPublicArtifactHandler, self).tearDown()
+
+    def test_download(self):
+        # check failures
+        response = self.get('/public_artifact_download/')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'You need to specify an artifact id')
+
+        response = self.get('/public_artifact_download/?artifact_id=10000')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Artifact does not exist')
+
+        response = self.get('/public_artifact_download/?artifact_id=3')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Artifact is not public. If this is '
+                         'a mistake contact: qiita.help@gmail.com')
+
+        # check success
+        Artifact(5).visibility = 'public'
+        response = self.get('/public_artifact_download/?artifact_id=5')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '[0-9]* [0-9]* /protected/processed_data/'
+            '1_study_1001_closed_reference_otu_table.biom '
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\n'
+            '- 36762 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/5_mapping_file.txt')
         self.assertRegex(response.body.decode('ascii'), exp)
 
 
