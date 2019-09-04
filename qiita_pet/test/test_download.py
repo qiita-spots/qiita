@@ -398,7 +398,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
         self.assertEqual(response.reason, 'Study does not exist')
 
         response = self.get('/public_download/?data=raw&study_id=1')
-        self.assertEqual(response.code, 422)
+        self.assertEqual(response.code, 404)
         self.assertEqual(response.reason, 'Study is not public. '
                          'If this is a mistake contact: qiita.help@gmail.com')
 
@@ -489,11 +489,11 @@ class TestDownloadPublicArtifactHandler(TestHandlerBase):
         self.assertEqual(response.reason, 'You need to specify an artifact id')
 
         response = self.get('/public_artifact_download/?artifact_id=10000')
-        self.assertEqual(response.code, 422)
+        self.assertEqual(response.code, 404)
         self.assertEqual(response.reason, 'Artifact does not exist')
 
         response = self.get('/public_artifact_download/?artifact_id=3')
-        self.assertEqual(response.code, 422)
+        self.assertEqual(response.code, 404)
         self.assertEqual(response.reason, 'Artifact is not public. If this is '
                          'a mistake contact: qiita.help@gmail.com')
 

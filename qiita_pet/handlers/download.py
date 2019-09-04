@@ -365,7 +365,7 @@ class DownloadPublicHandler(BaseHandlerDownload):
             else:
                 public_raw_download = study.public_raw_download
                 if study.status != 'public':
-                    raise HTTPError(422, reason='Study is not public. If this '
+                    raise HTTPError(404, reason='Study is not public. If this '
                                     'is a mistake contact: '
                                     'qiita.help@gmail.com')
                 elif data == 'raw' and not public_raw_download:
@@ -408,10 +408,10 @@ class DownloadPublicArtifactHandler(BaseHandlerDownload):
             try:
                 artifact = Artifact(artifact_id)
             except QiitaDBUnknownIDError:
-                raise HTTPError(422, reason='Artifact does not exist')
+                raise HTTPError(404, reason='Artifact does not exist')
             else:
                 if artifact.visibility != 'public':
-                    raise HTTPError(422, reason='Artifact is not public. If '
+                    raise HTTPError(404, reason='Artifact is not public. If '
                                     'this is a mistake contact: '
                                     'qiita.help@gmail.com')
                 else:
