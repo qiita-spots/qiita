@@ -691,7 +691,7 @@ with TRN:
 
 # Purge filepaths
 try:
-    purge_filepaths()
+    purge_filepaths(False)
 except Exception as e:
     errors.append("Error purging filepaths: %s" % str(e))
 

@@ -213,7 +213,7 @@ class TestArtifactAPI(TestCase):
                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
                 'threads': '1', 'sortmerna_coverage': '0.97'},
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-             'deprecated': False, 'platform': 'not provided',
+             'deprecated': False, 'platform': 'Illumina',
              'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
              'prep_samples': 27},
             {'files': ['biom_table.biom'], 'artifact_id': 7,

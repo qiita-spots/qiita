@@ -31,7 +31,7 @@ Processing in Qiita requires 3 things: raw data, sample and prep information
 files. `Here <https://github.com/biocore/qiita/blob/master/README.rst#accepted-raw-files>`__
 you can find a list of currently supported raw files files. Note that we are
 accepting any kind of target gene (16S, 18S, ITS, whatever). You can also upload
-WGS however, WGS processing is not ready.
+and process WGS via Shogun. 
 
 What's the difference between a sample and a prep information file?
 -------------------------------------------------------------------
@@ -87,6 +87,17 @@ A few more instructions: for the example above the workflow should be:
    perform closed OTU picking against the latest version of Greengenes and can
    be quite time consuming depending on the number of samples and the depth
    of sequencing.
+
+
+Access to a public study or artifact
+------------------------------------
+
+Access to Qiita resources is limited for non registered users; however, if you want
+to point to a given study or artifact you can use (do not forget to replace `study-id` or `artifact-id`):
+
+- Study: https://qiita.ucsd.edu/public/?study_id=study-id
+
+- Artifact: https://qiita.ucsd.edu/public/?artifact_id=artifact-id
 
 .. _issues_unzip:
 

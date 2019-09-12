@@ -8,7 +8,7 @@
 
 from unittest import TestCase, main
 from tempfile import mkstemp, mkdtemp, NamedTemporaryFile, TemporaryFile
-from os import close, remove, makedirs, mkdir
+from os import close, remove, mkdir
 from os.path import join, exists, basename
 from shutil import rmtree
 from datetime import datetime
@@ -1007,35 +1007,46 @@ class UtilTests(TestCase):
     def test_get_artifacts_information(self):
         # we are going to test that it ignores 1 and 2 cause they are not biom,
         # 4 has all information and 7 and 8 don't
-        obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
+        obs = qdb.util.get_artifacts_information([1, 2, 4, 6, 7, 8])
         # not testing timestamp
         for i in range(len(obs)):
             del obs[i]['timestamp']
 
         exp = [
-            {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'artifact_id': 4, 'data_type': '18S', 'active': True,
-             'target_gene': '16S rRNA', 'name': 'BIOM',
-             'target_subfragment': ['V4'], 'parameters': {
-                'reference': '1', 'similarity': '0.97',
-                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                'threads': '1', 'sortmerna_coverage': '0.97'},
+            {'artifact_id': 6, 'target_subfragment': ['V4'],
+             'prep_samples': 27, 'platform': 'Illumina',
+             'target_gene': '16S rRNA', 'name': 'BIOM', 'data_type': '16S',
+             'parameters': {'reference': '2', 'similarity': '0.97',
+                            'sortmerna_e_value': '1',
+                            'sortmerna_max_pos': '10000', 'threads': '1',
+                            'sortmerna_coverage': '0.97'},
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-             'deprecated': False, 'platform': 'Illumina',
              'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
-             'prep_samples': 27},
-            {'files': ['biom_table.biom'], 'artifact_id': 7,
-             'data_type': '16S', 'active': None,
-             'target_gene': '16S rRNA', 'name': 'BIOM',
-             'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
-             'deprecated': None, 'platform': 'Illumina', 'algorithm_az': '',
-             'prep_samples': 27},
-            {'files': ['biom_table.biom'], 'artifact_id': 8,
-             'data_type': '18S', 'active': None, 'target_gene': 'not provided',
-             'name': 'noname', 'target_subfragment': [], 'parameters': {},
-             'algorithm': '', 'deprecated': None, 'platform': 'not provided',
-             'algorithm_az': '', 'prep_samples': 0}]
+             'deprecated': False, 'active': True,
+             'files': ['1_study_1001_closed_reference_otu_table_Silva.biom']},
+            {'artifact_id': 4, 'target_subfragment': ['V4'],
+             'prep_samples': 27, 'platform': 'Illumina',
+             'target_gene': '16S rRNA', 'name': 'BIOM', 'data_type': '18S',
+             'parameters': {'reference': '1', 'similarity': '0.97',
+                            'sortmerna_e_value': '1',
+                            'sortmerna_max_pos': '10000', 'threads': '1',
+                            'sortmerna_coverage': '0.97'},
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
+             'deprecated': False, 'active': True,
+             'files': ['1_study_1001_closed_reference_otu_table.biom']},
+            {'artifact_id': 7, 'target_subfragment': ['V4'],
+             'prep_samples': 27, 'platform': 'Illumina',
+             'target_gene': '16S rRNA', 'name': 'BIOM', 'data_type': '16S',
+             'parameters': {}, 'algorithm': '', 'algorithm_az': '',
+             'deprecated': None, 'active': None, 'files': ['biom_table.biom']},
+            {'artifact_id': 8, 'target_subfragment': [], 'prep_samples': 0,
+             'platform': 'not provided', 'target_gene': 'not provided', 'name':
+             'noname', 'data_type': '18S', 'parameters': {}, 'algorithm': '',
+             'algorithm_az': '', 'deprecated': None, 'active': None,
+             'files': ['biom_table.biom']}]
         self.assertCountEqual(obs, exp)
+        exp = exp[1:]
 
         # now let's test that the order given by the commands actually give the
         # correct results
@@ -1181,141 +1192,82 @@ class TestFilePathOpening(TestCase):
         remove(name)
 
 
-class PurgeFilepathsTestBase(DBUtilTestsBase):
+class PurgeFilepathsTests(DBUtilTestsBase):
 
-    def _common_purge_filepaths_test(self):
-        # Get all the filepaths so we can test if they've been removed or not
-        sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
+    def _get_current_filepaths(self):
+        sql_fp = "SELECT filepath_id FROM qiita.filepath"
         with qdb.sql_connection.TRN:
             qdb.sql_connection.TRN.add(sql_fp)
-            results = qdb.sql_connection.TRN.execute_fetchindex()
-        exp_count = len(results)
-        fps = [join(qdb.util.get_mountpoint_path_by_id(dd_id), fp)
-               for fp, dd_id in results]
+            results = qdb.sql_connection.TRN.execute_fetchflatten()
+        return [qdb.util.get_filepath_information(_id)['fullpath']
+                for _id in results]
 
+    def _create_files(self, files):
+        # format is: [mp_id, fp_type_id, file_name]
+        sql = """INSERT INTO qiita.filepath (
+                    data_directory_id, filepath_type_id, filepath, checksum,
+                    checksum_algorithm_id)
+                 VALUES (%s, %s, %s, '852952723', 1) RETURNING filepath_id"""
+        with qdb.sql_connection.TRN:
+            for f in files:
+                qdb.sql_connection.TRN.add(sql, tuple(f))
+                fid = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+                qdb.util.get_filepath_information(fid)
+
+    def test_purge_filepaths_test(self):
+        # Get all the filepaths so we can test if they've been removed or not
+        fps_expected = self._get_current_filepaths()
         # Make sure that the files exist - specially for travis
-        for fp in fps:
+        for fp in fps_expected:
             if not exists(fp):
                 with open(fp, 'w') as f:
                     f.write('\n')
                 self.files_to_remove.append(fp)
 
-        # let's insert some new filepaths in the raw_data mount
-        _, raw_data_mp = qdb.util.get_mountpoint('raw_data')[0]
-        removed_fps = [
-            join(raw_data_mp, '2_sequences_barcodes.fastq.gz'),
-            join(raw_data_mp, '2_sequences.fastq.gz'),
-            join(raw_data_mp, 'directory_test')]
-        # creating the files
-        for fp in removed_fps[:-1]:
-            with open(fp, 'w') as f:
-                f.write('\n')
-        makedirs(removed_fps[-1])
-        # inserting them in the database
-        sql = """INSERT INTO qiita.filepath
-                    (filepath, filepath_type_id, checksum,
-                     checksum_algorithm_id, data_directory_id)
-                VALUES ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
-                       ('2_sequences.fastq.gz', 1, '852952723', 1, 5),
-                       ('directory_test', 8, '852952723', 1, 5)
-                RETURNING filepath_id"""
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(sql)
-            fp_ids = qdb.sql_connection.TRN.execute_fetchflatten()
-
-        fps = set(fps).difference(removed_fps)
-
-        # Before purging, let's check that the files exist
-        for fp in fps:
-            self.assertTrue(exists(fp))
-        for fp in removed_fps:
-            self.assertTrue(exists(fp))
-
+        # nothing shold be removed
         qdb.util.purge_filepaths()
-        obs_count = qdb.util.get_count("qiita.filepath")
-        # the patching system moves some files around so 'job/1_job_result.txt'
-        # and 'job/2_test_folder' are also going to be removed; thus, we need
-        # to rest them
-        extra_rm_files = ['job/2_test_folder', 'job/1_job_result.txt']
-        self.assertEqual(obs_count, exp_count - len(extra_rm_files))
+        fps_viewed = self._get_current_filepaths()
+        self.assertCountEqual(fps_expected, fps_viewed)
 
-        # Check that the 2 rows that have been removed are the correct ones
-        sql = """SELECT EXISTS(
-                    SELECT * FROM qiita.filepath WHERE filepath_id IN %s)"""
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(sql, [tuple(fp_ids)])
-            obs = qdb.sql_connection.TRN.execute_fetchflatten()[0]
-        self.assertFalse(obs)
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(sql, [tuple(fp_ids)])
-            obs = qdb.sql_connection.TRN.execute_fetchflatten()[0]
-        self.assertFalse(obs)
+        # testing study filepath delete by inserting a new study sample info
+        # and make sure it gets deleted
+        mp_id, mp = qdb.util.get_mountpoint('templates')[0]
+        txt_id = qdb.util.convert_to_id('sample_template', "filepath_type")
+        self._create_files([[mp_id, txt_id, '100_filepath.txt']])
+        qdb.util.purge_filepaths()
+        fps_viewed = self._get_current_filepaths()
+        self.assertCountEqual(fps_expected, fps_viewed)
 
-        # Check that the files have been successfully removed
-        for fp in removed_fps:
-            self.assertFalse(exists(fp))
+        # testing artifact [A], creating a folder with an artifact that
+        # doesn't exist
+        _, mp = qdb.util.get_mountpoint('per_sample_FASTQ')[0]
+        not_an_artifact_fp = join(mp, '10000')
+        mkdir(not_an_artifact_fp)
+        # now let's add test for [B] by creating 2 filepaths without a
+        # link to the artifacts tables
+        mp_id, mp = qdb.util.get_mountpoint('BIOM')[0]
+        biom_id = qdb.util.convert_to_id('biom', "filepath_type")
+        self._create_files([
+            [mp_id, txt_id, 'artifact_filepath.txt'],
+            [mp_id, biom_id, 'my_biom.biom']
+        ])
+        # adding files to tests
+        qdb.util.purge_filepaths()
+        fps_viewed = self._get_current_filepaths()
+        self.assertCountEqual(fps_expected, fps_viewed)
+        self.assertFalse(exists(not_an_artifact_fp))
 
-        # Check that all the other files still exist
-        for fp in fps:
-            if '/'.join(fp.split('/')[-2:]) not in extra_rm_files:
-                self.assertTrue(exists(fp))
-
-
-class PurgeFilepathsTestA(PurgeFilepathsTestBase):
-    def test_purge_files_from_filesystem(self):
-        info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "study_alias": "TST",
-                "study_description": "Some description of the study goes here",
-                "study_abstract": "Some abstract goes here",
-                "principal_investigator_id": qdb.study.StudyPerson(1),
-                "lab_person_id": qdb.study.StudyPerson(1)}
-
-        new_study = qdb.study.Study.create(
-            qdb.user.User('shared@foo.bar'),
-            'test_purge_files_from_filesystem', info=info)
-
-        metadata_dict = {
-            'SKB8.640193': {'center_name': 'ANL',
-                            'amzn_primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'bartab': 'GTCCGCAAGTTA',
-                            'frd_prefix': "s_G1_L001_sequences",
-                            'platform': 'Illumina',
-                            'instrument_model': 'Illumina MiSeq',
-                            'library_construction_protocol': 'AAAA',
-                            'experiment_design_description': 'BBBB'}}
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
-                                          dtype=str)
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(
-            metadata, new_study)
-        fps = [fp for _, fp in st.get_filepaths()]
-        qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
-        qdb.study.Study.delete(new_study.id)
-
-        for fp in fps:
-            self.assertTrue(exists(fp))
-
-        qdb.util.purge_files_from_filesystem(True)
-
-        for fp in fps:
-            self.assertFalse(exists(fp))
-
-    def test_purge_filepaths(self):
-        self._common_purge_filepaths_test()
-
-
-class PurgeFilepathsTestB(PurgeFilepathsTestBase):
-    def test_purge_filepaths_null_cols(self):
-        # For more details about the source of the issue that motivates this
-        # test: http://www.depesz.com/2008/08/13/nulls-vs-not-in/
-        # In the current set up, the only place where we can actually have a
-        # null value in a filepath id is in the reference table. Add a new
-        # reference without tree and taxonomy:
-        fd, seqs_fp = mkstemp(suffix="_seqs.fna")
-        close(fd)
-        ref = qdb.reference.Reference.create("null_db", "13_2", seqs_fp)
-        self.files_to_remove.append(ref.sequence_fp)
-
-        self._common_purge_filepaths_test()
+        # testing analysis filepath delete by filepaths for 2 different files
+        # and making sure they get deleted
+        mp_id, mp = qdb.util.get_mountpoint('analysis')[0]
+        biom_id = qdb.util.convert_to_id('biom', "filepath_type")
+        self._create_files([
+            [mp_id, txt_id, '10000_my_analysis_map.txt'],
+            [mp_id, biom_id, '10000_my_analysis_biom.biom']
+        ])
+        qdb.util.purge_filepaths()
+        fps_viewed = self._get_current_filepaths()
+        self.assertCountEqual(fps_expected, fps_viewed)
 
 
 STUDY_INFO = {

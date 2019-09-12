@@ -336,6 +336,11 @@ table {
 <text x='1240' y='1495'>Group_archive</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1240' y='1498' width='430' height='2' />
 
+<!-- ============= Group 'Group_stats' ============= -->
+<rect class='grp' style='fill:#ffcccc;stroke:#e0c5c5' x='2474' y='295' width='152' height='125' />
+<text x='2485' y='310'>Group_stats</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='2485' y='313' width='130' height='2' />
+
 <path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 285 1290 L 285,1305' >
 	<title>Foreign Key fk_column_controlled_vocabularies
 	column_controlled_vocabularies references mixs_field_description ( column_name )</title>
@@ -1944,6 +1949,14 @@ The name of the column that describes the specimen identifiers &#040;such as wha
   <a xlink:href='#restrictions.name'><text x='1548' y='412'>name</text><title>name varchar</title></a>
   <a xlink:href='#restrictions.valid_values'><text x='1548' y='427'>valid_values</text><title>valid_values varchar
 array of valid values</title></a>
+
+<!-- ============= Table 'stats_daily' ============= -->
+<rect class='table' x='2490' y='323' width='120' height='75' rx='7' ry='7' />
+<path d='M 2490.50 349.50 L 2490.50 330.50 Q 2490.50 323.50 2497.50 323.50 L 2602.50 323.50 Q 2609.50 323.50 2609.50 330.50 L 2609.50 349.50 L2490.50 349.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#stats_daily'><text x='2521' y='337' class='tableTitle'>stats_daily</text><title>Table qiita.stats_daily
+stores the daily stats</title></a>
+  <use id='nn' x='2492' y='357' xlink:href='#nn'/><a xlink:href='#stats_daily.stats'><text x='2508' y='367'>stats</text><title>stats varchar not null</title></a>
+  <use id='nn' x='2492' y='372' xlink:href='#nn'/><a xlink:href='#stats_daily.stats_timestamp'><text x='2508' y='382'>stats_timestamp</text><title>stats_timestamp timestamp not null</title></a>
 
 </g></svg>
 
@@ -6135,6 +6148,28 @@ Controlled Vocabulary </td>
 		<td><a name='restrictions.valid_values'>valid&#095;values</a></td>
 		<td> varchar   </td>
 		<td> array of valid values </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='stats_daily'>Table stats_daily</a></th></tr>
+<tr><td colspan='3'>stores the daily stats </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='stats_daily.stats'>stats</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='stats_daily.stats_timestamp'>stats&#095;timestamp</a></td>
+		<td> timestamp   </td>
+		<td>  </td>
 	</tr>
 </tbody>
 </table>
