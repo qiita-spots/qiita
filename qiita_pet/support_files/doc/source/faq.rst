@@ -31,7 +31,7 @@ Processing in Qiita requires 3 things: raw data, sample and prep information
 files. `Here <https://github.com/biocore/qiita/blob/master/README.rst#accepted-raw-files>`__
 you can find a list of currently supported raw files files. Note that we are
 accepting any kind of target gene (16S, 18S, ITS, whatever). You can also upload
-and process WGS via Shogun. 
+and process WGS via Shogun.
 
 What's the difference between a sample and a prep information file?
 -------------------------------------------------------------------
@@ -87,17 +87,7 @@ A few more instructions: for the example above the workflow should be:
    perform closed OTU picking against the latest version of Greengenes and can
    be quite time consuming depending on the number of samples and the depth
    of sequencing.
-
-
-Access to a public study or artifact
-------------------------------------
-
-Access to Qiita resources is limited for non registered users; however, if you want
-to point to a given study or artifact you can use (do not forget to replace `study-id` or `artifact-id`):
-
-- Study: https://qiita.ucsd.edu/public/?study_id=study-id
-
-- Artifact: https://qiita.ucsd.edu/public/?artifact_id=artifact-id
+   
 
 .. _issues_unzip:
 
@@ -188,26 +178,12 @@ To correct this issue, simply add a column to your preparation information file 
 "run_prefix". In this column, add the sample names from your BIOM table that matches the sample
 names listed in the sample_name column in your preparation information file.
 
+
 How to convert Qiita files to QIIME2 artifacts?
 -----------------------------------------------
 
 Please visit the `Transferring Qiita Artifacts to Qiime2 Tutorial <https://forum.qiime2.org/t/transferring-qiita-artifacts-to-qiime2/4790>`__
 in the `QIIME2 forum <https://forum.qiime2.org>`__. Note that all feature table (bioms) and analytical steps will generate qza and qzv, which are QIIME2 artifacts.
-
-
-How to download raw or all BIOM files from a given study?
----------------------------------------------------------
-
-We provide direct access to public data via a single end point. This end point can be used to download BIOMs or raw data,
-in specific (do not forget to replace `study-id` and/or `data_type` for your study or data type of interest ):
-
-- All raw data: https://qiita.ucsd.edu/public_download/?data=raw&study_id=study-id
-
-- All BIOMs + mapping files: https://qiita.ucsd.edu/public_download/?data=biom&study_id=study-id
-
-- Only 16S raw data: https://qiita.ucsd.edu/public_download/?data=raw&study_id=study-id&data_type=16S
-
-- Only Metagenomic BIOMs + mapping files: https://qiita.ucsd.edu/public_download/?data=biom&study_id=study-id&data_type=Metagenomic
 
 
 How to cite Qiita?

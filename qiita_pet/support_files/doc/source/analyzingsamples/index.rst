@@ -64,7 +64,7 @@ Note that rarefaction has some advantages for beta-diversity analyses
 :ref:`[11]<reference11>`, but can have undesirable properties in tests of
 differential abundance :ref:`[12]<reference12>`. To analyze your data with
 alternative normalization strategies, you can easily download the raw biom
-tables (see :doc:`../tutorials/downloading`) and load them into an analysis
+tables (see :doc:`../downloading`) and load them into an analysis
 pipeline such as `Phyloseq <https://bioconductor.org/packages/release/bioc/html/phyloseq.html>`__.
 
 Filtering Samples by Metadata

@@ -374,9 +374,14 @@ class DownloadPublicHandler(BaseHandlerDownload):
                                     'qiita.help@gmail.com')
                 else:
                     to_download = []
-                    for a in study.artifacts(dtype=data_type,
-                                             artifact_type='BIOM'
-                                             if data == 'biom' else None):
+                    # raw data
+                    artifacts = [a for a in study.artifacts(dtype=data_type)
+                                 if not a.parents]
+                    # bioms
+                    if data == 'biom':
+                        artifacts = study.artifacts(
+                            dtype=data_type, artifact_type='BIOM')
+                    for a in artifacts:
                         if a.visibility != 'public':
                             continue
                         to_download.extend(self._list_artifact_files_nginx(a))
