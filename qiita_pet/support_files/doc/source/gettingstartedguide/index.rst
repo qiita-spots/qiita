@@ -295,6 +295,8 @@ For all valid values for instrument_model per platform, view the values in the t
 +-----------------+----------------------------------------------------------------------------------------------------------+
 | ``Ion Torrent`` |  ``Ion Torrent PGM``, ``Ion Torrent Proton``, ``Ion Torrent S5``, ``Ion Torrent S5 XL``                  |
 +-----------------+----------------------------------------------------------------------------------------------------------+
+| ``PacBio_SMRT`` |  ``PacBio RS``, ``PacBio RS II``, ``Sequel ``, ``Sequel II``                                             |
++-----------------+----------------------------------------------------------------------------------------------------------+
 
 
 Required fields for pre-processing target gene data
