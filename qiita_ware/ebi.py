@@ -114,7 +114,7 @@ class EBISubmission(object):
                                     'NEXTSEQ 500',
                                     'NEXTSEQ 550',
                                     'UNSPECIFIED'],
-                       'PACBIO_SMRT': ['PACBIO RS' ,
+                       'PACBIO_SMRT': ['PACBIO RS',
                                        'PACBIO RS II',
                                        'SEQUEL',
                                        'SEQUEL II']}
