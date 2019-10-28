@@ -82,6 +82,15 @@ class TestUtil(TestCase):
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp, check_like=True)
 
+    def test_load_template_to_dataframe_sample_id(self):
+        obs = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.util.load_template_to_dataframe,
+            StringIO(EXP_SAMPLE_TEMPLATE_WITH_SAMPLE_ID))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp, check_like=True)
+
     def test_load_template_to_dataframe_xlsx(self):
         mfp = join(dirname(abspath(getfile(currentframe()))), 'support_files')
 
@@ -442,6 +451,18 @@ EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
     "Value for sample 3\n"
     "\t\t\t\t\t\t\t\t\t\t\t\t\n"
     "\t\t\t\t\t\t\t\t\t\t   \t\t\n")
+
+EXP_SAMPLE_TEMPLATE_WITH_SAMPLE_ID = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\t"
+    "sample_id\tsample-id\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\tA\ta\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\tB\tb\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\tC\tc\n")
 
 EXP_ST_SPACES_EMPTY_COLUMN = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
