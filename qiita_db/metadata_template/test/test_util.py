@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from six import StringIO
+from tempfile import NamedTemporaryFile
 from inspect import currentframe, getfile
 from os.path import dirname, abspath, join
 from unittest import TestCase, main
@@ -294,6 +295,12 @@ class TestUtil(TestCase):
             StringIO(QIIME_TUTORIAL_MAP_SUBSET))
         self.assertTrue(obs)
 
+        with NamedTemporaryFile(suffix='.csv') as tf:
+            tf.write(QIIME_TUTORIAL_MAP_SUBSET_UNICODE)
+            tf.seek(0)
+            obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(tf)
+        self.assertTrue(obs)
+
         obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(
             StringIO())
         self.assertFalse(obs)
@@ -334,6 +341,15 @@ QIIME_TUTORIAL_MAP_SUBSET = (
     "Control_mouse_I.D._354\n"
     "PC.607\tAACTGTGCGTAC\tYATGCTGCCTCCCGTAGGAGT\tFast\t20071112\t"
     "Fasting_mouse_I.D._607\n"
+)
+
+QIIME_TUTORIAL_MAP_SUBSET_UNICODE = (
+    b"#SampleID\tBarcodeSequence\tLinkerPri\xe5merSequence\tTreatment\tDOB\t"
+    b"Description\n"
+    b"PC.354\tAGCAC\xe5GAGCCTA\tYATGCTGCCTCCCGTAGGAGT\tControl\t20061218\t"
+    b"Control_mouse_I.D._354\n"
+    b"PC.607\tAACTGTGCGTAC\tYATGCTGCCTCCCGTAGGAGT\tFast\t20071112\t"
+    b"Fasting_mouse_I.D._607\n"
 )
 
 EXP_SAMPLE_TEMPLATE = (

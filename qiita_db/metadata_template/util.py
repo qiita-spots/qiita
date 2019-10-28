@@ -251,13 +251,13 @@ def looks_like_qiime_mapping_file(fp):
     some other different column.
     """
     first_line = None
-    with qdb.util.open_file(fp, newline=None) as f:
+    with qdb.util.open_file(fp, newline=None, errors='replace') as f:
         first_line = f.readline()
     if not first_line:
         return False
 
     first_col = first_line.split()[0]
-    return first_col == '#SampleID'
+    return first_col in ('#SampleID', b'#SampleID')
 
 
 def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
