@@ -191,6 +191,19 @@ def load_template_to_dataframe(fn, index='sample_name'):
             'all their values are empty: %s'
             % ', '.join(dropped_cols), qdb.exceptions.QiitaDBWarning)
 
+    # removing 'sample-id' and 'sample_id' as per issue #2906
+    sdrop = []
+    if 'sample-id' in template.columns:
+        sdrop.append('sample-id')
+    if 'sample_id' in template.columns:
+        sdrop.append('sample_id')
+    if sdrop:
+        template.drop(columns=sdrop, inplace=True)
+        warnings.warn(
+            'The following column(s) were removed from the template because '
+            'they will cause conflicts with sample_name: %s'
+            % ', '.join(sdrop), qdb.exceptions.QiitaDBWarning)
+
     # Pandas represents data with np.nan rather than Nones, change it to None
     # because psycopg2 knows that a None is a Null in SQL, while it doesn't
     # know what to do with NaN
