@@ -74,25 +74,27 @@ replace artifact-id):
 
 - https://qiita.ucsd.edu/public_artifact_download/?artifact_id=artifact-id
 
-Download raw or all BIOM files from a study
--------------------------------------------
+Download metadata, raw or all BIOM files from a study
+-----------------------------------------------------
 
 **no log required / wget or curl friendly**
 
 We provide direct access to public data via a single end point. This end point
-can be used to download BIOMs or raw data, in specific (do not forget to
-replace `study-id` and/or `data_type` for your study or data type of interest):
+can be used to download BIOMs or raw data. Do not forget to replace `study-id`,
+`prep_id` and/or `data_type` for your study, preparation or data type of interest:
 
 - All raw data: https://qiita.ucsd.edu/public_download/?data=raw&study_id=study-id
 - All BIOMs + mapping files: https://qiita.ucsd.edu/public_download/?data=biom&study_id=study-id
 - Only 16S raw data: https://qiita.ucsd.edu/public_download/?data=raw&study_id=study-id&data_type=16S
 - Only Metagenomic BIOMs + mapping files: https://qiita.ucsd.edu/public_download/?data=biom&study_id=study-id&data_type=Metagenomic
+- Only the sample information file: https://qiita.ucsd.edu/public_download/?data=sample_information&study_id=study-id
+- Only the preparation information file: https://qiita.ucsd.edu/public_download/?data=data=prep_information&prep_id=prep-id
 
 Note that if you are downloading raw data, the owner should have made that data
 available by selecting "Allow Qiita users to download raw data files" in
-the main study page. Also, that the created zip file will have a mapping file
-with the artifact id prepended to the name; this should allow you to match the
-artifact id with the mapping file; which will be helpful for processing.
+the main study page. Every artifact contained in the download zip file is paired
+with a mapping file to facilitate subsequent processing; the pairing is based
+off the artifact ID and is present in the artifact and metadata filenames.
 
 Finding Samples Based On Their Metadata
 ---------------------------------------
