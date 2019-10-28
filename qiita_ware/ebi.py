@@ -113,7 +113,11 @@ class EBISubmission(object):
                                     'ILLUMINA NOVASEQ 6000',
                                     'NEXTSEQ 500',
                                     'NEXTSEQ 550',
-                                    'UNSPECIFIED']}
+                                    'UNSPECIFIED'],
+                       'PACBIO_SMRT': ['PACBIO RS',
+                                       'PACBIO RS II',
+                                       'SEQUEL',
+                                       'SEQUEL II']}
 
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
