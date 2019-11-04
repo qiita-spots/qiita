@@ -6,6 +6,14 @@
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
 <script type="text/javascript">
   $(document).ready(function() {
+
+    $("#search").keyup(function() {
+      var new_value = $(this).val().replace('`', "'")
+                                   .replace('~', "'")
+                                   .replace('´', "'");
+      $(this).val(new_value);
+    });
+
     qiita_websocket.init(window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', error, error);
     qiita_websocket.add_callback('sel', show_alert);
     $("#redbiom-table").dataTable({

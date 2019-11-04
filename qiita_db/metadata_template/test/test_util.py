@@ -31,6 +31,9 @@ class TestUtil(TestCase):
                                                    orient='index', dtype=str)
         self.headers = ['float_col', 'str_col', 'int_col']
 
+        self.mfp = join(
+            dirname(abspath(getfile(currentframe()))), 'support_files')
+
     def test_prefix_sample_names_with_id(self):
         exp_metadata_dict = {
             '1.Sample1': {'int_col': 1, 'float_col': 2.1, 'str_col': 'str1'},
@@ -82,24 +85,31 @@ class TestUtil(TestCase):
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp, check_like=True)
 
-    def test_load_template_to_dataframe_xlsx(self):
-        mfp = join(dirname(abspath(getfile(currentframe()))), 'support_files')
+    def test_load_template_to_dataframe_sample_id(self):
+        obs = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.util.load_template_to_dataframe,
+            StringIO(EXP_SAMPLE_TEMPLATE_WITH_SAMPLE_ID))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp, check_like=True)
 
+    def test_load_template_to_dataframe_xlsx(self):
         # test loading a qiimp file
-        fp = join(mfp, 'a_qiimp_wb.xlsx')
+        fp = join(self.mfp, 'a_qiimp_wb.xlsx')
         obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
         exp = pd.DataFrame.from_dict(EXP_QIIMP, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp, check_like=True)
 
         # test loading an empty qiimp file
-        fp = join(mfp, 'empty_qiimp_wb.xlsx')
+        fp = join(self.mfp, 'empty_qiimp_wb.xlsx')
         with self.assertRaises(ValueError) as error:
             qdb.metadata_template.util.load_template_to_dataframe(fp)
         self.assertEqual(str(error.exception), "The template is empty")
 
         # test loading non qiimp file
-        fp = join(mfp, 'not_a_qiimp_wb.xlsx')
+        fp = join(self.mfp, 'not_a_qiimp_wb.xlsx')
         obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
         exp = pd.DataFrame.from_dict(EXP_NOT_QIIMP, dtype=str)
         exp.index.name = 'sample_name'
@@ -294,6 +304,10 @@ class TestUtil(TestCase):
             StringIO(QIIME_TUTORIAL_MAP_SUBSET))
         self.assertTrue(obs)
 
+        mf = join(self.mfp, 'qiita_map_unicode.tsv')
+        obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(mf)
+        self.assertTrue(obs)
+
         obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(
             StringIO())
         self.assertFalse(obs)
@@ -442,6 +456,18 @@ EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
     "Value for sample 3\n"
     "\t\t\t\t\t\t\t\t\t\t\t\t\n"
     "\t\t\t\t\t\t\t\t\t\t   \t\t\n")
+
+EXP_SAMPLE_TEMPLATE_WITH_SAMPLE_ID = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\t"
+    "sample_id\tsample-id\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\tA\ta\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\tB\tb\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\tC\tc\n")
 
 EXP_ST_SPACES_EMPTY_COLUMN = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"

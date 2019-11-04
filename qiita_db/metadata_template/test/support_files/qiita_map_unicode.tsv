@@ -1,0 +1,3 @@
+#SampleID	BarcodeSequence	LinkerPriåmerSequence	Treatment	DOB	Description
+PC.354	AGCACåGAGCCTA	YATGCTGCCTCCCGTAGGAGT	Control	20061218	Control_mouse_I.D._354
+PC.607	AACTGTGCGTAC	YATGCTGCCTCCCGTAGGAGT	Fast	20071112	Fasting_mouse_I.D._607
