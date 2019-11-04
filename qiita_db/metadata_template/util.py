@@ -264,7 +264,7 @@ def looks_like_qiime_mapping_file(fp):
     some other different column.
     """
     first_line = None
-    with qdb.util.open_file(fp, newline=None) as f:
+    with qdb.util.open_file(fp, newline=None, errors='replace') as f:
         first_line = f.readline()
     if not first_line:
         return False

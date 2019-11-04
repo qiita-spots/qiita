@@ -31,6 +31,9 @@ class TestUtil(TestCase):
                                                    orient='index', dtype=str)
         self.headers = ['float_col', 'str_col', 'int_col']
 
+        self.mfp = join(
+            dirname(abspath(getfile(currentframe()))), 'support_files')
+
     def test_prefix_sample_names_with_id(self):
         exp_metadata_dict = {
             '1.Sample1': {'int_col': 1, 'float_col': 2.1, 'str_col': 'str1'},
@@ -92,23 +95,21 @@ class TestUtil(TestCase):
         assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_xlsx(self):
-        mfp = join(dirname(abspath(getfile(currentframe()))), 'support_files')
-
         # test loading a qiimp file
-        fp = join(mfp, 'a_qiimp_wb.xlsx')
+        fp = join(self.mfp, 'a_qiimp_wb.xlsx')
         obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
         exp = pd.DataFrame.from_dict(EXP_QIIMP, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp, check_like=True)
 
         # test loading an empty qiimp file
-        fp = join(mfp, 'empty_qiimp_wb.xlsx')
+        fp = join(self.mfp, 'empty_qiimp_wb.xlsx')
         with self.assertRaises(ValueError) as error:
             qdb.metadata_template.util.load_template_to_dataframe(fp)
         self.assertEqual(str(error.exception), "The template is empty")
 
         # test loading non qiimp file
-        fp = join(mfp, 'not_a_qiimp_wb.xlsx')
+        fp = join(self.mfp, 'not_a_qiimp_wb.xlsx')
         obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
         exp = pd.DataFrame.from_dict(EXP_NOT_QIIMP, dtype=str)
         exp.index.name = 'sample_name'
@@ -301,6 +302,10 @@ class TestUtil(TestCase):
 
         obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(
             StringIO(QIIME_TUTORIAL_MAP_SUBSET))
+        self.assertTrue(obs)
+
+        mf = join(self.mfp, 'qiita_map_unicode.tsv')
+        obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(mf)
         self.assertTrue(obs)
 
         obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(
