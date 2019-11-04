@@ -391,7 +391,8 @@ class TestDownloadPublicHandler(TestHandlerBase):
         self.assertEqual(response.code, 422)
         self.assertEqual(response.reason, 'You need to specify '
                          'both data (the data type you want to download - '
-                         'raw/biom) and study_id')
+                         'raw/biom/sample_information/prep_information) and '
+                         'study_id or prep_id')
 
         response = self.get('/public_download/?data=raw&study_id=10000')
         self.assertEqual(response.code, 422)
@@ -473,6 +474,51 @@ class TestDownloadPublicHandler(TestHandlerBase):
             '_qiime_[0-9]*-[0-9]*.txt mapping_files/5_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
+    def test_download_sample_information(self):
+        response = self.get('/public_download/?data=sample_information')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(
+            response.reason, 'You need to specify both data (the data type '
+            'you want to download - raw/biom/sample_information/'
+            'prep_information) and study_id or prep_id')
+
+        response = self.get('/public_download/?data=sample_information&'
+                            'data_type=16S&study_id=1')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'If requesting an information file '
+                         'you cannot specify the data_type')
+
+        response = self.get(
+            '/public_download/?data=sample_information&prep_id=1')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Review your parameters, not a '
+                         'valid combination')
+
+        response = self.get(
+            '/public_download/?data=sample_information&study_id=10000')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Sample information does not exist')
+
+        response = self.get(
+            '/public_download/?data=prep_information&prep_id=10000')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(
+            response.reason, 'Preparation information does not exist')
+
+        response = self.get(
+            '/public_download/?data=sample_information&study_id=1')
+        self.assertEqual(response.code, 200)
+        exp = ('[0-9]* [0-9]* /protected/templates/1_[0-9]*-[0-9]*.txt '
+               'templates/1_[0-9]*-[0-9]*.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        response = self.get(
+            '/public_download/?data=prep_information&prep_id=1')
+        self.assertEqual(response.code, 200)
+        exp = ('[0-9]* [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]'
+               '*.txt templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
 
 class TestDownloadPublicArtifactHandler(TestHandlerBase):
 
@@ -508,6 +554,11 @@ class TestDownloadPublicArtifactHandler(TestHandlerBase):
             '- 36762 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/5_mapping_file.txt')
         self.assertRegex(response.body.decode('ascii'), exp)
+
+    def test_download_sample_information(self):
+        response = self.get('/public_artifact_download/')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'You need to specify an artifact id')
 
 
 if __name__ == '__main__':

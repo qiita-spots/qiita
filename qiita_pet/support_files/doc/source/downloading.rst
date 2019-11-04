@@ -5,11 +5,18 @@
 Downloading From Qiita
 ======================
 
-Qiita allows users to download public data as well as the user's own private
-data. This data can then be used for processing and analysis in external tools.
+Qiita provides convenient ways to access its data while keeping the data private
+based on the owners data permission. For example, the owner decides when the data
+becomes public and if the raw data is available for public download.
 
-Downloading All Public Data
----------------------------
+For an owner to make their study raw data available the owner needs to make the
+artifacts public and select "Allow Qiita users to download raw data files" from
+the main study page.
+
+Downloading All Public Data in BIOM format
+------------------------------------------
+
+**requires to be log into the system**
 
 Users can download all public studies on Qiita. To do this, users can select
 "Downloads" from the center of the toolbar located on the top of the screen.
@@ -19,6 +26,8 @@ processing steps (BIOM tables from analyses).*
 
 Download Processed Data
 -----------------------
+
+**requires to be log into the system**
 
 Users can download unprocessed or processed data from a single study. To do
 this, user's go to the "View Studies Page" by selecting "View Studies" on the
@@ -35,6 +44,8 @@ can be further processed and/or analyzed outside of Qiita.
 Download Analyzed Data
 ----------------------
 
+**requires to be log into the system**
+
 Users can download analyzed data from an analysis of a single study or from a
 meta-analysis of multiple studies. To do this, user's go to the
 "View Analysis Page" by selecting "See Previous Analyses" on the "Analysis"
@@ -46,6 +57,44 @@ the user selects their desired artifact, a list of "Available files" will
 appear below. These files can include distance matrixes, PCoA, visualization,
 other resulting files. These can be download from here and further analyzed
 outside of Qiita.
+
+Access a public study or artifact without login
+-----------------------------------------------
+
+**no log required / wget or curl friendly**
+
+To display the study or artifact information within Qiita you can (do not
+forget to replace study-id or artifact-id):
+
+- Study: https://qiita.ucsd.edu/public/?study_id=study-id
+- Artifact: https://qiita.ucsd.edu/public/?artifact_id=artifact-id
+
+Now, if you would like to download any give artifact you can (do not forget to
+replace artifact-id):
+
+- https://qiita.ucsd.edu/public_artifact_download/?artifact_id=artifact-id
+
+Download metadata, raw or all BIOM files from a study
+-----------------------------------------------------
+
+**no log required / wget or curl friendly**
+
+We provide direct access to public data via a single end point. This end point
+can be used to download BIOMs or raw data. Do not forget to replace `study-id`,
+`prep_id` and/or `data_type` for your study, preparation or data type of interest:
+
+- All raw data: https://qiita.ucsd.edu/public_download/?data=raw&study_id=study-id
+- All BIOMs + mapping files: https://qiita.ucsd.edu/public_download/?data=biom&study_id=study-id
+- Only 16S raw data: https://qiita.ucsd.edu/public_download/?data=raw&study_id=study-id&data_type=16S
+- Only Metagenomic BIOMs + mapping files: https://qiita.ucsd.edu/public_download/?data=biom&study_id=study-id&data_type=Metagenomic
+- Only the sample information file: https://qiita.ucsd.edu/public_download/?data=sample_information&study_id=study-id
+- Only the preparation information file: https://qiita.ucsd.edu/public_download/?data=data=prep_information&prep_id=prep-id
+
+Note that if you are downloading raw data, the owner should have made that data
+available by selecting "Allow Qiita users to download raw data files" in
+the main study page. Every artifact contained in the download zip file is paired
+with a mapping file to facilitate subsequent processing; the pairing is based
+off the artifact ID and is present in the artifact and metadata filenames.
 
 Finding Samples Based On Their Metadata
 ---------------------------------------

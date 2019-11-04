@@ -20,7 +20,8 @@ from qiita_db.study import Study
 from qiita_db.artifact import Artifact
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
                            get_filepath_information, get_mountpoint,
-                           filepath_id_to_object_id, get_data_types)
+                           filepath_id_to_object_id, get_data_types,
+                           retrieve_filepaths)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -346,16 +347,61 @@ class DownloadPublicHandler(BaseHandlerDownload):
     def get(self):
         data = self.get_argument("data", None)
         study_id = self.get_argument("study_id",  None)
+        prep_id = self.get_argument("prep_id",  None)
         data_type = self.get_argument("data_type",  None)
         dtypes = get_data_types().keys()
 
-        if data is None or study_id is None or data not in ('raw', 'biom'):
+        templates = ['sample_information', 'prep_information']
+        valid_data = ['raw', 'biom'] + templates
+
+        to_download = []
+        if data is None or (study_id is None and prep_id is None) or \
+                data not in valid_data:
             raise HTTPError(422, reason='You need to specify both data (the '
-                            'data type you want to download - raw/biom) and '
-                            'study_id')
+                            'data type you want to download - %s) and '
+                            'study_id or prep_id' % '/'.join(valid_data))
         elif data_type is not None and data_type not in dtypes:
             raise HTTPError(422, reason='Not a valid data_type. Valid types '
                             'are: %s' % ', '.join(dtypes))
+        elif data in templates and prep_id is None and study_id is None:
+            raise HTTPError(422, reason='If downloading a sample or '
+                            'preparation file you need to define study_id or'
+                            ' prep_id')
+        elif data in templates:
+            if data_type is not None:
+                raise HTTPError(422, reason='If requesting an information '
+                                'file you cannot specify the data_type')
+            elif prep_id is not None and data == 'prep_information':
+                fname = 'preparation_information_%s' % prep_id
+                prep_id = int(prep_id)
+                try:
+                    infofile = PrepTemplate(prep_id)
+                except QiitaDBUnknownIDError:
+                    raise HTTPError(
+                        422, reason='Preparation information does not exist')
+            elif study_id is not None and data == 'sample_information':
+                fname = 'sample_information_%s' % study_id
+                study_id = int(study_id)
+                try:
+                    infofile = SampleTemplate(study_id)
+                except QiitaDBUnknownIDError:
+                    raise HTTPError(
+                        422, reason='Sample information does not exist')
+            else:
+                raise HTTPError(422, reason='Review your parameters, not a '
+                                'valid combination')
+            x = retrieve_filepaths(
+                infofile._filepath_table, infofile._id_column, infofile.id,
+                sort='descending')[0]
+
+            basedir_len = len(get_db_files_base_dir()) + 1
+            fp = x['fp'][basedir_len:]
+            to_download.append((fp, fp, str(x['checksum']), str(x['fp_size'])))
+            self._write_nginx_file_list(to_download)
+
+            zip_fn = '%s_%s.zip' % (
+                fname, datetime.now().strftime('%m%d%y-%H%M%S'))
+            self._set_nginx_headers(zip_fn)
         else:
             study_id = int(study_id)
             try:
@@ -373,26 +419,31 @@ class DownloadPublicHandler(BaseHandlerDownload):
                                     'is a mistake contact: '
                                     'qiita.help@gmail.com')
                 else:
-                    to_download = []
-                    for a in study.artifacts(dtype=data_type,
-                                             artifact_type='BIOM'
-                                             if data == 'biom' else None):
+                    # raw data
+                    artifacts = [a for a in study.artifacts(dtype=data_type)
+                                 if not a.parents]
+                    # bioms
+                    if data == 'biom':
+                        artifacts = study.artifacts(
+                            dtype=data_type, artifact_type='BIOM')
+                    for a in artifacts:
                         if a.visibility != 'public':
                             continue
                         to_download.extend(self._list_artifact_files_nginx(a))
 
-                    if not to_download:
-                        raise HTTPError(422, reason='Nothing to download. If '
-                                        'this is a mistake contact: '
-                                        'qiita.help@gmail.com')
-                    else:
-                        self._write_nginx_file_list(to_download)
+                if not to_download:
+                    raise HTTPError(422, reason='Nothing to download. If '
+                                    'this is a mistake contact: '
+                                    'qiita.help@gmail.com')
+                else:
+                    self._write_nginx_file_list(to_download)
 
-                        zip_fn = 'study_%d_%s_%s.zip' % (
-                            study_id, data, datetime.now().strftime(
-                                '%m%d%y-%H%M%S'))
+                    zip_fn = 'study_%d_%s_%s.zip' % (
+                        study_id, data, datetime.now().strftime(
+                            '%m%d%y-%H%M%S'))
 
-                        self._set_nginx_headers(zip_fn)
+                    self._set_nginx_headers(zip_fn)
+
         self.finish()
 
 
