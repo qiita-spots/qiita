@@ -257,7 +257,7 @@ def looks_like_qiime_mapping_file(fp):
         return False
 
     first_col = first_line.split()[0]
-    return first_col in ('#SampleID', b'#SampleID')
+    return first_col == '#SampleID'
 
 
 def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):

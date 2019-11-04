@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from six import StringIO
-from tempfile import NamedTemporaryFile
 from inspect import currentframe, getfile
 from os.path import dirname, abspath, join
 from unittest import TestCase, main
@@ -31,6 +30,9 @@ class TestUtil(TestCase):
         self.metadata_map = pd.DataFrame.from_dict(metadata_dict,
                                                    orient='index', dtype=str)
         self.headers = ['float_col', 'str_col', 'int_col']
+
+        self.mfp = join(
+            dirname(abspath(getfile(currentframe()))), 'support_files')
 
     def test_prefix_sample_names_with_id(self):
         exp_metadata_dict = {
@@ -84,23 +86,21 @@ class TestUtil(TestCase):
         assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_xlsx(self):
-        mfp = join(dirname(abspath(getfile(currentframe()))), 'support_files')
-
         # test loading a qiimp file
-        fp = join(mfp, 'a_qiimp_wb.xlsx')
+        fp = join(self.mfp, 'a_qiimp_wb.xlsx')
         obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
         exp = pd.DataFrame.from_dict(EXP_QIIMP, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp, check_like=True)
 
         # test loading an empty qiimp file
-        fp = join(mfp, 'empty_qiimp_wb.xlsx')
+        fp = join(self.mfp, 'empty_qiimp_wb.xlsx')
         with self.assertRaises(ValueError) as error:
             qdb.metadata_template.util.load_template_to_dataframe(fp)
         self.assertEqual(str(error.exception), "The template is empty")
 
         # test loading non qiimp file
-        fp = join(mfp, 'not_a_qiimp_wb.xlsx')
+        fp = join(self.mfp, 'not_a_qiimp_wb.xlsx')
         obs = qdb.metadata_template.util.load_template_to_dataframe(fp)
         exp = pd.DataFrame.from_dict(EXP_NOT_QIIMP, dtype=str)
         exp.index.name = 'sample_name'
@@ -295,10 +295,8 @@ class TestUtil(TestCase):
             StringIO(QIIME_TUTORIAL_MAP_SUBSET))
         self.assertTrue(obs)
 
-        with NamedTemporaryFile(suffix='.csv') as tf:
-            tf.write(QIIME_TUTORIAL_MAP_SUBSET_UNICODE)
-            tf.seek(0)
-            obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(tf)
+        mf = join(self.mfp, 'qiita_map_unicode.tsv')
+        obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(mf)
         self.assertTrue(obs)
 
         obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(
@@ -341,15 +339,6 @@ QIIME_TUTORIAL_MAP_SUBSET = (
     "Control_mouse_I.D._354\n"
     "PC.607\tAACTGTGCGTAC\tYATGCTGCCTCCCGTAGGAGT\tFast\t20071112\t"
     "Fasting_mouse_I.D._607\n"
-)
-
-QIIME_TUTORIAL_MAP_SUBSET_UNICODE = (
-    b"#SampleID\tBarcodeSequence\tLinkerPri\xe5merSequence\tTreatment\tDOB\t"
-    b"Description\n"
-    b"PC.354\tAGCAC\xe5GAGCCTA\tYATGCTGCCTCCCGTAGGAGT\tControl\t20061218\t"
-    b"Control_mouse_I.D._354\n"
-    b"PC.607\tAACTGTGCGTAC\tYATGCTGCCTCCCGTAGGAGT\tFast\t20071112\t"
-    b"Fasting_mouse_I.D._607\n"
 )
 
 EXP_SAMPLE_TEMPLATE = (
