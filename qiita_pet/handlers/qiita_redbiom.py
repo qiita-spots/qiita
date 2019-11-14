@@ -49,13 +49,12 @@ class RedbiomPublicSearch(BaseHandler):
             study_artifacts = defaultdict(lambda: defaultdict(list))
             for ctx in contexts:
                 # redbiom.fetch.data_from_samples returns a biom, which we
-                # will ignore, and a dict
+                # will ignore, and a dict: {sample_id_in_table: original_id}
                 _, data = redbiom.fetch.data_from_samples(ctx, redbiom_samples)
-                for vals in data.values():
-                    for idx in vals:
-                        aid, sample_id = idx.split('_', 1)
-                        sid = sample_id.split('.', 1)[0]
-                        study_artifacts[sid][aid].append(sample_id)
+                for idx in data.keys():
+                    sample_id, aid = idx.rsplit('.', 1)
+                    sid = sample_id.split('.', 1)[0]
+                    study_artifacts[sid][aid].append(sample_id)
 
         return message, study_artifacts
 
@@ -64,7 +63,7 @@ class RedbiomPublicSearch(BaseHandler):
         query = [f for f in query.split(' ')]
         for ctx in contexts:
             for idx in redbiom.util.ids_from(query, False, 'feature', ctx):
-                aid, sample_id = idx.split('_', 1)
+                aid, sample_id = idx.rsplit('_', 1)
                 sid = sample_id.split('.', 1)[0]
                 study_artifacts[sid][aid].append(sample_id)
 
