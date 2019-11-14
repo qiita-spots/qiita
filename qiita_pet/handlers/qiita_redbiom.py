@@ -63,7 +63,7 @@ class RedbiomPublicSearch(BaseHandler):
         query = [f for f in query.split(' ')]
         for ctx in contexts:
             for idx in redbiom.util.ids_from(query, False, 'feature', ctx):
-                aid, sample_id = idx.rsplit('_', 1)
+                aid, sample_id = idx.split('_', 1)
                 sid = sample_id.split('.', 1)[0]
                 study_artifacts[sid][aid].append(sample_id)
 
