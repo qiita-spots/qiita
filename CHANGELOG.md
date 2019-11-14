@@ -1,5 +1,15 @@
 # Qiita changelog
 
+Version 112019
+--------------
+
+* Added PacBio_SMRT to the list of platform and PacBio RS, PacBio RS II, Sequel, Sequel II as valid instrument models
+* Improved downloads for public data (BIOM, raw data, etc.; see tutorials)
+* Added the possibility of just downloading sample or preparation information files
+* If sample_name and sample_id/sample-id are present, Qiita will drop the columns sample_id/sample-id to avoid issues with QIIME2
+* The redbiom webpage only accepts ' or "
+* Added qiime2.2019.10 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
+
 Version 092019
 --------------
 
