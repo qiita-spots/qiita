@@ -161,6 +161,43 @@ def artifact_summary_get_request(user, artifact_id):
             buttons.append(btn_base % ('revert to sandbox', 'sandbox',
                                        'Revert to sandbox'))
 
+        private_download_gen_link = """%s/private_download/generate/artifact/%s""" % (qiita_config.base_url, str(artifact_id))
+
+        # Have no fear, this is just python to generate html with an onclick in javascript that makes an
+        # ajax call to a separate url, takes the response and writes it to the newly uncollapsed div.
+        # Do note that you have to be REALLY CAREFUL with properly escaping quotation marks.
+        private_download = """<p>
+  <button class="btn btn-primary" type="button" aria-expanded="false" aria-controls="privateDownloadLink"
+    onclick="$.ajax({
+        url:'%s',
+        method:'PUT',
+        success: function(resp){
+          var newLink = $('<a>',{
+            text: resp.url,
+            title: resp.url,
+            href: resp.url
+          });
+          $('#downloadLinkText').text('Link will expire in 7 days');
+          $('#downloadLinkText').append('<br/>')
+          $('#downloadLinkText').append(newLink)
+          $('#privateDownloadLink').collapse('show')
+        },
+        error: function(resp){
+          $('#downloadLinkText').text('Failed to Generate Download Link');
+          $('#privateDownloadLink').collapse('show')
+        }});
+        ">
+    Generate Download Link
+  </button>
+</p>
+<div class="collapse" id="privateDownloadLink">
+  <div class="card card-body" id="downloadLinkText">
+    Generating Download Link...
+  </div>
+</div>""" % private_download_gen_link
+
+        buttons.append(private_download)
+
         if user.level == 'admin':
             if artifact.can_be_submitted_to_ebi:
                 buttons.append(
