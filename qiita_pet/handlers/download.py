@@ -459,7 +459,7 @@ class DownloadPrivateArtifactHandler(BaseHandlerDownload):
         jti = b64encode(uuid4().bytes).decode("utf-8")
         # Sign a jwt allowing access
         utcnow = datetime.now(timezone.utc)
-        jwt = jws.sign({
+        jwt = jose_jwt.encode({
                 "artifactId": str(artifact_id),
                 "perm": "download",
                 "sub": str(user._id),
