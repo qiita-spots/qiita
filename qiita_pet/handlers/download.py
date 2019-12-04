@@ -12,11 +12,11 @@ from tornado.gen import coroutine
 from future.utils import viewitems
 from os.path import basename, getsize, join, isdir
 from os import walk
-from datetime import datetime
 
 from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy.util import check_access
-from qiita_pet.handlers.artifact_handlers.base_handlers import check_artifact_access
+from qiita_pet.handlers.artifact_handlers.base_handlers \
+    import check_artifact_access
 from qiita_db.study import Study
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
@@ -444,16 +444,19 @@ class DownloadPrivateArtifactHandler(BaseHandlerDownload):
     @authenticated
     @coroutine
     @execute_as_transaction
-    def put(self, artifact_id):
+    def post(self, artifact_id):
         # Generate a new download link:
-        #   1. Build a signed jwt specifying the user and the artifact they wish to download
-        #   2. Write that jwt to the database keyed by its jti (jwt ID/ json token identifier)
+        #   1. Build a signed jwt specifying the user and
+        #      the artifact they wish to download
+        #   2. Write that jwt to the database keyed by its jti
+        #      (jwt ID/ json token identifier)
         #   3. Return the jti as a short url to be used for download
 
-        # Get current user
         user = self.current_user
+        artifact = Artifact(artifact_id)
+
         # Check that user is currently allowed to access artifact, else throw
-        check_artifact_access(user, Artifact(artifact_id))
+        check_artifact_access(user, artifact)
 
         # Generate a jwt id as a random uuid in base64
         jti = b64encode(uuid4().bytes).decode("utf-8")
@@ -476,7 +479,8 @@ class DownloadPrivateArtifactHandler(BaseHandlerDownload):
         DownloadLink.create(jwt)
 
         url = qiita_config.base_url + '/private_download/' + jti
-        user_msg = "This link will expire in 7 days on: " + (utcnow + timedelta(days=7)).strftime('%Y-%m-%d')
+        user_msg = "This link will expire in 7 days on: " + \
+                   (utcnow + timedelta(days=7)).strftime('%Y-%m-%d')
 
         self.set_status(200)
         self.finish({"url": url, "msg": user_msg})
@@ -489,7 +493,9 @@ class DownloadPrivateArtifactHandler(BaseHandlerDownload):
 
         # If no jwt, error response
         if jwt is None:
-            raise HTTPError(404, reason='Download Not Found.  Link may have expired.')
+            raise HTTPError(
+                404,
+                reason='Download Not Found.  Link may have expired.')
 
         # If jwt doesn't validate, error response
         jwt_data = jose_jwt.decode(jwt, qiita_config.jwt_secret, 'HS256')

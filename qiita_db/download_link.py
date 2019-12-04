@@ -11,12 +11,14 @@ from __future__ import division
 import qiita_db as qdb
 
 from jose import jwt as jose_jwt
-from datetime import datetime
+from datetime import datetime, timezone
 from qiita_core.qiita_settings import qiita_config
 
 
 class DownloadLink(qdb.base.QiitaObject):
-    r"""A shortened url for downloading artifacts alongside a signed jwt and expiration
+    r"""
+    A shortened url for downloading artifacts
+    alongside a signed jwt and expiration
 
     Methods
     -------
@@ -35,7 +37,8 @@ class DownloadLink(qdb.base.QiitaObject):
 
         Parameters
         ----------
-        jwt : Json Web Token signing the access link.  This jwt will have, at a minimum, jti and exp fields
+        jwt : Json Web Token signing the access link.
+        This jwt will have, at a minimum, jti and exp fields
 
         Raises
         ------
@@ -45,16 +48,20 @@ class DownloadLink(qdb.base.QiitaObject):
             If the jti already exists in the database
         """
 
-        jwt_data = jose_jwt.decode(jwt, qiita_config.jwt_secret, algorithms='HS256')
+        jwt_data = jose_jwt.decode(jwt,
+                                   qiita_config.jwt_secret,
+                                   algorithms='HS256')
         jti = jwt_data["jti"]
         exp = datetime.utcfromtimestamp(jwt_data["exp"] / 1000)
 
         with qdb.sql_connection.TRN:
             if cls.exists(jti):
-                raise qdb.exceptions.QiitaDBDuplicateError("JTI Already Exists")
+                raise qdb.exceptions.QiitaDBDuplicateError(
+                    "JTI Already Exists")
 
             # Insert study into database
-            sql = """INSERT INTO qiita.{0} (jti, jwt, exp) VALUES (%s, %s, %s) RETURNING jti""".format(cls._table)
+            sql = """INSERT INTO qiita.{0} (jti, jwt, exp)
+            VALUES (%s, %s, %s) RETURNING jti""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [jti, jwt, exp])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -85,7 +92,8 @@ class DownloadLink(qdb.base.QiitaObject):
         """
 
         with qdb.sql_connection.TRN:
-            sql = """SELECT COUNT(jti) FROM qiita.{0} WHERE jti=%s""".format(cls._table)
+            sql = """SELECT COUNT(jti) FROM qiita.{0}
+                     WHERE jti=%s""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [jti])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -116,6 +124,7 @@ class DownloadLink(qdb.base.QiitaObject):
         """
 
         with qdb.sql_connection.TRN:
-            sql = """SELECT jwt FROM qiita.{0} WHERE jti=%s""".format(cls._table)
+            sql = """SELECT jwt FROM qiita.{0}
+                     WHERE jti=%s""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [jti])
             return qdb.sql_connection.TRN.execute_fetchlast()

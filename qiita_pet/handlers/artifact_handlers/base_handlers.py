@@ -161,16 +161,19 @@ def artifact_summary_get_request(user, artifact_id):
             buttons.append(btn_base % ('revert to sandbox', 'sandbox',
                                        'Revert to sandbox'))
 
-        private_download_gen_link = """%s/private_download/generate/artifact/%s""" % (qiita_config.base_url, str(artifact_id))
+        download_gen_link = """%s/private_download/generate/artifact/%s""" % \
+                            (qiita_config.base_url, str(artifact_id))
 
-        # Have no fear, this is just python to generate html with an onclick in javascript that makes an
-        # ajax call to a separate url, takes the response and writes it to the newly uncollapsed div.
-        # Do note that you have to be REALLY CAREFUL with properly escaping quotation marks.
+        # Have no fear, this is just python to generate html with an onclick in
+        # javascript that makes an ajax call to a separate url, takes the
+        # response and writes it to the newly uncollapsed div.  Do note that
+        # you have to be REALLY CAREFUL with properly escaping quotation marks.
         private_download = """<p>
-  <button class="btn btn-primary" type="button" aria-expanded="false" aria-controls="privateDownloadLink"
+  <button class="btn btn-primary" type="button" aria-expanded="false"
+  aria-controls="privateDownloadLink"
     onclick="$.ajax({
         url:'%s',
-        method:'PUT',
+        method:'POST',
         success: function(resp){
           var newLink = $('<a>',{
             text: resp.url,
@@ -194,7 +197,7 @@ def artifact_summary_get_request(user, artifact_id):
   <div class="card card-body" id="downloadLinkText">
     Generating Download Link...
   </div>
-</div>""" % private_download_gen_link
+</div>""" % download_gen_link
 
         buttons.append(private_download)
 
