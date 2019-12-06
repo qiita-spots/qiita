@@ -270,6 +270,9 @@ KEY_FILE = /tmp/server.key
 #   print b64encode(uuid4().bytes + uuid4().bytes)"
 COOKIE_SECRET = SECRET
 
+# The value used to secure JWTs for delegated permission artifact download.
+JWT_SECRET = SUPER_SECRET
+
 # ----------------------------- SMTP settings -----------------------------
 [smtp]
 # The hostname to connect to
