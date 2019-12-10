@@ -132,7 +132,6 @@ def artifact_summary_get_request(user, artifact_id):
         '<button onclick="if (confirm(\'Are you sure you want to %s '
         'artifact id: {0}?\')) {{ set_artifact_visibility(\'%s\', {0}) }}" '
         'class="btn btn-primary btn-sm">%s</button>').format(artifact_id)
-
     if not analysis:
         # If the artifact is part of a study, the buttons shown depend in
         # multiple factors (see each if statement for an explanation of those)
@@ -161,46 +160,6 @@ def artifact_summary_get_request(user, artifact_id):
             buttons.append(btn_base % ('revert to sandbox', 'sandbox',
                                        'Revert to sandbox'))
 
-        download_gen_link = """%s/private_download/generate/artifact/%s""" % \
-                            (qiita_config.base_url, str(artifact_id))
-
-        # Have no fear, this is just python to generate html with an onclick in
-        # javascript that makes an ajax call to a separate url, takes the
-        # response and writes it to the newly uncollapsed div.  Do note that
-        # you have to be REALLY CAREFUL with properly escaping quotation marks.
-        private_download = """<p>
-  <button class="btn btn-primary" type="button" aria-expanded="false"
-  aria-controls="privateDownloadLink"
-    onclick="$.ajax({
-        url:'%s',
-        method:'POST',
-        success: function(resp){
-          var newLink = $('<a>',{
-            text: resp.url,
-            title: resp.url,
-            href: resp.url
-          });
-          $('#downloadLinkText').text('Link will expire in 7 days');
-          $('#downloadLinkText').append('<br/>')
-          $('#downloadLinkText').append(newLink)
-          $('#privateDownloadLink').collapse('show')
-        },
-        error: function(resp){
-          $('#downloadLinkText').text('Failed to Generate Download Link');
-          $('#privateDownloadLink').collapse('show')
-        }});
-        ">
-    Generate Download Link
-  </button>
-</p>
-<div class="collapse" id="privateDownloadLink">
-  <div class="card card-body" id="downloadLinkText">
-    Generating Download Link...
-  </div>
-</div>""" % download_gen_link
-
-        buttons.append(private_download)
-
         if user.level == 'admin':
             if artifact.can_be_submitted_to_ebi:
                 buttons.append(
@@ -214,6 +173,21 @@ def artifact_summary_get_request(user, artifact_id):
                         '<a class="btn btn-primary btn-sm" href="/vamps/%d">'
                         '<span class="glyphicon glyphicon-export"></span>'
                         ' Submit to VAMPS</a>' % artifact_id)
+
+    if visibility != 'public':
+        # Have no fear, this is just python to generate html with an onclick in
+        # javascript that makes an ajax call to a separate url, takes the
+        # response and writes it to the newly uncollapsed div.  Do note that
+        # you have to be REALLY CAREFUL with properly escaping quotation marks.
+        private_download = (
+            '<button class="btn btn-primary btn-sm" type="button" '
+            'aria-expanded="false" aria-controls="privateDownloadLink" '
+            'onclick="generate_private_download_link(%d)">Generate '
+            'Download Link</button><div class="collapse" '
+            'id="privateDownloadLink"><div class="card card-body" '
+            'id="privateDownloadText">Generating Download Link...'
+            '</div></div>') % artifact_id
+        buttons.append(private_download)
 
     files = [(x['fp_id'], "%s (%s)" % (basename(x['fp']),
                                        x['fp_type'].replace('_', ' ')),

@@ -188,8 +188,6 @@ class Application(tornado.web.Application):
             (r"/release/download/(.*)", DownloadRelease),
             (r"/public_download/", DownloadPublicHandler),
             (r"/public_artifact_download/", DownloadPublicArtifactHandler),
-            (r"/private_download/generate/artifact/(.*)",
-                DownloadPrivateArtifactHandler),
             (r"/private_download/(.*)", DownloadPrivateArtifactHandler),
             (r"/public/", PublicHandler),
             (r"/vamps/(.*)", VAMPSHandler),

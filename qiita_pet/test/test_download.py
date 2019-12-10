@@ -573,7 +573,7 @@ class TestDownloadPrivateArtifactHandler(TestHandlerBase):
 
     def test_download(self):
         # Stupidly, you can't post None, you must post an empty byte array
-        response = self.post('/private_download/generate/artifact/1', b'')
+        response = self.post('/private_download/1', b'')
         self.assertEqual(response.code, 200)
 
         resp_dict = json.loads(response.body)
