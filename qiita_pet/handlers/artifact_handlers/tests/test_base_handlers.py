@@ -231,13 +231,13 @@ class TestBaseHandlersUtils(TestCase):
                            'sure you want to revert to sandbox artifact id: '
                            '2?\')) { set_artifact_visibility(\'sandbox\', 2) '
                            '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button> ' + private_download_button % 2 +
-                           ' <a class="btn btn-primary '
+                           'sandbox</button> <a class="btn btn-primary '
                            'btn-sm" href="/ebi_submission/2"><span '
                            'class="glyphicon glyphicon-export"></span> '
                            'Submit to EBI</a> <a class="btn btn-primary '
                            'btn-sm" href="/vamps/2"><span class="glyphicon '
-                           'glyphicon-export"></span> Submit to VAMPS</a>'),
+                           'glyphicon-export"></span> Submit to VAMPS</a> ' +
+                           private_download_button % 2),
                'processing_info': {
                  'command_active': True, 'software_deprecated': False,
                  'command': 'Split libraries FASTQ',
