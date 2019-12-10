@@ -111,7 +111,7 @@ class DownloadLink(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             sql = """DELETE FROM qiita.{0} WHERE exp<%s""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [now])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.execute()
 
     @classmethod
     def get(cls, jti):
