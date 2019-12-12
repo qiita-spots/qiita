@@ -97,13 +97,7 @@ class DownloadLink(qdb.base.QiitaObject):
 
     @classmethod
     def delete_expired(cls):
-        r"""Deletes all expired download links
-
-        Returns
-        -------
-        None
-
-        """
+        r"""Deletes all expired download links"""
         now = datetime.now(timezone.utc)
 
         with qdb.sql_connection.TRN:
