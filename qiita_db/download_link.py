@@ -88,7 +88,6 @@ class DownloadLink(qdb.base.QiitaObject):
         -------
         bool
             True if link exists else false
-
         """
 
         with qdb.sql_connection.TRN:
