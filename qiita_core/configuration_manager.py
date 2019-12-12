@@ -228,7 +228,7 @@ class ConfigurationManager(object):
         self.jwt_secret = config.get('main', 'JWT_SECRET')
         if not self.jwt_secret:
             self.jwt_secret = b64encode(uuid4().bytes + uuid4().bytes)
-            warnings.warn("Random JWT secret generated.  Non Public Artifact"
+            warnings.warn("Random JWT secret generated.  Non Public Artifact "
                           "Download Links will expire upon system restart.")
 
         self.key_file = config.get('main', 'KEY_FILE')

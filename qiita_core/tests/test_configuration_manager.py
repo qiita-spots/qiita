@@ -125,6 +125,7 @@ class ConfigurationManagerTests(TestCase):
 
         conf_setter = partial(self.conf.set, 'main')
         conf_setter('COOKIE_SECRET', '')
+        conf_setter('JWT_SECRET', '')
         conf_setter('BASE_DATA_DIR', '')
         conf_setter('PLUGIN_DIR', '')
         conf_setter('CERTIFICATE_FILE', '')
@@ -137,7 +138,9 @@ class ConfigurationManagerTests(TestCase):
             obs._get_main(self.conf)
 
             obs_warns = [str(w.message) for w in warns]
-            exp_warns = ['Random cookie secret generated.']
+            exp_warns = ['Random cookie secret generated.',
+                         'Random JWT secret generated.  Non Public Artifact '
+                         'Download Links will expire upon system restart.']
             self.assertCountEqual(obs_warns, exp_warns)
 
         self.assertNotEqual(obs.cookie_secret, "SECRET")
