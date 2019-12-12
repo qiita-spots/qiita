@@ -198,12 +198,6 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
 
 class TestDownloadRelease(TestHandlerBase):
 
-    def setUp(self):
-        super(TestDownloadRelease, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadRelease, self).tearDown()
-
     def test_download(self):
         # check success
         response = self.get('/release/download/1')
@@ -287,12 +281,6 @@ class TestDownloadRawData(TestHandlerBase):
 
 class TestDownloadEBISampleAccessions(TestHandlerBase):
 
-    def setUp(self):
-        super(TestDownloadEBISampleAccessions, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadEBISampleAccessions, self).tearDown()
-
     def test_download(self):
         # check success
         response = self.get('/download_ebi_accessions/samples/1')
@@ -324,12 +312,6 @@ class TestDownloadEBISampleAccessions(TestHandlerBase):
 
 
 class TestDownloadEBIPrepAccessions(TestHandlerBase):
-
-    def setUp(self):
-        super(TestDownloadEBIPrepAccessions, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadEBIPrepAccessions, self).tearDown()
 
     def test_download(self):
         # check success
@@ -363,12 +345,6 @@ class TestDownloadEBIPrepAccessions(TestHandlerBase):
 
 class TestDownloadUpload(TestHandlerBase):
 
-    def setUp(self):
-        super(TestDownloadUpload, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadUpload, self).tearDown()
-
     def test_download(self):
         # check failure
         response = self.get('/download_upload/1/uploaded_file.txt')
@@ -381,12 +357,6 @@ class TestDownloadUpload(TestHandlerBase):
 
 
 class TestDownloadPublicHandler(TestHandlerBase):
-
-    def setUp(self):
-        super(TestDownloadPublicHandler, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadPublicHandler, self).tearDown()
 
     def test_download(self):
         # check failures
@@ -525,12 +495,6 @@ class TestDownloadPublicHandler(TestHandlerBase):
 
 class TestDownloadPublicArtifactHandler(TestHandlerBase):
 
-    def setUp(self):
-        super(TestDownloadPublicArtifactHandler, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadPublicArtifactHandler, self).tearDown()
-
     def test_download(self):
         # check failures
         response = self.get('/public_artifact_download/')
@@ -565,11 +529,6 @@ class TestDownloadPublicArtifactHandler(TestHandlerBase):
 
 
 class TestDownloadPrivateArtifactHandler(TestHandlerBase):
-    def setUp(self):
-        super(TestDownloadPrivateArtifactHandler, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadPrivateArtifactHandler, self).tearDown()
 
     def test_download(self):
         # you can't post None, you must post an empty byte array
