@@ -73,7 +73,6 @@ class DownloadLink(qdb.base.QiitaObject):
         ----------
         jti : object
             The jwt token identifier
-
         """
         with qdb.sql_connection.TRN:
             sql = """DELETE FROM qiita.{0} WHERE jti=%s""".format(cls._table)
