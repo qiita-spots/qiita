@@ -59,7 +59,7 @@ class DownloadLink(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBDuplicateError(
                     "JTI Already Exists")
 
-            # Insert study into database
+            # insert token into database
             sql = """INSERT INTO qiita.{0} (jti, jwt, exp)
             VALUES (%s, %s, %s) RETURNING jti""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [jti, jwt, exp])
