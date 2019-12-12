@@ -23,6 +23,9 @@ from qiita_db.study import Study
 from qiita_db.artifact import Artifact
 from qiita_db.software import Parameters, Command
 
+from urllib.parse import urlparse
+import json
+
 
 class TestDownloadHandler(TestHandlerBase):
 
@@ -195,12 +198,6 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
 
 class TestDownloadRelease(TestHandlerBase):
 
-    def setUp(self):
-        super(TestDownloadRelease, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadRelease, self).tearDown()
-
     def test_download(self):
         # check success
         response = self.get('/release/download/1')
@@ -284,12 +281,6 @@ class TestDownloadRawData(TestHandlerBase):
 
 class TestDownloadEBISampleAccessions(TestHandlerBase):
 
-    def setUp(self):
-        super(TestDownloadEBISampleAccessions, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadEBISampleAccessions, self).tearDown()
-
     def test_download(self):
         # check success
         response = self.get('/download_ebi_accessions/samples/1')
@@ -321,12 +312,6 @@ class TestDownloadEBISampleAccessions(TestHandlerBase):
 
 
 class TestDownloadEBIPrepAccessions(TestHandlerBase):
-
-    def setUp(self):
-        super(TestDownloadEBIPrepAccessions, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadEBIPrepAccessions, self).tearDown()
 
     def test_download(self):
         # check success
@@ -360,12 +345,6 @@ class TestDownloadEBIPrepAccessions(TestHandlerBase):
 
 class TestDownloadUpload(TestHandlerBase):
 
-    def setUp(self):
-        super(TestDownloadUpload, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadUpload, self).tearDown()
-
     def test_download(self):
         # check failure
         response = self.get('/download_upload/1/uploaded_file.txt')
@@ -378,12 +357,6 @@ class TestDownloadUpload(TestHandlerBase):
 
 
 class TestDownloadPublicHandler(TestHandlerBase):
-
-    def setUp(self):
-        super(TestDownloadPublicHandler, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadPublicHandler, self).tearDown()
 
     def test_download(self):
         # check failures
@@ -522,12 +495,6 @@ class TestDownloadPublicHandler(TestHandlerBase):
 
 class TestDownloadPublicArtifactHandler(TestHandlerBase):
 
-    def setUp(self):
-        super(TestDownloadPublicArtifactHandler, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadPublicArtifactHandler, self).tearDown()
-
     def test_download(self):
         # check failures
         response = self.get('/public_artifact_download/')
@@ -559,6 +526,29 @@ class TestDownloadPublicArtifactHandler(TestHandlerBase):
         response = self.get('/public_artifact_download/')
         self.assertEqual(response.code, 422)
         self.assertEqual(response.reason, 'You need to specify an artifact id')
+
+
+class TestDownloadPrivateArtifactHandler(TestHandlerBase):
+
+    def test_download(self):
+        # you can't post None, you must post an empty byte array
+        response = self.post('/private_download/1', b'')
+        self.assertEqual(response.code, 200)
+
+        resp_dict = json.loads(response.body)
+        o = urlparse(resp_dict["url"])
+        response_file = self.get(o.path)
+        self.assertEqual(response_file.code, 200)
+
+        exp = (
+            '2125826711 58 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
+            'raw_data/1_s_G1_L001_sequences.fastq.gz\n'
+            '2125826711 58 /protected/raw_data/1_s_G1_L001_sequences_barcodes.'
+            'fastq.gz raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
+            '- 36762 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/1_mapping_file.txt\n'
+        )
+        self.assertRegex(response_file.body.decode('ascii'), exp)
 
 
 if __name__ == '__main__':

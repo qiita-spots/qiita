@@ -12,12 +12,15 @@ from tornado.gen import coroutine
 from future.utils import viewitems
 from os.path import basename, getsize, join, isdir
 from os import walk
-from datetime import datetime
 
 from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy.util import check_access
+from qiita_pet.handlers.artifact_handlers.base_handlers \
+    import check_artifact_access
 from qiita_db.study import Study
 from qiita_db.artifact import Artifact
+from qiita_db.user import User
+from qiita_db.download_link import DownloadLink
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
                            get_filepath_information, get_mountpoint,
                            filepath_id_to_object_id, get_data_types,
@@ -27,6 +30,12 @@ from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_core.util import execute_as_transaction, get_release_info
+from qiita_core.qiita_settings import qiita_config
+
+from jose import jwt as jose_jwt
+from uuid import uuid4
+from base64 import b64encode
+from datetime import datetime, timedelta, timezone
 
 
 class BaseHandlerDownload(BaseHandler):
@@ -480,3 +489,97 @@ class DownloadPublicArtifactHandler(BaseHandlerDownload):
 
                         self._set_nginx_headers(zip_fn)
         self.finish()
+
+
+class DownloadPrivateArtifactHandler(BaseHandlerDownload):
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def post(self, artifact_id):
+        # Generate a new download link:
+        #   1. Build a signed jwt specifying the user and
+        #      the artifact they wish to download
+        #   2. Write that jwt to the database keyed by its jti
+        #      (jwt ID/ json token identifier)
+        #   3. Return the jti as a short url to be used for download
+
+        user = self.current_user
+        artifact = Artifact(artifact_id)
+
+        # Check that user is currently allowed to access artifact, else throw
+        check_artifact_access(user, artifact)
+
+        # Generate a jwt id as a random uuid in base64
+        jti = b64encode(uuid4().bytes).decode("utf-8")
+        # Sign a jwt allowing access
+        utcnow = datetime.now(timezone.utc)
+        jwt = jose_jwt.encode({
+                "artifactId": str(artifact_id),
+                "perm": "download",
+                "sub": str(user._id),
+                "email": str(user.email),
+                "iat": int(utcnow.timestamp() * 1000),
+                "exp": int((utcnow + timedelta(days=7)).timestamp() * 1000),
+                "jti": jti
+            },
+            qiita_config.jwt_secret,
+            algorithm='HS256'
+        )
+
+        # Save the jwt to the database
+        DownloadLink.create(jwt)
+
+        url = qiita_config.base_url + '/private_download/' + jti
+        user_msg = "This link will expire in 7 days on: " + \
+                   (utcnow + timedelta(days=7)).strftime('%Y-%m-%d')
+
+        self.set_status(200)
+        self.finish({"url": url, "msg": user_msg})
+
+    @coroutine
+    @execute_as_transaction
+    def get(self, jti):
+        # Grab the jwt out of the database
+        jwt = DownloadLink.get(jti)
+
+        # If no jwt, error response
+        if jwt is None:
+            raise HTTPError(
+                404,
+                reason='Download Not Found.  Link may have expired.')
+
+        # If jwt doesn't validate, error response
+        jwt_data = jose_jwt.decode(jwt, qiita_config.jwt_secret, 'HS256')
+        if jwt_data is None:
+            raise HTTPError(403, reason='Invalid JWT')
+
+        # Triple check expiration and user permissions
+        user = User(jwt_data["sub"])
+        artifact = Artifact(jwt_data["artifactId"])
+
+        utc_millis = datetime.now(timezone.utc).timestamp() * 1000
+
+        if utc_millis < jwt_data["iat"]:
+            raise HTTPError(403, reason="This download link is not yet valid")
+        if utc_millis > jwt_data["exp"]:
+            raise HTTPError(403, reason="This download link has expired")
+        if jwt_data["perm"] != "download":
+            raise HTTPError(403, reason="This download link is invalid")
+
+        check_artifact_access(user, artifact)
+
+        # All checks out, let's give them the files then!
+        to_download = self._list_artifact_files_nginx(artifact)
+        if not to_download:
+            raise HTTPError(422, reason='Nothing to download. If '
+                                        'this is a mistake contact: '
+                                        'qiita.help@gmail.com')
+        else:
+            self._write_nginx_file_list(to_download)
+
+            zip_fn = 'artifact_%s_%s.zip' % (
+                jwt_data["artifactId"], datetime.now().strftime(
+                    '%m%d%y-%H%M%S'))
+
+            self._set_nginx_headers(zip_fn)
+            self.finish()

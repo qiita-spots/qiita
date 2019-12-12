@@ -398,3 +398,24 @@ function format_biom_rows(data, row, for_study_list = true, samples = null) {
   proc_data_table += '</table>';
   return proc_data_table;
 }
+
+function generate_private_download_link(artifact_id){
+  $.ajax({
+    url: "/private_download/" + artifact_id,
+    method: 'POST',
+    success: function(response){
+      var newLink = $('<a>',{
+        text: response.url,
+        title: response.url,
+        href: response.url
+      });
+      $('#privateDownloadText').text('Link will expire in 7 days');
+      $('#privateDownloadText').append('<br/>')
+      $('#privateDownloadText').append(newLink)
+      $('#privateDownloadLink').collapse('show')
+  },
+  error: function(resp){
+    $('#downloadLinkText').text('Failed to Generate Download Link');
+    $('#privateDownloadLink').collapse('show')
+  }});
+}

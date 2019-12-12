@@ -79,6 +79,20 @@ class TestBaseHandlersUtils(TestCase):
 
     def test_artifact_summary_get_request(self):
         user = User('test@foo.bar')
+        main_buttons = (
+            '<button onclick="if (confirm(' "\'Are you sure you want to make "
+            "public artifact id: 1?')) { set_artifact_visibility('public', 1) "
+            '}" class="btn btn-primary btn-sm">Make public</button> <button '
+            'onclick="if (confirm(' "'Are you sure you want to revert to "
+            "sandbox artifact id: 1?')) { set_artifact_visibility('sandbox', 1"
+            ') }" class="btn btn-primary btn-sm">Revert to sandbox</button> ')
+        private_download_button = (
+            '<button class="btn btn-primary btn-sm" type="button" '
+            'aria-expanded="false" aria-controls="privateDownloadLink" '
+            'onclick="generate_private_download_link(%s)">Generate Download '
+            'Link</button><div class="collapse" id="privateDownloadLink"><div '
+            'class="card card-body" id="privateDownloadText">Generating '
+            'Download Link...</div></div>')
         # Artifact w/o summary
         obs = artifact_summary_get_request(user, 1)
         exp_files = [
@@ -92,15 +106,7 @@ class TestBaseHandlersUtils(TestCase):
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 1?\')) { '
-                           'set_artifact_visibility(\'public\', 1) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button>'),
+               'buttons': main_buttons + private_download_button % 1,
                'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
@@ -122,15 +128,7 @@ class TestBaseHandlersUtils(TestCase):
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 1?\')) { '
-                           'set_artifact_visibility(\'public\', 1) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button>'),
+               'buttons': main_buttons + private_download_button % 1,
                'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
@@ -160,15 +158,7 @@ class TestBaseHandlersUtils(TestCase):
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 1?\')) { '
-                           'set_artifact_visibility(\'public\', 1) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button>'),
+               'buttons': main_buttons + private_download_button % 1,
                'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
@@ -209,7 +199,7 @@ class TestBaseHandlersUtils(TestCase):
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'sandbox',
                'editable': True,
-               'buttons': '',
+               'buttons': private_download_button % 1,
                'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
@@ -246,7 +236,8 @@ class TestBaseHandlersUtils(TestCase):
                            'class="glyphicon glyphicon-export"></span> '
                            'Submit to EBI</a> <a class="btn btn-primary '
                            'btn-sm" href="/vamps/2"><span class="glyphicon '
-                           'glyphicon-export"></span> Submit to VAMPS</a>'),
+                           'glyphicon-export"></span> Submit to VAMPS</a> ' +
+                           private_download_button % 2),
                'processing_info': {
                  'command_active': True, 'software_deprecated': False,
                  'command': 'Split libraries FASTQ',
@@ -275,7 +266,7 @@ class TestBaseHandlersUtils(TestCase):
                'artifact_timestamp': obs['artifact_timestamp'],
                'visibility': 'sandbox',
                'editable': True,
-               'buttons': '',
+               'buttons': private_download_button % 8,
                'processing_info': {},
                'files': [(22, 'biom_table.biom (biom)', '1756512010',
                           '1.1 MB')],

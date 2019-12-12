@@ -18,6 +18,7 @@ from qiita_db.meta_util import (
     generate_biom_and_metadata_release as
     qiita_generate_biom_and_metadata_release,
     generate_plugin_releases as qiita_generate_plugin_releases)
+from qiita_db.download_link import DownloadLink
 
 
 @click.group()
@@ -49,6 +50,11 @@ def update_redis_stats():
 @commands.command()
 def generate_biom_and_metadata_release():
     qiita_generate_biom_and_metadata_release('public')
+
+
+@commands.command()
+def purge_json_web_tokens():
+    DownloadLink.delete_expired()
 
 
 @commands.command()
