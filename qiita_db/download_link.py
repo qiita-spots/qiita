@@ -61,7 +61,7 @@ class DownloadLink(qdb.base.QiitaObject):
             sql = """INSERT INTO qiita.{0} (jti, jwt, exp)
             VALUES (%s, %s, %s) RETURNING jti""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [jti, jwt, exp])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.execute()
 
     @classmethod
     def delete(cls, jti):
@@ -75,7 +75,7 @@ class DownloadLink(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             sql = """DELETE FROM qiita.{0} WHERE jti=%s""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [jti])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.execute()
 
     @classmethod
     def exists(cls, jti):
@@ -91,7 +91,7 @@ class DownloadLink(qdb.base.QiitaObject):
             sql = """SELECT COUNT(jti) FROM qiita.{0}
                      WHERE jti=%s""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [jti])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.sql_connection.TRN.execute_fetchlast() == 1
 
     @classmethod
     def delete_expired(cls):
