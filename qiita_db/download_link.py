@@ -117,7 +117,8 @@ class DownloadLink(qdb.base.QiitaObject):
 
         Returns
         -------
-        A jwt
+        str
+            A JSON web token
 
         """
 
