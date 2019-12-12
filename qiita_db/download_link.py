@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from __future__ import division
-
 import qiita_db as qdb
 
 from jose import jwt as jose_jwt
