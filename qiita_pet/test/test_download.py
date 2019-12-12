@@ -572,7 +572,7 @@ class TestDownloadPrivateArtifactHandler(TestHandlerBase):
         super(TestDownloadPrivateArtifactHandler, self).tearDown()
 
     def test_download(self):
-        # Stupidly, you can't post None, you must post an empty byte array
+        # you can't post None, you must post an empty byte array
         response = self.post('/private_download/1', b'')
         self.assertEqual(response.code, 200)
 
