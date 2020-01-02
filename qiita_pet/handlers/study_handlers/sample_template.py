@@ -6,10 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os import close
 from os.path import basename
 from json import loads, dumps
-from tempfile import mkstemp
+from tempfile import NamedTemporaryFile
 
 from tornado.web import authenticated, HTTPError
 
@@ -296,11 +295,9 @@ class SampleTemplateHandler(BaseHandler):
         if direct_upload and direct_upload == 'true':
             direct_upload = True
 
-            fd, filepath = mkstemp(suffix='.txt')
-            close(fd)
-            with open(filepath, 'w') as f:
-                f.write(
-                    self.request.files['theFile'][0]['body'].decode('ascii'))
+            with NamedTemporaryFile(suffix='.txt', delete=False) as fp:
+                fp.write(self.request.files['theFile'][0]['body'])
+                filepath = fp.name
 
         self.write(sample_template_handler_post_request(
             study_id, self.current_user, filepath, data_type=data_type,
@@ -317,10 +314,9 @@ class SampleTemplateHandler(BaseHandler):
         if direct_upload and direct_upload == 'true':
             direct_upload = True
 
-            fd, req_value = mkstemp(suffix='.txt')
-            close(fd)
-            with open(req_value, 'w') as f:
-                f.write(self.request.files['value'][0]['body'].decode('ascii'))
+            with NamedTemporaryFile(suffix='.txt', delete=False) as fp:
+                fp.write(self.request.files['value'][0]['body'])
+                req_value = fp.name
 
         self.write(sample_template_handler_patch_request(
             self.current_user, req_op, req_path, req_value, req_from,

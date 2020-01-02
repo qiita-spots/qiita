@@ -60,7 +60,7 @@ Vue.component('sample-template-page', {
               '</div>' +
             '</div>',
   props: ['portal', 'study-id'],
-  maxDirectUploadSize: 2097152,
+  maxDirectUploadSize: 10485760,
   methods: {
     /**
      *
