@@ -60,6 +60,7 @@ Vue.component('sample-template-page', {
               '</div>' +
             '</div>',
   props: ['portal', 'study-id'],
+  maxDirectUploadSize: 10485760,
   methods: {
     /**
      *
@@ -143,14 +144,31 @@ Vue.component('sample-template-page', {
       let vm = this;
       var fp = $('#file-select').val();
       var dtype = $('#data-type-select').val();
-      vm.refresh = true;
+      var file = $('#st-direct-upload')[0].files[0];
 
-      $.post(vm.portal + '/study/description/sample_template/', {study_id: vm.studyId, filepath: fp, data_type: dtype}, function(data) {
+      var fd = new FormData();
+      fd.append('study_id', vm.studyId);
+      fd.append('filepath', fp);
+      fd.append('data_type', dtype);
+
+      if (file !== undefined) {
+        fd.append('direct_upload', true);
+        fd.append('theFile', file);
+      }
+
+      $.ajax({
+        url: vm.portal + '/study/description/sample_template/',
+        type: 'POST',
+        processData: false,
+        contentType: false,
+        data: fd,
+        success: function(data) {
           vm.startJobCheckInterval(data['job']);
-      })
-        .fail(function(object, status, error_msg) {
-          bootstrapAlert("Error creating sample information: " + object.statusText, "danger");
-        });
+        },
+        error: function (object, status, error_msg) {
+          bootstrapAlert("Error updating sample template: " + error_msg, "danger")
+        }
+      });
     },
 
     /**
@@ -162,44 +180,30 @@ Vue.component('sample-template-page', {
       let vm = this;
       var file = $('#st-direct-upload')[0].files[0];
 
-      // We can have 2 scenarios: direct file upload or path from upload
-      // folder. The former is sent via PATCH using defaults, the latter
-      // via POST using "processData: false, contentType: false"; taken from:
-      // https://stackoverflow.com/a/5976031
+      var fd = new FormData();
+      fd.append('op', 'replace');
+      fd.append('path', vm.studyId + '/data/');
+
       if (file !== undefined) {
-        var fd = new FormData();
-        fd.append('theFile', file);
         fd.append('direct_upload', true);
-        fd.append('study_id', vm.studyId);
-        fd.append('filepath', undefined);
-        fd.append('data_type', undefined);
-        value = fd;
-        $.ajax({
-          url: vm.portal + '/study/description/sample_template/',
-          type: 'POST',
-          processData: false,
-          contentType: false,
-          data: fd,
-          success: function(data) {
-            vm.startJobCheckInterval(data['job']);
-          },
-          error: function (object, status, error_msg) {
-            bootstrapAlert("Error updating sample template: " + error_msg, "danger")
-          }
-        });
+        fd.append('value', file);
       } else {
-        $.ajax({
-          url: vm.portal + '/study/description/sample_template/',
-          type: 'PATCH',
-          data: {'op': 'replace', 'path': vm.studyId + '/data/', 'value': $('#file-select').val()},
-          success: function(data) {
-            vm.startJobCheckInterval(data['job']);
-          },
-          error: function (object, status, error_msg) {
-            bootstrapAlert("Error updating sample template: " + error_msg, "danger")
-          }
-        });
+        fd.append('value', $('#file-select').val());
       }
+
+      $.ajax({
+        url: vm.portal + '/study/description/sample_template/',
+        type: 'PATCH',
+        processData: false,
+        contentType: false,
+        data: fd,
+        success: function(data) {
+          vm.startJobCheckInterval(data['job']);
+        },
+        error: function (object, status, error_msg) {
+          bootstrapAlert("Error updating sample template: " + error_msg, "danger")
+        }
+      });
     },
 
     /**
@@ -479,7 +483,7 @@ Vue.component('sample-template-page', {
             alert('You can only upload one file.')
             return false;
           }
-          if (this.files[0].size > 2097152) {
+          if (this.files[0].size > vm.maxDirectUploadSize) {
             alert('You can only upload files smaller than 2MB. For larger files please use the "Upload Files" button on the left.');
             return false;
           }
@@ -576,6 +580,26 @@ Vue.component('sample-template-page', {
         $('<option>').attr('value', "").append(rC.placeholder).appendTo($select);
         for (var opt of rC.options) {
           $('<option>').attr('value', opt).append(opt).appendTo($select);
+        }
+
+        if (rC['selectId'] == 'file-select') {
+          // Add the direct upload field
+          $('<label>')
+            .addClass('btn btn-default')
+              .append('Direct upload file <small>(< 2MB)</small>')
+              .appendTo($row)
+              .append('<input type="file" style="display: none;" id="st-direct-upload">');
+          $('#st-direct-upload').on('change', function() {
+            if (this.files.length != 1) {
+              alert('You can only upload one file.')
+              return false;
+            }
+            if (this.files[0].size > vm.maxDirectUploadSize) {
+              alert('You can only upload files smaller than 2MB. For larger files please use the "Upload Files" button on the left.');
+              return false;
+            }
+            vm.createSampleTemplate()
+          });
         }
       }
 
