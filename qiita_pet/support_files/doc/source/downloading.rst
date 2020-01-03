@@ -74,6 +74,16 @@ replace artifact-id):
 
 - https://qiita.ucsd.edu/public_artifact_download/?artifact_id=artifact-id
 
+Access non-public artifacts without a login
+-------------------------------------------
+
+**no log required / wget or curl friendly**
+
+This feature is currently only available for non-public artifacts. To create a link you
+must be the owner of the study that contains the artifact. To generate the link
+visit the artifact you want to download and click on "Generate Download Link"; this will
+generate a unique link for that artifact.
+
 Download metadata, raw or all BIOM files from a study
 -----------------------------------------------------
 
