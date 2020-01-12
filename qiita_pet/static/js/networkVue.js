@@ -768,8 +768,7 @@ Vue.component('processing-graph', {
         layout: {
           hierarchical: {
             direction: "LR",
-            sortMethod: "directed",
-            levelSeparation: 260
+            levelSeparation: 200
           }
         },
         interaction: {
