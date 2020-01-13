@@ -756,7 +756,7 @@ Vue.component('processing-graph', {
         clickToUse: true,
         nodes: {
           font: {
-            size: 16,
+            size: 15,
             color: '#000000'
           },
           size: 13,
@@ -768,7 +768,7 @@ Vue.component('processing-graph', {
         layout: {
           hierarchical: {
             direction: "LR",
-            levelSeparation: 200
+            levelSeparation: 190
           }
         },
         interaction: {
