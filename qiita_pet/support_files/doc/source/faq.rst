@@ -144,8 +144,8 @@ Normally these are: How can I test X factor in my samples? Why do I see this pat
 Which statistical method better fits my question?
 
 As you can imagine, you are not alone as this is a common problem while doing analysis.
-Thus, we suggest posting general-interest questions to the `QIIME2 Forum <https://forum.qiime2.org/>`__,
-please be sure to **add your question in the "General Discussion" category of the forum**.
+Thus, we suggest posting your data processing questions (raw-data to feature-table) to 
+qiita.help@gmail.com and general-interest analytical questions (feature-table analyses) to the `QIIME2 Forum <https://forum.qiime2.org/>`__, please be sure to **add your question in the "General Discussion" category of the forum**.
 This will generally ensure that your question is answered in a timely manner. There
 are many users and developers monitoring the QIIME2 Forum. Posting questions in the forum
 allows you to share answers with others, who may have similar questions in the future.
