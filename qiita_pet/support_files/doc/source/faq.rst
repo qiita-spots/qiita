@@ -87,7 +87,7 @@ A few more instructions: for the example above the workflow should be:
    perform closed OTU picking against the latest version of Greengenes and can
    be quite time consuming depending on the number of samples and the depth
    of sequencing.
-   
+
 
 .. _issues_unzip:
 
@@ -131,6 +131,12 @@ in that message; for example:
    $ crc32 57457_all.biom
    f6b2a86b
 
+Do you have specific Qiita questions?
+-------------------------------------
+
+Please send them to qiita.help@gmail.com; this will assure prompt responses while keeping your
+information private.
+
 Do you have general analytical questions?
 -----------------------------------------
 
@@ -138,7 +144,8 @@ Normally these are: How can I test X factor in my samples? Why do I see this pat
 Which statistical method better fits my question?
 
 As you can imagine, you are not alone as this is a common problem while doing analysis.
-Thus, we suggest posting your question to the `QIIME2 Forum <https://forum.qiime2.org/>`__.
+Thus, we suggest posting your question to the `QIIME2 Forum <https://forum.qiime2.org/>`__,
+please be sure to **add your question in the "General Discussion" category of the forum**.
 This will generally ensure that your question is answered in a timely manner. There
 are many users and developers monitoring the QIIME2 Forum. Posting questions in the forum
 allows you to share answers with others, who may have similar questions in the future.
