@@ -719,7 +719,11 @@ Vue.component('processing-graph', {
       });
       node_name = node_name.join(':')
 
-      vm.new_job_id = node_name
+      vm.new_job_info = {
+        job_id: node_name,
+        position: vm.network.getViewPosition(),
+        scale: vm.network.getScale()
+      }
       vm.updateGraph();
     },
 
@@ -792,9 +796,13 @@ Vue.component('processing-graph', {
 
       vm.network = new vis.Network(container, data, options);
       vm.network.on("stabilized", function (params) {
-        if (vm.new_job_id !== null){
-          vm.network.focus(vm.new_job_id)
-          vm.new_job_id = null;
+        if (vm.new_job_info !== null){
+          vm.network.moveTo({
+            position: vm.new_job_info["position"],
+            scale: vm.new_job_info["scale"]
+          });
+          vm.network.focus(vm.new_job_info["job_id"])
+          vm.new_job_info = null;
         }
       });
 
@@ -1093,7 +1101,7 @@ Vue.component('processing-graph', {
    **/
   mounted() {
     let vm = this;
-    vm.new_job_id = null;
+    vm.new_job_info = null;
     // This initialPoll is used ONLY if the graph doesn't exist yet
     vm.initialPoll = false;
     // This variable is used to show the update countdown on the interface
