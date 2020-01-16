@@ -713,14 +713,9 @@ Vue.component('processing-graph', {
      **/
     addJobNodeToGraph: function(job_info) {
       let vm = this;
-      var node_name = [job_info.id]
-      $(job_info.outputs).each(function(){
-        node_name.push(this[0])
-      });
-      node_name = node_name.join(':')
 
       vm.new_job_info = {
-        job_id: node_name,
+        job_id: job_info.id,
         scale: vm.network.getScale()
       }
       vm.updateGraph();
