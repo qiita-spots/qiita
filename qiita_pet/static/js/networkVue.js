@@ -721,7 +721,6 @@ Vue.component('processing-graph', {
 
       vm.new_job_info = {
         job_id: node_name,
-        position: vm.network.getViewPosition(),
         scale: vm.network.getScale()
       }
       vm.updateGraph();
@@ -793,15 +792,12 @@ Vue.component('processing-graph', {
         }
       };
 
-
       vm.network = new vis.Network(container, data, options);
       vm.network.on("stabilized", function (params) {
         if (vm.new_job_info !== null){
-          vm.network.moveTo({
-            position: vm.new_job_info["position"],
+          vm.network.focus(vm.new_job_info["job_id"], {
             scale: vm.new_job_info["scale"]
           });
-          vm.network.focus(vm.new_job_info["job_id"])
           vm.new_job_info = null;
         }
       });
