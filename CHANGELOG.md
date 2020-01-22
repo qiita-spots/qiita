@@ -7,7 +7,7 @@ Version 012020
 * Added the option to generate unique URL (per artifact) for sandboxed or private studies; see https://qiita.ucsd.edu/static/doc/html/downloading.html
 * Added the possibility of just downloading sample or preparation information files
 * Updated vis.js and vis-network.js to version 6.5.2; this fixed some network display issues
-* Deployed Atropos v1.1.24 and Shogun v1.0.7 for Metagenomic processing; this new version
+* Deployed Atropos v1.1.24 and Shogun v1.0.7 for Metagenomic processing; this new version includes bowtie2 v2.3.5, burst15 v0.99.8 and utree v2.0RF as aligners and Web of Life and REP94 as databases
 
 Version 112019
 --------------
