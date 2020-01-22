@@ -21,7 +21,7 @@ before_install:
 install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
-  - travis_retry conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx
+  - travis_retry conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython
   - source activate qiita
   - pip install -U pip
   - 'echo "backend: Agg" > ~/matplotlibrc'

@@ -713,22 +713,12 @@ Vue.component('processing-graph', {
      **/
     addJobNodeToGraph: function(job_info) {
       let vm = this;
-      // Fun fact - although it seems counterintuitive, in vis.Network we
-      // first need to add the edge and then we can add the node. It doesn't
-      // make sense, but it is how it works
-      $(job_info.inputs).each(function(){
-        vm.edges_ds.add({id: vm.edges_ds.length + 1, from: this, to: job_info.id});
-      });
-      var node_info = vm.colorScheme.in_construction;
-      vm.nodes_ds.add({id: job_info.id, shape: node_info['shape'], group: "job", shape: 'dot', label: formatNodeLabel(job_info.label), color: node_info, status: 'in_construction'});
-      $(job_info.outputs).each(function(){
-        var out_name = this[0];
-        var out_type = this[1];
-        var n_id = job_info.id + ":" + out_name;
-        vm.edges_ds.add({id: vm.edges_ds.length + 1, from: job_info.id, to: n_id });
-        vm.nodes_ds.add({id: n_id, shape: 'dot', label: formatNodeLabel(out_name + "\n(" + out_type + ")"), group: "type", name: out_name, type: out_type});
-      });
-      vm.network.redraw();
+
+      vm.new_job_info = {
+        job_id: job_info.id,
+        scale: vm.network.getScale()
+      }
+      vm.updateGraph();
     },
 
     /**
@@ -753,10 +743,11 @@ Vue.component('processing-graph', {
         edges: vm.edges_ds
       };
       var options = {
+        autoResize: true,
         clickToUse: true,
         nodes: {
           font: {
-            size: 16,
+            size: 15,
             color: '#000000'
           },
           size: 13,
@@ -766,10 +757,13 @@ Vue.component('processing-graph', {
           color: 'grey'
         },
         layout: {
+          randomSeed: 1,
+          improvedLayout: true,
           hierarchical: {
             direction: "LR",
-            sortMethod: "directed",
-            levelSeparation: 260
+            sortMethod : 'directed',
+            levelSeparation: 190,
+            shakeTowards: 'roots'
           }
         },
         interaction: {
@@ -794,6 +788,15 @@ Vue.component('processing-graph', {
       };
 
       vm.network = new vis.Network(container, data, options);
+      vm.network.on("stabilized", function (params) {
+        if (vm.new_job_info !== null){
+          vm.network.focus(vm.new_job_info["job_id"], {
+            scale: vm.new_job_info["scale"]
+          });
+          vm.new_job_info = null;
+        }
+      });
+
       vm.network.on("click", function (properties) {
         var ids = properties.nodes;
         if (ids.length == 0) {
@@ -974,11 +977,16 @@ Vue.component('processing-graph', {
           // data in a way that Vis.Network likes it
           // Format edge list data
           for(var i = 0; i < data.edges.length; i++) {
+            // forcing a string
+            data.edges[i][0] = data.edges[i][0].toString()
+            data.edges[i][1] = data.edges[i][1].toString()
             vm.edges.push({from: data.edges[i][0], to: data.edges[i][1], arrows:'to'});
           }
           // Format node list data
           for(var i = 0; i < data.nodes.length; i++) {
             var node_info = vm.colorScheme[data.nodes[i][4]];
+            // forcing a string
+            data.nodes[i][2] = data.nodes[i][2].toString()
             vm.nodes.push({id: data.nodes[i][2], shape: node_info['shape'], label: formatNodeLabel(data.nodes[i][3]), type: data.nodes[i][1], group: data.nodes[i][0], color: node_info, status: data.nodes[i][4]});
             if (data.nodes[i][1] === 'job') {
               job_status = data.nodes[i][4];
@@ -1084,6 +1092,7 @@ Vue.component('processing-graph', {
    **/
   mounted() {
     let vm = this;
+    vm.new_job_info = null;
     // This initialPoll is used ONLY if the graph doesn't exist yet
     vm.initialPoll = false;
     // This variable is used to show the update countdown on the interface
