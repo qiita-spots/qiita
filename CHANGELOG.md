@@ -1,5 +1,14 @@
 # Qiita changelog
 
+Version 012020
+--------------
+
+* Fixed issues with adding sample information files directly to the study and skipping the upload folder
+* Added the option to generate unique URL (per artifact) for sandboxed or private studies; see https://qiita.ucsd.edu/static/doc/html/downloading.html
+* Added the possibility of just downloading sample or preparation information files
+* Updated vis.js and vis-network.js to version 6.5.2; this fixed some network display issues
+* Deployed Atropos v1.1.24 and Shogun v1.0.7 for Metagenomic processing; this new version
+
 Version 112019
 --------------
 
