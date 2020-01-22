@@ -978,8 +978,8 @@ Vue.component('processing-graph', {
           // Format edge list data
           for(var i = 0; i < data.edges.length; i++) {
             // forcing a string
-            data.edges[i][0] =data.edges[i][0].toString()
-            data.edges[i][1] =data.edges[i][1].toString()
+            data.edges[i][0] = data.edges[i][0].toString()
+            data.edges[i][1] = data.edges[i][1].toString()
             vm.edges.push({from: data.edges[i][0], to: data.edges[i][1], arrows:'to'});
           }
           // Format node list data
