@@ -1,5 +1,14 @@
 # Qiita changelog
 
+Version 012020
+--------------
+
+* Fixed issues with adding sample information files directly to the study and skipping the upload folder
+* Added the option to generate unique URL (per artifact) for sandboxed or private studies; see https://qiita.ucsd.edu/static/doc/html/downloading.html
+* Added the possibility of just downloading sample or preparation information files
+* Updated vis.js and vis-network.js to version 6.5.2; this fixed some network display issues
+* Deployed Atropos v1.1.24 and Shogun v1.0.7 for Metagenomic processing; this new version includes bowtie2 v2.3.5, burst15 v0.99.8 and utree v2.0RF as aligners and [Web of Life](https://biocore.github.io/wol/) and [rep94](ftp://ftp.ncbi.nlm.nih.gov/refseq/release/) ([more info](https://github.com/knights-lab/BURST/blob/master/bin/README.md) on processing) as databases
+
 Version 112019
 --------------
 
