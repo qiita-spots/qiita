@@ -63,21 +63,47 @@ The 3 Taxonomic Prediction files can be used for subsequent analysis and visuali
 Shogun aligners
 ^^^^^^^^^^^^^^^
 
-[ToDo]
+#. Bowtie2: The classical ultrafast short sequence aligner. Based on-FM indexing of genome sequences to achieve
+   efficient memory and CPU performance. We tuned the parameter setting for Bowtie2 to achieve optimal
+   alignment accuracy for typical shotgun metagenome datasets.
+
+   - Version: 2.3.5.1
+   - Alignment file format: SAM
+   - Website: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+   - Citation: Langmead B, Salzberg S. Fast gapped-read alignment with Bowtie 2. Nature Methods. 2012, 9:357-359.
+
+#. BURST: A novel sequence aligner featuring **exhaustive** (in contrast to heuristic) alignment against the entire
+   reference genome database, hence achieving the highest accuracy, though with relatively long running time.
+
+   - Version: 0.99.8
+   - Alignment file format: b6o (BLAST tabular output, i.e., `-outfmt 6`)
+   - Website: https://github.com/knights-lab/BURST
+   - Citation: Al-Ghalith, Gabriel and Dan Knights. BURST enables optimal exhaustive DNA alignment for big data. DOI 2017:doi.org/10.5281/zenodo.806850
+   - Note: Manuscript under review.
+
+#. UTree
+   A sequence classifier based on _k_-mer signature matching along a tree structure. Analogous to Kraken but with higher computational efficiency. The fastest option.
+
+   - Version: 2.0 RF
+   - Alignment file format: custom mapping file
+   - Website: https://github.com/knights-lab/UTree
+   - Citation: Al-Ghalith, Gabriel and Dan Knights. Faster and lower-memory metagenomic profiling with UTree. DOI: 10.5281/zenodo.998252
 
 Shogun reference databases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. WoLr1 ("Web of Life" release 1)
-   An even representation of microbial diversity, selected using an prototype selection algorithm based
-   on the MinHash distance matrix among all non-redundant bacterial and archaeal genomes from NCBI
-   (RefSeq and GenBank, complete and draft), plus several genome quality control criteria. A
+#. WoLr1 ("Web of Life" release 1): An even representation of microbial diversity, selected using an prototype
+   selection algorithm based on the MinHash distance matrix among all non-redundant bacterial and archaeal genomes
+   from NCBI (RefSeq and GenBank, complete and draft), plus several genome quality control criteria. A
    high-quality reference phylogeny is available for this genome pool, enabling subsequent
    phylogeny-based analyses. Also available are curated taxonomic annotations, based on NCBI and GTDB
    systems.
+
    - Domains: Bacteria, Archaea
    - Number of genomes: 10,575
    - Total length (bp): 32,861,886,373
+   - Citation: Zhu Q, Mai U, Pfeiffer W, et al. Phylogenomics of 10,575 genomes reveals evolutionary
+     proximity between domains Bacteria and Archaea. Nat Commun. 2019. 10(1):5477. doi: 10.1038/s41467-019-13443-4.
    - Numbers of taxonomic units:
 
      - Kingdoms: 2
@@ -90,14 +116,12 @@ Shogun reference databases
      - Strains: 89
      - Note: Nucleotide sequences per genome were concatenated with a linker of 20 "N"s.
 
-   - Citation: Zhu Q, Mai U, Pfeiffer W, et al. Phylogenomics of 10,575 genomes reveals evolutionary
-     proximity between domains Bacteria and Archaea. Nat Commun. 2019. 10(1):5477. doi: 10.1038/s41467-019-13443-4.
+#. Rep94: NCBI representative and reference microbial genomes, corresponding to RefSeq release 94.
 
-#. Rep94
-   NCBI representative and reference microbial genomes, corresponding to RefSeq release 94.
    - Domains: Bacteria, Archaea
    - Number of genomes: 5,808
    - Total length (bp): 23,165,526,011
+   - Note: Nucleotide sequences per genome were concatenated with a linker of 20 "N"s.
    - Numbers of taxonomic units:
 
      - Kingdoms: 2
@@ -109,13 +133,13 @@ Shogun reference databases
      - Species: 5,636
      - Strains: 84
 
-   - Note: Nucleotide sequences per genome were concatenated with a linker of 20 "N"s.
+#. Rep82: NCBI representative and reference microbial genomes, corresponding to RefSeq release 82.
 
-#. Rep82
-   NCBI representative and reference microbial genomes, corresponding to RefSeq release 82.
+   - Not available anymore for new processing
    - Domains: Bacteria, Archaea, Viruses/Viroids
    - Number of genomes: 10,519
    - Total length (bp): 20,387,349,319
+   - Note: Plasmids were isolated from bacterial and archaeal host genomes and considered as separate genomes.
    - Numbers of taxonomic units:
 
      - Kingdoms: 6
@@ -126,5 +150,3 @@ Shogun reference databases
      - Genera: 2,264
      - Species: 11,852
      - Strains: 4,263
-
-   - Note: Plasmids were isolated from bacterial and archaeal host genomes and considered as separate genomes.
