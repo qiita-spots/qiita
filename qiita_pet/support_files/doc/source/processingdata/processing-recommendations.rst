@@ -13,10 +13,10 @@ even from different wet lab techniques or sequencing technologies.
 Target gene barcoded sequencing
 -------------------------------
 
-For this you can start with raw, not demultiplexed data or per_sample_FASTQ. Either way, you will need to
+For this you can start with raw, pre-demultiplexing data or per-sample FASTQ. Either way, you will need to
 "Split libraries and QC", which uses the default in QIIME 1.9.1. Once your demultiplexed and QCed artifact is created
 you need to select which processing to perform. There are two main ideologies/methodologies to process target
-gene data: sequence clustering and sequence cleanup.
+gene data: sequence clustering and sequence deblur.
 
 Sequencing deblur (preferred)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -44,19 +44,21 @@ Qiita currently has one shotgun metagenomics data analysis pipeline: `Shogun <ht
 The current workflow is as follows:
 
 #. Removal of adapter sequence and quality control: `Atropos <https://github.com/jdidion/atropos/>`_
-#. Host contamination using `Bowtie2 <http://bowtie-bio.sourceforge.net/bowtie2/index.shtml>`_
-#. Taxonomy profiling using three different aligners and two different reference databases; see sections below
+#. Removal of host contamination using `Bowtie2 <http://bowtie-bio.sourceforge.net/bowtie2/index.shtml>`_
+#. Taxonomy profiling using choice of three different aligners and two different reference databases; see sections below
 
 Note that we recommend only uploading sequences that have already been through QC and human sequence removal. However, we
 recommend that all sequence files go through adapter and quality control within the system to ensure they are ready for
-subsequent analyses. Currently, the command removes adaptor sequences (only KAPA HyperPlus with iTru).
+subsequent analyses. Currently, the command removes adaptor sequences (only KAPA HyperPlus with iTru, which are compatible
+with Illumina TruSeq).
 
-For host removal we currently support Danio Rerio, Drosophila Melanogaster, Mus Musculus, PhiX, and Rattus Norvegicus.
+For host removal we currently support *Danio Rerio* (zebrafish), *Drosophila Melanogaster* (fruit fly), *Mus Musculus* (mouse),
+*Rattus Norvegicus* (rat), and Enterobacteria phage phiX174 (the Illumina spike-in control).
 
 Note that the Shogun command produces 4 output artifacts:
 - The Alignment Profile BIOM artifact, which contains the alignment files
 - A Taxonomic Prediction - phylum BIOM artifact, which contains the taxonomic predictions based on the alignment
-- A Taxonomic Prediction - genera BIOM artifact, which contains the taxonomic predictions based on the alignment
+- A Taxonomic Prediction - genus BIOM artifact, which contains the taxonomic predictions based on the alignment
 - A Taxonomic Prediction - species BIOM artifact, which contains the taxonomic predictions based on the alignment
 The 3 Taxonomic Prediction files can be used for subsequent analysis and visualization.
 

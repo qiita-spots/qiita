@@ -27,7 +27,7 @@ Shotgun Sequencing
 
 - `Plugin code <https://github.com/qiita-spots/qp-shotgun>`__
 - Main resource: `Shogun <https://msystems.asm.org/content/3/6/e00069-18>`__
-- Status:Fully deployed
+- Status: Fully deployed
 
 Metabolomics
 ^^^^^^^^^^^^
