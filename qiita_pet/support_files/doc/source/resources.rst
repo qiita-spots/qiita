@@ -26,8 +26,8 @@ Shotgun Sequencing
 ^^^^^^^^^^^^^^^^^^
 
 - `Plugin code <https://github.com/qiita-spots/qp-shotgun>`__
-- Main resource: `HUMAnN2 <https://bitbucket.org/biobakery/humann2/wiki/Home/>`__
-- Status: In development
+- Main resource: `Shogun <https://msystems.asm.org/content/3/6/e00069-18>`__
+- Status: Fully deployed
 
 Metabolomics
 ^^^^^^^^^^^^

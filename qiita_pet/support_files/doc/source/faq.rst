@@ -31,7 +31,8 @@ Processing in Qiita requires 3 things: raw data, sample and prep information
 files. `Here <https://github.com/biocore/qiita/blob/master/README.rst#accepted-raw-files>`__
 you can find a list of currently supported raw files files. Note that we are
 accepting any kind of target gene (16S, 18S, ITS, whatever). You can also upload
-and process WGS via Shogun.
+and process WGS via Shogun. Check our :doc:`processingdata/processing-recommendations`.
+
 
 What's the difference between a sample and a prep information file?
 -------------------------------------------------------------------
@@ -144,7 +145,7 @@ Normally these are: How can I test X factor in my samples? Why do I see this pat
 Which statistical method better fits my question?
 
 As you can imagine, you are not alone as this is a common problem while doing analysis.
-Thus, we suggest posting your data processing questions (raw-data to feature-table) to 
+Thus, we suggest posting your data processing questions (raw-data to feature-table) to
 qiita.help@gmail.com and general-interest analytical questions (feature-table analyses) to the `QIIME2 Forum <https://forum.qiime2.org/>`__, please be sure to **add your question in the "General Discussion" category of the forum**.
 This will generally ensure that your question is answered in a timely manner. There
 are many users and developers monitoring the QIIME2 Forum. Posting questions in the forum
