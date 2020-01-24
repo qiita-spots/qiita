@@ -75,7 +75,7 @@ class AuthCreateHandler(BaseHandler):
                    "<p>If you don't receive your activation email within a "
                    "couple of minutes, check your spam folder. If you still "
                    "don't see it, send us an email at <a "
-                   "href=\"mailto:qiita.help@ucsd.edu\">qiita.help@ucsd.edu"
+                   "href=\"mailto:qiita.help@gmail.com\">qiita.help@gmail.com"
                    "</a>.</p>")
             self.redirect(u"%s/?level=success&message=%s" %
                           (qiita_config.portal_dir, url_escape(msg)))
