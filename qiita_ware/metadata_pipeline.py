@@ -80,8 +80,8 @@ def create_templates_from_qiime_mapping_file(fp, study, data_type):
     pt_cols = qiime_cols.intersection(pt_cols)
     st_cols = qiime_cols.difference(pt_cols)
 
-    st_md = qiime_map.ix[:, st_cols]
-    pt_md = qiime_map.ix[:, pt_cols]
+    st_md = qiime_map.loc[:, st_cols]
+    pt_md = qiime_map.loc[:, pt_cols]
 
     return (SampleTemplate.create(st_md, study),
             PrepTemplate.create(pt_md, study, data_type))

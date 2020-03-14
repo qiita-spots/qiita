@@ -2146,10 +2146,9 @@ class TestSampleTemplate(TestCase):
         self.assertEqual(obs, {'collection_timestamp'})
 
     def test_validate_errors(self):
-        self.metadata.set_value('Sample1', 'collection_timestamp',
-                                'wrong date')
-        self.metadata.set_value('Sample2', 'latitude', 'wrong latitude')
-        self.metadata.set_value('Sample3', 'latitude', None)
+        self.metadata.at['Sample1', 'collection_timestamp'] = 'wrong date'
+        self.metadata.at['Sample2', 'latitude'] = 'wrong latitude'
+        self.metadata.at['Sample3', 'latitude'] = None
 
         with catch_warnings(record=True) as warn:
             qdb.metadata_template.sample_template.SampleTemplate.create(
@@ -2173,12 +2172,10 @@ class TestSampleTemplate(TestCase):
             self.assertIn(exp_error, message)
 
     def test_validate_errors_timestampA_year4digits(self):
-        self.metadata.set_value('Sample1', 'collection_timestamp',
-                                '2016-09-20 12:00')
-        self.metadata.set_value('Sample2', 'collection_timestamp',
-                                '2016-09-20 12')
-        self.metadata.set_value('Sample3', 'collection_timestamp',
-                                '2016-09-20')
+        column = 'collection_timestamp'
+        self.metadata.at['Sample1', column] = '2016-09-20 12:00'
+        self.metadata.at['Sample2', column] = '2016-09-20 12'
+        self.metadata.at['Sample3', column] = '2016-09-20'
 
         with catch_warnings(record=True) as warn:
             qdb.metadata_template.sample_template.SampleTemplate.create(
@@ -2187,12 +2184,10 @@ class TestSampleTemplate(TestCase):
             self.assertEqual(warn, [])
 
     def test_validate_errors_timestampA_year2digits(self):
-        self.metadata.set_value('Sample1', 'collection_timestamp',
-                                '16-09-20 12:00')
-        self.metadata.set_value('Sample2', 'collection_timestamp',
-                                '9/20/16 12')
-        self.metadata.set_value('Sample3', 'collection_timestamp',
-                                '09-20-16')
+        column = 'collection_timestamp'
+        self.metadata.at['Sample1', column] = '16-09-20 12:00'
+        self.metadata.at['Sample2', column] = '9/20/16 12'
+        self.metadata.at['Sample3', column] = '09-20-16'
 
         with catch_warnings(record=True) as warn:
             st = qdb.metadata_template.sample_template.SampleTemplate.create(
@@ -2215,10 +2210,9 @@ class TestSampleTemplate(TestCase):
                                   exp_message.split('\n'))
 
     def test_validate_errors_timestampB_year4digits(self):
-        self.metadata.set_value('Sample1', 'collection_timestamp',
-                                '2016-12')
-        self.metadata.set_value('Sample2', 'collection_timestamp',
-                                '2016')
+        column = 'collection_timestamp'
+        self.metadata.at['Sample1', column] = '2016-12'
+        self.metadata.at['Sample2', column] = '2016'
         with catch_warnings(record=True) as warn:
             qdb.metadata_template.sample_template.SampleTemplate.create(
                 self.metadata, self.new_study)
@@ -2226,10 +2220,9 @@ class TestSampleTemplate(TestCase):
             self.assertEqual(warn, [])
 
     def test_validate_errors_timestampB_year2digits(self):
-        self.metadata.set_value('Sample1', 'collection_timestamp',
-                                '16-12')
-        self.metadata.set_value('Sample2', 'collection_timestamp',
-                                '16')
+        column = 'collection_timestamp'
+        self.metadata.at['Sample1', column] = '16-12'
+        self.metadata.at['Sample2', column] = '16'
         with catch_warnings(record=True) as warn:
             st = qdb.metadata_template.sample_template.SampleTemplate.create(
                 self.metadata, self.new_study)
