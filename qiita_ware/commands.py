@@ -166,7 +166,7 @@ def download_remote(URL, private_key, destination):
     ssh.close()
 
 
-def submit_EBI(artifact_id, action, send, test=False, test_size=False):
+def submit_EBIA(artifact_id, action, send, test=False, test_size=False):
     """Submit an artifact to EBI
 
     Parameters
@@ -245,6 +245,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                 'cleaning: %d, after: %d' % (
                     artifact_id, total_size, new_total_size))
 
+    st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
     if send:
         # getting aspera's password
         old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
@@ -256,7 +257,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                          '%d completed successfully' % artifact_id))
 
         # step 4: sending sequences
-        if action != 'MODIFY':
+        if action == 'ADD':
             LogEntry.create('Runtime',
                             ("Submitting sequences for pre_processed_id: "
                              "%d" % artifact_id))
@@ -271,7 +272,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                     'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
         environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
-        # step 5: sending xml and parsing answer
+        # step 5: sending xml
         xmls_cmds = ebi_submission.generate_curl_command(
             ebi_seq_xfer_pass=ascp_passwd)
         LogEntry.create('Runtime',
@@ -289,18 +290,19 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
         open(ebi_submission.curl_reply, 'w').write(
             'stdout:\n%s\n\nstderr: %s' % (xml_content, stderr))
 
-        try:
-            st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
-                ebi_submission.parse_EBI_reply(xml_content, test=test)
-        except EBISubmissionError as e:
-            error = str(e)
-            le = LogEntry.create(
-                'Fatal', "Command: %s\nError: %s\n" % (xml_content, error),
-                info={'ebi_submission': artifact_id})
-            raise ComputeError(
-                "EBI Submission failed! Log id: %d\n%s" % (le.id, error))
-
+        # parsing answer / only if adding
         if action == 'ADD' or test:
+            try:
+                st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
+                    ebi_submission.parse_EBI_reply(xml_content, test=test)
+            except EBISubmissionError as e:
+                error = str(e)
+                le = LogEntry.create(
+                    'Fatal', "Command: %s\nError: %s\n" % (xml_content, error),
+                    info={'ebi_submission': artifact_id})
+                raise ComputeError(
+                    "EBI Submission failed! Log id: %d\n%s" % (le.id, error))
+
             if st_acc:
                 ebi_submission.study.ebi_study_accession = st_acc
             if sa_acc:
@@ -310,8 +312,6 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
             if ex_acc:
                 ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
             ebi_submission.artifact.ebi_run_accessions = run_acc
-    else:
-        st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
 
     return st_acc, sa_acc, bio_acc, ex_acc, run_acc
 
