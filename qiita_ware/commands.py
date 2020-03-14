@@ -257,7 +257,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                          '%d completed successfully' % artifact_id))
 
         # step 4: sending sequences
-        if action == 'ADD':
+        if action != 'MODIFY':
             LogEntry.create('Runtime',
                             ("Submitting sequences for pre_processed_id: "
                              "%d" % artifact_id))
