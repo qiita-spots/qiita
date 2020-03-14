@@ -166,7 +166,7 @@ def download_remote(URL, private_key, destination):
     ssh.close()
 
 
-def submit_EBIA(artifact_id, action, send, test=False, test_size=False):
+def submit_EBI(artifact_id, action, send, test=False, test_size=False):
     """Submit an artifact to EBI
 
     Parameters
