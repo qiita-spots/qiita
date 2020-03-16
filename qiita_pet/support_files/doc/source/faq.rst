@@ -60,9 +60,9 @@ This question normally comes up when you are working with per sample FASTQs as a
 stage there is no lane and run grouping within the samples.
 
 Generally, we recommend to set a single preparation for each lane in each sequencing
-run. This separation allows users to first tests that there are no biases within their
-lanes and runs and then merge them in a single analysis if needed. Remember that when you
-create a new analysis you can keep separate (default) or merge the samples with the same
+run. This separation allows users to first test there are no biases within their
+lanes and runs, and optionally merge them in a single analysis. For your convenience, when you
+create a new analysis you can keep samples separate (default) or merge samples with matching
 names in different preparations.
 
 Another thing to consider is that once you are ready, you might want to submit to EBI-ENA
