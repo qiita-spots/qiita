@@ -269,7 +269,7 @@ class TestBaseHandlersUtils(TestCase):
                'buttons': private_download_button % 8,
                'processing_info': {},
                'files': [(22, 'biom_table.biom (biom)', '1756512010',
-                          '1.0MB')],
+                          '1.0M')],
                'is_from_analysis': True,
                'summary': None,
                'job': None,
