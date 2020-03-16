@@ -521,7 +521,7 @@ class TestAnalysis(TestCase):
     def test_build_files(self):
         analysis = self._create_analyses_with_samples()
         biom_tables = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning, analysis.build_files, False)
+            qdb.exceptions.QiitaDBWarning, analysis.build_files, True)
 
         # testing that the generated files have the same sample ids
         biom_fp = biom_tables[0][1]
@@ -605,7 +605,7 @@ class TestAnalysis(TestCase):
         self._wait_for_jobs(new)
 
         biom_tables = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning, new.build_files, True)
+            qdb.exceptions.QiitaDBWarning, new.build_files, False)
 
         # testing that the generated files have the same sample ids
         biom_ids = []
