@@ -191,7 +191,7 @@ def artifact_summary_get_request(user, artifact_id):
 
     files = [(x['fp_id'], "%s (%s)" % (basename(x['fp']),
                                        x['fp_type'].replace('_', ' ')),
-              x['checksum'], naturalsize(x['fp_size']))
+              x['checksum'], naturalsize(x['fp_size'], gnu=True))
              for x in artifact.filepaths if x['fp_type'] != 'directory']
 
     # TODO: https://github.com/biocore/qiita/issues/1724 Remove this hardcoded

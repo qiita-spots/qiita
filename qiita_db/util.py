@@ -463,7 +463,7 @@ def get_files_from_uploads_folders(study_id):
             for f in listdir(t):
                 d = join(t, f)
                 if not f.startswith('.') and not isdir(d):
-                    fp.append((pid, f, naturalsize(getsize(d))))
+                    fp.append((pid, f, naturalsize(getsize(d), gnu=True)))
 
     return fp
 
