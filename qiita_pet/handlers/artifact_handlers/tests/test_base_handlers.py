@@ -97,9 +97,9 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp_files = [
             (1, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)',
-             '2125826711', '58 Bytes'),
+             '2125826711', '58B'),
             (2, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)',
-             '2125826711', '58 Bytes')]
+             '2125826711', '58B')]
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
                'artifact_type': 'FASTQ',
