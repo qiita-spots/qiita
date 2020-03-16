@@ -52,6 +52,32 @@ the "Upload instructions"
 
 .. _example_study_processing_workflow:
 
+
+How should I split my samples within preparations?
+--------------------------------------------------
+
+This question normally comes up when you are working with per sample FASTQs as at this
+stage there is no lane and run grouping within the samples.
+
+Generally, we recommend to set a single preparation for each lane in each sequencing
+run. This separation allows users to first tests that there are no biases within their
+lanes and runs and then merge them in a single analysis if needed. Remember that when you
+create a new analysis you can keep separate (default) or merge the samples with the same
+names in different preparations.
+
+Another thing to consider is that once you are ready, you might want to submit to EBI-ENA
+and they have a limit of 10M on the metadata that you want to submit. This limitation is a
+combination of the metadata of each preparation and the sample information. For example, if
+we imagine the worst case scenario, that we have in all our columns the default
+'not applicable' NULL value, and that XML adds 4 times the size due to its formatting (how
+EBI-ENA expects the submission); then we will have `len('not applicable') * 50 * 4 = 2800 (2.8K)`
+per sample. Thus, we cannot have more than 3.5K samples. Note that this number depends on
+the number of metadata columns in your sample information file and the number of characters
+in the values of each sample and metadata column.
+
+Please do not hesitate to send us an email if you have questions about this.
+
+
 Example study processing workflow
 ---------------------------------
 
