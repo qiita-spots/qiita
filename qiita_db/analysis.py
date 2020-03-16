@@ -837,7 +837,6 @@ class Analysis(qdb.base.QiitaObject):
             # the command id
             # Note that grouped_samples is basically how many biom tables we
             # are going to create
-            rename_dup_samples = False
             grouped_samples = {}
 
             # post_processing_cmds is a list of dictionaries, each describing
@@ -867,25 +866,10 @@ class Analysis(qdb.base.QiitaObject):
                                 merging_scheme, cmd)
                     grouped_samples[label] = []
                 grouped_samples[label].append((aid, asamples))
-            # 2. if rename_dup_samples is still False, make sure that we don't
-            #    need to rename samples by checking that there are not
-            #    duplicated samples per group
-            if not rename_dup_samples:
-                for _, t in viewitems(grouped_samples):
-                    # this element only has one table, continue
-                    if len(t) == 1:
-                        continue
-                    dup_samples = set()
-                    for _, s in t:
-                        # this set is not to make the samples unique, cause
-                        # they already are, but cast it as a set so we can
-                        # perform the following operations
-                        s = set(s)
-                        if dup_samples & s:
-                            rename_dup_samples = merge_duplicated_sample_ids
-                            break
-                        dup_samples = dup_samples | s
 
+            # We need to negate merge_duplicated_sample_ids because in
+            # _build_mapping_file is acually rename: merge yes == rename no
+            rename_dup_samples = not merge_duplicated_sample_ids
             self._build_mapping_file(samples, rename_dup_samples)
 
             if post_processing_cmds:
@@ -1051,7 +1035,7 @@ class Analysis(qdb.base.QiitaObject):
                     # the file path to the new tree, depending on p's
                     # return code.
                     if rv != 0:
-                        raise ValueError('Error %d: %s' % (rv, p_out))
+                        raise ValueError('Error %d: %s' % (rv, p_err))
                     p_out = loads(p_out)
 
                     if p_out['archive'] is not None:
