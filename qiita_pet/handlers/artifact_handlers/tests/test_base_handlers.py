@@ -148,7 +148,7 @@ class TestBaseHandlersUtils(TestCase):
         exp_files.append(
             (a.html_summary_fp[0],
              '%s (html summary)' % basename(a.html_summary_fp[1]),
-             '1642196267', '33 Bytes'))
+             '1642196267', '33B'))
         exp_summary_path = relpath(
             a.html_summary_fp[1], qiita_config.base_data_dir)
         obs = artifact_summary_get_request(user, 1)
@@ -214,9 +214,9 @@ class TestBaseHandlersUtils(TestCase):
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
         exp_files = [
-            (3, '1_seqs.fna (preprocessed fasta)', '', '0 Bytes'),
-            (4, '1_seqs.qual (preprocessed fastq)', '', '0 Bytes'),
-            (5, '1_seqs.demux (preprocessed demux)', '', '0 Bytes')]
+            (3, '1_seqs.fna (preprocessed fasta)', '', '0B'),
+            (4, '1_seqs.qual (preprocessed fastq)', '', '0B'),
+            (5, '1_seqs.demux (preprocessed demux)', '', '0B')]
         exp = {'name': 'Demultiplexed 1',
                'artifact_id': 2,
                'artifact_type': 'Demultiplexed',

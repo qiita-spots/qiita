@@ -549,7 +549,7 @@ class DBUtilTests(DBUtilTestsBase):
     def test_get_files_from_uploads_folders(self):
         # something has been uploaded and ignoring hidden files/folders
         # and folders
-        exp = (7, 'uploaded_file.txt', '0 Bytes')
+        exp = (7, 'uploaded_file.txt', '0B')
         obs = qdb.util.get_files_from_uploads_folders("1")
         self.assertIn(exp, obs)
 
@@ -569,7 +569,7 @@ class DBUtilTests(DBUtilTestsBase):
 
         self.files_to_remove.append(test_fp)
 
-        exp = (fid, 'this_is_a_test_file.txt', '4 Bytes')
+        exp = (fid, 'this_is_a_test_file.txt', '4B')
         obs = qdb.util.get_files_from_uploads_folders("1")
         self.assertIn(exp, obs)
 
