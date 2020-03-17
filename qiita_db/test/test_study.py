@@ -226,7 +226,7 @@ class TestStudy(TestCase):
                              {'f1': '10.100/7891011', 'f2': True},
                              {'f1': '7891011', 'f2': False}],
             'study_alias': 'Cannabis Soils',
-            'spatial_series': False,
+            'spatial_series': False, 'notes': '',
             'study_abstract': 'This is a preliminary study to examine the '
             'microbiota associated with the Cannabis plant. Soils samples from'
             ' the bulk soil, soil associated with the roots, and the '
@@ -433,6 +433,7 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
+               'notes': '',
                'specimen_id_column': None}
         self.assertEqual(obs_info, exp)
         # Check the timestamp separately, since it is set by the database
@@ -492,7 +493,8 @@ class TestStudy(TestCase):
             'metadata_complete': False,
             'reprocess': True,
             'first_contact': "10/24/2014 12:47PM",
-            'study_id': 3827
+            'study_id': 3827,
+            'notes': 'an analysis was performed \n here and \n here'
             })
         obs = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'), "Fried chicken microbiome 3",
@@ -514,6 +516,7 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
+               'notes': 'an analysis was performed \n here and \n here',
                'specimen_id_column': None}
         self.assertEqual(obs.info, exp)
         self.assertEqual(obs.shared_with, [])
@@ -649,6 +652,7 @@ class TestStudy(TestCase):
             "metadata_complete": False,
             "lab_person_id": qdb.study.StudyPerson(2),
             "vamps_id": 'MBE_111222',
+            'notes': 'These are my notes!!! \n ... and more notes ...'
         }
         self.info['first_contact'] = "6/11/2014"
         new = qdb.study.Study.create(
