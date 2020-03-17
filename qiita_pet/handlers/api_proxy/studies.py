@@ -91,6 +91,7 @@ def study_get_req(study_id, user_id):
     study_info['ebi_study_accession'] = study.ebi_study_accession
     study_info['ebi_submission_status'] = study.ebi_submission_status
     study_info['public_raw_download'] = study.public_raw_download
+    study_info['notes'] = study.notes
 
     # Clean up StudyPerson objects to string for display
     pi = study_info['principal_investigator']
