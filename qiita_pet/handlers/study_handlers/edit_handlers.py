@@ -63,6 +63,9 @@ class StudyEditorForm(Form):
                                          coerce=lambda x: x)
 
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
+    notes = TextAreaField('Analytical Notes', description=(
+        'Any relevant information about the samples or the processing that '
+        'other users should be aware of'))
 
     @execute_as_transaction
     def __init__(self, study=None, **kwargs):
@@ -98,6 +101,7 @@ class StudyEditorForm(Form):
                 'principal_investigator'].id
             self.lab_person.data = (study_info['lab_person'].id
                                     if study_info['lab_person'] else None)
+            self.notes.data = study.notes
 
 
 class StudyEditorExtendedForm(StudyEditorForm):
@@ -124,9 +128,6 @@ class StudyEditorExtendedForm(StudyEditorForm):
     environmental_packages = SelectMultipleField('Environmental Packages',
                                                  [validators.Required()])
     timeseries = SelectField('Event-Based Data', coerce=lambda x: x)
-    notes = TextAreaField('Analytical Notes', description=(
-        'Any relevant information about the samples or the processing that '
-        'other users should be aware of'))
 
     @execute_as_transaction
     def __init__(self, study=None, **kwargs):
@@ -153,7 +154,6 @@ class StudyEditorExtendedForm(StudyEditorForm):
 
             self.environmental_packages.data = study.environmental_packages
             self.timeseries.data = study_info['timeseries_type_id']
-            self.notes.data = study.notes
 
 
 class StudyEditHandler(BaseHandler):

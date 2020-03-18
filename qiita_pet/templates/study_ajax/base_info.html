@@ -170,19 +170,6 @@
       </form>
     </td>
   </tr>
-  {% if study_info['notes'].strip() %}
-    <tr>
-      <td colspan="3">
-        &nbsp;
-      </td>
-    </tr>
-    <tr bgcolor="#EFEFEF">
-      <td colspan="3">
-        <h4>Analytical Notes</h4>
-        {% raw study_info['notes'].replace('\n', '<br/>') %}
-      </td>
-    </tr>
-  {% end %}
 </table>
 
 {% if study_info['ebi_submission_status'] == 'submitted' %}
@@ -220,4 +207,12 @@
     </div>
   </div>
 </div>
+{% end %}
+
+{% if study_info['notes'].strip() %}
+  <br/><br/>
+  <div style="background-color: #EFEFEF; padding: 5px 20px 20px 20px">
+    <h4>Analytical Notes</h4>
+    {% raw study_info['notes'].replace('\n', '<br/>') %}
+  </div>
 {% end %}
