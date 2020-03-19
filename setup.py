@@ -111,7 +111,7 @@ setup(name='qiita-spots',
                         'paramiko', 'seaborn',  'matplotlib', 'scipy', 'nose',
                         'flake8', 'six', 'qiita-files @ https://github.com/'
                         'qiita-spots/qiita-files/archive/master.zip', 'mock',
-                        'python-jose',
+                        'python-jose', 'markdown2',
                         'supervisor @ https://github.com/Supervisor/'
                         'supervisor/archive/master.zip', 'joblib'],
       classifiers=classifiers

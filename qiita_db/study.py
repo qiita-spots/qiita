@@ -532,7 +532,7 @@ class Study(qdb.base.QiitaObject):
 
     @notes.setter
     def notes(self, notes):
-        """Sets the title of the study
+        """Sets the notes of the study
 
         Parameters
         ----------

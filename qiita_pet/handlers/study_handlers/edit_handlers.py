@@ -65,7 +65,8 @@ class StudyEditorForm(Form):
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
     notes = TextAreaField('Analytical Notes', description=(
         'Any relevant information about the samples or the processing that '
-        'other users should be aware of'))
+        'other users should be aware of (e.g. problematic samples, '
+        'explaining certain metadata columns, etc) - accepts markdown'))
 
     @execute_as_transaction
     def __init__(self, study=None, **kwargs):
