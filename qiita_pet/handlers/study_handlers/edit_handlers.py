@@ -66,7 +66,7 @@ class StudyEditorForm(Form):
     notes = TextAreaField('Analytical Notes', description=(
         'Any relevant information about the samples or the processing that '
         'other users should be aware of (e.g. problematic samples, '
-        'explaining certain metadata columns, etc) - accepts markdown'))
+        'explaining certain metadata columns, etc) - renders as markdown'))
 
     @execute_as_transaction
     def __init__(self, study=None, **kwargs):
