@@ -86,7 +86,7 @@ class TestStudyAPI1(TestStudyAPI):
                 'study_alias': 'Cannabis Soils', 'study_id': 1,
                 'most_recent_contact': datetime(2014, 5, 19, 16, 11),
                 'ebi_study_accession': 'EBI123456-BB', 'num_samples': 27,
-                'public_raw_download': False,
+                'public_raw_download': False, 'notes': '',
                 'study_title': (
                     'Identification of the Microbiomes for Cannabis Soils')},
             'message': '',
@@ -124,7 +124,7 @@ class TestStudyAPI1(TestStudyAPI):
             'principal_investigator': {
                 'affiliation': 'Wash U', 'name': 'PIDude',
                 'email': 'PI_dude@foo.bar'}, 'study_alias': 'FCM',
-            'study_id': new_study.id,
+            'study_id': new_study.id, 'notes': '',
             'most_recent_contact': datetime(2015, 5, 19, 16, 11),
             'ebi_study_accession': None, 'specimen_id_column': None,
             'study_title': 'Some New Study for test'}, 'message': '',

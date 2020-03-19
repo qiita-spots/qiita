@@ -208,3 +208,11 @@
   </div>
 </div>
 {% end %}
+
+{% if study_info['notes'].strip() %}
+  <br/><br/>
+  <div style="background-color: #EFEFEF; padding: 5px 20px 20px 20px">
+    <h4>Analytical Notes</h4>
+    {% raw study_info['notes'].replace('\n', '<br/>') %}
+  </div>
+{% end %}

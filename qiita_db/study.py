@@ -516,6 +516,36 @@ class Study(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute()
 
     @property
+    def notes(self):
+        """Returns the notes of the study
+
+        Returns
+        -------
+        str
+            Study notes
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT notes FROM qiita.{0}
+                     WHERE study_id = %s""".format(self._table)
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @notes.setter
+    def notes(self, notes):
+        """Sets the notes of the study
+
+        Parameters
+        ----------
+        notes : str
+            The study notes
+        """
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.{0} SET notes = %s
+                     WHERE study_id = %s""".format(self._table)
+            qdb.sql_connection.TRN.add(sql, [notes, self._id])
+            return qdb.sql_connection.TRN.execute()
+
+    @property
     def public_raw_download(self):
         """Returns if the study's raw data is available for download
 
