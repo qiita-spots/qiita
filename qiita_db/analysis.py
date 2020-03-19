@@ -1053,8 +1053,8 @@ class Analysis(qdb.base.QiitaObject):
             all_ids = set()
             to_concat = []
             for aid, samps in viewitems(samples):
-                qiime_map_fp = qdb.artifact.Artifact(
-                    aid).prep_templates[0].qiime_map_fp
+                pt = qdb.artifact.Artifact(aid).prep_templates[0]
+                qiime_map_fp = pt.qiime_map_fp
 
                 # Parse the mapping file
                 qm = qdb.metadata_template.util.load_template_to_dataframe(
@@ -1063,6 +1063,7 @@ class Analysis(qdb.base.QiitaObject):
                 # if we are not going to merge the duplicated samples
                 # append the aid to the sample name
                 qm['qiita_artifact_id'] = aid
+                qm['qiita_prep_deprecated'] = pt.deprecated
                 if rename_dup_samples:
                     qm['original_SampleID'] = qm.index
                     qm['#SampleID'] = "%d." % aid + qm.index
