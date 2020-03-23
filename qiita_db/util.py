@@ -1512,7 +1512,8 @@ def generate_study_list(user, visibility):
                         if pinfo['f4'] == 'BIOM':
                             artifact_biom_ids.append(pinfo['f3'])
                         if pinfo['f6'] is not None:
-                            artifact_biom_ids.extend(pinfo['f6'].split(','))
+                            artifact_biom_ids.extend(
+                                map(int, pinfo['f6'].split(',')))
                 del info['preparation_information']
                 info['artifact_biom_ids'] = list(set(artifact_biom_ids))
                 info['preparation_data_types'] = list(set(
