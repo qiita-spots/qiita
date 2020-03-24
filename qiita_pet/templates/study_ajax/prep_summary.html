@@ -139,32 +139,30 @@
    * Updates deprecated flag in the prep information <fieldset>
    *
    * @param prep_id the prep template id
+   * @param new_value the new deprecate value
    *
    * This function executes an AJAX call to update the deprecated flag
    *
    */
   function deprecate_preparation(prep_id, new_value) {
     var status = 'deprecate';
-    console.log(new_value)
     if (!new_value){
       status = 'DE-deprecate'
     }
     if(confirm("Are you sure you want to " + status + " this preparation?")) {
-      if(confirm("Are you _really_ sure you want to " + status + " this preparation?")) {
-        $.ajax({
-          url: '{% raw qiita_config.portal_dir %}/prep_template/',
-          type: 'PATCH',
-          data: {'op': 'update-deprecated', 'path': '/' + prep_id + '/' + new_value},
-          success: function(data) {
-            if(data.status == 'error') {
-              bootstrapAlert(data.message, "danger");
-            }
-            else {
-              populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}} });
-            }
+      $.ajax({
+        url: '{% raw qiita_config.portal_dir %}/prep_template/',
+        type: 'PATCH',
+        data: {'op': 'update-deprecated', 'path': '/' + prep_id + '/' + new_value},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
           }
-        });
-      }
+          else {
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}} });
+          }
+        }
+      });
     }
   }
 
@@ -438,7 +436,7 @@
       {% if editable %}
         <br/>
         {% if deprecated %}
-          <a class="btn btn-warning" onclick="deprecate_preparation({{prep_id}}, false);"><span class="glyphicon glyphicon-pushpin"></span> Remove Deprecate</a>
+          <a class="btn btn-warning" onclick="deprecate_preparation({{prep_id}}, false);"><span class="glyphicon glyphicon-pushpin"></span> Remove Deprecation</a>
         {% else%}
           <a class="btn btn-warning" onclick="deprecate_preparation({{prep_id}}, true);"><span class="glyphicon glyphicon-pushpin"></span> Deprecate</a>
         {% end %}
