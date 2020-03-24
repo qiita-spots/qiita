@@ -107,6 +107,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
     """
     pt = PrepTemplate(prep_id)
     name = pt.name
+    deprecated = pt.deprecated
 
     # Initialize variables here
     processing = False
@@ -178,6 +179,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'is_submitted_to_ebi': pt.is_submitted_to_ebi,
             'prep_restrictions': restrictions,
             'samples': sorted(list(pt.keys())),
+            'deprecated': deprecated,
             'alert_message': alert_msg}
 
 
@@ -489,6 +491,21 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
                      dumps({'job_id': job.id}))
         job.submit()
         return {'status': 'success', 'message': '', 'row_id': row_id}
+    elif req_op == 'update-deprecated':
+        if len(req_path) != 2:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter'}
+        prep_id = int(req_path[0])
+        value = req_path[1] == 'true'
+
+        # Check if the user actually has access to the study
+        pt = PrepTemplate(prep_id)
+        access_error = check_access(pt.study_id, user_id)
+        if access_error:
+            return access_error
+
+        pt.deprecated = value
+        return {'status': 'success', 'message': ''}
     else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. '

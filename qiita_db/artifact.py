@@ -225,6 +225,13 @@ class Artifact(qdb.base.QiitaObject):
             sql_args = [prep_template.study_id, a_id]
             qdb.sql_connection.TRN.add(sql, sql_args)
 
+            # Associate the artifact with the preparation information
+            sql = """INSERT INTO qiita.preparation_artifact (
+                        prep_template_id, artifact_id)
+                     VALUES (%s, %s)"""
+            sql_args = [prep_template.id, a_id]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+
             # Associate the artifact with its filepaths
             filepaths = [(x['fp'], x['fp_type']) for x in artifact.filepaths]
             fp_ids = qdb.util.insert_filepaths(
@@ -363,12 +370,17 @@ class Artifact(qdb.base.QiitaObject):
 
             return cls(a_id)
 
-        def _associate_with_study(instance, study_id):
+        def _associate_with_study(instance, study_id, prep_template_id):
             # Associate the artifact with the study
             sql = """INSERT INTO qiita.study_artifact
                         (study_id, artifact_id)
                      VALUES (%s, %s)"""
             sql_args = [study_id, instance.id]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            sql = """INSERT INTO qiita.preparation_artifact
+                        (prep_template_id, artifact_id)
+                     VALUES (%s, %s)"""
+            sql_args = [prep_template_id, instance.id]
             qdb.sql_connection.TRN.add(sql, sql_args)
             qdb.sql_connection.TRN.execute()
 
@@ -421,8 +433,8 @@ class Artifact(qdb.base.QiitaObject):
                     instance = _common_creation_steps(
                         artifact_type, processing_parameters.command.id,
                         dtypes.pop(), processing_parameters.dump())
-
-                    _associate_with_study(instance, study_id)
+                    _associate_with_study(
+                        instance, study_id, parents[0].prep_templates[0].id)
                 else:
                     # This artifact is part of the analysis pipeline
                     analysis_id = analyses.pop()
@@ -460,7 +472,8 @@ class Artifact(qdb.base.QiitaObject):
                 # Associate the artifact with the prep template
                 prep_template.artifact = instance
                 # Associate the artifact with the study
-                _associate_with_study(instance, prep_template.study_id)
+                _associate_with_study(
+                    instance, prep_template.study_id, prep_template.id)
             else:
                 # This artifact is an initial artifact of an analysis
                 instance = _common_creation_steps(
@@ -621,6 +634,11 @@ class Artifact(qdb.base.QiitaObject):
 
             # Detach the artifacts from the analysis_artifact table
             sql = "DELETE FROM qiita.analysis_artifact WHERE artifact_id IN %s"
+            qdb.sql_connection.TRN.add(sql, [all_ids])
+
+            # Detach artifact from preparation_artifact
+            sql = """DELETE FROM qiita.preparation_artifact
+                     WHERE artifact_id IN %s"""
             qdb.sql_connection.TRN.add(sql, [all_ids])
 
             # Delete the rows in the artifact table
@@ -1308,10 +1326,8 @@ class Artifact(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT prep_template_id
-                     FROM qiita.prep_template
-                     WHERE artifact_id IN (
-                        SELECT *
-                        FROM qiita.find_artifact_roots(%s))"""
+                     FROM qiita.preparation_artifact
+                     WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return [qdb.metadata_template.prep_template.PrepTemplate(pt_id)
                     for pt_id in qdb.sql_connection.TRN.execute_fetchflatten()]

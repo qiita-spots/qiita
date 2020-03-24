@@ -1403,29 +1403,17 @@ def generate_study_list(user, visibility):
                 AS number_samples_collected]
     - retrieve all the prep data types for all the artifacts depending on their
       visibility
-            (SELECT array_agg(DISTINCT data_type)
-             FROM qiita.study_prep_template
-             LEFT JOIN qiita.prep_template USING (prep_template_id)
-             LEFT JOIN qiita.data_type USING (data_type_id)
-             LEFT JOIN qiita.artifact USING (artifact_id)
-             LEFT JOIN qiita.visibility USING (visibility_id)
-             LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-             WHERE {0} study_id = qiita.study.study_id)
-                 AS preparation_data_types,
-    - all the BIOM artifact_ids sorted by artifact_id that belong to the study,
-      including their software deprecated value and their prep info file data
-      type values
-            (SELECT array_agg(row_to_json(
-             (m_aid.artifact_id, qs.deprecated), true)
-                 ORDER BY artifact_id)
-             FROM qiita.study_artifact
-             LEFT JOIN qiita.artifact AS m_aid USING (artifact_id)
-             LEFT JOIN qiita.visibility USING (visibility_id)
-             LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-             LEFT JOIN qiita.software_command USING (command_id)
-             LEFT JOIN qiita.software qs USING (software_id)
-             WHERE artifact_type='BIOM' AND {0}
-                 study_id = qiita.study.study_id) AS aids_with_deprecation,
+            (SELECT array_agg(row_to_json((prep_template_id, data_type,
+                 artifact_id, artifact_type, deprecated,
+                 qiita.bioms_from_preparation_artifacts(artifact_id)), true))
+                FROM qiita.study_prep_template
+                LEFT JOIN qiita.prep_template USING (prep_template_id)
+                LEFT JOIN qiita.data_type USING (data_type_id)
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                LEFT JOIN qiita.visibility USING (visibility_id)
+                WHERE {0} study_id = qiita.study.study_id)
+                    AS preparation_information,
     - all the publications that belong to the study
             (SELECT array_agg((publication, is_doi)))
                 FROM qiita.study_publication
@@ -1468,26 +1456,17 @@ def generate_study_list(user, visibility):
             (SELECT COUNT(sample_id) FROM qiita.study_sample
                 WHERE study_id=qiita.study.study_id)
                 AS number_samples_collected,
-            (SELECT array_agg(DISTINCT data_type)
+            (SELECT array_agg(row_to_json((prep_template_id, data_type,
+                 artifact_id, artifact_type, deprecated,
+                 qiita.bioms_from_preparation_artifacts(artifact_id)), true))
                 FROM qiita.study_prep_template
                 LEFT JOIN qiita.prep_template USING (prep_template_id)
                 LEFT JOIN qiita.data_type USING (data_type_id)
                 LEFT JOIN qiita.artifact USING (artifact_id)
-                LEFT JOIN qiita.visibility USING (visibility_id)
                 LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                LEFT JOIN qiita.visibility USING (visibility_id)
                 WHERE {0} study_id = qiita.study.study_id)
-                    AS preparation_data_types,
-            (SELECT array_agg(row_to_json(
-                (m_aid.artifact_id, qs.deprecated), true)
-                    ORDER BY artifact_id)
-                FROM qiita.study_artifact
-                LEFT JOIN qiita.artifact AS m_aid USING (artifact_id)
-                LEFT JOIN qiita.visibility USING (visibility_id)
-                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                LEFT JOIN qiita.software_command USING (command_id)
-                LEFT JOIN qiita.software qs USING (software_id)
-                WHERE artifact_type='BIOM' AND {0}
-                    study_id = qiita.study.study_id) AS aids_with_deprecation,
+                    AS preparation_information,
             (SELECT array_agg(row_to_json((publication, is_doi), true))
                 FROM qiita.study_publication
                 WHERE study_id=qiita.study.study_id) AS publications,
@@ -1520,17 +1499,25 @@ def generate_study_list(user, visibility):
                     info['owner'] = info['owner_email']
                 del info['owner_email']
 
-                # cleaning aids_with_deprecation
-                info['artifact_biom_ids'] = []
-                if info['aids_with_deprecation'] is not None:
-                    for x in info['aids_with_deprecation']:
-                        # f1-2 are the default names given by pgsql
-                        if not x['f2']:
-                            info['artifact_biom_ids'].append(x['f1'])
-                del info['aids_with_deprecation']
-
-                if info['preparation_data_types'] is None:
-                    info['preparation_data_types'] = []
+                preparation_data_types = []
+                artifact_biom_ids = []
+                if info['preparation_information'] is not None:
+                    for pinfo in info['preparation_information']:
+                        # 'f1': prep_template_id, 'f2': data_type,
+                        # 'f3': artifact_id, 'f4': artifact_type,
+                        # 'f5':deprecated, 'f6': biom artifacts
+                        if pinfo['f5']:
+                            continue
+                        preparation_data_types.append(pinfo['f2'])
+                        if pinfo['f4'] == 'BIOM':
+                            artifact_biom_ids.append(pinfo['f3'])
+                        if pinfo['f6'] is not None:
+                            artifact_biom_ids.extend(
+                                map(int, pinfo['f6'].split(',')))
+                del info['preparation_information']
+                info['artifact_biom_ids'] = list(set(artifact_biom_ids))
+                info['preparation_data_types'] = list(set(
+                    preparation_data_types))
 
                 # publication info
                 info['publication_doi'] = []

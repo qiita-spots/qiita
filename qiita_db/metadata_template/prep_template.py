@@ -480,6 +480,29 @@ class PrepTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
+    @property
+    def deprecated(self):
+        with qdb.sql_connection.TRN:
+            sql = """SELECT deprecated FROM qiita.prep_template
+                     WHERE {0} = %s""".format(self._id_column)
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @deprecated.setter
+    def deprecated(self, deprecated):
+        r"""Update deprecated value of prep information file
+
+        Parameters
+        ----------
+        deprecated : bool
+            If the prep info file is deprecated
+        """
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.prep_template SET deprecated = %s
+                     WHERE {0} = %s""".format(self._id_column)
+            qdb.sql_connection.TRN.add(sql, [deprecated, self.id])
+            qdb.sql_connection.TRN.execute()
+
     def generate_files(self, samples=None, columns=None):
         r"""Generates all the files that contain data from this template
 

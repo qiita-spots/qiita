@@ -133,6 +133,39 @@
     }
   }
 
+
+  /*
+   *
+   * Updates deprecated flag in the prep information <fieldset>
+   *
+   * @param prep_id the prep template id
+   * @param new_value the new deprecate value
+   *
+   * This function executes an AJAX call to update the deprecated flag
+   *
+   */
+  function deprecate_preparation(prep_id, new_value) {
+    var status = 'deprecate';
+    if (!new_value){
+      status = 'DE-deprecate'
+    }
+    if(confirm("Are you sure you want to " + status + " this preparation?")) {
+      $.ajax({
+        url: '{% raw qiita_config.portal_dir %}/prep_template/',
+        type: 'PATCH',
+        data: {'op': 'update-deprecated', 'path': '/' + prep_id + '/' + new_value},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}} });
+          }
+        }
+      });
+    }
+  }
+
   /*
    *
    * Deletes a column from the prep template
@@ -388,6 +421,11 @@
 <div class="row">
   <div class="col-md-12">
     <h4>
+      {% if deprecated %}
+        <span class="label label-danger">This Preparation Information has been DEPRECATED</span>
+        <br/><br/>
+      {% end %}
+
       <span id="prep-name-span">{{name}}</span> - ID {{prep_id}} ({{data_type}})
       <a class="btn btn-default" data-toggle="modal" data-target="#update-prep-name"><span class="glyphicon glyphicon-pencil"></span> Edit name</a>
       <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
@@ -396,6 +434,12 @@
         <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_ebi_accessions/experiments/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> EBI experiment accessions</a>
       {% end %}
       {% if editable %}
+        <br/>
+        {% if deprecated %}
+          <a class="btn btn-warning" onclick="deprecate_preparation({{prep_id}}, false);"><span class="glyphicon glyphicon-pushpin"></span> Remove Deprecation</a>
+        {% else%}
+          <a class="btn btn-warning" onclick="deprecate_preparation({{prep_id}}, true);"><span class="glyphicon glyphicon-pushpin"></span> Deprecate</a>
+        {% end %}
         <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}
       {% if prep_restrictions %}

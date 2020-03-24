@@ -1241,6 +1241,14 @@ class TestPrepTemplate(TestCase):
         pt.investigation_type = 'RNASeq'
         self.assertEqual(pt.investigation_type, 'RNASeq')
 
+    def test_deprecated_setter(self):
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        self.assertFalse(pt.deprecated)
+        pt.deprecated = True
+        self.assertTrue(pt.deprecated)
+        pt.deprecated = False
+        self.assertFalse(pt.deprecated)
+
     def test_status(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
         self.assertEqual(pt.status, 'private')

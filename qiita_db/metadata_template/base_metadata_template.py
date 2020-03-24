@@ -653,6 +653,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         table_name != 'prep_template_filepath' AND
                         table_name != 'prep_template_sample' AND
                         table_name != 'prep_template_processing_job' AND
+                        table_name != 'preparation_artifact' AND
                         table_name != 'prep_template'""".format(
                         cls._table_prefix)
             qdb.sql_connection.TRN.add(sql)
