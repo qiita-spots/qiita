@@ -458,11 +458,11 @@ class Artifact(qdb.base.QiitaObject):
                 visibilities = {a.visibility for a in instance.parents}
                 # set based on the "lowest" visibility
                 if 'sandbox' in visibilities:
-                    instance.visibility = 'sandbox'
+                    instance._set_visibility('sandbox')
                 elif 'private' in visibilities:
-                    instance.visibility = 'private'
+                    instance._set_visibility('private')
                 else:
-                    instance.visibility = 'public'
+                    instance._set_visibility('public')
 
             elif prep_template:
                 # This artifact is uploaded by the user in the
@@ -737,6 +737,25 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
+    def _set_visibility(self, value):
+        "helper method to split validation and actual set of the visibility"
+        # In order to correctly propagate the visibility we need to find
+        # the root of this artifact and then propagate to all the artifacts
+        vis_id = qdb.util.convert_to_id(value, "visibility")
+
+        sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
+        qdb.sql_connection.TRN.add(sql, [self.id])
+        root_id = qdb.sql_connection.TRN.execute_fetchlast()
+        root = qdb.artifact.Artifact(root_id)
+        # these are the ids of all the children from the root
+        ids = [a.id for a in root.descendants.nodes()]
+
+        sql = """UPDATE qiita.artifact
+                 SET visibility_id = %s
+                 WHERE artifact_id IN %s"""
+        qdb.sql_connection.TRN.add(sql, [vis_id, tuple(ids)])
+        qdb.sql_connection.TRN.execute()
+
     @visibility.setter
     def visibility(self, value):
         """Sets the visibility of the artifact
@@ -753,7 +772,6 @@ class Artifact(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # first let's check that this is a valid visibility
-            vis_id = qdb.util.convert_to_id(value, "visibility")
             study = self.study
 
             # then let's check that the sample/prep info files have the correct
@@ -770,20 +788,7 @@ class Artifact(qdb.base.QiitaObject):
                     raise ValueError(
                         "Errors in your info files:%s" % '\n'.join(message))
 
-            # In order to correctly propagate the visibility we need to find
-            # the root of this artifact and then propagate to all the artifacts
-            sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
-            qdb.sql_connection.TRN.add(sql, [self.id])
-            root_id = qdb.sql_connection.TRN.execute_fetchlast()
-            root = qdb.artifact.Artifact(root_id)
-            # these are the ids of all the children from the root
-            ids = [a.id for a in root.descendants.nodes()]
-
-            sql = """UPDATE qiita.artifact
-                     SET visibility_id = %s
-                     WHERE artifact_id IN %s"""
-            qdb.sql_connection.TRN.add(sql, [vis_id, tuple(ids)])
-            qdb.sql_connection.TRN.execute()
+            self._set_visibility(value)
 
     @property
     def artifact_type(self):
