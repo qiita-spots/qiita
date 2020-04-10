@@ -170,7 +170,7 @@ is used for removal of ribosomal reads from quality filtered metaT data
 Latest SortMeRNA version: v2.1
 
 Input: Quality filtered metaT reads (FASTA/FASTQ) 
-Ribosomal reads are identified by searching against pre-curated rRNA databases. Currently, rRNA databases covering bacteria, archaea and eukarya were downloaded from the SILVA and rfam databases and indexed.
+Ribosomal reads are identified by searching against pre-curated rRNA databases. Currently, rRNA databases covering bacteria, archaea and eukarya were downloaded and indexed from `SILVA <https://www.arb-silva.de>`_ and `Rfam <https://rfam.xfam.org>`_.
 Currently indexed databases and their clustering ids:
 
 - silva-bacterial-16s-id 90%
