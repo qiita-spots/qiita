@@ -158,7 +158,7 @@ Metatranscriptome sample processing
 
 Sample processing guidelines for metatranscriptomic (metaT) data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Total community RNA extracted from samples contain both coding and non-coding RNA. Typically, ribosomal RNA make up >90% of the library if not depleted prior to library construction.Ribosomal depletion allows for mRNA enrichment. Even if you are dealing with ribosomal RNA subtracted cDNA libraries, there will be some
+Total community RNA extracted from samples contain both coding and non-coding RNA. Typically, ribosomal RNA make up >90% of the library if not depleted prior to library construction. Ribosomal depletion allows for mRNA enrichment. Even if you are dealing with ribosomal RNA subtracted cDNA libraries, there will be some
 residual ribosomal RNA in the libraries that you want to remove/separate from the non ribosomal RNA sequences.
 
 Ribosomal read filtering
