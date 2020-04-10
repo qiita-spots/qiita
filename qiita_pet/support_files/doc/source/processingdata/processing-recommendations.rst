@@ -169,7 +169,7 @@ is used for removal of ribosomal reads from quality filtered metaT data
 
 Latest SortMeRNA version: v2.1
 
-Input: Quality filtered metaT reads (Fasta/Fastq) 
+Input: Quality filtered metaT reads (FASTA/FASTQ) 
 Ribosomal reads are identified by searching against pre-curated rRNA databases. Currently, rRNA databases covering bacteria, archaea and eukarya were downloaded from the SILVA and rfam databases and indexed.
 Currently indexed databases and their clustering ids:
 
