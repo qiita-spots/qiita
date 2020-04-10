@@ -102,7 +102,9 @@ setup(name='qiita-spots',
       scripts=glob('scripts/*'),
       # making sure that numpy is installed before biom
       setup_requires=['numpy'],
-      install_requires=['psycopg2', 'click', 'future', 'bcrypt', 'pandas',
+      # newest pandas has no 'DataFrame' object has no attribute 'set_value',
+      # fixing to 0.24.2 as it's the version deployed in the system
+      install_requires=['psycopg2', 'click', 'future', 'bcrypt', 'pandas==0.24.2',
                         'biom-format', 'tornado<6.0', 'toredis', 'redis',
                         'scp', 'pyparsing', 'h5py',  'natsort', 'nose', 'pep8',
                         'networkx', 'humanize', 'scikit-bio', 'wtforms',
