@@ -152,3 +152,54 @@ Shogun reference databases
      - Genera: 2,264
      - Species: 11,852
      - Strains: 4,263
+
+Metatranscriptome sample processing
+------------------------------------
+
+Sample processing guidelines for metatranscriptomic (metaT) data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Total community RNA extracted from samples contain both coding and non-coding RNA. Typically, ribosomal RNA make up >90% of the library if not depleted prior to library construction.Ribosomal depletion allows for mRNA enrichment. Even if you are dealing with ribosomal RNA subtracted cDNA libraries, there will be some
+residual ribosomal RNA in the libraries that you want to remove/separate from the non ribosomal RNA sequences.
+
+Ribosomal read filtering
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+`SortMeRNA <https://bioinfo.lifl.fr/RNA/sortmerna/>`_
+is used for removal of ribosomal reads from quality filtered metaT data
+
+Latest SortMeRNA version: v2.1
+
+Input: Quality filtered metaT reads (Fasta/Fastq) 
+Ribosomal reads are identified by searching against pre-curated rRNA databases. Currently, rRNA databases covering bacteria, archaea and eukarya were downloaded from the SILVA and rfam databases and indexed.
+Currently indexed databases and their clustering ids:
+
+- silva-bacterial-16s-id 90%
+- silva-bacterial-23s-id 98%
+- silva-archaeal-16s-id 95%
+- silva-archaeal-23s-id 98%
+- silva-eukarya-18s-id 95%
+- silva-eukarya-28s-id 98%
+- rfam-5s-database-id 98%
+- rfam-5.8s-database-id 98%
+
+The above databases and ID cut-offs were chosen to work with a range of samples including more diverse/complex environmental samples.
+
+Building Custom databases
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Custom databases can also be built in addition to the above mentioned databases.
+Custom databases can be built by using the using the `ARB package <https://www.arb-silva.de/download/arb-files/>`_ to extract FASTA files for:
+
+- 16S bacteria, 16S archaea and 18S eukarya using SSURef_NR99_119_SILVA_14_07_14_opt.arb
+- 23S bacteria, 23S archaea and 28S eukarya using LSURef_119_SILVA_15_07_14_opt.arb
+
+The built databases will then have to be indexed before running SortMeRNA. 
+Reference database(s) and their corresponding indexes separated by "," and multiple databases are separated by ":"
+
+
+SortMeRNA Usage
+^^^^^^^^^^^^^^^
+SortMeRNA filters the ribosomal from the non-ribosomal reads from the input sample dataset (via BLAST search)and outputs two fasta/q files containing the ribosomal and non-ribosomal reads respectively. 
+Additionally, a summary file showing the proportion of reads matching to each of the screened ribosomal databases can also be made available. 
+Default options have been set to report only the best alignment per read reaching E-value. 
+For non ribo-depleted samples (i.e. total RNA), the ribosomal reads obtained from SortMeRNA can be further used in taxonomic/compositional analysis. 
+In the case of ribo-depleted samples, only the non-ribosomal reads are used in downstream analyses such as assembly, mapping, differential gene abundance analyses etc.
