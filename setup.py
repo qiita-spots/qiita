@@ -101,7 +101,7 @@ setup(name='qiita-spots',
               ]},
       scripts=glob('scripts/*'),
       # making sure that numpy is installed before biom
-      setup_requires=['numpy'],
+      setup_requires=['numpy', 'cython'],
       # newest pandas has no 'DataFrame' object has no attribute 'set_value',
       # fixing to 0.24.2 as it's the version deployed in the system
       install_requires=['psycopg2', 'click', 'future', 'bcrypt', 'pandas==0.24.2',
@@ -113,7 +113,7 @@ setup(name='qiita-spots',
                         'paramiko', 'seaborn',  'matplotlib', 'scipy', 'nose',
                         'flake8', 'six', 'qiita-files @ https://github.com/'
                         'qiita-spots/qiita-files/archive/master.zip', 'mock',
-                        'python-jose',
+                        'python-jose', 'markdown2',
                         'supervisor @ https://github.com/Supervisor/'
                         'supervisor/archive/master.zip', 'joblib'],
       classifiers=classifiers

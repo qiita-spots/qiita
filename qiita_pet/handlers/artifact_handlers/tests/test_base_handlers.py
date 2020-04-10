@@ -97,9 +97,9 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp_files = [
             (1, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)',
-             '2125826711', '58 Bytes'),
+             '2125826711', '58B'),
             (2, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)',
-             '2125826711', '58 Bytes')]
+             '2125826711', '58B')]
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
                'artifact_type': 'FASTQ',
@@ -148,7 +148,7 @@ class TestBaseHandlersUtils(TestCase):
         exp_files.append(
             (a.html_summary_fp[0],
              '%s (html summary)' % basename(a.html_summary_fp[1]),
-             '1642196267', '33 Bytes'))
+             '1642196267', '33B'))
         exp_summary_path = relpath(
             a.html_summary_fp[1], qiita_config.base_data_dir)
         obs = artifact_summary_get_request(user, 1)
@@ -214,9 +214,9 @@ class TestBaseHandlersUtils(TestCase):
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
         exp_files = [
-            (3, '1_seqs.fna (preprocessed fasta)', '', '0 Bytes'),
-            (4, '1_seqs.qual (preprocessed fastq)', '', '0 Bytes'),
-            (5, '1_seqs.demux (preprocessed demux)', '', '0 Bytes')]
+            (3, '1_seqs.fna (preprocessed fasta)', '', '0B'),
+            (4, '1_seqs.qual (preprocessed fastq)', '', '0B'),
+            (5, '1_seqs.demux (preprocessed demux)', '', '0B')]
         exp = {'name': 'Demultiplexed 1',
                'artifact_id': 2,
                'artifact_type': 'Demultiplexed',
@@ -269,7 +269,7 @@ class TestBaseHandlersUtils(TestCase):
                'buttons': private_download_button % 8,
                'processing_info': {},
                'files': [(22, 'biom_table.biom (biom)', '1756512010',
-                          '1.1 MB')],
+                          '1.0M')],
                'is_from_analysis': True,
                'summary': None,
                'job': None,
