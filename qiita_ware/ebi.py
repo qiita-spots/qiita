@@ -393,7 +393,7 @@ class EBISubmission(object):
             The list of samples to be included in the sample xml. If not
             provided or an empty list is provided, all the samples are used
         ignore_columns : list of str, optional
-            The list of columns to ignore during submission; helful for when
+            The list of columns to ignore during submission; helpful for when
             the submissions are too large
 
         Returns
@@ -411,14 +411,19 @@ class EBISubmission(object):
         for sample_name in sorted(samples):
             sample_info = dict(self.samples[sample_name])
 
-            if self._ebi_sample_accessions[sample_name] is None:
-                sample = ET.SubElement(sample_set, 'SAMPLE', {
-                    'alias': self._get_sample_alias(sample_name),
-                    'center_name': qiita_config.ebi_center_name}
-                )
+            sample_accession = self._ebi_sample_accessions[sample_name]
+
+            if self.action == 'ADD':
+                if sample_accession is not None:
+                    continue
+                else:
+                    sample = ET.SubElement(sample_set, 'SAMPLE', {
+                        'alias': self._get_sample_alias(sample_name),
+                        'center_name': qiita_config.ebi_center_name}
+                    )
             else:
                 sample = ET.SubElement(sample_set, 'SAMPLE', {
-                    'accession': self._ebi_sample_accessions[sample_name],
+                    'accession': sample_accession,
                     'center_name': qiita_config.ebi_center_name}
                 )
 

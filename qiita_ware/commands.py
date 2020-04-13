@@ -207,7 +207,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                  ebi_submission.submission_xml_fp]
     total_size = sum([stat(tr).st_size for tr in to_review if tr is not None])
     # note that the max for EBI is 10M but let's play it safe
-    max_size = 8.5e+6 if not test_size else 6000
+    max_size = 10e+6 if not test_size else 6000
     if total_size > max_size:
         LogEntry.create(
             'Runtime', 'The submission: %d is larger than allowed (%d), will '

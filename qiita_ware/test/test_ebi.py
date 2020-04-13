@@ -177,7 +177,9 @@ class TestEBISubmission(TestCase):
 
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_sample_xml(samples=samples))
-        exp = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
+        exp = ('<SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-'
+               'instance" xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.'
+               'uk/meta/xsd/sra_1_3/SRA.sample.xsd" />')
         self.assertEqual(obs.decode('ascii'), exp)
 
         # removing samples so test text is easier to read
@@ -194,7 +196,6 @@ class TestEBISubmission(TestCase):
             del(submission.samples[k])
             del(submission.samples_prep[k])
         obs = ET.tostring(submission.generate_sample_xml())
-        exp = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
         obs = ET.tostring(submission.generate_sample_xml(samples=[]))
