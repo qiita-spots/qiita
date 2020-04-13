@@ -236,8 +236,6 @@ class CommandsTests(TestCase):
 
         rmtree(join(self.base_fp, '%d_ebi_submission' % aid), True)
 
-    submit_EBI
-
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
 CCACCCAGTAAC

@@ -744,7 +744,7 @@ class EBISubmission(object):
             new_samples = {
                 sample for sample, accession in viewitems(
                     self.sample_template.ebi_sample_accessions)
-                if accession is None}
+                if accession is not None}
             new_samples = new_samples.intersection(self.samples)
             if new_samples:
                 self.sample_xml_fp = get_output_fp('sample.xml')
