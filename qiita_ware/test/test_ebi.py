@@ -609,6 +609,7 @@ class TestEBISubmission(TestCase):
         e.generate_xml_files()
         self.assertIsNotNone(e.run_xml_fp)
         self.assertIsNotNone(e.experiment_xml_fp)
+        self.assertIsNone(e.sample_xml_fp)
         self.assertIsNone(e.study_xml_fp)
         self.assertIsNotNone(e.submission_xml_fp)
 
