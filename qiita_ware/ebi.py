@@ -412,8 +412,7 @@ class EBISubmission(object):
             sample_info = dict(self.samples[sample_name])
 
             sample_accession = self._ebi_sample_accessions[sample_name]
-
-            if self.action == 'ADD':
+            if self.action in ('ADD', 'VALIDATE'):
                 if sample_accession is not None:
                     continue
                 else:
@@ -744,7 +743,7 @@ class EBISubmission(object):
             new_samples = {
                 sample for sample, accession in viewitems(
                     self.sample_template.ebi_sample_accessions)
-                if accession is not None}
+                if accession is None}
             new_samples = new_samples.intersection(self.samples)
             if new_samples:
                 self.sample_xml_fp = get_output_fp('sample.xml')

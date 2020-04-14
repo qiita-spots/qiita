@@ -229,7 +229,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                                        'description'}
         all_samples = ebi_submission.sample_template.ebi_sample_accessions
         samples = {k: all_samples[k] for k in ebi_submission.samples
-                   if all_samples[k] is not None}
+                   if all_samples[k] is None}
         if samples:
             ebi_submission.write_xml_file(
                 ebi_submission.generate_sample_xml(samples, cols_to_drop),

@@ -587,11 +587,13 @@ class TestEBISubmission(TestCase):
         e.generate_demultiplexed_fastq()
         self.assertIsNone(e.run_xml_fp)
         self.assertIsNone(e.experiment_xml_fp)
+        self.assertIsNone(e.sample_xml_fp)
         self.assertIsNone(e.study_xml_fp)
         self.assertIsNone(e.submission_xml_fp)
         e.generate_xml_files()
         self.assertIsNotNone(e.run_xml_fp)
         self.assertIsNotNone(e.experiment_xml_fp)
+        self.assertIsNotNone(e.sample_xml_fp)
         self.assertIsNotNone(e.study_xml_fp)
         self.assertIsNotNone(e.submission_xml_fp)
 
@@ -622,6 +624,7 @@ class TestEBISubmission(TestCase):
         e.generate_xml_files()
         self.assertIsNotNone(e.run_xml_fp)
         self.assertIsNone(e.experiment_xml_fp)
+        self.assertIsNone(e.sample_xml_fp)
         self.assertIsNone(e.study_xml_fp)
         self.assertIsNotNone(e.submission_xml_fp)
 
