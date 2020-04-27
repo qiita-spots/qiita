@@ -14,6 +14,7 @@ from os.path import exists, join, basename
 from shutil import copyfile
 from functools import partial
 from json import dumps
+from time import sleep
 
 import pandas as pd
 import networkx as nx
@@ -1113,6 +1114,45 @@ class ArtifactTests(TestCase):
 
         # Check that the job still exists, so we cap keep track of system usage
         qdb.processing_job.ProcessingJob(job.id)
+
+    def test_being_deleted_by(self):
+        test = qdb.artifact.Artifact.create(
+            self.filepaths_root, "FASTQ", prep_template=self.prep_template)
+        uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
+                          str(test.study.id))
+        self._clean_up_files.extend(
+            [join(uploads_fp, basename(x['fp'])) for x in test.filepaths])
+
+        # verifying that there are no jobs in the list
+        self.assertIsNone(test.being_deleted_by)
+
+        # creating new deleting job
+        qiita_plugin = qdb.software.Software.from_name_and_version(
+            'Qiita', 'alpha')
+        cmd = qiita_plugin.get_command('delete_artifact')
+        params = qdb.software.Parameters.load(
+            cmd, values_dict={'artifact': test.id})
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params, True)
+        job._set_status('running')
+
+        # verifying that there is a job and is the same than above
+        self.assertEqual(job, test.being_deleted_by)
+
+        # let's set it as error and now we should not have it anymore
+        job._set_error('Killed by admin')
+        self.assertIsNone(test.being_deleted_by)
+
+        # now, let's actually remove
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params, True)
+        job.submit()
+        # let's wait for job
+        while job.status in ('queued', 'running'):
+            sleep(1)
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.artifact.Artifact(test.id)
 
     def test_delete_as_output_job(self):
         fd, fp = mkstemp(suffix='_table.biom')
