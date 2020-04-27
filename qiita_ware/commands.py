@@ -207,7 +207,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                  ebi_submission.submission_xml_fp]
     total_size = sum([stat(tr).st_size for tr in to_review if tr is not None])
     # note that the max for EBI is 10M but let's play it safe
-    max_size = 8.5e+6 if not test_size else 6000
+    max_size = 10e+6 if not test_size else 5000
     if total_size > max_size:
         LogEntry.create(
             'Runtime', 'The submission: %d is larger than allowed (%d), will '
@@ -228,10 +228,12 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
         cols_to_drop = cols_to_drop - {'taxon_id', 'scientific_name',
                                        'description'}
         all_samples = ebi_submission.sample_template.ebi_sample_accessions
-        samples = {k: all_samples[k] for k in ebi_submission.samples}
-        ebi_submission.write_xml_file(
-            ebi_submission.generate_sample_xml(samples, cols_to_drop),
-            ebi_submission.sample_xml_fp)
+        samples = {k: all_samples[k] for k in ebi_submission.samples
+                   if all_samples[k] is None}
+        if samples:
+            ebi_submission.write_xml_file(
+                ebi_submission.generate_sample_xml(samples, cols_to_drop),
+                ebi_submission.sample_xml_fp)
 
         # now let's recalculate the size to make sure it's fine
         new_total_size = sum([stat(tr).st_size
