@@ -234,6 +234,7 @@ def artifact_summary_get_request(user, artifact_id):
             'job': job_info,
             'artifact_timestamp': artifact.timestamp.strftime(
                 "%Y-%m-%d %H:%m"),
+            'being_deleted': artifact.being_deleted_by is not None,
             'errored_summary_jobs': errored_summary_jobs}
 
 
@@ -390,25 +391,33 @@ def artifact_post_req(user, artifact_id):
     """
     artifact_id = int(artifact_id)
     artifact = Artifact(artifact_id)
-    check_artifact_access(user, artifact)
 
-    analysis = artifact.analysis
+    being_deleted_by = artifact.being_deleted_by
 
-    if analysis:
-        # Do something when deleting in the analysis part to keep track of it
-        redis_key = "analysis_%s" % analysis.id
+    if being_deleted_by is None:
+        check_artifact_access(user, artifact)
+
+        analysis = artifact.analysis
+
+        if analysis:
+            # Do something when deleting in the analysis part to keep
+            # track of it
+            redis_key = "analysis_%s" % analysis.id
+        else:
+            pt_id = artifact.prep_templates[0].id
+            redis_key = PREP_TEMPLATE_KEY_FORMAT % pt_id
+
+        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+        cmd = qiita_plugin.get_command('delete_artifact')
+        params = Parameters.load(cmd, values_dict={'artifact': artifact_id})
+        job = ProcessingJob.create(user, params, True)
+
+        r_client.set(
+            redis_key, dumps({'job_id': job.id, 'is_qiita_job': True}))
+
+        job.submit()
     else:
-        pt_id = artifact.prep_templates[0].id
-        redis_key = PREP_TEMPLATE_KEY_FORMAT % pt_id
-
-    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-    cmd = qiita_plugin.get_command('delete_artifact')
-    params = Parameters.load(cmd, values_dict={'artifact': artifact_id})
-    job = ProcessingJob.create(user, params, True)
-
-    r_client.set(redis_key, dumps({'job_id': job.id, 'is_qiita_job': True}))
-
-    job.submit()
+        job = being_deleted_by
 
     return {'job': job.id}
 

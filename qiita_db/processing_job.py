@@ -591,6 +591,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                         TTRN.add(sql, [artifact_info, job_id])
                     else:
                         pending[artifact_info[0]][pname] = artifact_info[1]
+                elif pname == 'artifact':
+                    TTRN.add(sql, [parameters.values[pname], job_id])
+
             if pending:
                 sql = """UPDATE qiita.processing_job
                          SET pending = %s

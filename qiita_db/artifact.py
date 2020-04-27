@@ -50,6 +50,7 @@ class Artifact(qdb.base.QiitaObject):
     -------
     create
     delete
+    being_deleted_by
 
     See Also
     --------
@@ -1411,6 +1412,21 @@ class Artifact(qdb.base.QiitaObject):
             parent_softwares.append(parent_software)
 
         return ', '.join(merging_schemes), ', '.join(parent_softwares)
+
+    @property
+    def being_deleted_by(self):
+        with qdb.sql_connection.TRN:
+            sql = """
+                SELECT processing_job_id FROM qiita.artifact_processing_job
+                  LEFT JOIN qiita.processing_job using (processing_job_id)
+                  LEFT JOIN qiita.processing_job_status using (
+                    processing_job_status_id)
+                  LEFT JOIN qiita.software_command using (command_id)
+                  WHERE artifact_id = %s AND name = 'delete_artifact' AND
+                    processing_job_status = 'running'"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+        return qdb.processing_job.ProcessingJob(res[0][0]) if res else None
 
     def jobs(self, cmd=None, status=None, show_hidden=False):
         """Jobs that used this artifact as input
