@@ -35,12 +35,12 @@ class RedbiomPublicSearch(BaseHandler):
             timestamps = []
 
         if timestamps:
-            latests_release = timestamps[0]
+            latest_release = timestamps[0]
         else:
-            latests_release = 'Not reported'
+            latest_release = 'Not reported'
         if self.request.uri != '/redbiom/':
             self.redirect('/redbiom/')
-        self.render('redbiom.html', latests_release=latests_release)
+        self.render('redbiom.html', latest_release=latest_release)
 
     def _redbiom_metadata_search(self, query, contexts):
         study_artifacts = defaultdict(lambda: defaultdict(list))
