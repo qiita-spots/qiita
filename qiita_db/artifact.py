@@ -458,9 +458,9 @@ class Artifact(qdb.base.QiitaObject):
                 visibilities = {a.visibility for a in instance.parents}
                 # set based on the "lowest" visibility
                 if 'sandbox' in visibilities:
-                    instance._set_visibility('sandbox')
+                    instance.visibility = 'sandbox'
                 elif 'private' in visibilities:
-                    instance._set_visibility('private')
+                    instance.visibility = 'private'
                 else:
                     instance._set_visibility('public')
 
