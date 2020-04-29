@@ -396,8 +396,6 @@ def artifact_post_req(user, artifact_id):
     being_deleted_by = artifact.being_deleted_by
 
     if being_deleted_by is None:
-        check_artifact_access(user, artifact)
-
         analysis = artifact.analysis
 
         if analysis:
