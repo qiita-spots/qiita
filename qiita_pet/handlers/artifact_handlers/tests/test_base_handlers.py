@@ -102,7 +102,7 @@ class TestBaseHandlersUtils(TestCase):
              '2125826711', '58B')]
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
-               'artifact_type': 'FASTQ',
+               'artifact_type': 'FASTQ', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
@@ -124,7 +124,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
-               'artifact_type': 'FASTQ',
+               'artifact_type': 'FASTQ', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
@@ -154,7 +154,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
-               'artifact_type': 'FASTQ',
+               'artifact_type': 'FASTQ', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
@@ -177,7 +177,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(demo_u, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
-               'artifact_type': 'FASTQ',
+               'artifact_type': 'FASTQ', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'public',
                'editable': False,
@@ -195,7 +195,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
-               'artifact_type': 'FASTQ',
+               'artifact_type': 'FASTQ', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'sandbox',
                'editable': True,
@@ -219,7 +219,7 @@ class TestBaseHandlersUtils(TestCase):
             (5, '1_seqs.demux (preprocessed demux)', '', '0B')]
         exp = {'name': 'Demultiplexed 1',
                'artifact_id': 2,
-               'artifact_type': 'Demultiplexed',
+               'artifact_type': 'Demultiplexed', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 10:10',
                'visibility': 'private',
                'editable': True,
@@ -261,7 +261,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 8)
         exp = {'name': 'noname',
                'artifact_id': 8,
-               'artifact_type': 'BIOM',
+               'artifact_type': 'BIOM', 'being_deleted': False,
                # this value changes on build so copy from obs
                'artifact_timestamp': obs['artifact_timestamp'],
                'visibility': 'sandbox',

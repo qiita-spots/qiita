@@ -216,7 +216,7 @@ Vue.component('processing-graph', {
         // Clean up the div
         $("#processing-results").empty();
         // Update the artifact node to mark that it is being deleted
-        var node = vm.nodes_ds.get(artifactId);
+        var node = vm.nodes_ds.get(artifactId.toString());
         var node_info = vm.colorScheme['deleting'];
         node.group = 'deleting';
         node.color = node_info;
@@ -985,6 +985,10 @@ Vue.component('processing-graph', {
           // Format node list data
           for(var i = 0; i < data.nodes.length; i++) {
             var node_info = vm.colorScheme[data.nodes[i][4]];
+            if (data.artifacts_being_deleted.includes(data.nodes[i][2])) {
+              data.nodes[i][0] = 'deleting'
+              node_info = vm.colorScheme['deleting']
+            }
             // forcing a string
             data.nodes[i][2] = data.nodes[i][2].toString()
             vm.nodes.push({id: data.nodes[i][2], shape: node_info['shape'], label: formatNodeLabel(data.nodes[i][3]), type: data.nodes[i][1], group: data.nodes[i][0], color: node_info, status: data.nodes[i][4]});

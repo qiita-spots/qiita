@@ -188,6 +188,9 @@ def get_network_nodes_edges(graph, full_access, nodes=None, edges=None):
     # n[1] is the object
     for n in graph.nodes():
         if n[0] == 'job':
+            # ignoring internal Jobs
+            if n[1].command.software.name == 'Qiita':
+                continue
             atype = 'job'
             name = n[1].command.name
             status = n[1].status
