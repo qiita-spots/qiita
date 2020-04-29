@@ -661,6 +661,9 @@ def prep_template_graph_get_req(prep_id, user_id):
     G = artifact.descendants_with_jobs
 
     nodes, edges, wf_id = get_network_nodes_edges(G, full_access)
+    # nodes returns [node_type, node_name, element_id]; here we are looking
+    # for the node_type == artifact, and check by the element/artifact_id if
+    # it's being deleted
     artifacts_being_deleted = [a[2] for a in nodes if a[0] == 'artifact' and
                                Artifact(a[2]).being_deleted_by is not None]
 

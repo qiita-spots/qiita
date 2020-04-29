@@ -1415,6 +1415,15 @@ class Artifact(qdb.base.QiitaObject):
 
     @property
     def being_deleted_by(self):
+        """The running job that is deleting this artifact
+
+        Returns
+        -------
+        qiita_db.processing_job.ProcessingJob
+            The running job that is deleting this artifact, None if it
+            doesn't exist
+        """
+
         with qdb.sql_connection.TRN:
             sql = """
                 SELECT processing_job_id FROM qiita.artifact_processing_job

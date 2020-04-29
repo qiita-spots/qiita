@@ -391,6 +391,7 @@ def artifact_post_req(user, artifact_id):
     """
     artifact_id = int(artifact_id)
     artifact = Artifact(artifact_id)
+    check_artifact_access(user, artifact)
 
     being_deleted_by = artifact.being_deleted_by
 

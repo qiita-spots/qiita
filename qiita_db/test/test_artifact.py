@@ -14,7 +14,6 @@ from os.path import exists, join, basename
 from shutil import copyfile
 from functools import partial
 from json import dumps
-from time import sleep
 
 import pandas as pd
 import networkx as nx
@@ -22,6 +21,7 @@ from biom import example_table as et
 from biom.util import biom_open
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.testing import wait_for_processing_job
 import qiita_db as qdb
 
 
@@ -1148,8 +1148,7 @@ class ArtifactTests(TestCase):
             qdb.user.User('test@foo.bar'), params, True)
         job.submit()
         # let's wait for job
-        while job.status in ('queued', 'running'):
-            sleep(1)
+        wait_for_processing_job(job.id)
 
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.artifact.Artifact(test.id)
