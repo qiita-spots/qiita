@@ -157,9 +157,10 @@ def analyisis_graph_handler_get_request(analysis_id, user):
             # nodes returns [node_type, node_name, element_id]; here we
             # are looking for the node_type == artifact, and check by
             # the element/artifact_id if it's being deleted
-            artifacts_being_deleted = [
-                a[2] for a in nodes if a[0] == 'artifact' and
-                Artifact(a[2]).being_deleted_by is not None]
+            for a in nodes:
+                if (a[0] == 'artifact' and
+                        Artifact(a[2]).being_deleted_by is not None):
+                    artifacts_being_deleted(a[2])
 
             if wf_id is None:
                 wf_id = a_wf_id

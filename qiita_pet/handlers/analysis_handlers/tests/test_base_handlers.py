@@ -123,6 +123,7 @@ class TestBaseHandlersUtils(TestCase):
         # it here. There is only 1 job in the first artifact of the analysis
         job_id = Analysis(1).artifacts[0].jobs()[0].id
         exp = {'edges': [(8, job_id), (job_id, 9)],
+               'artifacts_being_deleted': [],
                'nodes': [
                     ('job', 'job', job_id, 'Single Rarefaction', 'success'),
                     ('artifact', 'BIOM', 9, 'noname\n(BIOM)', 'outdated'),
@@ -210,6 +211,7 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         job_id = Analysis(1).artifacts[0].jobs()[0].id
         obs = loads(response.body)
         exp = {'edges': [[8, job_id], [job_id, 9]],
+               'artifacts_being_deleted': [],
                'nodes': [
                     ['job', 'job', job_id, 'Single Rarefaction', 'success'],
                     ['artifact', 'BIOM', 9, 'noname\n(BIOM)', 'artifact'],
@@ -256,6 +258,7 @@ class TestAnalysisGraphHandler(TestHandlerBase):
         obs = loads(response.body)
         exp = {'edges': [[artifacts[0].id, job_id],
                          [job_id, '%s:taxa_summary' % job_id]],
+               'artifacts_being_deleted': [],
                'nodes': [
                     ['job', 'job', job_id, 'Summarize Taxa',
                      'in_construction'],
@@ -289,6 +292,7 @@ class TestAnalysisGraphHandler(TestHandlerBase):
                          [job_id, '%s:taxa_summary' % job_id],
                          [artifacts[1].id, job_id_2],
                          [job_id_2, '%s:rarefied_table' % job_id_2]],
+               'artifacts_being_deleted': [],
                'nodes': [
                     ['job', 'job', job_id, 'Summarize Taxa',
                      'in_construction'],
