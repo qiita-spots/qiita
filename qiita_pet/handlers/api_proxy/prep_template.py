@@ -18,6 +18,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_pet.util import get_network_nodes_edges
+from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
@@ -660,11 +661,17 @@ def prep_template_graph_get_req(prep_id, user_id):
     G = artifact.descendants_with_jobs
 
     nodes, edges, wf_id = get_network_nodes_edges(G, full_access)
+    # nodes returns [node_type, node_name, element_id]; here we are looking
+    # for the node_type == artifact, and check by the element/artifact_id if
+    # it's being deleted
+    artifacts_being_deleted = [a[2] for a in nodes if a[0] == 'artifact' and
+                               Artifact(a[2]).being_deleted_by is not None]
 
     return {'edges': edges,
             'nodes': nodes,
             'workflow': wf_id,
             'status': 'success',
+            'artifacts_being_deleted': artifacts_being_deleted,
             'message': ''}
 
 
