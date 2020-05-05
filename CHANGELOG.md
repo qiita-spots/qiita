@@ -1,5 +1,23 @@
 # Qiita changelog
 
+Version 052020
+--------------
+
+* Added Metatrascriptomics as a data type, added a Ribosomal read filtering step and documentation on how to use it in the processing recommendations
+* Fixed issue that prevented creating new artifacts when it was the children of a public parent
+* Qiita now keeps track of artifact deletion jobs, prevents submitting duplicated deletions, and the GUI is updated when an artifact is being deleted
+* We now display the `redbiom` DB release date in the redbiom Qiita page
+* Fixed EBA-ENA duplicated sample submission in multiple preparations - this could happen when a sample existed in more than one preparation
+* Add the ability to deprecate a preparation; this is useful when there is an unsuccessful run or preparation
+* The study page now has a markdown `Notes` section so users add problematic samples, explaining certain metadata columns, etc
+* Added user documentation to better explain how to split your samples in preparations
+* Fix a bug where repeated sample names were incorrectly handled during meta-analysis (#2978). Removed unused-legacy code to deal with duplicated sample names while building analyses
+* Improved headings in the stats page to avoid confusions
+* Fixed issue that only deleted selected samples within the page's viewing frame
+* Qiita now uses `gnu=True` in the `humanize.naturalsize` so the size display matches what a user sees when they `ls` the file
+* Updated code so it works with `pandas v1.0.3`
+* Added qiime2.2020.02 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
+
 Version 012020
 --------------
 

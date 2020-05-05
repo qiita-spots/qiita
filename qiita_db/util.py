@@ -1405,7 +1405,8 @@ def generate_study_list(user, visibility):
       visibility
             (SELECT array_agg(row_to_json((prep_template_id, data_type,
                  artifact_id, artifact_type, deprecated,
-                 qiita.bioms_from_preparation_artifacts(artifact_id)), true))
+                 qiita.bioms_from_preparation_artifacts(prep_template_id)),
+                 true))
                 FROM qiita.study_prep_template
                 LEFT JOIN qiita.prep_template USING (prep_template_id)
                 LEFT JOIN qiita.data_type USING (data_type_id)
@@ -1458,7 +1459,8 @@ def generate_study_list(user, visibility):
                 AS number_samples_collected,
             (SELECT array_agg(row_to_json((prep_template_id, data_type,
                  artifact_id, artifact_type, deprecated,
-                 qiita.bioms_from_preparation_artifacts(artifact_id)), true))
+                 qiita.bioms_from_preparation_artifacts(prep_template_id)),
+                 true))
                 FROM qiita.study_prep_template
                 LEFT JOIN qiita.prep_template USING (prep_template_id)
                 LEFT JOIN qiita.data_type USING (data_type_id)
