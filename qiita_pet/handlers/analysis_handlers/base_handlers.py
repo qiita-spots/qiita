@@ -160,7 +160,7 @@ def analyisis_graph_handler_get_request(analysis_id, user):
             for a in nodes:
                 if (a[0] == 'artifact' and
                         Artifact(a[2]).being_deleted_by is not None):
-                    artifacts_being_deleted(a[2])
+                    artifacts_being_deleted.append(a[2])
 
             if wf_id is None:
                 wf_id = a_wf_id
