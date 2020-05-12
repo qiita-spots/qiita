@@ -362,7 +362,7 @@ class MetaUtilTests(TestCase):
 
         tmp = topen(tgz, "r:gz")
         fhd = tmp.extractfile(txt)
-        txt_obs = [l.decode('ascii') for l in fhd.readlines()]
+        txt_obs = [line.decode('ascii') for line in fhd.readlines()]
         tmp.close()
         txt_exp = [
             'biom fp\tsample fp\tprep fp\tqiita artifact id\tplatform\t'
@@ -445,7 +445,7 @@ class MetaUtilTests(TestCase):
 
         tmp = topen(tgz, "r:gz")
         fhd = tmp.extractfile(txt)
-        txt_obs = [l.decode('ascii') for l in fhd.readlines()]
+        txt_obs = [line.decode('ascii') for line in fhd.readlines()]
         tmp.close()
 
         txt_exp = [
@@ -488,7 +488,7 @@ class MetaUtilTests(TestCase):
 
         tmp = topen(tgz, "r:gz")
         fhd = tmp.extractfile(txt)
-        txt_obs = [l.decode('ascii') for l in fhd.readlines()]
+        txt_obs = [line.decode('ascii') for line in fhd.readlines()]
         tmp.close()
 
         # we should only get the header

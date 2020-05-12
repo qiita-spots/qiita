@@ -315,7 +315,7 @@ class Analysis(qdb.base.QiitaObject):
             sql = """SELECT portal
                      FROM qiita.analysis_portal
                         JOIN qiita.portal_type USING (portal_type_id)
-                     WHERE analysis_id = %s""".format(self._table)
+                     WHERE analysis_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.sql_connection.TRN.execute_fetchflatten()
 
@@ -904,7 +904,7 @@ class Analysis(qdb.base.QiitaObject):
             for label, tables in viewitems(grouped_samples):
 
                 data_type, algorithm = [
-                    l.strip() for l in label.split('||')]
+                    line.strip() for line in label.split('||')]
 
                 new_table = None
                 artifact_ids = []
