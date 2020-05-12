@@ -1437,7 +1437,8 @@ class Artifact(qdb.base.QiitaObject):
                     processing_job_status_id)
                   LEFT JOIN qiita.software_command using (command_id)
                   WHERE artifact_id = %s AND name = 'delete_artifact' AND
-                    processing_job_status = 'running'"""
+                    processing_job_status in (
+                        'running', 'queued', 'in_construction')"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()
         return qdb.processing_job.ProcessingJob(res[0][0]) if res else None

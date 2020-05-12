@@ -168,7 +168,7 @@ class TestEBISubmission(TestCase):
         submission = EBISubmission(3, 'ADD')
         self.files_to_remove.append(submission.full_ebi_dir)
         obs = ET.tostring(submission.generate_study_xml())
-        exp = ''.join([l.strip() for l in STUDYXML.splitlines()])
+        exp = ''.join([line.strip() for line in STUDYXML.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
     def test_generate_sample_xml(self):
@@ -207,7 +207,7 @@ class TestEBISubmission(TestCase):
         elm = ET.Element('design', {'foo': 'bar'})
 
         e._generate_spot_descriptor(elm, 'LS454')
-        exp = ''.join([l.strip() for l in GENSPOTDESC.splitlines()])
+        exp = ''.join([line.strip() for line in GENSPOTDESC.splitlines()])
         obs = ET.tostring(elm)
         self.assertEqual(obs.decode('ascii'), exp)
 
@@ -222,7 +222,7 @@ class TestEBISubmission(TestCase):
         exp = SUBMISSIONXML % {
             'submission_alias': submission._get_submission_alias(),
             'center_name': qiita_config.ebi_center_name}
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
         submission.study_xml_fp = "/some/path/study.xml"
@@ -235,7 +235,7 @@ class TestEBISubmission(TestCase):
         exp = SUBMISSIONXML_FULL % {
             'submission_alias': submission._get_submission_alias(),
             'center_name': qiita_config.ebi_center_name}
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
     def test_write_xml_file(self):
@@ -502,7 +502,7 @@ class TestEBISubmission(TestCase):
             'study_id': artifact.study.id,
             'pt_id': artifact.prep_templates[0].id
         }
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
         submission = EBISubmission(3, 'ADD')
@@ -510,7 +510,7 @@ class TestEBISubmission(TestCase):
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_experiment_xml(samples=samples))
         exp = EXPERIMENTXML
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
         # removing samples so test text is easier to read
@@ -554,7 +554,7 @@ class TestEBISubmission(TestCase):
             'sample_2': md5_sums['%d.Sample2' % self.study_id],
             'sample_3': md5_sums['%d.Sample3' % self.study_id]
         }
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
         artifact = self.write_demux_files(PrepTemplate(1))
@@ -577,7 +577,7 @@ class TestEBISubmission(TestCase):
             'organization_prefix': qiita_config.ebi_organization_prefix,
             'center_name': qiita_config.ebi_center_name,
             'artifact_id': artifact.id}
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
     def test_generate_xml_files(self):
@@ -1285,8 +1285,7 @@ shrubland biome</VALUE>
     </SAMPLE_ATTRIBUTES>
   </SAMPLE>
  </SAMPLE_SET>
- """ % {'organization_prefix': qiita_config.ebi_organization_prefix,
-        'center_name': qiita_config.ebi_center_name}
+ """ % {'center_name': qiita_config.ebi_center_name}
 
 STUDYXML = """
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
