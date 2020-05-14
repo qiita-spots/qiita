@@ -70,6 +70,8 @@ public, both in Qiita and the permanent repository, Figure 2.
    study listing page.
 
 
+.. _complex_example:
+
 Qiita allows for complex study designs
 --------------------------------------
 
