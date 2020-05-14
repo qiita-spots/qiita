@@ -223,7 +223,7 @@ in the `QIIME2 forum <https://forum.qiime2.org>`__. Note that all feature table 
 How to add extra files to a Qiita study?
 ----------------------------------------
 
-A lot of times a publication relies on extra files that are not part or
+Many publications rely on extra files that are not part or
 generated within Qiita. However, to facilitate analytical reproducibility a user
 might like to link these files to Qiita. In this case, we recommend to upload
 your external file to a long term repository, like
