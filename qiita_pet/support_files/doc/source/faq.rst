@@ -220,6 +220,21 @@ Please visit the `Transferring Qiita Artifacts to Qiime2 Tutorial <https://forum
 in the `QIIME2 forum <https://forum.qiime2.org>`__. Note that all feature table (bioms) and analytical steps will generate qza and qzv, which are QIIME2 artifacts.
 
 
+How to add extra files to a Qiita study?
+----------------------------------------
+
+Many publications rely on extra files that are not part or
+generated within Qiita. However, to facilitate analytical reproducibility a user
+might like to link these files to Qiita. In this case, we recommend to upload
+your external file to a long term repository, like
+`figshare.com <https://figshare.com/>`__, and then link to your study via the
+"Analytical Notes" within a study. The "Analytical Notes" section can be accessed
+within the study "Edit" button. Note that this text box renders Markdown when
+displayed in the study section. Markdown allows to format text, add images,
+etc; for more information check
+`this 3 minute read about Markdown <https://guides.github.com/features/mastering-markdown/>`__.
+
+
 How to cite Qiita?
 ------------------
 
