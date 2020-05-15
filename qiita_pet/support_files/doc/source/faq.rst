@@ -44,7 +44,7 @@ collected 100 samples for your study, you will need 100 rows in your sample
 information file describing each of them, and additional rows for blanks and other
 control samples. If you prepared 95 of them for 16S and 50 of them for 18S,
 you will need 2 prep information files: one with 95 rows describing the preparation
-for 16S, and another one with 50 describing the 18S. For a more information
+for 16S, and another one with 50 describing the 18S. For more information
 visit :ref:`complex_example`.
 
 .. _example_study_processing_workflow:
