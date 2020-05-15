@@ -5,7 +5,7 @@
 <script type="text/javascript">
   function validate_file() {
     var ssh_key = $("#ssh-key")[0].files[0];
-    if (ssh_key.size > 2000) {
+    if (ssh_key.size > 4000) {
       alert("Your input file is too large to be a valid key, please try again.");
       $("#ssh-key").val("");
     }
