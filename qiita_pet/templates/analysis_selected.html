@@ -1,6 +1,5 @@
 {% extends sitebase.html %}
 {% block head %}
-{% from future.utils import viewitems %}
 {% from itertools import chain %}
 <script type="text/javascript">
 
@@ -15,7 +14,7 @@ function check_empty() {
 
 function clear() {
   if(confirm('Are you sure you want to remove all samples?')) {
-    qiita_websocket.send('clear', {'pids': {% raw [int(p) for p in chain.from_iterable(pid.keys() for sid, pid in viewitems(sel_data))] %} });
+    qiita_websocket.send('clear', {'pids': {% raw [int(p) for p in chain.from_iterable(pid.keys() for sid, pid in sel_data.items())] %} });
   }
 }
 
@@ -88,7 +87,7 @@ $(document).ready(function() {
 <br/>
 {% end %}
 
-{% for study, proc_datas in viewitems(sel_data) %}
+{% for study, proc_datas in sel_data.items() %}
 <div class="row" id="study{{study.id}}">
   <div class="col-md-12" style="border:2px solid #a1a1a1; border-radius: 15px;">
     <h2><a href="{% raw qiita_config.portal_dir %}/study/description/{{study.id}}">{{study.title}}</a></h2>
@@ -97,7 +96,7 @@ $(document).ready(function() {
     <tr>
       <th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Parent processing</th><th class="col-sm-2">Merging Scheme</th><th class="col-sm-1">Samples selected from Prep Info</th><th></th><th></th>
     </tr>
-  {% for pid, samples in viewitems(proc_datas) %}
+  {% for pid, samples in proc_datas.items() %}
     <tr id="proc{{pid}}">
       <td>{{pid}} <a href="#" data-toggle="modal" data-target="#proc{{pid}}-settings-modal" onclick="return false;"><span class="glyphicon glyphicon-info-sign"></span></a></td>
       <td>{{proc_info[pid]["data_type"]}}</td>

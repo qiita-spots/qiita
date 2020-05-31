@@ -5,8 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from future.builtins import zip
 from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove

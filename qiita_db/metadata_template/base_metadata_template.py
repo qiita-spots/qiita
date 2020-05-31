@@ -34,9 +34,6 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-from future.utils import viewitems
 from itertools import chain
 from copy import deepcopy
 from datetime import datetime
@@ -1493,7 +1490,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 table_name = self._table_name(self._id)
                 raise qdb.exceptions.QiitaDBUnknownIDError(missing, table_name)
 
-            for k, v in viewitems(samples_and_values):
+            for k, v in samples_and_values.items():
                 sample = self[k]
                 if isinstance(v, np.generic):
                     v = np.asscalar(v)
@@ -1645,7 +1642,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         warning_msg = []
         columns = self.categories()
         wrong_msg = 'Sample "%s", column "%s", wrong value "%s"'
-        for label, restriction in viewitems(restriction_dict):
+        for label, restriction in restriction_dict.items():
             missing = set(restriction.columns).difference(columns)
             if missing:
                 warning_msg.append(
@@ -1653,7 +1650,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                                 ', '.join(sorted(missing))))
             else:
                 valid_null = qdb.metadata_template.constants.EBI_NULL_VALUES
-                for column, datatype in viewitems(restriction.columns):
+                for column, datatype in restriction.columns.items():
                     # sorting by key (sample id) so we always check in the
                     # same order, helpful for testing
                     cats_by_column = self.get_category(column)

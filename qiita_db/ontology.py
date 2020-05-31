@@ -23,9 +23,6 @@ Classes
 
    Ontology
 """
-
-from __future__ import division
-
 import qiita_db as qdb
 
 

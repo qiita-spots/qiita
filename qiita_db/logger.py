@@ -22,9 +22,6 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-
 from json import loads, dumps
 
 import qiita_db as qdb

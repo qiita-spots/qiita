@@ -18,7 +18,6 @@ from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
 from h5py import File
-from future.utils import viewitems, viewkeys
 from skbio.util import safe_md5
 from qiita_files.demux import to_per_sample_ascii
 
@@ -213,7 +212,7 @@ class EBISubmission(object):
         get_output_fp = partial(join, self.full_ebi_dir)
         nvp = []
         nvim = []
-        for k, sample_prep in viewitems(self.prep_template):
+        for k, sample_prep in self.prep_template.items():
             # validating required fields
             if ('platform' not in sample_prep or
                     sample_prep['platform'] is None):
@@ -406,7 +405,7 @@ class EBISubmission(object):
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "sample"})
 
         if not samples:
-            samples = viewkeys(self.samples)
+            samples = self.samples.keys()
 
         for sample_name in sorted(samples):
             sample_info = dict(self.samples[sample_name])
@@ -501,7 +500,7 @@ class EBISubmission(object):
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "experiment"})
 
-        samples = samples if samples is not None else viewkeys(self.samples)
+        samples = samples if samples is not None else self.samples.keys()
 
         for sample_name in sorted(samples):
             experiment_alias = self._get_experiment_alias(sample_name)
@@ -612,7 +611,7 @@ class EBISubmission(object):
         run_set = ET.Element('RUN_SET', {
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "run"})
-        for sample_name, sample_prep in sorted(viewitems(self.samples_prep)):
+        for sample_name, sample_prep in sorted(self.samples_prep.items()):
             sample_prep = dict(sample_prep)
 
             if self._ebi_experiment_accessions[sample_name]:
@@ -741,8 +740,8 @@ class EBISubmission(object):
             # are samples in the current submission that do NOT have an
             # ebi_sample_accession
             new_samples = {
-                sample for sample, accession in viewitems(
-                    self.sample_template.ebi_sample_accessions)
+                sample for sample, accession in
+                self.sample_template.ebi_sample_accessions.items()
                 if accession is None}
             new_samples = new_samples.intersection(self.samples)
             if new_samples:
@@ -754,8 +753,8 @@ class EBISubmission(object):
             # samples in the current submission that do NO have an
             # ebi_experiment_accession
             new_samples = {
-                sample for sample, accession in viewitems(
-                    self.prep_template.ebi_experiment_accessions)
+                sample for sample, accession in
+                self.prep_template.ebi_experiment_accessions.items()
                 if accession is None}
             new_samples = new_samples.intersection(self.samples)
             if new_samples:
@@ -875,7 +874,7 @@ class EBISubmission(object):
           be generated before executing this function
         """
         fastqs = []
-        for _, sfp in viewitems(self.sample_demux_fps):
+        for _, sfp in self.sample_demux_fps.items():
             fastqs.append(sfp + self.FWD_READ_SUFFIX)
             if self.per_sample_FASTQ_reverse:
                 sfp = sfp + self.REV_READ_SUFFIX
@@ -1028,8 +1027,8 @@ class EBISubmission(object):
             fps.append((sample_name, (fwd_read, rev_read)))
 
         if 'run_prefix' in self.prep_template.categories():
-            rps = [(k, v) for k, v in viewitems(
-                self.prep_template.get_category('run_prefix'))]
+            rps = [(k, v) for k, v in
+                   self.prep_template.get_category('run_prefix').items()]
         else:
             rps = [(v, v.split('.', 1)[1]) for v in self.prep_template.keys()]
         rps.sort(key=lambda x: x[1])

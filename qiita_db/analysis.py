@@ -16,12 +16,10 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from itertools import product
 from os.path import join, exists
 from os import mkdir
 
-from future.utils import viewitems
 from biom import load_table
 from biom.util import biom_open
 from biom.exception import DisjointIDError
@@ -745,7 +743,7 @@ class Analysis(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             self._lock_samples()
 
-            for aid, samps in viewitems(samples):
+            for aid, samps in samples.items():
                 # get previously selected samples for aid and filter them out
                 sql = """SELECT sample_id
                          FROM qiita.analysis_sample
@@ -845,7 +843,7 @@ class Analysis(qdb.base.QiitaObject):
             # multiple post_processing_cmds are implemented, ensure proper
             # order before passing off to _build_biom_tables().
             post_processing_cmds = dict()
-            for aid, asamples in viewitems(samples):
+            for aid, asamples in samples.items():
                 # find the artifact info, [0] there should be only one info
                 ainfo = [bi for bi in bioms_info
                          if bi['artifact_id'] == aid][0]
@@ -901,7 +899,7 @@ class Analysis(qdb.base.QiitaObject):
                 mkdir(base_fp)
 
             biom_files = []
-            for label, tables in viewitems(grouped_samples):
+            for label, tables in grouped_samples.items():
 
                 data_type, algorithm = [
                     line.strip() for line in label.split('||')]
@@ -1052,7 +1050,7 @@ class Analysis(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             all_ids = set()
             to_concat = []
-            for aid, samps in viewitems(samples):
+            for aid, samps in samples.items():
                 pt = qdb.artifact.Artifact(aid).prep_templates[0]
                 qiime_map_fp = pt.qiime_map_fp
 

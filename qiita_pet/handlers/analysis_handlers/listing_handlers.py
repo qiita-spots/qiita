@@ -9,7 +9,6 @@
 from functools import partial
 from json import dumps, loads
 from collections import defaultdict
-from future.utils import viewitems
 
 from tornado.web import authenticated
 
@@ -108,7 +107,7 @@ class SelectedSamplesHandler(BaseHandler):
         sel_data = defaultdict(dict)
         proc_data_info = {}
         sel_samps = self.current_user.default_analysis.samples
-        for aid, samples in viewitems(sel_samps):
+        for aid, samples in sel_samps.items():
             artifact = Artifact(aid)
             sel_data[artifact.study][aid] = samples
             proc_data_info[aid] = {

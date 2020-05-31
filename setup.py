@@ -102,7 +102,7 @@ setup(name='qiita-spots',
       scripts=glob('scripts/*'),
       # making sure that numpy is installed before biom
       setup_requires=['numpy', 'cython'],
-      install_requires=['psycopg2', 'click', 'future', 'bcrypt', 'pandas',
+      install_requires=['psycopg2', 'click', 'bcrypt', 'pandas',
                         'biom-format', 'tornado<6.0', 'toredis', 'redis',
                         'scp', 'pyparsing', 'h5py',  'natsort', 'nose', 'pep8',
                         'networkx', 'humanize', 'scikit-bio', 'wtforms',

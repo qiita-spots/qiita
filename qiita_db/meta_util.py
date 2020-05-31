@@ -22,8 +22,6 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
-
 from os import stat, rename
 from os.path import join, relpath, basename
 from time import strftime, localtime

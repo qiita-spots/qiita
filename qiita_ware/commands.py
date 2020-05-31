@@ -16,7 +16,6 @@ from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from scp import SCPClient
 from urllib.parse import urlparse
 from functools import partial
-from future.utils import viewitems
 import pandas as pd
 
 from qiita_db.artifact import Artifact
@@ -213,7 +212,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
             'Runtime', 'The submission: %d is larger than allowed (%d), will '
             'try to fix: %d' % (artifact_id, max_size, total_size))
         # transform current metadata to dataframe for easier curation
-        rows = {k: dict(v) for k, v in viewitems(ebi_submission.samples)}
+        rows = {k: dict(v) for k, v in ebi_submission.samples.items()}
         df = pd.DataFrame.from_dict(rows, orient='index')
         # remove unique columns and same value in all columns
         nunique = df.apply(pd.Series.nunique)

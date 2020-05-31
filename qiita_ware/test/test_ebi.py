@@ -1,5 +1,3 @@
-from __future__ import division
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -19,7 +17,6 @@ import pandas as pd
 import warnings
 from datetime import date
 from skbio.util import safe_md5
-from future.utils import viewitems
 
 from h5py import File
 from qiita_files.demux import to_hdf5
@@ -538,7 +535,7 @@ class TestEBISubmission(TestCase):
         obs = ET.tostring(submission.generate_run_xml())
 
         md5_sums = {}
-        for s, fp in viewitems(submission.sample_demux_fps):
+        for s, fp in submission.sample_demux_fps.items():
             md5_sums[s] = safe_md5(
                 open(fp + submission.FWD_READ_SUFFIX, 'rb')).hexdigest()
 
@@ -683,7 +680,7 @@ class TestEBISubmission(TestCase):
         # we can test that the script uses the correct names during
         # copy/gz-generation
         files = []
-        for sn, seqs in viewitems(sequences):
+        for sn, seqs in sequences.items():
             fn = join(self.temp_dir, sn + 'should_rename.fastq')
             with open(fn, 'w') as fh:
                 fh.write(seqs)

@@ -9,7 +9,6 @@
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine
 
-from future.utils import viewitems
 from os.path import basename, getsize, join, isdir
 from os import walk
 
@@ -49,7 +48,7 @@ class BaseHandlerDownload(BaseHandler):
 
     def _generate_files(self, header_name, accessions, filename):
         text = "sample_name\t%s\n%s" % (header_name, '\n'.join(
-            ["%s\t%s" % (k, v) for k, v in viewitems(accessions)]))
+            ["%s\t%s" % (k, v) for k, v in accessions.items()]))
 
         self.set_header('Content-Description', 'text/csv')
         self.set_header('Expires', '0')

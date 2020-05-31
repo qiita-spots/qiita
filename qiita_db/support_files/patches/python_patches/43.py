@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 import qiita_db as qdb
-from future.utils import viewitems
 
 
 PJ = qdb.processing_job.ProcessingJob
@@ -50,7 +49,7 @@ for aid in all_artifacts:
         for j_id in job_ids:
             job = qdb.processing_job.ProcessingJob(j_id)
             if job.status == 'success' and job.outputs:
-                for _, a in viewitems(job.outputs):
+                for _, a in job.outputs.items():
                     if a.id == child:
                         job_id = job.id
                         break

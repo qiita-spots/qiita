@@ -43,9 +43,6 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-from future.builtins import zip
 from random import SystemRandom
 from string import ascii_letters, digits, punctuation
 from binascii import crc32
@@ -61,7 +58,6 @@ from csv import writer as csv_writer
 from datetime import datetime
 from itertools import chain
 from contextlib import contextmanager
-from future.builtins import bytes, str
 import h5py
 from humanize import naturalsize
 import hashlib
@@ -73,11 +69,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
-from future import standard_library
-
-with standard_library.hooks():
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 
 def scrub_data(s):

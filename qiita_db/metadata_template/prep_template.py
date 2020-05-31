@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-from future.utils import viewvalues
 from itertools import chain
 from os.path import join
 from time import strftime
@@ -356,7 +353,7 @@ class PrepTemplate(MetadataTemplate):
 
             tg_columns = set(chain.from_iterable(
                 [v.columns for v in
-                 viewvalues(PREP_TEMPLATE_COLUMNS_TARGET_GENE)]))
+                 PREP_TEMPLATE_COLUMNS_TARGET_GENE.values()]))
 
             if not columns & tg_columns:
                 return True
@@ -595,7 +592,7 @@ class PrepTemplate(MetadataTemplate):
             index = mapping.index
             placeholder = ['XXQIITAXX'] * len(index)
             missing = []
-            for val in viewvalues(rename_cols):
+            for val in rename_cols.values():
                 if val not in mapping:
                     missing.append(val)
                     mapping[val] = pd.Series(placeholder, index=index)

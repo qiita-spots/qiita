@@ -10,7 +10,6 @@ import networkx as nx
 import qiita_db as qdb
 from collections import defaultdict, Iterable
 from datetime import datetime
-from future.utils import viewitems, viewvalues
 from itertools import chain
 from json import dumps, loads
 from multiprocessing import Process, Queue, Event
@@ -531,7 +530,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             # we need to use ILIKE because of booleans as they can be
             # false or False
             params = []
-            for k, v in viewitems(parameters.values):
+            for k, v in parameters.values.items():
                 # this is necessary in case we have an Iterable as a value
                 # but that is string
                 if isinstance(v, Iterable) and not isinstance(v, str):
@@ -1003,7 +1002,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                                 command_output_id)
                              VALUES (%s, %s, %s)"""
                     sql_args = [[aid, self.id, outid]
-                                for outid, aid in viewitems(mapping)]
+                                for outid, aid in mapping.items()]
                     qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
                     self._update_and_launch_children(mapping)
@@ -1093,7 +1092,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         validator_jobs = []
         with qdb.sql_connection.TRN:
             cmd_id = self.command.id
-            for out_name, a_data in viewitems(artifacts_data):
+            for out_name, a_data in artifacts_data.items():
                 # Correct the format of the filepaths parameter so we can
                 # create a validate job
                 filepaths = defaultdict(list)
@@ -1467,7 +1466,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             for c in self.children:
                 qdb.sql_connection.TRN.add(sql, [c.id])
                 params, pending = qdb.sql_connection.TRN.execute_fetchflatten()
-                for pname, out_name in viewitems(pending[self.id]):
+                for pname, out_name in pending[self.id].items():
                     a_id = new_map[out_name]
                     params[pname] = str(a_id)
                     del pending[self.id]
@@ -1687,7 +1686,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 all_nodes[node] = (node.command, node.parameters)
 
             # Check that we have all the required parameters
-            root_cmds = set(c for c, _ in viewvalues(roots))
+            root_cmds = set(c for c, _ in roots.values())
             if root_cmds != set(req_params):
                 error_msg = ['Provided required parameters do not match the '
                              'initial set of commands for the workflow.']
@@ -1710,7 +1709,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                     user,
                     qdb.software.Parameters.from_default_params(
                         p, req_params[c]), force)
-                for n, (c, p) in viewitems(roots)}
+                for n, (c, p) in roots.items()}
             root_jobs = node_to_job.values()
 
             # SQL used to create the edges between jobs
@@ -1923,9 +1922,9 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 req_params = req_params if req_params else {}
                 # Loop through all the connections to add the relevant
                 # parameters
-                for source, mapping in viewitems(connections):
+                for source, mapping in connections.items():
                     source_id = source.id
-                    for out, in_param in viewitems(mapping):
+                    for out, in_param in mapping.items():
                         req_params[in_param] = [source_id, out]
 
                 new_job = ProcessingJob.create(
@@ -2024,7 +2023,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             # the root nodes
             in_degrees = dict(g.in_degree())
             roots = []
-            for job, degree in viewitems(in_degrees):
+            for job, degree in in_degrees.items():
                 if degree == 0:
                     roots.append(job)
                 else:

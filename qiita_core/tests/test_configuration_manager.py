@@ -9,15 +9,13 @@
 from unittest import TestCase, main
 from os import environ, close, remove
 from tempfile import mkstemp
-from future import standard_library
 from functools import partial
 import warnings
 
 from qiita_core.exceptions import MissingConfigSection
 from qiita_core.configuration_manager import ConfigurationManager
 
-with standard_library.hooks():
-    from configparser import ConfigParser
+from configparser import ConfigParser
 
 
 class ConfigurationManagerTests(TestCase):

@@ -13,16 +13,11 @@ import gzip
 from glob import glob
 from natsort import natsorted
 
-from future import standard_library
-from future.utils import viewitems
-
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config, r_client
 import qiita_db as qdb
 
-
-with standard_library.hooks():
-    from urllib.request import urlretrieve
+from urllib.request import urlretrieve
 
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
@@ -112,7 +107,7 @@ def _download_reference_files():
                           'ftp://ftp.microbio.me/greengenes_release/'
                           'gg_13_8_otus/rep_set/97_otus.fasta')}
 
-    for file_type, (local_fp, url) in viewitems(files):
+    for file_type, (local_fp, url) in files.items():
         # Do not download the file if it exists already
         if exists(local_fp):
             print("SKIPPING %s: file already exists at %s. To "

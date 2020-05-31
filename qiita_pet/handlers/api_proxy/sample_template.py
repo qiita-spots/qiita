@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from json import loads
 from collections import defaultdict
 
