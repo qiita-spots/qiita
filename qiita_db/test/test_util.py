@@ -1173,9 +1173,13 @@ class TestFilePathOpening(TestCase):
             self.assertTrue(fh is f)
 
     def test_hdf5IO(self):
-        f = h5py.File('test', driver='core', backing_store=False)
-        with qdb.util.open_file(f) as fh:
-            self.assertTrue(fh is f)
+        with NamedTemporaryFile() as fh:
+            name = fh.name
+            fh.close()
+
+            f = h5py.File(name, driver='core', backing_store=False)
+            with qdb.util.open_file(f) as fh:
+                self.assertTrue(fh is f)
 
     def test_hdf5IO_open(self):
         name = None
