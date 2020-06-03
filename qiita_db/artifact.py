@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
 from os import remove
@@ -933,7 +930,7 @@ class Artifact(qdb.base.QiitaObject):
                         (sample_id, artifact_id, ebi_run_accession)
                      VALUES (%s, %s, %s)"""
             sql_args = [[sample, self.id, accession]
-                        for sample, accession in viewitems(values)]
+                        for sample, accession in values.items()]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 

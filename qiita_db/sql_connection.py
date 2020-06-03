@@ -26,7 +26,6 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from contextlib import contextmanager
 from itertools import chain
 from functools import wraps

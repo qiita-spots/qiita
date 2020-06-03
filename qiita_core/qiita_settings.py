@@ -6,8 +6,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
-
 from redis import Redis
 
 from qiita_core.configuration_manager import ConfigurationManager

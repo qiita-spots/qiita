@@ -31,10 +31,7 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
 from collections import defaultdict
-from future.utils import viewitems
 from copy import deepcopy
 from itertools import chain
 import warnings
@@ -335,7 +332,7 @@ class Study(qdb.base.QiitaObject):
                 insertdict['reprocess'] = False
 
             # No nuns allowed
-            insertdict = {k: v for k, v in viewitems(insertdict)
+            insertdict = {k: v for k, v in insertdict.items()
                           if v is not None}
 
             # make sure dictionary only has keys for available columns in db
@@ -648,7 +645,7 @@ class Study(qdb.base.QiitaObject):
             sql_vals = []
             data = []
             # build query with data values in correct order for SQL statement
-            for key, val in viewitems(info):
+            for key, val in info.items():
                 sql_vals.append("{0} = %s".format(key))
                 if isinstance(val, qdb.base.QiitaObject):
                     data.append(val.id)

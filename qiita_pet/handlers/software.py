@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 

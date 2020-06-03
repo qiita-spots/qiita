@@ -8,7 +8,6 @@
 
 from json import dumps, loads
 from copy import deepcopy
-from future import standard_library
 import inspect
 import warnings
 
@@ -17,8 +16,7 @@ import networkx as nx
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
-with standard_library.hooks():
-    from configparser import ConfigParser
+from configparser import ConfigParser
 
 
 class Command(qdb.base.QiitaObject):

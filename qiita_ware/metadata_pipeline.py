@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from future.utils import viewvalues, viewkeys
-
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -62,8 +59,8 @@ def create_templates_from_qiime_mapping_file(fp, study, data_type):
 
     # Figure out which columns belong to the prep template
     def _col_iterator(restriction_set):
-        for restriction in viewvalues(restriction_set):
-            for cols in viewkeys(restriction.columns):
+        for restriction in restriction_set.values():
+            for cols in restriction.columns.keys():
                 yield cols
 
     pt_cols = set(col for col in _col_iterator(PREP_TEMPLATE_COLUMNS))

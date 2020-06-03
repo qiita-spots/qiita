@@ -9,15 +9,13 @@
 from functools import partial
 from os.path import join, dirname, abspath, isdir, expanduser, exists
 from os import environ, mkdir
-from future import standard_library
 from base64 import b64encode
 from uuid import uuid4
 import warnings
 
 from .exceptions import MissingConfigSection
 
-with standard_library.hooks():
-    from configparser import ConfigParser, Error, NoOptionError
+from configparser import ConfigParser, Error, NoOptionError
 
 
 class ConfigurationManager(object):

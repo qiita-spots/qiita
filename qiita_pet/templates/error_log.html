@@ -1,6 +1,5 @@
 {% extends sitebase.html %}
 {% block head %}
-{% from future.utils import viewitems %}
 {% from qiita_core.qiita_settings import qiita_config %}
 
 <script type="text/javascript">
@@ -36,7 +35,7 @@ $(document).ready(function() {
                 <td>{% raw escape(error.msg).replace("\n", "<br />") %}</td>
                 <td>
                     {% for entry in error.info %}
-                      {% for field, val in viewitems(entry) %}
+                      {% for field, val in entry.items() %}
                           {{field}}: {{val}}<br />
                       {% end %}
                     {% end %}

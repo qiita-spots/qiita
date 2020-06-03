@@ -23,11 +23,8 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from re import sub
 from datetime import datetime
-
-from future.utils import viewitems
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -521,7 +518,7 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args)
             db_res = dict(qdb.sql_connection.TRN.execute_fetchindex())
             res = {}
-            for s_id, artifact_ids in viewitems(db_res):
+            for s_id, artifact_ids in db_res.items():
                 res[qdb.study.Study(s_id)] = [
                     qdb.artifact.Artifact(a_id) for a_id in artifact_ids]
 

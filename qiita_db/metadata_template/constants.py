@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from collections import namedtuple
-from future.utils import viewkeys, viewvalues
 from datetime import datetime
 
 Restriction = namedtuple('Restriction', ['columns', 'error_msg'])
@@ -83,8 +82,8 @@ FALSE_VALUES = ['No', 'no', 'NO', 'N', 'n', 'False', 'false', 'FALSE',
 # A set holding all the controlled columns, useful to avoid recalculating it
 def _col_iterator():
     for r_set in ALL_RESTRICTIONS:
-        for restriction in viewvalues(r_set):
-            for cols in viewkeys(restriction.columns):
+        for restriction in r_set.values():
+            for cols in restriction.columns.keys():
                 yield cols
 
 

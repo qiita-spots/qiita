@@ -1,5 +1,3 @@
-from __future__ import division
-
 """
 Objects for dealing with Qiita studies
 

@@ -5,8 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
-
 from tornado.web import authenticated, HTTPError
 from tornado.escape import json_decode
 from markdown2 import Markdown

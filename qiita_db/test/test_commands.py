@@ -12,7 +12,6 @@ from tempfile import mkstemp, mkdtemp
 from shutil import rmtree
 from unittest import TestCase, main
 from six import StringIO
-from future import standard_library
 from functools import partial
 
 import pandas as pd
@@ -21,8 +20,7 @@ from qiita_core.util import qiita_test_checker
 
 import qiita_db as qdb
 
-with standard_library.hooks():
-    import configparser
+import configparser
 
 
 @qiita_test_checker()

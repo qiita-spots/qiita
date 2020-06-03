@@ -5,11 +5,8 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from collections import defaultdict
 from json import dumps, loads
-
-from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
@@ -224,7 +221,7 @@ def study_prep_get_req(study_id, user_id):
                 info['youngest_artifact'] = '%s - %s' % (
                     youngest_artifact.name, youngest_artifact.artifact_type)
                 info['ebi_experiment'] = len(
-                    [v for _, v in viewitems(prep.ebi_experiment_accessions)
+                    [v for _, v in prep.ebi_experiment_accessions.items()
                      if v is not None])
             else:
                 info['start_artifact'] = None
@@ -307,7 +304,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
         remaining.extend([f for _, f, _ in uploaded if f not in inuse])
         supp_file_types_len = len(supp_file_types)
 
-        for k, v in viewitems(sfiles):
+        for k, v in sfiles.items():
             len_files = len(v)
             # if the number of files in the k group is larger than the
             # available columns add to the remaining group, if not put them in
@@ -334,7 +331,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     study = Study(study_id)
     if study not in user_artifacts:
         user_artifacts[study] = study.artifacts(artifact_type=artifact_type)
-    for study, artifacts in viewitems(user_artifacts):
+    for study, artifacts in user_artifacts.items():
         study_label = "%s (%d)" % (study.title, study.id)
         for a in artifacts:
             artifact_options.append(

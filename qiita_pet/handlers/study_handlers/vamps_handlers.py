@@ -5,8 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
-
 from tornado.web import authenticated, HTTPError
 from qiita_files.demux import stats as demux_stats
 

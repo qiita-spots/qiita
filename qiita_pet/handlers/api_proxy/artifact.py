@@ -9,7 +9,6 @@ from os.path import join
 from functools import partial
 from json import dumps
 
-from future.utils import viewitems
 from itertools import chain
 
 from qiita_core.util import execute_as_transaction
@@ -187,7 +186,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         path_builder = partial(join, uploads_path, str(study_id))
         cleaned_filepaths = {}
 
-        for ftype, file_list in viewitems(filepaths):
+        for ftype, file_list in filepaths.items():
             # JavaScript sends us this list as a comma-separated list
             for fp in file_list.split(','):
                 # JavaScript will send this value as an empty string if the
