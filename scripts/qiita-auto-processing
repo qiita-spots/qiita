@@ -103,6 +103,25 @@ def _check_previous_command(prev_step, pparams):
     return False
 
 
+def _check_requirements(requirements, template):
+    satisfied = True
+    for req in requirements:
+        if satisfied:
+            if req['column'] not in template.categories():
+                if req['equal']:
+                    satisfied = False
+                continue
+            template_value = list(map(str.lower, set(
+                template.get_category(req['column']).values())))
+            if req['equal'] and template_value != req['value']:
+                satisfied = False
+                continue
+            elif not req['equal'] and template_value == req['value']:
+                satisfied = False
+                continue
+    return satisfied
+
+
 # Step 1. Loop over the full_pipelines to process each step
 for pipeline in full_pipelines:
     # Step 2. From the steps generate the list of commands to add to the
@@ -113,7 +132,7 @@ for pipeline in full_pipelines:
         cmds = [c for c in plugin.commands if c.name == step['cmd_name']]
         if len(cmds) != 1:
             raise ValueError('There is more than one command with this '
-                             'defenition %s' % str(step))
+                             'definition %s' % str(step))
 
         cmd = cmds[0]
         parameters = []
@@ -130,16 +149,16 @@ for pipeline in full_pipelines:
             'parameters': parameters})
 
     # Step 3. Find all preparations/artifacts that we can add the pipeline
-    artifacs_all = [a for study in Study.iter()
-                    # loop over all artifacts of artifact_type with in study
-                    for a in study.artifacts(
-                        artifact_type=pipeline['artifact_type'])
-                    if _check_previous_command(
-                        pipeline['previous-step'], a.processing_parameters)]
+    artifacts_all = [a for study in Study.iter()
+                     # loop over all artifacts of artifact_type with in study
+                     for a in study.artifacts(
+                         artifact_type=pipeline['artifact_type'])
+                     if _check_previous_command(
+                         pipeline['previous-step'], a.processing_parameters)]
 
     # Step 4. Limit all_artifacts to those within restrictions
     artifacts_compliant = []
-    for a in artifacs_all:
+    for a in artifacts_all:
         st = a.study.sample_template
         pt = a.prep_templates[0]
 
@@ -150,44 +169,11 @@ for pipeline in full_pipelines:
         if pt.data_type() not in pipeline['data_type']:
             continue
 
-        requirements = pipeline['requirements']
-        if 'sample' in requirements:
-            satisfied = True
-            for req in requirements['prep']:
-                if satisfied:
-                    if req['column'] not in st.categories():
-                        if req['equal']:
-                            satisfied = False
-                        continue
-                    sample_value = list(map(str.lower, set(
-                        st.get_category(req['column']).values())))
-                    if req['equal'] and sample_value != req['value']:
-                        satisfied = False
-                        continue
-                    elif not req['equal'] and sample_value == req['value']:
-                        satisfied = False
-                        continue
-            if not satisfied:
-                continue
-
-        if 'prep' in requirements:
-            satisfied = True
-            for req in requirements['prep']:
-                if satisfied:
-                    if req['column'] not in pt.categories():
-                        if req['equal']:
-                            satisfied = False
-                        continue
-                    prep_value = list(map(str.lower, set(
-                        pt.get_category(req['column']).values())))
-                    if req['equal'] and prep_value != req['value']:
-                        satisfied = False
-                        continue
-                    elif not req['equal'] and prep_value == req['value']:
-                        satisfied = False
-                        continue
-            if not satisfied:
-                continue
+        reqs = pipeline['requirements']
+        if 'sample' in reqs and not _check_requirements(reqs['sample'], st):
+            continue
+        if 'prep' in reqs and not _check_requirements(reqs['prep'], pt):
+            continue
 
         artifacts_compliant.append(a)
 
