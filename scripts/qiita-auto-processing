@@ -13,7 +13,8 @@ from qiita_db.user import User
 from qiita_db.processing_job import ProcessingWorkflow
 
 
-user = User('antoniog@ucsd.edu')
+# user = User('antoniog@ucsd.edu')
+user = User('admin@foo.bar')
 
 # full_pipelines is a list of dict as: {
 #   'name': str,
