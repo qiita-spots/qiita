@@ -319,18 +319,18 @@ def start(port, master):
             if 'error_msg' in msg:
                 job_error = msg['error_msg']
 
-            qid = qdb.processing_job.ProcessingJob.by_ext_id(msg['Job_Id'])
-
-            if qid:
-                # Qiita recognizes the external ID from Watcher, and has
-                # mapped it to a Qiita ID. Now, create a Job object to
-                # register the job's changed status in Qiita.
-                job_obj = qdb.processing_job.ProcessingJob(qid)
-                job_obj.complete(job_state, error=job_error)
-            else:
+            try:
+                qjob = qdb.processing_job.ProcessingJob.by_external_id(
+                    msg['Job_Id'])
+            except Exception:
                 # ignore any job owned by Qiita, but can't be
                 # mapped to a ProcessJob.
                 pass
+            else:
+                # Qiita recognizes the external ID from Watcher, and has
+                # mapped it to a Qiita ID. Now, create a Job object to
+                # register the job's changed status in Qiita.
+                qjob.complete(job_state, error=job_error)
 
     if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
         if master:
