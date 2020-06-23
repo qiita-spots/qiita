@@ -1120,7 +1120,11 @@ Vue.component('processing-graph', {
     show_loading('processing-network-div');
     $("#processing-network-div").hide();
 
-    $('#run-btn').on('click', function() { vm.runWorkflow(); });
+    $('#run-btn').on('click', function() {
+      $('#run-btn').attr('disabled', true);
+      this.innerHTML = 'Submitting!';
+      vm.runWorkflow();
+    });
     $('#run-btn-div').hide();
 
     $('#refresh-now-link').on('click', function () {
