@@ -464,7 +464,7 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(len(validators), 1)
         # the validator actually runs on the system so it gets an external_id
         # assigned, let's test that is not None
-        self.assertIsNotNone(validators[0].external_id)
+        self.assertFalse(validators[0].external_id == 'Not Available')
         # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(

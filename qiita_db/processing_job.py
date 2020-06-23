@@ -742,7 +742,10 @@ class ProcessingJob(qdb.base.QiitaObject):
                      FROM qiita.processing_job
                      WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            result = qdb.sql_connection.TRN.execute_fetchlast()
+            if result is None:
+                result = 'Not Available'
+            return result
 
     @external_id.setter
     def external_id(self, value):
