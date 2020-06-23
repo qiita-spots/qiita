@@ -52,6 +52,19 @@ class BaseTestPrivatePlugin(TestCase):
         job._set_status('queued')
         return job
 
+    def setUp(self):
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for f in self._clean_up_files:
+            if exists(f):
+                if isdir(f):
+                    rmtree(f)
+                else:
+                    remove(f)
+
+        r_client.flushdb()
+
 
 @qiita_test_checker()
 class TestPrivatePlugin(BaseTestPrivatePlugin):
@@ -64,16 +77,6 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
 
         self.temp_dir = mkdtemp()
         self._clean_up_files = [self.fp, self.temp_dir]
-
-    def tearDown(self):
-        for f in self._clean_up_files:
-            if exists(f):
-                if isdir(f):
-                    rmtree(f)
-                else:
-                    remove(f)
-
-        r_client.flushdb()
 
     def test_copy_artifact(self):
         # Failure test
@@ -433,6 +436,7 @@ class TestPrivatePluginDeleteAnalysis(BaseTestPrivatePlugin):
             et.to_hdf5(f, "test")
         with biom_open(fp14, 'w') as f:
             et.to_hdf5(f, "test")
+        self._clean_up_files.extend([fp10, fp11, fp12, fp13, fp14])
 
         # copying some processing parameters
         a9 = Artifact(9)
