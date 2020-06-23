@@ -349,6 +349,8 @@ Vue.component('processing-graph', {
         vm.updateGraph();
       })
         .fail(function(object, status, error_msg) {
+          $('#run-btn').attr('disabled', false);
+          $('#run-btn').innerHTML = '<span class="glyphicon glyphicon-play"></span> Run';
           bootstrapAlert("Error submitting workflow: " + object.statusText, "danger");
         });
     },
