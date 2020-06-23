@@ -13,8 +13,7 @@ from qiita_db.user import User
 from qiita_db.processing_job import ProcessingWorkflow
 
 
-# user = User('antoniog@ucsd.edu')
-user = User('admin@foo.bar')
+user = User('antoniog@ucsd.edu')
 
 # full_pipelines is a list of dict as: {
 #   'name': str,
@@ -139,7 +138,10 @@ for pipeline in full_pipelines:
         parameters = []
         for dps in cmd.default_parameter_sets:
             if dps.name in step['parameters_names']:
-                parameters.append({'id': dps.id, 'values': dps.values})
+                # note that for simplicity we are converting all values in the
+                # parameters to string
+                parameters.append({'id': dps.id, 'values': {
+                    k: str(v) for k, v in dps.values.items()}})
 
         commands.append({
             'command': cmd,
@@ -148,6 +150,15 @@ for pipeline in full_pipelines:
             'parent_artifact_name': step['parent_artifact_name'],
             'input_name': step['input_name'],
             'parameters': parameters})
+
+    # Step 2. - for children. Get their commands. We currently only support
+    #         processing for 2 levels, like:
+    #         -> Trim -> Deblur
+    #                 -> Close reference
+    #         which should be fine for now as all our pipelines only
+    #         have 2 levels
+    children_cmds = [c for c in commands[1:]
+                     if c['previous-step'] == commands[0]['command-name']]
 
     # Step 3. Find all preparations/artifacts that we can add the pipeline
     artifacts_all = [a for study in Study.iter()
@@ -178,10 +189,11 @@ for pipeline in full_pipelines:
 
         artifacts_compliant.append(a)
 
-    # Step 5. Limit artifacts_compliant to those artifacts missing the command
-    #         and parameters of this pipeline. Note that this could be part
-    #         of Step 4 but for debugging it makes sense to separate
+    # Step 5a. Limit artifacts_compliant to those artifacts missing the command
+    #          and parameters of this pipeline. Note that this could be part
+    #          of Step 4 but for debugging it makes sense to separate
     artifact_process = []
+    children_compliant = []
     for a in artifacts_compliant:
         cmd = commands[0]
         # getting all jobs, includen hiddens, in case the job failed
@@ -195,13 +207,37 @@ for pipeline in full_pipelines:
             p.update({cmd['input_name']: str(a.id)})
             if p not in params:
                 missing_parameters.append(p)
-
+            else:
+                for c in a.children:
+                    if c.processing_parameters.values == p:
+                        children_compliant.append(c)
         if missing_parameters:
             # note that we are building a dict for each artifact so we can
             # save the workflow id, useful for when we run this in a terminal
             # and we want to follow up on those workflows
             artifact_process.append({'workflow': None, 'artifact': a,
-                                     'missing_parameters': missing_parameters})
+                                     'missing_parameters': missing_parameters,
+                                     'cmd_id': 0})
+
+    # Step 5b. Add workflow/commands for children
+    for a in children_compliant:
+        for cmd_id, cmd in enumerate(children_cmds):
+            # getting all jobs, includen hiddens, in case the job failed
+            jobs = a.jobs(cmd=cmd['command'], show_hidden=True)
+            params = [j.parameters.values for j in jobs]
+
+            # checking that all required parameters of this command exist
+            missing_parameters = []
+            for p in cmd['parameters']:
+                p = p['values']
+                p.update({cmd['input_name']: str(c.id)})
+                if p not in params:
+                    missing_parameters.append(p)
+            if missing_parameters:
+                artifact_process.append(
+                    {'workflow': None, 'artifact': a,
+                     'missing_parameters': missing_parameters,
+                     'cmd_id': cmd_id + 1})
 
     # Step 6: add workflows and jobs
     # max processing will be useful for debugging as it allows to stop after
@@ -216,9 +252,10 @@ for pipeline in full_pipelines:
             continue
 
         a = artifact['artifact']
+        cmd_id = artifact['cmd_id']
         # create the first-job/workflow with the first command and the first
         # set of parameters
-        cmd = commands[0]
+        cmd = commands[cmd_id]
         params = artifact['missing_parameters'][0]
         params.update({cmd['input_name']: str(a.id)})
         job_params = Parameters.load(cmd['command'], values_dict=params)
@@ -233,7 +270,7 @@ for pipeline in full_pipelines:
             job_params = Parameters.load(cmd['command'], values_dict=params)
             artifact['workflow'].add(job_params)
 
-        for cmd in commands[1:]:
+        for cmd in commands[cmd_id + 1:]:
             # get jobs from the workflow to which we can add this new command
             previous_jobs = [j for j in artifact['workflow'].graph.nodes()
                              if j.command.name == cmd['previous-step']]

@@ -94,7 +94,6 @@ script:
   - cat /tmp/supervisord.log
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then all-qiita-cron-job; fi
-  - if [ ${TEST_ADD_STUDIES} == "True" ]; then qiita-auto-processing; fi
   - flake8 qiita_* setup.py scripts/qiita*
   - qiita pet webserver
 addons:
