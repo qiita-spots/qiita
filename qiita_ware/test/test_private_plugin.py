@@ -422,10 +422,15 @@ class TestPrivatePluginDeleteAnalysis(BaseTestPrivatePlugin):
         # basically want 8 -> 9 -> 10 -> 12 -> 14
         #                       -> 11 -> 13
         fd, fp10 = mkstemp(suffix='_table.biom')
+        close(fd)
         fd, fp11 = mkstemp(suffix='_table.biom')
+        close(fd)
         fd, fp12 = mkstemp(suffix='_table.biom')
+        close(fd)
         fd, fp13 = mkstemp(suffix='_table.biom')
+        close(fd)
         fd, fp14 = mkstemp(suffix='_table.biom')
+        close(fd)
         with biom_open(fp10, 'w') as f:
             et.to_hdf5(f, "test")
         with biom_open(fp11, 'w') as f:
