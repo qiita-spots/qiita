@@ -445,10 +445,10 @@ class TestPrivatePluginDeleteAnalysis(BaseTestPrivatePlugin):
                               processing_parameters=pp)
         a12 = Artifact.create([(fp12, 7)], "BIOM", parents=[a10],
                               processing_parameters=pp)
-        a13 = Artifact.create([(fp13, 7)], "BIOM", parents=[a11],
-                              processing_parameters=pp)
-        a14 = Artifact.create([(fp14, 7)], "BIOM", parents=[a12],
-                              processing_parameters=pp)
+        Artifact.create([(fp13, 7)], "BIOM", parents=[a11],
+                        processing_parameters=pp)
+        Artifact.create([(fp14, 7)], "BIOM", parents=[a12],
+                        processing_parameters=pp)
 
         job = self._create_job('delete_analysis', {'analysis_id': 1})
         private_task(job.id)
