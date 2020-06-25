@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-qiita-cron-job empty-trash-upload-folder
-qiita-cron-job generate-biom-and-metadata-release
-qiita-cron-job purge-filepaths
-qiita-cron-job update-redis-stats
-qiita-cron-job generate-plugin-releases
-qiita-cron-job purge-json-web-tokens

@@ -322,7 +322,7 @@ def start(port, master):
             try:
                 qjob = qdb.processing_job.ProcessingJob.by_external_id(
                     msg['Job_Id'])
-            except QiitaDBUnknownIDError:
+            except qdb.exceptions.QiitaDBUnknownIDError:
                 # ignore any job owned by Qiita, but can't be
                 # mapped to a ProcessJob.
                 pass
