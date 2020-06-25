@@ -412,7 +412,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def by_ext_id(cls, external_id):
+    def by_external_id(cls, external_id):
         """Return Qiita Job UUID associated with external_id
 
         Parameters
@@ -429,7 +429,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             sql = """SELECT processing_job_id FROM qiita.processing_job
                      WHERE external_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [external_id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            return cls(qdb.sql_connection.TRN.execute_fetchlast())
 
     def get_resource_allocation_info(self):
         """Return resource allocation defined for this job. For
@@ -734,7 +734,21 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [new_status, self.id])
             qdb.sql_connection.TRN.execute()
 
-    def _set_ext_id(self, value):
+    @property
+    def external_id(self):
+        """Retrieves the external id"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT external_job_id
+                     FROM qiita.processing_job
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            result = qdb.sql_connection.TRN.execute_fetchlast()
+            if result is None:
+                result = 'Not Available'
+            return result
+
+    @external_id.setter
+    def external_id(self, value):
         """Sets the external job id of the job
 
         Parameters
@@ -821,12 +835,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                                               job_dir,
                                               parent_job_id, resource_params)
 
-                # note that at this point, self.id is Qiita's UUID for a Qiita
-                # job. job_id at this point is an external ID (e.g. Torque Job
-                # ID). Record the mapping between job_id and self.id using
-                # _set_ext_id().
-                self._set_ext_id(job_id)
-
                 if dependent_jobs_list:
                     # a dependent_jobs_list will always have at least one
                     # job
@@ -860,6 +868,8 @@ class ProcessingJob(qdb.base.QiitaObject):
 
                 p.start()
 
+                job_id = p.pid
+
                 if dependent_jobs_list:
                     # for now, treat dependents as independent when
                     # running locally. This means they will not be
@@ -880,6 +890,13 @@ class ProcessingJob(qdb.base.QiitaObject):
         else:
             error = "plugin_launcher should be one of two values for now"
             raise AssertionError(error)
+
+        # note that at this point, self.id is Qiita's UUID for a Qiita
+        # job. job_id at this point is an external ID (e.g. Torque Job
+        # ID). Record the mapping between job_id and self.id using
+        # external_id.
+        if job_id is not None:
+            self.external_id = job_id
 
     def release(self):
         """Releases the job from the waiting status and creates the artifact
@@ -951,7 +968,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             # in two states when completed: 'waiting' in case of success
             # or 'error' otherwise
 
-            validator_ids = [j.id for j in self.validator_jobs
+            validator_ids = ['%s [%s]' % (j.id, j.external_id)
+                             for j in self.validator_jobs
                              if j.status not in ['waiting', 'error']]
 
             # Active polling - wait until all validator jobs are completed
@@ -963,7 +981,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                 self.step = ("Validating outputs (%d remaining) via "
                              "job(s) %s" % (len(validator_ids), jids))
                 sleep(10)
-                validator_ids = [j.id for j in self.validator_jobs
+                validator_ids = ['%s [%s]' % (j.id, j.external_id)
+                                 for j in self.validator_jobs
                                  if j.status not in ['waiting', 'error']]
 
             # Check if any of the validators errored
@@ -1171,7 +1190,8 @@ class ProcessingJob(qdb.base.QiitaObject):
 
             # Change the current step of the job
             self.step = "Validating outputs (%d remaining) via job(s) %s" % (
-                len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
+                len(validator_jobs), ', '.join(['%s [%s]' % (
+                    j.id, j.external_id) for j in validator_jobs]))
 
             # Link all the validator jobs with the current job
             self._set_validator_jobs(validator_jobs)
