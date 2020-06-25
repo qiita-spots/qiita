@@ -518,10 +518,16 @@ class ProcessingJobTest(TestCase):
         # Retrieve the job that is performing the validation:
         validators = list(job.validator_jobs)
         self.assertEqual(len(validators), 1)
+        # here we can test that the validator shape and allocation is correct
+        validator = validators[0]
+        self.assertEqual(validator.parameters.values['artifact_type'], 'BIOM')
+        self.assertEqual(validator.get_resource_allocation_info(), '-q qiita '
+                         '-l nodes=1:ppn=1 -l mem=90gb -l walltime=150:00:00')
+        self.assertEqual(validator.shape, (27, 31))
         # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(
-            loads(validators[0].parameters.values['provenance'])['name'],
+            loads(validator.parameters.values['provenance'])['name'],
             "demultiplexed golay_12 1.5")
 
     def test_complete_failure(self):
@@ -731,6 +737,40 @@ class ProcessingJobTest(TestCase):
         self.assertFalse(job.hidden)
         job.hide()
         self.assertTrue(job.hidden)
+
+    def test_shape(self):
+        jids = {
+            # Split libraries FASTQ
+            '6d368e16-2242-4cf8-87b4-a5dc40bb890b': (27, 31),
+            # Pick closed-reference OTUs
+            '80bf25f3-5f1d-4e10-9369-315e4244f6d5': (27, 31),
+            # Single Rarefaction / Analysis
+            '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0': (5, 56),
+            # Split libraries
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d': (27, 31)}
+
+        for jid, shape in jids.items():
+            job = qdb.processing_job.ProcessingJob(jid)
+            self.assertEqual(job.shape, shape)
+
+    def test_get_resource_allocation_info(self):
+        jids = {
+            # Split libraries FASTQ
+            '6d368e16-2242-4cf8-87b4-a5dc40bb890b':
+                '-q qiita -l nodes=1:ppn=1 -l mem=120gb -l walltime=80:00:00',
+            # Pick closed-reference OTUs
+            '80bf25f3-5f1d-4e10-9369-315e4244f6d5':
+                '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00',
+            # Single Rarefaction / Analysis
+            '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0':
+                '-q qiita -l nodes=1:ppn=5 -l pmem=8gb -l walltime=168:00:00',
+            # Split libraries
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d':
+                '-q qiita -l nodes=1:ppn=1 -l mem=60gb -l walltime=25:00:00'}
+
+        for jid, allocation in jids.items():
+            job = qdb.processing_job.ProcessingJob(jid)
+            self.assertEqual(job.get_resource_allocation_info(), allocation)
 
 
 @qiita_test_checker()
