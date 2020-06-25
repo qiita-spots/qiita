@@ -291,6 +291,14 @@ def delete_sample_or_column(job):
         job._set_status('success')
 
 
+def _delete_analysis_artifacts(analysis):
+    aids = [a.id for a in analysis.artifacts]
+    aids.sort(reverse=True)
+    for aid in aids:
+        qdb.artifact.Artifact.delete(aid)
+    qdb.analysis.Analysis.delete(analysis.id)
+
+
 def delete_study(job):
     """Deletes a full study
 
@@ -306,16 +314,7 @@ def delete_study(job):
 
         # deleting analyses
         for analysis in study.analyses():
-            # selecting roots of the analysis, can be multiple
-            artifacts = [a for a in analysis.artifacts
-                         if a.processing_parameters is None]
-            # deleting each of the processing graphs
-            for a in artifacts:
-                to_delete = list(a.descendants.nodes())
-                to_delete.reverse()
-                for td in to_delete:
-                    qdb.artifact.Artifact.delete(td.id)
-            qdb.analysis.Analysis.delete(analysis.id)
+            _delete_analysis_artifacts(analysis)
 
         for pt in study.prep_templates():
             to_delete = list(pt.artifact.descendants.nodes())
@@ -376,16 +375,7 @@ def delete_analysis(job):
         analysis_id = job.parameters.values['analysis_id']
         analysis = qdb.analysis.Analysis(analysis_id)
 
-        # selecting roots of the analysis, can be multiple
-        artifacts = [a for a in analysis.artifacts
-                     if a.processing_parameters is None]
-        # deleting each of the processing graphs
-        for a in artifacts:
-            to_delete = list(a.descendants.nodes())
-            to_delete.reverse()
-            for td in to_delete:
-                qdb.artifact.Artifact.delete(td.id)
-        qdb.analysis.Analysis.delete(analysis_id)
+        _delete_analysis_artifacts(analysis)
 
         r_client.delete('analysis_delete_%d' % analysis_id)
 
