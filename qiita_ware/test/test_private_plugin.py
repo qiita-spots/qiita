@@ -391,6 +391,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         # now let's test a full build_analysis_files job
         job = self._create_job('build_analysis_files', {
             'analysis': 3, 'merge_dup_sample_ids': True})
+        job._set_status('in_construction')
+        job.submit()
 
         while job.status not in ('error', 'success'):
             sleep(0.5)
