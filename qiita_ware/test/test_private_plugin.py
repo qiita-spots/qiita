@@ -397,7 +397,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         while job.status not in ('error', 'success'):
             sleep(0.5)
 
-        self.assertEqual(job.status, 'success')
+        self.assertEqual(job.status, 'error')
+        self.assertEqual(job.log.message, '')
 
 
 @qiita_test_checker()
