@@ -398,7 +398,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
             sleep(0.5)
 
         self.assertEqual(job.status, 'error')
-        self.assertEqual(job.log.message, '')
+        self.assertEqual(job.log.msg, '')
 
 
 @qiita_test_checker()
