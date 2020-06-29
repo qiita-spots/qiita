@@ -8,6 +8,8 @@
 
 import networkx as nx
 import qiita_db as qdb
+import pandas as pd
+
 from collections import defaultdict, Iterable
 from datetime import datetime
 from itertools import chain
@@ -453,6 +455,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                 jtype = 'RELEASE_VALIDATORS_RESOURCE_PARAM'
                 tmp = ProcessingJob(self.parameters.values['job'])
                 name = tmp.parameters.command.name
+            elif self.command.name == 'Validate':
+                jtype = 'VALIDATOR'
+                name = self.parameters.values['artifact_type']
             elif self.id == 'register':
                 jtype = 'REGISTER'
                 name = 'REGISTER'
@@ -1618,6 +1623,84 @@ class ProcessingJob(qdb.base.QiitaObject):
                      WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [True, self.id])
             qdb.sql_connection.TRN.execute()
+
+    @property
+    def shape(self):
+        """The number of samples and metadata columns related to this job
+
+        Returns
+        -------
+        int, int
+            Number of samples and metadata columns. None means it couldn't
+            be calculated
+        """
+        samples = None
+        columns = None
+        study_id = None
+        analysis_id = None
+        artifact = None
+
+        parameters = self.parameters.values
+
+        if self.command.name == 'Validate':
+            # Validate only has two options to calculate it's size: template (a
+            # job that has a preparation linked) or analysis (is from an
+            # analysis).
+            if 'template' in parameters:
+                try:
+                    pt = qdb.metadata_template.prep_template.PrepTemplate(
+                        parameters['template'])
+                except qdb.exceptions.QiitaDBUnknownIDError:
+                    pass
+                else:
+                    study_id = pt.study_id
+            elif 'analysis' in parameters:
+                analysis_id = parameters['analysis']
+        elif self.command.software.name == 'Qiita':
+            if 'study' in parameters:
+                study_id = parameters['study']
+            elif 'study_id' in parameters:
+                study_id = parameters['study_id']
+            elif 'analysis' in parameters:
+                analysis_id = parameters['analysis']
+            elif 'analysis_id' in parameters:
+                analysis_id = parameters['analysis_id']
+            elif 'artifact' in parameters:
+                try:
+                    artifact = qdb.artifact.Artifact(parameters['artifact'])
+                except qdb.exceptions.QiitaDBUnknownIDError:
+                    pass
+        elif self.input_artifacts:
+            artifact = self.input_artifacts[0]
+
+        # if there is an artifact, then we need to get the study_id/analysis_id
+        if artifact is not None:
+            if artifact.study is not None:
+                study_id = artifact.study.id
+            elif artifact.analysis is not None:
+                analysis_id = artifact.analysis.id
+
+        # now retrieve the sample/columns based on study_id/analysis_id
+        if study_id is not None:
+            try:
+                st = qdb.study.Study(study_id).sample_template
+            except qdb.exceptions.QiitaDBUnknownIDError:
+                pass
+            else:
+                samples = len(st)
+                columns = len(st.categories())
+        elif analysis_id is not None:
+            try:
+                analysis = qdb.analysis.Analysis(analysis_id)
+            except qdb.exceptions.QiitaDBUnknownIDError:
+                pass
+            else:
+                mfp = qdb.util.get_filepath_information(
+                    analysis.mapping_file)['fullpath']
+                samples, columns = pd.read_csv(
+                    mfp, sep='\t', dtype=str).shape
+
+        return samples, columns
 
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
