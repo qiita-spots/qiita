@@ -546,7 +546,7 @@ class EBISubmission(object):
             lcp.text = escape(clean_whitespace(
                 sample_prep.pop('library_construction_protocol')))
 
-            lg = ET.SubElement(design, 'LIBRARY_STRATEGY')
+            lg = ET.SubElement(library_descriptor, 'LIBRARY_STRATEGY')
             lg.text = library_strategy
 
             self._generate_spot_descriptor(design, platform)

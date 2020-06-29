@@ -1342,6 +1342,7 @@ experiment.xsd">
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
         <LIBRARY_CONSTRUCTION_PROTOCOL>Protocol ABC
         </LIBRARY_CONSTRUCTION_PROTOCOL>
+        <LIBRARY_STRATEGY>Metagenomics</LIBRARY_STRATEGY>
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
@@ -1376,6 +1377,7 @@ experiment.xsd">
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
         <LIBRARY_CONSTRUCTION_PROTOCOL>Protocol ABC
         </LIBRARY_CONSTRUCTION_PROTOCOL>
+        <LIBRARY_STRATEGY>Metagenomics</LIBRARY_STRATEGY>
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
@@ -1410,6 +1412,7 @@ experiment.xsd">
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
         <LIBRARY_CONSTRUCTION_PROTOCOL>Protocol ABC
         </LIBRARY_CONSTRUCTION_PROTOCOL>
+        <LIBRARY_STRATEGY>Metagenomics</LIBRARY_STRATEGY>
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
@@ -1459,6 +1462,7 @@ primer is barcoded with a 12-base error-correcting Golay code to facilitate \
 multiplexing of up to 1,500 samples per lane, and both PCR primers contain \
 sequencer adapter regions.
         </LIBRARY_CONSTRUCTION_PROTOCOL>
+        <LIBRARY_STRATEGY>Metagenomics</LIBRARY_STRATEGY>
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
@@ -1547,6 +1551,7 @@ primer is barcoded with a 12-base error-correcting Golay code to facilitate \
 multiplexing of up to 1,500 samples per lane, and both PCR primers contain \
 sequencer adapter regions.
         </LIBRARY_CONSTRUCTION_PROTOCOL>
+        <LIBRARY_STRATEGY>Metagenomics</LIBRARY_STRATEGY>
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
