@@ -546,6 +546,9 @@ class TestEBISubmission(TestCase):
         exp = '<LIBRARY_STRATEGY>%s</LIBRARY_STRATEGY>' % new_term
         self.assertIn(exp, obs.decode('ascii'))
 
+        # returnging investigation_type to it's value
+        ubmission.prep_template.investigation_type = 'Metagenomics'
+
     def test_generate_run_xml(self):
         artifact = self.generate_new_study_with_preprocessed_data()
         submission = EBISubmission(artifact.id, 'ADD')
