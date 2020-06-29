@@ -93,7 +93,7 @@ class EBISubmission(object):
     valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
                                  '454 GS FLX+', '454 GS FLX TITANIUM',
                                  '454 GS JUNIOR', 'UNSPECIFIED'],
-                       'ION TORRENT': ['ION TORRENT PGM', 'ION TORRENT PROTON',
+                       'ION_TORRENT': ['ION TORRENT PGM', 'ION TORRENT PROTON',
                                        'ION TORRENT S5', 'ION TORRENT S5 XL'],
                        'ILLUMINA': ['HISEQ X FIVE',
                                     'HISEQ X TEN',
@@ -120,7 +120,6 @@ class EBISubmission(object):
 
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
-    experiment_library_fields = ['library_strategy']
 
     def __init__(self, artifact_id, action):
         error_msgs = []
@@ -357,18 +356,6 @@ class EBISubmission(object):
         study_title = ET.SubElement(descriptor, 'STUDY_TITLE')
         study_title.text = escape(clean_whitespace(self.study_title))
 
-        if self.investigation_type == 'Other':
-            ET.SubElement(descriptor, 'STUDY_TYPE', {
-                'existing_study_type': 'Other',
-                'new_study_type': escape(clean_whitespace(
-                    self.new_investigation_type))}
-            )
-        else:
-            ET.SubElement(descriptor, 'STUDY_TYPE', {
-                'existing_study_type': escape(clean_whitespace(
-                    self.investigation_type))}
-            )
-
         study_abstract = ET.SubElement(descriptor, 'STUDY_ABSTRACT')
         study_abstract.text = clean_whitespace(escape(self.study_abstract))
 
@@ -502,6 +489,11 @@ class EBISubmission(object):
 
         samples = samples if samples is not None else self.samples.keys()
 
+        if self.investigation_type == 'Other':
+            library_strategy = self.new_investigation_type
+        else:
+            library_strategy = self.investigation_type
+
         for sample_name in sorted(samples):
             experiment_alias = self._get_experiment_alias(sample_name)
             sample_prep = dict(self.samples_prep[sample_name])
@@ -554,12 +546,8 @@ class EBISubmission(object):
             lcp.text = escape(clean_whitespace(
                 sample_prep.pop('library_construction_protocol')))
 
-            # these are not requiered field but present add them in the right
-            # format
-            for field in self.experiment_library_fields:
-                if field in sample_prep:
-                    element = ET.SubElement(library_descriptor, field.upper())
-                    element.text = sample_prep.pop(field)
+            lg = ET.SubElement(design, 'LIBRARY_STRATEGY')
+            lg.text = library_strategy
 
             self._generate_spot_descriptor(design, platform)
 

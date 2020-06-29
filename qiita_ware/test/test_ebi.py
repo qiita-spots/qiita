@@ -1292,7 +1292,6 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
       <STUDY_TITLE>
         Identification of the Microbiomes for Cannabis Soils
       </STUDY_TITLE>
-      <STUDY_TYPE existing_study_type="Metagenomics" />
       <STUDY_ABSTRACT>
         This is a preliminary study to examine the microbiota associated with \
 the Cannabis plant. Soils samples from the bulk soil, soil associated with \
