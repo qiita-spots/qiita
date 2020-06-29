@@ -517,6 +517,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                             return 'Not valid'
 
                         try:
+                            # if eval has something that can't be processed
+                            # it will raise a NameError
                             mem = eval(value.format(
                                 samples=samples, columns=columns,
                                 input_size=input_size))
@@ -524,6 +526,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                             self._set_error(error_msg)
                             return 'Not valid'
                         else:
+                            if mem <= 0:
+                                self._set_error(error_msg)
+                                return 'Not valid'
                             value = naturalsize(mem, gnu=True, format='%.0f')
                             part = '%s=%s' % (variable, value)
 
