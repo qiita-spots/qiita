@@ -22,6 +22,7 @@ from uuid import UUID
 from os.path import join
 from threading import Thread
 from humanize import naturalsize
+from numbers import Number
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
@@ -514,11 +515,18 @@ class ProcessingJob(qdb.base.QiitaObject):
                                  None)):
                             self._set_error(error_msg)
                             return 'Not valid'
-                        value = naturalsize(eval(value.format(
-                            samples=samples, columns=columns,
-                            input_size=input_size)), gnu=True, format='%.0f')
 
-                        part = '%s=%s' % (variable, value)
+                        try:
+                            mem = eval(value.format(
+                                samples=samples, columns=columns,
+                                input_size=input_size))
+                        except NameError:
+                            self._set_error(error_msg)
+                            return 'Not valid'
+                        else:
+                            value = naturalsize(mem, gnu=True, format='%.0f')
+                            part = '%s=%s' % (variable, value)
+
                     parts.append(part)
 
                 allocation = ' '.join(parts)
