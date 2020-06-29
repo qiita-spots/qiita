@@ -21,17 +21,18 @@ from skbio.util import safe_md5
 from h5py import File
 from qiita_files.demux import to_hdf5
 
-from qiita_ware.ebi import EBISubmission
-from qiita_ware.exceptions import EBISubmissionError
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.util import get_mountpoint
+from qiita_core.util import qiita_test_checker
+from qiita_db.util import get_mountpoint, convert_to_id
 from qiita_db.study import Study, StudyPerson
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
 from qiita_db.software import Parameters, DefaultParameters
-from qiita_core.util import qiita_test_checker
+from qiita_db.ontology import Ontology
+from qiita_ware.ebi import EBISubmission
+from qiita_ware.exceptions import EBISubmissionError
 
 
 @qiita_test_checker()
@@ -502,7 +503,9 @@ class TestEBISubmission(TestCase):
         exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
-        submission = EBISubmission(3, 'ADD')
+        artifact_id = 3
+
+        submission = EBISubmission(artifact_id, 'ADD')
         self.files_to_remove.append(submission.full_ebi_dir)
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_experiment_xml(samples=samples))
@@ -526,6 +529,22 @@ class TestEBISubmission(TestCase):
 
         obs = ET.tostring(submission.generate_experiment_xml())
         self.assertEqual(obs.decode('ascii'), exp)
+
+        # changing investigation_type to tests user defined terms, first let's
+        # create a new term
+        new_term = 'Ultimate Term'
+        ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        ena_ontology.add_user_defined_term(new_term)
+        # set the preparation with the new term
+        submission.prep_template.investigation_type = new_term
+        # regenerate submission to make sure everything is just fine ...
+        submission = EBISubmission(artifact_id, 'ADD')
+        self.assertEqual(submission.investigation_type, 'Other')
+        self.assertEqual(submission.new_investigation_type, new_term)
+
+        obs = ET.tostring(submission.generate_experiment_xml())
+        exp = '<LIBRARY_STRATEGY>%s</LIBRARY_STRATEGY>' % new_term
+        self.assertIn(exp, obs.decode('ascii'))
 
     def test_generate_run_xml(self):
         artifact = self.generate_new_study_with_preprocessed_data()
