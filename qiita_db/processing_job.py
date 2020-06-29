@@ -22,7 +22,6 @@ from uuid import UUID
 from os.path import join
 from threading import Thread
 from humanize import naturalsize
-from numbers import Number
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
