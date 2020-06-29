@@ -19,6 +19,8 @@ from h5py import File
 import pandas as pd
 import numpy.testing as npt
 from time import time, sleep
+from biom import example_table as et
+from biom.util import biom_open
 
 from qiita_files.demux import to_hdf5
 from qiita_core.util import qiita_test_checker
@@ -50,6 +52,19 @@ class BaseTestPrivatePlugin(TestCase):
         job._set_status('queued')
         return job
 
+    def setUp(self):
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for f in self._clean_up_files:
+            if exists(f):
+                if isdir(f):
+                    rmtree(f)
+                else:
+                    remove(f)
+
+        r_client.flushdb()
+
 
 @qiita_test_checker()
 class TestPrivatePlugin(BaseTestPrivatePlugin):
@@ -62,16 +77,6 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
 
         self.temp_dir = mkdtemp()
         self._clean_up_files = [self.fp, self.temp_dir]
-
-    def tearDown(self):
-        for f in self._clean_up_files:
-            if exists(f):
-                if isdir(f):
-                    rmtree(f)
-                else:
-                    remove(f)
-
-        r_client.flushdb()
 
     def test_copy_artifact(self):
         # Failure test
@@ -413,7 +418,47 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
 @qiita_test_checker()
 class TestPrivatePluginDeleteAnalysis(BaseTestPrivatePlugin):
     def test_delete_analysis(self):
-        # as samples have been submitted to EBI, this will fail
+        # adding extra filepaths to make sure the delete works as expected, we
+        # basically want 8 -> 9 -> 10 -> 12 -> 14
+        #                       -> 11 -> 13
+        fd, fp10 = mkstemp(suffix='_table.biom')
+        close(fd)
+        fd, fp11 = mkstemp(suffix='_table.biom')
+        close(fd)
+        fd, fp12 = mkstemp(suffix='_table.biom')
+        close(fd)
+        fd, fp13 = mkstemp(suffix='_table.biom')
+        close(fd)
+        fd, fp14 = mkstemp(suffix='_table.biom')
+        close(fd)
+        with biom_open(fp10, 'w') as f:
+            et.to_hdf5(f, "test")
+        with biom_open(fp11, 'w') as f:
+            et.to_hdf5(f, "test")
+        with biom_open(fp12, 'w') as f:
+            et.to_hdf5(f, "test")
+        with biom_open(fp13, 'w') as f:
+            et.to_hdf5(f, "test")
+        with biom_open(fp14, 'w') as f:
+            et.to_hdf5(f, "test")
+        self._clean_up_files.extend([fp10, fp11, fp12, fp13, fp14])
+
+        # copying some processing parameters
+        a9 = Artifact(9)
+        pp = a9.processing_parameters
+
+        # 7: BIOM
+        a10 = Artifact.create([(fp10, 7)], "BIOM", parents=[a9],
+                              processing_parameters=pp)
+        a11 = Artifact.create([(fp11, 7)], "BIOM", parents=[a9],
+                              processing_parameters=pp)
+        a12 = Artifact.create([(fp12, 7)], "BIOM", parents=[a10],
+                              processing_parameters=pp)
+        Artifact.create([(fp13, 7)], "BIOM", parents=[a11],
+                        processing_parameters=pp)
+        Artifact.create([(fp14, 7)], "BIOM", parents=[a12],
+                        processing_parameters=pp)
+
         job = self._create_job('delete_analysis', {'analysis_id': 1})
         private_task(job.id)
         self.assertEqual(job.status, 'success')
