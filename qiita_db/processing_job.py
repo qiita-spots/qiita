@@ -496,12 +496,18 @@ class ProcessingJob(qdb.base.QiitaObject):
                     '{input_size}' in allocation):
                 samples, columns, input_size = self.shape
                 parts = []
-                for part in allocation.split():
+                for part in allocation.split(' '):
                     if ('{samples}' in part or '{columns}' in part or
                             '{input_size}' in part):
                         variable, value = part.split('=')
                         error_msg = ('Obvious incorrect allocation. Please '
                                      'contact qiita.help@gmail.com')
+                        # to make sure that the formula is correct and avoid
+                        # possible issues with conversions, we will check that
+                        # all the variables {samples}/{columns}/{input_size}
+                        # present in the formula are not None, if any is None
+                        # we will set the job's error (will stop it) and the
+                        # message is gonna be shown to the user within the job
                         if (('{samples}' in value and samples is None) or
                                 ('{columns}' in value and columns is None) or
                                 ('{input_size}' in value and input_size is
@@ -1685,7 +1691,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             elif 'analysis' in parameters:
                 analysis_id = parameters['analysis']
         elif self.command.name == 'build_analysis_files':
-            # build analysis is an special case because the analysis doesn't
+            # build analysis is a special case because the analysis doesn't
             # exist yet
             sanalysis = qdb.analysis.Analysis(parameters['analysis']).samples
             samples = sum([len(sams) for sams in sanalysis.values()])
