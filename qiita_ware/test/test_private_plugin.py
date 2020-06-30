@@ -360,6 +360,64 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         # wait for everything to finish to avoid DB deadlocks
         sleep(5)
 
+    def test_build_analysis_files(self):
+        job = self._create_job('build_analysis_files', {
+            'analysis': 3, 'merge_dup_sample_ids': True})
+
+        # testing shape and get_resource_allocation_info as
+        # build_analysis_files is an special case
+        def _set_allocation(memory):
+            with TRN:
+                sql = """UPDATE qiita.processing_job_resource_allocation
+                         SET allocation = '{0}'
+                         WHERE name = 'build_analysis_files'""".format(
+                            '-q qiita -l mem=%s' % memory)
+                TRN.add(sql)
+                TRN.execute()
+
+        self.assertEqual(job.shape, (4, None, 1256812))
+        self.assertEqual(
+            job.get_resource_allocation_info(),
+            '-q qiita -l nodes=1:ppn=1 -l mem=16gb -l walltime=10:00:00')
+        _set_allocation('{samples}*1000')
+        self.assertEqual(job.get_resource_allocation_info(),
+                         '-q qiita -l mem=4K')
+        _set_allocation('{columns}*1000')
+        self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
+        self.assertEqual(job.status, 'error')
+        self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
+                         'contact qiita.help@gmail.com')
+
+        # now let's test something that will cause not a number input_size*N
+        job = self._create_job('build_analysis_files', {
+            'analysis': 3, 'merge_dup_sample_ids': True})
+        _set_allocation('{input_size}*N')
+        self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
+        self.assertEqual(job.status, 'error')
+        self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
+                         'contact qiita.help@gmail.com')
+
+        # now let's test something that will return a negative number -samples
+        job = self._create_job('build_analysis_files', {
+            'analysis': 3, 'merge_dup_sample_ids': True})
+        _set_allocation('-{samples}')
+        self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
+        self.assertEqual(job.status, 'error')
+        self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
+                         'contact qiita.help@gmail.com')
+
+        # now let's test a full build_analysis_files job
+        job = self._create_job('build_analysis_files', {
+            'analysis': 3, 'merge_dup_sample_ids': True})
+        job._set_status('in_construction')
+        job.submit()
+
+        while job.status not in ('error', 'success'):
+            sleep(0.5)
+
+        self.assertEqual(job.status, 'error')
+        self.assertIn('1 validator jobs failed', job.log.msg)
+
 
 @qiita_test_checker()
 class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):

@@ -15,15 +15,17 @@ from datetime import datetime
 from itertools import chain
 from json import dumps, loads
 from multiprocessing import Process, Queue, Event
-from qiita_core.qiita_settings import qiita_config
-from qiita_db.util import create_nested_path
 from re import search, findall
 from subprocess import Popen, PIPE
 from time import sleep, time
 from uuid import UUID
 from os.path import join
 from threading import Thread
+from humanize import naturalsize
+
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
+from qiita_db.util import create_nested_path
 
 
 class Watcher(Process):
@@ -488,9 +490,52 @@ class ProcessingJob(qdb.base.QiitaObject):
                     AssertionError(
                         "Could not match %s to a resource allocation!" % name)
 
-            # [0] sending one element as execute_fetchflatten returns
-            # an array
-            return result[0]
+            allocation = result[0]
+
+            if ('{samples}' in allocation or '{columns}' in allocation or
+                    '{input_size}' in allocation):
+                samples, columns, input_size = self.shape
+                parts = []
+                for part in allocation.split(' '):
+                    if ('{samples}' in part or '{columns}' in part or
+                            '{input_size}' in part):
+                        variable, value = part.split('=')
+                        error_msg = ('Obvious incorrect allocation. Please '
+                                     'contact qiita.help@gmail.com')
+                        # to make sure that the formula is correct and avoid
+                        # possible issues with conversions, we will check that
+                        # all the variables {samples}/{columns}/{input_size}
+                        # present in the formula are not None, if any is None
+                        # we will set the job's error (will stop it) and the
+                        # message is gonna be shown to the user within the job
+                        if (('{samples}' in value and samples is None) or
+                                ('{columns}' in value and columns is None) or
+                                ('{input_size}' in value and input_size is
+                                 None)):
+                            self._set_error(error_msg)
+                            return 'Not valid'
+
+                        try:
+                            # if eval has something that can't be processed
+                            # it will raise a NameError
+                            mem = eval(value.format(
+                                samples=samples, columns=columns,
+                                input_size=input_size))
+                        except NameError:
+                            self._set_error(error_msg)
+                            return 'Not valid'
+                        else:
+                            if mem <= 0:
+                                self._set_error(error_msg)
+                                return 'Not valid'
+                            value = naturalsize(mem, gnu=True, format='%.0f')
+                            part = '%s=%s' % (variable, value)
+
+                    parts.append(part)
+
+                allocation = ' '.join(parts)
+
+            return allocation
 
     @classmethod
     def create(cls, user, parameters, force=False):
@@ -1626,19 +1671,20 @@ class ProcessingJob(qdb.base.QiitaObject):
 
     @property
     def shape(self):
-        """The number of samples and metadata columns related to this job
+        """Number of samples, metadata columns and input size of this job
 
         Returns
         -------
-        int, int
-            Number of samples and metadata columns. None means it couldn't
-            be calculated
+        int, int, int
+            Number of samples, metadata columns and input size. None means it
+            couldn't be calculated
         """
         samples = None
         columns = None
         study_id = None
         analysis_id = None
         artifact = None
+        input_size = None
 
         parameters = self.parameters.values
 
@@ -1656,6 +1702,13 @@ class ProcessingJob(qdb.base.QiitaObject):
                     study_id = pt.study_id
             elif 'analysis' in parameters:
                 analysis_id = parameters['analysis']
+        elif self.command.name == 'build_analysis_files':
+            # build analysis is a special case because the analysis doesn't
+            # exist yet
+            sanalysis = qdb.analysis.Analysis(parameters['analysis']).samples
+            samples = sum([len(sams) for sams in sanalysis.values()])
+            input_size = sum([fp['fp_size'] for aid in sanalysis
+                              for fp in qdb.artifact.Artifact(aid).filepaths])
         elif self.command.software.name == 'Qiita':
             if 'study' in parameters:
                 study_id = parameters['study']
@@ -1672,6 +1725,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                     pass
         elif self.input_artifacts:
             artifact = self.input_artifacts[0]
+            input_size = sum([fp['fp_size'] for a in self.input_artifacts
+                              for fp in a.filepaths])
 
         # if there is an artifact, then we need to get the study_id/analysis_id
         if artifact is not None:
@@ -1699,8 +1754,10 @@ class ProcessingJob(qdb.base.QiitaObject):
                     analysis.mapping_file)['fullpath']
                 samples, columns = pd.read_csv(
                     mfp, sep='\t', dtype=str).shape
+                input_size = sum([fp['fp_size'] for aid in analysis.samples for
+                                  fp in qdb.artifact.Artifact(aid).filepaths])
 
-        return samples, columns
+        return samples, columns, input_size
 
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
