@@ -9,3 +9,8 @@ INSERT INTO qiita.processing_job_resource_allocation (name, job_type, allocation
   ('distance_matrix', 'VALIDATOR', '-q qiita -l nodes=1:ppn=1 -l mem=42gb -l walltime=150:00:00'),
   ('BIOM', 'VALIDATOR', '-q qiita -l nodes=1:ppn=1 -l mem=90gb -l walltime=150:00:00'),
   ('alpha_vector', 'VALIDATOR', '-q qiita -l nodes=1:ppn=1 -l mem=10gb -l walltime=70:00:00');
+
+
+-- For EBI-ENA, Ion Torren is Ion_Torrent
+UPDATE qiita.restrictions SET valid_values = ARRAY['FASTA', 'Illumina', 'Ion_Torrent', 'LS454', 'Oxford Nanopore']
+  WHERE table_name = 'prep_template_sample' AND name = 'platform';

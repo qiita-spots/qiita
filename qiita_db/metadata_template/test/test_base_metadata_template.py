@@ -125,7 +125,7 @@ class TestMetadataTemplateReadOnly(TestCase):
         obs = MT.prep_template.PrepTemplate(1).restrictions
         exp = {
             'target_gene': ['16S rRNA', '18S rRNA', 'ITS1/2', 'LSU'],
-            'platform': ['FASTA', 'Illumina', 'Ion Torrent', 'LS454',
+            'platform': ['FASTA', 'Illumina', 'Ion_Torrent', 'LS454',
                          'Oxford Nanopore'],
             'target_subfragment': ['V3', 'V4', 'V6', 'V9', 'ITS1/2'],
             'instrument_model': [
