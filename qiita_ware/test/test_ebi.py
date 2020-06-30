@@ -530,7 +530,7 @@ class TestEBISubmission(TestCase):
         obs = ET.tostring(submission.generate_experiment_xml())
         self.assertEqual(obs.decode('ascii'), exp)
 
-        # changing investigation_type to tests user defined terms, first let's
+        # changing investigation_type to test user defined terms, first let's
         # create a new term
         new_term = 'Ultimate Term'
         ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
