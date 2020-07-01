@@ -174,7 +174,7 @@ def create_sample_template(job):
             remove(fp)
 
             if warns:
-                msg = '\n'.join(set(str(w) for w in warns))
+                msg = '\n'.join(set(str(w.message) for w in warns))
                 r_client.set("sample_template_%s" % study.id,
                              dumps({'job_id': job.id, 'alert_type': 'warning',
                                     'alert_msg': msg}))
@@ -203,7 +203,7 @@ def update_sample_template(job):
             # Join all the warning messages into one. Note that this info
             # will be ignored if an exception is raised
             if warns:
-                msg = '\n'.join(set(str(w) for w in warns))
+                msg = '\n'.join(set(str(w.message) for w in warns))
                 r_client.set("sample_template_%s" % study_id,
                              dumps({'job_id': job.id, 'alert_type': 'warning',
                                     'alert_msg': msg}))
@@ -247,7 +247,7 @@ def update_prep_template(job):
             # Join all the warning messages into one. Note that this info
             # will be ignored if an exception is raised
             if warns:
-                msg = '\n'.join(set(str(w) for w in warns))
+                msg = '\n'.join(set(str(w.message) for w in warns))
                 r_client.set("prep_template_%s" % prep_id,
                              dumps({'job_id': job.id, 'alert_type': 'warning',
                                     'alert_msg': msg}))
