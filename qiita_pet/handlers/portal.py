@@ -80,7 +80,7 @@ class StudyPortalHandler(PortalEditBase):
             self.write(action.upper() + " ERROR:<br/>" + str(e))
             return
 
-        msg = '; '.join([str(w) for w in warns])
+        msg = '; '.join([str(w.message) for w in warns])
         self.write(action + " completed successfully<br/>" + msg)
 
 

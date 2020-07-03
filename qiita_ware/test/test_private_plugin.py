@@ -155,6 +155,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertIn(
             'Some functionality will be disabled due to missing columns:',
             obs['alert_msg'])
+        # making sure that the error name is not in the messages
+        self.assertNotIn('QiitaDBWarning', obs['alert_msg'])
 
     def test_create_sample_template_nonutf8(self):
         fp = join(dirname(abspath(__file__)), 'test_data',
@@ -188,6 +190,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn('The following columns have been added to the existing '
                       'template: new_col', obs['alert_msg'])
+        # making sure that the error name is not in the messages
+        self.assertNotIn('QiitaDBWarning', obs['alert_msg'])
 
     def test_delete_sample_template(self):
         # Error case
@@ -246,6 +250,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn('The following columns have been added to the existing '
                       'template: new_col', obs['alert_msg'])
+        # making sure that the error name is not in the messages
+        self.assertNotIn('QiitaDBWarning', obs['alert_msg'])
 
     # This is a long test but it includes the 3 important cases that need
     # to be tested on this function (job success, job error, and internal error
