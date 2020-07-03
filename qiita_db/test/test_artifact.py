@@ -1065,10 +1065,18 @@ class ArtifactTests(TestCase):
             qdb.artifact.Artifact(test.id)
 
     def test_delete_with_html(self):
+
+        # creating a single file html_summary
         fd, html_fp = mkstemp(suffix=".html")
         close(fd)
         self.filepaths_root.append((html_fp, 'html_summary'))
         self._clean_up_files.append(html_fp)
+
+        # creating a folder with a file for html_summary_dir
+        summary_dir = mkdtemp()
+        open(join(summary_dir, 'index.html'), 'w').write('this is a test')
+        self.filepaths_root.append((summary_dir, 'html_summary_dir'))
+        self._clean_up_files.append(summary_dir)
 
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
@@ -1085,6 +1093,7 @@ class ArtifactTests(TestCase):
             qdb.artifact.Artifact(test.id)
 
         self.assertFalse(exists(join(uploads_fp, basename(html_fp))))
+        self.assertFalse(exists(join(uploads_fp, basename(summary_dir))))
 
     def test_delete_with_jobs(self):
         test = qdb.artifact.Artifact.create(
