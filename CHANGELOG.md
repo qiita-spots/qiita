@@ -1,5 +1,23 @@
 # Qiita changelog
 
+Version 072020
+--------------
+
+* Added per preparation LIBRARY_STRATEGY and removed the study wide STUDY_TYPE values for EBI-ENA submissions to comply with newer metadata standards
+* Changed `Ion Torrent` to `Ion_Torrent` as described by EBI-ENA
+* Added a VALIDATOR job_type to be able to specify job validator resources
+* Added a job.shape method that returns the number of columns, samples and input size of each job based its input artifacts
+* Added the possibility of requesting memory resources for a job based on the input size, number of samples and/or columns
+* Warnings from commands will only use the message part of the warning/errors (#2898)
+* Fixed error when deleting multiple artifacts with summaries and support_files
+* Button now will be disabled when submitting a workflow via GUI to avoid double clicking from users
+* Jobs will now display their "external job id" to users, in practice their barnacle job id
+* Fixed bug that prevented delete of full analyses when the processing tree had multiple paths
+* Added initial script for nightly auto-processing of workflows
+* Removed legacy future dependencies from Python2.7
+* Users can see the available system plugins, their commands and resource allocations: https://qiita.ucsd.edu/software/
+* Added qiime2.2020.06 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
+
 Version 052020
 --------------
 
