@@ -463,6 +463,30 @@ class SoftwareTestsIter(TestCase):
         obs = list(qdb.software.Software.iter(False))
         self.assertEqual(obs, [s1, s2, s3, s4])
 
+        # test command resouce allocations here to be able to delete
+        # allocations so we can tests errors.
+
+        # Command 2 is Split libraries and has defined resources
+        self.assertEqual(
+            qdb.software.Command(2).resource_allocation,
+            '-q qiita -l nodes=1:ppn=1 -l mem=60gb -l walltime=25:00:00')
+
+        # Command 9 is Summarize Taxa and has no defined resources so it goes
+        # to defaults
+        self.assertEqual(
+            qdb.software.Command(9).resource_allocation,
+            '-q qiita -l nodes=1:ppn=5 -l pmem=8gb -l walltime=168:00:00')
+
+        # delete allocations to test errors
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "DELETE FROM qiita.processing_job_resource_allocation")
+            qdb.sql_connection.TRN.execute()
+
+        with self.assertRaisesRegex(ValueError, "Could not match 'Split "
+                                    "libraries' to a resource allocation!"):
+            qdb.software.Command(2).resource_allocation
+
 
 @qiita_test_checker()
 class SoftwareTests(TestCase):

@@ -705,6 +705,40 @@ class Command(qdb.base.QiitaObject):
                     'outputs': outputs,
                     'ignore_parent_command': ipc}
 
+    @property
+    def resource_allocation(self):
+        """The resource allocation defined in the database for this command
+
+        Returns
+        -------
+        str
+        """
+
+        with qdb.sql_connection.TRN:
+            sql = """SELECT allocation FROM
+                     qiita.processing_job_resource_allocation
+                     WHERE name = %s and
+                        job_type = 'RESOURCE_PARAMS_COMMAND'"""
+            qdb.sql_connection.TRN.add(sql, [self.name])
+
+            result = qdb.sql_connection.TRN.execute_fetchflatten()
+
+            # if no matches for both type and name were found, query the
+            # 'default' value for the type
+
+            if not result:
+                sql = """SELECT allocation FROM
+                         qiita.processing_job_resource_allocation WHERE
+                         name = %s and job_type = 'RESOURCE_PARAMS_COMMAND'"""
+                qdb.sql_connection.TRN.add(sql, ['default'])
+
+                result = qdb.sql_connection.TRN.execute_fetchflatten()
+                if not result:
+                    raise ValueError("Could not match '%s' to a resource "
+                                     "allocation!" % self.name)
+
+        return result[0]
+
 
 class Software(qdb.base.QiitaObject):
     r"""A software package available in the system
