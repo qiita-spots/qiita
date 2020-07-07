@@ -240,7 +240,8 @@ def job_ajax_get_req(job_id):
     job_error = job.log.msg if job.log is not None else None
     return {'status': 'success',
             'message': '',
-            'job_id': '%s [%s]' % (job.id, job.external_id),
+            'job_id': job.id,
+            'job_external_id': job.external_id,
             'job_status': job_status,
             'job_step': job.step,
             'job_parameters': job.parameters.values,

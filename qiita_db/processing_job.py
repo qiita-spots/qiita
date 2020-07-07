@@ -1007,75 +1007,74 @@ class ProcessingJob(qdb.base.QiitaObject):
 
     def release_validators(self):
         """Allows all the validator job spawned by this job to complete"""
-        with qdb.sql_connection.TRN:
-            if self.command.software.type not in ('artifact transformation',
-                                                  'private'):
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Only artifact transformation and private jobs can "
-                    "release validators")
+        if self.command.software.type not in ('artifact transformation',
+                                              'private'):
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "Only artifact transformation and private jobs can "
+                "release validators")
 
-            # Check if all the validators are completed. Validator jobs can be
-            # in two states when completed: 'waiting' in case of success
-            # or 'error' otherwise
+        # Check if all the validators are completed. Validator jobs can be
+        # in two states when completed: 'waiting' in case of success
+        # or 'error' otherwise
 
+        validator_ids = ['%s [%s]' % (j.id, j.external_id)
+                         for j in self.validator_jobs
+                         if j.status not in ['waiting', 'error']]
+
+        # Active polling - wait until all validator jobs are completed
+        # TODO: As soon as we see one errored validator, we should kill
+        # the other jobs and exit early. Don't wait for all of the jobs
+        # to complete.
+        while validator_ids:
+            jids = ', '.join([j[0] for j in validator_ids])
+            self.step = ("Validating outputs (%d remaining) via "
+                         "job(s) %s" % (len(validator_ids), jids))
+            sleep(10)
             validator_ids = ['%s [%s]' % (j.id, j.external_id)
                              for j in self.validator_jobs
                              if j.status not in ['waiting', 'error']]
 
-            # Active polling - wait until all validator jobs are completed
-            # TODO: As soon as we see one errored validator, we should kill
-            # the other jobs and exit early. Don't wait for all of the jobs
-            # to complete.
-            while validator_ids:
-                jids = ', '.join([j[0] for j in validator_ids])
-                self.step = ("Validating outputs (%d remaining) via "
-                             "job(s) %s" % (len(validator_ids), jids))
-                sleep(10)
-                validator_ids = ['%s [%s]' % (j.id, j.external_id)
-                                 for j in self.validator_jobs
-                                 if j.status not in ['waiting', 'error']]
+        # Check if any of the validators errored
+        errored = [j for j in self.validator_jobs
+                   if j.status == 'error']
+        if errored:
+            # At least one of the validators failed, Set the rest of the
+            # validators and the current job as failed
+            waiting = [j.id for j in self.validator_jobs
+                       if j.status == 'waiting']
 
-            # Check if any of the validators errored
-            errored = [j for j in self.validator_jobs
-                       if j.status == 'error']
-            if errored:
-                # At least one of the validators failed, Set the rest of the
-                # validators and the current job as failed
-                waiting = [j.id for j in self.validator_jobs
-                           if j.status == 'waiting']
+            common_error = "\n".join(
+                ["Validator %s error message: %s" % (j.id, j.log.msg)
+                 for j in errored])
 
-                common_error = "\n".join(
-                    ["Validator %s error message: %s" % (j.id, j.log.msg)
-                     for j in errored])
+            val_error = "%d sister validator jobs failed: %s" % (
+                len(errored), common_error)
+            for j in waiting:
+                ProcessingJob(j)._set_error(val_error)
 
-                val_error = "%d sister validator jobs failed: %s" % (
-                    len(errored), common_error)
-                for j in waiting:
-                    ProcessingJob(j)._set_error(val_error)
+            self._set_error('%d validator jobs failed: %s'
+                            % (len(errored), common_error))
+        else:
+            mapping = {}
+            # Loop through all validator jobs and release them, allowing
+            # to create the artifacts. Note that if any artifact creation
+            # fails, the rollback operation will make sure that the
+            # previously created artifacts are not in there
+            for vjob in self.validator_jobs:
+                mapping.update(vjob.release())
 
-                self._set_error('%d validator jobs failed: %s'
-                                % (len(errored), common_error))
-            else:
-                mapping = {}
-                # Loop through all validator jobs and release them, allowing
-                # to create the artifacts. Note that if any artifact creation
-                # fails, the rollback operation will make sure that the
-                # previously created artifacts are not in there
-                for vjob in self.validator_jobs:
-                    mapping.update(vjob.release())
-
-                if mapping:
-                    sql = """INSERT INTO
-                                qiita.artifact_output_processing_job
-                                (artifact_id, processing_job_id,
-                                command_output_id)
-                             VALUES (%s, %s, %s)"""
-                    sql_args = [[aid, self.id, outid]
-                                for outid, aid in mapping.items()]
+            if mapping:
+                sql = """INSERT INTO
+                            qiita.artifact_output_processing_job
+                            (artifact_id, processing_job_id,
+                            command_output_id)
+                         VALUES (%s, %s, %s)"""
+                sql_args = [[aid, self.id, outid]
+                            for outid, aid in mapping.items()]
+                with qdb.sql_connection.TRN:
                     qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-
-                    self._update_and_launch_children(mapping)
-                self._set_status('success')
+                self._update_and_launch_children(mapping)
+            self._set_status('success')
 
     def _complete_artifact_definition(self, artifact_data):
         """"Performs the needed steps to complete an artifact definition job

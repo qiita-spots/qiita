@@ -371,7 +371,7 @@ Vue.component('processing-graph', {
         $("#processing-results").empty();
 
         // Create the header of the page
-        var h = $("<h3>").text('Job ' + data['job_id'] + ' ').appendTo("#processing-results");
+        var h = $("<h3>").text('Job ' + data['job_id'] + ' [' + data['job_external_id'] + '] ').appendTo("#processing-results");
 
         // Only add the delete job button if the job is "in_construction"
         // or "error"
