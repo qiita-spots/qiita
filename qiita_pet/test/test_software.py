@@ -17,13 +17,20 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 
 class TestSoftware(TestHandlerBase):
     def test_get(self):
-        response = self.get('/admin/software/')
-        self.assertEqual(response.code, 403)
+        response = self.get('/software/')
+        self.assertEqual(response.code, 200)
+        body = response.body.decode('ascii')
+        self.assertNotEqual(body, "")
+        # checking that this software is not displayed
+        self.assertNotIn('Target Gene', body)
 
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
-        response = self.get('/admin/software/')
+        response = self.get('/software/')
         self.assertEqual(response.code, 200)
-        self.assertNotEqual(response.body, "")
+        body = response.body.decode('ascii')
+        self.assertNotEqual(body, "")
+        # checking that this software is displayed
+        self.assertIn('Target Gene', body)
 
 
 if __name__ == "__main__":

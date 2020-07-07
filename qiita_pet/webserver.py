@@ -126,7 +126,6 @@ class Application(tornado.web.Application):
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
             (r"/admin/artifact/", ArtifactAdminAJAX),
-            (r"/admin/software/", SoftwareHandler),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
             # Study handlers
             (r"/study/create/", StudyEditHandler),
@@ -177,6 +176,7 @@ class Application(tornado.web.Application):
             (r"/upload/", UploadFileHandler),
             (r"/check_study/", CreateStudyAJAX),
             (r"/stats/", StatsHandler),
+            (r"/software/", SoftwareHandler),
             (r"/download/(.*)", DownloadHandler),
             (r"/download_study_bioms/(.*)", DownloadStudyBIOMSHandler),
             (r"/download_raw_data/(.*)", DownloadRawData),

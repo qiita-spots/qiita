@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from tornado.gen import coroutine
-from tornado.web import HTTPError
 
 from qiita_core.util import execute_as_transaction
 from qiita_db.software import Software
@@ -14,15 +13,14 @@ from .base_handlers import BaseHandler
 
 
 class SoftwareHandler(BaseHandler):
-    def check_access(self):
-        if self.current_user.level not in {'admin', 'dev'}:
-            raise HTTPError(403, reason="User %s doesn't have sufficient "
-                            "privileges to view error page" %
-                            self.current_user.email)
-
     @coroutine
     @execute_as_transaction
     def get(self):
-        self.check_access()
-        software = Software.iter(False)
+        # active True will only show active software
+        active = True
+        user = self.current_user
+        if user is not None and user.level in {'admin', 'dev'}:
+            active = False
+
+        software = Software.iter(active=active)
         self.render("software.html", software=software)
