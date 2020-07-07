@@ -7,7 +7,7 @@ Qiita's per job resources allocation
 
 Qiita will request specific resource allocations based on the name of the command,
 the job type and it's definition in the database. These definitions are in the
-qiita.processing_job_resource_allocation table in the database. This table has name
+qiita.processing_job_resource_allocation table in the database. This table has a name
 (the name of the job), a description, job_type (more below), and the allocation for
 that job.
 
@@ -15,7 +15,7 @@ Job types
 ---------
 
 The Qiita job types allows us to better group the jobs based on what they do and
-separate possible name conflicts while at the same time kipping these separation
+separate possible name conflicts while at the same time keeping this separation
 simple.
 
 #. RESOURCE_PARAMS_COMMAND: This is the most common entry as it defines the allocation
@@ -25,7 +25,7 @@ simple.
    finished successfully and a set of artifact(s) that need to be validated and then added to Qiita -
    move to the final locations and register them in the database. For these jobs the name is the actual
    artifact type that is being generated, for example: "per_sample_FASTQ" or "q2_visualization"
-#. RELEASE_VALIDATORS_RESOURCE_PARAM: The complete job will create a new job to release and coordinate
+#. RELEASE_VALIDATORS_RESOURCE_PARAM: The completed job will create a new job to release and coordinate
    all the artifact validators for a given command
 #. VALIDATOR: Each new artifact needs a validator and depends on the Qiita plugin that defined
    that artifact type. Similar to COMPLETE_JOBS_RESOURCE_PARAM here the name of the job is the
@@ -60,9 +60,9 @@ and "{input_size}" -  the total size of the artifact type (in bytes).
 
 Some examples:
 
-#. Request 1K per sample: samples*1000 -> "-q qiita -l nodes=1:ppn=5 -l mem={samples}*1000 -l walltime=130:00:00"
-#. Request at least 4M and then add samples+columns and request 1M for each:
-   ((samples+columns)*1000000)+4000000 -> "-q qiita -l nodes=1:ppn=5 -l mem=(({samples}+{columns})*1000000)+4000000
-   -l walltime=130:00:00"
-#. Request at least 2G and grow based on input size: {input_size}+(2*1e+9) -> "-q qiita -l nodes=1:ppn=5 -l
-   mem={input_size}+(2*1e+9) -l walltime=130:00:00"
+#. Request 1K per sample: `samples*1000` -> `-q qiita -l nodes=1:ppn=5 -l mem={samples}*1000 -l walltime=130:00:00`
+#. Request at least 4M and then add `samples+columns` and request 1M for each:
+   `((samples+columns)*1000000)+4000000` -> `-q qiita -l nodes=1:ppn=5 -l mem=(({samples}+{columns})*1000000)+4000000
+   -l walltime=130:00:00`
+#. Request at least 2G and grow based on input size: `{input_size}+(2*1e+9)` -> `-q qiita -l nodes=1:ppn=5 -l
+   mem={input_size}+(2*1e+9) -l walltime=130:00:00`
