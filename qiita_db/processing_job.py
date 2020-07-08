@@ -1026,7 +1026,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         # the other jobs and exit early. Don't wait for all of the jobs
         # to complete.
         while validator_ids:
-            jids = ', '.join([j[0] for j in validator_ids])
+            jids = ', '.join(validator_ids)
             self.step = ("Validating outputs (%d remaining) via "
                          "job(s) %s" % (len(validator_ids), jids))
             sleep(10)
