@@ -532,7 +532,7 @@ class TestEBISubmission(TestCase):
 
         # changing investigation_type to test user defined terms, first let's
         # create a new term
-        new_term = 'Ultimate Term'
+        new_term = 'ULTIMATE TERM'
         ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
         ena_ontology.add_user_defined_term(new_term)
         # set the preparation with the new term
@@ -1359,12 +1359,12 @@ experiment.xsd">
 %(study_id)s.Sample1" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>%(study_id)s.Sample1</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
         <LIBRARY_CONSTRUCTION_PROTOCOL>Protocol ABC
         </LIBRARY_CONSTRUCTION_PROTOCOL>
-        <LIBRARY_STRATEGY>Metagenomics</LIBRARY_STRATEGY>
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
@@ -1394,12 +1394,12 @@ experiment.xsd">
 %(study_id)s.Sample2" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>%(study_id)s.Sample2</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
         <LIBRARY_CONSTRUCTION_PROTOCOL>Protocol ABC
         </LIBRARY_CONSTRUCTION_PROTOCOL>
-        <LIBRARY_STRATEGY>Metagenomics</LIBRARY_STRATEGY>
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
@@ -1429,12 +1429,12 @@ experiment.xsd">
 %(study_id)s.Sample3" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>%(study_id)s.Sample3</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
         <LIBRARY_CONSTRUCTION_PROTOCOL>Protocol ABC
         </LIBRARY_CONSTRUCTION_PROTOCOL>
-        <LIBRARY_STRATEGY>Metagenomics</LIBRARY_STRATEGY>
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
@@ -1470,6 +1470,7 @@ center_name="%(center_name)s">
       <SAMPLE_DESCRIPTOR accession="ERS000008" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB2.640194</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1484,7 +1485,6 @@ primer is barcoded with a 12-base error-correcting Golay code to facilitate \
 multiplexing of up to 1,500 samples per lane, and both PCR primers contain \
 sequencer adapter regions.
         </LIBRARY_CONSTRUCTION_PROTOCOL>
-        <LIBRARY_STRATEGY>Metagenomics</LIBRARY_STRATEGY>
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
@@ -1559,6 +1559,7 @@ center_name="%(center_name)s">
       <SAMPLE_DESCRIPTOR accession="ERS000024" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB3.640195</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1573,7 +1574,6 @@ primer is barcoded with a 12-base error-correcting Golay code to facilitate \
 multiplexing of up to 1,500 samples per lane, and both PCR primers contain \
 sequencer adapter regions.
         </LIBRARY_CONSTRUCTION_PROTOCOL>
-        <LIBRARY_STRATEGY>Metagenomics</LIBRARY_STRATEGY>
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
