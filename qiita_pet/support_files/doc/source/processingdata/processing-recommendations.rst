@@ -54,6 +54,12 @@ recommend that all sequence files go through adapter and quality control within 
 subsequent analyses. Currently, the command removes adaptor sequences (only KAPA HyperPlus with iTru, which are compatible
 with Illumina TruSeq).
 
+Sequences generated with an instrument that relies on two-color chemistry (NextSeq, NovaSeq), need to undergo an additional
+quality control step. This step removes trailing G nucleotides which signify that the instrument has finished capturing new
+information. Per Illumina's specification, NovaSeq instruments have 3 quality levels (11, 25 and 37), and
+high-quality trailing Gs need to be removed. Typically this can be done in conjunction with adapter removal, with Atropos
+we recommend using the `--nextseq-trim 30` parameter.
+
 For host removal we currently support *Danio Rerio* (zebrafish), *Drosophila Melanogaster* (fruit fly), *Mus Musculus* (mouse),
 *Rattus Norvegicus* (rat), and Enterobacteria phage phiX174 (the Illumina spike-in control).
 
