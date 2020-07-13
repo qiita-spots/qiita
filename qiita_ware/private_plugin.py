@@ -75,10 +75,9 @@ def release_validators(job):
     job : qiita_db.processing_job.ProcessingJob
         The processing job with the information of the parent job
     """
-    with qdb.sql_connection.TRN:
-        qdb.processing_job.ProcessingJob(
-            job.parameters.values['job']).release_validators()
-        job._set_status('success')
+    qdb.processing_job.ProcessingJob(
+        job.parameters.values['job']).release_validators()
+    job._set_status('success')
 
 
 def submit_to_VAMPS(job):

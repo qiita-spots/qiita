@@ -526,6 +526,9 @@ class EBISubmission(object):
             library_name = ET.SubElement(library_descriptor, 'LIBRARY_NAME')
             library_name.text = self._get_library_name(sample_name)
 
+            lg = ET.SubElement(library_descriptor, 'LIBRARY_STRATEGY')
+            lg.text = escape(clean_whitespace(library_strategy.upper()))
+
             # hardcoding some values,
             # see https://github.com/biocore/qiita/issues/1485
             library_source = ET.SubElement(library_descriptor,
@@ -545,9 +548,6 @@ class EBISubmission(object):
                                 "LIBRARY_CONSTRUCTION_PROTOCOL")
             lcp.text = escape(clean_whitespace(
                 sample_prep.pop('library_construction_protocol')))
-
-            lg = ET.SubElement(library_descriptor, 'LIBRARY_STRATEGY')
-            lg.text = library_strategy
 
             self._generate_spot_descriptor(design, platform)
 

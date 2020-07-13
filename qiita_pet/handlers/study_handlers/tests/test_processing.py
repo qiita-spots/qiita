@@ -32,7 +32,8 @@ class TestJobAJAX(TestHandlerBase):
         exp = {
             'status': 'success',
             'message': '',
-            'job_id': "063e553b-327c-4818-ab4a-adfe58e49860 [Not Available]",
+            'job_id': "063e553b-327c-4818-ab4a-adfe58e49860",
+            'job_external_id': 'Not Available',
             'job_status': "queued",
             'job_step': None,
             'job_error': None,

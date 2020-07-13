@@ -349,10 +349,11 @@ Vue.component('processing-graph', {
         vm.updateGraph();
       })
         .fail(function(object, status, error_msg) {
-          $('#run-btn').attr('disabled', false);
-          $('#run-btn').innerHTML = '<span class="glyphicon glyphicon-play"></span> Run';
           bootstrapAlert("Error submitting workflow: " + object.statusText, "danger");
         });
+      // return button to regular state
+      $('#run-btn').attr('disabled', false);
+      $('#run-btn').html('<span class="glyphicon glyphicon-play"></span> Run');
     },
 
     /**
@@ -371,7 +372,7 @@ Vue.component('processing-graph', {
         $("#processing-results").empty();
 
         // Create the header of the page
-        var h = $("<h3>").text('Job ' + data['job_id'] + ' ').appendTo("#processing-results");
+        var h = $("<h3>").text('Job ' + data['job_id'] + ' [' + data['job_external_id'] + '] ').appendTo("#processing-results");
 
         // Only add the delete job button if the job is "in_construction"
         // or "error"
