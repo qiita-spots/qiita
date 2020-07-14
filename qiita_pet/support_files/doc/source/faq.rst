@@ -210,6 +210,18 @@ To correct this issue, simply add a column to your preparation information file 
 names listed in the sample_name column in your preparation information file.
 
 
+What's a Qiita Artifact?
+------------------------
+
+A Qiita artifact is a collection of files and their summaries that represent the output
+or input of a processing or analytical command.
+
+For example a per_sample_FASTQ artifact will contain the per sample FASTQ files and their
+summary (if a user generated); while a BIOM artifact has the feature table as a biom file, a
+QIIME2 QZA, any other supporting files (like a phylogenetic tree for deblur or sortmerna_picked_otus.tgz
+for close reference picking), and summaries.
+
+
 How to convert Qiita files to QIIME2 artifacts?
 -----------------------------------------------
 
@@ -235,7 +247,7 @@ etc; for more information check
 How to cite Qiita?
 ------------------
 
-If you use Qiita for processing, submition to EBI-ENA and/or its data for any published research, please include the following citation:
+If you use Qiita for processing, submission to EBI-ENA and/or its data for any published research, please include the following citation:
 
 **Qiita: rapid, web-enabled microbiome meta-analysis.**
 Antonio Gonzalez, Jose A. Navas-Molina, Tomasz Kosciolek, Daniel McDonald, Yoshiki Vázquez-Baeza, Gail Ackermann, Jeff DeReus, Stefan Janssen, Austin D. Swafford, Stephanie B. Orchanian, Jon G. Sanders, Joshua Shorenstein, Hannes Holste, Semar Petrus, Adam Robbins-Pianka, Colin J. Brislawn, Mingxun Wang, Jai Ram Rideout, Evan Bolyen, Matthew Dillon, J. Gregory Caporaso, Pieter C. Dorrestein & Rob Knight. Nature Methods, volume 15, pages 796–798 (2018);

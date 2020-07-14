@@ -203,7 +203,7 @@ class Transaction(object):
 
     @_checker
     def add(self, sql, sql_args=None, many=False):
-        """Add an sql query to the transaction
+        """Add a sql query to the transaction
 
         Parameters
         ----------

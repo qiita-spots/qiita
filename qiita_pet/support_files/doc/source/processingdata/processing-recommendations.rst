@@ -88,7 +88,7 @@ Shogun aligners
    - Version: 0.99.8
    - Alignment file format: b6o (BLAST tabular output, i.e., `-outfmt 6`)
    - Website: https://github.com/knights-lab/BURST
-   - Citation: Al-Ghalith, Gabriel and Dan Knights. BURST enables optimal exhaustive DNA alignment for big data. DOI 2017:doi.org/10.5281/zenodo.806850
+   - Citation: Gabriel Al-Ghalith and Dan Knights. BURST enables optimal exhaustive DNA alignment for big data. DOI 2017:doi.org/10.5281/zenodo.806850
    - Note: Manuscript under review.
 
 #. UTree
@@ -97,7 +97,7 @@ Shogun aligners
    - Version: 2.0 RF
    - Alignment file format: custom mapping file
    - Website: https://github.com/knights-lab/UTree
-   - Citation: Al-Ghalith, Gabriel and Dan Knights. Faster and lower-memory metagenomic profiling with UTree. DOI: 10.5281/zenodo.998252
+   - Citation: Gabriel Al-Ghalith and Dan Knights. Faster and lower-memory metagenomic profiling with UTree. DOI: 10.5281/zenodo.998252
 
 Shogun reference databases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -125,6 +125,19 @@ Shogun reference databases
      - Species: 9,105
      - Strains: 89
      - Note: Nucleotide sequences per genome were concatenated with a linker of 20 "N"s.
+
+#. Rep200: NCBI representative and reference microbial genomes, corresponding to RefSeq release 200 (2020-05-14)
+
+   - Genomes:             11,955
+   - Nucleotides:        926,894
+   - Basepairs:   62,823,581,921 (excluding gaps)
+   - Numbers of taxonomic units:
+
+     - Archaea:  419
+     - Bacteria: 11080
+     - Fungi:    320
+     - Protozoa: 88
+     - Viral:    48
 
 #. Rep94: NCBI representative and reference microbial genomes, corresponding to RefSeq release 94.
 
@@ -166,7 +179,10 @@ Metatranscriptome processing
 
 Sample processing guidelines for metatranscriptomic data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Total community RNA extracted from samples contain both coding and non-coding RNA. Typically, ribosomal RNA make up >90% of the library if not depleted prior to library construction. Ribosomal depletion allows for mRNA enrichment. Even if you are dealing with ribosomal RNA subtracted cDNA libraries, there will be some
+
+Total community RNA extracted from samples contain both coding and non-coding RNA. Typically, ribosomal RNA make up
+>90% of the library if not depleted prior to library construction. Ribosomal depletion allows for mRNA enrichment. Even if
+you are dealing with ribosomal RNA subtracted cDNA libraries, there will be some
 residual ribosomal RNA in the libraries that you want to remove/separate from the non ribosomal RNA sequences.
 
 Ribosomal read filtering
@@ -178,7 +194,8 @@ is used for removal of ribosomal reads from quality filtered Metatranscriptome d
 Latest SortMeRNA version: v2.1
 
 Input: Quality filtered Metatranscriptome reads (FASTA/FASTQ)
-Ribosomal reads are identified by searching against pre-curated rRNA databases. Currently, rRNA databases covering bacteria, archaea and eukarya were downloaded and indexed from `SILVA <https://www.arb-silva.de>`_ and `Rfam <https://rfam.xfam.org>`_.
+Ribosomal reads are identified by searching against pre-curated rRNA databases. Currently, rRNA databases covering bacteria, archaea and eukarya
+were downloaded and indexed from `SILVA <https://www.arb-silva.de>`_ and `Rfam <https://rfam.xfam.org>`_.
 Currently indexed databases and their clustering ids:
 
 - silva-bacterial-16s-id 90%
@@ -206,7 +223,8 @@ Reference database(s) and their corresponding indexes separated by "," and multi
 
 SortMeRNA Usage
 ^^^^^^^^^^^^^^^
-SortMeRNA filters the ribosomal from the non-ribosomal reads from the input sample dataset (via BLAST search)and outputs two fasta/q files containing the ribosomal and non-ribosomal reads respectively.
+SortMeRNA filters the ribosomal from the non-ribosomal reads from the input sample dataset (via BLAST search)and outputs two fasta/q files containing the
+ribosomal and non-ribosomal reads respectively.
 Additionally, a summary file showing the proportion of reads matching to each of the screened ribosomal databases can also be made available.
 Default options have been set to report only the best alignment per read reaching E-value.
 For non ribo-depleted samples (i.e. total RNA), the ribosomal reads obtained from SortMeRNA can be further used in taxonomic/compositional analysis.
