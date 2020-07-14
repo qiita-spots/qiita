@@ -17,6 +17,7 @@ Version 072020
 * Removed legacy future dependencies from Python2.7
 * Users can see the available system plugins, their commands and resource allocations: https://qiita.ucsd.edu/software/
 * Added qiime2.2020.06 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
+* Shogun v1.0.8 for Metagenomic and Metatrascriptomics processing; this new version includes bowtie2 v2.4.1 as aligner and [Web of Life](https://biocore.github.io/wol/) and [rep200](ftp://ftp.ncbi.nlm.nih.gov/refseq/release/).
 
 Version 052020
 --------------

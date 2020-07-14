@@ -19,7 +19,7 @@ separate possible name conflicts while at the same time keeping this separation
 simple.
 
 #. RESOURCE_PARAMS_COMMAND: This is the most common entry as it defines the allocation
-   for an specific command name, like "Shogun v1.0.7" or "Beta diversity (phylogenetic)",
+   for a specific command name, like "Shogun v1.0.7" or "Beta diversity (phylogenetic)",
    for the complete list of commands visit: `Qiita Software <https://qiita.ucsd.edu/software/>`__
 #. COMPLETE_JOBS_RESOURCE_PARAM: When a RESOURCE_PARAMS_COMMAND completes, it will define if the job
    finished successfully and a set of artifact(s) that need to be validated and then added to Qiita -

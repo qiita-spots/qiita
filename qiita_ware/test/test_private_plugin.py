@@ -371,7 +371,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
             'analysis': 3, 'merge_dup_sample_ids': True})
 
         # testing shape and get_resource_allocation_info as
-        # build_analysis_files is an special case
+        # build_analysis_files is a special case
         def _set_allocation(memory):
             with TRN:
                 sql = """UPDATE qiita.processing_job_resource_allocation
