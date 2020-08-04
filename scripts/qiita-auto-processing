@@ -129,6 +129,12 @@ def _check_requirements(requirements, template):
     return satisfied
 
 
+def _check_parameters(jobs, cmd):
+    params = [{k: str(v) for k, v in j.parameters.values.items()
+              if k not in cmd['ignore_parameters']} for j in jobs]
+    return params
+
+
 def _submit_workflows(artifact_process):
     for artifact in artifact_process:
         if artifact['workflow'] is None:
@@ -221,8 +227,7 @@ for pipeline in full_pipelines:
     for a in artifacts_compliant:
         # getting all jobs, includen hiddens, in case the job failed
         jobs = a.jobs(cmd=cmd['command'], show_hidden=True)
-        params = [{k: str(v) for k, v in j.parameters.values.items()
-                   if k not in cmd['ignore_parameters']} for j in jobs]
+        params = _check_parameters(jobs, cmd)
 
         # checking that all required parameters of this command exist
         missing_parameters = []
@@ -238,10 +243,7 @@ for pipeline in full_pipelines:
                 for c in a.children:
                     cpp = c.processing_parameters
                     if cpp.command.name == cmd['command-name']:
-                        cparams = {
-                            k: str(v)
-                            for k, v in cpp.values.items()
-                            if k not in cmd['ignore_parameters']}
+                        cparams = _check_parameters([cpp], cmd)
                         if cparams == p_to_compare:
                             children_compliant.append(c)
         if missing_parameters:
@@ -257,8 +259,7 @@ for pipeline in full_pipelines:
         for cmd_id, cmd in enumerate(children_cmds):
             # getting all jobs, includen hiddens, in case the job failed
             jobs = a.jobs(cmd=cmd['command'], show_hidden=True)
-            params = [{k: str(v) for k, v in j.parameters.values.items()
-                       if k not in cmd['ignore_parameters']} for j in jobs]
+            params = _check_parameters(jobs, cmd)
 
             # checking that all required parameters of this command exist
             missing_parameters = []
