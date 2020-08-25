@@ -17,6 +17,23 @@ compute resources to the global community, alleviating the technical burdens,
 such as familiarity with the command line or access to compute power, that are
 typically limiting for researchers studying microbial ecology.
 
+
+Qiita (pronounced Cheetah) is a web-based platform for meta-analysis of 
+microbiome data, which has an associated ‘living’ (regularly updated and 
+optimised) data-base of open-source and curated ‘omics’ data. The 
+standardization of this data, and its associated meta-data, allow comparison 
+across studies and samples. Qiita therefore allows aggregation and analysis of 
+data from multiple studies, selected by metadata values, providing a means to 
+answer novel questions using existing data. Furthermore, the extensive metadata
+also allows the identification and control of biases which may have been 
+introduced by the method of sample collection and data extraction. To mitigate
+these biases data is generally also uploaded in the rawest form possible. 
+Qiita’s graphical processing interface can be used for both statistical 
+analysis, and the creation of figures, and so an entire (simple) analysis can
+be completed within Qiita.
+
+
+
 Qiita is currently in alpha status. We are very open to community
 contributions and feedback. If you're interested in contributing to Qiita,
 see `CONTRIBUTING.md <https://github.com/biocore/qiita/blob/master/CONTRIBUTING.md>`__.
@@ -85,3 +102,4 @@ future.
    :target: https://codecov.io/gh/biocore/qiita
 .. |Gitter| image:: https://badges.gitter.im/Join%20Chat.svg
    :target: https://gitter.im/biocore/qiita?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
