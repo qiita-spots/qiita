@@ -446,6 +446,10 @@ class ProcessingJobTest(TestCase):
              qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
     def test_complete_success(self):
+        # Note that here we are submitting and creating other multiple jobs;
+        # thus here is the best place to test any intermediary steps/functions
+        # of the job creation, submission, exectution, and completion.
+        #
         # This first part of the test is just to test that by default the
         # naming of the output artifact will be the name of the output
         fd, fp = mkstemp(suffix='_table.biom')
@@ -457,6 +461,10 @@ class ProcessingJobTest(TestCase):
                                             'artifact_type': 'BIOM'}}
         job = _create_job()
         job._set_status('running')
+
+        # here we can test that job.release_validator_job hasn't been created
+        # yet so it has to be None
+        self.assertIsNone(job.release_validator_job)
         job.complete(True, artifacts_data=artifacts_data)
         self._wait_for_job(job)
         # Retrieve the job that is performing the validation:
@@ -464,6 +472,7 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(len(validators), 1)
         # the validator actually runs on the system so it gets an external_id
         # assigned, let's test that is not None
+
         self.assertFalse(validators[0].external_id == 'Not Available')
         # Test the output artifact is going to be named based on the
         # input parameters
@@ -858,8 +867,9 @@ class ProcessingWorkflowTests(TestCase):
             tester._raise_if_not_in_construction()
 
     def test_submit(self):
-        # In order to test a success, we need to actually run the jobs, which
-        # will mean to run split libraries, for example.
+        # The submit method is being tested in test_complete_success via
+        # a job, its release validators and validators submissions.
+        # Leaving this note here in case it's helpful for future development
         pass
 
     def test_from_default_workflow(self):

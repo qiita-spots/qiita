@@ -821,6 +821,31 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [value, self.id])
             qdb.sql_connection.TRN.execute()
 
+    @property
+    def release_validator_job(self):
+        """Retrieves the release validator job
+
+        Returns
+        -------
+        qiita_db.processing_job.ProcessingJob or None
+            The release validator job of this job
+        """
+        rvalidator = None
+        with qdb.sql_connection.TRN:
+            sql = """SELECT processing_job_id
+                     FROM qiita.processing_job
+                     WHERE command_id in (
+                         SELECT command_id
+                         FROM qiita.software_command
+                         WHERE name = 'release_validators')
+                             AND command_parameters->>'job' = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            results = qdb.sql_connection.TRN.execute_fetchflatten()
+            if results:
+                rvalidator = ProcessingJob(results[0])
+
+        return rvalidator
+
     def submit(self, parent_job_id=None, dependent_jobs_list=None):
         """Submits the job to execution
         This method has the ability to submit itself, as well as a list of
