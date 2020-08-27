@@ -467,12 +467,15 @@ class ProcessingJobTest(TestCase):
         self.assertIsNone(job.release_validator_job)
         job.complete(True, artifacts_data=artifacts_data)
         self._wait_for_job(job)
+        # let's check for the job that released the validators
+        self.assertIsNotNone(job.release_validator_job)
+        self.assertEqual(job.release_validator_job.parameters.values['job'],
+                         job.id)
         # Retrieve the job that is performing the validation:
         validators = list(job.validator_jobs)
         self.assertEqual(len(validators), 1)
         # the validator actually runs on the system so it gets an external_id
         # assigned, let's test that is not None
-
         self.assertFalse(validators[0].external_id == 'Not Available')
         # Test the output artifact is going to be named based on the
         # input parameters
