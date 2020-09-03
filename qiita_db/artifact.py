@@ -388,8 +388,7 @@ class Artifact(qdb.base.QiitaObject):
                         (analysis_id, artifact_id)
                      VALUES (%s, %s)"""
             sql_args = [analysis_id, instance.id]
-            qdb.sql_connection.TRN.add(sql, sql_args)
-            qdb.sql_connection.TRN.execute()
+            qdb.sql_connection.encapsulated_query(sql, sql_args)
 
         with qdb.sql_connection.TRN:
             if parents:
@@ -673,12 +672,10 @@ class Artifact(qdb.base.QiitaObject):
         ValueError
             If `value` contains more than 35 chars
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.artifact
-                     SET name = %s
-                     WHERE artifact_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.artifact
+                 SET name = %s
+                 WHERE artifact_id = %s"""
+        qdb.sql_connection.TRN.encapsulated_query(sql, [value, self.id])
 
     @property
     def timestamp(self):
@@ -751,8 +748,7 @@ class Artifact(qdb.base.QiitaObject):
         sql = """UPDATE qiita.artifact
                  SET visibility_id = %s
                  WHERE artifact_id IN %s"""
-        qdb.sql_connection.TRN.add(sql, [vis_id, tuple(ids)])
-        qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.TRN.encapsulated_query(sql, [vis_id, tuple(ids)])
 
     @visibility.setter
     def visibility(self, value):
@@ -989,15 +985,13 @@ class Artifact(qdb.base.QiitaObject):
         QiitaDBOperationNotPermittedError
             If the artifact cannot be submitted to VAMPS
         """
-        with qdb.sql_connection.TRN:
-            if not self.can_be_submitted_to_vamps:
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Artifact %s cannot be submitted to VAMPS" % self.id)
-            sql = """UPDATE qiita.artifact
-                     SET submitted_to_vamps = %s
-                     WHERE artifact_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        if not self.can_be_submitted_to_vamps:
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "Artifact %s cannot be submitted to VAMPS" % self.id)
+        sql = """UPDATE qiita.artifact
+                 SET submitted_to_vamps = %s
+                 WHERE artifact_id = %s"""
+        qdb.sql_connection.TRN.encapsulated_query(sql, [value, self.id])
 
     @property
     def filepaths(self):
