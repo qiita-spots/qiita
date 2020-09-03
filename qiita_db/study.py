@@ -471,13 +471,14 @@ class Study(qdb.base.QiitaObject):
         tags : list of str
             The list of tags to add
         """
-        email = user.email
-        sql = """INSERT INTO qiita.study_tags (email, study_tag)
-                 SELECT %s, %s WHERE NOT EXISTS (
-                    SELECT 1 FROM qiita.study_tags WHERE study_tag = %s)"""
-        sql_args = [[email, tag, tag] for tag in tags]
-
-        qdb.sql_connection.encapsulated_query(sql, sql_args, many=True)
+        with qdb.sql_connection.TRN:
+            email = user.email
+            sql = """INSERT INTO qiita.study_tags (email, study_tag)
+                     SELECT %s, %s WHERE NOT EXISTS (
+                        SELECT 1 FROM qiita.study_tags WHERE study_tag = %s)"""
+            sql_args = [[email, tag, tag] for tag in tags]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
 
 # --- Attributes ---
     @property

@@ -1303,11 +1303,13 @@ class ProcessingJob(qdb.base.QiitaObject):
         validator_jobs : list of ProcessingJob
             The validator_jobs for the current job
         """
-        sql = """INSERT INTO qiita.processing_job_validator
-                    (processing_job_id, validator_id)
-                 VALUES (%s, %s)"""
-        sql_args = [[self.id, j.id] for j in validator_jobs]
-        qdb.sql_connection.encapsulated_query(sql, sql_args, many=True)
+        with qdb.sql_connection.TRN:
+            sql = """INSERT INTO qiita.processing_job_validator
+                        (processing_job_id, validator_id)
+                     VALUES (%s, %s)"""
+            sql_args = [[self.id, j.id] for j in validator_jobs]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
 
     def complete(self, success, artifacts_data=None, error=None):
         """Completes the job, either with a success or error status
