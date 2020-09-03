@@ -483,12 +483,12 @@ PREP_TEMPLATE = (
 
 PY_PATCH = """
 from qiita_db.study import Study
-from qiita_db.sql_connection import encapsulated_query
+from qiita_db.sql_connection import TRN
 study = Study(1)
 
 with TRN:
     sql = "INSERT INTO qiita.patchtest10 (testing) VALUES (%s)"
-    encapsulated_query(sql, [[study.id], [study.id*100]], many=True)
+    TRN(sql, [[study.id], [study.id*100]], many=True)
     TRN.execute()
 """
 
