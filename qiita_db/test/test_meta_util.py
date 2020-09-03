@@ -34,17 +34,13 @@ class MetaUtilTests(TestCase):
 
     def _set_artifact_private(self):
         id_status = qdb.util.convert_to_id('private', 'visibility')
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.single_query(
+            "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
 
     def _set_artifact_public(self):
         id_status = qdb.util.convert_to_id('public', 'visibility')
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.single_query(
+            "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
 
     def test_validate_filepath_access_by_user(self):
         self._set_artifact_private()
@@ -108,10 +104,8 @@ class MetaUtilTests(TestCase):
                 self.assertTrue(obs)
 
         # test in case there is a prep template that failed
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.single_query(
+            "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             obs = qdb.meta_util.validate_filepath_access_by_user(user, i)
             if i < 3:
@@ -467,10 +461,8 @@ class MetaUtilTests(TestCase):
         self.assertEqual(txt_obs, txt_exp)
 
         # returning configuration
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET base_data_dir = '%s'" % obdr)
-            bdr = qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.single_query(
+            "UPDATE settings SET base_data_dir = '%s'" % obdr)
 
         # testing public/default release
         qdb.meta_util.generate_biom_and_metadata_release()
