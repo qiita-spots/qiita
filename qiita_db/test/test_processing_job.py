@@ -488,12 +488,13 @@ class ProcessingJobTest(TestCase):
         # parameter information of the command - since the ones existing
         # in the database currently do not require using any input parameter
         # to name the output artifact
-        sql = """UPDATE qiita.command_parameter
-                 SET name_order = %s
-                 WHERE command_parameter_id = %s"""
-        # Hard-coded values; 19 -> barcode_type, 20 -> max_barcode_errors
-        qdb.sql_connection.encapsulated_query(
-            sql, [[1, 19], [2, 20]], many=True)
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.command_parameter
+                     SET name_order = %s
+                     WHERE command_parameter_id = %s"""
+            # Hard-coded values; 19 -> barcode_type, 20 -> max_barcode_errors
+            qdb.sql_connection.TRN.add(sql, [[1, 19], [2, 20]], many=True)
+            qdb.sql_connection.TRN.execute()
 
         fd, fp = mkstemp(suffix='_table.biom')
         self._clean_up_files.append(fp)
