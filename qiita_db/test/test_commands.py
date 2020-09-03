@@ -488,7 +488,7 @@ study = Study(1)
 
 with TRN:
     sql = "INSERT INTO qiita.patchtest10 (testing) VALUES (%s)"
-    TRN(sql, [[study.id], [study.id*100]], many=True)
+    TRN.add(sql, [[study.id], [study.id*100]], many=True)
     TRN.execute()
 """
 
