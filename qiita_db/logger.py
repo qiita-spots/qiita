@@ -204,4 +204,4 @@ class LogEntry(qdb.base.QiitaObject):
 
         sql = """UPDATE qiita.{} SET information = %s
                  WHERE logging_id = %s""".format(self._table)
-        qdb.sql_connection.TRN.encapsulated_query(sql, [new_info, self.id])
+        qdb.sql_connection.encapsulated_query(sql, [new_info, self.id])

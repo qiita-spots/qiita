@@ -97,7 +97,7 @@ class DownloadLink(qdb.base.QiitaObject):
         now = datetime.now(timezone.utc)
 
         sql = """DELETE FROM qiita.{0} WHERE exp<%s""".format(cls._table)
-        qdb.sql_connection.TRN.encapsulated_query(sql, [now])
+        qdb.sql_connection.encapsulated_query(sql, [now])
 
     @classmethod
     def get(cls, jti):
