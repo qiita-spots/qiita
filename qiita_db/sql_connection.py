@@ -494,7 +494,7 @@ TRNADMIN = Transaction(admin=True)
 
 
 def encapsulated_query(sql, parameters=None):
-    """Opens, adds and executes "SQL" as a single transaction
+    """Opens, adds and executes sql as a single transaction
 
     Parameters
     ----------

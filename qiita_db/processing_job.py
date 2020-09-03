@@ -814,12 +814,10 @@ class ProcessingJob(qdb.base.QiitaObject):
             - If the current status of the job is 'running' and `value` is
             'queued'
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.processing_job
-                     SET external_job_id = %s
-                     WHERE processing_job_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.processing_job
+                 SET external_job_id = %s
+                 WHERE processing_job_id = %s"""
+        qdb.sql_connection.encapsulated_query(sql, [value, self.id])
 
     @property
     def release_validator_job(self):
@@ -1305,13 +1303,11 @@ class ProcessingJob(qdb.base.QiitaObject):
         validator_jobs : list of ProcessingJob
             The validator_jobs for the current job
         """
-        with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.processing_job_validator
-                        (processing_job_id, validator_id)
-                     VALUES (%s, %s)"""
-            sql_args = [[self.id, j.id] for j in validator_jobs]
-            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-            qdb.sql_connection.TRN.execute()
+        sql = """INSERT INTO qiita.processing_job_validator
+                    (processing_job_id, validator_id)
+                 VALUES (%s, %s)"""
+        sql_args = [[self.id, j.id] for j in validator_jobs]
+        qdb.sql_connection.encapsulated_query(sql, sql_args, many=True)
 
     def complete(self, success, artifacts_data=None, error=None):
         """Completes the job, either with a success or error status
@@ -1475,16 +1471,14 @@ class ProcessingJob(qdb.base.QiitaObject):
         qiita_db.exceptions.QiitaDBOperationNotPermittedError
             If the status of the job is not 'running'
         """
-        with qdb.sql_connection.TRN:
-            if self.status != 'running':
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Cannot change the step of a job whose status is not "
-                    "'running'")
-            sql = """UPDATE qiita.processing_job
-                     SET step = %s
-                     WHERE processing_job_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        if self.status != 'running':
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "Cannot change the step of a job whose status is not "
+                "'running'")
+        sql = """UPDATE qiita.processing_job
+                 SET step = %s
+                 WHERE processing_job_id = %s"""
+        qdb.sql_connection.encapsulated_query(sql, [value, self.id])
 
     @property
     def children(self):

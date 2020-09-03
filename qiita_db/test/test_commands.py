@@ -276,10 +276,8 @@ class TestPatch(TestCase):
     def test_unpatched(self):
         """Test patching from unpatched state"""
         # Reset the settings table to the unpatched state
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET current_patch = 'unpatched'")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.encapsulated_query(
+            "UPDATE settings SET current_patch = 'unpatched'")
 
         self._assert_current_patch('unpatched')
         qdb.environment_manager.patch(self.patches_dir)
@@ -289,10 +287,8 @@ class TestPatch(TestCase):
 
     def test_skip_patch(self):
         """Test patching from a patched state"""
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET current_patch = '2.sql'")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.encapsulated_query(
+            "UPDATE settings SET current_patch = '2.sql'")
         self._assert_current_patch('2.sql')
 
         # If it tried to apply patch 2.sql again, this will error
@@ -306,10 +302,8 @@ class TestPatch(TestCase):
 
     def test_nonexistent_patch(self):
         """Test case where current patch does not exist"""
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET current_patch = 'nope.sql'")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.encapsulated_query(
+            "UPDATE settings SET current_patch = 'nope.sql'")
         self._assert_current_patch('nope.sql')
 
         with self.assertRaises(RuntimeError):
@@ -322,10 +316,8 @@ class TestPatch(TestCase):
             f.write(PY_PATCH)
 
         # Reset the settings table to the unpatched state
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET current_patch = 'unpatched'")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.encapsulated_query(
+            "UPDATE settings SET current_patch = 'unpatched'")
 
         self._assert_current_patch('unpatched')
 
@@ -491,12 +483,12 @@ PREP_TEMPLATE = (
 
 PY_PATCH = """
 from qiita_db.study import Study
-from qiita_db.sql_connection import TRN
+from qiita_db.sql_connection import encapsulated_query
 study = Study(1)
 
 with TRN:
     sql = "INSERT INTO qiita.patchtest10 (testing) VALUES (%s)"
-    TRN.add(sql, [[study.id], [study.id*100]], many=True)
+    encapsulated_query(sql, [[study.id], [study.id*100]], many=True)
     TRN.execute()
 """
 

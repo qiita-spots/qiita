@@ -28,10 +28,9 @@ class ArchiveTest(TestCase):
 
         # 7 - to test error due to not filepath biom
         aid = 7
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add("DELETE FROM qiita.artifact_filepath "
-                                       "WHERE artifact_id = %d" % aid)
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.encapsulated_query(
+            "DELETE FROM qiita.artifact_filepath "
+            "WHERE artifact_id = %d" % aid)
         with self.assertRaises(ValueError) as err:
             qdb.archive.Archive.insert_from_artifact(
                 qdb.artifact.Artifact(aid), {})

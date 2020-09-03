@@ -555,12 +555,10 @@ class TestAnalysis(TestCase):
         # convert to json representation and store in PostgreSQL
         results = dumps(results)
 
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software_command
-                     SET post_processing_cmd = %s
-                     WHERE command_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [results, cmd_id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software_command
+                 SET post_processing_cmd = %s
+                 WHERE command_id = %s"""
+        qdb.sql_connection.encapsulated_query(sql, [results, cmd_id])
 
         # create a sample analysis and run build_files on it.
         analysis = self._create_analyses_with_samples()
@@ -581,12 +579,10 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, exp)
 
         # cleanup (assume command was NULL previously)
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software_command
-                     SET post_processing_cmd = NULL
-                     WHERE command_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [cmd_id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software_command
+                 SET post_processing_cmd = NULL
+                 WHERE command_id = %s"""
+        qdb.sql_connection.encapsulated_query(sql, [cmd_id])
 
     def test_build_files_merge_duplicated_sample_ids(self):
         user = qdb.user.User("demo@microbio.me")

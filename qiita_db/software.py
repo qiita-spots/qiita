@@ -632,12 +632,10 @@ class Command(qdb.base.QiitaObject):
 
     def activate(self):
         """Activates the command"""
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software_command
-                     SET active = %s
-                     WHERE command_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [True, self.id])
-            return qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software_command
+                 SET active = %s
+                 WHERE command_id = %s"""
+        qdb.sql_connection.encapsulated_query(sql, [True, self.id])
 
     @property
     def analysis_only(self):
@@ -1277,11 +1275,9 @@ class Software(qdb.base.QiitaObject):
         deprecate : bool
             New software deprecate value
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software SET deprecated = %s
-                     WHERE software_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [deprecate, self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software SET deprecated = %s
+                 WHERE software_id = %s"""
+        qdb.sql_connection.encapsulated_query(sql, [deprecate, self._id])
 
     @property
     def active(self):
@@ -1299,12 +1295,10 @@ class Software(qdb.base.QiitaObject):
 
     def activate(self):
         """Activates the plugin"""
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software
-                     SET active = %s
-                     WHERE software_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [True, self.id])
-            return qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software
+                 SET active = %s
+                 WHERE software_id = %s"""
+        qdb.sql_connection.encapsulated_query(sql, [True, self.id])
 
     @property
     def client_id(self):

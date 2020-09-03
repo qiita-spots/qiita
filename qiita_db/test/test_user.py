@@ -295,9 +295,7 @@ class UserTest(TestCase):
                         user_verify_code='verifycode',
                         pass_reset_code='resetcode'
                     WHERE email=%s"""
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(sql, [email])
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.encapsulated_query(sql, [email])
 
         self.assertFalse(
             qdb.user.User.verify_code(email, 'wrongcode', 'create'))

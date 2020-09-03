@@ -488,13 +488,12 @@ class ProcessingJobTest(TestCase):
         # parameter information of the command - since the ones existing
         # in the database currently do not require using any input parameter
         # to name the output artifact
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.command_parameter
-                     SET name_order = %s
-                     WHERE command_parameter_id = %s"""
-            # Hard-coded values; 19 -> barcode_type, 20 -> max_barcode_errors
-            qdb.sql_connection.TRN.add(sql, [[1, 19], [2, 20]], many=True)
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.command_parameter
+                 SET name_order = %s
+                 WHERE command_parameter_id = %s"""
+        # Hard-coded values; 19 -> barcode_type, 20 -> max_barcode_errors
+        qdb.sql_connection.encapsulated_query(
+            sql, [[1, 19], [2, 20]], many=True)
 
         fd, fp = mkstemp(suffix='_table.biom')
         self._clean_up_files.append(fp)
@@ -792,13 +791,11 @@ class ProcessingJobTest(TestCase):
 
         # helper to set memory allocations easier
         def _set_allocation(memory):
-            with qdb.sql_connection.TRN:
-                sql = """UPDATE qiita.processing_job_resource_allocation
-                         SET allocation = '{0}'
-                         WHERE name = 'Split libraries FASTQ'""".format(
-                            '-q qiita -l mem=%s' % memory)
-                qdb.sql_connection.TRN.add(sql)
-                qdb.sql_connection.TRN.execute()
+            sql = """UPDATE qiita.processing_job_resource_allocation
+                     SET allocation = '{0}'
+                     WHERE name = 'Split libraries FASTQ'""".format(
+                        '-q qiita -l mem=%s' % memory)
+            qdb.sql_connection.encapsulated_query(sql)
 
         # let's start with something simple, samples*1000
         #                                         27*1000 ~ 27000

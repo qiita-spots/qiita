@@ -471,15 +471,13 @@ class Study(qdb.base.QiitaObject):
         tags : list of str
             The list of tags to add
         """
-        with qdb.sql_connection.TRN:
-            email = user.email
-            sql = """INSERT INTO qiita.study_tags (email, study_tag)
-                     SELECT %s, %s WHERE NOT EXISTS (
-                        SELECT 1 FROM qiita.study_tags WHERE study_tag = %s)"""
-            sql_args = [[email, tag, tag] for tag in tags]
+        email = user.email
+        sql = """INSERT INTO qiita.study_tags (email, study_tag)
+                 SELECT %s, %s WHERE NOT EXISTS (
+                    SELECT 1 FROM qiita.study_tags WHERE study_tag = %s)"""
+        sql_args = [[email, tag, tag] for tag in tags]
 
-            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.encapsulated_query(sql, sql_args, many=True)
 
 # --- Attributes ---
     @property
@@ -506,11 +504,9 @@ class Study(qdb.base.QiitaObject):
         title : str
             The study title
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{0} SET study_title = %s
-                     WHERE study_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [title, self._id])
-            return qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0} SET study_title = %s
+                 WHERE study_id = %s""".format(self._table)
+        qdb.sql_connection.encapsulated_query(sql, [title, self._id])
 
     @property
     def notes(self):
@@ -536,11 +532,9 @@ class Study(qdb.base.QiitaObject):
         notes : str
             The study notes
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{0} SET notes = %s
-                     WHERE study_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [notes, self._id])
-            return qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0} SET notes = %s
+                 WHERE study_id = %s""".format(self._table)
+        qdb.sql_connection.encapsulated_query(sql, [notes, self._id])
 
     @property
     def public_raw_download(self):
@@ -566,11 +560,10 @@ class Study(qdb.base.QiitaObject):
         public_raw_download : bool
             The study public_raw_download
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{0} SET public_raw_download = %s
-                     WHERE study_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [public_raw_download, self._id])
-            return qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0} SET public_raw_download = %s
+                 WHERE study_id = %s""".format(self._table)
+        qdb.sql_connection.encapsulated_query(
+            sql, [public_raw_download, self._id])
 
     @property
     def info(self):
@@ -772,13 +765,10 @@ class Study(qdb.base.QiitaObject):
                                                         " contain unique "
                                                         "values.")
 
-        with qdb.sql_connection.TRN:
-            # Set the new ones
-            sql = """UPDATE qiita.study SET
-                     specimen_id_column = %s
-                     WHERE study_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.study SET
+                 specimen_id_column = %s
+                 WHERE study_id = %s"""
+        qdb.sql_connection.encapsulated_query(sql, [value, self._id])
 
     @property
     def investigation(self):
@@ -965,16 +955,14 @@ class Study(qdb.base.QiitaObject):
         QiitDBError
             If the study already has an EBI study accession
         """
-        with qdb.sql_connection.TRN:
-            if self.ebi_study_accession is not None:
-                raise qdb.exceptions.QiitaDBError(
-                    "Study %s already has an EBI study accession"
-                    % self.id)
-            sql = """UPDATE qiita.{}
-                     SET ebi_study_accession = %s
-                     WHERE study_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        if self.ebi_study_accession is not None:
+            raise qdb.exceptions.QiitaDBError(
+                "Study %s already has an EBI study accession"
+                % self.id)
+        sql = """UPDATE qiita.{}
+                 SET ebi_study_accession = %s
+                 WHERE study_id = %s""".format(self._table)
+        qdb.sql_connection.encapsulated_query(sql, [value, self.id])
 
     def _ebi_submission_jobs(self):
         """Helper code to avoid duplication"""
@@ -1215,18 +1203,16 @@ class Study(qdb.base.QiitaObject):
         user: User object
             The user to share the study with
         """
-        with qdb.sql_connection.TRN:
-            # Make sure the study is not already shared with the given user
-            if user in self.shared_with:
-                return
-            # Do not allow the study to be shared with the owner
-            if user == self.owner:
-                return
+        # Make sure the study is not already shared with the given user
+        if user in self.shared_with:
+            return
+        # Do not allow the study to be shared with the owner
+        if user == self.owner:
+            return
 
-            sql = """INSERT INTO qiita.study_users (study_id, email)
-                     VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [self._id, user.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """INSERT INTO qiita.study_users (study_id, email)
+                 VALUES (%s, %s)"""
+        qdb.sql_connection.encapsulated_query(sql, [self._id, user.id])
 
     def unshare(self, user):
         """Unshare the study with another user
@@ -1236,11 +1222,9 @@ class Study(qdb.base.QiitaObject):
         user: User object
             The user to unshare the study with
         """
-        with qdb.sql_connection.TRN:
-            sql = """DELETE FROM qiita.study_users
-                     WHERE study_id = %s AND email = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id, user.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """DELETE FROM qiita.study_users
+                 WHERE study_id = %s AND email = %s"""
+        qdb.sql_connection.encapsulated_query(sql, [self._id, user.id])
 
     def update_tags(self, user, tags):
         """Sets the tags of the study
@@ -1550,11 +1534,9 @@ class StudyPerson(qdb.base.QiitaObject):
         value : str
             New address for person
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{0} SET address = %s
-                     WHERE study_person_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [value, self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0} SET address = %s
+                 WHERE study_person_id = %s""".format(self._table)
+        qdb.sql_connection.encapsulated_query(sql, [value, self._id])
 
     @property
     def phone(self):
@@ -1580,8 +1562,6 @@ class StudyPerson(qdb.base.QiitaObject):
         value : str
             New phone number for person
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{0} SET phone = %s
-                     WHERE study_person_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [value, self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0} SET phone = %s
+                 WHERE study_person_id = %s""".format(self._table)
+        qdb.sql_connection.encapsulated_query(sql, [value, self._id])
