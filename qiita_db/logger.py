@@ -181,12 +181,9 @@ class LogEntry(qdb.base.QiitaObject):
     def clear_info(self):
         """Resets the list of info dicts to be an empty list
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{} SET information = %s
-                     WHERE logging_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [dumps([]), self.id])
-
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{} SET information = %s
+                 WHERE logging_id = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(sql, [dumps([]), self.id])
 
     def add_info(self, info):
         """Adds new information to the info associated with this LogEntry
@@ -201,12 +198,10 @@ class LogEntry(qdb.base.QiitaObject):
         - When `info` is added, keys can be of any type, but upon retrieval,
           they will be of type str
         """
-        with qdb.sql_connection.TRN:
-            current_info = self.info
-            current_info.append(info)
-            new_info = dumps(current_info)
+        current_info = self.info
+        current_info.append(info)
+        new_info = dumps(current_info)
 
-            sql = """UPDATE qiita.{} SET information = %s
-                     WHERE logging_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [new_info, self.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{} SET information = %s
+                 WHERE logging_id = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(sql, [new_info, self.id])

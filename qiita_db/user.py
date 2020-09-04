@@ -551,13 +551,11 @@ class User(qdb.base.QiitaObject):
 
     def generate_reset_code(self):
         """Generates a password reset code for user"""
-        with qdb.sql_connection.TRN:
-            reset_code = qdb.util.create_rand_string(20, punct=False)
-            sql = """UPDATE qiita.{0}
-                     SET pass_reset_code = %s, pass_reset_timestamp = NOW()
-                     WHERE email = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [reset_code, self._id])
-            qdb.sql_connection.TRN.execute()
+        reset_code = qdb.util.create_rand_string(20, punct=False)
+        sql = """UPDATE qiita.{0}
+                 SET pass_reset_code = %s, pass_reset_timestamp = NOW()
+                 WHERE email = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(sql, [reset_code, self._id])
 
     def change_forgot_password(self, code, newpass):
         """Changes the password if the code is valid
@@ -581,16 +579,14 @@ class User(qdb.base.QiitaObject):
             return False
 
     def _change_pass(self, newpass):
-        with qdb.sql_connection.TRN:
-            if not validate_password(newpass):
-                raise IncorrectPasswordError("Bad password given!")
+        if not validate_password(newpass):
+            raise IncorrectPasswordError("Bad password given!")
 
-            sql = """UPDATE qiita.{0}
-                     SET password=%s, pass_reset_code = NULL
-                     WHERE email = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(
-                sql, [qdb.util.hash_password(newpass), self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0}
+                 SET password=%s, pass_reset_code = NULL
+                 WHERE email = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(
+            sql, [qdb.util.hash_password(newpass), self._id])
 
     def messages(self, count=None):
         """Return messages in user's queue

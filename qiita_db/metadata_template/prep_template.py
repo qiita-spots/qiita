@@ -453,14 +453,13 @@ class PrepTemplate(MetadataTemplate):
         QiitaDBColumnError
             If the investigation type is not a valid ENA ontology
         """
-        with qdb.sql_connection.TRN:
-            if investigation_type is not None:
-                self.validate_investigation_type(investigation_type)
+        if investigation_type is not None:
+            self.validate_investigation_type(investigation_type)
 
-            sql = """UPDATE qiita.prep_template SET investigation_type = %s
-                     WHERE {0} = %s""".format(self._id_column)
-            qdb.sql_connection.TRN.add(sql, [investigation_type, self.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.prep_template SET investigation_type = %s
+                 WHERE {0} = %s""".format(self._id_column)
+        qdb.sql_connection.perform_as_transaction(
+            sql, [investigation_type, self.id])
 
     @property
     def study_id(self):
@@ -494,11 +493,9 @@ class PrepTemplate(MetadataTemplate):
         deprecated : bool
             If the prep info file is deprecated
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.prep_template SET deprecated = %s
-                     WHERE {0} = %s""".format(self._id_column)
-            qdb.sql_connection.TRN.add(sql, [deprecated, self.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.prep_template SET deprecated = %s
+                 WHERE {0} = %s""".format(self._id_column)
+        qdb.sql_connection.perform_as_transaction(sql, [deprecated, self.id])
 
     def generate_files(self, samples=None, columns=None):
         r"""Generates all the files that contain data from this template
@@ -761,12 +758,10 @@ class PrepTemplate(MetadataTemplate):
     @name.setter
     def name(self, value):
         """Changes the name of the prep template"""
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.prep_template
-                     SET name = %s
-                     WHERE prep_template_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.prep_template
+                 SET name = %s
+                 WHERE prep_template_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
     def to_dataframe(self, add_ebi_accessions=False):
         """Returns the metadata template as a dataframe

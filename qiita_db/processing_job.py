@@ -814,12 +814,10 @@ class ProcessingJob(qdb.base.QiitaObject):
             - If the current status of the job is 'running' and `value` is
             'queued'
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.processing_job
-                     SET external_job_id = %s
-                     WHERE processing_job_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.processing_job
+                 SET external_job_id = %s
+                 WHERE processing_job_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
     @property
     def release_validator_job(self):
@@ -1475,16 +1473,14 @@ class ProcessingJob(qdb.base.QiitaObject):
         qiita_db.exceptions.QiitaDBOperationNotPermittedError
             If the status of the job is not 'running'
         """
-        with qdb.sql_connection.TRN:
-            if self.status != 'running':
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Cannot change the step of a job whose status is not "
-                    "'running'")
-            sql = """UPDATE qiita.processing_job
-                     SET step = %s
-                     WHERE processing_job_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        if self.status != 'running':
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "Cannot change the step of a job whose status is not "
+                "'running'")
+        sql = """UPDATE qiita.processing_job
+                 SET step = %s
+                 WHERE processing_job_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
     @property
     def children(self):

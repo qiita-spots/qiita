@@ -18,10 +18,9 @@ class TestOntology(TestCase):
         self.ontology = qdb.ontology.Ontology(999999999)
 
     def _remove_term(self, term):
-        with qdb.sql_connection.TRN:
-            sql = "DELETE FROM qiita.term WHERE ontology_id = %s AND term = %s"
-            qdb.sql_connection.TRN.add(sql, [self.ontology.id, term])
-            qdb.sql_connection.TRN.execute()
+        sql = "DELETE FROM qiita.term WHERE ontology_id = %s AND term = %s"
+        qdb.sql_connection.perform_as_transaction(
+            sql, [self.ontology.id, term])
 
     def testConvertToID(self):
         self.assertEqual(qdb.util.convert_to_id('ENA', 'ontology'), 999999999)
