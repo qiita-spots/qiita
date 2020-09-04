@@ -767,3 +767,20 @@ class PrepTemplate(MetadataTemplate):
                      WHERE prep_template_id = %s"""
             qdb.sql_connection.TRN.add(sql, [value, self.id])
             qdb.sql_connection.TRN.execute()
+
+    def to_dataframe(self, add_ebi_accessions=False):
+        """Returns the metadata template as a dataframe
+
+        Parameters
+        ----------
+        add_ebi_accessions : bool, optional
+            If this should add the ebi accessions
+        """
+        df = self._common_to_dataframe_steps()
+
+        if add_ebi_accessions:
+            accessions = self.ebi_experiment_accessions
+            df['qiita_ebi_experiment_accessions'] = df.index.map(
+                lambda sid: accessions[sid])
+
+        return df
