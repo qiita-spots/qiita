@@ -1157,8 +1157,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             df.to_csv(fp, index_label='sample_name', na_rep="", sep='\t',
                       encoding='utf-8')
 
-    def to_dataframe(self):
-        """Returns the metadata template as a dataframe
+    def _common_to_dataframe_steps(self):
+        """Perform the common to_dataframe steps
 
         Returns
         -------

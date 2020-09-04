@@ -685,6 +685,12 @@ class TestPrepTemplate(TestCase):
             u'illumina_technology', u'sample_center', u'pcr_primers',
             u'study_center', 'qiita_prep_id'})
 
+        # test with add_ebi_accessions as True
+        obs = self.tester.to_dataframe(True)
+        self.assertEqual(
+            self.tester.ebi_experiment_accessions,
+            obs.qiita_ebi_experiment_accessions.to_dict())
+
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
         """

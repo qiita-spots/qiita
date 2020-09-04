@@ -762,3 +762,20 @@ class PrepTemplate(MetadataTemplate):
                  SET name = %s
                  WHERE prep_template_id = %s"""
         qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
+
+    def to_dataframe(self, add_ebi_accessions=False):
+        """Returns the metadata template as a dataframe
+
+        Parameters
+        ----------
+        add_ebi_accessions : bool, optional
+            If this should add the ebi accessions
+        """
+        df = self._common_to_dataframe_steps()
+
+        if add_ebi_accessions:
+            accessions = self.ebi_experiment_accessions
+            df['qiita_ebi_experiment_accessions'] = df.index.map(
+                lambda sid: accessions[sid])
+
+        return df
