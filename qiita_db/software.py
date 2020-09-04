@@ -622,11 +622,26 @@ class Command(qdb.base.QiitaObject):
         -------
         bool
             Whether the command is active or not
+
+        Notes
+        -----
+        This method differentiates between commands based on analysis_only. The
+        commands that are not for analysis (processing) will return as active
+        if they have the same name than a command that is active; this helps
+        for situations where the processing plugins are updated but some
+        commands didn't change its version.
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT active
-                     FROM qiita.software_command
-                     WHERE command_id = %s"""
+            if self.analysis_only:
+                sql = """SELECT active
+                         FROM qiita.software_command
+                         WHERE command_id = %s"""
+            else:
+                sql = """SELECT EXISTS (
+                            SELECT active FROM qiita.software_command
+                            WHERE name IN (
+                                SELECT name FROM qiita.software_command
+                                WHERE command_id = %s))"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
