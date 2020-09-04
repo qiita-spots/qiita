@@ -340,6 +340,14 @@ class APIArtifactHandlerTest(OauthTestingBase):
         while job.status not in ('error', 'success'):
             sleep(0.5)
 
+        print ('--------------------')
+        print ('--------------------')
+        print (job.status)
+        print (job.log.msg)
+        print ('--------------------')
+        print ('--------------------')
+        print ('--------------------')
+
         original_job = qdb.processing_job.ProcessingJob(data['job_id'])
         self.assertEqual(len(list(original_job.children)), 0)
 
