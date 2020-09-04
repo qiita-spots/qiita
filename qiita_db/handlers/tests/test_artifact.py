@@ -288,7 +288,7 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
 
 
-class APIArtifactHandlerTest(OauthTestingBase):
+class APIArtifactHandlerTests(OauthTestingBase):
     def setUp(self):
         super(APIArtifactHandlerTest, self).setUp()
         self._clean_up_files = []
@@ -340,16 +340,16 @@ class APIArtifactHandlerTest(OauthTestingBase):
         while job.status not in ('error', 'success'):
             sleep(0.5)
 
-        print ('--------------------')
-        print ('--------------------')
-        print (job.status)
-        print (job.log.msg)
-        print ('--------------------')
-        print ('--------------------')
-        print ('--------------------')
+        print('--------------------')
+        print('--------------------')
+        print(job.status)
+        print(job.log.msg)
+        print('--------------------')
+        print('--------------------')
+        print('--------------------')
 
         original_job = qdb.processing_job.ProcessingJob(data['job_id'])
-        self.assertEqual(len(list(original_job.children)), 0)
+        self.assertEqual(len(list(original_job.children)), 1)
 
 
 if __name__ == '__main__':
