@@ -8,7 +8,7 @@
 
 from tornado.web import HTTPError
 from collections import defaultdict
-from json import loads
+from json import loads, dumps
 
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
@@ -233,4 +233,49 @@ class ArtifactTypeHandler(OauthBaseHandler):
             # to be idempotent.
             self.set_status(200, reason="Artifact type already exists")
 
+        self.finish()
+
+
+class APIArtifactHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def post(self):
+        job_id = self.get_argument('job_id', None)
+        prep_id = self.get_argument('prep_id', None)
+        atype = self.get_argument('artifact_type')
+        aname = self.get_argument('command_artifact_name')
+        filepaths = self.get_argument('filepaths')
+
+        if job_id is None and prep_id is None:
+            raise HTTPError(
+                400, reason='You need to specify a job_id or a prep_id')
+        if job_id is not None and prep_id is not None:
+            raise HTTPError(
+                400, reason='You need to specify only a job_id or a prep_id')
+
+        if job_id is not None:
+            PJ = qdb.processing_job.ProcessingJob
+            TN = qdb.sql_connection.TRN
+            job = PJ(job_id)
+            with TN:
+                sql = """SELECT command_output_id
+                         FROM qiita.command_output
+                         WHERE name = %s AND command_id = %s"""
+                TN.add(sql, [aname, job.command.id])
+                cmd_out_id = TN.execute_fetchlast()
+            provenance = {'job': job_id,
+                          'cmd_out_id': cmd_out_id,
+                          'name': aname}
+            values = {
+                'files': dumps(filepaths), 'artifact_type': atype,
+                'template': prep_id, 'provenance': dumps(provenance),
+                # leaving here in case we need to add a way to add an artifact
+                # directly to an analysis, for more information see
+                # ProcessingJob._complete_artifact_transformation
+                'analysis': None}
+            cmd = qdb.software.Command.get_validator(atype)
+            params = qdb.software.Parameters.load(cmd, values_dict=values)
+            new_job = PJ.create(job.user, params, True)
+            new_job.submit()
+
+        self.write(new_job.id)
         self.finish()

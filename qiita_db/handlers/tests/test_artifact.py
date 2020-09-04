@@ -7,13 +7,13 @@
 # -----------------------------------------------------------------------------
 
 from unittest import main, TestCase
-from json import loads
+from json import loads, dumps
 from functools import partial
 from os.path import join, exists, isfile
 from os import close, remove
 from shutil import rmtree
 from tempfile import mkstemp, mkdtemp
-from json import dumps
+from time import sleep
 
 from tornado.web import HTTPError
 import pandas as pd
@@ -286,6 +286,62 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
         obs = self.post('/qiita_db/artifacts/types/', headers=self.header,
                         data=data)
         self.assertEqual(obs.code, 200)
+
+
+class APIArtifactHandlerTest(OauthTestingBase):
+    def setUp(self):
+        super(APIArtifactHandlerTest, self).setUp()
+        self._clean_up_files = []
+
+    def tearDown(self):
+        super(APIArtifactHandlerTest, self).tearDown()
+
+        for f in self._clean_up_files:
+            if exists(f):
+                remove(f)
+
+    def test_post(self):
+        # no header
+        obs = self.post('/qiita_db/artifact/', data={})
+        self.assertEqual(obs.code, 400)
+
+        fd, fp = mkstemp(suffix='_table.biom')
+        close(fd)
+        with biom_open(fp, 'w') as f:
+            et.to_hdf5(f, "test")
+        self._clean_up_files.append(fp)
+
+        # no job_id or prep_id
+        data = {'artifact_type': 'BIOM',
+                'command_artifact_name': 'OTU table',
+                'filepaths': dumps([(fp, 'biom')])}
+
+        obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
+        self.assertEqual(obs.code, 400)
+        self.assertIn(
+            'You need to specify a job_id or a prep_id', str(obs.error))
+
+        # both job_id and prep_id defined
+        data['job_id'] = '80bf25f3-5f1d-4e10-9369-315e4244f6d5'
+        data['prep_id'] = 'prep_id'
+        obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
+        self.assertEqual(obs.code, 400)
+        self.assertIn(
+            'You need to specify only a job_id or a prep_id', str(obs.error))
+
+        # now let's tests success
+        original_job = qdb.processing_job.ProcessingJob(data['job_id'])
+        self.assertEqual(len(list(original_job.children)), 0)
+
+        del data['prep_id']
+        obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
+        jid = obs.body.decode("utf-8")
+        job = qdb.processing_job.ProcessingJob(jid)
+        while job.status not in ('error', 'success'):
+            sleep(0.5)
+
+        original_job = qdb.processing_job.ProcessingJob(data['job_id'])
+        self.assertEqual(len(list(original_job.children)), 0)
 
 
 if __name__ == '__main__':
