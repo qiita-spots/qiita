@@ -641,7 +641,7 @@ class Command(qdb.base.QiitaObject):
                             SELECT active FROM qiita.software_command
                             WHERE name IN (
                                 SELECT name FROM qiita.software_command
-                                WHERE command_id = %s))"""
+                                WHERE command_id = %s) AND active = true)"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
