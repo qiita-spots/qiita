@@ -276,7 +276,7 @@ class TestPatch(TestCase):
     def test_unpatched(self):
         """Test patching from unpatched state"""
         # Reset the settings table to the unpatched state
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE settings SET current_patch = 'unpatched'")
 
         self._assert_current_patch('unpatched')
@@ -287,7 +287,7 @@ class TestPatch(TestCase):
 
     def test_skip_patch(self):
         """Test patching from a patched state"""
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE settings SET current_patch = '2.sql'")
         self._assert_current_patch('2.sql')
 
@@ -302,7 +302,7 @@ class TestPatch(TestCase):
 
     def test_nonexistent_patch(self):
         """Test case where current patch does not exist"""
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE settings SET current_patch = 'nope.sql'")
         self._assert_current_patch('nope.sql')
 
@@ -316,7 +316,7 @@ class TestPatch(TestCase):
             f.write(PY_PATCH)
 
         # Reset the settings table to the unpatched state
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE settings SET current_patch = 'unpatched'")
 
         self._assert_current_patch('unpatched')

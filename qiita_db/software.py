@@ -635,7 +635,7 @@ class Command(qdb.base.QiitaObject):
         sql = """UPDATE qiita.software_command
                  SET active = %s
                  WHERE command_id = %s"""
-        qdb.sql_connection.encapsulated_query(sql, [True, self.id])
+        qdb.sql_connection.perform_as_transaction(sql, [True, self.id])
 
     @property
     def analysis_only(self):
@@ -1277,7 +1277,7 @@ class Software(qdb.base.QiitaObject):
         """
         sql = """UPDATE qiita.software SET deprecated = %s
                  WHERE software_id = %s"""
-        qdb.sql_connection.encapsulated_query(sql, [deprecate, self._id])
+        qdb.sql_connection.perform_as_transaction(sql, [deprecate, self._id])
 
     @property
     def active(self):
@@ -1298,7 +1298,7 @@ class Software(qdb.base.QiitaObject):
         sql = """UPDATE qiita.software
                  SET active = %s
                  WHERE software_id = %s"""
-        qdb.sql_connection.encapsulated_query(sql, [True, self.id])
+        qdb.sql_connection.perform_as_transaction(sql, [True, self.id])
 
     @property
     def client_id(self):

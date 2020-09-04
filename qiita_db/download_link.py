@@ -73,7 +73,7 @@ class DownloadLink(qdb.base.QiitaObject):
             The jwt token identifier
         """
         sql = """DELETE FROM qiita.{0} WHERE jti=%s""".format(cls._table)
-        qdb.sql_connection.encapsulated_query(sql, [jti])
+        qdb.sql_connection.perform_as_transaction(sql, [jti])
 
     @classmethod
     def exists(cls, jti):
@@ -97,7 +97,7 @@ class DownloadLink(qdb.base.QiitaObject):
         now = datetime.now(timezone.utc)
 
         sql = """DELETE FROM qiita.{0} WHERE exp<%s""".format(cls._table)
-        qdb.sql_connection.encapsulated_query(sql, [now])
+        qdb.sql_connection.perform_as_transaction(sql, [now])
 
     @classmethod
     def get(cls, jti):

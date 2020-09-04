@@ -817,7 +817,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         sql = """UPDATE qiita.processing_job
                  SET external_job_id = %s
                  WHERE processing_job_id = %s"""
-        qdb.sql_connection.encapsulated_query(sql, [value, self.id])
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
     @property
     def release_validator_job(self):
@@ -1480,7 +1480,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         sql = """UPDATE qiita.processing_job
                  SET step = %s
                  WHERE processing_job_id = %s"""
-        qdb.sql_connection.encapsulated_query(sql, [value, self.id])
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
     @property
     def children(self):

@@ -289,7 +289,7 @@ class BaseSample(qdb.base.QiitaObject):
                  SET sample_values = sample_values || %s
                  WHERE sample_id = %s""".format(self._dynamic_table)
 
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             sql, [dumps({column: value}), self.id])
 
     def __setitem__(self, column, value):

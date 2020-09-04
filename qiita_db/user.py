@@ -555,7 +555,7 @@ class User(qdb.base.QiitaObject):
         sql = """UPDATE qiita.{0}
                  SET pass_reset_code = %s, pass_reset_timestamp = NOW()
                  WHERE email = %s""".format(self._table)
-        qdb.sql_connection.encapsulated_query(sql, [reset_code, self._id])
+        qdb.sql_connection.perform_as_transaction(sql, [reset_code, self._id])
 
     def change_forgot_password(self, code, newpass):
         """Changes the password if the code is valid
@@ -585,7 +585,7 @@ class User(qdb.base.QiitaObject):
         sql = """UPDATE qiita.{0}
                  SET password=%s, pass_reset_code = NULL
                  WHERE email = %s""".format(self._table)
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             sql, [qdb.util.hash_password(newpass), self._id])
 
     def messages(self, count=None):

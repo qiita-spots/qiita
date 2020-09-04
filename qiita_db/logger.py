@@ -183,7 +183,7 @@ class LogEntry(qdb.base.QiitaObject):
         """
         sql = """UPDATE qiita.{} SET information = %s
                  WHERE logging_id = %s""".format(self._table)
-        qdb.sql_connection.encapsulated_query(sql, [dumps([]), self.id])
+        qdb.sql_connection.perform_as_transaction(sql, [dumps([]), self.id])
 
     def add_info(self, info):
         """Adds new information to the info associated with this LogEntry
@@ -204,4 +204,4 @@ class LogEntry(qdb.base.QiitaObject):
 
         sql = """UPDATE qiita.{} SET information = %s
                  WHERE logging_id = %s""".format(self._table)
-        qdb.sql_connection.encapsulated_query(sql, [new_info, self.id])
+        qdb.sql_connection.perform_as_transaction(sql, [new_info, self.id])

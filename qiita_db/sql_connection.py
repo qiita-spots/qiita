@@ -493,7 +493,7 @@ TRN = Transaction()
 TRNADMIN = Transaction(admin=True)
 
 
-def encapsulated_query(sql, parameters=None):
+def perform_as_transaction(sql, parameters=None):
     """Opens, adds and executes sql as a single transaction
 
     Parameters

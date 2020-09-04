@@ -34,12 +34,12 @@ class MetaUtilTests(TestCase):
 
     def _set_artifact_private(self):
         id_status = qdb.util.convert_to_id('private', 'visibility')
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
 
     def _set_artifact_public(self):
         id_status = qdb.util.convert_to_id('public', 'visibility')
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
 
     def test_validate_filepath_access_by_user(self):
@@ -104,7 +104,7 @@ class MetaUtilTests(TestCase):
                 self.assertTrue(obs)
 
         # test in case there is a prep template that failed
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             obs = qdb.meta_util.validate_filepath_access_by_user(user, i)
@@ -461,7 +461,7 @@ class MetaUtilTests(TestCase):
         self.assertEqual(txt_obs, txt_exp)
 
         # returning configuration
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE settings SET base_data_dir = '%s'" % obdr)
 
         # testing public/default release

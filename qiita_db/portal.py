@@ -99,7 +99,7 @@ class Portal(qdb.base.QiitaObject):
                     VALUES (aid, pid);
                 END LOOP;
             END $do$;"""
-        qdb.sql_connection.encapsulated_query(sql, [portal, desc])
+        qdb.sql_connection.perform_as_transaction(sql, [portal, desc])
 
         return cls(portal)
 

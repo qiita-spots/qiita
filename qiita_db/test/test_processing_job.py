@@ -796,7 +796,7 @@ class ProcessingJobTest(TestCase):
                      SET allocation = '{0}'
                      WHERE name = 'Split libraries FASTQ'""".format(
                         '-q qiita -l mem=%s' % memory)
-            qdb.sql_connection.encapsulated_query(sql)
+            qdb.sql_connection.perform_as_transaction(sql)
 
         # let's start with something simple, samples*1000
         #                                         27*1000 ~ 27000

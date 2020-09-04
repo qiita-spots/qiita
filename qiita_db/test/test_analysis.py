@@ -558,7 +558,7 @@ class TestAnalysis(TestCase):
         sql = """UPDATE qiita.software_command
                  SET post_processing_cmd = %s
                  WHERE command_id = %s"""
-        qdb.sql_connection.encapsulated_query(sql, [results, cmd_id])
+        qdb.sql_connection.perform_as_transaction(sql, [results, cmd_id])
 
         # create a sample analysis and run build_files on it.
         analysis = self._create_analyses_with_samples()
@@ -582,7 +582,7 @@ class TestAnalysis(TestCase):
         sql = """UPDATE qiita.software_command
                  SET post_processing_cmd = NULL
                  WHERE command_id = %s"""
-        qdb.sql_connection.encapsulated_query(sql, [cmd_id])
+        qdb.sql_connection.perform_as_transaction(sql, [cmd_id])
 
     def test_build_files_merge_duplicated_sample_ids(self):
         user = qdb.user.User("demo@microbio.me")

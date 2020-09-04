@@ -458,7 +458,7 @@ class DBUtilTests(DBUtilTestsBase):
 
         # inserting new ones so we can test that it retrieves these and
         # doesn't alter other ones
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE qiita.data_directory SET active=false WHERE "
             "data_directory_id=1")
         count = qdb.util.get_count('qiita.data_directory')
@@ -466,7 +466,7 @@ class DBUtilTests(DBUtilTestsBase):
                                                    subdirectory, active)
                  VALUES ('analysis', 'analysis_tmp', true, true),
                         ('raw_data', 'raw_data_tmp', true, false)"""
-        qdb.sql_connection.encapsulated_query(sql)
+        qdb.sql_connection.perform_as_transaction(sql)
 
         # this should have been updated
         exp = [(count + 1, join(qdb.util.get_db_files_base_dir(),
@@ -514,7 +514,7 @@ class DBUtilTests(DBUtilTestsBase):
 
         # inserting new ones so we can test that it retrieves these and
         # doesn't alter other ones
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE qiita.data_directory SET active=false WHERE "
             "data_directory_id=1")
         count = qdb.util.get_count('qiita.data_directory')
@@ -522,7 +522,7 @@ class DBUtilTests(DBUtilTestsBase):
                                                    subdirectory, active)
                  VALUES ('analysis', 'analysis_tmp', true, true),
                         ('raw_data', 'raw_data_tmp', true, false)"""
-        qdb.sql_connection.encapsulated_query(sql)
+        qdb.sql_connection.perform_as_transaction(sql)
 
         # this should have been updated
         exp = join(qdb.util.get_db_files_base_dir(), 'analysis_tmp')
@@ -650,7 +650,7 @@ class DBUtilTests(DBUtilTestsBase):
         sql = """INSERT INTO qiita.artifact_filepath
                         (artifact_id, filepath_id)
                     VALUES (%s, %s)"""
-        qdb.sql_connection.encapsulated_query(sql, [2, test])
+        qdb.sql_connection.perform_as_transaction(sql, [2, test])
 
         obs = qdb.util.filepath_id_to_rel_path(test)
         exp = 'FASTQ/2/%s' % basename(fp)
@@ -667,7 +667,7 @@ class DBUtilTests(DBUtilTestsBase):
         sql = """INSERT INTO qiita.artifact_filepath
                         (artifact_id, filepath_id)
                     VALUES (%s, %s)"""
-        qdb.sql_connection.encapsulated_query(sql, [2, test])
+        qdb.sql_connection.perform_as_transaction(sql, [2, test])
 
         obs = qdb.util.filepath_ids_to_rel_paths([1, 3, test])
         exp = {1: 'raw_data/1_s_G1_L001_sequences.fastq.gz',

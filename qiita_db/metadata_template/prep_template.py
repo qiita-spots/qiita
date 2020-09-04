@@ -458,7 +458,7 @@ class PrepTemplate(MetadataTemplate):
 
         sql = """UPDATE qiita.prep_template SET investigation_type = %s
                  WHERE {0} = %s""".format(self._id_column)
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             sql, [investigation_type, self.id])
 
     @property
@@ -495,7 +495,7 @@ class PrepTemplate(MetadataTemplate):
         """
         sql = """UPDATE qiita.prep_template SET deprecated = %s
                  WHERE {0} = %s""".format(self._id_column)
-        qdb.sql_connection.encapsulated_query(sql, [deprecated, self.id])
+        qdb.sql_connection.perform_as_transaction(sql, [deprecated, self.id])
 
     def generate_files(self, samples=None, columns=None):
         r"""Generates all the files that contain data from this template
@@ -761,4 +761,4 @@ class PrepTemplate(MetadataTemplate):
         sql = """UPDATE qiita.prep_template
                  SET name = %s
                  WHERE prep_template_id = %s"""
-        qdb.sql_connection.encapsulated_query(sql, [value, self.id])
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])

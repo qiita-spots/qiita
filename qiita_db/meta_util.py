@@ -337,7 +337,7 @@ def update_redis_stats():
     vals = dumps(dict([x[:-1] for x in vals]))
     sql = """INSERT INTO qiita.stats_daily (stats, stats_timestamp)
              VALUES (%s, NOW())"""
-    qdb.sql_connection.encapsulated_query(sql, [vals])
+    qdb.sql_connection.perform_as_transaction(sql, [vals])
 
     return missing_files
 

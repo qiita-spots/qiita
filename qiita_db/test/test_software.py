@@ -145,7 +145,7 @@ class CommandTests(TestCase):
         sql = """UPDATE qiita.software_command
                  SET post_processing_cmd = %s
                  WHERE command_id = 1"""
-        qdb.sql_connection.encapsulated_query(sql, [results])
+        qdb.sql_connection.perform_as_transaction(sql, [results])
 
         results = qdb.software.Command(1).post_processing_cmd
 
@@ -160,7 +160,7 @@ class CommandTests(TestCase):
         sql = """UPDATE qiita.software_command
                  SET post_processing_cmd = NULL
                  WHERE command_id = 1"""
-        qdb.sql_connection.encapsulated_query(sql)
+        qdb.sql_connection.perform_as_transaction(sql)
 
     def test_description(self):
         self.assertEqual(
@@ -474,7 +474,7 @@ class SoftwareTestsIter(TestCase):
             '-q qiita -l nodes=1:ppn=5 -l pmem=8gb -l walltime=168:00:00')
 
         # delete allocations to test errors
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "DELETE FROM qiita.processing_job_resource_allocation")
 
         with self.assertRaisesRegex(ValueError, "Could not match 'Split "

@@ -507,7 +507,7 @@ class Study(qdb.base.QiitaObject):
         """
         sql = """UPDATE qiita.{0} SET study_title = %s
                  WHERE study_id = %s""".format(self._table)
-        qdb.sql_connection.encapsulated_query(sql, [title, self._id])
+        qdb.sql_connection.perform_as_transaction(sql, [title, self._id])
 
     @property
     def notes(self):
@@ -535,7 +535,7 @@ class Study(qdb.base.QiitaObject):
         """
         sql = """UPDATE qiita.{0} SET notes = %s
                  WHERE study_id = %s""".format(self._table)
-        qdb.sql_connection.encapsulated_query(sql, [notes, self._id])
+        qdb.sql_connection.perform_as_transaction(sql, [notes, self._id])
 
     @property
     def public_raw_download(self):
@@ -563,7 +563,7 @@ class Study(qdb.base.QiitaObject):
         """
         sql = """UPDATE qiita.{0} SET public_raw_download = %s
                  WHERE study_id = %s""".format(self._table)
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             sql, [public_raw_download, self._id])
 
     @property
@@ -769,7 +769,7 @@ class Study(qdb.base.QiitaObject):
         sql = """UPDATE qiita.study SET
                  specimen_id_column = %s
                  WHERE study_id = %s"""
-        qdb.sql_connection.encapsulated_query(sql, [value, self._id])
+        qdb.sql_connection.perform_as_transaction(sql, [value, self._id])
 
     @property
     def investigation(self):
@@ -963,7 +963,7 @@ class Study(qdb.base.QiitaObject):
         sql = """UPDATE qiita.{}
                  SET ebi_study_accession = %s
                  WHERE study_id = %s""".format(self._table)
-        qdb.sql_connection.encapsulated_query(sql, [value, self.id])
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
     def _ebi_submission_jobs(self):
         """Helper code to avoid duplication"""
@@ -1213,7 +1213,7 @@ class Study(qdb.base.QiitaObject):
 
         sql = """INSERT INTO qiita.study_users (study_id, email)
                  VALUES (%s, %s)"""
-        qdb.sql_connection.encapsulated_query(sql, [self._id, user.id])
+        qdb.sql_connection.perform_as_transaction(sql, [self._id, user.id])
 
     def unshare(self, user):
         """Unshare the study with another user
@@ -1225,7 +1225,7 @@ class Study(qdb.base.QiitaObject):
         """
         sql = """DELETE FROM qiita.study_users
                  WHERE study_id = %s AND email = %s"""
-        qdb.sql_connection.encapsulated_query(sql, [self._id, user.id])
+        qdb.sql_connection.perform_as_transaction(sql, [self._id, user.id])
 
     def update_tags(self, user, tags):
         """Sets the tags of the study
@@ -1537,7 +1537,7 @@ class StudyPerson(qdb.base.QiitaObject):
         """
         sql = """UPDATE qiita.{0} SET address = %s
                  WHERE study_person_id = %s""".format(self._table)
-        qdb.sql_connection.encapsulated_query(sql, [value, self._id])
+        qdb.sql_connection.perform_as_transaction(sql, [value, self._id])
 
     @property
     def phone(self):
@@ -1565,4 +1565,4 @@ class StudyPerson(qdb.base.QiitaObject):
         """
         sql = """UPDATE qiita.{0} SET phone = %s
                  WHERE study_person_id = %s""".format(self._table)
-        qdb.sql_connection.encapsulated_query(sql, [value, self._id])
+        qdb.sql_connection.perform_as_transaction(sql, [value, self._id])

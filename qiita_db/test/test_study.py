@@ -204,7 +204,7 @@ class TestStudy(TestCase):
         # Change the status of the studies by changing the status of their
         # artifacts
         id_status = qdb.util.convert_to_id(new_status, 'visibility')
-        qdb.sql_connection.encapsulated_query(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE qiita.artifact SET visibility_id = %s", (id_status,))
 
     def test_get_info(self):
@@ -331,7 +331,8 @@ class TestStudy(TestCase):
     def test_share(self):
         # Clear all sharing associations
         self._change_processed_data_status('sandbox')
-        qdb.sql_connection.encapsulated_query("delete from qiita.study_users")
+        qdb.sql_connection.perform_as_transaction(
+            "delete from qiita.study_users")
         self.assertEqual(self.study.shared_with, [])
 
         # Try to share with the owner, which should not work

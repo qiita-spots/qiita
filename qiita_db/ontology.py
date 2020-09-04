@@ -84,7 +84,7 @@ class Ontology(qdb.base.QiitaObject):
             sql = """INSERT INTO qiita.term
                         (ontology_id, term, user_defined)
                      VALUES (%s, %s, true);"""
-            qdb.sql_connection.encapsulated_query(sql, [self.id, term])
+            qdb.sql_connection.perform_as_transaction(sql, [self.id, term])
 
     def term_type(self, term):
         """Get the type of a given ontology term
