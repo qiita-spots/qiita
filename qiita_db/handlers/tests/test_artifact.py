@@ -290,11 +290,11 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
 
 class APIArtifactHandlerTests(OauthTestingBase):
     def setUp(self):
-        super(APIArtifactHandlerTest, self).setUp()
+        super(APIArtifactHandlerTests, self).setUp()
         self._clean_up_files = []
 
     def tearDown(self):
-        super(APIArtifactHandlerTest, self).tearDown()
+        super(APIArtifactHandlerTests, self).tearDown()
 
         for f in self._clean_up_files:
             if exists(f):
