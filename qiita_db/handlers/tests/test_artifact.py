@@ -333,6 +333,9 @@ class APIArtifactHandlerTests(OauthTestingBase):
         original_job = qdb.processing_job.ProcessingJob(data['job_id'])
         self.assertEqual(len(list(original_job.children)), 0)
 
+        # let's make sure that all the plugins are on
+        qdb.util.activate_or_update_plugins(update=True)
+
         del data['prep_id']
         obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
         jid = obs.body.decode("utf-8")
