@@ -10,6 +10,7 @@ from tornado.web import HTTPError
 from collections import defaultdict
 from json import loads, dumps
 
+from qiita_core.qiita_settings import r_client
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
@@ -239,6 +240,7 @@ class ArtifactTypeHandler(OauthBaseHandler):
 class APIArtifactHandler(OauthBaseHandler):
     @authenticate_oauth
     def post(self):
+        user_email = self.get_argument('user_email')
         job_id = self.get_argument('job_id', None)
         prep_id = self.get_argument('prep_id', None)
         atype = self.get_argument('artifact_type')
@@ -251,6 +253,15 @@ class APIArtifactHandler(OauthBaseHandler):
         if job_id is not None and prep_id is not None:
             raise HTTPError(
                 400, reason='You need to specify only a job_id or a prep_id')
+
+        user = qdb.user.User(user_email)
+        values = {
+            'files': dumps(filepaths), 'artifact_type': atype,
+            'template': prep_id, 'name': aname,
+            # leaving here in case we need to add a way to add an artifact
+            # directly to an analysis, for more information see
+            # ProcessingJob._complete_artifact_transformation
+            'analysis': None}
 
         if job_id is not None:
             PJ = qdb.processing_job.ProcessingJob
@@ -265,17 +276,16 @@ class APIArtifactHandler(OauthBaseHandler):
             provenance = {'job': job_id,
                           'cmd_out_id': cmd_out_id,
                           'name': aname}
-            values = {
-                'files': dumps(filepaths), 'artifact_type': atype,
-                'template': prep_id, 'provenance': dumps(provenance),
-                # leaving here in case we need to add a way to add an artifact
-                # directly to an analysis, for more information see
-                # ProcessingJob._complete_artifact_transformation
-                'analysis': None}
-            cmd = qdb.software.Command.get_validator(atype)
-            params = qdb.software.Parameters.load(cmd, values_dict=values)
-            new_job = PJ.create(job.user, params, True)
-            new_job.submit()
+            values['provenance'] = dumps(provenance)
+            prep_id = job.input_artifacts[0].id
+
+        cmd = qdb.software.Command.get_validator(atype)
+        params = qdb.software.Parameters.load(cmd, values_dict=values)
+        new_job = PJ.create(user, params, True)
+        new_job.submit()
+
+        r_client.set('prep_template_%d' % prep_id,
+                     dumps({'job_id': job.id, 'is_qiita_job': True}))
 
         self.write(new_job.id)
         self.finish()

@@ -312,7 +312,8 @@ class APIArtifactHandlerTests(OauthTestingBase):
         self._clean_up_files.append(fp)
 
         # no job_id or prep_id
-        data = {'artifact_type': 'BIOM',
+        data = {'user_email': 'demo@microbio.me',
+                'artifact_type': 'BIOM',
                 'command_artifact_name': 'OTU table',
                 'filepaths': dumps([(fp, 'biom')])}
 
@@ -322,20 +323,20 @@ class APIArtifactHandlerTests(OauthTestingBase):
             'You need to specify a job_id or a prep_id', str(obs.error))
 
         # both job_id and prep_id defined
-        data['job_id'] = '80bf25f3-5f1d-4e10-9369-315e4244f6d5'
+        data['job_id'] = '46b76f74-e100-47aa-9bf2-c0208bcea52d'
         data['prep_id'] = 'prep_id'
         obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
         self.assertEqual(obs.code, 400)
         self.assertIn(
             'You need to specify only a job_id or a prep_id', str(obs.error))
 
-        # now let's tests success
-        original_job = qdb.processing_job.ProcessingJob(data['job_id'])
-        self.assertEqual(len(list(original_job.children)), 0)
-
-        # let's make sure that all the plugins are on
+        # make sure that all the plugins are on
         qdb.util.activate_or_update_plugins(update=True)
 
+        # tests success by inserting a new artifact into an existing job
+        original_job = qdb.processing_job.ProcessingJob(data['job_id'])
+        self.assertEqual(len(list(original_job.children)), 1)
+        # send the new data
         del data['prep_id']
         obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
         jid = obs.body.decode("utf-8")
@@ -343,6 +344,7 @@ class APIArtifactHandlerTests(OauthTestingBase):
         while job.status not in ('error', 'success'):
             sleep(0.5)
 
+        # now the original job should have 2 children
         print('--------------------')
         print('--------------------')
         print(job.status)
@@ -350,9 +352,7 @@ class APIArtifactHandlerTests(OauthTestingBase):
         print('--------------------')
         print('--------------------')
         print('--------------------')
-
-        original_job = qdb.processing_job.ProcessingJob(data['job_id'])
-        self.assertEqual(len(list(original_job.children)), 1)
+        self.assertEqual(len(list(original_job.children)), 2)
 
 
 if __name__ == '__main__':
