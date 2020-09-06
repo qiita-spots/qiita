@@ -256,13 +256,11 @@ class APIArtifactHandler(OauthBaseHandler):
 
         user = qdb.user.User(user_email)
         values = {
-            'files': dumps(filepaths), 'artifact_type': atype,
-            'template': prep_id, 'name': aname,
+            'files': dumps(filepaths), 'artifact_type': atype, 'name': aname,
             # leaving here in case we need to add a way to add an artifact
             # directly to an analysis, for more information see
             # ProcessingJob._complete_artifact_transformation
             'analysis': None}
-
         if job_id is not None:
             PJ = qdb.processing_job.ProcessingJob
             TN = qdb.sql_connection.TRN
@@ -283,6 +281,7 @@ class APIArtifactHandler(OauthBaseHandler):
             values['provenance'] = dumps(provenance)
             prep_id = job.input_artifacts[0].id
 
+        values['template'] = prep_id
         cmd = qdb.software.Command.get_validator(atype)
         params = qdb.software.Parameters.load(cmd, values_dict=values)
         new_job = PJ.create(user, params, True)
