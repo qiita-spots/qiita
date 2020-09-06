@@ -272,7 +272,11 @@ class APIArtifactHandler(OauthBaseHandler):
                          FROM qiita.command_output
                          WHERE name = %s AND command_id = %s"""
                 TN.add(sql, [aname, job.command.id])
-                cmd_out_id = TN.execute_fetchlast()
+                results = TN.execute_fetchflatten()
+                if len(results) < 1:
+                    raise HTTPError(400, 'The command_artifact_name does not '
+                                    'exist in the command')
+                cmd_out_id = results[0]
             provenance = {'job': job_id,
                           'cmd_out_id': cmd_out_id,
                           'name': aname}

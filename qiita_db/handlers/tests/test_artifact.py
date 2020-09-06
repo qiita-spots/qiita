@@ -323,7 +323,7 @@ class APIArtifactHandlerTests(OauthTestingBase):
             'You need to specify a job_id or a prep_id', str(obs.error))
 
         # both job_id and prep_id defined
-        data['job_id'] = '46b76f74-e100-47aa-9bf2-c0208bcea52d'
+        data['job_id'] = 'e5609746-a985-41a1-babf-6b3ebe9eb5a9'
         data['prep_id'] = 'prep_id'
         obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
         self.assertEqual(obs.code, 400)
@@ -335,24 +335,24 @@ class APIArtifactHandlerTests(OauthTestingBase):
 
         # tests success by inserting a new artifact into an existing job
         original_job = qdb.processing_job.ProcessingJob(data['job_id'])
-        self.assertEqual(len(list(original_job.children)), 1)
+        input_artifact = original_job.input_artifacts[0]
+        self.assertEqual(len(input_artifact.children), 3)
         # send the new data
         del data['prep_id']
         obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
         jid = obs.body.decode("utf-8")
+
         job = qdb.processing_job.ProcessingJob(jid)
         while job.status not in ('error', 'success'):
             sleep(0.5)
 
-        # now the original job should have 2 children
-        print('--------------------')
+        # now the original job should have 4 children
         print('--------------------')
         print(job.status)
-        print(job.log.msg)
+        if job.status == 'error':
+            print(job.log.msg)
         print('--------------------')
-        print('--------------------')
-        print('--------------------')
-        self.assertEqual(len(list(original_job.children)), 2)
+        self.assertEqual(len(input_artifact.children), 4)
 
 
 if __name__ == '__main__':
