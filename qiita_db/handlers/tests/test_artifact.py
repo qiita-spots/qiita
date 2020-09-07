@@ -315,7 +315,7 @@ class APIArtifactHandlerTests(OauthTestingBase):
         data = {'user_email': 'demo@microbio.me',
                 'artifact_type': 'BIOM',
                 'command_artifact_name': 'OTU table',
-                'filepaths': dumps({'biom': [fp]})}
+                'files': dumps({'biom': [fp]})}
 
         obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
         self.assertEqual(obs.code, 400)
@@ -347,11 +347,9 @@ class APIArtifactHandlerTests(OauthTestingBase):
             sleep(0.5)
 
         # now the original job should have 4 children
-        print('--------------------')
         print(job.status)
         if job.status == 'error':
             print(job.log.msg)
-        print('--------------------')
         self.assertEqual(len(input_artifact.children), 4)
 
 

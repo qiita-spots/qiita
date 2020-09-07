@@ -245,7 +245,7 @@ class APIArtifactHandler(OauthBaseHandler):
         prep_id = self.get_argument('prep_id', None)
         atype = self.get_argument('artifact_type')
         aname = self.get_argument('command_artifact_name')
-        filepaths = self.get_argument('filepaths')
+        files = self.get_argument('files')
 
         if job_id is None and prep_id is None:
             raise HTTPError(
@@ -256,7 +256,7 @@ class APIArtifactHandler(OauthBaseHandler):
 
         user = qdb.user.User(user_email)
         values = {
-            'files': dumps(filepaths), 'artifact_type': atype, 'name': aname,
+            'files': dumps(files), 'artifact_type': atype, 'name': aname,
             # leaving here in case we need to add a way to add an artifact
             # directly to an analysis, for more information see
             # ProcessingJob._complete_artifact_transformation
