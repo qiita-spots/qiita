@@ -315,7 +315,7 @@ class APIArtifactHandlerTests(OauthTestingBase):
         data = {'user_email': 'demo@microbio.me',
                 'artifact_type': 'BIOM',
                 'command_artifact_name': 'OTU table',
-                'filepaths': dumps([(fp, 'biom')])}
+                'filepaths': dumps({'biom': [fp]})}
 
         obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
         self.assertEqual(obs.code, 400)
