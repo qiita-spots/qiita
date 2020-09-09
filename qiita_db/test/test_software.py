@@ -330,6 +330,13 @@ class CommandTests(TestCase):
                 self.outputs)
 
     def test_create(self):
+        # let's deactivate all current plugins and commands; this is not
+        # important to test the creation but it is important to test if a
+        # command is active as the new commands should take precedence and
+        # should make the old commands active if they have the same name
+        qdb.software.Software.deactivate_all()
+
+        # note that here we are adding commands to an existing software
         obs = qdb.software.Command.create(
             self.software, "Test Command", "This is a command for testing",
             self.parameters, self.outputs)
@@ -351,6 +358,7 @@ class CommandTests(TestCase):
                          {'parameters': [], 'outputs': [],
                           'ignore_parent_command': False})
 
+        # here we are creating a new software that we will add new commads to
         obs = qdb.software.Command.create(
             self.software, "Test Command 2", "This is a command for testing",
             self.parameters, analysis_only=True)
@@ -421,6 +429,22 @@ class CommandTests(TestCase):
                'outputs': ['out1'],
                'ignore_parent_command': False}
         self.assertEqual(obs.merging_scheme, exp)
+
+        # now that we are done with the regular creation testing we can create
+        # a new command with the name of an old deprecated command and make
+        # sure that is not deprecated now
+        # 1. let's find the previous command and make sure is deprecated
+        cmd_name = 'Split libraries FASTQ'
+        old_cmd = [cmd for cmd in self.software.commands
+                   if cmd.name == cmd_name][0]
+        self.assertFalse(old_cmd.active)
+
+        # 2. let's create a new command with the same name and check that now
+        #    the old and the new are active
+        new_cmd = qdb.software.Command.create(
+            software, cmd_name, cmd_name, parameters, outputs=outputs)
+        self.assertTrue(old_cmd.active)
+        self.assertTrue(new_cmd.active)
 
     def test_activate(self):
         qdb.software.Software.deactivate_all()
