@@ -307,6 +307,10 @@ class APIArtifactHandlerTests(OauthTestingBase):
 
         fd, fp = mkstemp(suffix='_table.biom')
         close(fd)
+        # renaming samples
+        et.update_ids({'S1': '1.SKB1.640202',
+                       'S2': '1.SKD3.640198',
+                       'S3': '1.SKM4.640180'}, inplace=True)
         with biom_open(fp, 'w') as f:
             et.to_hdf5(f, "test")
         self._clean_up_files.append(fp)
@@ -346,11 +350,14 @@ class APIArtifactHandlerTests(OauthTestingBase):
         while job.status not in ('error', 'success'):
             sleep(0.5)
 
-        # now the original job should have 4 children
-        print(job.status)
-        if job.status == 'error':
-            print(job.log.msg)
-        self.assertEqual(len(input_artifact.children), 4)
+        # now the original job should have 4 children and make sure they have
+        # the same parent and parameters
+        children = input_artifact.children
+        self.assertEqual(len(children), 4)
+        for c in children[1:]:
+            self.assertCountEqual(children[0].processing_parameters.values,
+                                  c.processing_parameters.values)
+            self.assertEqual(children[0].parents, c.parents)
 
 
 if __name__ == '__main__':

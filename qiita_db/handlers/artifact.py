@@ -256,7 +256,7 @@ class APIArtifactHandler(OauthBaseHandler):
 
         user = qdb.user.User(user_email)
         values = {
-            'files': dumps(files), 'artifact_type': atype, 'name': aname,
+            'files': files, 'artifact_type': atype, 'name': aname,
             # leaving here in case we need to add a way to add an artifact
             # directly to an analysis, for more information see
             # ProcessingJob._complete_artifact_transformation
@@ -277,6 +277,7 @@ class APIArtifactHandler(OauthBaseHandler):
                 cmd_out_id = results[0]
             provenance = {'job': job_id,
                           'cmd_out_id': cmd_out_id,
+                          'direct_creation': True,
                           'name': aname}
             values['provenance'] = dumps(provenance)
             prep_id = job.input_artifacts[0].id

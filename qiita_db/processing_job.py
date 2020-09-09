@@ -1125,18 +1125,32 @@ class ProcessingJob(qdb.base.QiitaObject):
             if job_params['provenance'] is not None:
                 # The artifact is a result from a previous job
                 provenance = loads(job_params['provenance'])
-                if provenance.get('data_type') is not None:
-                    artifact_data = {'data_type': provenance['data_type'],
-                                     'artifact_data': artifact_data}
+                if ('direct_creation' in provenance and
+                        provenance['direct_creation']):
+                    original_job = ProcessingJob(provenance['job'])
+                    qdb.artifact.Artifact.create(
+                        filepaths, atype,
+                        parents=original_job.input_artifacts,
+                        processing_parameters=original_job.parameters,
+                        analysis=job_params['analysis'],
+                        # data_type=data_type,
+                        name=job_params['name'])
+                    self._set_status('success')
+                else:
+                    if provenance.get('data_type') is not None:
+                        artifact_data = {'data_type': provenance['data_type'],
+                                         'artifact_data': artifact_data}
 
-                sql = """UPDATE qiita.processing_job_validator
-                         SET artifact_info = %s
-                         WHERE validator_id = %s"""
-                qdb.sql_connection.TRN.add(
-                    sql, [dumps(artifact_data), self.id])
-                qdb.sql_connection.TRN.execute()
-                # Can't create the artifact until all validators are completed
-                self._set_status('waiting')
+                    sql = """UPDATE qiita.processing_job_validator
+                             SET artifact_info = %s
+                             WHERE validator_id = %s"""
+                    qdb.sql_connection.TRN.add(
+                        sql, [dumps(artifact_data), self.id])
+                    qdb.sql_connection.TRN.execute()
+
+                    # Can't create the artifact until all validators
+                    # are completed
+                    self._set_status('waiting')
             else:
                 # The artifact is uploaded by the user or is the initial
                 # artifact of an analysis
