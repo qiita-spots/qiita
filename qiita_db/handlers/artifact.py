@@ -277,6 +277,11 @@ class APIArtifactHandler(OauthBaseHandler):
                 cmd_out_id = results[0]
             provenance = {'job': job_id,
                           'cmd_out_id': cmd_out_id,
+                          # direct_creation is a flag to avoid having to wait
+                          # for the complete job to create the new artifact,
+                          # which is normally ran during regular processing.
+                          # Skipping is fine because we are adding an artifact
+                          # to an existing job outside of regular processing
                           'direct_creation': True,
                           'name': aname}
             values['provenance'] = dumps(provenance)

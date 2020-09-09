@@ -1115,6 +1115,14 @@ class ProcessingJob(qdb.base.QiitaObject):
             Dict with the artifact information. `filepaths` contains the list
             of filepaths and filepath types for the artifact and
             `artifact_type` the type of the artifact
+
+        Notes
+        -----
+        The `provenance` in the job.parameters can contain a `direct_creation`
+        flag to avoid having to wait for the complete job to create a new
+        artifact, which is normally ran during regular processing. Skipping is
+        fine because we are adding an artifact to an existing job outside of
+        regular processing
         """
         with qdb.sql_connection.TRN:
             atype = artifact_data['artifact_type']
@@ -1125,15 +1133,13 @@ class ProcessingJob(qdb.base.QiitaObject):
             if job_params['provenance'] is not None:
                 # The artifact is a result from a previous job
                 provenance = loads(job_params['provenance'])
-                if ('direct_creation' in provenance and
-                        provenance['direct_creation']):
+                if provenance.get('direct_creation', False):
                     original_job = ProcessingJob(provenance['job'])
                     qdb.artifact.Artifact.create(
                         filepaths, atype,
                         parents=original_job.input_artifacts,
                         processing_parameters=original_job.parameters,
                         analysis=job_params['analysis'],
-                        # data_type=data_type,
                         name=job_params['name'])
                     self._set_status('success')
                 else:
