@@ -359,6 +359,29 @@ class APIArtifactHandlerTests(OauthTestingBase):
                                   c.processing_parameters.values)
             self.assertEqual(children[0].parents, c.parents)
 
+        # now let's test adding an artifact directly to a new prep
+        new_prep = qdb.metadata_template.prep_template.PrepTemplate.create(
+            pd.DataFrame({'new_col': {'1.SKB1.640202': 1,
+                                      '1.SKD3.640198': 2,
+                                      '1.SKM4.640180': 3}}),
+            qdb.study.Study(1), '16S')
+        fd, fp = mkstemp(suffix='_table.biom')
+        close(fd)
+        with biom_open(fp, 'w') as f:
+            et.to_hdf5(f, "test")
+        self._clean_up_files.append(fp)
+        data = {'user_email': 'demo@microbio.me',
+                'artifact_type': 'BIOM', 'prep_id': new_prep.id,
+                'files': dumps({'biom': [fp]})}
+
+        obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
+        jid = obs.body.decode("utf-8")
+
+        job = qdb.processing_job.ProcessingJob(jid)
+        while job.status not in ('error', 'success'):
+            sleep(0.5)
+        self.assertIsNotNone(new_prep.artifact)
+
 
 if __name__ == '__main__':
     main()

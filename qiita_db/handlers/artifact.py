@@ -244,7 +244,7 @@ class APIArtifactHandler(OauthBaseHandler):
         job_id = self.get_argument('job_id', None)
         prep_id = self.get_argument('prep_id', None)
         atype = self.get_argument('artifact_type')
-        aname = self.get_argument('command_artifact_name')
+        aname = self.get_argument('command_artifact_name', 'Name')
         files = self.get_argument('files')
 
         if job_id is None and prep_id is None:
@@ -261,8 +261,8 @@ class APIArtifactHandler(OauthBaseHandler):
             # directly to an analysis, for more information see
             # ProcessingJob._complete_artifact_transformation
             'analysis': None}
+        PJ = qdb.processing_job.ProcessingJob
         if job_id is not None:
-            PJ = qdb.processing_job.ProcessingJob
             TN = qdb.sql_connection.TRN
             job = PJ(job_id)
             with TN:
@@ -281,6 +281,8 @@ class APIArtifactHandler(OauthBaseHandler):
                           'name': aname}
             values['provenance'] = dumps(provenance)
             prep_id = job.input_artifacts[0].id
+        else:
+            prep_id = int(prep_id)
 
         values['template'] = prep_id
         cmd = qdb.software.Command.get_validator(atype)
@@ -289,7 +291,7 @@ class APIArtifactHandler(OauthBaseHandler):
         new_job.submit()
 
         r_client.set('prep_template_%d' % prep_id,
-                     dumps({'job_id': job.id, 'is_qiita_job': True}))
+                     dumps({'job_id': new_job.id, 'is_qiita_job': True}))
 
         self.write(new_job.id)
         self.finish()
