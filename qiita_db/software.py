@@ -627,14 +627,14 @@ class Command(qdb.base.QiitaObject):
         -----
         This method differentiates between commands based on analysis_only or
         the software type. The commands that are not for analysis (processing)
-        and are not from an artifact definition software will return as active
+        and are from an artifact definition software will return as active
         if they have the same name than a command that is active; this helps
         for situations where the processing plugins are updated but some
         commands didn't change its version.
         """
         with qdb.sql_connection.TRN:
             cmd_type = self.software.type
-            if self.analysis_only or cmd_type != 'artifact definition':
+            if self.analysis_only or cmd_type == 'artifact definition':
                 sql = """SELECT active
                          FROM qiita.software_command
                          WHERE command_id = %s"""
