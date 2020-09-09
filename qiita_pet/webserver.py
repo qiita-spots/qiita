@@ -60,7 +60,8 @@ from qiita_db.handlers.processing_job import (
     JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
     ProcessingJobAPItestHandler)
 from qiita_db.handlers.artifact import (
-    ArtifactHandler, ArtifactAPItestHandler, ArtifactTypeHandler)
+    ArtifactHandler, ArtifactAPItestHandler, ArtifactTypeHandler,
+    APIArtifactHandler)
 from qiita_db.handlers.sample_information import SampleInfoDBHandler
 from qiita_db.handlers.user import UserInfoDBHandler, UsersListDBHandler
 from qiita_db.handlers.prep_template import (
@@ -205,6 +206,7 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)", JobHandler),
             (r"/qiita_db/artifacts/types/", ArtifactTypeHandler),
             (r"/qiita_db/artifacts/(.*)/", ArtifactHandler),
+            (r"/qiita_db/artifact/", APIArtifactHandler),
             (r"/qiita_db/users/", UsersListDBHandler),
             (r"/qiita_db/user/(.*)/data/", UserInfoDBHandler),
             (r"/qiita_db/sample_information/(.*)/data/", SampleInfoDBHandler),
