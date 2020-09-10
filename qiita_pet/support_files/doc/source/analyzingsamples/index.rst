@@ -513,6 +513,7 @@ Beta Correlation
 
 * Gives scatterplot of the distance matrix on the x-axis and the variable being tested on the y-axis
 
+-------------------------------------------------------------------------------
 
 Statistical Analysis to Justify Clinical Trial Sample Size Tutorial
 -------------------------------------------------------------------
@@ -537,16 +538,16 @@ Find and process data in Qiita
 
 Once you have selected the study 1629 (see `Retrieving Public Data for Own Analysis Tutorial` under redbiom) there are four artifacts, these are:
 
-1. `Pick closed-reference OTUs (reference-seq: /databases/gg/13_8/rep_set/97_otus.fasta) | Split libraries FASTQ`.
+#. *Pick closed-reference OTUs (reference-seq: /databases/gg/13_8/rep_set/97_otus.fasta) | Split libraries FASTQ*.
     * This tells us that the data is picked OTUs clustered by closed reference against /databases/gg/13_8/rep_set/97_otus.fasta and is now in a split library FASTQ format.
     * FASTQ stores both sequence and corresponding quality score see `here <https://emea.support.illumina.com/bulletins/2016/04/fastq-files-explained.html>`__ for more info (though note the data in FASTQ format does not have to be illumina sequencing data).
     * Split refers to demultiplexing where sequences from the same lane are split into samples based on barcodes (N.B. illumina can sequence multiple different samples at the same time, therefore sequence data has to be demultiplexed into the separate samples present in the same lane.)
-2. Pick closed-reference OTUs (reference-seq: /databases/gg/13_8/rep_set/97_otus.fasta) | Trimming (length: 90)
+#. *Pick closed-reference OTUs (reference-seq: /databases/gg/13_8/rep_set/97_otus.fasta) | Trimming (length: 90)*
     * This is essentially the same as the previous artifact but the reads have been trimmed to 90nt (see contexts for an explanation of why this is done).
-3. Deblur (Reference phylogeny for SEPP: Greengenes_13.8, BIOM: /projects/qiita_data/BIOM/60941/reference-hit.biom) | Trimming (length: 90)
+#. *Deblur (Reference phylogeny for SEPP: Greengenes_13.8, BIOM: /projects/qiita_data/BIOM/60941/reference-hit.biom) | Trimming (length: 90)*
     * Deblur processed sequence data trimmed to 90nt and classified by taxonomy using the greengenes reference database. This artifact contains only those sequences which have been classified thus reference-**hit**.biom
     * SEPP is a phylogenetic placement program that can be used to place query sequences (reads e.g. of the V4 region of 16S) into the phylogeny of the full length gene’s tree (e.g. in this case using the Greengenes database).
-4. Deblur (Reference phylogeny for SEPP: Greengenes_13.8, BIOM: /projects/qiita_data/BIOM/60942/all.biom) | Trimming (length: 90)
+#. *Deblur (Reference phylogeny for SEPP: Greengenes_13.8, BIOM: /projects/qiita_data/BIOM/60942/all.biom) | Trimming (length: 90)*
     * This artifact been processed in the same manner as the previous artifact, but all ASVs are present, including those that did not get placed (therefore **all**.biom).
 
 For the Deblur data we will use the reference-hit.biom data as this represents those ASVs which were placed within the Greengenes database. Using the all.biom data would give all ASVs, but the unplaced sequences would have to be removed to allow later analysis with Unifrac (so that they may as well not be present) and therefore we select the reference-hit data from the start. N.B. unifrac uses phylogenetic distance (measures of relatedness), thus the need for placed sequences.

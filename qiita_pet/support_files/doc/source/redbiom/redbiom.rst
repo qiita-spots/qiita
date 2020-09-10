@@ -116,19 +116,19 @@ Search Options
        p__Tenericutes
        
        
+----------------------------------------
        
        
-       
-Retrieving Public Data for Own Analysis Tutorial
-------------------------------------------------
+Retrieving Public Data for Own Analysis 
+----------------------------------------
 
 Introduction
-~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 This tutorial aims to introduce Qiita [1A]_ and redbiom [2A]_ to new users as utilities for downloading public datasets for subsequent analyses of their own. This will be illustrated with two examples.
 
 Set up
-~~~~~~
+^^^^^^^^
 
 This tutorial will start online using `Qiita <https://qiita.ucsd.edu/>`__ , for which one requires an account. If you do not, as yet, have a Qiita account you will need to create one (this is very simple, requiring only an email address); navigate to the `Qiita website <https://qiita.ucsd.edu/>`__ and use the sign up action box in the top right corner to do so.
 Redbiom can be used as a plugin in Qiita but the redbiom programme has more functionality. We will therefore be installing redbiom in the command line to use with the second tutorial example which demonstrates this functionality. Windows requires some additional set-up, please refer to `Setting up Windows to use QIIME 2 <https://docs.qiime2.org/>`__ in the QIIME2 docs. The following set-up is relevant for linux, Mac and the Windows subsystem for Linux (setup explained in the `QIIME2 docs <https://docs.qiime2.org>`__ ):
@@ -163,7 +163,7 @@ Alternatively, if you prefer not to install miniconda use:
 
 
 Introduction to the example data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This tutorial will use two different datasets to highlight both the different questions that can be asked with existing, open source data, and the different methods we can use to do so.
 
@@ -174,10 +174,10 @@ The second example poses a meta-analysis type question about the microbiome whic
 The following section will explain how to retrieve the data for these examples, beginning with the simpler clinical data example data retrieval on Qiita.
 
 Retrieving Data
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 Contexts
-^^^^^^^^
+"""""""""
 
 Processing and bioinformatic techniques can cause inherent biases in datasets, and so in Qiita and redbiom processed samples are partitioned into contexts representing these different methods. The protocol used to obtain samples and extract data may cause biases but, within any one context, data is expected to have the same biases and so be comparable. When retrieving data found in a redbiom search a context must be specified so ensuring the retrieved data is comparable.
 
@@ -191,11 +191,12 @@ Ultimately a context represents a processing pipeline, so if you are unfamiliar 
 If you already have a decent understanding of sequencing and processing microbial genomic data then please proceed to the next section.
 
 Commands to retrieve data
-^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""
 
 As previously discussed this tutorial will explore two methods by which one can retrieve data from publicly available studies. The simpler method, that is, completing everything within Qiita, will be outlined first, and this will be illustrated with our first example data set.
 
-**Retrieving data using the redbiom plug-in within Qiita**
+Retrieving data using the redbiom plug-in within Qiita
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 It is possible to search for data and studies directly on Qiita using the redbiom plug-in. This will be demonstrated by finding the data used in Casals-Pascual et al 2020, which cites that the data used was retrieved from a study in Qiita with ID 1629 [3A]_ . On the Qiita website select the *Study -> View Study option*, specify metadata in the tab down menu next to the search box and search for 1629 to find the data for this first example. In most scenarios however, the study would not be known beforehand, and in this case the Redbiom plugin can be used to search by metadata attributes e.g. a search for IBD brings up 7 studies, including Study 1629. Note that next to the search box you can specify metadata, feature or taxon. Selecting the green plus for the study of interest reveals the study data, in the form of Qiita artifacts. All artifacts of one type can then be selected by using *add all*, or specific artifacts can be selected using *per artifact -> add*. These selected artifacts can then be used to create an analysis as outlined in the next section.
 
@@ -215,11 +216,13 @@ Other tutorials (e.g. the *Statistical Analysis to Justify Clinical Trial Sample
 
 Where ``<study-id/prep-id>`` should be replaced with the appropriate study-id/prep-id.
 
-**Retrieving Data with the Redbiom programme**
+Retrieving data with redbiom in the command line
+''''''''''''''''''''''''''''''''''''''''''''''''''
 
 While the redbiom plugin for Qiita is useful for simple searches, and when finding data for processing and analysis within Qiita, the redbiom programme has increased functionality, and is particularly useful when data will be processed outside of Qiita. While artifacts, or raw study data, found within Qiita can then be downloaded after accessing the study and finding their ID, the redbiom programme allows searching and direct download all within the command line. The exercise frequency example will demonstrate how to use the redbiom programme.
 
-**1. Background information :** [4A]_
+**Background information:** [4A]_
+
 
 Redbiom commands follow a specific syntax: ``redbiom [options] command [arguments]``; for example to search for a metadata feature: ``redbiom search metadata <the feature>``. The general structure of the search arguments is ``<set operations> where <value restrictions>``. Typing ``redbiom`` in the terminal will return its syntax and commands if ever in doubt. Similarly typing ``redbiom <command>`` will return the syntax and options of that redbiom command.
 
@@ -229,7 +232,7 @@ Querying and fetching sample data using Redbiom requires a specified context (``
 
 Making a directory to work in at this point (e.g. ``mkdir querying_redbiom; cd querying_redbiom``), will keep all the data retrieved and generated together and tidy.
 
-**2. Retrieving data**
+**Retrieving data**
 
 For the first example, as we know the specific study we are interested in using, we could use the syntax ``redbiom search metadata "where qiita_study_id == <study ID>"`` . To retrieve the data from this study we could pipe the previous command as follows:
 
@@ -279,12 +282,12 @@ with
 Where shuf shuffles the lines piped to it and randomly selects the number of lines specified. All other commands remain the same but there will be less samples being analysed.
 
 Conclusion
-~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 This tutorial has demonstrated how to retrieve publicly available data with redbiom either through the Qiita plugin or the command line programme. If you are interested in learning how to process the raw data retrieved through the redbiom programme into a form appropriate for analysis please proceed to the next section of the tutorial. Alternatively, if you would like to learn how to use the data retrieved through the Qiita redbiom plugin to perform statistical analysis to justify clinical trial size please see the appropriate tutorial at :doc:`../analyzingsamples/index` for guidance on how to do so.
 
 Bibliography
-~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 .. [1A] Gonzalez A et al. 2018 Qiita: rapid, web-enabled microbiome meta-analysis. Nat. Methods 15, 796798. (doi:10.1038/s41592-018-0141-9)
 
@@ -294,14 +297,14 @@ Bibliography
 
 .. [4A] https://github.com/biocore/redbiom
 
-
- 
-Processing Public Data Retrieved With redbiom Tutorial
 ------------------------------------------------------
+ 
+Processing Public Data Retrieved with redbiom
+----------------------------------------------
 
 
 Introduction
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 This tutorial proceeds from the *Retrieving Data From Public Studies Tutorial*, and demonstrates how to process the raw AGP data retrieved through the redbiom API so that it can be used for analysis. The general work flow is transferable to any raw data retrieved through the redbiom API.
 
@@ -330,7 +333,7 @@ Should give an output something like as follows:
 Note this will be different if you are using a smaller subset of the data (which will speed up the tutorial). In the tutorial this retrieved data will be processed into an appropriate format for analysis using QIIME 2. QIIME 2 can be used in the command line or as an API for python. The command line is simpler to use, while the API allows more customization for complex processing. Note that while QIIME 2 artifacts cannot easily be viewed from either interface, one can use ``qiime tools peek <artifact name>`` to obtain some information on them in the command line or use the QIIME 2 `artifact viewer <https://view.qiime2.org/>`__ to view visualization type QIIME 2 artifacts (.qzv files).
 
 Set up
-~~~~~~
+^^^^^^^^
 
 QIIME 2 is the latest version (at the time of writing) of a package necessary for handling the raw data retrieved through redbiom. It is a command line programme, therefore, if you have Windows OS you will need to use WSL2 for this tutorial. For instructions to set up WSL2 please see this [tutorial](LINK TO THE Windows set up tutorial). Instructions for QIIME 2 installation on Linux, Mac and Windows and the latest release of the software can be found `here <https://docs.qiime2.org/>`__ . If you have anaconda/miniconda then use the following commands:
 
@@ -373,7 +376,7 @@ Restart the terminal to have changes take effect, then create an environment to 
 Packages for this project can now be installed in this environment, keeping them separate from any other projects you may have, and ensuring that different dependencies do not clash.
 
 Command line workflow
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 For the command line version of the processing workflow, make sure you have activated the appropriate conda environment (i.e. the one in which you installed QIIME 2). The first step is to load the files retrieved with redbiom into QIIME 2 format files. Note that we don't need to load the metadata into a QIIME 2 format, as it can be used as is in the .tsv format.
 
@@ -451,12 +454,12 @@ One can also train a taxonomic classifier to classify the sequences. The fragmen
 You have now produced all the artifacts necessary for a basic exploratory analyses and could continue from here to analyse e.g. beta diversity and alpha diversity, as well as producing PCA plots. The next section details how to achieve the same result in python, rather than the command line.
 
 Python Workflow
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 This section will demonstrate how to, using python, process data retrieved via redbiom into a form that can be used for further analysis.
 
 Set up
-^^^^^^
+""""""""
 
 As well as QIIME 2 processing the data in python will require pandas (a data analysis and manipulation tool) and some QIIME 2 plugins:
 
@@ -479,7 +482,7 @@ These are loaded into your IDE as follows:
 If any of these are not present, install them through conda (search conda install <name of package> in your preferred internet browser for instructions on how to do so for said package).
 
 Load and process data
-^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""
 
 The first step is to load the files retrieved using redbiom into QIIME 2 artifact type variables, these can then be recognised by QIIME 2 processing commands.
 
@@ -656,12 +659,12 @@ We can also visualise this classification as a table:
 With the data processed it is now possible to begin analysis. We have generated a feature table, representative sequences, an insertion tree and taxonomic classification and these will be sufficient for most simple exploratory analyses. 
 
 Conclusion
-~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 This tutorial has demonstrated how to process raw data retrieved through redbiom, using QIIME 2, either directly in the command line or through the python API. The processed data can now be analysed e.g. by calculating alpha and beta diversity metrics. To learn how to analyse the data visit the `QIIME 2 docs <https://docs.qiime2.org/>`__ and select an appropriate tutorial e.g. the Moving Pictures tutorial (skip to the Alpha and Beta Diversity Analysis section).
 
 Bibliography
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 .. [1B] Bokulich NA, Kaehler BD, Rideout JR, Dillon M, Bolyen E, Knight R, Huttley GA, Gregory Caporaso J. 2018 Optimizing taxonomic classification of marker-gene amplicon sequences with QIIME 2’s q2-feature-classifier plugin. Microbiome 6, 90. (doi:10.1186/s40168-018-0470-z)
 
