@@ -125,7 +125,7 @@ Retrieving Public Data for Own Analysis Tutorial
 Introduction
 ~~~~~~~~~~~~
 
-This tutorial aims to introduce Qiita [1A]_ and redbiom [2A]_ to new users as utilities for downloading public datasets for subsequent analyses of their own. It will begin with a brief introduction to these utilities, then proceed to illustrate their usage with two examples.
+This tutorial aims to introduce Qiita [1A]_ and redbiom [2A]_ to new users as utilities for downloading public datasets for subsequent analyses of their own. This will be illustrated with two examples.
 
 Set up
 ~~~~~~
@@ -150,7 +150,7 @@ Restart the terminal to have changes take effect, then create an environment to 
 
 .. code-block:: bash
 
-    conda create --name <name for environment>
+    conda create --name <name of new environment>
 
 Packages for this project can now be installed in this environment, keeping them separate from any other projects you may have, and ensuring that different dependencies do not clash. 
 
