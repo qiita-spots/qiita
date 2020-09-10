@@ -512,3 +512,527 @@ Beta Correlation
   * **Pearson** :ref:`[56]<reference56>` : Measures how strong the linear relationship is between 2 variables
 
 * Gives scatterplot of the distance matrix on the x-axis and the variable being tested on the y-axis
+
+
+Statistical Analysis to Justify Clinical Trial Sample Size Tutorial
+-------------------------------------------------------------------
+
+The goal of this tutorial is to demonstrate how to analyse public data similar to that one may obtain from one’s own proposed study; and use this to find the minimum sample size needed for appropriate/sufficient statistical power. This will allow relevant conclusions to be drawn for the minimum clinical trial size in one’s actual (own) study. The information obtained using this public data will therefore allow justification of the clinical trial format, and strengthen e.g. grant applications. 
+
+This tutorial is based on Casals-Pascual et al 2020 and will be analysing the same data, to reproduce the figures and statistics found in the paper [1]_ . The tutorial continues on from the `Retrieving Public Data for Own Analysis Tutorial` (see under redbiom) and expects that you can find the example data from study 1629, using the Qiita redbiom plugin.
+
+To reproduce the figures and results in Casals-Pascual et al 2020 we first need to process the raw data from study 1629 to obtain an Alpha_diversity artifact and a Beta_diverstiy artifact for the data. This stage of the tutorial will be completed within the Qiita processing interface, though note that it could be completed in QIIME 2 instead. We will also need the Metadata artifact from the original study. The second half of the process, producing the figures can then be completed either in python or in R.
+
+Set up
+~~~~~~
+
+Please follow the instructions in the `Retrieving Public Data for Own Analysis Tutorial` (see under redbiom) for the first example to find the data required for this tutorial.
+
+For later analysis you will require either a python script editor or R studio.
+Python scripts can be written directly in the command line editor vi but if you are a beginner this is not very user friendly, and I would recommend installing spyder (``conda install spyder``, presuming you have `miniconda <https://docs.conda.io/en/latest/miniconda.html>`__ ) which can then be launched from the command line by typing ``spyder``.
+R-studio can be downloaded via the command line using conda if you have miniconda/anaconda. It can also be downloaded and function independently of the command line (note you need to install both R and R-studio in this case). There are many tutorials for this online e.g. `here <https://www.datacamp.com/community/tutorials/installing-R-windows-mac-ubuntu>`__ or `here <https://techvidvan.com/tutorials/install-r/>`__ .
+
+Find and process data in Qiita
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once you have selected the study 1629 (see `Retrieving Public Data for Own Analysis Tutorial` under redbiom) there are four artifacts, these are:
+
+1. `Pick closed-reference OTUs (reference-seq: /databases/gg/13_8/rep_set/97_otus.fasta) | Split libraries FASTQ`.
+    * This tells us that the data is picked OTUs clustered by closed reference against /databases/gg/13_8/rep_set/97_otus.fasta and is now in a split library FASTQ format.
+    * FASTQ stores both sequence and corresponding quality score see `here <https://emea.support.illumina.com/bulletins/2016/04/fastq-files-explained.html>`__ for more info (though note the data in FASTQ format does not have to be illumina sequencing data).
+    * Split refers to demultiplexing where sequences from the same lane are split into samples based on barcodes (N.B. illumina can sequence multiple different samples at the same time, therefore sequence data has to be demultiplexed into the separate samples present in the same lane.)
+2. Pick closed-reference OTUs (reference-seq: /databases/gg/13_8/rep_set/97_otus.fasta) | Trimming (length: 90)
+    * This is essentially the same as the previous artifact but the reads have been trimmed to 90nt (see contexts for an explanation of why this is done).
+3. Deblur (Reference phylogeny for SEPP: Greengenes_13.8, BIOM: /projects/qiita_data/BIOM/60941/reference-hit.biom) | Trimming (length: 90)
+    * Deblur processed sequence data trimmed to 90nt and classified by taxonomy using the greengenes reference database. This artifact contains only those sequences which have been classified thus reference-**hit**.biom
+    * SEPP is a phylogenetic placement program that can be used to place query sequences (reads e.g. of the V4 region of 16S) into the phylogeny of the full length gene’s tree (e.g. in this case using the Greengenes database).
+4. Deblur (Reference phylogeny for SEPP: Greengenes_13.8, BIOM: /projects/qiita_data/BIOM/60942/all.biom) | Trimming (length: 90)
+    * This artifact been processed in the same manner as the previous artifact, but all ASVs are present, including those that did not get placed (therefore **all**.biom).
+
+For the Deblur data we will use the reference-hit.biom data as this represents those ASVs which were placed within the Greengenes database. Using the all.biom data would give all ASVs, but the unplaced sequences would have to be removed to allow later analysis with Unifrac (so that they may as well not be present) and therefore we select the reference-hit data from the start. N.B. unifrac uses phylogenetic distance (measures of relatedness), thus the need for placed sequences.
+For the OTUs, the trimmed sequences are appropriate, as they represent a later step in the processing pipeline of the raw data.
+
+With these two artifacts selected proceed to *create analysis*. Both samples will need to be rarefied and then have alpha and beta diversity artifacts created. For a general overview of processing data in the Qiita processing interface see this `Qiita docs <https://qiita.ucsd.edu/static/doc/html/index.html>`__ . To rarefy the data select the artifact -> *process* -> *rarefy*, modify the options of rarefy so that total frequency is a 10000 for both -> *add command* -> *run*.
+The cut off frequency is an individual choice, but the use of 10 000 strikes a compromise between losing data from samples with large library sizes and discarding samples with smaller library size. One can look at the frequency tables of the biom artifacts to get an idea of what would be an appropriate cut off. In this case 10 000 will allow most samples to be used, while maintaining quality. Once rarefaction has completed the `rarefied_table` artifact can be used for alpha and beta diversity calculations. Select the `rarefied_table` artifact, *process* -> *alpha diversity (phylogenetic) [alpha_phylogenetic]* and in options use the default option of Faith’s index then *add command* -> *run*. Beta Diversity can be calculated with *Beta Diversity (phylogenetic)* (this uses Unifrac). For the OTU artifact one can specify the phylogenetic tree from the database (as closed OTUs inherently have taxonomy data). For the Deblur artifact use the ‘artifact tree, if exists’ option. The artifact we are using has been aligned to a reference database, but not all deblur data will necessarily have associated taxonomy data.
+The distance matrix produced by the Beta Diversity process will allow us to run a principal coordinate analysis, while this is not necessary for reproducing the plots, it allows one to visualise the data and so get an intuitive idea of what it represents.
+
+Retrieve artifacts/data from Qiita and create figures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To reproduce the plots in the paper we need to produce two figures (three plots). The first shows sample size against power (1 - P(type II error)) which is used to find statistically significant differences in alpha diversity. This allows one to calculate the standard sample size required to detect an effect between a group and the control population. This sample size will be affected by the effect size, so we need to plot power for at least three different effect sizes. Casals-Pascual et al 2020. use 0.55, 0.82, 1.00 because these represent a difference in Faith’s PD (a measure of phylogenetic distance) of 2, 3, and 4. The group being used to calculate alpha diversity is B1.
+The second figure includes two plots: the first plots sample size against power (1 - P(type II error)) to find statistically significant differences in Beta diversity (in this case pairwise distances between the two groups). Again, multiple scenarios are used, in this case significance levels of 0.001, 0.01, 0.05 and 0.1. The second is a histogram showing the distribution of pairwise distances within and between the two sample groups. The groups are B1 and B2/3 (i.e. B1 samples are compared to all other samples).
+
+Download data from Qiita
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This can be done in the command line using wget and the links from your Qiita study. Select an artifact followed by ‘generate download link’ if your study is private. If your study is public one can simply use the artifact ID as described in the [Retrieving Public Data tutorial](LINK TO THIS). Use the -O option to specify the output (downloaded) file’s name. We also need the study metadata, this can be retrieved from the study page, under sample information, copy the link address of the sample info download button.
+
+.. code-block:: bash
+
+    wget -O alpha_div_artifact.zip “<link for alpha diversity artifact>”
+    wget -O beta_div_artifact.zip "<link for beta diversity artifact>"
+    wget -O metadata.zip “<https://qiita.ucsd.edu/public_download/?data=sample_information&study_id=<study-id>”
+
+To have this run ‘quietly’ (without showing any output) add the -q option. However, note that running in quiet mode might lead to missed error messages. Certain errors, suggesting that the zipfile is corrupt, can be `ignored <https://qiita.ucsd.edu/static/doc/html/faq.html#how-to-solve-download-or-unzip-errors>`__ .
+When the files have been downloaded unzip them with ``unzip <file name>``.
+
+If you did not merge samples when creating your analysis the sample IDs in the beta and alpha diversity artifacts may not match those of the metadata, as they will have your rarefied artifact ID appended to the sample ID. To make the sample IDs match, the simplest fix is to change the metadata file as it is an easily manipulatable .txt file. The code below will append your rarified table ID to the metadata IDs
+
+.. code-block:: bash
+
+    cat ./templates/<name of your metdata file> | sed “s/^1629/<rarified table in Qiita ID>.1629/g” > ./templates/metadata.txt
+
+Check this has worked with ``cat templates/metadata.txt | less``.
+
+Python workflow
+~~~~~~~~~~~~~~~
+
+This section works through the `code <https://github.com/knightlab-analyses/sample-size-stat-power-clinical-microbiome>`__ accompanying the aforementioned paper. Alternatively, you can skip this section and use R studio for the same end result figures.
+
+Set up environment
+^^^^^^^^^^^^^^^^^^
+
+There are various modules required to complete this analysis in python.
+
+* ``qiime2``: a bioinformatics platform for next generation microbiome data.
+* ``pandas``: a data analysis and manipulation tool.
+* ``Seaborn``: a data visualization library based on matplotlib which facilitates drawing statistical graphics.
+* ``Matplotlib.pyplot``: a matplotlib interface (allows plotting in a manner similar to that in MATLAB which is a programming language).
+* ``skbio/scikit-bio``: a python package which is used by QIIME 2 (i.e. a dependency), from which the DistanceMatrix function is required.
+* ``statistics``: a python package for functions such as mean and stdev
+* From ``statsmodels.stats.power`` the ``tt_ind_solve_power`` function is required - this is a function that allows calculation of the power of a two sample t-test given relevant data.
+
+It is likely that these packages will already be present if you are using conda and have installed QIIME 2. If any are missing do an internet search for the package name + conda; one of the top hits will be from the anaconda cloud, and give instructions for installing the package. Alternatively, you can use ``conda search <package name>`` within the command line.
+
+Open your preferred python IDE or script editor, and make a new script. To set-up the environment use:
+
+.. code-block:: python
+
+    import pandas as pd
+    import qiime2 as q2
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+
+    from statsmodels.stats.power import tt_ind_solve_power
+    from statistics import mean, stdev
+    from skbio import DistanceMatrix
+
+Process the artifact data
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Metadata**
+
+The metadata file unpacks to a folder template, with one file 1629_20180101-113841.txt. If you have used the earlier command to append an artifact ID to the sample ID this name may be different. To assign the metadata to a variable use:
+
+.. code-block:: python
+
+    metadata = pd.read_csv('./templates/<metadata file name>', sep='\\t', dtype=str, index_col=0, engine='python')
+    
+
+This code assigns the metadata information to the variable metadata, using the pandas ``read_csv function``, the ``sep =`` sets the separator of the data columns, ``index_col`` specifies the column to use as the index, ``dtype`` specifies the data type for the columns, and ``engine`` specifies the parser. The variable metadata now consists of 38 columns specifying the metadata details of the 683 patients.
+
+Next, using QIIME 2, the alpha_diversity artifact can be be added to the metadata variable in a new column (deblur alpha diversity):
+
+.. code-block:: python
+
+    metadata['deblur alpha diversity'] = q2.Artifact.load('./alpha_vector/<appropriate ID>/alpha_diversity.qza').view(pd.Series)
+    metadata.dropna(subset=['deblur alpha diversity'], inplace=True)
+
+The ``view(pd.Series)`` is used to view the artifact (loaded by QIIME 2) in panda series format - in this format the data can be appended to the metadata variable. A panda series is an array that can be made from data input such as csv files and existing storage. The last line of code drops those rows with NA (not applicable) values (i.e. missing values) in the deblur alpha diversity column from the data frame. Inplace specifies editing of the object in place rather than returning the output as a new dataframe.
+
+When working through someone else's code it is often a good aid to understanding to print various variables along the way, this gives a better idea of what is happening, and will flag any possible errors. E.g. at this stage try
+
+.. code-block:: python
+
+    print(metadata[metadata ['deblur alpha diversity']])
+
+Next we can divide the data into groups:
+
+.. code-block:: python
+
+    b1 = metadata[metadata.cd_behavior == 'Non-stricturing, non-penetrating (B1)']
+    bother = metadata[(metadata.cd_behavior != 'Non-stricturing, non-penetrating (B1)') & (metadata.cd_behavior != 'not applicable')]
+
+    dtx = q2.Artifact.load('<path to distance matrix artifact/distance artifact .qza>').view(DistanceMatrix)
+
+    b1_dtx = dtx.filter(ids=b1.index).to_series().values
+    bother_dtx = dtx.filter(ids=bother.index).to_series().values
+
+This code makes a variable representing the b1 group. This variable (``b1``) contains all rows in the metadata object which have cd_behaviour equal to the B1 phenotype (Non-structuring, non-penetrating (B1). ``b1_dtx`` contains all the values in the distance matrix after filtering for b1. To do this required loading the distance matrix data into a variable using q2.Artifact.load. We also create variables containing all other non-B1 and present (not NA) data from the metadata and dtx variables.
+
+**Alpha diversity data**
+
+Now we have processed the data into a python readable format we can calculate variables such as the standard deviation and the mean:
+
+.. code-block:: python
+ 
+    sd1 = b1['deblur alpha diversity'].std()
+    sd2 = bother['deblur alpha diversity'].std()
+    sd12 = mean([sd1, sd2])
+
+Again, print these to see if they look as expected, or, if you are using an appropriate IDE (such as spyder), you can look at their values and type in the inbuilt variable explorer. Next we will make a data frame containing the data for the first plot
+
+.. code-block:: python
+
+    # significance level
+    alpha = 0.05 
+
+    #create empty list
+    data_alpha = [] 
+
+    #in steps of 5 from 10 to 55
+    for observations in range(10, 155, 5):
+    #for differences in Faiths PD representative of effect sizes 0.55, 0.82, 1.00
+        for difference in [2, 3, 4]:
+            #effect size calculation	
+       		effect_size = difference/sd12
+       		x = tt_ind_solve_power(effect_size=effect_size,
+                #number of observations, iterated by the loop
+                nobs1=observations, 	
+                #significance level
+                alpha=alpha,
+                #number of observations for second group presumed to be equal to first group's observations
+                ratio=1.0,
+                alternative='two-sided')	
+            data_alpha.append({	
+                #append parameters and output to list
+                'alpha': alpha, 'Power (1-β)': x,
+                'Total sample size (N)': observations * 2,
+                'Difference': '%d (effect size %0.2f)' % (difference, effect_size)})
+
+    #turn the list created in the loop into dataframe
+    data_alpha = pd.DataFrame(data_alpha)							
+    
+    
+``tt_ind_solve_power`` solves for any one parameter of a two sample t-test. In this case we are using it to find power given all data. It requires effect_size, nobs1, alpha, power and ratio; where exactly one needs to be None (and is calculated), while all others need numeric values.
+
+* ``Effect_size`` is the standardized effect size, the difference between the two means divided by the standard deviation.
+* ``Nobs1`` is the number of observations of sample 1 (which we generate with a loop, in steps of 5 from 10 to 55).
+* ``Ratio`` is used to specify the ratio between the number of observations of group one and two; so that ``nobs2 = nobs1 * ratio``.
+* ``Alpha`` is the significance level - that is the probability of a type I error; that is the probability of finding a significant effect when the null hypothesis is actually true.
+* ``Power`` - is what we want to calculate, it is (1 - the probability of a type II error). A type II error is falsely finding a non-significant effect and accepting the null hypothesis (when there is in fact a significant effect).
+
+Our extra parameter, alternative, ensures that the power is calculated for a two-tailed t-test (this is default in anycase).
+The outcome of this code is therefore to calculate the power for a given alpha and difference over a range of sample sizes (represented by observation), and then append all parameters appropriately to a list which is then processed to form a data-frame which we can use as input for plotting.
+
+**Beta diversity data**
+
+The process for obtaining the points to plot for beta diversity is similar to that for alpha diversity but now we are considering two groups, and therefore the difference between them. The absolute difference in the two groups’ means divided by their mean standard deviation gives the effect size:
+
+.. code-block:: python
+
+    u2u1 = abs(mean(b1_dtx) - mean(bother_dtx))
+    effect_size = u2u1/mean([stdev(b1_dtx), stdev(bother_dtx)])
+
+Note here that ``stdev()`` is used rather than ``std()``. ``std()`` calculates population standard deviation, while ``stdev()`` calculates sample standard deviation. For alpha diversity we consider only the contents of the particular sample (i.e. we are not comparing to any other group but rather attempting to find whether the sample is significantly different from the entire population) and therefore, for the null hypothesis can treat it as the population. However, for beta-diversity comparison between groups means that no one group cannot be considered as necessarily representative of the whole population and so sample standard deviation is used.
+
+Again, a list is created by appending iterated ``tt_ind_solve_power`` output and parameters, and this list is then converted to a dataframe. However, this time we iterate through different significance levels rather than effect levels.
+
+.. code-block:: python
+
+    data_beta = []
+    for observations in range(10, 155, 5):
+        for alpha in [.001, .01, .05, .1]:
+            x = tt_ind_solve_power(effect_size=effect_size, nobs1=observations,
+                    alpha=alpha, ratio=1.0,
+                    alternative='two-sided')
+            data_beta.append({
+                    'Significance level (α)': alpha, 'Power (1-β)': x,
+                    'Total sample size (N)': observations * 2,
+                    'Difference': '%d (effect size %0.2f)' % (difference, effect_size)})
+   data_beta = pd.DataFrame(data_beta)
+
+We have now generated the necessary data to create the relevant plots.
+
+Create Figures
+^^^^^^^^^^^^^^
+
+**Figure 1**
+
+We will use ``fig``, which allows the creation of a background (blank canvas) upon which further commands will take effect, the rest of the first line formats this background. ``sns.set`` can be used to set aesthetic parameters of the graph including plotting context such as grid line width, adjust the parameters of the plotting line axes and specify the axes titles.
+
+.. code-block:: python
+
+    fig, ax1 = plt.subplots(figsize=(15, 9))
+
+    sns.set(style="whitegrid")
+    sns.set_context("paper", font_scale=2,
+    rc={'lines.linewidth': 2, 'lines.markersize': 12})
+
+    f = sns.lineplot(x='Total sample size (N)', y='Power (1-β)', markers=True, dashes=False, style='Difference', ax=ax1, data=data_alpha)		#plot the data itself
+    
+    #x.axis ticks every 20 units
+    ax1.xaxis.set_major_locator(plt.MultipleLocator(20))
+
+    plt.axhline(0.8, 0, data_alpha['Total sample size (N)'].max())
+
+    fig.savefig('figure1.pdf')
+
+**Figure 2**
+
+Figure 2 has two graphs within it. This requires a grid to place them within, with three columns, two for the one graph, one for the other graph, on a single row. Then we can plot the two graphs, using similar syntax to the previous figure.
+
+.. code-block:: python
+
+    fig = plt.figure(figsize=(20, 8))
+    grid = plt.GridSpec(ncols=3, nrows=1, hspace=0.2, wspace=0.2)
+
+    # add two new plots to grid
+    ax1 = fig.add_subplot(grid[0, :2])
+    ax2 = fig.add_subplot(grid[0, 2:])
+
+    #for plot 1 set the style, axes etc + specify the data
+    sns.lineplot(x='Total sample size (N)', y='Power (1-β)',
+        style='Significance level (α)',
+        markers=True, dashes=False,
+        ax=ax1, data=data_beta)
+
+    # plot the data for plot 1, and set it’s x axis ticks to be every 20 units
+    ax1.axhline(0.8, 0, data_beta['Total sample size (N)'].max())
+    ax1.xaxis.set_major_locator(plt.MultipleLocator(20))
+
+    # specify plot 2 parameters and plot
+    sns.distplot(b1_dtx, label="B1 within distances", color="red", ax=ax2)
+    ax2.axvline(mean(b1_dtx), 0, 6, color="red")
+    sns.distplot(bother_dtx, label="B2-3 within distances", color="skyblue", ax=ax2)
+    ax2.axvline(mean(bother_dtx), 0, 6, color="skyblue")
+    ax2.xaxis.set_major_locator(plt.MultipleLocator(.1))
+    plt.legend()
+
+    fig.savefig('figure2.pdf')
+
+You have now replicated the two figures in the Casals-Pascual et al 2020 paper, and should be able to repurpose this code to use for other data relevant to your own study.
+
+R studio workflow
+~~~~~~~~~~~~~~~~~
+
+Set up environment
+^^^^^^^^^^^^^^^^^^
+
+In R-studio create a new project and copy the (equivalent) following files to it:
+
+* metadata.txt
+* alpha-diversity.tsv
+* alpha_diversity.qza
+* distance_matrix.qza
+* distance-matrix.tsv
+
+If you are using windows, and have the windows R-studio, the files can be copied from the linux subshell using ``cp <file.name> /mnt/c/Users/<your username>/<rest\ of\ path\ with\ back-slashes\ to\ escape\ spaces>/`` (this assumes you are in the directory containing the files, if not add the path to the file before the file name). Create a new script and set up your R environment:
+
+.. code-block:: r
+
+    # IBD example
+
+    ##get packages
+    if (!requireNamespace("installr", quietly = TRUE)){install.packages("installr")}
+    library("installr")
+    if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
+    library(devtools)
+    if (!requireNamespace("qiime2R", quietly = TRUE )) {devtools::install_github("jbisanz/qiime2R")}
+    library(qiime2R)
+    if(!requireNamespace("stats", quietly = TRUE)){install.packages("stats")}
+    library("stats")
+    if(!requireNamespace("ggplot2", quietly = TRUE)){install.packages("ggplot2")}
+    library("ggplot2")
+    if(requireNamespace("gridExtra", quietly = TRUE)){install.packages("gridExtra")}
+    library("gridExtra")
+    
+
+Not all the above steps may be necessary, but do remember to load the libraries, even if they are already installed. After this is completed we can import the data and process it. We will use Qiime2R [2]_ to import the data into formats R can handle, then filter it into appropriate groups.
+
+Import and process data
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: r
+
+    ## Import and prepare data
+    ### metadata
+    metadata <- read.table("metadata.txt", sep="\t", header = TRUE)
+
+    ###Load alpha diversity artifact
+    alpha <- read_qza("alpha_diversity.qza")
+    metadata <- merge.data.frame(metadata, alpha$data, by.x = 'sample_name', by.y = 0 )
+    metadata <- metadata[!is.na(metadata$faith_pd),]
+
+    ####Make variables for each group
+    b1 <- metadata[(metadata[ ,'cd_behavior'] == 'Non-stricturing, non-penetrating (B1)'), ]
+    bother <- metadata[(metadata$cd_behavior != 'Non-stricturing, non-penetrating (B1)' & metadata$cd_behavior != 'not applicable'), ]
+
+    ###Load beta diversity/distance matrix artifact
+    beta <- read_qza("distance_matrix.qza")
+    dtx <- as.matrix(beta$data)
+
+    ####Make variables for each group
+    b1_dtx <- as.vector(t(dtx[(metadata[(metadata$cd_behavior == 'Non-stricturing, non-penetrating (B1)'),"sample_name"]), ]))
+    bother_dtx <- as.vector(t(dtx[(metadata[(metadata$cd_behavior != 'Non-stricturing, non-penetrating (B1)' & metadata$cd_behavior != 'not applicable'), "sample_name"]), ]))
+
+The artifacts have now been loaded into R and the data separated by group. We can now perform the necessary processing to obtain data for plotting. Note that we do not use R’s sd function directly because it calculates sample standard deviation and we require population standard deviation when working with alpha diversity statistics (which consider the sample as the population).
+
+.. code-block:: r
+
+    ## Process data
+    ### alpha
+    n <- length(b1$faith_pd)
+
+    # R's standard sd function uses denominator n -1 i.e. calculates sample standard deviation, therefore we do not use sd directly.
+
+    sd1 <- sqrt((n-1)/n) * sd(b1$faith_pd) 
+    sd2 <- sqrt((n-1)/n) * sd(bother$faith_pd)
+    sd12 <- mean(sd1, sd2)
+
+    #### power t-test has the parameters n, delta, sd, sig.level and power. Four must be specified and the final is then calculated
+
+    #significance level
+    sig <- 0.05
+
+    #create and empty data frame
+    data_alpha <- data.frame(NULL)
+    
+    #calculate the values for plotting and place them in a data frame
+    #iterate through sample sizes
+    for(obs in seq(from = 10, to = 155, by = 5)) {
+    	#for each sample size iterate through different effect sizes
+        for(diff in 2:4){
+            x <- power.t.test(n=obs,
+                                delta=diff,
+                                sd=sd12,
+                                sig.level=sig,
+                                power=NULL,
+                                alternative="two.sided")
+    #place the calculated values into a dataframe
+        xrow <- c(x$sig.level, x$power, (x$n * 2), x$delta, (x$delta / x$sd))
+        data_alpha <- rbind(data_alpha, xrow)
+        }
+    }
+
+    # Set column names of the created dataframe
+    colnames(data_alpha) <- c('Significance level (α)', 'Power (1-β)', 'Total sample size (N)', 'Difference', 'Effect size')
+
+    ###beta
+
+    u2u1 <- abs(mean(b1_dtx) - mean(bother_dtx))
+    
+    # note here we do use sd() because now we do want to calculate the sample standard deviation
+    sd_dtx <- mean(sd(b1_dtx), sd(bother_dtx)) 
+
+    #create empty dataframe
+    data_beta <- data.frame(NULL)
+
+    #iterate through samples sizes
+    for(obs in seq(from=10, to=155, by=5)){
+    #for each sample size iterate through different significance levels
+        for(sig in c(0.001, 0.01, 0.05, 0.1)){
+            #calculate power for the set variable
+            x <- power.t.test(n=obs,
+                            delta=u2u1,
+                            sd=sd_dtx,
+                            sig.level=sig,
+                            power=NULL,
+                            type="two.sample",
+                            alternative="two.sided")
+            #place the calculated data into a data frame
+            xrow <- c(x$sig.level, x$power, (x$n * 2), x$delta, (x$delta / x$sd))
+            data_beta <- rbind(data_beta, xrow)
+            }
+    }
+
+    #Name the columns of the data frame appropriately
+    colnames(data_beta) <- c('Significance level (α)', 'Power (1-β)', 'Total sample size (N)', 'Difference', 'Effect size')
+
+If you have also looked at the python version of this code you may notice that here we do not use effect size directly, rather the function accepts both the difference and the standard deviation and calculates the effect size itself.
+
+Make Plots
+^^^^^^^^^^
+
+R’s default plotting function is perfectly adequate for exploratory analysis, but for publication level figures the package ggplot is more appropriate. ggplot uses 'layers', first the plot background is made, then points, lines, annotations etc can be added to it.
+
+.. code-block:: r
+    
+    ## Make plots
+    ### Figure 1
+    p <- ggplot(data_alpha, aes(x =as.numeric(`Total sample size (N)`), y =as.numeric(`Power (1-ß)`), group = as.factor(`Difference`), color = as.factor(`Difference`), shape = as.factor(`Difference`))) +
+        geom_hline(yintercept = 0.8, color = "blue", size = 0.5) +
+        geom_point() +
+        geom_line() +
+        scale_x_continuous(breaks = seq(0, 320, by = 20)) +
+        scale_y_continuous(breaks = seq(0, 1, by = 0.1)) +
+        labs(x = "Total sample size (N)", y = "Power (1-ß)") +
+        scale_shape_discrete(name = 'Difference', breaks = c("2", "3", "4"), labels = c("2 (effect size 0.55)", "3 (effect size 0.82)", "4 (effect size 1.09)")) +
+        scale_colour_discrete(name = 'Difference', breaks = c("2", "3", "4"), labels = c("2 (effect size 0.55)", "3 (effect size 0.82)", "4 (effect size 1.09)")) +
+        theme(legend.position = "bottom")
+
+        #save the figure
+        jpeg('Figure_1.jpg', width = 1306, height = 579)
+        p
+        dev.off()
+
+While this code contains the necessary command to save an image automatically, a better quality image can be saved by running the line ``p`` alone so that the plot is present in the Rstudio plot viewer, and then using *export* -> *export as png* -> optionally alter image size and or ratio -> *save*. The same is true for figure 2 below, but in this case run the line ``grid.arrange(p1, p2, layout_matrix = lay)`` alone.
+
+.. code-block:: r
+
+    ### Figure 2
+    #### First create the two graphs
+    p1 <- ggplot(data_beta, aes(x =as.numeric(`Total sample size (N)`), y =as.numeric(`Power (1-ß)`), group = as.factor(`Significance level (a)`), color = as.factor(`Significance level (a)`), shape = as.factor(`Significance level (a)`))) +
+        geom_hline(yintercept = 0.8, color = "blue", size = 0.5) +
+        geom_point() +
+        geom_line() +
+        scale_x_continuous(breaks = seq(0, 320, by = 20)) +
+        scale_y_continuous(breaks = seq(0, 1, by = 0.1)) +
+        labs(x = "Total sample size (N)", y = "Power (1-ß)") +
+        scale_shape_discrete(name = 'Significance level (α)', breaks = c("0.001", "0.01", "0.05", "0.1"), labels = c("0.001", "0.01", "0.05", "0.1")) +
+        scale_colour_discrete(name = 'Significance level (α)', breaks = c("0.001", "0.01", "0.05", "0.1"), labels = c("0.001", "0.01", "0.05", "0.1")) +
+        theme(legend.position = "bottom")
+
+    ####prepare data so ggplot can use it for a histogram
+    mu_b1 <- mean(b1_dtx)
+    label <- 'b1'
+    b1_dtx <- cbind(b1_dtx, label)
+    mu_bother <- mean(bother_dtx)
+    label <- 'bother'
+    bother_dtx <- cbind(bother_dtx, label)
+    merged <- as.data.frame(rbind(b1_dtx, bother_dtx))
+    colnames(merged) <- c('dtx', 'Sample')
+
+
+    ####plot the histogram
+
+    p2 <- ggplot(data = merged, aes(x = as.numeric(dtx), group = Sample, fill = Sample)) +
+        geom_histogram(aes(y=..density.., color = Sample), alpha = 0.1, binwidth = 0.01) +
+        geom_density(alpha = 0.4) +
+        scale_x_continuous(name = '', breaks = seq(0,1,0.1), expand = c(0.1, 0.1)) +
+        scale_y_continuous(breaks = c(0:20)) +
+        geom_vline(xintercept = mu_b1, color = 'red', linetype = 'dashed', size = 0.8) +
+        geom_vline(xintercept = mu_bother, color = 'blue', linetype = 'dashed', size = 0.8) +
+        theme(legend.position = "bottom") +
+        scale_color_discrete(name = '', breaks = c('b1', 'bother'), labels = c("B1 within distances", "B2-3 within distances")) +
+        scale_fill_discrete(name = '', breaks = c('b1', 'bother'), labels = c("B1 within distances", "B2-3 within distances"))
+
+    #specify layout
+    lay <- cbind(matrix(1), matrix(1), matrix(2))
+
+    #save figure
+    jpeg('Figure_2.jpg', width = 1500, height = 579)
+    grid.arrange(p1, p2, layout_matrix = lay)
+    dev.off()
+    
+These figures will look slightly different to those in Casals-Pascual et al 2020 because they have been made in R but they are essentially the same, and this code can be modified to one’s own data if R is preferred.
+
+Conclusion
+~~~~~~~~~~
+
+You should now have two figures essentially the same as those found in Casals-Pascual et al 2020 as well as having obtained the data to quantitatively decide an appropriate sample size for an experiment which will allow you obtain similar data. The generic paragraph recommended by their publication is as follows:
+
+*Generic Sample Size Justification Paragraph for Grants or Articles
+The sample size has been determined based on statistical power, effect size, time, and available resources requested in this grant. A total number of 110 patients is realistic and achievable enrollment in our clinical setting. The diversity of microbial communities is a good indicator of dysbiosis in patients with CD1, and we have selected Faith’s PD as a suitable metric to calculate alpha diversity. In a similar study, we observed that this metric shows an approximately normal distribution with mean 13.5 and standard deviation 3.45. Thus, to find a significant reduction of 2 units of Faith’s PD (effect size, Cohen’s D: 0.55) with an alpha value (type I error) of 5% and a statistical power (1  beta) of 80%, we will have to enroll 110 patients (55 with B1 phenotype and 55 with B2/B3 phenotype).*
+
+
+
+Bibliography
+~~~~~~~~~~~~
+
+.. [1]  Casals-Pascual C, González A, Vázquez-Baeza Y, Song SJ, Jiang L, Knight R. 2020 Microbial Diversity in Clinical Microbiome Studies: Sample Size and Statistical Power Considerations. Gastroenterology 158, 15241528. (doi:10.1053/j.gastro.2019.11.305)
+
+.. [2] 2018 Tutorial: Integrating QIIME2 and R for data visualization and analysis using qiime2R. QIIME 2 Forum. See https://forum.qiime2.org/t/tutorial-integrating-qiime2-and-r-for-data-visualization-and-analysis-using-qiime2r/4121
+
+
+

@@ -44,7 +44,7 @@ Looking for comparable studies? Please see the document here:
 
 .. toctree::
 
-   redbiom.rst
+   redbiom/redbiom.rst
 
 Looking for information about analyzing your data? Please see the document here:
 
