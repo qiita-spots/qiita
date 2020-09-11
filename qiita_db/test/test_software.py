@@ -383,23 +383,24 @@ class CommandTests(TestCase):
             'analysis': ('analysis', None),
             'files': ('string', None),
             'artifact_type': ('string', None)}
-        obs = qdb.software.Command.create(
+        validate = qdb.software.Command.create(
             software, "Validate", "Test creating a validate command",
             parameters)
-        self.assertEqual(obs.name, "Validate")
-        self.assertEqual(obs.description, "Test creating a validate command")
+        self.assertEqual(validate.name, "Validate")
+        self.assertEqual(
+            validate.description, "Test creating a validate command")
         exp_required = {
             'template': ('prep_template', [None]),
             'analysis': ('analysis', [None]),
             'files': ('string', [None]),
             'artifact_type': ('string', [None])}
-        self.assertEqual(obs.required_parameters, exp_required)
+        self.assertEqual(validate.required_parameters, exp_required)
         exp_optional = {'name': ['string', 'dflt_name'],
                         'provenance': ['string', None]}
-        self.assertEqual(obs.optional_parameters, exp_optional)
-        self.assertFalse(obs.analysis_only)
-        self.assertEqual(obs.naming_order, [])
-        self.assertEqual(obs.merging_scheme,
+        self.assertEqual(validate.optional_parameters, exp_optional)
+        self.assertFalse(validate.analysis_only)
+        self.assertEqual(validate.naming_order, [])
+        self.assertEqual(validate.merging_scheme,
                          {'parameters': [], 'outputs': [],
                           'ignore_parent_command': False})
 
@@ -440,11 +441,21 @@ class CommandTests(TestCase):
         self.assertFalse(old_cmd.active)
 
         # 2. let's create a new command with the same name and check that now
-        #    the old and the new are active
+        #    the old and the new are active. Remember the new command is going
+        #    to be created in a new software that has a Validate command which
+        #    is an 'artifact definition', so this will allow us to test that
+        #    a previous Validate command is not active
         new_cmd = qdb.software.Command.create(
             software, cmd_name, cmd_name, parameters, outputs=outputs)
+        self.assertEqual(old_cmd.name, new_cmd.name)
         self.assertTrue(old_cmd.active)
         self.assertTrue(new_cmd.active)
+        # find an old Validate command
+        old_validate = [c for c in qdb.software.Software.from_name_and_version(
+            'BIOM type', '2.1.4 - Qiime2').commands if c.name == 'Validate'][0]
+        self.assertEqual(old_validate.name, validate.name)
+        self.assertTrue(validate.active)
+        self.assertFalse(old_validate.active)
 
     def test_activate(self):
         qdb.software.Software.deactivate_all()
