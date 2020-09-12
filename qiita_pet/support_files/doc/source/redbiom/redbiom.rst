@@ -7,6 +7,10 @@ redbiom
 * Allows you to search through public studies to find comparable data to your own
 * Can search by: metadata, feature, or taxon
 
+redbiom is a cache service which can be used to search databases for samples which contain particular taxonomic units or given features (e.g. environmental or clinical factors); either as a Qiita plugin, or as a separately installed command line package. redbiom can therefore be used to identify samples for a meta-analysis focused on some particular factor (or factors). The utility of searching by metadata or feature is that it allows the discovery and subsequent use of a potentially wide variety of samples. This may include data from studies with completely different research goals, which one would have otherwise been unlikely to realize could be used.
+
+Note that a cache service is a high-speed data storage layer which stores a subset of data allowing a more rapid searching and retrieval experience. redbiom has a much smaller, sparse vector version of the Qiita database containing mainly metadata, which thus allows rapid searching. Samples found in a redbiom search can then be retrieved from the Qiita database through redbiom for subsequent analysis.
+
 For more information, advanced queries and generating
 `BIOM <http://biom-format.org/>`__ files go to the
 `redbiom github page <https://github.com/biocore/redbiom/blob/master/README.md>`__.
@@ -35,7 +39,7 @@ Search Options
     will find all samples which have the *qiita_study_id* metadata category, and in which the value for that sample is *10317*.
 
   * **Examples:**
-  
+
     * Find all samples in which both the word 'infant', as well as 'antibiotics' exist, and where the infants are under a year old:
 
     .. code-block:: bash
@@ -114,12 +118,12 @@ Search Options
     .. code-block:: bash
 
        p__Tenericutes
-       
-       
+
+
 ----------------------------------------
-       
-       
-Retrieving Public Data for Own Analysis 
+
+
+Retrieving Public Data for Own Analysis
 ----------------------------------------
 
 Introduction
@@ -131,7 +135,7 @@ Set up
 ^^^^^^^^
 
 This tutorial will start online using `Qiita <https://qiita.ucsd.edu/>`__ , for which one requires an account. If you do not, as yet, have a Qiita account you will need to create one (this is very simple, requiring only an email address); navigate to the `Qiita website <https://qiita.ucsd.edu/>`__ and use the sign up action box in the top right corner to do so.
-Redbiom can be used as a plugin in Qiita but the redbiom programme has more functionality. We will therefore be installing redbiom in the command line to use with the second tutorial example which demonstrates this functionality. Windows requires some additional set-up, please refer to `Setting up Windows to use QIIME 2 <https://docs.qiime2.org/>`__ in the QIIME2 docs. The following set-up is relevant for linux, Mac and the Windows subsystem for Linux (setup explained in the `QIIME2 docs <https://docs.qiime2.org>`__ ):
+Redbiom can be used as a plugin within Qiita, however, the command line version of redbiom has increased functionality. We will therefore be installing redbiom in the command line to use with the second tutorial example, which demonstrates this functionality. Windows requires some additional set-up, please refer to the *Setting up Windows to use QIIME 2* section in the `QIIME2 docs <https://docs.qiime2.org/>`__. The following set-up is relevant for linux, Mac and the Windows Subsystem for Linux (setup explained in the `QIIME2 docs <https://docs.qiime2.org>`__):
 
 If you have installed anaconda/miniconda then (in the command line) type:
 
@@ -139,7 +143,7 @@ If you have installed anaconda/miniconda then (in the command line) type:
 
     conda install -c conda-forge redbiom
 
-If  you do not have miniconda or anaconda installed you can install miniconda as follows:
+If  you do not have miniconda or anaconda installed you could choose to install miniconda as follows:
 
 .. code-block:: bash
 
@@ -152,12 +156,12 @@ Restart the terminal to have changes take effect, then create an environment to 
 
     conda create --name <name of new environment>
 
-Packages for this project can now be installed in this environment, keeping them separate from any other projects you may have, and ensuring that different dependencies do not clash. 
+Packages for this tutorial can now be installed in the new environment, keeping them separate from any other projects you may have, and ensuring that different dependencies do not clash.
 
-Alternatively, if you prefer not to install miniconda use:
+Alternatively, if you prefer not to install miniconda, redbiom can be installed as follows:
 
 .. code-block:: bash
-    
+
     pip install numpy
     pip install redbiom
 
@@ -165,13 +169,13 @@ Alternatively, if you prefer not to install miniconda use:
 Introduction to the example data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This tutorial will use two different datasets to highlight both the different questions that can be asked with existing, open source data, and the different methods we can use to do so.
+This tutorial will use two different datasets to highlight both the different questions that can be asked with existing, open source data, and the different methods that can be used to do so.
 
-The analysis of clinical microbiome data, selected for its similarity to the type of samples one plans to collect, allows one to produce example data before starting a study. This data can then be used for informing and justifying clinical trial format or experimental set-up [3A]_ . As this requires only a relatively small data set, and the question is of a less exploratory nature, it will be possible to carry out almost the entire process for this first example within Qiita.
+The analysis of clinical microbiome data, selected for its similarity to the type of samples one plans to collect for one's own study, allows one to produce example data before starting such a study. This data can then be used for informing and justifying clinical trial format or experimental set-up [3A]_. As this requires only a relatively small data set, and the question is of a less exploratory nature (than the second example), it will be possible to carry out the entire process for this first example within Qiita.
 
-The second example poses a meta-analysis type question about the microbiome which has not yet been fully addressed in the literature: does a person’s frequency of exercise affect their microbiome? To answer this type of exploratory meta-analysis question does not necessarily require a new study, it may be possible to re-purpose publicly available data for the analysis. This exploratory exercise-microbiome effect analysis will require a search through the data-base for any samples with information about a specific meta-data feature - frequency of exercise - this existing data can then be used to answer the novel question. This is a larger study and will require the use of the Redbiom programme, and coding tools beyond Qiita.
+The second example poses a meta-analysis type question about the microbiome which has not yet been fully addressed in the literature: does a person’s frequency of exercise affect their microbiome? To answer this type of exploratory meta-analysis type question does not necessarily require a new study, it may be possible to re-purpose publicly available data for the analysis. This exploratory analysis will require a search through the database for any samples with information about a specific meta-data feature - in this case frequency of exercise - this existing data can then be used to answer the novel question. This is a larger study and will require the use of the command line version of redbiom, and coding tools beyond Qiita.
 
-The following section will explain how to retrieve the data for these examples, beginning with the simpler clinical data example data retrieval on Qiita.
+The following section will explain how to retrieve the data for these examples, beginning with the simpler clinical data example.
 
 Retrieving Data
 ^^^^^^^^^^^^^^^^
@@ -179,16 +183,16 @@ Retrieving Data
 Contexts
 """""""""
 
-Processing and bioinformatic techniques can cause inherent biases in datasets, and so in Qiita and redbiom processed samples are partitioned into contexts representing these different methods. The protocol used to obtain samples and extract data may cause biases but, within any one context, data is expected to have the same biases and so be comparable. When retrieving data found in a redbiom search a context must be specified so ensuring the retrieved data is comparable.
+Processing and bioinformatic techniques can cause inherent biases in datasets. Therefore, within Qiita and redbiom processed samples are partitioned into contexts representing these different methods. The protocol used to obtain samples and extract data may cause biases but, within any one context, data is expected to have the same biases and so be comparable. When retrieving data found in a redbiom search a context must be specified so ensuring the retrieved data is comparable.
 
-Ultimately a context represents a processing pipeline, so if you are unfamiliar with the methods and processes used in such pipelines it may be worth reading this section: 
+Ultimately a context represents a processing pipeline, so if you are unfamiliar with the methods and processes used in such pipelines it may be worth reading this section:
 
 .. toctree::
     :maxdepth: 1
 
     understanding-contexts.rst
 
-If you already have a decent understanding of sequencing and processing microbial genomic data then please proceed to the next section.
+If you already have a decent understanding of sequencing and processing microbial genomics data then please proceed to the next section.
 
 Commands to retrieve data
 """"""""""""""""""""""""""
@@ -198,14 +202,14 @@ As previously discussed this tutorial will explore two methods by which one can 
 Retrieving data using the redbiom plug-in within Qiita
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-It is possible to search for data and studies directly on Qiita using the redbiom plug-in. This will be demonstrated by finding the data used in Casals-Pascual et al 2020, which cites that the data used was retrieved from a study in Qiita with ID 1629 [3A]_ . On the Qiita website select the *Study -> View Study option*, specify metadata in the tab down menu next to the search box and search for 1629 to find the data for this first example. In most scenarios however, the study would not be known beforehand, and in this case the Redbiom plugin can be used to search by metadata attributes e.g. a search for IBD brings up 7 studies, including Study 1629. Note that next to the search box you can specify metadata, feature or taxon. Selecting the green plus for the study of interest reveals the study data, in the form of Qiita artifacts. All artifacts of one type can then be selected by using *add all*, or specific artifacts can be selected using *per artifact -> add*. These selected artifacts can then be used to create an analysis as outlined in the next section.
+It is possible to search for data and studies directly on Qiita using the redbiom plug-in. This will be demonstrated by finding the data used in Casals-Pascual et al 2020, which cites that the data used was retrieved from a study in Qiita with ID 1629 [3A]_. On the Qiita website select the *Study -> View Study option*, specify metadata in the tab down menu next to the search box and search for 1629 to find the data for this first example. However, in most scenarios, one would not know of a specific study to search for beforehand. In this case, the Redbiom plugin can be used to search by metadata attributes e.g. a search for IBD brings up 7 studies, including Study 1629. Note that next to the search box you can specify metadata, feature or taxon. Selecting the green plus for the study of interest reveals the study data, in the form of Qiita artifacts. All artifacts of one type can then be selected by using *add all*, or specific artifacts can be selected using *per artifact -> add*. These selected artifacts can then be used to create an analysis as will be outlined subsequently.
 
 When browsing public studies to find appropriate data, more information on any study can be accessed by selecting it; this will open a new page which includes the study abstract and details as well as options to download the study data. All QIIME 2 maps and BIOMs, as well as EBI accession numbers and sample information can be downloaded directly from this main page. Selecting *data types*, and then the type of interest shows a diagram of the processing pipeline, further information, and list of samples within the dataset of that type. The sample information tab includes a list of all the metadata features (e.g. BMI) associated with the samples, and the option to download this metadata. Perusing these features may give a better indication of whether a study can be repurposed for one’s own analysis.
 
 A search using the redbiom plugin within Qiita therefore allows one to either download data for study on another platform or to select artifacts for processing and analysis within Qiita. Once the artifacts have been added select *analysis* from the top bar and, from the drop down menu, select *create from selected samples*. This opens a window where one can view all selected artifacts and exclude blocks of samples or individual samples that are not required/relevant (first select a particular artifact to view these). Note if one chooses multiple studies that only like data can be merged.
 Selecting *create analysis* and entering an analysis name (and optional description) will take one to Qiita’s graphical interface processing platform. Note that you should should *Merge samples with the same name - useful when merging multiple preparation artifacts* if you want to use the metadata from the studies the samples originated from.
 
-Other tutorials (e.g. the *Statistical Analysis to Justify Clinical Trial Sample Size Tutorial*) explain how to process the raw data that you have just selected within Qiita for analysis. After processing raw data with Qiita the artifacts can be downloaded by selecting an artifact and clicking ‘generate a download link’. This is also possible for another’s analysis as long as it is public. More generally, using wget or curl in the command line, one can use the general *https://qiita.ucsd.edu/public_artifact_download/?artifact_id=artifact-id* notation, provided the analysis is public. This is also useful in the situation where one wants to use the processed artifacts from a public study (simply click on an artifact in any public study’s processing network to view its artifact ID). To fetch specific types of data one can also use specific calls. The following notation can be used to fetch:
+Other tutorials (e.g. the *Statistical Analysis to Justify Clinical Trial Sample Size Tutorial* in :doc:`../analyzingsamples/index/`) explain how to process the raw data that you have just selected within Qiita for analysis. After processing raw data with Qiita the artifacts can be downloaded by selecting an artifact and clicking ‘*generate a download link*’. This is also possible for another’s analysis as long as it is public. More generally, using wget or curl in the command line, one can use the general notation: *https://qiita.ucsd.edu/public_artifact_download/?artifact_id=artifact-id*, provided the analysis is public. This is also useful in the situation where one wants to use the processed artifacts from a public study (simply click on an artifact in any public study’s processing network to view its artifact ID). To fetch specific types of data one can also use specific calls. The following notation can be used to fetch:
 
 * All raw data: ``https://qiita.ucsd.edu/public_download/?data=raw&study_id=<study-id>``
 * All BIOMs + mapping files: ``https://qiita.ucsd.edu/public_download/?data=biom&study_id=<study-id>``
@@ -214,17 +218,17 @@ Other tutorials (e.g. the *Statistical Analysis to Justify Clinical Trial Sample
 * Only the sample information file: ``https://qiita.ucsd.edu/public_download/?data=sample_information&study_id=<study-id>``
 * Only the preparation information file: ``https://qiita.ucsd.edu/public_download/?data=data=prep_information&prep_id=<prep-id>``
 
-Where ``<study-id/prep-id>`` should be replaced with the appropriate study-id/prep-id.
+Where ``<study-id>/<prep-id>`` should be replaced with the appropriate study-id/prep-id.
 
 Retrieving data with redbiom in the command line
 ''''''''''''''''''''''''''''''''''''''''''''''''''
 
-While the redbiom plugin for Qiita is useful for simple searches, and when finding data for processing and analysis within Qiita, the redbiom programme has increased functionality, and is particularly useful when data will be processed outside of Qiita. While artifacts, or raw study data, found within Qiita can then be downloaded after accessing the study and finding their ID, the redbiom programme allows searching and direct download all within the command line. The exercise frequency example will demonstrate how to use the redbiom programme.
+While the redbiom plugin for Qiita is useful for simple searches, and when finding data for processing and analysis within Qiita, the command line version of redbiom has increased functionality, and is particularly useful when data will be processed outside of Qiita. While artifacts, or raw study data, found within Qiita can then be downloaded after accessing the study and finding their ID, the command line version of redbiom  allows searching and direct download all within the command line. The exercise frequency example will demonstrate how to use the command line version of redbiom.
 
 **Background information:** [4A]_
 
 
-Redbiom commands follow a specific syntax: ``redbiom [options] command [arguments]``; for example to search for a metadata feature: ``redbiom search metadata <the feature>``. The general structure of the search arguments is ``<set operations> where <value restrictions>``. Typing ``redbiom`` in the terminal will return its syntax and commands if ever in doubt. Similarly typing ``redbiom <command>`` will return the syntax and options of that redbiom command.
+redbiom commands follow a specific syntax: ``redbiom [options] command [arguments]``; for example to search for a metadata feature: ``redbiom search metadata <the feature>``. The general structure of the search arguments is ``<set operations> where <value restrictions>``. Typing ``redbiom`` in the terminal will return its syntax and commands if ever in doubt. Similarly typing ``redbiom <command>`` will return the syntax and options of that redbiom command.
 
 redbiom search has four commands, ``features``, ``metadata``, ``samples`` and ``taxon``. ``samples`` and ``features`` are complementary, ``features`` retrieves samples containing that feature while ``samples`` fetches the features present in the specified sample/s. In redbiom features are either closed reference OTU ids or exact sequences from deblur. In the future features will be expanded to include other unique attributes produced by processing pipelines. Both of these commands require a specified file and so are not as relevant to initial exploratory searches. ``taxon`` will return features associated with a taxon. ``metadata`` is particularly useful for our purposes. It accepts both ‘natural language’ (but uses stemming) and python-like grammar (separately or in combination). Some useful symbols include: ``&`` for intersection, ``|`` for union, ``-`` for difference and ``==`` for equal to. ``<``, ``>``, ``=>``, ``=<``, etc. can also be used. Using the option ``--categories`` one can search for metadata categories rather than values using the same syntax. For example, one could type ``redbiom search metadata --categories <keyword>`` to see the categories which include that keyword, one can then learn more about a specific category with ``summarize metadata-category --category <category-name> --counter``.
 
@@ -247,7 +251,7 @@ Note here the use of our context. Alternatively, it is possible to write the con
     redbiom search metadata "where qiita_study_id == 1629" > IBD.samples.lst
     redbiom fetch samples --from IBD.samples.lst --context $CTX --output IBD.data.biom
 
-To illustrate the full functionality of redbiom we will now proceed to the exercise frequency example. The first step will be to search for studies that log exercise frequency, ``redbiom search metadata "exercise"`` yields 24 results. 
+To illustrate the full functionality of redbiom we will now proceed to the exercise frequency example. The first step will be to search for studies that log exercise frequency, ``redbiom search metadata "exercise"`` yields 24 results.
 Or, using `NCBI <https://www.ncbi.nlm.nih.gov/Taxonomy/TaxIdentifier/tax_identifier.cgi>`__ to find the human taxa ID we could use ``redbiom search metadata "exercise where host_taxid==9606"`` which also gives 24 results. These results are studies, rather than individual samples (which is what was returned when we searched for a specific study).
 
 When searching with a key word one cannot be sure how it is being used within the metadata, therefore, it is worth examining the categories which are returned by an exercise search: ``redbiom search metadata --categories exercise``. This searches for metadata categories containing exercise, of which there are eight at the time of writing.
@@ -298,7 +302,7 @@ Bibliography
 .. [4A] https://github.com/biocore/redbiom
 
 ------------------------------------------------------
- 
+
 Processing Public Data Retrieved with redbiom
 ----------------------------------------------
 
@@ -322,7 +326,7 @@ Should give an output something like as follows:
     Num observations: 1,028,814
     Total count: 524,626,716
     Table density (fraction of non-zero values): 0.000
-    
+
     Counts/sample summary:
     Min: 2.000
     Max: 499,002.000
@@ -339,7 +343,7 @@ QIIME 2 is the latest version (at the time of writing) of a package necessary fo
 
 Installation in a new environment:
 
-* Visit the `QIIME 2 documentation <https://docs.qiime2.org/>`__ and navigate to *Natively installing QIIME 2* to find the link for the latest version of QIIME 2. 
+* Visit the `QIIME 2 documentation <https://docs.qiime2.org/>`__ and navigate to *Natively installing QIIME 2* to find the link for the latest version of QIIME 2.
 * Then install as follows:
 
 .. code-block:: bash
@@ -352,11 +356,11 @@ Installation in a new environment:
 
 Installation in an existing environment:
 
-* Visit the `QIIME 2 documentation <https://docs.qiime2.org/>`__ and navigate to *Natively installing QIIME 2* to find the link for the latest version of QIIME 2. 
+* Visit the `QIIME 2 documentation <https://docs.qiime2.org/>`__ and navigate to *Natively installing QIIME 2* to find the link for the latest version of QIIME 2.
 * Then install as follows:
 
 .. code-block:: bash
-    
+
     wget <link from QIIME2 docs>
     conda env update --file <RELEASE-NAME>.yml
 
@@ -406,7 +410,7 @@ Once the data has been imported into a QIIME 2 format, it needs to undergo quali
     #visualise the filtered table
     qiime feature-table summarize --i-table filtered-table-AGP.qza --o-visualization filtered-table.qzv --m-sample-metadata-file ../AGP-metadata.tsv
 
-We now have a filtered dataset, but will need to classify our features if we want to use analyses that take into account phylogenetic distance, and for more general taxonomic analysis. Therefore we need to extract sequences from the dataset and ‘insert’ them into a reference phylogenetic tree (this placement identifies their taxonomic position). The first step is to extract representative sequences from the data, and these can then be aligned with and inserted in a reference database. 
+We now have a filtered dataset, but will need to classify our features if we want to use analyses that take into account phylogenetic distance, and for more general taxonomic analysis. Therefore we need to extract sequences from the dataset and ‘insert’ them into a reference phylogenetic tree (this placement identifies their taxonomic position). The first step is to extract representative sequences from the data, and these can then be aligned with and inserted in a reference database.
 Obtain this reference data, as follows:
 In the command terminal in your working directory (e.g. ``~/microbiome/exercise/``) create a directory for references (``mkdir reference``) and then use wget to download the data:
 
@@ -421,7 +425,7 @@ In the command terminal in your working directory (e.g. ``~/microbiome/exercise/
     wget https://github.com/BenKaehler/readytowear/raw/master/data/gg_13_8/515f-806r/ref-seqs-v4.qza
     wget https://github.com/BenKaehler/readytowear/raw/master/data/gg_13_8/515f-806r/ref-tax.qza
     # return to the directory we have been working in
-    cd .. 
+    cd ..
 
 Once these have downloaded one can proceed with the fragment insertion workflow.
 
@@ -440,7 +444,7 @@ Note that here we have made a fasta file, this is a very common file type for se
     #use the representative sequences artifact to create a fragment insertion placement tree
     qiime fragment-insertion sepp --i-representative-sequences ./rep_seqs.qza --i-reference-database ./sepp-refs-gg-13-8.qza --o-tree ./insertion-tree.qza --o-placements ./insertion-placements.qza
 
-Aligning the fragments and creating an insertion tree is computationally costly, and will require at least 12GB ram and possibly several hours. If you are struggling to complete this step consider decreasing the sample size you are using (go back to the data retrieval section, and use the ``shuf -n`` option, then repeat the steps from there). 
+Aligning the fragments and creating an insertion tree is computationally costly, and will require at least 12GB ram and possibly several hours. If you are struggling to complete this step consider decreasing the sample size you are using (go back to the data retrieval section, and use the ``shuf -n`` option, then repeat the steps from there).
 
 One can also train a taxonomic classifier to classify the sequences. The fragment insertion generated a phylogeny, with the sequences inserted appropriately. The taxonomic classifier classifies the ASVs, assigning them to a particular clade (e.g. with good data to specific species) [1B]_ . While it is possible to use pre-trained classifiers these tend to give poorer results than those trained on data similar to that of the sample, therefore we will train  a classifier using human-stool samples.
 
@@ -565,7 +569,7 @@ You have now obtained a filtered dataset, but will need to classify the features
     sequences = q.Artifact.import_data(type='FeatureData[Sequence]', view='./results/sequences.fna')
 
 
-The first line here creates a writeable output file and assigns it to a variable. ``seqs = ‘’`` creates an empty string that is then filled in the following for loop. The for loop uses two variables ``i`` and ``seq`` representing the index and a column from the ``feature_filtered_data`` represented as a panda DataFrame. Each loop therefore writes a line with > and then the contents of the next column to seqs. Seqs is then written to the output file.We don’t necessarily know how many lines have been added to seqs but can specify to write out the slice from the first to the last index using [:-1] (or [0:-1]). 
+The first line here creates a writeable output file and assigns it to a variable. ``seqs = ‘’`` creates an empty string that is then filled in the following for loop. The for loop uses two variables ``i`` and ``seq`` representing the index and a column from the ``feature_filtered_data`` represented as a panda DataFrame. Each loop therefore writes a line with > and then the contents of the next column to seqs. Seqs is then written to the output file.We don’t necessarily know how many lines have been added to seqs but can specify to write out the slice from the first to the last index using [:-1] (or [0:-1]).
 
 Again, we can visualize this data and save it:
 
@@ -576,7 +580,7 @@ Again, we can visualize this data and save it:
     sequences.save('./results/sequences.qza')
     vis_sequences.visualization.save('./results/sequences.qzv')
 
-We can now create a tree to insert the fragments into. For this we will need reference data, this can be downloaded in the command terminal as follows: 
+We can now create a tree to insert the fragments into. For this we will need reference data, this can be downloaded in the command terminal as follows:
 In your working directory (e.g. ``~/microbiome/exercise/``) create a directory for references (``mkdir reference``) and then use wget to download the data:
 
 .. code-block:: bash
@@ -592,7 +596,7 @@ In your working directory (e.g. ``~/microbiome/exercise/``) create a directory f
     cd .. # return to the directory we have been working in
 
 
-When the data is downloaded the sepp reference data can be loaded into your python IDE and the sample fragments inserted into the sepp tree. 
+When the data is downloaded the sepp reference data can be loaded into your python IDE and the sample fragments inserted into the sepp tree.
 
 .. code-block:: python
 
@@ -606,7 +610,7 @@ When the data is downloaded the sepp reference data can be loaded into your pyth
 
 
 Once the sequences have been placed save the tree and placements as with the same save function we have been using throughout this section:
-This last command is computationally costly (requires at least 12GB ram), and will take a while. If you are having trouble consider using a subset of the entire AGP dataset - you do not need to change your script, simply copy it into a new directory, repeat the redbiom data retrieval steps with the same names for the output files but with the ``shuf -n <number of samples>`` command piped into the initial sample ID retrieval command, and then run your script again in this new directory. Another possible solution is to lower the number of threads, though the process will take longer. 
+This last command is computationally costly (requires at least 12GB ram), and will take a while. If you are having trouble consider using a subset of the entire AGP dataset - you do not need to change your script, simply copy it into a new directory, repeat the redbiom data retrieval steps with the same names for the output files but with the ``shuf -n <number of samples>`` command piped into the initial sample ID retrieval command, and then run your script again in this new directory. Another possible solution is to lower the number of threads, though the process will take longer.
 
 We can also train a taxonomic classifier to classify the sequences. The fragment insertion generated a phylogeny, with the sequences inserted appropriately. The taxonomic classifier classifies the ASVs, assigning them to a particular clade (e.g. with good data to specific species) [1B]_ . While it is possible to use pre-trained classifiers these tend to give poorer results than those trained on data similar to that of the sample, therefore we will train  a classifier using human-stool samples. First we load the other references and the representative sequence:
 
@@ -614,7 +618,7 @@ We can also train a taxonomic classifier to classify the sequences. The fragment
 
     # Load the representative sequences
     rep_seqs = qiime2.Artifact.import_data(type='FeatureData[Sequence]', view='./sequences.fna`)
-    
+
     # Load the Greengenes sequences and taxonomy and Clawback human stool weights
     human_stool_weights = q.Artifact.load('./reference/human-stool.qza')
     ref_seqs_v4 = q.Artifact.load('./reference/ref-seqs-v4.qza')
@@ -656,7 +660,7 @@ We can also visualise this classification as a table:
     taxonomy_vis = metadata.visualizers.tabulate(bespoke_taxonomy.classification.view(q.Metadata))
     taxonomy_vis.visualization.save('./results/bespoke-taxonomy.qzv')
 
-With the data processed it is now possible to begin analysis. We have generated a feature table, representative sequences, an insertion tree and taxonomic classification and these will be sufficient for most simple exploratory analyses. 
+With the data processed it is now possible to begin analysis. We have generated a feature table, representative sequences, an insertion tree and taxonomic classification and these will be sufficient for most simple exploratory analyses.
 
 Conclusion
 ^^^^^^^^^^^^^^^^
