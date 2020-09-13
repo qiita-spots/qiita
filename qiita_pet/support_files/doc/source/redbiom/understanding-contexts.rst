@@ -66,7 +66,7 @@ The most common reference database for 16S rDNA is Greengenes. However, this dat
 Conclusion
 ----------
 
-This article should have given you a brief overview of some of the major processes and considerations in processing pipelines for microbiome data and so the ability to interpret redbiom and Qiita contexts. The general syntax of the context is <binning strategy>-<reference database>-<sequencing strategy>-<region sequenced><trimming length (if trimmed>-<id>. Each of these processes or considerations can lead to differences or biases in the data, and thus is included in contexts. 
+This article should have given you a brief overview of some of the major processes and considerations in processing pipelines for microbiome data and so the ability to interpret redbiom and Qiita contexts. The general syntax of the context is <binning strategy>-<reference database>-<sequencing strategy>-<region sequenced><trimming length (if trimmed>-<id>. Each of these processes or considerations can lead to differences or biases in the data, and thus is included in contexts.
 
 Bibliography
 ------------

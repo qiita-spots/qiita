@@ -518,11 +518,11 @@ Beta Correlation
 Statistical Analysis to Justify Clinical Trial Sample Size Tutorial
 -------------------------------------------------------------------
 
-The goal of this tutorial is to demonstrate how to analyse public data similar to that one may obtain from one’s own proposed study; and use this to find the minimum sample size needed for appropriate/sufficient statistical power. This will allow relevant conclusions to be drawn for the minimum clinical trial size in one’s actual (own) study. The information obtained using this public data will therefore allow justification of the clinical trial format, and strengthen e.g. grant applications. 
+The goal of this tutorial is to demonstrate how to analyse public data similar to that one may obtain from one’s own proposed study; and use this to find the minimum sample size needed for appropriate/sufficient statistical power. This will allow relevant conclusions to be drawn for the minimum clinical trial size in one’s actual (own) study. The information obtained using this public data will therefore allow justification of the clinical trial format, and strengthen e.g. grant applications.
 
-This tutorial is based on Casals-Pascual et al 2020 and will be analysing the same data, to reproduce the figures and statistics found in the paper [1]_ . The tutorial continues on from the `Retrieving Public Data for Own Analysis Tutorial` (see under redbiom) and expects that you can find the example data from study 1629, using the Qiita redbiom plugin.
+This tutorial is based on Casals-Pascual et al 2020 and will be analysing the same data, to reproduce the figures and statistics found in the paper [1]_ . The tutorial continues on from the `Retrieving Public Data for Own Analysis Tutorial` (found under redbiom) and expects that you can find the example data from study 1629, using the Qiita redbiom plugin.
 
-To reproduce the figures and results in Casals-Pascual et al 2020 we first need to process the raw data from study 1629 to obtain an Alpha_diversity artifact and a Beta_diverstiy artifact for the data. This stage of the tutorial will be completed within the Qiita processing interface, though note that it could be completed in QIIME 2 instead. We will also need the Metadata artifact from the original study. The second half of the process, producing the figures can then be completed either in python or in R.
+To reproduce the figures and results in Casals-Pascual et al 2020 we first need to process the raw data from study 1629 to obtain an Alpha_diversity artifact and a Beta_diverstiy artifact for the data. This stage of the tutorial will be completed within the Qiita processing interface, though note that it could be completed in QIIME 2 instead. We will also need the Metadata artifact from the original study. The second half of the process, producing the figures can then be completed using either python or R.
 
 Set up
 ~~~~~~
@@ -540,20 +540,20 @@ Once you have selected the study 1629 (see `Retrieving Public Data for Own Analy
 
 #. *Pick closed-reference OTUs (reference-seq: /databases/gg/13_8/rep_set/97_otus.fasta) | Split libraries FASTQ*.
     * This tells us that the data is picked OTUs clustered by closed reference against /databases/gg/13_8/rep_set/97_otus.fasta and is now in a split library FASTQ format.
-    * FASTQ stores both sequence and corresponding quality score see `here <https://emea.support.illumina.com/bulletins/2016/04/fastq-files-explained.html>`__ for more info (though note the data in FASTQ format does not have to be illumina sequencing data).
-    * Split refers to demultiplexing where sequences from the same lane are split into samples based on barcodes (N.B. illumina can sequence multiple different samples at the same time, therefore sequence data has to be demultiplexed into the separate samples present in the same lane.)
+    * FASTQ stores both sequence and corresponding quality score see `here <https://emea.support.illumina.com/bulletins/2016/04/fastq-files-explained.html>`__ for more information (though note the data in FASTQ format does not have to be illumina sequencing data).
+    * Split refers to demultiplexing where sequences from the same lane are split into samples based on barcodes. N.B. illumina can sequence multiple different samples at the same time, therefore sequence data has to be demultiplexed into the separate samples present in the same lane.
 #. *Pick closed-reference OTUs (reference-seq: /databases/gg/13_8/rep_set/97_otus.fasta) | Trimming (length: 90)*
-    * This is essentially the same as the previous artifact but the reads have been trimmed to 90nt (see contexts for an explanation of why this is done).
+    * This is essentially the same as the previous artifact but the reads have been trimmed to 90nt (see the explanation of contexts for an explanation of why this is done).
 #. *Deblur (Reference phylogeny for SEPP: Greengenes_13.8, BIOM: /projects/qiita_data/BIOM/60941/reference-hit.biom) | Trimming (length: 90)*
     * Deblur processed sequence data trimmed to 90nt and classified by taxonomy using the greengenes reference database. This artifact contains only those sequences which have been classified thus reference-**hit**.biom
-    * SEPP is a phylogenetic placement program that can be used to place query sequences (reads e.g. of the V4 region of 16S) into the phylogeny of the full length gene’s tree (e.g. in this case using the Greengenes database).
+    * SEPP is a phylogenetic placement program that can be used to place query sequences (reads e.g. of the V4 region of 16S) into the phylogeny of the full length gene’s tree (in this case using the Greengenes database).
 #. *Deblur (Reference phylogeny for SEPP: Greengenes_13.8, BIOM: /projects/qiita_data/BIOM/60942/all.biom) | Trimming (length: 90)*
     * This artifact been processed in the same manner as the previous artifact, but all ASVs are present, including those that did not get placed (therefore **all**.biom).
 
 For the Deblur data we will use the reference-hit.biom data as this represents those ASVs which were placed within the Greengenes database. Using the all.biom data would give all ASVs, but the unplaced sequences would have to be removed to allow later analysis with Unifrac (so that they may as well not be present) and therefore we select the reference-hit data from the start. N.B. unifrac uses phylogenetic distance (measures of relatedness), thus the need for placed sequences.
 For the OTUs, the trimmed sequences are appropriate, as they represent a later step in the processing pipeline of the raw data.
 
-With these two artifacts selected proceed to *create analysis*. Both samples will need to be rarefied and then have alpha and beta diversity artifacts created. For a general overview of processing data in the Qiita processing interface see this `Qiita docs <https://qiita.ucsd.edu/static/doc/html/index.html>`__ . To rarefy the data select the artifact -> *process* -> *rarefy*, modify the options of rarefy so that total frequency is a 10000 for both -> *add command* -> *run*.
+With these two artifacts selected proceed to *create analysis*. Both samples will need to be rarefied and then have alpha and beta diversity artifacts created. For a general overview of processing data in the Qiita processing interface see the appropriate section of these `Qiita docs <https://qiita.ucsd.edu/static/doc/html/index.html>`__ . To rarefy the data select the artifact -> *process* -> *rarefy*, modify the options of rarefy so that total frequency is a 10000 for both -> *add command* -> *run*.
 The cut off frequency is an individual choice, but the use of 10 000 strikes a compromise between losing data from samples with large library sizes and discarding samples with smaller library size. One can look at the frequency tables of the biom artifacts to get an idea of what would be an appropriate cut off. In this case 10 000 will allow most samples to be used, while maintaining quality. Once rarefaction has completed the `rarefied_table` artifact can be used for alpha and beta diversity calculations. Select the `rarefied_table` artifact, *process* -> *alpha diversity (phylogenetic) [alpha_phylogenetic]* and in options use the default option of Faith’s index then *add command* -> *run*. Beta Diversity can be calculated with *Beta Diversity (phylogenetic)* (this uses Unifrac). For the OTU artifact one can specify the phylogenetic tree from the database (as closed OTUs inherently have taxonomy data). For the Deblur artifact use the ‘artifact tree, if exists’ option. The artifact we are using has been aligned to a reference database, but not all deblur data will necessarily have associated taxonomy data.
 The distance matrix produced by the Beta Diversity process will allow us to run a principal coordinate analysis, while this is not necessary for reproducing the plots, it allows one to visualise the data and so get an intuitive idea of what it represents.
 
@@ -566,7 +566,7 @@ The second figure includes two plots: the first plots sample size against power 
 Download data from Qiita
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-This can be done in the command line using wget and the links from your Qiita study. Select an artifact followed by ‘generate download link’ if your study is private. If your study is public one can simply use the artifact ID as described in the [Retrieving Public Data tutorial](LINK TO THIS). Use the -O option to specify the output (downloaded) file’s name. We also need the study metadata, this can be retrieved from the study page, under sample information, copy the link address of the sample info download button.
+This can be done in the command line using wget and the links from your Qiita study. Select an artifact followed by ‘generate download link’ if your study is private. If your study is public one can simply use the artifact ID as described in the Retrieving Public Data for Own Analysis Tutorial (under redbiom). Use the -O option to specify the output (downloaded) file’s name. We also need the study metadata, this can be retrieved from the study page, under sample information, copy the link address of the sample info download button, or use the study ID as below.
 
 .. code-block:: bash
 
@@ -628,7 +628,7 @@ The metadata file unpacks to a folder template, with one file 1629_20180101-1138
 .. code-block:: python
 
     metadata = pd.read_csv('./templates/<metadata file name>', sep='\\t', dtype=str, index_col=0, engine='python')
-    
+
 
 This code assigns the metadata information to the variable metadata, using the pandas ``read_csv function``, the ``sep =`` sets the separator of the data columns, ``index_col`` specifies the column to use as the index, ``dtype`` specifies the data type for the columns, and ``engine`` specifies the parser. The variable metadata now consists of 38 columns specifying the metadata details of the 683 patients.
 
@@ -666,7 +666,7 @@ This code makes a variable representing the b1 group. This variable (``b1``) con
 Now we have processed the data into a python readable format we can calculate variables such as the standard deviation and the mean:
 
 .. code-block:: python
- 
+
     sd1 = b1['deblur alpha diversity'].std()
     sd2 = bother['deblur alpha diversity'].std()
     sd12 = mean([sd1, sd2])
@@ -676,35 +676,35 @@ Again, print these to see if they look as expected, or, if you are using an appr
 .. code-block:: python
 
     # significance level
-    alpha = 0.05 
+    alpha = 0.05
 
     #create empty list
-    data_alpha = [] 
+    data_alpha = []
 
     #in steps of 5 from 10 to 55
     for observations in range(10, 155, 5):
     #for differences in Faiths PD representative of effect sizes 0.55, 0.82, 1.00
         for difference in [2, 3, 4]:
-            #effect size calculation	
+            #effect size calculation
        		effect_size = difference/sd12
        		x = tt_ind_solve_power(effect_size=effect_size,
                 #number of observations, iterated by the loop
-                nobs1=observations, 	
+                nobs1=observations,
                 #significance level
                 alpha=alpha,
                 #number of observations for second group presumed to be equal to first group's observations
                 ratio=1.0,
-                alternative='two-sided')	
-            data_alpha.append({	
+                alternative='two-sided')
+            data_alpha.append({
                 #append parameters and output to list
                 'alpha': alpha, 'Power (1-β)': x,
                 'Total sample size (N)': observations * 2,
                 'Difference': '%d (effect size %0.2f)' % (difference, effect_size)})
 
     #turn the list created in the loop into dataframe
-    data_alpha = pd.DataFrame(data_alpha)							
-    
-    
+    data_alpha = pd.DataFrame(data_alpha)
+
+
 ``tt_ind_solve_power`` solves for any one parameter of a two sample t-test. In this case we are using it to find power given all data. It requires effect_size, nobs1, alpha, power and ratio; where exactly one needs to be None (and is calculated), while all others need numeric values.
 
 * ``Effect_size`` is the standardized effect size, the difference between the two means divided by the standard deviation.
@@ -761,7 +761,7 @@ We will use ``fig``, which allows the creation of a background (blank canvas) up
     rc={'lines.linewidth': 2, 'lines.markersize': 12})
 
     f = sns.lineplot(x='Total sample size (N)', y='Power (1-β)', markers=True, dashes=False, style='Difference', ax=ax1, data=data_alpha)		#plot the data itself
-    
+
     #x.axis ticks every 20 units
     ax1.xaxis.set_major_locator(plt.MultipleLocator(20))
 
@@ -837,7 +837,7 @@ If you are using windows, and have the windows R-studio, the files can be copied
     library("ggplot2")
     if(requireNamespace("gridExtra", quietly = TRUE)){install.packages("gridExtra")}
     library("gridExtra")
-    
+
 
 Not all the above steps may be necessary, but do remember to load the libraries, even if they are already installed. After this is completed we can import the data and process it. We will use Qiime2R [2]_ to import the data into formats R can handle, then filter it into appropriate groups.
 
@@ -877,7 +877,7 @@ The artifacts have now been loaded into R and the data separated by group. We ca
 
     # R's standard sd function uses denominator n -1 i.e. calculates sample standard deviation, therefore we do not use sd directly.
 
-    sd1 <- sqrt((n-1)/n) * sd(b1$faith_pd) 
+    sd1 <- sqrt((n-1)/n) * sd(b1$faith_pd)
     sd2 <- sqrt((n-1)/n) * sd(bother$faith_pd)
     sd12 <- mean(sd1, sd2)
 
@@ -888,7 +888,7 @@ The artifacts have now been loaded into R and the data separated by group. We ca
 
     #create and empty data frame
     data_alpha <- data.frame(NULL)
-    
+
     #calculate the values for plotting and place them in a data frame
     #iterate through sample sizes
     for(obs in seq(from = 10, to = 155, by = 5)) {
@@ -912,9 +912,9 @@ The artifacts have now been loaded into R and the data separated by group. We ca
     ###beta
 
     u2u1 <- abs(mean(b1_dtx) - mean(bother_dtx))
-    
+
     # note here we do use sd() because now we do want to calculate the sample standard deviation
-    sd_dtx <- mean(sd(b1_dtx), sd(bother_dtx)) 
+    sd_dtx <- mean(sd(b1_dtx), sd(bother_dtx))
 
     #create empty dataframe
     data_beta <- data.frame(NULL)
@@ -948,7 +948,7 @@ Make Plots
 R’s default plotting function is perfectly adequate for exploratory analysis, but for publication level figures the package ggplot is more appropriate. ggplot uses 'layers', first the plot background is made, then points, lines, annotations etc can be added to it.
 
 .. code-block:: r
-    
+
     ## Make plots
     ### Figure 1
     p <- ggplot(data_alpha, aes(x =as.numeric(`Total sample size (N)`), y =as.numeric(`Power (1-ß)`), group = as.factor(`Difference`), color = as.factor(`Difference`), shape = as.factor(`Difference`))) +
@@ -1015,16 +1015,17 @@ While this code contains the necessary command to save an image automatically, a
     jpeg('Figure_2.jpg', width = 1500, height = 579)
     grid.arrange(p1, p2, layout_matrix = lay)
     dev.off()
-    
+
 These figures will look slightly different to those in Casals-Pascual et al 2020 because they have been made in R but they are essentially the same, and this code can be modified to one’s own data if R is preferred.
 
 Conclusion
 ~~~~~~~~~~
 
-You should now have two figures essentially the same as those found in Casals-Pascual et al 2020 as well as having obtained the data to quantitatively decide an appropriate sample size for an experiment which will allow you obtain similar data. The generic paragraph recommended by their publication is as follows:
+You should now have two figures essentially the same as those found in Casals-Pascual et al 2020 as well as having obtained the data to quantitatively decide on an appropriate sample size for an experiment that will obtain similar data. The generic paragraph recommended by their publication is as follows:
 
-*Generic Sample Size Justification Paragraph for Grants or Articles
-The sample size has been determined based on statistical power, effect size, time, and available resources requested in this grant. A total number of 110 patients is realistic and achievable enrollment in our clinical setting. The diversity of microbial communities is a good indicator of dysbiosis in patients with CD1, and we have selected Faith’s PD as a suitable metric to calculate alpha diversity. In a similar study, we observed that this metric shows an approximately normal distribution with mean 13.5 and standard deviation 3.45. Thus, to find a significant reduction of 2 units of Faith’s PD (effect size, Cohen’s D: 0.55) with an alpha value (type I error) of 5% and a statistical power (1  beta) of 80%, we will have to enroll 110 patients (55 with B1 phenotype and 55 with B2/B3 phenotype).*
+**Generic Sample Size Justification Paragraph for Grants or Articles**
+
+*"The sample size has been determined based on statistical power, effect size, time, and available resources requested in this grant. A total number of 110 patients is realistic and achievable enrollment in our clinical setting. The diversity of microbial communities is a good indicator of dysbiosis in patients with CD1, and we have selected Faith’s PD as a suitable metric to calculate alpha diversity. In a similar study, we observed that this metric shows an approximately normal distribution with mean 13.5 and standard deviation 3.45. Thus, to find a significant reduction of 2 units of Faith’s PD (effect size, Cohen’s D: 0.55) with an alpha value (type I error) of 5% and a statistical power (1  beta) of 80%, we will have to enroll 110 patients (55 with B1 phenotype and 55 with B2/B3 phenotype)."*
 
 
 
@@ -1034,6 +1035,3 @@ Bibliography
 .. [1]  Casals-Pascual C, González A, Vázquez-Baeza Y, Song SJ, Jiang L, Knight R. 2020 Microbial Diversity in Clinical Microbiome Studies: Sample Size and Statistical Power Considerations. Gastroenterology 158, 15241528. (doi:10.1053/j.gastro.2019.11.305)
 
 .. [2] 2018 Tutorial: Integrating QIIME2 and R for data visualization and analysis using qiime2R. QIIME 2 Forum. See https://forum.qiime2.org/t/tutorial-integrating-qiime2-and-r-for-data-visualization-and-analysis-using-qiime2r/4121
-
-
-
