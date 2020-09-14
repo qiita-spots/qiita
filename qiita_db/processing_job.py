@@ -1133,12 +1133,27 @@ class ProcessingJob(qdb.base.QiitaObject):
                 provenance = loads(job_params['provenance'])
                 if provenance.get('direct_creation', False):
                     original_job = ProcessingJob(provenance['job'])
-                    qdb.artifact.Artifact.create(
+                    artifact = qdb.artifact.Artifact.create(
                         filepaths, atype,
                         parents=original_job.input_artifacts,
                         processing_parameters=original_job.parameters,
                         analysis=job_params['analysis'],
                         name=job_params['name'])
+
+                    sql = """INSERT INTO qiita.artifact_processing_job
+                                (artifact_id, processing_job_id)
+                             VALUES (%s, %s)"""
+                    qdb.sql_connection.TRN.add(
+                        sql, [artifact.id, original_job.id])
+                    sql = """
+                        INSERT INTO qiita.artifact_output_processing_job
+                            (artifact_id, processing_job_id,
+                             command_output_id)
+                         VALUES (%s, %s, %s)"""
+                    qdb.sql_connection.TRN.add(
+                        sql, [artifact.id, original_job.id, 3])
+                    qdb.sql_connection.TRN.execute()
+
                     self._set_status('success')
                 else:
                     if provenance.get('data_type') is not None:
