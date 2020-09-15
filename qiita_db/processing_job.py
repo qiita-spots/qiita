@@ -1140,18 +1140,14 @@ class ProcessingJob(qdb.base.QiitaObject):
                         analysis=job_params['analysis'],
                         name=job_params['name'])
 
-                    sql = """INSERT INTO qiita.artifact_processing_job
-                                (artifact_id, processing_job_id)
-                             VALUES (%s, %s)"""
-                    qdb.sql_connection.TRN.add(
-                        sql, [artifact.id, original_job.id])
                     sql = """
                         INSERT INTO qiita.artifact_output_processing_job
                             (artifact_id, processing_job_id,
                              command_output_id)
                          VALUES (%s, %s, %s)"""
                     qdb.sql_connection.TRN.add(
-                        sql, [artifact.id, original_job.id, 3])
+                        sql, [artifact.id, original_job.id,
+                              provenance['cmd_out_id']])
                     qdb.sql_connection.TRN.execute()
 
                     self._set_status('success')
