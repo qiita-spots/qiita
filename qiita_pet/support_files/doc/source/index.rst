@@ -44,13 +44,19 @@ Looking for comparable studies? Please see the document here:
 
 .. toctree::
 
-   redbiom/redbiom.rst
+   redbiom.rst
 
 Looking for information about analyzing your data? Please see the document here:
 
 .. toctree::
 
    analyzingsamples/index.rst
+
+Interested in how you can access and use public data available on Qiita? Please see the document here:
+
+   .. toctree::
+
+     reanalysis/reanalysis.rst
 
 Looking for available guides? Please see these documents:
 
