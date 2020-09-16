@@ -340,7 +340,9 @@ class APIArtifactHandlerTests(OauthTestingBase):
         # tests success by inserting a new artifact into an existing job
         original_job = qdb.processing_job.ProcessingJob(data['job_id'])
         input_artifact = original_job.input_artifacts[0]
-        self.assertEqual(len(input_artifact.children), 3)
+        original_children = input_artifact.children
+        self.assertEqual(len(original_children), 3)
+
         # send the new data
         del data['prep_id']
         obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
@@ -353,11 +355,16 @@ class APIArtifactHandlerTests(OauthTestingBase):
         # now the original job should have 4 children and make sure they have
         # the same parent and parameters
         children = input_artifact.children
+        new_children = list(set(children) - set(original_children))[0]
         self.assertEqual(len(children), 4)
         for c in children[1:]:
             self.assertCountEqual(children[0].processing_parameters.values,
                                   c.processing_parameters.values)
             self.assertEqual(children[0].parents, c.parents)
+
+        # making sure the new artifact is part of the descendants, which is a
+        # different method and usage than children method
+        self.assertIn(new_children, input_artifact.descendants.nodes)
 
         # now let's test adding an artifact directly to a new prep
         new_prep = qdb.metadata_template.prep_template.PrepTemplate.create(

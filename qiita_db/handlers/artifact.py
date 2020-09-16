@@ -285,7 +285,8 @@ class APIArtifactHandler(OauthBaseHandler):
                           'direct_creation': True,
                           'name': aname}
             values['provenance'] = dumps(provenance)
-            prep_id = job.input_artifacts[0].id
+            # inherint the first prep info file from the first input artifact
+            prep_id = job.input_artifacts[0].prep_templates[0].id
         else:
             prep_id = int(prep_id)
 
