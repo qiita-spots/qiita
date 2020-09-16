@@ -52,6 +52,12 @@ Looking for information about analyzing your data? Please see the document here:
 
    analyzingsamples/index.rst
 
+Interested in how you can access and use public data available on Qiita? Please see the document here:
+
+   .. toctree::
+
+     reanalysis/reanalysis.rst
+
 Looking for available guides? Please see these documents:
 
 .. toctree::

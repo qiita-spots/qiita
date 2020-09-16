@@ -1975,6 +1975,12 @@ class TestSampleTemplate(TestCase):
             'anonymized_name', 'tot_org_carb', 'description_duplicate',
             'env_feature', 'scientific_name', 'qiita_study_id'})
 
+        # test with add_ebi_accessions as True
+        obs = self.tester.to_dataframe(True)
+        self.assertEqual(
+            self.tester.ebi_sample_accessions,
+            obs.qiita_ebi_sample_accessions.to_dict())
+
     def test_check_restrictions(self):
         obs = self.tester.check_restrictions(
             [STC['EBI']])

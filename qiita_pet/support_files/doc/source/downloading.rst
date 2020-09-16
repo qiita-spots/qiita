@@ -109,7 +109,7 @@ off the artifact ID and is present in the artifact and metadata filenames.
 Finding Samples Based On Their Metadata
 ---------------------------------------
 
-For help on doing complex searches for samples go to :doc:`../redbiom`. Redbiom
+For help on doing complex searches for samples go to :doc:`./redbiom`. Redbiom
 helps users find samples based on their metadata, a specific taxon or feature
 of interest via a simple Qiita GUI or the command line (more powerful).
 

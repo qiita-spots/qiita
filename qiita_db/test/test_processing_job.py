@@ -446,6 +446,10 @@ class ProcessingJobTest(TestCase):
              qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
     def test_complete_success(self):
+        # Note that here we are submitting and creating other multiple jobs;
+        # thus here is the best place to test any intermediary steps/functions
+        # of the job creation, submission, exectution, and completion.
+        #
         # This first part of the test is just to test that by default the
         # naming of the output artifact will be the name of the output
         fd, fp = mkstemp(suffix='_table.biom')
@@ -457,8 +461,16 @@ class ProcessingJobTest(TestCase):
                                             'artifact_type': 'BIOM'}}
         job = _create_job()
         job._set_status('running')
+
+        # here we can test that job.release_validator_job hasn't been created
+        # yet so it has to be None
+        self.assertIsNone(job.release_validator_job)
         job.complete(True, artifacts_data=artifacts_data)
         self._wait_for_job(job)
+        # let's check for the job that released the validators
+        self.assertIsNotNone(job.release_validator_job)
+        self.assertEqual(job.release_validator_job.parameters.values['job'],
+                         job.id)
         # Retrieve the job that is performing the validation:
         validators = list(job.validator_jobs)
         self.assertEqual(len(validators), 1)
@@ -780,13 +792,11 @@ class ProcessingJobTest(TestCase):
 
         # helper to set memory allocations easier
         def _set_allocation(memory):
-            with qdb.sql_connection.TRN:
-                sql = """UPDATE qiita.processing_job_resource_allocation
-                         SET allocation = '{0}'
-                         WHERE name = 'Split libraries FASTQ'""".format(
-                            '-q qiita -l mem=%s' % memory)
-                qdb.sql_connection.TRN.add(sql)
-                qdb.sql_connection.TRN.execute()
+            sql = """UPDATE qiita.processing_job_resource_allocation
+                     SET allocation = '{0}'
+                     WHERE name = 'Split libraries FASTQ'""".format(
+                        '-q qiita -l mem=%s' % memory)
+            qdb.sql_connection.perform_as_transaction(sql)
 
         # let's start with something simple, samples*1000
         #                                         27*1000 ~ 27000
@@ -858,8 +868,9 @@ class ProcessingWorkflowTests(TestCase):
             tester._raise_if_not_in_construction()
 
     def test_submit(self):
-        # In order to test a success, we need to actually run the jobs, which
-        # will mean to run split libraries, for example.
+        # The submit method is being tested in test_complete_success via
+        # a job, its release validators and validators submissions.
+        # Leaving this note here in case it's helpful for future development
         pass
 
     def test_from_default_workflow(self):

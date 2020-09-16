@@ -7,6 +7,10 @@ redbiom
 * Allows you to search through public studies to find comparable data to your own
 * Can search by: metadata, feature, or taxon
 
+redbiom is a cache service which can be used to search databases for samples which contain particular taxonomic units or given features (e.g. environmental or clinical factors); either as a Qiita plugin, or as a separately installed command line package. redbiom can therefore be used to identify samples for a meta-analysis focused on some particular factor (or factors). The utility of searching by metadata or feature is that it allows the discovery and subsequent use of a potentially wide variety of samples. This may include data from studies with completely different research goals, which one would have otherwise been unlikely to realize could be used.
+
+Note that a cache service is a high-speed data storage layer which stores a subset of data allowing a more rapid searching and retrieval experience. redbiom has a much smaller, sparse vector version of the Qiita database containing mainly metadata, which thus allows rapid searching. Samples found in a redbiom search can then be retrieved from the Qiita database through redbiom for subsequent analysis.
+
 For more information, advanced queries and generating
 `BIOM <http://biom-format.org/>`__ files go to the
 `redbiom github page <https://github.com/biocore/redbiom/blob/master/README.md>`__.
@@ -35,7 +39,7 @@ Search Options
     will find all samples which have the *qiita_study_id* metadata category, and in which the value for that sample is *10317*.
 
   * **Examples:**
-  
+
     * Find all samples in which both the word 'infant', as well as 'antibiotics' exist, and where the infants are under a year old:
 
     .. code-block:: bash

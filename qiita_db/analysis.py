@@ -355,11 +355,9 @@ class Analysis(qdb.base.QiitaObject):
         QiitaDBStatusError
             Analysis is public
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{0} SET description = %s
-                     WHERE analysis_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [description, self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0} SET description = %s
+                 WHERE analysis_id = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(sql, [description, self._id])
 
     @property
     def samples(self):
@@ -513,11 +511,9 @@ class Analysis(qdb.base.QiitaObject):
         -----
         An analysis should only ever have one PMID attached to it.
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{0} SET pmid = %s
-                     WHERE analysis_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [pmid, self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0} SET pmid = %s
+                 WHERE analysis_id = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(sql, [pmid, self._id])
 
     @property
     def can_be_publicized(self):
@@ -618,13 +614,11 @@ class Analysis(qdb.base.QiitaObject):
         error_msg : str
             The error message
         """
-        with qdb.sql_connection.TRN:
-            le = qdb.logger.LogEntry.create('Runtime', error_msg)
-            sql = """UPDATE qiita.analysis
-                     SET logging_id = %s
-                     WHERE analysis_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [le.id, self.id])
-            qdb.sql_connection.TRN.execute()
+        le = qdb.logger.LogEntry.create('Runtime', error_msg)
+        sql = """UPDATE qiita.analysis
+                 SET logging_id = %s
+                 WHERE analysis_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [le.id, self.id])
 
     def has_access(self, user):
         """Returns whether the given user has access to the analysis
@@ -696,11 +690,9 @@ class Analysis(qdb.base.QiitaObject):
         if user.id == self.owner or user.id in self.shared_with:
             return
 
-        with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.analysis_users (analysis_id, email)
-                     VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [self._id, user.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """INSERT INTO qiita.analysis_users (analysis_id, email)
+                 VALUES (%s, %s)"""
+        qdb.sql_connection.perform_as_transaction(sql, [self._id, user.id])
 
     def unshare(self, user):
         """Unshare the analysis with another user
@@ -710,11 +702,9 @@ class Analysis(qdb.base.QiitaObject):
         user: User object
             The user to unshare the analysis with
         """
-        with qdb.sql_connection.TRN:
-            sql = """DELETE FROM qiita.analysis_users
-                     WHERE analysis_id = %s AND email = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id, user.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """DELETE FROM qiita.analysis_users
+                 WHERE analysis_id = %s AND email = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [self._id, user.id])
 
     def _lock_samples(self):
         """Only dflt analyses can have samples added/removed

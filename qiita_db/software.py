@@ -622,22 +622,37 @@ class Command(qdb.base.QiitaObject):
         -------
         bool
             Whether the command is active or not
+
+        Notes
+        -----
+        This method differentiates between commands based on analysis_only or
+        the software type. The commands that are not for analysis (processing)
+        and are from an artifact definition software will return as active
+        if they have the same name than a command that is active; this helps
+        for situations where the processing plugins are updated but some
+        commands didn't change its version.
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT active
-                     FROM qiita.software_command
-                     WHERE command_id = %s"""
+            cmd_type = self.software.type
+            if self.analysis_only or cmd_type == 'artifact definition':
+                sql = """SELECT active
+                         FROM qiita.software_command
+                         WHERE command_id = %s"""
+            else:
+                sql = """SELECT EXISTS (
+                            SELECT active FROM qiita.software_command
+                            WHERE name IN (
+                                SELECT name FROM qiita.software_command
+                                WHERE command_id = %s) AND active = true)"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     def activate(self):
         """Activates the command"""
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software_command
-                     SET active = %s
-                     WHERE command_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [True, self.id])
-            return qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software_command
+                 SET active = %s
+                 WHERE command_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [True, self.id])
 
     @property
     def analysis_only(self):
@@ -1277,11 +1292,9 @@ class Software(qdb.base.QiitaObject):
         deprecate : bool
             New software deprecate value
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software SET deprecated = %s
-                     WHERE software_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [deprecate, self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software SET deprecated = %s
+                 WHERE software_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [deprecate, self._id])
 
     @property
     def active(self):
@@ -1299,12 +1312,10 @@ class Software(qdb.base.QiitaObject):
 
     def activate(self):
         """Activates the plugin"""
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software
-                     SET active = %s
-                     WHERE software_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [True, self.id])
-            return qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software
+                 SET active = %s
+                 WHERE software_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [True, self.id])
 
     @property
     def client_id(self):

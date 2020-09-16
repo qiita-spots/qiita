@@ -17,7 +17,7 @@ compute resources to the global community, alleviating the technical burdens,
 such as familiarity with the command line or access to compute power, that are
 typically limiting for researchers studying microbial ecology.
 
-Qiita is currently in alpha status. We are very open to community
+Qiita is currently in beta status. We are very open to community
 contributions and feedback. If you're interested in contributing to Qiita,
 see `CONTRIBUTING.md <https://github.com/biocore/qiita/blob/master/CONTRIBUTING.md>`__.
 If you'd like to report bugs or request features, you can do that in the
@@ -43,9 +43,7 @@ Current features
 
   * Target gene data: we support deblur against GreenGenes (13_8) and close
     reference picking against GreenGenes (13_8) and Silva.
-  * Metagenoic/Shotgun data: we support Shogun processing. Note that this data
-    is suitable for download and further down stream analyses but we don't recommend
-    meta-analysis within Qiita (only single study).
+  * Metagenomic and Metatranscriptomic data: we support Shogun processing.
   * biom files can be added as new preparation templates for downstream
     analyses; however, this cannot be made public.
 

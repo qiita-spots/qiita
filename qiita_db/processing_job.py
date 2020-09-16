@@ -814,12 +814,35 @@ class ProcessingJob(qdb.base.QiitaObject):
             - If the current status of the job is 'running' and `value` is
             'queued'
         """
+        sql = """UPDATE qiita.processing_job
+                 SET external_job_id = %s
+                 WHERE processing_job_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
+
+    @property
+    def release_validator_job(self):
+        """Retrieves the release validator job
+
+        Returns
+        -------
+        qiita_db.processing_job.ProcessingJob or None
+            The release validator job of this job
+        """
+        rvalidator = None
         with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.processing_job
-                     SET external_job_id = %s
-                     WHERE processing_job_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+            sql = """SELECT processing_job_id
+                     FROM qiita.processing_job
+                     WHERE command_id in (
+                         SELECT command_id
+                         FROM qiita.software_command
+                         WHERE name = 'release_validators')
+                             AND command_parameters->>'job' = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            results = qdb.sql_connection.TRN.execute_fetchflatten()
+            if results:
+                rvalidator = ProcessingJob(results[0])
+
+        return rvalidator
 
     def submit(self, parent_job_id=None, dependent_jobs_list=None):
         """Submits the job to execution
@@ -1090,6 +1113,14 @@ class ProcessingJob(qdb.base.QiitaObject):
             Dict with the artifact information. `filepaths` contains the list
             of filepaths and filepath types for the artifact and
             `artifact_type` the type of the artifact
+
+        Notes
+        -----
+        The `provenance` in the job.parameters can contain a `direct_creation`
+        flag to avoid having to wait for the complete job to create a new
+        artifact, which is normally ran during regular processing. Skipping is
+        fine because we are adding an artifact to an existing job outside of
+        regular processing
         """
         with qdb.sql_connection.TRN:
             atype = artifact_data['artifact_type']
@@ -1100,18 +1131,41 @@ class ProcessingJob(qdb.base.QiitaObject):
             if job_params['provenance'] is not None:
                 # The artifact is a result from a previous job
                 provenance = loads(job_params['provenance'])
-                if provenance.get('data_type') is not None:
-                    artifact_data = {'data_type': provenance['data_type'],
-                                     'artifact_data': artifact_data}
+                if provenance.get('direct_creation', False):
+                    original_job = ProcessingJob(provenance['job'])
+                    artifact = qdb.artifact.Artifact.create(
+                        filepaths, atype,
+                        parents=original_job.input_artifacts,
+                        processing_parameters=original_job.parameters,
+                        analysis=job_params['analysis'],
+                        name=job_params['name'])
 
-                sql = """UPDATE qiita.processing_job_validator
-                         SET artifact_info = %s
-                         WHERE validator_id = %s"""
-                qdb.sql_connection.TRN.add(
-                    sql, [dumps(artifact_data), self.id])
-                qdb.sql_connection.TRN.execute()
-                # Can't create the artifact until all validators are completed
-                self._set_status('waiting')
+                    sql = """
+                        INSERT INTO qiita.artifact_output_processing_job
+                            (artifact_id, processing_job_id,
+                             command_output_id)
+                         VALUES (%s, %s, %s)"""
+                    qdb.sql_connection.TRN.add(
+                        sql, [artifact.id, original_job.id,
+                              provenance['cmd_out_id']])
+                    qdb.sql_connection.TRN.execute()
+
+                    self._set_status('success')
+                else:
+                    if provenance.get('data_type') is not None:
+                        artifact_data = {'data_type': provenance['data_type'],
+                                         'artifact_data': artifact_data}
+
+                    sql = """UPDATE qiita.processing_job_validator
+                             SET artifact_info = %s
+                             WHERE validator_id = %s"""
+                    qdb.sql_connection.TRN.add(
+                        sql, [dumps(artifact_data), self.id])
+                    qdb.sql_connection.TRN.execute()
+
+                    # Can't create the artifact until all validators
+                    # are completed
+                    self._set_status('waiting')
             else:
                 # The artifact is uploaded by the user or is the initial
                 # artifact of an analysis
@@ -1450,16 +1504,14 @@ class ProcessingJob(qdb.base.QiitaObject):
         qiita_db.exceptions.QiitaDBOperationNotPermittedError
             If the status of the job is not 'running'
         """
-        with qdb.sql_connection.TRN:
-            if self.status != 'running':
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Cannot change the step of a job whose status is not "
-                    "'running'")
-            sql = """UPDATE qiita.processing_job
-                     SET step = %s
-                     WHERE processing_job_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        if self.status != 'running':
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "Cannot change the step of a job whose status is not "
+                "'running'")
+        sql = """UPDATE qiita.processing_job
+                 SET step = %s
+                 WHERE processing_job_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
     @property
     def children(self):

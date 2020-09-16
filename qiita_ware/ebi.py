@@ -356,6 +356,11 @@ class EBISubmission(object):
         study_title = ET.SubElement(descriptor, 'STUDY_TITLE')
         study_title.text = escape(clean_whitespace(self.study_title))
 
+        # study type is deprecated and not displayed anywhere on EBI-ENA;
+        # however it's required for submission so just injecting with Other
+        ET.SubElement(
+            descriptor, 'STUDY_TYPE', {'existing_study_type': 'Other'})
+
         study_abstract = ET.SubElement(descriptor, 'STUDY_ABSTRACT')
         study_abstract.text = clean_whitespace(escape(self.study_abstract))
 

@@ -142,12 +142,10 @@ class CommandTests(TestCase):
         results = dumps(results)
 
         # modify table directly, in order to test method
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software_command
-                     SET post_processing_cmd = %s
-                     WHERE command_id = 1"""
-            qdb.sql_connection.TRN.add(sql, [results])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software_command
+                 SET post_processing_cmd = %s
+                 WHERE command_id = 1"""
+        qdb.sql_connection.perform_as_transaction(sql, [results])
 
         results = qdb.software.Command(1).post_processing_cmd
 
@@ -159,12 +157,10 @@ class CommandTests(TestCase):
         self.assertEqual(results['script_params'], {'a': 'A', 'b': 'B'})
 
         # clean up table
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software_command
-                     SET post_processing_cmd = NULL
-                     WHERE command_id = 1"""
-            qdb.sql_connection.TRN.add(sql)
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software_command
+                 SET post_processing_cmd = NULL
+                 WHERE command_id = 1"""
+        qdb.sql_connection.perform_as_transaction(sql)
 
     def test_description(self):
         self.assertEqual(
@@ -334,6 +330,13 @@ class CommandTests(TestCase):
                 self.outputs)
 
     def test_create(self):
+        # let's deactivate all current plugins and commands; this is not
+        # important to test the creation but it is important to test if a
+        # command is active as the new commands should take precedence and
+        # should make the old commands active if they have the same name
+        qdb.software.Software.deactivate_all()
+
+        # note that here we are adding commands to an existing software
         obs = qdb.software.Command.create(
             self.software, "Test Command", "This is a command for testing",
             self.parameters, self.outputs)
@@ -355,6 +358,7 @@ class CommandTests(TestCase):
                          {'parameters': [], 'outputs': [],
                           'ignore_parent_command': False})
 
+        # here we are creating a new software that we will add new commads to
         obs = qdb.software.Command.create(
             self.software, "Test Command 2", "This is a command for testing",
             self.parameters, analysis_only=True)
@@ -379,23 +383,24 @@ class CommandTests(TestCase):
             'analysis': ('analysis', None),
             'files': ('string', None),
             'artifact_type': ('string', None)}
-        obs = qdb.software.Command.create(
+        validate = qdb.software.Command.create(
             software, "Validate", "Test creating a validate command",
             parameters)
-        self.assertEqual(obs.name, "Validate")
-        self.assertEqual(obs.description, "Test creating a validate command")
+        self.assertEqual(validate.name, "Validate")
+        self.assertEqual(
+            validate.description, "Test creating a validate command")
         exp_required = {
             'template': ('prep_template', [None]),
             'analysis': ('analysis', [None]),
             'files': ('string', [None]),
             'artifact_type': ('string', [None])}
-        self.assertEqual(obs.required_parameters, exp_required)
+        self.assertEqual(validate.required_parameters, exp_required)
         exp_optional = {'name': ['string', 'dflt_name'],
                         'provenance': ['string', None]}
-        self.assertEqual(obs.optional_parameters, exp_optional)
-        self.assertFalse(obs.analysis_only)
-        self.assertEqual(obs.naming_order, [])
-        self.assertEqual(obs.merging_scheme,
+        self.assertEqual(validate.optional_parameters, exp_optional)
+        self.assertFalse(validate.analysis_only)
+        self.assertEqual(validate.naming_order, [])
+        self.assertEqual(validate.merging_scheme,
                          {'parameters': [], 'outputs': [],
                           'ignore_parent_command': False})
 
@@ -425,6 +430,32 @@ class CommandTests(TestCase):
                'outputs': ['out1'],
                'ignore_parent_command': False}
         self.assertEqual(obs.merging_scheme, exp)
+
+        # now that we are done with the regular creation testing we can create
+        # a new command with the name of an old deprecated command and make
+        # sure that is not deprecated now
+        # 1. let's find the previous command and make sure is deprecated
+        cmd_name = 'Split libraries FASTQ'
+        old_cmd = [cmd for cmd in self.software.commands
+                   if cmd.name == cmd_name][0]
+        self.assertFalse(old_cmd.active)
+
+        # 2. let's create a new command with the same name and check that now
+        #    the old and the new are active. Remember the new command is going
+        #    to be created in a new software that has a Validate command which
+        #    is an 'artifact definition', so this will allow us to test that
+        #    a previous Validate command is not active
+        new_cmd = qdb.software.Command.create(
+            software, cmd_name, cmd_name, parameters, outputs=outputs)
+        self.assertEqual(old_cmd.name, new_cmd.name)
+        self.assertTrue(old_cmd.active)
+        self.assertTrue(new_cmd.active)
+        # find an old Validate command
+        old_validate = [c for c in qdb.software.Software.from_name_and_version(
+            'BIOM type', '2.1.4 - Qiime2').commands if c.name == 'Validate'][0]
+        self.assertEqual(old_validate.name, validate.name)
+        self.assertTrue(validate.active)
+        self.assertFalse(old_validate.active)
 
     def test_activate(self):
         qdb.software.Software.deactivate_all()
@@ -478,10 +509,8 @@ class SoftwareTestsIter(TestCase):
             '-q qiita -l nodes=1:ppn=5 -l pmem=8gb -l walltime=168:00:00')
 
         # delete allocations to test errors
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "DELETE FROM qiita.processing_job_resource_allocation")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "DELETE FROM qiita.processing_job_resource_allocation")
 
         with self.assertRaisesRegex(ValueError, "Could not match 'Split "
                                     "libraries' to a resource allocation!"):

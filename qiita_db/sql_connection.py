@@ -493,6 +493,24 @@ TRN = Transaction()
 TRNADMIN = Transaction(admin=True)
 
 
+def perform_as_transaction(sql, parameters=None):
+    """Opens, adds and executes sql as a single transaction
+
+    Parameters
+    ----------
+    sql : str
+        The SQL to execute
+    parameters: object, optional
+        The object of parameters to pass to the TRN.add command
+    """
+    with TRN:
+        if parameters:
+            TRN.add(sql, parameters)
+        else:
+            TRN.add(sql)
+        TRN.execute()
+
+
 def create_new_transaction():
     """Creates a new global transaction
 

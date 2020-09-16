@@ -7,13 +7,13 @@
 # -----------------------------------------------------------------------------
 
 from unittest import main, TestCase
-from json import loads
+from json import loads, dumps
 from functools import partial
 from os.path import join, exists, isfile
 from os import close, remove
 from shutil import rmtree
 from tempfile import mkstemp, mkdtemp
-from json import dumps
+from time import sleep
 
 from tornado.web import HTTPError
 import pandas as pd
@@ -286,6 +286,108 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
         obs = self.post('/qiita_db/artifacts/types/', headers=self.header,
                         data=data)
         self.assertEqual(obs.code, 200)
+
+
+class APIArtifactHandlerTests(OauthTestingBase):
+    def setUp(self):
+        super(APIArtifactHandlerTests, self).setUp()
+        self._clean_up_files = []
+
+    def tearDown(self):
+        super(APIArtifactHandlerTests, self).tearDown()
+
+        for f in self._clean_up_files:
+            if exists(f):
+                remove(f)
+
+    def test_post(self):
+        # no header
+        obs = self.post('/qiita_db/artifact/', data={})
+        self.assertEqual(obs.code, 400)
+
+        fd, fp = mkstemp(suffix='_table.biom')
+        close(fd)
+        # renaming samples
+        et.update_ids({'S1': '1.SKB1.640202',
+                       'S2': '1.SKD3.640198',
+                       'S3': '1.SKM4.640180'}, inplace=True)
+        with biom_open(fp, 'w') as f:
+            et.to_hdf5(f, "test")
+        self._clean_up_files.append(fp)
+
+        # no job_id or prep_id
+        data = {'user_email': 'demo@microbio.me',
+                'artifact_type': 'BIOM',
+                'command_artifact_name': 'OTU table',
+                'files': dumps({'biom': [fp]})}
+
+        obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
+        self.assertEqual(obs.code, 400)
+        self.assertIn(
+            'You need to specify a job_id or a prep_id', str(obs.error))
+
+        # both job_id and prep_id defined
+        data['job_id'] = 'e5609746-a985-41a1-babf-6b3ebe9eb5a9'
+        data['prep_id'] = 'prep_id'
+        obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
+        self.assertEqual(obs.code, 400)
+        self.assertIn(
+            'You need to specify only a job_id or a prep_id', str(obs.error))
+
+        # make sure that all the plugins are on
+        qdb.util.activate_or_update_plugins(update=True)
+
+        # tests success by inserting a new artifact into an existing job
+        original_job = qdb.processing_job.ProcessingJob(data['job_id'])
+        input_artifact = original_job.input_artifacts[0]
+        original_children = input_artifact.children
+        self.assertEqual(len(original_children), 3)
+
+        # send the new data
+        del data['prep_id']
+        obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
+        jid = obs.body.decode("utf-8")
+
+        job = qdb.processing_job.ProcessingJob(jid)
+        while job.status not in ('error', 'success'):
+            sleep(0.5)
+
+        # now the original job should have 4 children and make sure they have
+        # the same parent and parameters
+        children = input_artifact.children
+        new_children = list(set(children) - set(original_children))[0]
+        self.assertEqual(len(children), 4)
+        for c in children[1:]:
+            self.assertCountEqual(children[0].processing_parameters.values,
+                                  c.processing_parameters.values)
+            self.assertEqual(children[0].parents, c.parents)
+
+        # making sure the new artifact is part of the descendants, which is a
+        # different method and usage than children method
+        self.assertIn(new_children, input_artifact.descendants.nodes)
+
+        # now let's test adding an artifact directly to a new prep
+        new_prep = qdb.metadata_template.prep_template.PrepTemplate.create(
+            pd.DataFrame({'new_col': {'1.SKB1.640202': 1,
+                                      '1.SKD3.640198': 2,
+                                      '1.SKM4.640180': 3}}),
+            qdb.study.Study(1), '16S')
+        fd, fp = mkstemp(suffix='_table.biom')
+        close(fd)
+        with biom_open(fp, 'w') as f:
+            et.to_hdf5(f, "test")
+        self._clean_up_files.append(fp)
+        data = {'user_email': 'demo@microbio.me',
+                'artifact_type': 'BIOM', 'prep_id': new_prep.id,
+                'files': dumps({'biom': [fp]})}
+
+        obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
+        jid = obs.body.decode("utf-8")
+
+        job = qdb.processing_job.ProcessingJob(jid)
+        while job.status not in ('error', 'success'):
+            sleep(0.5)
+        self.assertIsNotNone(new_prep.artifact)
 
 
 if __name__ == '__main__':

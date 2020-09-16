@@ -6,4 +6,4 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-__version__ = "052020"
+__version__ = "092020"

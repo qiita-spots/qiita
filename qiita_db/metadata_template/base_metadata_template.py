@@ -279,19 +279,18 @@ class BaseSample(qdb.base.QiitaObject):
         QiitaDBColumnError
             If the column does not exist in the table
         """
-        with qdb.sql_connection.TRN:
-            # Check if the column exist in the table
-            if column not in self._get_categories():
-                raise qdb.exceptions.QiitaDBColumnError(
-                    "Column %s does not exist in %s" %
-                    (column, self._dynamic_table))
+        # Check if the column exist in the table
+        if column not in self._get_categories():
+            raise qdb.exceptions.QiitaDBColumnError(
+                "Column %s does not exist in %s" %
+                (column, self._dynamic_table))
 
-            sql = """UPDATE qiita.{0}
-                     SET sample_values = sample_values || %s
-                     WHERE sample_id = %s""".format(self._dynamic_table)
+        sql = """UPDATE qiita.{0}
+                 SET sample_values = sample_values || %s
+                 WHERE sample_id = %s""".format(self._dynamic_table)
 
-            qdb.sql_connection.TRN.add(sql, [dumps({column: value}), self.id])
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            sql, [dumps({column: value}), self.id])
 
     def __setitem__(self, column, value):
         r"""Sets the metadata value for the category `column`
@@ -1158,8 +1157,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             df.to_csv(fp, index_label='sample_name', na_rep="", sep='\t',
                       encoding='utf-8')
 
-    def to_dataframe(self):
-        """Returns the metadata template as a dataframe
+    def _common_to_dataframe_steps(self):
+        """Perform the common to_dataframe steps
 
         Returns
         -------
