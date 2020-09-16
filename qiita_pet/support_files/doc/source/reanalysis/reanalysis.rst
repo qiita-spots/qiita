@@ -840,6 +840,8 @@ We will use ``fig``, which allows the creation of a background (blank canvas) up
 .. figure::  fig.1.python.png
    :align:   center
 
+   Figure 1 as produced by python code.
+
 **Figure 2**
 
 Figure 2 has two graphs within it. This requires a grid to place them within, with three columns, two for the one graph, one for the other graph, on a single row. Then we can plot the two graphs, using similar syntax to the previous figure.
@@ -877,6 +879,8 @@ You have now replicated the two figures in the Casals-Pascual et al 2020 paper, 
 
 .. figure::  fig.2.python.png
    :align:   center
+
+   Figure 2 as produced by python code.
 
 R studio workflow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1044,6 +1048,8 @@ R's default plotting function is perfectly adequate for exploratory analysis, bu
 .. figure::  fig.1.R.png
    :align:   center
 
+   Figure 1 as produced by R code.
+
 While this code contains the necessary command to save an image automatically, a better quality image can be saved by running the line ``p`` alone so that the plot is present in the Rstudio plot viewer, and then using *export* -> *export as png* -> optionally alter image size and or ratio -> *save*. The same is true for figure 2 below, but in this case run the line ``grid.arrange(p1, p2, layout_matrix = lay)`` alone.
 
 .. code-block:: r
@@ -1097,6 +1103,8 @@ These figures will look slightly different to those in Casals-Pascual et al 2020
 
 .. figure::  fig.2.R.png
    :align:   center
+
+   Figure 2 as produced by R code.
 
 Conclusion
 ^^^^^^^^^^^^^^^^
