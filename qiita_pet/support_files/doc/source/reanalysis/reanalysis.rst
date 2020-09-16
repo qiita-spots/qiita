@@ -453,17 +453,15 @@ To save these to the results directory made in your working directory use the co
     filtered_table = feature_filtered_data.filtered_table.view(q.Metadata)
     filtered_ids = "\n".join(filtered_table.to_dataframe().index) + "\n"
     with open('./results/filtered.ids', 'w') as f:
-    f.write(filtered_ids)
+        f.write(filtered_ids)
 
 You have now obtained a filtered dataset, but will need to classify the features if you want to use analyses that take into account phylogenetic distance. Therefore we need to extract sequences from the dataset and ‘insert' them into a reference phylogenetic tree (this placement identifies their taxonomic position). To extract representative sequences from the features we will use the ``feature_filtered_data`` (a frequency feature table) to make a fasta file (a universal DNA/protein sequence file format) of sequence feature data. You can view this file with ``less <file>`` or ``cat <file> | head``, as it is a plain text file. Often such files have information about the origin of the sequences (on the > line before the sequence), but we will use the sequence itself as an ID as the taxonomic data is currently unknown. Fragment insertion, mapping representative sequences from the samples to a reference database will allow taxonomic classification of the ASVs. First extract representative sequences from the data:
 
 .. code-block:: python
 
     with open('./results/sequences.fna', 'w') as f:
-    seqs = ''
-    for i,seq in enumerate(feature_filtered_data.filtered_table.view(pd.DataFrame).columns):
-        seqs = seqs + '>' + seq + '\n' + seq + '\n'
-    f.write(seqs[:-1])
+        for seq in feature_filtered_data.filtered_table.view(pd.DataFrame).columns:
+            f.write('>%s\n%s\n' % (seq, seq))
 
     # import the fasta file as a FeatureData[Sequence] artifact
     sequences = q.Artifact.import_data(type='FeatureData[Sequence]', view='./results/sequences.fna')
@@ -541,6 +539,7 @@ You can check your version of scikit-learn by typing the following in your pytho
 
 .. code-block:: python
 
+    import sklearn
     print('The scikit-learn version is {}.'.format(sklearn.__version__))
 
 If you have the correct version, ignore the warning. If not, update to the correct version using conda.
