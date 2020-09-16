@@ -4,8 +4,8 @@ Version 092020
 --------------
 
 * Added a new endpoint to inject artifacts to existing preparations or jobs: `/qiita_db/artifact/`
-* Now outdated commands with the exact same name than newer commands will be marked as not outdated. This is helpful for cases where the commands haven't changed between version
-* Added the `add_ebi_accessions` to the to_dataframe() method of the information files so it can be used to `redbiom`. This will allow searching via sample or experiment accessions
+* Outdated commands with the exact same name than newer commands will be marked as not outdated. This is helpful for cases where the commands haven't changed between version
+* Added the `add_ebi_accessions` to the `to_dataframe()` method of the information files so it can be used to `redbiom`. This will allow searching via sample or experiment accessions
 * Added the `release_validator_job` method to `ProcessingJob` method to easily retrieve the `release_validator` job of a `processing_job`
 * Re-added `STUDY_TYPE` to the EBI-ENA submission as they are required but deprecated so just adding as Other
 * Added qiime2.2020.08 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
