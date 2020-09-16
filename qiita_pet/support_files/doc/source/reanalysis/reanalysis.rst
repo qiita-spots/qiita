@@ -837,6 +837,9 @@ We will use ``fig``, which allows the creation of a background (blank canvas) up
 
     fig.savefig('figure1.pdf')
 
+.. figure::  fig.1.python.png
+   :align:   center
+
 **Figure 2**
 
 Figure 2 has two graphs within it. This requires a grid to place them within, with three columns, two for the one graph, one for the other graph, on a single row. Then we can plot the two graphs, using similar syntax to the previous figure.
@@ -871,6 +874,9 @@ Figure 2 has two graphs within it. This requires a grid to place them within, wi
     fig.savefig('figure2.pdf')
 
 You have now replicated the two figures in the Casals-Pascual et al 2020 paper, and should be able to repurpose this code to use for other data relevant to your own study.
+
+.. figure::  fig.2.python.png
+   :align:   center
 
 R studio workflow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1035,6 +1041,9 @@ R's default plotting function is perfectly adequate for exploratory analysis, bu
         p
         dev.off()
 
+.. figure::  fig.1.R.png
+   :align:   center
+
 While this code contains the necessary command to save an image automatically, a better quality image can be saved by running the line ``p`` alone so that the plot is present in the Rstudio plot viewer, and then using *export* -> *export as png* -> optionally alter image size and or ratio -> *save*. The same is true for figure 2 below, but in this case run the line ``grid.arrange(p1, p2, layout_matrix = lay)`` alone.
 
 .. code-block:: r
@@ -1067,7 +1076,7 @@ While this code contains the necessary command to save an image automatically, a
 
     p2 <- ggplot(data = merged, aes(x = as.numeric(dtx), group = Sample, fill = Sample)) +
         geom_histogram(aes(y=..density.., color = Sample), alpha = 0.1, binwidth = 0.01) +
-        geom_density(alpha = 0.4) +
+        #geom_density(alpha = 0.4) +                                                        #optional addition of density overlay
         scale_x_continuous(name = '', breaks = seq(0,1,0.1), expand = c(0.1, 0.1)) +
         scale_y_continuous(breaks = c(0:20)) +
         geom_vline(xintercept = mu_b1, color = 'red', linetype = 'dashed', size = 0.8) +
@@ -1085,6 +1094,9 @@ While this code contains the necessary command to save an image automatically, a
     dev.off()
 
 These figures will look slightly different to those in Casals-Pascual et al 2020 because they have been made in R but they are essentially the same, and this code can be modified to one's own data if R is preferred.
+
+.. figure::  fig.2.R.png
+   :align:   center
 
 Conclusion
 ^^^^^^^^^^^^^^^^

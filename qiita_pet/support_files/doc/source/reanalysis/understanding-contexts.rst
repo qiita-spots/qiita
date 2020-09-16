@@ -3,6 +3,11 @@ An explanation of contexts in redbiom and Qiita.
 
 In both redbiom and Qiita study data is grouped into contexts representing different processing pipelines/methods. Processing and bioinformatic techniques can cause inherent biases in datasets, however if data is grouped by the protocol used to obtain the samples and extract data from them then, within any one such group (context), data is expected to be comparable. This is because the data in such a group (context) should share the same biases/limitations. Therefore, when retrieving data found in a redbiom search a context must be specified; so ensuring the retrieved data is comparable. If you are familiar with the methods and processes used in sample processing pipelines you should be able to interpret contexts as a context ultimately represents a processing pipeline. The general syntax of the context is <binning strategy>-<reference database>-<sequencing strategy>-<region sequenced>-<(if trimmed) trimming length>-<id> and this section should help familiarize you with these considerations therefore providing an understanding of contexts in both redbiom and Qiita.
 
+.. figure::  contexts.jpg
+   :align:   center
+
+   Diagram of general workflow for obtaining and processing data (green = data state; grey = process; white = example) [Produced at http://interactive.blockdiag.com/]
+
 Obtaining Data
 --------------
 
