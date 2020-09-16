@@ -1,5 +1,17 @@
-Introduction to the download and analysis of public Qiita data
-====================================================================
+Introduction to the download and (re)analysis of public data from Qiita
+===========================================================================
+
+This documentation provides an introduction to accessing and processing public data within the Qiita database for re-analysis. redbiom can be used to identify public data within Qiita for a meta-analysis focused on some particular factor (or factors). The utility of using redbiom to search the database in this way is that it allows the discovery and subsequent use of a potentially wide variety of samples. This may include data from studies with completely different research goals, which one would otherwise have been unlikely to realize could be used.
+
+To illustrate this utility, the following tutorials provide guidance on how to search for and download data using redbiom (:ref:`Retrieving Public Data`) and how to process data retrieved with redbiom using QIIME 2 to allow (re-)analysis of said data (:ref:`Processing Public Data`).
+Furthermore, the third section (the :ref:`Statistical Analysis`) provides guidance on a specific example of how public data may be repurposed, in this case to justify clinical trial or experimental sample size.
+
+Two datasets are used in this documentation:
+
+* the American Gut Project (AGP),
+* the data used in Casals-Pascual et al 2020 (originally from Halfvarson et al 2017).
+
+See :ref:`Intro-to-data` for more detail. Both datasets are used in the first section (:ref:`Retrieving Public Data`) while :ref:`Processing Public Data` uses the AGP data and the :ref:`Statistical Analysis` uses the data used in Casals-Pascual et al 2020.
 
 .. _Retrieving Public Data:
 
@@ -45,6 +57,7 @@ Alternatively, if you prefer not to install miniconda, redbiom can be installed 
     pip install numpy
     pip install redbiom
 
+.. _Intro-to-data:
 
 Introduction to the example data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
