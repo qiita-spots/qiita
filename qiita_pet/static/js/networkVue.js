@@ -70,7 +70,7 @@ Vue.component('processing-graph', {
                     '<div class="col-md-2">' +
                       '<h4><span class="blinking-message">Start workflow:</h4></span>' +
                     '</div>' +
-                    '<div class="col-md-1">' +
+                    '<div class="col-md-2">' +
                       '<a class="btn btn-success form-control" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run</a>' +
                     '</div>' +
                   '</div>' +
@@ -341,6 +341,8 @@ Vue.component('processing-graph', {
      *
      */
     runWorkflow: function() {
+      $('#run-btn').attr('disabled', true);
+      $('#run-btn').html('<span class="glyphicon glyphicon-stop"></span> Submitting');
       let vm = this;
       $.post(vm.portal + "/study/process/workflow/run/", {workflow_id: vm.workflowId}, function(data){
         bootstrapAlert("Workflow " + vm.workflowId + " submitted", "success");
@@ -351,9 +353,11 @@ Vue.component('processing-graph', {
         .fail(function(object, status, error_msg) {
           bootstrapAlert("Error submitting workflow: " + object.statusText, "danger");
         });
-      // return button to regular state
-      $('#run-btn').attr('disabled', false);
-      $('#run-btn').html('<span class="glyphicon glyphicon-play"></span> Run');
+        .always(function() {
+          // return button to regular state
+          $('#run-btn').attr('disabled', false);
+          $('#run-btn').html('<span class="glyphicon glyphicon-play"></span> Run');
+        });
     },
 
     /**
