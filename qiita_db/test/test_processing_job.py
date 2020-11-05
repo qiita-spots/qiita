@@ -280,7 +280,6 @@ class ProcessingJobTest(TestCase):
             job.submit()
 
             self.assertEqual(job.status, 'error')
-            self.assertIn('No such file', job.log.msg)
 
             qdb.sql_connection.TRN.rollback()
 
