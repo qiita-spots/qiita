@@ -165,7 +165,7 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
             'BIOM/7/biom_table.biom\n'
             '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/7_mapping_file.txt\n'
-            '[0-9]* [0-9]* /protected/BIOM/{0}/otu_table.biom '
+            '- [0-9]* /protected/BIOM/{0}/otu_table.biom '
             'BIOM/{0}/otu_table.biom\n'
             '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
