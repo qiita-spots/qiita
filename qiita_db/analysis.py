@@ -1040,13 +1040,15 @@ class Analysis(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             all_ids = set()
             to_concat = []
+            sample_infos = dict()
             for aid, samps in samples.items():
-                pt = qdb.artifact.Artifact(aid).prep_templates[0]
-                qiime_map_fp = pt.qiime_map_fp
+                artifact = qdb.artifact.Artifact(aid)
+                si = artifact.study.sample_template()
+                if si not in sample_infos:
+                    sample_infos[si] = si.to_dataframe()
+                pt = artifact.prep_templates[0].to_dataframe()
 
-                # Parse the mapping file
-                qm = qdb.metadata_template.util.load_template_to_dataframe(
-                    qiime_map_fp, index='#SampleID')
+                qm = pt.join(sample_infos[si], lsuffix="_prep")
 
                 # if we are not going to merge the duplicated samples
                 # append the aid to the sample name
