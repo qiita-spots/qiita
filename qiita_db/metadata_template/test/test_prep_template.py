@@ -954,9 +954,9 @@ class TestPrepTemplate(TestCase):
         for s_id in exp_sample_ids:
             self.assertEqual(pt[s_id]._to_dict(), exp_dict[s_id])
 
-        # prep and qiime files have been created
+        # prep files have been created
         filepaths = pt.get_filepaths()
-        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(len(filepaths), 1)
 
     def test_validate_restrictions(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
@@ -1100,9 +1100,9 @@ class TestPrepTemplate(TestCase):
         for s_id in exp_sample_ids:
             self.assertEqual(pt[s_id]._to_dict(), exp_dict[s_id])
 
-        # prep and qiime files have been created
+        # prep files have been created
         filepaths = pt.get_filepaths()
-        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(len(filepaths), 1)
 
         # cleaning
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)

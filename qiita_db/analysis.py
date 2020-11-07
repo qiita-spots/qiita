@@ -1043,7 +1043,7 @@ class Analysis(qdb.base.QiitaObject):
             sample_infos = dict()
             for aid, samps in samples.items():
                 artifact = qdb.artifact.Artifact(aid)
-                si = artifact.study.sample_template()
+                si = artifact.study.sample_template
                 if si not in sample_infos:
                     sample_infos[si] = si.to_dataframe()
                 pt = artifact.prep_templates[0].to_dataframe()

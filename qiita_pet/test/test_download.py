@@ -163,8 +163,6 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
             '[0-9]*.txt mapping_files/6_mapping_file.txt\n'
             '1756512010 1093210 /protected/BIOM/7/biom_table.biom '
             'BIOM/7/biom_table.biom\n'
-            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-'
-            '[0-9]*.txt mapping_files/7_mapping_file.txt\n'
             '[0-9]* [0-9]* /protected/BIOM/{0}/otu_table.biom '
             'BIOM/{0}/otu_table.biom\n'
             '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
@@ -245,9 +243,7 @@ class TestDownloadRawData(TestHandlerBase):
             '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/1_mapping_file.txt\n'
             '1756512010 1093210 /protected/BIOM/7/biom_table.biom '
-            'BIOM/7/biom_table.biom\n'
-            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
-            'mapping_files/7_mapping_file.txt\n')
+            'BIOM/7/biom_table.biom\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
         response = self.get('/download_study_bioms/200')
@@ -273,9 +269,7 @@ class TestDownloadRawData(TestHandlerBase):
             return_value=User("demo@microbio.me"))
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
-        exp = (
-            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
-            'mapping_files/7_mapping_file.txt\n')
+        exp = ''
         self.assertRegex(response.body.decode('ascii'), exp)
 
 
@@ -387,9 +381,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
         # check success
         response = self.get('/public_download/?data=biom&study_id=1')
         self.assertEqual(response.code, 200)
-        exp = (
-            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
-            'mapping_files/7_mapping_file.txt\n')
+        exp = ''
         self.assertRegex(response.body.decode('ascii'), exp)
 
         Study(1).public_raw_download = True
