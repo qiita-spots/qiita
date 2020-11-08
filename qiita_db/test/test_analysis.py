@@ -374,8 +374,7 @@ class TestAnalysis(TestCase):
         analysis = self._create_analyses_with_samples()
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
 
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
-                         analysis._build_mapping_file, samples)
+        analysis._build_mapping_file(samples)
         obs = qdb.util.get_filepath_information(
             analysis.mapping_file)['fullpath']
 
@@ -401,8 +400,7 @@ class TestAnalysis(TestCase):
         analysis = self._create_analyses_with_samples()
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
                    3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
-                         analysis._build_mapping_file, samples, True)
+        analysis._build_mapping_file(samples, True)
 
         mapping_fp = qdb.util.get_filepath_information(
             analysis.mapping_file)['fullpath']
@@ -425,8 +423,7 @@ class TestAnalysis(TestCase):
         analysis = self._create_analyses_with_samples()
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
                    3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
-                         analysis._build_mapping_file, samples)
+        analysis._build_mapping_file(samples)
         mapping_fp = qdb.util.get_filepath_information(
             analysis.mapping_file)['fullpath']
         obs = qdb.metadata_template.util.load_template_to_dataframe(
@@ -520,8 +517,7 @@ class TestAnalysis(TestCase):
 
     def test_build_files(self):
         analysis = self._create_analyses_with_samples()
-        biom_tables = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning, analysis.build_files, True)
+        biom_tables = analysis.build_files(True)
 
         # testing that the generated files have the same sample ids
         biom_fp = biom_tables[0][1]
@@ -600,8 +596,7 @@ class TestAnalysis(TestCase):
 
         self._wait_for_jobs(new)
 
-        biom_tables = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning, new.build_files, False)
+        biom_tables = new.build_files(False)
 
         # testing that the generated files have the same sample ids
         biom_ids = []
