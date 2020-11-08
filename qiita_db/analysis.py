@@ -1046,9 +1046,10 @@ class Analysis(qdb.base.QiitaObject):
                 si = artifact.study.sample_template
                 if si not in sample_infos:
                     sample_infos[si] = si.to_dataframe()
-                pt = artifact.prep_templates[0].to_dataframe()
+                pt = artifact.prep_templates[0]
+                pt_df = pt.to_dataframe()
 
-                qm = pt.join(sample_infos[si], lsuffix="_prep")
+                qm = pt_df.join(sample_infos[si], lsuffix="_prep")
 
                 # if we are not going to merge the duplicated samples
                 # append the aid to the sample name

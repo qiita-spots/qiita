@@ -106,7 +106,7 @@ class TestLoadArtifactFromCmd(TestCase):
         self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
-            qdb.util.check_count('qiita.filepath', self.fp_count + 5))
+            qdb.util.check_count('qiita.filepath', self.fp_count + 4))
 
     def test_load_artifact_from_cmd_processed(self):
         fd, file1 = mkstemp()

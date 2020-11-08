@@ -1019,9 +1019,9 @@ class TestPrepTemplate(TestCase):
         fp_count = qdb.util.get_count("qiita.filepath")
         self.tester.generate_files()
         obs = qdb.util.get_count("qiita.filepath")
-        # We just make sure that the count has been increased by 2, since
+        # We just make sure that the count has been increased by 1, since
         # the contents of the files have been tested elsewhere.
-        self.assertEqual(obs, fp_count + 2)
+        self.assertEqual(obs, fp_count + 1)
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
