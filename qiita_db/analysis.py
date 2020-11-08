@@ -1079,15 +1079,6 @@ class Analysis(qdb.base.QiitaObject):
 
             merged_map = pd.concat(to_concat)
 
-            # forcing QIIME column order
-            cols = merged_map.columns.values.tolist()
-            cols.remove('BarcodeSequence')
-            cols.remove('LinkerPrimerSequence')
-            cols.remove('Description')
-            cols = (['BarcodeSequence', 'LinkerPrimerSequence'] + cols +
-                    ['Description'])
-            merged_map = merged_map[cols]
-
             # Save the mapping file
             _, base_fp = qdb.util.get_mountpoint(self._table)[0]
             mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
