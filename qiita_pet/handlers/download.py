@@ -113,10 +113,10 @@ class BaseHandlerDownload(BaseHandler):
             elif x['fp'].startswith(basedir):
                 spath = x['fp'][basedir_len:]
                 to_download.append(
-                    (spath, spath, str(x['checksum']), str(x['fp_size'])))
+                    (spath, spath, '-', str(x['fp_size'])))
             else:
                 to_download.append(
-                    (x['fp'], x['fp'], str(x['checksum']), str(x['fp_size'])))
+                    (x['fp'], x['fp'], '-', str(x['fp_size'])))
 
         for pt in artifact.prep_templates:
             qmf = pt.qiime_map_fp
@@ -404,7 +404,7 @@ class DownloadPublicHandler(BaseHandlerDownload):
 
             basedir_len = len(get_db_files_base_dir()) + 1
             fp = x['fp'][basedir_len:]
-            to_download.append((fp, fp, str(x['checksum']), str(x['fp_size'])))
+            to_download.append((fp, fp, '-', str(x['fp_size'])))
             self._write_nginx_file_list(to_download)
 
             zip_fn = '%s_%s.zip' % (
