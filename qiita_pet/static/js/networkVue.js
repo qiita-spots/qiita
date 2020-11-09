@@ -1011,6 +1011,7 @@ Vue.component('processing-graph', {
 
           // At this point we can show the graph and hide the job list
           $("#processing-network-div").show();
+          $("#show-hide-network-btn").show();
           $("#processing-job-div").hide();
         }
       })
@@ -1035,6 +1036,7 @@ Vue.component('processing-graph', {
       $.get(vm.portal + vm.jobsEndpoint, function(data) {
         $("#processing-job-div").html("");
         $("#processing-job-div").append("<p>Hang tight, we are processing your request: </p>");
+        $("#show-hide-network-btn").hide();
         var nonCompletedJobs = 0;
         var successJobs = 0;
         var totalJobs = 0;
