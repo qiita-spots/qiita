@@ -880,12 +880,30 @@ class ProcessingJob(qdb.base.QiitaObject):
         # portal server that submitted the job
         url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
 
+        # if the word ENVIRONMENT is in the plugin_env_script we have a special
+        # case where we are going to execute some command and then wait for the
+        # plugin to return their own id (first implemented for
+        # fast-bowtie2+woltka)
+        if 'ENVIRONMENT' in plugin_env_script:
+            # the job has to be in running state so the plugin can change its`
+            # status
+            with qdb.sql_connection.TRN:
+                self._set_status('running')
+                qdb.sql_connection.TRN.commit()
+
+            create_nested_path(job_dir)
+            cmd = (f'{plugin_env_script}; {plugin_start_script} '
+                   f'{url} {self.id} {job_dir}')
+            stdout, stderr, return_value = _system_call(cmd)
+            if return_value != 0 or stderr != '':
+                self._set_error(stderr)
+            job_id = stdout
         # note that dependent jobs, such as m validator jobs marshalled into
         # n 'queues' require the job_id returned by an external scheduler such
         # as Torque's MOAB, rather than a job name that can be defined within
         # Qiita. Hence, this method must be able to handle the case where a job
         # requires metadata from a late-defined and time-sensitive source.
-        if qiita_config.plugin_launcher in ProcessingJob._launch_map:
+        elif qiita_config.plugin_launcher in ProcessingJob._launch_map:
             launcher = ProcessingJob._launch_map[qiita_config.plugin_launcher]
             if launcher['execute_in_process']:
                 # run this launcher function within this process.
