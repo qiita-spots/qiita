@@ -1365,9 +1365,9 @@ class TestSampleTemplate(TestCase):
         fp_count = qdb.util.get_count("qiita.filepath")
         self.tester.generate_files()
         obs = qdb.util.get_count("qiita.filepath")
-        # We just make sure that the count has been increased by 4, since
+        # We just make sure that the count has been increased by 3, since
         # the contents of the files have been tested elsewhere.
-        self.assertEqual(obs, fp_count + 4)
+        self.assertEqual(obs, fp_count + 3)
 
     def test_to_file(self):
         """to file writes a tab delimited file with all the metadata"""

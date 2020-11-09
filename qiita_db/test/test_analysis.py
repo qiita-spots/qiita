@@ -6,7 +6,6 @@ from shutil import move
 from biom import load_table
 from pandas.util.testing import assert_frame_equal
 from functools import partial
-import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.testing import wait_for_processing_job

@@ -66,7 +66,7 @@ class PrepTemplateDBHandler(OauthBaseHandler):
             'investigation_type': prep info investigation type
             'study': study that the prep info belongs to
             'status': prep info status
-            'qiime-map': the path to the qiime mapping file
+            'sample-file': the path to the sample information file
             'prep-file': the path to the prep info file
         """
         with qdb.sql_connection.TRN:
@@ -74,13 +74,17 @@ class PrepTemplateDBHandler(OauthBaseHandler):
             prep_files = [fp for _, fp in pt.get_filepaths()
                           if 'qiime' not in basename(fp)]
             artifact = pt.artifact.id if pt.artifact is not None else None
+            sid = pt.study_id
             response = {
                 'data_type': pt.data_type(),
                 'artifact': artifact,
                 'investigation_type': pt.investigation_type,
-                'study': pt.study_id,
+                'study': sid,
                 'status': pt.status,
-                'qiime-map': pt.qiime_map_fp,
+                # get_filepaths returns an ordered list of [filepath_id,
+                # filepath] and we want the latests
+                'sample-file': qdb.study.Study(
+                    sid).sample_template.get_filepaths()[0][1],
                 # The first element in the prep_files is the newest
                 # prep information file - hence the correct one
                 'prep-file': prep_files[0]
