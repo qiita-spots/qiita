@@ -119,7 +119,7 @@ class BaseHandlerDownload(BaseHandler):
                     (x['fp'], x['fp'], '-', str(x['fp_size'])))
 
         for pt in artifact.prep_templates:
-            # the latests prep template file is always the first [1] tuple and
+            # the latest prep template file is always the first [0] tuple and
             # we need the filepath [1]
             pt_fp = pt.get_filepaths()[0][1]
             if pt_fp is not None:

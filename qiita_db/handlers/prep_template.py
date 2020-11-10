@@ -82,7 +82,7 @@ class PrepTemplateDBHandler(OauthBaseHandler):
                 'study': sid,
                 'status': pt.status,
                 # get_filepaths returns an ordered list of [filepath_id,
-                # filepath] and we want the latests
+                # filepath] and we want the last pair
                 'sample-file': qdb.study.Study(
                     sid).sample_template.get_filepaths()[0][1],
                 # The first element in the prep_files is the newest
