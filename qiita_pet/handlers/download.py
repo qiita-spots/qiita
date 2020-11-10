@@ -113,19 +113,21 @@ class BaseHandlerDownload(BaseHandler):
             elif x['fp'].startswith(basedir):
                 spath = x['fp'][basedir_len:]
                 to_download.append(
-                    (spath, spath, str(x['checksum']), str(x['fp_size'])))
+                    (spath, spath, '-', str(x['fp_size'])))
             else:
                 to_download.append(
-                    (x['fp'], x['fp'], str(x['checksum']), str(x['fp_size'])))
+                    (x['fp'], x['fp'], '-', str(x['fp_size'])))
 
         for pt in artifact.prep_templates:
-            qmf = pt.qiime_map_fp
-            if qmf is not None:
-                sqmf = qmf
-                if qmf.startswith(basedir):
-                    sqmf = qmf[basedir_len:]
+            # the latest prep template file is always the first [0] tuple and
+            # we need the filepath [1]
+            pt_fp = pt.get_filepaths()[0][1]
+            if pt_fp is not None:
+                spt_fp = pt_fp
+                if pt_fp.startswith(basedir):
+                    spt_fp = pt_fp[basedir_len:]
                 fname = 'mapping_files/%s_mapping_file.txt' % artifact.id
-                to_download.append((sqmf, fname, '-', str(getsize(qmf))))
+                to_download.append((spt_fp, fname, '-', str(getsize(pt_fp))))
         return to_download
 
     def _write_nginx_file_list(self, to_download):
@@ -404,7 +406,7 @@ class DownloadPublicHandler(BaseHandlerDownload):
 
             basedir_len = len(get_db_files_base_dir()) + 1
             fp = x['fp'][basedir_len:]
-            to_download.append((fp, fp, str(x['checksum']), str(x['fp_size'])))
+            to_download.append((fp, fp, '-', str(x['fp_size'])))
             self._write_nginx_file_list(to_download)
 
             zip_fn = '%s_%s.zip' % (
