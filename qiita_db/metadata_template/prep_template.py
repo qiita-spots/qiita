@@ -9,10 +9,7 @@ from itertools import chain
 from os.path import join
 from time import strftime
 from copy import deepcopy
-import warnings
 from skbio.util import find_duplicates
-
-import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
@@ -518,116 +515,6 @@ class PrepTemplate(MetadataTemplate):
             # adding the fp to the object
             fp_id = qdb.util.convert_to_id("prep_template", "filepath_type")
             self.add_filepath(fp, fp_id=fp_id)
-
-            # creating QIIME mapping file
-            self.create_qiime_mapping_file()
-
-    def create_qiime_mapping_file(self):
-        """This creates the QIIME mapping file and links it in the db.
-
-        Returns
-        -------
-        filepath : str
-            The filepath of the created QIIME mapping file
-
-        Raises
-        ------
-        ValueError
-            If the prep template is not a subset of the sample template
-        QiitaDBWarning
-            If the QIIME-required columns are not present in the template
-
-        Notes
-        -----
-        We cannot ensure that the QIIME-required columns are present in the
-        metadata map. However, we have to generate a QIIME-compliant mapping
-        file. Since the user may need a QIIME mapping file, but not these
-        QIIME-required columns, we are going to create them and
-        populate them with the value XXQIITAXX.
-        """
-        with qdb.sql_connection.TRN:
-            rename_cols = {
-                'barcode': 'BarcodeSequence',
-                'primer': 'LinkerPrimerSequence',
-                'description': 'Description',
-            }
-
-            if 'reverselinkerprimer' in self.categories():
-                rename_cols['reverselinkerprimer'] = 'ReverseLinkerPrimer'
-                new_cols = ['BarcodeSequence', 'LinkerPrimerSequence',
-                            'ReverseLinkerPrimer']
-            else:
-                new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
-
-            # Retrieve the latest sample template
-            # Since we sorted the filepath retrieval, the first result contains
-            # the filepath that we want. `retrieve_filepaths` returns a
-            # 3-tuple, in which the fp is the second element
-            sample_template_fp = qdb.util.retrieve_filepaths(
-                "sample_template_filepath", "study_id", self.study_id,
-                sort='descending')[0]['fp']
-
-            # reading files via pandas
-            st = qdb.metadata_template.util.load_template_to_dataframe(
-                sample_template_fp)
-            pt = self.to_dataframe()
-
-            st_sample_names = set(st.index)
-            pt_sample_names = set(pt.index)
-
-            if not pt_sample_names.issubset(st_sample_names):
-                raise ValueError(
-                    "Prep template is not a sub set of the sample template, "
-                    "file: %s - samples: %s"
-                    % (sample_template_fp,
-                       ', '.join(pt_sample_names-st_sample_names)))
-
-            mapping = pt.join(st, lsuffix="_prep")
-            mapping.rename(columns=rename_cols, inplace=True)
-
-            # Pre-populate the QIIME-required columns with the value XXQIITAXX
-            index = mapping.index
-            placeholder = ['XXQIITAXX'] * len(index)
-            missing = []
-            for val in rename_cols.values():
-                if val not in mapping:
-                    missing.append(val)
-                    mapping[val] = pd.Series(placeholder, index=index)
-
-            if missing:
-                warnings.warn(
-                    "Some columns required to generate a QIIME-compliant "
-                    "mapping file are not present in the template. A "
-                    "placeholder value (XXQIITAXX) has been used to populate "
-                    "these columns. Missing columns: %s"
-                    % ', '.join(sorted(missing)),
-                    qdb.exceptions.QiitaDBWarning)
-
-            # Gets the orginal mapping columns and readjust the order to comply
-            # with QIIME requirements
-            cols = mapping.columns.values.tolist()
-            cols.remove('BarcodeSequence')
-            cols.remove('LinkerPrimerSequence')
-            cols.remove('Description')
-            new_cols.extend(cols)
-            new_cols.append('Description')
-            mapping = mapping[new_cols]
-
-            # figuring out the filepath for the QIIME map file
-            _id, fp = qdb.util.get_mountpoint('templates')[0]
-            filepath = join(fp, '%d_prep_%d_qiime_%s.txt' % (self.study_id,
-                            self.id, strftime("%Y%m%d-%H%M%S")))
-
-            # Save the mapping file
-            mapping.to_csv(filepath, index_label='#SampleID', na_rep='',
-                           sep='\t', encoding='utf-8')
-
-            # adding the fp to the object
-            self.add_filepath(
-                filepath,
-                fp_id=qdb.util.convert_to_id("qiime_map", "filepath_type"))
-
-            return filepath
 
     @property
     def status(self):

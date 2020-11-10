@@ -954,9 +954,9 @@ class TestPrepTemplate(TestCase):
         for s_id in exp_sample_ids:
             self.assertEqual(pt[s_id]._to_dict(), exp_dict[s_id])
 
-        # prep and qiime files have been created
+        # prep files have been created
         filepaths = pt.get_filepaths()
-        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(len(filepaths), 1)
 
     def test_validate_restrictions(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
@@ -1019,28 +1019,9 @@ class TestPrepTemplate(TestCase):
         fp_count = qdb.util.get_count("qiita.filepath")
         self.tester.generate_files()
         obs = qdb.util.get_count("qiita.filepath")
-        # We just make sure that the count has been increased by 2, since
+        # We just make sure that the count has been increased by 1, since
         # the contents of the files have been tested elsewhere.
-        self.assertEqual(obs, fp_count + 2)
-
-    def test_create_qiime_mapping_file(self):
-        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
-
-        # creating prep template file
-        _id, fp = qdb.util.get_mountpoint('templates')[0]
-
-        obs_fp = pt.create_qiime_mapping_file()
-        exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
-
-        obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=False,
-                          parse_dates=False, index_col=False, comment='\t')
-        exp = pd.read_csv(
-            exp_fp, sep='\t', infer_datetime_format=False,
-            parse_dates=False, index_col=False, comment='\t')
-        obs = obs.reindex(sorted(obs.columns), axis=1)
-        exp = exp.reindex(sorted(exp.columns), axis=1)
-
-        assert_frame_equal(obs, exp, check_like=True)
+        self.assertEqual(obs, fp_count + 1)
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
@@ -1119,9 +1100,9 @@ class TestPrepTemplate(TestCase):
         for s_id in exp_sample_ids:
             self.assertEqual(pt[s_id]._to_dict(), exp_dict[s_id])
 
-        # prep and qiime files have been created
+        # prep files have been created
         filepaths = pt.get_filepaths()
-        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(len(filepaths), 1)
 
         # cleaning
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)

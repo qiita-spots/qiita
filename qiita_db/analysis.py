@@ -1040,13 +1040,16 @@ class Analysis(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             all_ids = set()
             to_concat = []
+            sample_infos = dict()
             for aid, samps in samples.items():
-                pt = qdb.artifact.Artifact(aid).prep_templates[0]
-                qiime_map_fp = pt.qiime_map_fp
+                artifact = qdb.artifact.Artifact(aid)
+                si = artifact.study.sample_template
+                if si not in sample_infos:
+                    sample_infos[si] = si.to_dataframe()
+                pt = artifact.prep_templates[0]
+                pt_df = pt.to_dataframe()
 
-                # Parse the mapping file
-                qm = qdb.metadata_template.util.load_template_to_dataframe(
-                    qiime_map_fp, index='#SampleID')
+                qm = pt_df.join(sample_infos[si], lsuffix="_prep")
 
                 # if we are not going to merge the duplicated samples
                 # append the aid to the sample name
@@ -1075,15 +1078,6 @@ class Analysis(qdb.base.QiitaObject):
                 to_concat.append(qm)
 
             merged_map = pd.concat(to_concat)
-
-            # forcing QIIME column order
-            cols = merged_map.columns.values.tolist()
-            cols.remove('BarcodeSequence')
-            cols.remove('LinkerPrimerSequence')
-            cols.remove('Description')
-            cols = (['BarcodeSequence', 'LinkerPrimerSequence'] + cols +
-                    ['Description'])
-            merged_map = merged_map[cols]
 
             # Save the mapping file
             _, base_fp = qdb.util.get_mountpoint(self._table)[0]
