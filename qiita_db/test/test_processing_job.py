@@ -265,6 +265,24 @@ class ProcessingJobTest(TestCase):
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             job.submit()
 
+    def test_submit_environment(self):
+        job = _create_job()
+        software = job.command.software
+        current = software.environment_script
+
+        # temporal update and then rollback to not commit change
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software SET environment_script = %s
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [
+                f'{current} ENVIRONMENT', software.id])
+
+            job.submit()
+
+            self.assertEqual(job.status, 'error')
+
+            qdb.sql_connection.TRN.rollback()
+
     def test_complete_multiple_outputs(self):
         # This test performs the test of multiple functions at the same
         # time. "release", "release_validators" and
