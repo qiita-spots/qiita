@@ -139,6 +139,7 @@ DATA = [
      'metadata_complete': True, 'publication_pid': ['123456', '7891011'],
      'ebi_submission_status': 'submitted',
      'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
+     'autoloaded': False,
      'study_abstract': ('This is a preliminary study to examine the '
                         'microbiota associated with the Cannabis plant. Soils '
                         'samples from the bulk soil, soil associated with the '

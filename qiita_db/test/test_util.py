@@ -962,6 +962,7 @@ class UtilTests(TestCase):
              'metadata_complete': True, 'publication_pid': [
                 '123456', '7891011'], 'ebi_submission_status': 'submitted',
              'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
+             'autoloaded': False,
              'study_abstract': (
                 'This is a preliminary study to examine the microbiota '
                 'associated with the Cannabis plant. Soils samples from '
@@ -1276,6 +1277,7 @@ STUDY_INFO = {
         'location at different time points in the plant '
         'lifecycle.',
     'metadata_complete': True,
+    'autoloaded': False,
     'ebi_study_accession': 'EBI123456-BB',
     'ebi_submission_status': 'submitted',
     'study_title':

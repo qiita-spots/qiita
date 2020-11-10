@@ -57,6 +57,7 @@ class Study(qdb.base.QiitaObject):
     title
     owner
     specimen_id_column
+    autoloaded
 
     Methods
     -------
@@ -77,7 +78,8 @@ class Study(qdb.base.QiitaObject):
     _table = "study"
     _portal_table = "study_portal"
     # The following columns are considered not part of the study info
-    _non_info = frozenset(["email", "study_title", "ebi_study_accession"])
+    _non_info = frozenset(["email", "study_title", "ebi_study_accession",
+                           "autoloaded"])
 
     def _lock_non_sandbox(self):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
@@ -481,6 +483,34 @@ class Study(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.execute()
 
 # --- Attributes ---
+    @property
+    def autoloaded(self):
+        """Returns if the study was autoloaded
+
+        Returns
+        -------
+        bool
+            If the study was loaded or not
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT autoloaded FROM qiita.{0}
+                     WHERE study_id = %s""".format(self._table)
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @autoloaded.setter
+    def autoloaded(self, value):
+        """Sets the title of the study
+
+        Parameters
+        ----------
+        value : bool
+            Value to set the autoloaded of this study
+        """
+        sql = """UPDATE qiita.{0} SET autoloaded = %s
+                 WHERE study_id = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(sql, [value, self._id])
+
     @property
     def title(self):
         """Returns the title of the study

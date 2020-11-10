@@ -86,7 +86,7 @@ class TestStudyAPI1(TestStudyAPI):
                 'study_alias': 'Cannabis Soils', 'study_id': 1,
                 'most_recent_contact': datetime(2014, 5, 19, 16, 11),
                 'ebi_study_accession': 'EBI123456-BB', 'num_samples': 27,
-                'public_raw_download': False, 'notes': '',
+                'public_raw_download': False, 'notes': '', 'autoloaded': False,
                 'study_title': (
                     'Identification of the Microbiomes for Cannabis Soils')},
             'message': '',
