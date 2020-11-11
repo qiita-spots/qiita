@@ -848,7 +848,7 @@ class UtilTests(TestCase):
         snew_info = {
             'status': 'sandbox', 'study_title': 'test_study_1',
             'metadata_complete': True, 'publication_pid': [],
-            'artifact_biom_ids': [],
+            'artifact_biom_ids': [], 'autoloaded': False,
             'ebi_submission_status': 'not submitted',
             'study_id': new_study.id, 'ebi_study_accession': None,
             'owner': 'Shared', 'shared': [],
@@ -978,7 +978,7 @@ class UtilTests(TestCase):
              'study_alias': 'Cannabis Soils', 'number_samples_collected': 27},
             {'status': 'sandbox', 'study_title': 'test_study_1',
              'metadata_complete': True, 'publication_pid': [],
-             'ebi_submission_status': 'not submitted',
+             'ebi_submission_status': 'not submitted', 'autoloaded': False,
              'study_id': new_study.id, 'ebi_study_accession': None,
              'study_abstract': 'Some abstract goes here',
              'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],

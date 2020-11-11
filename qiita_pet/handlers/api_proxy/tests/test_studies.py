@@ -115,7 +115,7 @@ class TestStudyAPI1(TestStudyAPI):
             'owner': 'test@foo.bar', 'message': '', 'funding': None,
             'show_biom_download_button': False, 'publication_pid': [],
             'vamps_id': None, 'first_contact': datetime(2015, 5, 19, 16, 10),
-            'ebi_submission_status': 'not submitted',
+            'ebi_submission_status': 'not submitted', 'autoloaded': False,
             'show_raw_download_button': False, 'timeseries_type_id': 1,
             'study_abstract': 'ABS', 'status': 'sandbox',
             'spatial_series': None, 'study_description': 'DESC',
