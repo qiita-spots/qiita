@@ -9,10 +9,10 @@ Version 2020.11
 * We stopped adding the CRC32 information from mod_zip, which should remove the warnings about CRC incorrect checksums.
 * Removed the show/hide button from an analysis while the analysis was being built to avoid possible confusion.
 * A new per-sample, fast, bowtie2 and Woltka plugin for WGS and Metatrascriptomics processing has been added, deprecating the Shogun plugin and moving the rest of the commands to a new qp-meta plugin.
-* Added the possibility for plugins to submit and control their own jobs vs. Qiita automatially submitting for them. For specifics of this new functionality, visit (![#3040](https://github.com/biocore/qiita/pull/3040/files))
+* Added the possibility for plugins to submit and control their own jobs vs. Qiita automatically submitting for them. For specifics of this new functionality, visit (![#3040](https://github.com/biocore/qiita/pull/3040/files))
 * We increased the number of workers in qiita.ucsd.edu for the web interface (from eight to twenty), redbiom (from eight to ten), and the plugin interactions (from eight to twenty). This should speed up responses and improve general performance.
 * For the qp-qiime2 plugin, we removed some unsupported alpha rarefaction metrics from the options, following QIIME2 guidelines.
-* For the qp-qiime2 plugin, if the user selects a tree but it doesn't exist, if will not try to parse and skip it.
+* For the qp-qiime2 plugin, if the user selects a tree but it doesn't exist, it will not try to parse and skip it.
 
 Version 092020
 --------------
