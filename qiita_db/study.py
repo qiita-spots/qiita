@@ -490,7 +490,7 @@ class Study(qdb.base.QiitaObject):
         Returns
         -------
         bool
-            If the study was loaded or not
+            If the study was autoloaded or not
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT autoloaded FROM qiita.{0}
@@ -500,12 +500,12 @@ class Study(qdb.base.QiitaObject):
 
     @autoloaded.setter
     def autoloaded(self, value):
-        """Sets the title of the study
+        """Sets the autoloaded status of the study
 
         Parameters
         ----------
         value : bool
-            Value to set the autoloaded of this study
+            Whether the study was autoloaded
         """
         sql = """UPDATE qiita.{0} SET autoloaded = %s
                  WHERE study_id = %s""".format(self._table)
