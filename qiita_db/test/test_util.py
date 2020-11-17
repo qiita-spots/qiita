@@ -848,7 +848,7 @@ class UtilTests(TestCase):
         snew_info = {
             'status': 'sandbox', 'study_title': 'test_study_1',
             'metadata_complete': True, 'publication_pid': [],
-            'artifact_biom_ids': [],
+            'artifact_biom_ids': [], 'autoloaded': False,
             'ebi_submission_status': 'not submitted',
             'study_id': new_study.id, 'ebi_study_accession': None,
             'owner': 'Shared', 'shared': [],
@@ -962,6 +962,7 @@ class UtilTests(TestCase):
              'metadata_complete': True, 'publication_pid': [
                 '123456', '7891011'], 'ebi_submission_status': 'submitted',
              'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
+             'autoloaded': False,
              'study_abstract': (
                 'This is a preliminary study to examine the microbiota '
                 'associated with the Cannabis plant. Soils samples from '
@@ -977,7 +978,7 @@ class UtilTests(TestCase):
              'study_alias': 'Cannabis Soils', 'number_samples_collected': 27},
             {'status': 'sandbox', 'study_title': 'test_study_1',
              'metadata_complete': True, 'publication_pid': [],
-             'ebi_submission_status': 'not submitted',
+             'ebi_submission_status': 'not submitted', 'autoloaded': False,
              'study_id': new_study.id, 'ebi_study_accession': None,
              'study_abstract': 'Some abstract goes here',
              'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
@@ -1276,6 +1277,7 @@ STUDY_INFO = {
         'location at different time points in the plant '
         'lifecycle.',
     'metadata_complete': True,
+    'autoloaded': False,
     'ebi_study_accession': 'EBI123456-BB',
     'ebi_submission_status': 'submitted',
     'study_title':

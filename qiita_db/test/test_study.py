@@ -243,6 +243,7 @@ class TestStudy(TestCase):
             'Soils',
             'ebi_submission_status': 'submitted',
             'ebi_study_accession': 'EBI123456-BB',
+            'autoloaded': False,
             'specimen_id_column': None}
         self.assertDictEqual(obs, exp)
 
@@ -320,6 +321,13 @@ class TestStudy(TestCase):
 
     def test_owner(self):
         self.assertEqual(self.study.owner, qdb.user.User("test@foo.bar"))
+
+    def test_autoloaded(self):
+        self.assertFalse(self.study.autoloaded)
+        self.study.autoloaded = True
+        self.assertTrue(self.study.autoloaded)
+        self.study.autoloaded = False
+        self.assertFalse(self.study.autoloaded)
 
     def test_public_raw_download(self):
         self.assertFalse(self.study.public_raw_download)
