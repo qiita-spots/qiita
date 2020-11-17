@@ -86,7 +86,7 @@ class TestStudyAPI1(TestStudyAPI):
                 'study_alias': 'Cannabis Soils', 'study_id': 1,
                 'most_recent_contact': datetime(2014, 5, 19, 16, 11),
                 'ebi_study_accession': 'EBI123456-BB', 'num_samples': 27,
-                'public_raw_download': False, 'notes': '',
+                'public_raw_download': False, 'notes': '', 'autoloaded': False,
                 'study_title': (
                     'Identification of the Microbiomes for Cannabis Soils')},
             'message': '',
@@ -115,7 +115,7 @@ class TestStudyAPI1(TestStudyAPI):
             'owner': 'test@foo.bar', 'message': '', 'funding': None,
             'show_biom_download_button': False, 'publication_pid': [],
             'vamps_id': None, 'first_contact': datetime(2015, 5, 19, 16, 10),
-            'ebi_submission_status': 'not submitted',
+            'ebi_submission_status': 'not submitted', 'autoloaded': False,
             'show_raw_download_button': False, 'timeseries_type_id': 1,
             'study_abstract': 'ABS', 'status': 'sandbox',
             'spatial_series': None, 'study_description': 'DESC',

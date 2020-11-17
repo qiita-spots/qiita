@@ -18,10 +18,10 @@
 				<comment><![CDATA[PMID of paper from the analysis]]></comment>
 			</column>
 			<column name="timestamp" type="timestamptz" jt="93" >
-				<defo>current_timestamp</defo>
+				<defo><![CDATA[current_timestamp]]></defo>
 			</column>
-			<column name="dflt" type="bool" jt="-7" mandatory="y" >
-				<defo>false</defo>
+			<column name="dflt" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="portal_type_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="logging_id" type="bigint" jt="-5" />
@@ -217,8 +217,8 @@
 			</column>
 			<column name="artifact_type_id" type="integer" jt="4" />
 			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="submitted_to_vamps" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;FALSE&#039;</defo>
+			<column name="submitted_to_vamps" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['FALSE']]></defo>
 			</column>
 			<index name="pk_artifact" unique="PRIMARY_KEY" >
 				<column name="artifact_id" />
@@ -316,25 +316,25 @@
 			<column name="artifact_type_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="artifact_type" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
-			<column name="can_be_submitted_to_ebi" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;FALSE&#039;</defo>
+			<column name="can_be_submitted_to_ebi" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['FALSE']]></defo>
 			</column>
-			<column name="can_be_submitted_to_vamps" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;FALSE&#039;</defo>
+			<column name="can_be_submitted_to_vamps" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['FALSE']]></defo>
 			</column>
-			<column name="is_user_uploadable" type="bool" jt="-7" />
+			<column name="is_user_uploadable" type="boolean" jt="-7" />
 			<index name="pk_filetype" unique="PRIMARY_KEY" >
 				<column name="artifact_type_id" />
 			</index>
-			<index name="idx_filetype" unique="UNIQUE" >
+			<index name="idx_filetype" unique="UNIQUE_KEY" >
 				<column name="artifact_type" />
 			</index>
 		</table>
 		<table name="artifact_type_filepath_type" >
 			<column name="artifact_type_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="filepath_type_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="required" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;TRUE&#039;</defo>
+			<column name="required" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['TRUE']]></defo>
 			</column>
 			<index name="idx_artifact_type_filepath_type" unique="PRIMARY_KEY" >
 				<column name="artifact_type_id" />
@@ -359,7 +359,7 @@
 			<index name="pk_checksum_algorithm" unique="PRIMARY_KEY" >
 				<column name="checksum_algorithm_id" />
 			</index>
-			<index name="idx_checksum_algorithm" unique="UNIQUE" >
+			<index name="idx_checksum_algorithm" unique="UNIQUE_KEY" >
 				<column name="name" />
 			</index>
 		</table>
@@ -406,13 +406,13 @@
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="command_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="artifact_type_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="check_biom_merge" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;False&#039;</defo>
+			<column name="check_biom_merge" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['False']]></defo>
 			</column>
 			<index name="pk_command_output" unique="PRIMARY_KEY" >
 				<column name="command_output_id" />
 			</index>
-			<index name="idx_command_output" unique="UNIQUE" >
+			<index name="idx_command_output" unique="UNIQUE_KEY" >
 				<column name="name" />
 				<column name="command_id" />
 			</index>
@@ -434,11 +434,11 @@
 			<column name="command_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="parameter_name" type="varchar" jt="12" mandatory="y" />
 			<column name="parameter_type" type="varchar" jt="12" mandatory="y" />
-			<column name="required" type="bool" jt="-7" mandatory="y" />
+			<column name="required" type="boolean" jt="-7" mandatory="y" />
 			<column name="default_value" type="varchar" jt="12" />
 			<column name="name_order" type="integer" jt="4" />
-			<column name="check_biom_merge" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;False&#039;</defo>
+			<column name="check_biom_merge" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['False']]></defo>
 			</column>
 			<index name="idx_command_parameter" unique="NORMAL" >
 				<column name="command_id" />
@@ -446,7 +446,7 @@
 			<index name="pk_command_parameter" unique="PRIMARY_KEY" >
 				<column name="command_parameter_id" />
 			</index>
-			<index name="idx_command_parameter_0" unique="UNIQUE" >
+			<index name="idx_command_parameter_0" unique="UNIQUE_KEY" >
 				<column name="command_id" />
 				<column name="parameter_name" />
 			</index>
@@ -481,10 +481,10 @@
 			<column name="data_directory_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="data_type" type="varchar" jt="12" mandatory="y" />
 			<column name="mountpoint" type="varchar" jt="12" mandatory="y" />
-			<column name="subdirectory" type="bool" jt="-7" mandatory="y" >
-				<defo>FALSE</defo>
+			<column name="subdirectory" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[FALSE]]></defo>
 			</column>
-			<column name="active" type="bool" jt="-7" mandatory="y" />
+			<column name="active" type="boolean" jt="-7" mandatory="y" />
 			<index name="pk_data_directory" unique="PRIMARY_KEY" >
 				<column name="data_directory_id" />
 			</index>
@@ -497,7 +497,7 @@
 			<index name="pk_data_type" unique="PRIMARY_KEY" >
 				<column name="data_type_id" />
 			</index>
-			<index name="idx_data_type" unique="UNIQUE" >
+			<index name="idx_data_type" unique="UNIQUE_KEY" >
 				<column name="data_type" />
 			</index>
 		</table>
@@ -514,7 +514,7 @@
 			<index name="idx_default_parameter_set" unique="NORMAL" >
 				<column name="command_id" />
 			</index>
-			<index name="idx_default_parameter_set_0" unique="UNIQUE" >
+			<index name="idx_default_parameter_set_0" unique="UNIQUE_KEY" >
 				<column name="command_id" />
 				<column name="parameter_set_name" />
 			</index>
@@ -529,7 +529,7 @@
 			<index name="pk_default_workflow" unique="PRIMARY_KEY" >
 				<column name="default_workflow_id" />
 			</index>
-			<index name="idx_default_workflow" unique="UNIQUE" >
+			<index name="idx_default_workflow" unique="UNIQUE_KEY" >
 				<column name="software_id" />
 				<column name="name" />
 			</index>
@@ -681,7 +681,7 @@
 			<index name="pk_filepath_type" unique="PRIMARY_KEY" >
 				<column name="filepath_type_id" />
 			</index>
-			<index name="idx_filepath_type" unique="UNIQUE" >
+			<index name="idx_filepath_type" unique="UNIQUE_KEY" >
 				<column name="filepath_type" />
 			</index>
 		</table>
@@ -749,7 +749,7 @@
 			<column name="message_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="message" type="varchar" jt="12" mandatory="y" />
 			<column name="message_time" type="timestamp" jt="93" mandatory="y" >
-				<defo>current_timestamp</defo>
+				<defo><![CDATA[current_timestamp]]></defo>
 			</column>
 			<column name="expiration" type="timestamp" jt="93" />
 			<index name="pk_message" unique="PRIMARY_KEY" >
@@ -759,8 +759,8 @@
 		<table name="message_user" >
 			<column name="email" type="varchar" jt="12" mandatory="y" />
 			<column name="message_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="read" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;false&#039;</defo>
+			<column name="read" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['false']]></defo>
 				<comment><![CDATA[Whether the message has been read or not.]]></comment>
 			</column>
 			<index name="idx_message_user" unique="PRIMARY_KEY" >
@@ -821,7 +821,7 @@
 		<table name="ontology" >
 			<column name="ontology_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="ontology" type="varchar" jt="12" mandatory="y" />
-			<column name="fully_loaded" type="bool" jt="-7" mandatory="y" />
+			<column name="fully_loaded" type="boolean" jt="-7" mandatory="y" />
 			<column name="fullname" type="varchar" jt="12" />
 			<column name="query_url" type="varchar" jt="12" />
 			<column name="source_url" type="varchar" jt="12" />
@@ -830,7 +830,7 @@
 			<index name="pk_ontology" unique="PRIMARY_KEY" >
 				<column name="ontology_id" />
 			</index>
-			<index name="idx_ontology" unique="UNIQUE" >
+			<index name="idx_ontology" unique="UNIQUE_KEY" >
 				<column name="ontology" />
 			</index>
 		</table>
@@ -927,17 +927,17 @@
 			<column name="prep_template_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="preprocessing_status" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;not_preprocessed&#039;</defo>
+				<defo><![CDATA['not_preprocessed']]></defo>
 			</column>
 			<column name="investigation_type" type="varchar" jt="12" >
 				<comment><![CDATA[The investigation type (e.g., one of the values from EBI's set of known types)]]></comment>
 			</column>
 			<column name="artifact_id" type="bigint" jt="-5" />
 			<column name="name" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;Default Name&#039;</defo>
+				<defo><![CDATA['Default Name']]></defo>
 			</column>
-			<column name="deprecated" type="bool" jt="-7" >
-				<defo>FALSE</defo>
+			<column name="deprecated" type="boolean" jt="-7" >
+				<defo><![CDATA[FALSE]]></defo>
 			</column>
 			<index name="pk_prep_template" unique="PRIMARY_KEY" >
 				<column name="prep_template_id" />
@@ -1050,8 +1050,8 @@
 			</column>
 			<column name="step" type="varchar" jt="12" />
 			<column name="pending" type="varchar" jt="12" />
-			<column name="hidden" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;False&#039;</defo>
+			<column name="hidden" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['False']]></defo>
 			</column>
 			<column name="external_job_id" type="varchar" jt="12" >
 				<comment><![CDATA[Store an external job ID (e.g. Torque job ID) associated this Qiita job]]></comment>
@@ -1168,7 +1168,7 @@
 			<comment><![CDATA[Holds all user information]]></comment>
 			<column name="email" type="varchar" jt="12" mandatory="y" />
 			<column name="user_level_id" type="integer" jt="4" mandatory="y" >
-				<defo>5</defo>
+				<defo><![CDATA[5]]></defo>
 				<comment><![CDATA[user level]]></comment>
 			</column>
 			<column name="password" type="varchar" jt="12" mandatory="y" />
@@ -1267,7 +1267,7 @@
 			<index name="pk_severity" unique="PRIMARY_KEY" >
 				<column name="severity_id" />
 			</index>
-			<index name="idx_severity" unique="UNIQUE" >
+			<index name="idx_severity" unique="UNIQUE_KEY" >
 				<column name="severity" />
 			</index>
 		</table>
@@ -1279,11 +1279,11 @@
 			<column name="environment_script" type="varchar" jt="12" mandatory="y" />
 			<column name="start_script" type="varchar" jt="12" mandatory="y" />
 			<column name="software_type_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="active" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;True&#039;</defo>
+			<column name="active" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['True']]></defo>
 			</column>
-			<column name="deprecated" type="bool" jt="-7" >
-				<defo>False</defo>
+			<column name="deprecated" type="boolean" jt="-7" >
+				<defo><![CDATA[False]]></defo>
 			</column>
 			<index name="pk_software" unique="PRIMARY_KEY" >
 				<column name="software_id" />
@@ -1321,14 +1321,14 @@
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="software_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
-			<column name="active" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;True&#039;</defo>
+			<column name="active" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['True']]></defo>
 			</column>
-			<column name="is_analysis" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;False&#039;</defo>
+			<column name="is_analysis" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA['False']]></defo>
 			</column>
-			<column name="ignore_parent_command" type="bool" jt="-7" mandatory="y" >
-				<defo>false</defo>
+			<column name="ignore_parent_command" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="post_processing_cmd" type="varchar" jt="12" >
 				<comment><![CDATA[Store information on additional post-processing steps for merged BIOMs, if any.]]></comment>
@@ -1384,7 +1384,7 @@
 				<comment><![CDATA[Email of study owner]]></comment>
 			</column>
 			<column name="first_contact" type="timestamp" jt="93" mandatory="y" >
-				<defo>current_timestamp</defo>
+				<defo><![CDATA[current_timestamp]]></defo>
 			</column>
 			<column name="funding" type="varchar" jt="12" />
 			<column name="timeseries_type_id" type="bigint" jt="-5" mandatory="y" >
@@ -1392,12 +1392,12 @@
 Controlled Vocabulary]]></comment>
 			</column>
 			<column name="lab_person_id" type="bigint" jt="-5" />
-			<column name="metadata_complete" type="bool" jt="-7" mandatory="y" />
-			<column name="mixs_compliant" type="bool" jt="-7" mandatory="y" />
+			<column name="metadata_complete" type="boolean" jt="-7" mandatory="y" />
+			<column name="mixs_compliant" type="boolean" jt="-7" mandatory="y" />
 			<column name="most_recent_contact" type="timestamp" jt="93" />
 			<column name="principal_investigator_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="reprocess" type="bool" jt="-7" mandatory="y" />
-			<column name="spatial_series" type="bool" jt="-7" />
+			<column name="reprocess" type="boolean" jt="-7" mandatory="y" />
+			<column name="spatial_series" type="boolean" jt="-7" />
 			<column name="study_title" type="varchar" jt="12" mandatory="y" />
 			<column name="study_alias" type="varchar" jt="12" mandatory="y" />
 			<column name="study_description" type="text" jt="12" mandatory="y" />
@@ -1407,10 +1407,13 @@ Controlled Vocabulary]]></comment>
 			<column name="specimen_id_column" type="varchar" length="256" jt="12" >
 				<comment><![CDATA[The name of the column that describes the specimen identifiers (such as what is written on the tubes).]]></comment>
 			</column>
-			<column name="public_raw_download" type="bool" jt="-7" >
-				<defo>&#039;false&#039;</defo>
+			<column name="public_raw_download" type="boolean" jt="-7" >
+				<defo><![CDATA['false']]></defo>
 			</column>
 			<column name="notes" type="text" length="600" jt="12" />
+			<column name="autoloaded" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[false]]></defo>
+			</column>
 			<index name="pk_study" unique="PRIMARY_KEY" >
 				<column name="study_id" />
 			</index>
@@ -1426,7 +1429,7 @@ Controlled Vocabulary]]></comment>
 			<index name="idx_study_4" unique="NORMAL" >
 				<column name="timeseries_type_id" />
 			</index>
-			<index name="unique_study_title" unique="UNIQUE" >
+			<index name="unique_study_title" unique="UNIQUE_KEY" >
 				<column name="study_title" />
 			</index>
 			<fk name="fk_study_user" to_schema="qiita" to_table="qiita_user" >
@@ -1496,7 +1499,7 @@ Controlled Vocabulary]]></comment>
 			<index name="pk_study_person" unique="PRIMARY_KEY" >
 				<column name="study_person_id" />
 			</index>
-			<index name="idx_study_person" unique="UNIQUE" >
+			<index name="idx_study_person" unique="UNIQUE_KEY" >
 				<column name="name" />
 				<column name="affiliation" />
 			</index>
@@ -1546,7 +1549,7 @@ Controlled Vocabulary]]></comment>
 		<table name="study_publication" >
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="publication" type="varchar" jt="12" mandatory="y" />
-			<column name="is_doi" type="bool" jt="-7" />
+			<column name="is_doi" type="boolean" jt="-7" />
 			<fk name="fk_study_publication_study" to_schema="qiita" to_table="study" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
@@ -1574,7 +1577,7 @@ Controlled Vocabulary]]></comment>
 			<index name="pk_study_tags" unique="PRIMARY_KEY" >
 				<column name="study_tag_id" />
 			</index>
-			<index name="idx_study_tags" unique="UNIQUE" >
+			<index name="idx_study_tags" unique="UNIQUE_KEY" >
 				<column name="study_tag" />
 			</index>
 			<index name="idx_study_tags" unique="NORMAL" >
@@ -1609,20 +1612,20 @@ Controlled Vocabulary]]></comment>
 			<column name="term_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="ontology_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="old_term_id" type="bigint" jt="-5" >
-				<defo>NULL</defo>
+				<defo><![CDATA[NULL]]></defo>
 				<comment><![CDATA[Identifier used in the old system, we are keeping this for consistency]]></comment>
 			</column>
 			<column name="term" type="varchar" jt="12" mandatory="y" />
 			<column name="identifier" type="varchar" jt="12" />
 			<column name="definition" type="varchar" jt="12" />
 			<column name="namespace" type="varchar" jt="12" />
-			<column name="is_obsolete" type="bool" jt="-7" >
-				<defo>&#039;false&#039;</defo>
+			<column name="is_obsolete" type="boolean" jt="-7" >
+				<defo><![CDATA['false']]></defo>
 			</column>
-			<column name="is_root_term" type="bool" jt="-7" />
-			<column name="is_leaf" type="bool" jt="-7" />
-			<column name="user_defined" type="bool" jt="-7" mandatory="y" >
-				<defo>False</defo>
+			<column name="is_root_term" type="boolean" jt="-7" />
+			<column name="is_leaf" type="boolean" jt="-7" />
+			<column name="user_defined" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[False]]></defo>
 				<comment><![CDATA[Whether or not this term was defined by a user]]></comment>
 			</column>
 			<index name="pk_term" unique="PRIMARY_KEY" >
@@ -1639,12 +1642,12 @@ Controlled Vocabulary]]></comment>
 			<column name="timeseries_type_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="timeseries_type" type="varchar" jt="12" mandatory="y" />
 			<column name="intervention_type" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;None&#039;</defo>
+				<defo><![CDATA['None']]></defo>
 			</column>
 			<index name="pk_timeseries_type" unique="PRIMARY_KEY" >
 				<column name="timeseries_type_id" />
 			</index>
-			<index name="idx_timeseries_type" unique="UNIQUE" >
+			<index name="idx_timeseries_type" unique="UNIQUE_KEY" >
 				<column name="timeseries_type" />
 				<column name="intervention_type" />
 			</index>
@@ -1659,7 +1662,7 @@ Controlled Vocabulary]]></comment>
 			<index name="pk_user_level" unique="PRIMARY_KEY" >
 				<column name="user_level_id" />
 			</index>
-			<index name="idx_user_level" unique="UNIQUE" >
+			<index name="idx_user_level" unique="UNIQUE_KEY" >
 				<column name="name" />
 			</index>
 		</table>
@@ -1670,7 +1673,7 @@ Controlled Vocabulary]]></comment>
 			<index name="pk_visibility" unique="PRIMARY_KEY" >
 				<column name="visibility_id" />
 			</index>
-			<index name="idx_visibility" unique="UNIQUE" >
+			<index name="idx_visibility" unique="UNIQUE_KEY" >
 				<column name="visibility" />
 			</index>
 		</table>
@@ -1678,89 +1681,89 @@ Controlled Vocabulary]]></comment>
 	<connector name="PostgreSQL" database="PostgreSQL" host="localhost" port="5432" instance="qiita_test" user="ccowart" />
 	<layout name="qiita" id="Layout669806" confirmed="y" show_relation="columns" >
 		<comment><![CDATA[qiita]]></comment>
-		<entity schema="qiita" name="column_controlled_vocabularies" color="D0DEF5" x="272" y="1248" />
-		<entity schema="qiita" name="analysis_users" color="D0DEF5" x="48" y="880" />
-		<entity schema="qiita" name="logging" color="C0D4F3" x="976" y="1376" />
-		<entity schema="qiita" name="analysis_filepath" color="C0D4F3" x="400" y="880" />
-		<entity schema="qiita" name="controlled_vocab" color="D0DEF5" x="48" y="1248" />
-		<entity schema="qiita" name="qiita_user" color="D0DEF5" x="592" y="384" />
-		<entity schema="qiita" name="user_level" color="D0DEF5" x="432" y="352" />
-		<entity schema="qiita" name="severity" color="C0D4F3" x="1120" y="1376" />
-		<entity schema="qiita" name="analysis_portal" color="A8C4EF" x="176" y="768" />
-		<entity schema="qiita" name="message_user" color="A8C4EF" x="1312" y="1344" />
-		<entity schema="qiita" name="message" color="A8C4EF" x="1504" y="1360" />
-		<entity schema="qiita" name="study_users" color="D0DEF5" x="1776" y="176" />
-		<entity schema="qiita" name="study_portal" color="A8C4EF" x="1856" y="80" />
-		<entity schema="qiita" name="visibility" color="B2CDF7" x="1040" y="1152" />
-		<entity schema="qiita" name="oauth_identifiers" color="B7C8E3" x="2352" y="768" />
-		<entity schema="qiita" name="oauth_software" color="B2CDF7" x="2192" y="768" />
 		<entity schema="qiita" name="analysis" color="D0DEF5" x="224" y="880" />
-		<entity schema="qiita" name="ebi_run_accession" color="B2CDF7" x="1344" y="1184" />
-		<entity schema="qiita" name="filepath_type" color="C0D4F3" x="816" y="784" />
-		<entity schema="qiita" name="data_directory" color="B2CDF7" x="576" y="1008" />
-		<entity schema="qiita" name="artifact_type_filepath_type" color="B2CDF7" x="1376" y="816" />
-		<entity schema="qiita" name="study_artifact" color="B2CDF7" x="1600" y="800" />
-		<entity schema="qiita" name="software_type" color="B2CDF7" x="2640" y="992" />
-		<entity schema="qiita" name="study_publication" color="B2CDF7" x="1856" y="768" />
-		<entity schema="qiita" name="investigation_study" color="C0D4F3" x="2032" y="400" />
-		<entity schema="qiita" name="investigation" color="C0D4F3" x="2256" y="352" />
-		<entity schema="qiita" name="artifact" color="B2CDF7" x="1200" y="960" />
+		<entity schema="qiita" name="analysis_filepath" color="C0D4F3" x="400" y="880" />
+		<entity schema="qiita" name="analysis_portal" color="A8C4EF" x="176" y="768" />
 		<entity schema="qiita" name="analysis_sample" color="D0DEF5" x="256" y="1072" />
-		<entity schema="qiita" name="portal_type" color="C0D4F3" x="816" y="640" />
-		<entity schema="qiita" name="data_type" color="D0DEF5" x="704" y="1200" />
-		<entity schema="qiita" name="study_sample" color="D0DEF5" x="1360" y="288" />
-		<entity schema="qiita" name="study_prep_template" color="D0DEF5" x="1504" y="528" />
-		<entity schema="qiita" name="prep_template_filepath" color="B2CDF7" x="1024" y="512" />
-		<entity schema="qiita" name="sample_template_filepath" color="B2CDF7" x="1040" y="656" />
-		<entity schema="qiita" name="study_environmental_package" color="B2CDF7" x="2096" y="80" />
-		<entity schema="qiita" name="environmental_package" color="B2CDF7" x="2176" y="224" />
-		<entity schema="qiita" name="study_person" color="C0D4F3" x="2016" y="176" />
-		<entity schema="qiita" name="per_study_tags" color="B2CDF7" x="2160" y="496" />
-		<entity schema="qiita" name="study_tags" color="B2CDF7" x="2304" y="528" />
-		<entity schema="qiita" name="timeseries_type" color="C0D4F3" x="2016" y="576" />
-		<entity schema="qiita" name="software_publication" color="B2CDF7" x="1984" y="864" />
-		<entity schema="qiita" name="publication" color="B2CDF7" x="2016" y="768" />
-		<entity schema="qiita" name="parameter_artifact_type" color="B2CDF7" x="1760" y="1120" />
-		<entity schema="qiita" name="command_output" color="B2CDF7" x="1760" y="1216" />
-		<entity schema="qiita" name="artifact_processing_job" color="B2CDF7" x="1760" y="1344" />
+		<entity schema="qiita" name="analysis_users" color="D0DEF5" x="48" y="880" />
+		<entity schema="qiita" name="archive_feature_value" color="B2CDF7" x="1472" y="1552" />
+		<entity schema="qiita" name="archive_merging_scheme" color="B2CDF7" x="1248" y="1552" />
+		<entity schema="qiita" name="artifact" color="B2CDF7" x="1200" y="960" />
+		<entity schema="qiita" name="artifact_filepath" color="B2CDF7" x="1040" y="1040" />
 		<entity schema="qiita" name="artifact_output_processing_job" color="B2CDF7" x="1760" y="1456" />
-		<entity schema="qiita" name="software_artifact_type" color="B2CDF7" x="1984" y="1008" />
+		<entity schema="qiita" name="artifact_processing_job" color="B2CDF7" x="1744" y="1344" />
+		<entity schema="qiita" name="artifact_type" color="D0DEF5" x="1408" y="960" />
+		<entity schema="qiita" name="artifact_type_filepath_type" color="B2CDF7" x="1376" y="816" />
+		<entity schema="qiita" name="checksum_algorithm" color="B2CDF7" x="736" y="1040" />
+		<entity schema="qiita" name="column_controlled_vocabularies" color="D0DEF5" x="272" y="1248" />
+		<entity schema="qiita" name="column_ontology" color="D0DEF5" x="272" y="1504" />
+		<entity schema="qiita" name="command_output" color="B2CDF7" x="1760" y="1216" />
 		<entity schema="qiita" name="command_parameter" color="B2CDF7" x="2176" y="1040" />
+		<entity schema="qiita" name="controlled_vocab" color="D0DEF5" x="48" y="1248" />
+		<entity schema="qiita" name="controlled_vocab_values" color="D0DEF5" x="48" y="1376" />
+		<entity schema="qiita" name="data_directory" color="B2CDF7" x="576" y="1008" />
+		<entity schema="qiita" name="data_type" color="D0DEF5" x="704" y="1200" />
 		<entity schema="qiita" name="default_parameter_set" color="B2CDF7" x="2416" y="1168" />
-		<entity schema="qiita" name="default_workflow_node" color="B2CDF7" x="2416" y="1280" />
-		<entity schema="qiita" name="default_workflow" color="B2CDF7" x="2608" y="1120" />
+		<entity schema="qiita" name="default_workflow" color="B2CDF7" x="2656" y="1120" />
 		<entity schema="qiita" name="default_workflow_edge" color="B2CDF7" x="2640" y="1312" />
 		<entity schema="qiita" name="default_workflow_edge_connections" color="B2CDF7" x="2384" y="1424" />
-		<entity schema="qiita" name="processing_job_status" color="B2CDF7" x="1760" y="1552" />
-		<entity schema="qiita" name="parent_processing_job" color="B2CDF7" x="2016" y="1472" />
-		<entity schema="qiita" name="reference" color="C0D4F3" x="2016" y="1584" />
-		<entity schema="qiita" name="processing_job_workflow" color="B2CDF7" x="2176" y="1584" />
-		<entity schema="qiita" name="controlled_vocab_values" color="D0DEF5" x="48" y="1376" />
-		<entity schema="qiita" name="mixs_field_description" color="D0DEF5" x="256" y="1360" />
-		<entity schema="qiita" name="column_ontology" color="D0DEF5" x="272" y="1504" />
-		<entity schema="qiita" name="archive_feature_value" color="B2CDF7" x="1472" y="1552" />
-		<entity schema="qiita" name="checksum_algorithm" color="B2CDF7" x="736" y="1040" />
-		<entity schema="qiita" name="ontology" color="D0DEF5" x="576" y="1488" />
-		<entity schema="qiita" name="term" color="D0DEF5" x="736" y="1488" />
-		<entity schema="qiita" name="archive_merging_scheme" color="B2CDF7" x="1248" y="1552" />
-		<entity schema="qiita" name="artifact_type" color="D0DEF5" x="1408" y="960" />
-		<entity schema="qiita" name="processing_job" color="B2CDF7" x="1952" y="1168" />
-		<entity schema="qiita" name="software" color="B2CDF7" x="2416" y="992" />
-		<entity schema="qiita" name="prep_y" color="D0DEF5" x="1024" y="320" />
-		<entity schema="qiita" name="prep_template_sample" color="D0DEF5" x="1168" y="320" />
-		<entity schema="qiita" name="sample_x" color="D0DEF5" x="1536" y="288" />
-		<entity schema="qiita" name="processing_job_workflow_root" color="B2CDF7" x="2416" y="1584" />
-		<entity schema="qiita" name="prep_template_processing_job" color="B2CDF7" x="1728" y="1008" />
-		<entity schema="qiita" name="processing_job_resource_allocation" color="C1D8EE" x="2624" y="1456" />
-		<entity schema="qiita" name="processing_job_validator" color="B2CDF7" x="2176" y="1472" />
-		<entity schema="qiita" name="software_command" color="B2CDF7" x="2176" y="1264" />
+		<entity schema="qiita" name="default_workflow_node" color="B2CDF7" x="2416" y="1280" />
+		<entity schema="qiita" name="ebi_run_accession" color="B2CDF7" x="1344" y="1184" />
+		<entity schema="qiita" name="environmental_package" color="B2CDF7" x="2176" y="224" />
 		<entity schema="qiita" name="filepath" color="C0D4F3" x="640" y="832" />
-		<entity schema="qiita" name="restrictions" color="B2CDF7" x="1536" y="400" />
-		<entity schema="qiita" name="stats_daily" color="B2CDF7" x="2496" y="368" />
-		<entity schema="qiita" name="artifact_filepath" color="B2CDF7" x="1040" y="1040" />
+		<entity schema="qiita" name="filepath_type" color="C0D4F3" x="816" y="784" />
+		<entity schema="qiita" name="investigation" color="C0D4F3" x="2256" y="352" />
+		<entity schema="qiita" name="investigation_study" color="C0D4F3" x="2032" y="400" />
+		<entity schema="qiita" name="logging" color="C0D4F3" x="976" y="1376" />
+		<entity schema="qiita" name="message" color="A8C4EF" x="1504" y="1360" />
+		<entity schema="qiita" name="message_user" color="A8C4EF" x="1312" y="1344" />
+		<entity schema="qiita" name="mixs_field_description" color="D0DEF5" x="256" y="1360" />
+		<entity schema="qiita" name="oauth_identifiers" color="B7C8E3" x="2352" y="768" />
+		<entity schema="qiita" name="oauth_software" color="B2CDF7" x="2192" y="768" />
+		<entity schema="qiita" name="ontology" color="D0DEF5" x="576" y="1488" />
+		<entity schema="qiita" name="parameter_artifact_type" color="B2CDF7" x="1760" y="1120" />
 		<entity schema="qiita" name="parent_artifact" color="B2CDF7" x="1040" y="928" />
-		<entity schema="qiita" name="study" color="D0DEF5" x="1792" y="288" />
+		<entity schema="qiita" name="parent_processing_job" color="B2CDF7" x="2016" y="1472" />
+		<entity schema="qiita" name="per_study_tags" color="B2CDF7" x="2160" y="496" />
+		<entity schema="qiita" name="portal_type" color="C0D4F3" x="816" y="640" />
 		<entity schema="qiita" name="prep_template" color="B2CDF7" x="1232" y="512" />
+		<entity schema="qiita" name="prep_template_filepath" color="B2CDF7" x="1024" y="512" />
+		<entity schema="qiita" name="prep_template_processing_job" color="B2CDF7" x="1728" y="1008" />
+		<entity schema="qiita" name="prep_template_sample" color="D0DEF5" x="1136" y="304" />
+		<entity schema="qiita" name="prep_y" color="D0DEF5" x="992" y="320" />
+		<entity schema="qiita" name="processing_job" color="B2CDF7" x="1952" y="1168" />
+		<entity schema="qiita" name="processing_job_resource_allocation" color="C1D8EE" x="2624" y="1456" />
+		<entity schema="qiita" name="processing_job_status" color="B2CDF7" x="1760" y="1552" />
+		<entity schema="qiita" name="processing_job_validator" color="B2CDF7" x="2176" y="1472" />
+		<entity schema="qiita" name="processing_job_workflow" color="B2CDF7" x="2176" y="1584" />
+		<entity schema="qiita" name="processing_job_workflow_root" color="B2CDF7" x="2416" y="1584" />
+		<entity schema="qiita" name="publication" color="B2CDF7" x="2016" y="768" />
+		<entity schema="qiita" name="qiita_user" color="D0DEF5" x="592" y="384" />
+		<entity schema="qiita" name="reference" color="C0D4F3" x="2016" y="1584" />
+		<entity schema="qiita" name="restrictions" color="B2CDF7" x="1536" y="400" />
+		<entity schema="qiita" name="sample_template_filepath" color="B2CDF7" x="1040" y="656" />
+		<entity schema="qiita" name="sample_x" color="D0DEF5" x="1536" y="288" />
+		<entity schema="qiita" name="severity" color="C0D4F3" x="1120" y="1376" />
+		<entity schema="qiita" name="software" color="B2CDF7" x="2416" y="992" />
+		<entity schema="qiita" name="software_artifact_type" color="B2CDF7" x="1984" y="1008" />
+		<entity schema="qiita" name="software_command" color="B2CDF7" x="2176" y="1264" />
+		<entity schema="qiita" name="software_publication" color="B2CDF7" x="1984" y="864" />
+		<entity schema="qiita" name="software_type" color="B2CDF7" x="2640" y="992" />
+		<entity schema="qiita" name="stats_daily" color="B2CDF7" x="2496" y="368" />
+		<entity schema="qiita" name="study" color="D0DEF5" x="1792" y="288" />
+		<entity schema="qiita" name="study_artifact" color="B2CDF7" x="1600" y="800" />
+		<entity schema="qiita" name="study_environmental_package" color="B2CDF7" x="2096" y="80" />
+		<entity schema="qiita" name="study_person" color="C0D4F3" x="2016" y="176" />
+		<entity schema="qiita" name="study_portal" color="A8C4EF" x="1856" y="80" />
+		<entity schema="qiita" name="study_prep_template" color="D0DEF5" x="1504" y="528" />
+		<entity schema="qiita" name="study_publication" color="B2CDF7" x="1856" y="768" />
+		<entity schema="qiita" name="study_sample" color="D0DEF5" x="1360" y="288" />
+		<entity schema="qiita" name="study_tags" color="B2CDF7" x="2304" y="528" />
+		<entity schema="qiita" name="study_users" color="D0DEF5" x="1776" y="176" />
+		<entity schema="qiita" name="term" color="D0DEF5" x="736" y="1488" />
+		<entity schema="qiita" name="timeseries_type" color="C0D4F3" x="2016" y="576" />
+		<entity schema="qiita" name="user_level" color="D0DEF5" x="432" y="352" />
+		<entity schema="qiita" name="visibility" color="B2CDF7" x="1040" y="1152" />
 		<group name="Group_analyses" color="C4E0F9" >
 			<comment><![CDATA[analysis tables]]></comment>
 			<entity schema="qiita" name="analysis" />
