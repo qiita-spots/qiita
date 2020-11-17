@@ -74,7 +74,6 @@ class TestPrepAPIReadOnly(TestCase):
                'name': "Prep information 1",
                'files': ["uploaded_file.txt"],
                'download_prep_id': 24,
-               'download_qiime_id': 21,
                'other_filepaths': ['1_prep_1_19700101-000000.txt',
                                    '1_prep_1_19700101-000000.txt'],
                'num_samples': 27,

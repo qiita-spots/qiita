@@ -1,5 +1,19 @@
 # Qiita changelog
 
+
+Version 2020.11
+---------------
+
+* Deprecated the automatic creation of the per template QIIME1 mapping file. Now, if you want to merge a preparation and a biom table you must create a meta-analysis.
+* Added a new autoloaded boolean flag to the Study object so we can control if a study was autoloaded via an automatic EBI-ENA or SRA loading job.
+* We stopped adding the CRC32 information from mod_zip, which should remove the warnings about CRC checksums.
+* Removed the show/hide button from an analysis while the analysis was being built to avoid possible confusion.
+* A new per-sample, fast, bowtie2 and Woltka plugin for WGS and Metatrascriptomics processing has been added, deprecating the Shogun plugin and moving the rest of the commands to a new qp-meta plugin.
+* Added the possibility for plugins to submit and control their own jobs vs. Qiita automatially submitting for them. For specifics of this new functionality, visit (#3040)
+* We raised the number of workers in qiita.ucsd.edu for the web interface (from eight to twenty), redbiom (from eight to ten), and the plugin interactions (from eight to twenty). This should speed up responses and improve general performance.
+* For the qp-qiime2 plugin, we removed some unsupported alpha rarefaction metrics from the options, following QIIME2 guidelines.
+* For the qp-qiime2 plugin, if the user selects a tree but it doesn't exist, if will not try to parse and skip it.
+
 Version 092020
 --------------
 

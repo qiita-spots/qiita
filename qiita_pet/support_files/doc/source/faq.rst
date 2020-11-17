@@ -244,6 +244,18 @@ etc; for more information check
 `this 3 minute read about Markdown <https://guides.github.com/features/mastering-markdown/>`__.
 
 
+Where's my QIIME1 mapping file?
+-------------------------------
+
+During the 2020.11 deployment we removed the functionality that automatically created
+the merged preparation and sample information file per preparation. This change will allow us
+to make faster information file updates allow for future multi-site operations.
+
+If you want to create a merged and validated mapping file (merged sample and preparation
+information file) please create an analysis by following these instructions:
+:ref:`creating_a_new_analysis`.
+
+
 How to cite Qiita?
 ------------------
 

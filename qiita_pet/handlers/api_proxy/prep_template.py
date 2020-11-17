@@ -141,18 +141,13 @@ def prep_template_ajax_get_req(user_id, prep_id):
     investigation_type = pt.investigation_type
 
     download_prep_id = None
-    download_qiime_id = None
     other_filepaths = []
     for fp_id, fp in pt.get_filepaths():
         fp = basename(fp)
-        if 'qiime' in fp:
-            if download_qiime_id is None:
-                download_qiime_id = fp_id
+        if download_prep_id is None:
+            download_prep_id = fp_id
         else:
-            if download_prep_id is None:
-                download_prep_id = fp_id
-            else:
-                other_filepaths.append(fp)
+            other_filepaths.append(fp)
 
     ontology = _get_ENA_ontology()
 
@@ -165,7 +160,6 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'name': name,
             'files': files,
             'download_prep_id': download_prep_id,
-            'download_qiime_id': download_qiime_id,
             'other_filepaths': other_filepaths,
             'num_samples': num_samples,
             'num_columns': num_columns,

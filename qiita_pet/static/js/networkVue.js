@@ -352,7 +352,7 @@ Vue.component('processing-graph', {
       })
         .fail(function(object, status, error_msg) {
           bootstrapAlert("Error submitting workflow: " + object.statusText, "danger");
-        });
+        })
         .always(function() {
           // return button to regular state
           $('#run-btn').attr('disabled', false);
