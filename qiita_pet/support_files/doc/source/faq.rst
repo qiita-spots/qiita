@@ -260,14 +260,15 @@ destroy it.
 
 To take advantage of this feature you need to:
 
-#. Prepare all the files you want to transfer in a single folder (or you can do this on
-   multiple folders). Note that Qiita will only collect files with valid extensions; see the
+#. Prepare all the files you want to transfer in a single folder (or you can transfer
+   multiple times from multiple folders into one study). Note that Qiita will only collect
+   files with valid extensions from the top level directory (no sub-directories); see the
    top of the "Upload Files" page within your study for the latests list of valid extensions.
 #. In your server (this needs to be run within your home directory in the server where you
    store the files!), generate a new key by running:
    `ssh-keygen -t rsa -C "ssh test key" -f ~/.ssh/qiita-key -P ""`. Here is where you are
    creating that key to your storage-shed.
-#. Allow access using the new key to new connections (this also needs to be ran in the
+#. Allow access using the new key to new connections (this also needs to be run in the
    remote server): `cat ~/.ssh/qiita-key.pub >> ~/.ssh/authorized_keys`. This tells the
    server that is OK to give access to the key created to your storage-shed; note that if
    you want to completely stop that key to work you can open that file and remove the line
