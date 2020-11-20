@@ -259,19 +259,20 @@ access to Qiita to run a single copy command in your server), Qiita uses that ke
 destroy it.
 
 To take advantage of this feature you need to:
-1. Prepare all the files you want to transfer in a single folder (or you can do this on
+
+#. Prepare all the files you want to transfer in a single folder (or you can do this on
    multiple folders). Note that Qiita will only collect files with valid extensions; see the
    top of the "Upload Files" page within your study for the latests list of valid extensions.
-2. In your server (this needs to be run within your home directory in the server where you
+#. In your server (this needs to be run within your home directory in the server where you
    store the files!), generate a new key by running:
    `ssh-keygen -t rsa -C "ssh test key" -f ~/.ssh/qiita-key -P ""`. Here is where you are
    creating that key to your storage-shed.
-3. Allow access using the new key to new connections (this also needs to be ran in the
+#. Allow access using the new key to new connections (this also needs to be ran in the
    remote server): `cat ~/.ssh/qiita-key.pub >> ~/.ssh/authorized_keys`. This tells the
    server that is OK to give access to the key created to your storage-shed; note that if
    you want to completely stop that key to work you can open that file and remove the line
    with the name of this key.
-4. Dowload your new generated key `qiita-key` (the file) to your local computer and use it
+#. Dowload your new generated key `qiita-key` (the file) to your local computer and use it
    in the `Key` option of "Upload via Remote Server (ADVANCED)".
 
 Using this key you can `List Files` to test the connection and verify the list of study files. Then,
@@ -316,6 +317,7 @@ sample with that run_prefix.
 
 Now the run_prefix is used constantly within file selection and processing in all file types but
 specially on:
+
 - BIOM: the run_prefix is used to rename the samples in your BIOM to match the sample names
   in Qiita. Basically, if you add the sample names in your BIOM file as the run_prefix and the
   sample name in Qiita in the sample_name column of your preparation, Qiita will automatically
