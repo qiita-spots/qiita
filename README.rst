@@ -39,7 +39,7 @@ Current features
 * Easy long-term sequence data deposition to the European Nucleotide Archive (ENA),
   part of the European Bioinformatics Institute (EBI) for private and public
   studies.
-* Raw data processing for `Target Gene, Metagenomic, Metabolomic and BIOM files <https://qiita.ucsd.edu/static/doc/html/processingdata/index.html#processing-recommendations>`. BIOM files can be added as new preparation templates for downstream analyses; however, this cannot be made public.
+* Raw data processing for `Target Gene, Metagenomic, Metabolomic and BIOM files <https://qiita.ucsd.edu/static/doc/html/processingdata/index.html#processing-recommendations>`. BIOM files can be added as new preparation files for downstream analyses; however, this cannot be made public.
 
 * Basic downstream analyses using Qiime2.
 * Basic study search in the study listing page.

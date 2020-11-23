@@ -8,7 +8,7 @@ Currently, Qiita supports the processing of raw data from:
 #. Metatranscriptome sequencing
 
 
-Note that the selected processing are mainly guided so we can perform meta-analyses,
+Note that the selected processing recommendations are mainly guided towards performing meta-analyses,
 this is combine different studies, even from different wet lab techniques or
 sequencing technologies. However, these parameters shouldn't prevent you using the
 resulting tables as your primary analytical source.
