@@ -44,10 +44,7 @@ For each preparation that needs to be uploaded to EBI-ENA we will check:
   1. Data processing
 
     a. Only datasets where raw sequences are available and linked to the preparation can be submitted. Studies where the starting point is a BIOM table cannot be submitted, since EBI is a sequence archive
-    b. The data is processed and the owner confirms the data is correct:
-
-      1. For target gene: data is demultiplexed (review split_library_log to make sure each sample has roughly the expected number of sequences) and there is at least a closed-reference (GG for 16S, Silva for 18S, UNITE for ITS) or trim/deblur artifacts. Trimming should be done with 90, 100 and 150 base pairs (preferred)
-      2. For shotgun: data is uploaded via per_sample_FASTQ and processed using Shogun/utree. Remember to remove sequencing data for any human subject via `the HMP SOP <https://www.hmpdacc.org/hmp/doc/HumanSequenceRemoval_SOP.pdf>`__ or `the Knight Lab SOP <https://github.com/qiita-spots/qp-shogun/blob/master/notebooks/host_filtering.rst>`__
+    b. The data is processed and the owner confirms the data is correct and followed our :doc:`processingdata/processing-recommendations`.
 
   2. Verify the sample information
 
