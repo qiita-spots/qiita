@@ -12,6 +12,9 @@ Thanks to this, we've got new layout of the analysis panel and the following new
 * `Filter Samples <https://docs.qiime2.org/2020.2/plugins/available/feature-table/>`__
 * `Taxa Summary <https://docs.qiime2.org/2020.2/plugins/available/taxa/barplot/>`__ (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2020.2%2Fdata%2Ftutorials%2Fmoving-pictures%2Ftaxa-bar-plots.qzv>`__)
 
+
+.. _creating_a_new_analysis:
+
 Creating A New Analysis
 -----------------------
 
