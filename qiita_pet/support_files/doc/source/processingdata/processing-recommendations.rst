@@ -8,8 +8,10 @@ Currently, Qiita supports the processing of raw data from:
 #. Metatranscriptome sequencing
 
 
-Note that the selected processing are mainly guided so we can perform meta-analyses, this is combine different studies,
-even from different wet lab techniques or sequencing technologies.
+Note that the selected processing recommendations are mainly guided towards performing meta-analyses,
+this is combine different studies, even from different wet lab techniques or
+sequencing technologies. However, these parameters shouldn't prevent you using the
+resulting tables as your primary analytical source.
 
 
 Target gene barcoded sequencing
@@ -41,13 +43,15 @@ Currently, we have the reference databases: Greengenes version 3_8-97, Silva 119
 Shotgun sequencing
 ------------------
 
-Qiita currently has one shotgun metagenomics data analysis pipeline: `Shogun <https://msystems.asm.org/content/3/6/e00069-18>`_.
+Qiita currently has one active shotgun metagenomics data analysis pipeline: a per sample
+bowtie2 alignment step with Woltka classification using either the WoLr1 or Rep200 databases.
+Below you will find more information about each of these options.
 
 The current workflow is as follows:
 
 #. Removal of adapter sequence and quality control: `Atropos <https://github.com/jdidion/atropos/>`_
 #. Removal of host contamination using `Bowtie2 <http://bowtie-bio.sourceforge.net/bowtie2/index.shtml>`_
-#. Taxonomy profiling using choice of three different aligners and two different reference databases; see sections below
+#. Taxonomy profiling using bowtie2 as an aligner and two different reference databases; see sections below
 
 Note that we recommend only uploading sequences that have already been through QC and human sequence removal. However, we
 recommend that all sequence files go through adapter and quality control within the system to ensure they are ready for
@@ -63,21 +67,24 @@ we recommend using the `--nextseq-trim 30` parameter.
 For host removal we currently support *Danio Rerio* (zebrafish), *Drosophila Melanogaster* (fruit fly), *Mus Musculus* (mouse),
 *Rattus Norvegicus* (rat), and Enterobacteria phage phiX174 (the Illumina spike-in control).
 
-Note that the Shogun command produces 4 output artifacts:
-- The Alignment Profile BIOM artifact, which contains the alignment files
-- A Taxonomic Prediction - phylum BIOM artifact, which contains the taxonomic predictions based on the alignment
-- A Taxonomic Prediction - genus BIOM artifact, which contains the taxonomic predictions based on the alignment
-- A Taxonomic Prediction - species BIOM artifact, which contains the taxonomic predictions based on the alignment
-The 3 Taxonomic Prediction files can be used for subsequent analysis and visualization.
+Note that the command produces up to 6 output artifacts based on the aligner and database selected:
+- Alignment Profile: contains the raw alignment file and the no rank classification BIOM table
+- Taxonomic Prediction - phylum: contains the phylum level taxonomic predictions BIOM table
+- Taxonomic Prediction - genus: contains the genus level taxonomic predictions BIOM table
+- Taxonomic Prediction - species: contains the genus level taxonomic predictions BIOM table
+- Per genome Predictions: contains the per genome level taxonomic predictions BIOM table
+- Per gene Predictions: Only WoLr1, contains the per gene level taxonomic predictions BIOM table
 
-Shogun aligners
-^^^^^^^^^^^^^^^
+Aligners
+^^^^^^^^
+
+Note that some of these are legacy option but not available for new processing.
 
 #. Bowtie2: The classical ultrafast short sequence aligner. Based on-FM indexing of genome sequences to achieve
    efficient memory and CPU performance. We tuned the parameter setting for Bowtie2 to achieve optimal
    alignment accuracy for typical shotgun metagenome datasets.
 
-   - Version: 2.3.5.1
+   - Version: 2.4.2
    - Alignment file format: SAM
    - Website: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
    - Citation: Langmead B, Salzberg S. Fast gapped-read alignment with Bowtie 2. Nature Methods. 2012, 9:357-359.
@@ -99,8 +106,10 @@ Shogun aligners
    - Website: https://github.com/knights-lab/UTree
    - Citation: Gabriel Al-Ghalith and Dan Knights. Faster and lower-memory metagenomic profiling with UTree. DOI: 10.5281/zenodo.998252
 
-Shogun reference databases
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Reference databases
+^^^^^^^^^^^^^^^^^^^
+
+Note that some of these are legacy option but not available for new processing.
 
 #. WoLr1 ("Web of Life" release 1): An even representation of microbial diversity, selected using an prototype
    selection algorithm based on the MinHash distance matrix among all non-redundant bacterial and archaeal genomes

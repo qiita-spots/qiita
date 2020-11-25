@@ -30,8 +30,8 @@ What kind of data can I upload to Qiita for processing?
 Processing in Qiita requires 3 things: raw data, sample and prep information
 files. `Here <https://github.com/biocore/qiita/blob/master/README.rst#accepted-raw-files>`__
 you can find a list of currently supported raw files files. Note that we are
-accepting any kind of target gene (16S, 18S, ITS, whatever). You can also upload
-and process WGS via Shogun. Check our :doc:`processingdata/processing-recommendations`.
+accepting any kind of target gene (16S, 18S, ITS, whatever), Whole Genome and
+Metatranscriptomic. Check our :doc:`processingdata/processing-recommendations`.
 
 
 What's the difference between a sample and a prep information file?

@@ -76,4 +76,3 @@ If you intend to deploy or develop Qiita we recommend that you have a look at th
    qiita-philosophy/index.rst
    admin/index.rst
    dev/index.rst
-   resources.rst
