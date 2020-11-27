@@ -45,8 +45,8 @@ full_pipelines = [
      'requirements': dict(),
      'steps': [
          {'previous-step': None,
-          'plugin': 'qp-shogun',
-          'version': '012020',
+          'plugin': 'qp-meta',
+          'version': '2020.11',
           'cmd_name': 'Atropos v1.1.24',
           'input_name': 'input',
           'ignore_parameters': ['Number of threads used'],
