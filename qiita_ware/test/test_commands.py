@@ -52,11 +52,9 @@ class SSHTests(TestCase):
         return files
 
     def test_list_scp_wrong_key(self):
-        kpath = join(self.temp_local_dir, 'tmp-key')
-        copyfile(self.test_wrong_key, kpath)
         with self.assertRaises(AuthenticationException):
-            list_remote('scp://localhost:'+self.remote_dir_path, kpath)
-        self.assertFalse(exists(kpath))
+            list_remote('scp://localhost:'+self.remote_dir_path,
+            self.test_wrong_key)
 
     def test_list_scp_nonexist_key(self):
         with self.assertRaises(IOError):
@@ -65,12 +63,14 @@ class SSHTests(TestCase):
 
     def test_list_scp(self):
         kpath = join(self.temp_local_dir, 'tmp-key')
+        copyfile(self.test_ssh_key, kpath)
         read_file_list = list_remote('scp://localhost:'+self.remote_dir_path,
                                      kpath)
         self.assertCountEqual(read_file_list, self.exp_files)
 
     def test_list_sftp(self):
         kpath = join(self.temp_local_dir, 'tmp-key')
+        copyfile(self.test_ssh_key, kpath)
         read_file_list = list_remote('sftp://localhost:'+self.remote_dir_path,
                                      kpath)
         self.assertCountEqual(read_file_list, self.exp_files)
@@ -78,6 +78,7 @@ class SSHTests(TestCase):
 
     def test_download_scp(self):
         kpath = join(self.temp_local_dir, 'tmp-key')
+        copyfile(self.test_ssh_key, kpath)
         download_remote('scp://localhost:'+self.remote_dir_path,
                         kpath, self.temp_local_dir)
         local_files = self._get_valid_files(self.temp_local_dir)
@@ -86,6 +87,7 @@ class SSHTests(TestCase):
 
     def test_download_sftp(self):
         kpath = join(self.temp_local_dir, 'tmp-key')
+        copyfile(self.test_ssh_key, kpath)
         download_remote('sftp://localhost:'+self.remote_dir_path,
                         kpath, self.temp_local_dir)
         local_files = self._get_valid_files(self.temp_local_dir)
