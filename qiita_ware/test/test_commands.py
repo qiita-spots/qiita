@@ -6,11 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main, skipIf
-from os.path import join, basename
+from os.path import join, basename, exists
 from tempfile import mkdtemp
 import pandas as pd
 from datetime import datetime
-from shutil import rmtree
+from shutil import rmtree, copyfile
 from os import path
 from glob import glob
 from paramiko.ssh_exception import AuthenticationException
@@ -52,9 +52,11 @@ class SSHTests(TestCase):
         return files
 
     def test_list_scp_wrong_key(self):
+        kpath = join(self.temp_local_dir, 'tmp-key')
+        copyfile(self.test_wrong_key, kpath)
         with self.assertRaises(AuthenticationException):
-            list_remote('scp://localhost:'+self.remote_dir_path,
-                        self.test_wrong_key)
+            list_remote('scp://localhost:'+self.remote_dir_path, kpath)
+        self.assertFalse(exists(kpath))
 
     def test_list_scp_nonexist_key(self):
         with self.assertRaises(IOError):
@@ -62,26 +64,33 @@ class SSHTests(TestCase):
                         join(self.self_dir_path, 'nokey'))
 
     def test_list_scp(self):
+        kpath = join(self.temp_local_dir, 'tmp-key')
         read_file_list = list_remote('scp://localhost:'+self.remote_dir_path,
-                                     self.test_ssh_key)
+                                     kpath)
         self.assertCountEqual(read_file_list, self.exp_files)
 
     def test_list_sftp(self):
+        kpath = join(self.temp_local_dir, 'tmp-key')
         read_file_list = list_remote('sftp://localhost:'+self.remote_dir_path,
-                                     self.test_ssh_key)
+                                     kpath)
         self.assertCountEqual(read_file_list, self.exp_files)
+        self.assertFalse(exists(kpath))
 
     def test_download_scp(self):
+        kpath = join(self.temp_local_dir, 'tmp-key')
         download_remote('scp://localhost:'+self.remote_dir_path,
-                        self.test_ssh_key, self.temp_local_dir)
+                        kpath, self.temp_local_dir)
         local_files = self._get_valid_files(self.temp_local_dir)
         self.assertCountEqual(local_files, self.exp_files)
+        self.assertFalse(exists(kpath))
 
     def test_download_sftp(self):
+        kpath = join(self.temp_local_dir, 'tmp-key')
         download_remote('sftp://localhost:'+self.remote_dir_path,
-                        self.test_ssh_key, self.temp_local_dir)
+                        kpath, self.temp_local_dir)
         local_files = self._get_valid_files(self.temp_local_dir)
         self.assertCountEqual(local_files, self.exp_files)
+        self.assertFalse(exists(kpath))
 
 
 class CommandsTests(TestCase):

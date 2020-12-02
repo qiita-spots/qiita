@@ -6,11 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import basename, isdir, join
+from os.path import basename, isdir, join, exists
 from shutil import rmtree
 from tarfile import open as taropen
 from tempfile import mkdtemp
-from os import environ, stat
+from os import environ, stat, remove
 from traceback import format_exc
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from scp import SCPClient
@@ -120,6 +120,11 @@ def list_remote(URL, private_key):
     ssh = _ssh_session(p_url, private_key)
     valid_files = _list_valid_files(ssh, directory)
     ssh.close()
+
+    # for security, remove key
+    if exists(private_key):
+        remove(private_key)
+
     return valid_files
 
 
@@ -163,6 +168,10 @@ def download_remote(URL, private_key, destination):
 
     # step 3: close the connection
     ssh.close()
+
+    # for security, remove key
+    if exists(private_key):
+        remove(private_key)
 
 
 def submit_EBI(artifact_id, action, send, test=False, test_size=False):
