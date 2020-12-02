@@ -54,7 +54,7 @@ class SSHTests(TestCase):
     def test_list_scp_wrong_key(self):
         with self.assertRaises(AuthenticationException):
             list_remote('scp://localhost:'+self.remote_dir_path,
-            self.test_wrong_key)
+                        self.test_wrong_key)
 
     def test_list_scp_nonexist_key(self):
         with self.assertRaises(IOError):
