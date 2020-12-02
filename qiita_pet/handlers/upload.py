@@ -142,7 +142,7 @@ class StudyUploadViaRemote(BaseHandler):
 
         with open(ssh_key_fp, 'wb') as f:
             f.write(ssh_key)
-        chmod(ssh_key, 0o600)
+        chmod(ssh_key_fp, 0o600)
 
         qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
         if method == 'list':
