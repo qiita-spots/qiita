@@ -6,12 +6,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import pandas as pd
 from unittest import main
 from mock import Mock
 from os.path import exists, isdir, join, basename
 from os import remove, makedirs, close
 from shutil import rmtree
 from tempfile import mkdtemp, mkstemp
+from io import StringIO
 
 from biom.util import biom_open
 from biom import example_table as et
@@ -337,6 +339,25 @@ class TestDownloadEBIPrepAccessions(TestHandlerBase):
         BaseHandler.get_current_user = Mock(
             return_value=User("demo@microbio.me"))
         response = self.get('/download_ebi_accessions/experiments/1')
+        self.assertEqual(response.code, 405)
+
+
+class TestDownloadSampleInfoPerPrep(TestHandlerBase):
+
+    def test_download(self):
+        # check success
+        response = self.get('/download_sample_info_per_prep/1')
+        self.assertEqual(response.code, 200)
+
+        df = pd.read_csv(StringIO(response.body.decode('ascii')), sep='\t')
+        # just testing shape as the actual content is tested in the dataframe
+        # generation
+        self.assertEqual(df.shape, (27, 33))
+
+        # changing user so we can test the failures
+        BaseHandler.get_current_user = Mock(
+            return_value=User("demo@microbio.me"))
+        response = self.get('/download_sample_info_per_prep/1')
         self.assertEqual(response.code, 405)
 
 

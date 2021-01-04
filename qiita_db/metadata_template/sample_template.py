@@ -333,15 +333,17 @@ class SampleTemplate(MetadataTemplate):
         """
         self._update_accession_numbers('biosample_accession', value)
 
-    def to_dataframe(self, add_ebi_accessions=False):
+    def to_dataframe(self, add_ebi_accessions=False, samples=None):
         """Returns the metadata template as a dataframe
 
         Parameters
         ----------
         add_ebi_accessions : bool, optional
             If this should add the ebi accessions
+        samples list of string, optional
+            A list of the sample names we actually want to retrieve
         """
-        df = self._common_to_dataframe_steps()
+        df = self._common_to_dataframe_steps(samples=samples)
 
         if add_ebi_accessions:
             accessions = self.ebi_sample_accessions

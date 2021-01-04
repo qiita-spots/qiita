@@ -1157,22 +1157,30 @@ class MetadataTemplate(qdb.base.QiitaObject):
             df.to_csv(fp, index_label='sample_name', na_rep="", sep='\t',
                       encoding='utf-8')
 
-    def _common_to_dataframe_steps(self):
+    def _common_to_dataframe_steps(self, samples=None):
         """Perform the common to_dataframe steps
 
         Returns
         -------
         pandas DataFrame
             The metadata in the template,indexed on sample id
+        samples list of string, optional
+            A list of the sample names we actually want to retrieve
         """
         with qdb.sql_connection.TRN:
             # Retrieve all the information from the database
             cols = self.categories()
+
             sql = """SELECT sample_id, sample_values
                      FROM qiita.{0}
                      WHERE sample_id != '{1}'""".format(
                         self._table_name(self._id), QIITA_COLUMN_NAME)
-            qdb.sql_connection.TRN.add(sql)
+            if samples is None:
+                qdb.sql_connection.TRN.add(sql)
+            else:
+                sql += ' AND sample_id IN %s'
+                qdb.sql_connection.TRN.add(sql, [tuple(samples)])
+
             # this query is going to return a tuple
             # (sample_id, dict of columns/values); however it's important to
             # notice that we can't assure that all column/values pairs are the
