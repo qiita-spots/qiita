@@ -535,7 +535,7 @@ class TestPrepAPI(TestCase):
         exp = {'status': 'success', 'message': '', 'row_id': '10'}
         self.assertEqual(obs, exp)
         self._wait_for_parallel_job('prep_template_%s' % pt.id)
-        self.assertNotIn('target_subfragment', pt.categories())
+        self.assertNotIn('target_subfragment', pt.categories)
 
         # Change the name of the prep template
         obs = prep_template_patch_req(

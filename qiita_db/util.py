@@ -1790,7 +1790,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
             if prep_template_id is not None:
                 if prep_template_id not in ps:
                     pt = PT(prep_template_id)
-                    categories = pt.categories()
+                    categories = pt.categories
                     if 'platform' in categories:
                         platform = ', '.join(
                             set(pt.get_category('platform').values()))

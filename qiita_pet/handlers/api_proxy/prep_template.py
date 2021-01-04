@@ -137,7 +137,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
 
     # The call to list is needed because keys is an iterator
     num_samples = len(list(pt.keys()))
-    num_columns = len(pt.categories())
+    num_columns = len(pt.categories)
     investigation_type = pt.investigation_type
 
     download_prep_id = None

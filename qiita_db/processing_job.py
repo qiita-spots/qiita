@@ -1815,7 +1815,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 pass
             else:
                 samples = len(st)
-                columns = len(st.categories())
+                columns = len(st.categories)
         elif analysis_id is not None:
             try:
                 analysis = qdb.analysis.Analysis(analysis_id)
