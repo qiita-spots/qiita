@@ -139,7 +139,7 @@ def sample_template_meta_cats_get_req(samp_id, user_id):
 
     return {'status': 'success',
             'message': '',
-            'categories': sorted(SampleTemplate(int(samp_id)).categories())
+            'categories': sorted(SampleTemplate(int(samp_id)).categories)
             }
 
 

@@ -542,7 +542,7 @@ class TestSampleTemplate(TestCase):
                'physical_specimen_remaining', 'dna_extracted',
                'sample_type', 'collection_timestamp', 'host_subject_id',
                'description', 'latitude', 'longitude', 'scientific_name'}
-        obs = set(self.tester.categories())
+        obs = set(self.tester.categories)
         self.assertCountEqual(obs, exp)
 
     def test_iter(self):
@@ -974,7 +974,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertCountEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories, exp_categories)
         exp_dict = {
             "%s.Sample1" % new_id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1040,7 +1040,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertCountEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories, exp_categories)
         exp_dict = {
             "%s.12.Sample1" % new_id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1106,7 +1106,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertCountEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories, exp_categories)
         exp_dict = {
             "%s.foo.Sample1" % new_id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1172,7 +1172,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertCountEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories, exp_categories)
         exp_dict = {
             "%s.Sample1" % new_id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1463,7 +1463,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertCountEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories, exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1568,7 +1568,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id'}
-        self.assertCountEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories, exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1650,7 +1650,7 @@ class TestSampleTemplate(TestCase):
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id',
                           'texture', 'tot_nitro'}
-        self.assertCountEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories, exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1736,7 +1736,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id', 'tot_nitro'}
-        self.assertCountEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories, exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -1835,7 +1835,7 @@ class TestSampleTemplate(TestCase):
                           'longitude', 'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'taxon_id', 'tot_nitro'}
-        self.assertCountEqual(st.categories(), exp_categories)
+        self.assertCountEqual(st.categories, exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': '2014-05-29 12:24:15',
@@ -2247,7 +2247,7 @@ class TestSampleTemplate(TestCase):
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
             self.metadata, self.new_study)
         st.delete_column('dna_extracted')
-        self.assertNotIn('dna_extracted', st.categories())
+        self.assertNotIn('dna_extracted', st.categories)
 
     def test_delete_column_specimen_id(self):
         st = qdb.metadata_template.sample_template.SampleTemplate.create(

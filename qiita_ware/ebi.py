@@ -1019,7 +1019,7 @@ class EBISubmission(object):
             rev_read = r[1] if r is not None else None
             fps.append((sample_name, (fwd_read, rev_read)))
 
-        if 'run_prefix' in self.prep_template.categories():
+        if 'run_prefix' in self.prep_template.categories:
             rps = [(k, v) for k, v in
                    self.prep_template.get_category('run_prefix').items()]
         else:

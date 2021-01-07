@@ -47,7 +47,7 @@ class StudySamplesHandler(RESTHandler):
             self.fail('No samples provided', 400)
             return
 
-        categories = set(study.sample_template.categories())
+        categories = set(study.sample_template.categories)
 
         if set(data.columns) != categories:
             if set(data.columns).issubset(categories):
@@ -99,7 +99,7 @@ class StudySamplesCategoriesHandler(RESTHandler):
             self.fail('Study does not have sample information', 404)
             return
 
-        available_categories = set(study.sample_template.categories())
+        available_categories = set(study.sample_template.categories)
         not_found = set(categories) - available_categories
         if not_found:
             self.fail('Category not found', 404,
@@ -130,7 +130,7 @@ class StudySamplesInfoHandler(RESTHandler):
                     'categories': []}
         else:
             info = {'number-of-samples': len(st),
-                    'categories': st.categories()}
+                    'categories': st.categories}
 
         self.write(json_encode(info))
         self.finish()
