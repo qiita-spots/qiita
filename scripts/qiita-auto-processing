@@ -114,7 +114,7 @@ def _check_requirements(requirements, template):
     satisfied = True
     for req in requirements:
         if satisfied:
-            if req['column'] not in template.categories():
+            if req['column'] not in template.categories:
                 if req['equal']:
                     satisfied = False
                 continue

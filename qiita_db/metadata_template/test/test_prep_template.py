@@ -909,7 +909,7 @@ class TestPrepTemplate(TestCase):
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
-        self.assertCountEqual(pt.categories(), exp_categories)
+        self.assertCountEqual(pt.categories, exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
                 'barcode': 'CCTCTGAGAGCT',
@@ -1058,7 +1058,7 @@ class TestPrepTemplate(TestCase):
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
-        self.assertCountEqual(pt.categories(), exp_categories)
+        self.assertCountEqual(pt.categories, exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
                 'ebi_submission_accession': None,
@@ -1628,7 +1628,7 @@ class TestPrepTemplate(TestCase):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
         pt.delete_column('str_column')
-        self.assertNotIn('str_column', pt.categories())
+        self.assertNotIn('str_column', pt.categories)
 
         # testing errors
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)

@@ -201,7 +201,7 @@ class TestHelpers(TestHandlerBase):
 
         # Wait until the job is done
         wait_for_processing_job(loads(job_info)['job_id'])
-        self.assertNotIn('col2', st.categories())
+        self.assertNotIn('col2', st.categories)
 
         # TESTS FOR OPERATION: replace
         # Test incorrect path parameter with replace

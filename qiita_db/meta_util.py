@@ -412,7 +412,7 @@ def generate_biom_and_metadata_release(study_status='public'):
                     continue
                 fp = relpath(x['fp'], bdir)
                 for pt in a.prep_templates:
-                    categories = pt.categories()
+                    categories = pt.categories
                     platform = ''
                     target_gene = ''
                     if 'platform' in categories:

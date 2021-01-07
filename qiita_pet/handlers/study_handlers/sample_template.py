@@ -375,7 +375,7 @@ def sample_template_overview_handler_get_request(study_id, user):
         # the number of samples. Doing len(list(st.keys())) creates a list
         # that we are not using
         num_samples = sum(1 for _ in st.keys())
-        columns = st.categories()
+        columns = st.categories
         # The number of columns
         num_cols = len(columns)
         specimen_id_column = Study(study_id).specimen_id_column
@@ -435,7 +435,7 @@ def sample_template_columns_get_req(study_id, column, user):
     sample_template_checks(study_id, user, check_exists=True)
 
     if column is None:
-        reply = SampleTemplate(study_id).categories()
+        reply = SampleTemplate(study_id).categories
     else:
         reply = list(SampleTemplate(study_id).get_category(column).values())
 

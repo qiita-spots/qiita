@@ -55,6 +55,19 @@ from string import ascii_letters, digits
 QIITA_COLUMN_NAME = 'qiita_sample_column_names'
 
 
+def _helper_get_categories(table):
+    """This is a helper function to avoid duplication of code"""
+    with qdb.sql_connection.TRN:
+        sql = """SELECT sample_values->>'columns'
+                 FROM qiita.{0}
+                 WHERE sample_id = '{1}'""".format(table, QIITA_COLUMN_NAME)
+        qdb.sql_connection.TRN.add(sql)
+        results = qdb.sql_connection.TRN.execute_fetchflatten()
+        if results:
+            results = sorted(loads(results[0]))
+        return results
+
+
 class BaseSample(qdb.base.QiitaObject):
     r"""Sample object that accesses the db to get the information of a sample
     belonging to a PrepTemplate or a SampleTemplate.
@@ -184,17 +197,7 @@ class BaseSample(qdb.base.QiitaObject):
         set of str
             The set of all available metadata categories
         """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT sample_values->>'columns'
-                     FROM qiita.{0}
-                     WHERE sample_id = '{1}'""".format(
-                        self._dynamic_table, QIITA_COLUMN_NAME)
-            qdb.sql_connection.TRN.add(sql)
-            results = qdb.sql_connection.TRN.execute_fetchflatten()
-            if results:
-                results = loads(results[0])
-
-            return set(results)
+        return set(_helper_get_categories(self._dynamic_table))
 
     def _to_dict(self):
         r"""Returns the categories and their values in a dictionary
@@ -729,7 +732,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             If the column_name is selected as a specimen_id_column in the
             study.
         """
-        if column_name not in self.categories():
+        if column_name not in self.categories:
             raise qdb.exceptions.QiitaDBColumnError(
                 "'%s' not in info file %d" % (column_name, self._id))
         if not self.can_be_updated(columns={column_name}):
@@ -754,7 +757,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [column_name, QIITA_COLUMN_NAME])
 
             # deleting from QIITA_COLUMN_NAME
-            columns = self.categories()
+            columns = self.categories
             columns.remove(column_name)
             values = '{"columns": %s}' % dumps(columns)
             sql = """UPDATE {0}
@@ -834,7 +837,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             # Check if we are adding new columns
             headers = md_template.keys().tolist()
-            new_cols = set(headers).difference(self.categories())
+            new_cols = set(headers).difference(self.categories)
 
             if not new_cols and not new_samples:
                 return None, None
@@ -855,7 +858,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 # code). Sorting the new columns to enforce an order
                 new_cols = sorted(new_cols)
 
-                cols = self.categories()
+                cols = self.categories
                 cols.extend(new_cols)
 
                 values = dumps({"columns": cols})
@@ -1169,8 +1172,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # Retrieve all the information from the database
-            cols = self.categories()
-
+            cols = self.categories
             sql = """SELECT sample_id, sample_values
                      FROM qiita.{0}
                      WHERE sample_id != '{1}'""".format(
@@ -1245,6 +1247,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         self._filepath_table, self._id_column, self.id,
                         sort='descending')]
 
+    @property
     def categories(self):
         """Identifies the metadata columns present in an info file
 
@@ -1253,19 +1256,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         cols : list
             The category fields
         """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT sample_values->>'columns'
-                     FROM qiita.{0}
-                     WHERE sample_id = '{1}'""".format(
-                        self._table_name(self._id), QIITA_COLUMN_NAME)
-
-            qdb.sql_connection.TRN.add(sql)
-
-            results = qdb.sql_connection.TRN.execute_fetchflatten()
-            if results:
-                results = sorted(loads(results[0]))
-
-            return results
+        return _helper_get_categories(self._table_name(self._id))
 
     def extend(self, md_template):
         """Adds the given template to the current one
@@ -1277,7 +1268,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             md_template = self._clean_validate_template(
-                md_template, self.study_id, current_columns=self.categories())
+                md_template, self.study_id, current_columns=self.categories)
             new_samples, new_columns = self._common_extend_steps(md_template)
             if new_samples or new_columns:
                 self.validate(self.columns_restrictions)
@@ -1404,7 +1395,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                             self._table_name(self._id))
                 qdb.sql_connection.TRN.add(sql, [dumps(values), sid])
 
-            nc = list(set(new_columns).union(set(self.categories())))
+            nc = list(set(new_columns).union(set(self.categories)))
             table_name = self._table_name(self.id)
             values = dumps({"columns": nc})
             sql = """UPDATE qiita.{0}
@@ -1438,7 +1429,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             # Clean and validate the metadata template given
             new_map = self._clean_validate_template(
-                md_template, self.study_id, current_columns=self.categories())
+                md_template, self.study_id, current_columns=self.categories)
             samples, columns = self._update(new_map)
             self.validate(self.columns_restrictions)
             self.generate_files(samples, columns)
@@ -1458,7 +1449,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             md_template = self._clean_validate_template(
-                md_template, self.study_id, current_columns=self.categories())
+                md_template, self.study_id, current_columns=self.categories)
             new_samples, new_columns = self._common_extend_steps(md_template)
             samples, columns = self._update(md_template)
             if samples is None:
@@ -1524,7 +1515,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             If category is not part of the template
         """
         with qdb.sql_connection.TRN:
-            if category not in self.categories():
+            if category not in self.categories:
                 raise qdb.exceptions.QiitaDBColumnError(category)
             sql = """SELECT sample_id,
                         COALESCE(sample_values->>'{0}', 'None') AS {0}
@@ -1550,7 +1541,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         cols = {col for restriction in restrictions
                 for col in restriction.columns}
 
-        return cols.difference(self.categories())
+        return cols.difference(self.categories)
 
     def _get_accession_numbers(self, column):
         """Return the accession numbers stored in `column`
@@ -1647,7 +1638,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             If the values aren't castable
         """
         warning_msg = []
-        columns = self.categories()
+        columns = self.categories
         wrong_msg = 'Sample "%s", column "%s", wrong value "%s"'
         for label, restriction in restriction_dict.items():
             missing = set(restriction.columns).difference(columns)
@@ -1804,7 +1795,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             success = True
             message = []
             restrictions = self.restrictions
-            categories = self.categories()
+            categories = self.categories
 
             difference = sorted(set(restrictions.keys()) - set(categories))
             if difference:

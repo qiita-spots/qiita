@@ -142,7 +142,7 @@ class PrepTemplate(MetadataTemplate):
 
             md_template = cls._clean_validate_template(md_template, study.id)
             _check_duplicated_columns(list(md_template.columns),
-                                      study.sample_template.categories())
+                                      study.sample_template.categories)
 
             # Insert the metadata template
             sql = """INSERT INTO qiita.prep_template
@@ -394,7 +394,7 @@ class PrepTemplate(MetadataTemplate):
                                        "prep template")
 
         _check_duplicated_columns(list(new_columns), qdb.study.Study(
-            self.study_id).sample_template.categories())
+            self.study_id).sample_template.categories)
 
         return True, ""
 

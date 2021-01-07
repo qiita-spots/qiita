@@ -542,7 +542,7 @@ class TestPrivatePluginDeleteTests(BaseTestPrivatePlugin):
                                 'name': 'season_environment'})
         private_task(job.id)
         self.assertEqual(job.status, 'success')
-        self.assertNotIn('season_environment', st.categories())
+        self.assertNotIn('season_environment', st.categories)
 
         # Delete a sample template sample - need to add one
         # sample that we will remove
@@ -567,7 +567,7 @@ class TestPrivatePluginDeleteTests(BaseTestPrivatePlugin):
                                 'name': 'target_subfragment'})
         private_task(job.id)
         self.assertEqual(job.status, 'success')
-        self.assertNotIn('target_subfragment', pt.categories())
+        self.assertNotIn('target_subfragment', pt.categories)
 
         # Delete a prep template sample
         metadata = pd.DataFrame.from_dict(

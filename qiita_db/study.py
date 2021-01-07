@@ -784,7 +784,7 @@ class Study(qdb.base.QiitaObject):
                                                     "sample information.")
 
         if value is not None:
-            if value not in st.categories():
+            if value not in st.categories:
                 raise qdb.exceptions.QiitaDBLookupError("Category '%s' is not "
                                                         "present in the sample"
                                                         " information."
