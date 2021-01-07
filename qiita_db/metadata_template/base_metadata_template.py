@@ -558,20 +558,20 @@ class MetadataTemplate(qdb.base.QiitaObject):
         error = []
         if pgsql_reserved:
             error.append(
-                "The following column names in the template contain PgSQL "
-                "reserved words: %s." % ", ".join(pgsql_reserved))
+                "These column names are PgSQL reserved words, replace them: "
+                "~~ %s ~~." % ", ".join(pgsql_reserved))
         if invalid:
             error.append(
-                "The following column names in the template contain invalid "
-                "chars: %s." % ", ".join(invalid))
+                "These column names contain invalid chars, remove or replace "
+                "them: ~~ %s ~~." % ", ".join(invalid))
         if forbidden:
             error.append(
-                "The following column names in the template contain invalid "
-                "values: %s." % ", ".join(forbidden))
+                "These column names are not valid in this information file, "
+                "remove them: ~~ %s ~~." % ", ".join(forbidden))
         if qiime2_reserved:
             error.append(
-                "The following column names in the template contain QIIME2 "
-                "reserved words: %s." % ", ".join(pgsql_reserved))
+                "These columns are QIIME2 reserved words, replace them: "
+                " ~~ %s ~~." % ", ".join(pgsql_reserved))
 
         if error:
             raise qdb.exceptions.QiitaDBColumnError(

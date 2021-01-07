@@ -1763,8 +1763,8 @@ class ProcessingJob(qdb.base.QiitaObject):
         if self.command.name == 'Validate':
             # Validate only has two options to calculate it's size: template (a
             # job that has a preparation linked) or analysis (is from an
-            # analysis).
-            if 'template' in parameters:
+            # analysis). However, 'template' can be present and be None 
+            if 'template' in parameters and parameters['template'] is not None:
                 try:
                     pt = qdb.metadata_template.prep_template.PrepTemplate(
                         parameters['template'])
