@@ -117,13 +117,16 @@ def list_remote(URL, private_key):
     """
     p_url = urlparse(URL)
     directory = p_url.path
-    ssh = _ssh_session(p_url, private_key)
-    valid_files = _list_valid_files(ssh, directory)
-    ssh.close()
-
-    # for security, remove key
-    if exists(private_key):
-        remove(private_key)
+    try:
+        ssh = _ssh_session(p_url, private_key)
+        valid_files = _list_valid_files(ssh, directory)
+        ssh.close()
+    except Exception as ex:
+        raise ex
+    finally:
+        # for security, remove key
+        if exists(private_key):
+            remove(private_key)
 
     return valid_files
 
