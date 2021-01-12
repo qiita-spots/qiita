@@ -1,6 +1,6 @@
 dist: xenial
 language: python
-sudo: false
+sudo:false
 env:
   global:
     - PYTHON_VERSION=3.6
