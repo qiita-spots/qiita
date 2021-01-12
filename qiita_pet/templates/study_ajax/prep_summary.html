@@ -429,7 +429,7 @@
       <span id="prep-name-span">{{name}}</span> - ID {{prep_id}} ({{data_type}})
       <a class="btn btn-default" data-toggle="modal" data-target="#update-prep-name"><span class="glyphicon glyphicon-pencil"></span> Edit name</a>
       <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
-      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_sample_info_per_prep/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Sample info</a>
+      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_sample_info_per_prep/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Sample info (only this prep)</a>
       {% if is_submitted_to_ebi %}
         <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_ebi_accessions/experiments/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> EBI experiment accessions</a>
       {% end %}
