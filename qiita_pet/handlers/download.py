@@ -46,10 +46,7 @@ class BaseHandlerDownload(BaseHandler):
                 study_info['message'], self.current_user.email, sid))
         return Study(sid)
 
-    def _generate_files(self, header_name, accessions, filename):
-        text = "sample_name\t%s\n%s" % (header_name, '\n'.join(
-            ["%s\t%s" % (k, v) for k, v in accessions.items()]))
-
+    def _finish_generate_files(self, filename, text):
         self.set_header('Content-Description', 'text/csv')
         self.set_header('Expires', '0')
         self.set_header('Cache-Control', 'no-cache')
@@ -57,6 +54,12 @@ class BaseHandlerDownload(BaseHandler):
                         'filename=%s' % filename)
         self.write(text)
         self.finish()
+
+    def _generate_files(self, header_name, accessions, filename):
+        text = "sample_name\t%s\n%s" % (header_name, '\n'.join(
+            ["%s\t%s" % (k, v) for k, v in accessions.items()]))
+
+        self._finish_generate_files(filename, text)
 
     def _list_dir_files_nginx(self, dirpath):
         """Generates a nginx list of files in the given dirpath for nginx
@@ -325,6 +328,25 @@ class DownloadEBIPrepAccessions(BaseHandlerDownload):
         self._generate_files(
             'experiment_accession', pt.ebi_experiment_accessions,
             'ebi_experiment_accessions_study_%s_prep_%s.tsv' % (sid, pid))
+
+
+class DownloadSampleInfoPerPrep(BaseHandlerDownload):
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def get(self, prep_template_id):
+        pid = int(prep_template_id)
+        pt = PrepTemplate(pid)
+        sid = pt.study_id
+
+        self._check_permissions(sid)
+
+        st = SampleTemplate(sid)
+
+        text = st.to_dataframe(samples=list(pt)).to_csv(None, sep='\t')
+
+        self._finish_generate_files(
+            'sample_information_from_prep_%s.tsv' % pid, text)
 
 
 class DownloadUpload(BaseHandlerDownload):

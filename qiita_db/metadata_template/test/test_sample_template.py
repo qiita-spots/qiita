@@ -1963,8 +1963,7 @@ class TestSampleTemplate(TestCase):
                '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
                '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'}
         self.assertEqual(set(obs.index), exp)
-
-        self.assertEqual(set(obs.columns), {
+        exp_columns = {
             'physical_specimen_location', 'physical_specimen_remaining',
             'dna_extracted', 'sample_type', 'collection_timestamp',
             'host_subject_id', 'description', 'latitude', 'longitude',
@@ -1973,7 +1972,15 @@ class TestSampleTemplate(TestCase):
             'water_content_soil', 'elevation', 'temp', 'tot_nitro',
             'samp_salinity', 'altitude', 'env_biome', 'country', 'ph',
             'anonymized_name', 'tot_org_carb', 'description_duplicate',
-            'env_feature', 'scientific_name', 'qiita_study_id'})
+            'env_feature', 'scientific_name', 'qiita_study_id'}
+        self.assertEqual(set(obs.columns), exp_columns)
+
+        # test limiting samples produced
+        exp_samples = set(['1.SKD4.640185', '1.SKD5.640186'])
+        obs = self.tester.to_dataframe(samples=exp_samples)
+        self.assertEqual(len(obs), 2)
+        self.assertEqual(set(obs.index), exp_samples)
+        self.assertEqual(set(obs.columns), exp_columns)
 
         # test with add_ebi_accessions as True
         obs = self.tester.to_dataframe(True)
