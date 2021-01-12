@@ -1,7 +1,7 @@
 Qiita (canonically pronounced *cheetah*)
 ========================================
 
-| Build Status| |Coverage Status| |Gitter|
+|Build Status| |Coverage Status| |Gitter|
 
 Advances in sequencing, proteomics, transcriptomics and metabolomics are giving
 us new insights into the microbial world and dramatically improving our ability
