@@ -17,6 +17,7 @@ SAMPLE_TEMPLATE_COLUMNS = {
     'EBI': Restriction(columns={'collection_timestamp': datetime,
                                 'physical_specimen_location': str,
                                 'taxon_id': int,
+                                'description': str,
                                 'scientific_name': str},
                        error_msg="EBI submission disabled"),
     # The following columns are required for the official main QIITA site

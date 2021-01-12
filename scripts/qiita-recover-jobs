@@ -23,6 +23,7 @@ SQL = """SELECT processing_job_id
          JOIN qiita.processing_job_status
          USING (processing_job_status_id)
          WHERE processing_job_status = %s"""
+ARRAY_COMMANDS = set(['Woltka v0.1.1'])
 
 
 def _submit_jobs(jids_to_recover, recover_type):
@@ -41,25 +42,36 @@ def _submit_jobs(jids_to_recover, recover_type):
 
 
 def _retrieve_queue_jobs():
-    qiita_jobs = [line.split()[0]
-                  for line in check_output("qstat").decode('ascii').split("\n")
-                  # just retriving 'qiita' and ignoring [] (ipython workers)
-                  if 'qiita' in line and '[]' not in line and
-                  # and private jobs
-                  'private' not in line and
-                  'STDIN' not in line]
+    lines = check_output(["qstat", "-f"]).decode('ascii').split("\n")
+
+    # looking for qiita jobs
+    # i-1: the line before is the job name, which is the internal qiita job id
+    job_names = [lines[i-1] for i, l in enumerate(lines)
+                 if 'Job_Owner = qiita@qiita.ucsd.edu' in l]
+
     qiita_jids = []
-    for qj in qiita_jobs:
-        # to retrieve info about the jobs we need to use the fullname, so
-        # appending .ucsd.edu
-        args = ["qstat", "-f", "%s.ucsd.edu" % qj]
-        # the name is the last string of the line and has .txt prepended
-        qji = [line.split()[-1].split(".")[0]
-               for line in check_output(args).decode('ascii').split("\n")
-               if 'Job_Name' in line]
-        qiita_jids.extend(qji)
+    for job in job_names:
+        # this should always be false but rather check
+        if 'Job_Name' not in job:
+            continue
+        # ignoring interactive jobs
+        if 'STDIN' in job:
+            continue
+
+        # removing extra info
+        jid = job[15:].replace('merge-', '').replace('.txt', '')
+        qiita_jids.append(jid)
 
     return set(qiita_jids)
+
+
+def _count_jobs_in_arrays():
+    # a direct way to calculate how many jobs are in the queue is to count
+    # how many samples are in the preparation information file of the input
+    # artifact
+    jobs = [ProcessingJob(jid) for jid in _retrieve_queue_jobs()
+            if ProcessingJob(jid).command.name in ARRAY_COMMANDS]
+    return sum([len(job.input_artifacts[0].prep_templates[0]) for job in jobs])
 
 
 def _get_jids_to_recover(recover_type):
