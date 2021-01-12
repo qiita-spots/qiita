@@ -19,12 +19,12 @@ typically limiting for researchers studying microbial ecology.
 
 Qiita is currently in beta status. We are very open to community
 contributions and feedback. If you're interested in contributing to Qiita,
-see `CONTRIBUTING.md <https://github.com/biocore/qiita/blob/master/CONTRIBUTING.md>`__.
+see `CONTRIBUTING.md <https://github.com/qiita-spots/qiita/blob/master/CONTRIBUTING.md>`__.
 If you'd like to report bugs or request features, you can do that in the
-`Qiita issue tracker <https://github.com/biocore/qiita/issues>`__.
+`Qiita issue tracker <https://github.com/qiita-spots/qiita/issues>`__.
 
 To install and configure your own Qiita server, see
-`INSTALL.md <https://github.com/biocore/qiita/blob/master/INSTALL.md>`__.
+`INSTALL.md <https://github.com/qiita-spots/qiita/blob/master/INSTALL.md>`__.
 
 For more specific details about qiita visit `the Qiita main site tutorial <https://qiita.microbio.me/static/doc/html/qiita-philosophy/index.html>`__.
 
@@ -71,9 +71,7 @@ future.
   existing studies by submitting a fix proposals to the authors of the study.
 
 
-.. |Build Status| image:: https://travis-ci.org/biocore/qiita.png?branch=master
-   :target: https://travis-ci.org/biocore/qiita
-.. |Coverage Status| image:: https://codecov.io/gh/biocore/qiita/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/biocore/qiita
-.. |Gitter| image:: https://badges.gitter.im/Join%20Chat.svg
-   :target: https://gitter.im/biocore/qiita?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |Build Status| image:: https://travis-ci.org/qiita-spots/qiita.png?branch=master
+   :target: https://travis-ci.org/qiita-spots/qiita
+.. |Coverage Status| image:: https://codecov.io/gh/qiita-spots/qiita/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/qiita-spots/qiita

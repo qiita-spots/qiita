@@ -558,20 +558,20 @@ class MetadataTemplate(qdb.base.QiitaObject):
         error = []
         if pgsql_reserved:
             error.append(
-                "The following column names in the template contain PgSQL "
-                "reserved words: %s." % ", ".join(pgsql_reserved))
+                "These column names are PgSQL reserved words, replace them: "
+                "~~ %s ~~." % ", ".join(pgsql_reserved))
         if invalid:
             error.append(
-                "The following column names in the template contain invalid "
-                "chars: %s." % ", ".join(invalid))
+                "These column names contain invalid chars, remove or replace "
+                "them: ~~ %s ~~." % ", ".join(invalid))
         if forbidden:
             error.append(
-                "The following column names in the template contain invalid "
-                "values: %s." % ", ".join(forbidden))
+                "These column names are not valid in this information file, "
+                "remove them: ~~ %s ~~." % ", ".join(forbidden))
         if qiime2_reserved:
             error.append(
-                "The following column names in the template contain QIIME2 "
-                "reserved words: %s." % ", ".join(pgsql_reserved))
+                "These columns are QIIME2 reserved words, replace them: "
+                " ~~ %s ~~." % ", ".join(pgsql_reserved))
 
         if error:
             raise qdb.exceptions.QiitaDBColumnError(
@@ -1160,13 +1160,15 @@ class MetadataTemplate(qdb.base.QiitaObject):
             df.to_csv(fp, index_label='sample_name', na_rep="", sep='\t',
                       encoding='utf-8')
 
-    def _common_to_dataframe_steps(self):
+    def _common_to_dataframe_steps(self, samples=None):
         """Perform the common to_dataframe steps
 
         Returns
         -------
         pandas DataFrame
             The metadata in the template,indexed on sample id
+        samples list of string, optional
+            A list of the sample names we actually want to retrieve
         """
         with qdb.sql_connection.TRN:
             # Retrieve all the information from the database
@@ -1175,7 +1177,12 @@ class MetadataTemplate(qdb.base.QiitaObject):
                      FROM qiita.{0}
                      WHERE sample_id != '{1}'""".format(
                         self._table_name(self._id), QIITA_COLUMN_NAME)
-            qdb.sql_connection.TRN.add(sql)
+            if samples is None:
+                qdb.sql_connection.TRN.add(sql)
+            else:
+                sql += ' AND sample_id IN %s'
+                qdb.sql_connection.TRN.add(sql, [tuple(samples)])
+
             # this query is going to return a tuple
             # (sample_id, dict of columns/values); however it's important to
             # notice that we can't assure that all column/values pairs are the

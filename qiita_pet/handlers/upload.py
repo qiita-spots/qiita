@@ -9,7 +9,7 @@
 from tornado.web import authenticated, HTTPError
 
 from os.path import join, exists
-from os import remove
+from os import remove, chmod
 from json import loads, dumps
 
 from collections import defaultdict
@@ -142,6 +142,7 @@ class StudyUploadViaRemote(BaseHandler):
 
         with open(ssh_key_fp, 'wb') as f:
             f.write(ssh_key)
+        chmod(ssh_key_fp, 0o600)
 
         qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
         if method == 'list':

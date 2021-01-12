@@ -160,7 +160,7 @@ def artifact_summary_get_request(user, artifact_id):
             buttons.append(btn_base % ('revert to sandbox', 'sandbox',
                                        'Revert to sandbox'))
 
-        if user.level == 'admin':
+        if user.level == 'admin' and not study.autoloaded:
             if artifact.can_be_submitted_to_ebi:
                 buttons.append(
                     '<a class="btn btn-primary btn-sm" '

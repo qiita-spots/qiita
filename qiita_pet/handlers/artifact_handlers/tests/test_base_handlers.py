@@ -257,6 +257,22 @@ class TestBaseHandlersUtils(TestCase):
                'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
+        # the buttons shouldn't be present when the study is autoloaded
+        study = a.study
+        study.autoloaded = True
+        exp['buttons'] = ('<button onclick="if (confirm(\'Are you sure you '
+                          'want to make public artifact id: 2?\')) { '
+                          'set_artifact_visibility(\'public\', 2) }" '
+                          'class="btn btn-primary btn-sm">Make public'
+                          '</button> <button onclick="if (confirm(\'Are you '
+                          'sure you want to revert to sandbox artifact id: '
+                          '2?\')) { set_artifact_visibility(\'sandbox\', 2) '
+                          '}" class="btn btn-primary btn-sm">Revert to '
+                          'sandbox</button> ' + private_download_button % 2)
+        obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
+        self.assertEqual(obs, exp)
+        study.autoloaded = False
+
         # analysis artifact
         obs = artifact_summary_get_request(user, 8)
         exp = {'name': 'noname',
