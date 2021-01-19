@@ -46,7 +46,7 @@ full_pipelines = [
      'steps': [
          {'previous-step': None,
           'plugin': 'qp-meta',
-          'version': '2020.11',
+          'version': '2021.01',
           'cmd_name': 'Atropos v1.1.24',
           'input_name': 'input',
           'ignore_parameters': ['Number of threads used'],
