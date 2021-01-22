@@ -1,6 +1,18 @@
 # Qiita changelog
 
 
+Version 2021.01
+---------------
+
+* Moved the qiita repo from biocore to [qiita-spots](https://github.com/qiita-spots/qiita/).
+* Created the [Qiita portal for the Cancer Microbiome](https://qiita.ucsd.edu/cancer/).
+* The EBI-ENA code now verifies that the sample information file has a description column; this wasn't previously required because it was automatically prefilled by the QIIME 1 mapping file.
+* Now it is possible to download the per preparation sample information file and the sample-preparation summary.
+* Added a faster metagenomic/metatranscriptomic adaptor and host removal step based on fastp and minimap2. The previous version, using atropos and bowtie2 for QC host filtering, is now deprecated.
+* Added qiime2.2020.11 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization.
+* Added [WoL](https://biocore.github.io/wol/) tree for phylogenetic analyses (/projects/wol/release/databases/qiime2/phylogeny.qza) with per-genome WoL artifacts.
+* Fixed the following issues: [#3060](https://github.com/qiita-spots/qiita/issues/3060), [#3049](https://github.com/qiita-spots/qiita/issues/3049), and [#2751](https://github.com/qiita-spots/qiita/issues/2751).
+
 Version 2020.11
 ---------------
 

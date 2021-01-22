@@ -10,7 +10,7 @@
 from setuptools import setup
 from glob import glob
 
-__version__ = "2020.11"
+__version__ = "2021.01"
 
 
 classes = """
