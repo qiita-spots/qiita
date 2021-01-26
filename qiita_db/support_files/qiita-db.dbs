@@ -939,6 +939,12 @@
 			<column name="deprecated" type="boolean" jt="-7" >
 				<defo><![CDATA[FALSE]]></defo>
 			</column>
+			<column name="creation_timestamp" type="timestamp" jt="-9" >
+				<defo><![CDATA[FALSE]]></defo>
+			</column>
+			<column name="modification_timestamp" type="timestamp" jt="-11" >
+				<defo><![CDATA[FALSE]]></defo>
+			</column>
 			<index name="pk_prep_template" unique="PRIMARY_KEY" >
 				<column name="prep_template_id" />
 			</index>

@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 from itertools import chain
 from os.path import join
-from time import strftime
 from copy import deepcopy
 from skbio.util import find_duplicates
 
@@ -507,11 +506,16 @@ class PrepTemplate(MetadataTemplate):
         with qdb.sql_connection.TRN:
             # figuring out the filepath of the prep template
             _id, fp = qdb.util.get_mountpoint('templates')[0]
+            # update timestamp in the DB first
+            qdb.sql_connection.TRN.add(
+                """UPDATE qiita.prep_template
+                   SET modification_timestamp = CURRENT_TIMESTAMP
+                   WHERE prep_template_id = %s""", [self._id])
+            ctime = self.modification_timestamp
             fp = join(fp, '%d_prep_%d_%s.txt' % (self.study_id, self._id,
-                      strftime("%Y%m%d-%H%M%S")))
+                      ctime.strftime("%Y%m%d-%H%M%S")))
             # storing the template
             self.to_file(fp)
-
             # adding the fp to the object
             fp_id = qdb.util.convert_to_id("prep_template", "filepath_type")
             self.add_filepath(fp, fp_id=fp_id)
@@ -666,3 +670,35 @@ class PrepTemplate(MetadataTemplate):
                 lambda sid: accessions[sid])
 
         return df
+
+    @property
+    def creation_timestamp(self):
+        """The creation timestamp of the prep information
+
+        Returns
+        -------
+        datetime.datetime
+            The creation timestamp of the prep information
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT creation_timestamp
+                     FROM qiita.prep_template
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def modification_timestamp(self):
+        """The modification timestamp of the prep information
+
+        Returns
+        -------
+        datetime.datetime
+            The modification timestamp of the prep information
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT modification_timestamp
+                     FROM qiita.prep_template
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()

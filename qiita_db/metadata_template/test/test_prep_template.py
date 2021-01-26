@@ -11,6 +11,7 @@ from os import close, remove
 from os.path import join, exists
 from collections import Iterable
 from copy import deepcopy
+from datetime import datetime
 
 import numpy.testing as npt
 import pandas as pd
@@ -978,7 +979,14 @@ class TestPrepTemplate(TestCase):
         self.assertFalse(success)
 
         metadata['target_gene'] = '16S rRNA'
+        # as we are testing the update functionality of a prep info file, we
+        # can also test that the timestamps are working correctly
+        current_ct = pt.creation_timestamp
+        current_mt = pt.modification_timestamp
+        self.assertTrue(current_ct < current_mt)
         pt.update(metadata)
+        self.assertEqual(current_ct, pt.creation_timestamp)
+        self.assertTrue(current_mt < pt.modification_timestamp)
         success, message = pt.validate_restrictions()
         success, message = pt.validate_restrictions()
         self.assertEqual(message, '')
@@ -994,6 +1002,12 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type,
             name='New Prep For Test')
         self._common_creation_checks(pt, fp_count, "New Prep For Test")
+        # checking that the creation and modification timestamps are within
+        # 2 seconds of current time
+        dsecs = (datetime.now() - pt.modification_timestamp).total_seconds()
+        self.assertTrue(dsecs < 2)
+        dsecs = (datetime.now() - pt.creation_timestamp).total_seconds()
+        self.assertTrue(dsecs < 2)
         # cleaning
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
