@@ -1184,7 +1184,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             df = pd.DataFrame(qdb.sql_connection.TRN.execute_fetchindex())
             df = pd.concat([df.drop(1, axis=1),
-                            pd.DataFrame(df[1].tolist())], axis=1)
+                            pd.DataFrame(df[1].tolist(), dtype='str')], axis=1)
             df.set_index(0, inplace=True)
             df.index.name = 'sample_id'
             df.where((pd.notnull(df)), None)
