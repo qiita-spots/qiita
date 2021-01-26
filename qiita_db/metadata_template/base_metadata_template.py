@@ -1172,7 +1172,6 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # Retrieve all the information from the database
-            cols = self.categories
             sql = """SELECT sample_id, sample_values
                      FROM qiita.{0}
                      WHERE sample_id != '{1}'""".format(
@@ -1183,34 +1182,11 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 sql += ' AND sample_id IN %s'
                 qdb.sql_connection.TRN.add(sql, [tuple(samples)])
 
-            # this query is going to return a tuple
-            # (sample_id, dict of columns/values); however it's important to
-            # notice that we can't assure that all column/values pairs are the
-            # same for all samples as we are not doing full bookkeeping of all
-            # the columns in all the samples. Thus, we have 2 options:
-            # 1. use dict() on the query result with pd.DataFrame.from_dict so
-            #    pandas deals with this; but this takes a crazy amount of time,
-            #    for more info google: "performance pandas from_dict"
-            # 2. generate a matrix rows/samples, cols/values and load them
-            #    via pandas.DataFrame, which actually has good performace
-            data = []
-            for sid, values in qdb.sql_connection.TRN.execute_fetchindex():
-                # creating row of values, first insert sample id
-                vals = [sid]
-                # then loop over all the possible values making sure that if
-                # the column doesn't exist in that sample, it gets a None
-                for c in cols:
-                    v = None
-                    if c in values:
-                        v = values[c]
-                    vals.append(v)
-                # append the row to the full matrix
-                data.append(vals)
-            cols.insert(0, 'sample_id')
-            df = pd.DataFrame(data, columns=cols, dtype=str)
-            df.set_index('sample_id', inplace=True)
-
-            # Make sure that we are changing np.NaN by Nones
+            df = pd.DataFrame(qdb.sql_connection.TRN.execute_fetchindex())
+            df = pd.concat([df.drop(1, axis=1),
+                            pd.DataFrame(df[1].tolist())], axis=1)
+            df.set_index(0, inplace=True)
+            df.index.name = 'sample_id'
             df.where((pd.notnull(df)), None)
             id_column_name = 'qiita_%sid' % (self._table_prefix)
             if id_column_name == 'qiita_sample_id':

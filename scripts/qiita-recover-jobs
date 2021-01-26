@@ -47,7 +47,7 @@ def _retrieve_queue_jobs():
     # looking for qiita jobs
     # i-1: the line before is the job name, which is the internal qiita job id
     job_names = [lines[i-1] for i, l in enumerate(lines)
-                 if 'Job_Owner = qiita@qiita.ucsd.edu' in l]
+                 if l.startswith('    Job_Owner = qiita')]
 
     qiita_jids = []
     for job in job_names:
