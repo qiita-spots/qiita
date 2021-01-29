@@ -160,8 +160,8 @@ def validate_filepath_access_by_user(user, filepath_id):
             # [0] cause we should only have 1
             aid = anid[0]
             analysis = qdb.analysis.Analysis(aid)
-            return analysis in (
-                user.private_analyses | user.shared_analyses)
+            return analysis.is_public | (analysis in (
+                user.private_analyses | user.shared_analyses))
         return False
 
 
