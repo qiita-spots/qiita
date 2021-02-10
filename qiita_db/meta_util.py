@@ -248,7 +248,7 @@ def update_redis_stats():
     # these are some filetypes that are too small to plot alone so we'll merge
     # in other
     group_other = {'html_summary', 'tgz', 'directory', 'raw_fasta', 'log',
-                   'biom', 'raw_sff', 'raw_qual', 'qza', 'html_summary_dir',
+                   'raw_sff', 'raw_qual', 'qza', 'html_summary_dir',
                    'qza', 'plain_text', 'raw_barcodes'}
     for ft, size, ym in stats:
         if ft in group_other:
