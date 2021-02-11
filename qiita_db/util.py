@@ -1756,10 +1756,6 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
             # generating algorithm, by default is ''
             algorithm = ''
-            # set to False because if there is no cid, it means that it
-            # was a direct upload
-            deprecated = None
-            active = None
             if cid is not None:
                 deprecated = commands[cid]['deprecated']
                 active = commands[cid]['active']
@@ -1777,6 +1773,12 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 if algorithm not in algorithm_az:
                     algorithm_az[algorithm] = hashlib.md5(
                         algorithm.encode('utf-8')).hexdigest()
+            else:
+                # there is no cid, thus is a direct upload; setting things
+                # like this so the artifacts are dispayed
+                deprecated = False
+                active = True
+
 
             if prep_template_id not in ts:
                 qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])

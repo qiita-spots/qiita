@@ -218,10 +218,10 @@ class TestArtifactAPI(TestCase):
              'prep_samples': 27},
             {'files': ['biom_table.biom'], 'artifact_id': 7,
              'data_type': '16S',
-             'timestamp': '2012-10-02 17:30:00', 'active': None,
+             'timestamp': '2012-10-02 17:30:00', 'active': True,
              'target_gene': '16S rRNA', 'name': 'BIOM',
              'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
-             'deprecated': None, 'platform': 'Illumina', 'algorithm_az': '',
+             'deprecated': False, 'platform': 'Illumina', 'algorithm_az': '',
              'prep_samples': 27}]
         exp = {'status': 'success', 'msg': '', 'data': data}
         self.assertCountEqual(list(obs.keys()), exp.keys())
