@@ -314,7 +314,7 @@ class TestArtifactAPI(TestCase):
         self.assertEqual(obs, exp)
         # testing that the log message is generated
         self.assertEqual(LogEntry.newest_records(1)[0].msg,
-                         'admin@foo.bar changed artifact 1 (1) to private')
+                         'admin@foo.bar changed artifact 1 (study 1) to private')
 
     def test_artifact_status_put_req_private_bad_permissions(self):
         obs = artifact_status_put_req(1, 'test@foo.bar', 'private')
