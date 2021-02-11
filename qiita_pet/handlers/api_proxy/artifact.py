@@ -345,7 +345,7 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
     else:
         pd.visibility = visibility
 
-    LogEntry.create('Warning', '%s changed artifact %s (%d) to %s' % (
+    LogEntry.create('Warning', '%s changed artifact %s (study %d) to %s' % (
         user_id, artifact_id, sid, visibility))
 
     return {'status': status,
