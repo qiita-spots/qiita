@@ -1779,7 +1779,6 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 deprecated = False
                 active = True
 
-
             if prep_template_id not in ts:
                 qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])
                 ts[prep_template_id] = \

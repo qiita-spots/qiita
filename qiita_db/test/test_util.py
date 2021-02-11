@@ -1028,7 +1028,8 @@ class UtilTests(TestCase):
              'prep_samples': 27, 'platform': 'Illumina',
              'target_gene': '16S rRNA', 'name': 'BIOM', 'data_type': '16S',
              'parameters': {}, 'algorithm': '', 'algorithm_az': '',
-             'deprecated': False, 'active': True, 'files': ['biom_table.biom']},
+             'deprecated': False, 'active': True,
+             'files': ['biom_table.biom']},
             {'artifact_id': 8, 'target_subfragment': [], 'prep_samples': 0,
              'platform': 'not provided', 'target_gene': 'not provided', 'name':
              'noname', 'data_type': '18S', 'parameters': {}, 'algorithm': '',
