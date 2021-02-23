@@ -266,14 +266,13 @@ class TestUtil(TestCase):
         assert_frame_equal(obs, exp, check_like=True)
 
     def test_load_template_to_dataframe_better_tokenizing_error_msg(self):
-        with self.assertRaises(RuntimeError) as error:
+        with self.assertRaisesRegex(RuntimeError, 'Your file has more columns '
+                                    'with values than headers'):
             qdb.metadata_template.util.load_template_to_dataframe(
                 StringIO('sample_name\tcollection_timestamp\n'
                          '2.Sample1\t2014-05-29 12:24:51\t\n'
                          '2.Sample2\taaa\n'
                          'xxx\tadfa\t\t\n'))
-        self.assertIn('Your file has more columns with values than headers.',
-                      str(error.exception))
 
     def test_get_invalid_sample_names(self):
         all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',

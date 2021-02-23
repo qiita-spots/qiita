@@ -88,6 +88,10 @@ def load_template_to_dataframe(fn, index='sample_name'):
     the database
 
     Everything in the DataFrame will be read and managed as string
+
+    While reading the file via pandas, it's possible that it will raise a
+    'tokenizing' pd.errors.ParserError which is confusing for users; thus,
+    rewriting the error with an explanation of what it means and how to fix.
     """
     # Load in file lines
     holdfile = None
