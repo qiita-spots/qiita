@@ -1074,19 +1074,14 @@ class ParametersTests(TestCase):
 
 
 class DefaultWorkflowNodeTests(TestCase):
-    def test_command(self):
+    def test_default_parameter(self):
         obs = qdb.software.DefaultWorkflowNode(1)
-        self.assertEqual(obs.command, qdb.software.Command(1))
+        self.assertEqual(
+            obs.default_parameter, qdb.software.DefaultParameters(1))
 
         obs = qdb.software.DefaultWorkflowNode(2)
-        self.assertEqual(obs.command, qdb.software.Command(3))
-
-    def test_parameters(self):
-        obs = qdb.software.DefaultWorkflowNode(1)
-        self.assertEqual(obs.parameters, qdb.software.DefaultParameters(1))
-
-        obs = qdb.software.DefaultWorkflowNode(2)
-        self.assertEqual(obs.parameters, qdb.software.DefaultParameters(10))
+        self.assertEqual(
+            obs.default_parameter, qdb.software.DefaultParameters(10))
 
 
 class DefaultWorkflowEdgeTests(TestCase):

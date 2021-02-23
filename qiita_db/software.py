@@ -1764,23 +1764,7 @@ class DefaultWorkflowNode(qdb.base.QiitaObject):
     _table = "default_workflow_node"
 
     @property
-    def command(self):
-        """The command to execute in this node
-
-        Returns
-        -------
-        qiita_db.software.Command
-        """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT command_id
-                     FROM qiita.default_workflow_node
-                     WHERE default_workflow_node_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self.id])
-            cmd_id = qdb.sql_connection.TRN.execute_fetchlast()
-            return qdb.software.Command(cmd_id)
-
-    @property
-    def parameters(self):
+    def default_parameter(self):
         """The default parameter set to use in this node
 
         Returns
@@ -1838,6 +1822,29 @@ class DefaultWorkflow(qdb.base.QiitaObject):
     destination command.
     """
     _table = "default_workflow"
+
+    @classmethod
+    def iter(cls, active=True):
+        """Iterates over all active DefaultWorkflow
+
+        Parameters
+        ----------
+        active : bool, optional
+            If True will only return active software
+
+        Returns
+        -------
+        list of qiita_db.software.DefaultWorkflow
+            The DefaultWorkflow objects
+        """
+        sql = """SELECT default_workflow_id
+                 FROM qiita.default_workflow {0}
+                 ORDER BY default_workflow_id""".format(
+                    'WHERE active = True' if active else '')
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            for s_id in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield cls(s_id)
 
     @property
     def name(self):
