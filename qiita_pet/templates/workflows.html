@@ -64,29 +64,30 @@ function format_title(name, params) {
     <h3>Recommended Workflows</h3>
     ~~ Click on the spheres to get more information ~~
       {% for i, w in enumerate(workflows) %}
-        <h4>{{w['name']}} ({{w['id']}})</h4>
-        <div class="col-md-12 graph" style="width:90%" id="workflow_{{i}}"></div>
-        <script type="text/javascript">
-          var nodes_{{i}} = new vis.DataSet([
-            {% for node in w['nodes'] %}
-              {% if node[0].startswith('command') %}
-                {id: "{{node[0]}}", shape: "dot", color: colorScheme['command'], label: "{{node[2]}}", title: format_title("{{node[3]}}", {% raw node[4] %})},
-              {% else %}
-                {id: "{{node[0]}}", shape: "dot", color: colorScheme['artifact'], label: "{{node[2]}}", title: "Artifact: {{node[2]}}"},
+        <div class="col-md-12">
+          <h4>{{w['name']}} ({{w['id']}})</h4>
+          <div class="col-md-12 graph" style="width:90%" id="workflow_{{i}}"></div>
+          <script type="text/javascript">
+            var nodes_{{i}} = new vis.DataSet([
+              {% for node in w['nodes'] %}
+                {% if node[0].startswith('command') %}
+                  {id: "{{node[0]}}", shape: "dot", color: colorScheme['command'], label: "{{node[2]}}", title: format_title("{{node[3]}}", {% raw node[4] %})},
+                {% else %}
+                  {id: "{{node[0]}}", shape: "dot", color: colorScheme['artifact'], label: "{{node[2]}}", title: "Artifact: {{node[2]}}"},
+                {% end %}
               {% end %}
-            {% end %}
-          ]);
+            ]);
 
-          var edges_{{i}} = new vis.DataSet([
-            {% for f, t in w['edges'] %}
-              { from: "{{f}}", to: "{{t}}", arrows: "to"},
-            {% end %}
-          ]);
-          var container = document.getElementById("workflow_{{i}}");
-          var data = { nodes: nodes_{{i}}, edges: edges_{{i}} };
-          var network = new vis.Network(container, data, options);
-        </script>
-        <br/>
+            var edges_{{i}} = new vis.DataSet([
+              {% for f, t in w['edges'] %}
+                { from: "{{f}}", to: "{{t}}", arrows: "to"},
+              {% end %}
+            ]);
+            var container = document.getElementById("workflow_{{i}}");
+            var data = { nodes: nodes_{{i}}, edges: edges_{{i}} };
+            var network = new vis.Network(container, data, options);
+          </script>
+        </div>
       {% end %}
   {% else %}
       <div id="jumbotron" class="jumbotron">
