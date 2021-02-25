@@ -59,8 +59,8 @@ jobs:
           pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
 
           # 2. Setting up redis
-          redis-server --port 7777 —daemonize yes
-          redis-server --port 6379 —daemonize yes
+          redis-server --daemonize yes --port 7777
+          redis-server --daemonize yes --port 6379
 
           # 3. Setting up webdis/redbiom
           git clone https://github.com/nicolasff/webdis
