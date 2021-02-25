@@ -126,15 +126,19 @@ jobs:
           sleep 5
           cat /tmp/supervisord.log
 
-          # Starting plugins :: make sure all the instances are OK
-          start_biom https://localhost:8383 register ignored
-
-      - name: Test
+      - name: Main tests [qiita_db]
         shell: bash -l {0}
         run: |
           export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
           conda activate qiita
-          nosetests qiita_db qiita_pet qiita_core qiita_ware --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+          nosetests qiita_db --with-doctest --with-coverage --with-timer -v --cover-package=qiita_db -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+
+      - name: Main tests [qiita_pet qiita_core qiita_ware]
+        shell: bash -l {0}
+        run: |
+          export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
+          conda activate qiita
+          nosetests qiita_pet qiita_core qiita_ware --with-doctest --with-coverage --with-timer -v --cover-package=qiita_pet qiita_core qiita_ware -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
   qiita-ci-lint:
     runs-on: ubuntu-latest
