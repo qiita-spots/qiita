@@ -17,7 +17,7 @@ jobs:
         # Docker Hub image
         image: postgres:9.5
         env:
-          POSTGRES_DB: qiita_test
+          POSTGRES_DB: postgres
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
 
@@ -117,7 +117,6 @@ jobs:
 
           # 5. setting up qiita
           export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
-          qiita-env drop
           qiita-env make --no-load-ontologies
           qiita-test-install
           qiita plugins update
