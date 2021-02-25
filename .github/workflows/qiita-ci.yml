@@ -1,15 +1,15 @@
 name: qiita-private-api CI
-    
-on: 
+
+on:
   push:
     branches: [ dev ]
   pull_request:
-    
+
 jobs:
   # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
   postgres-runner-job:
     runs-on: ubuntu-latest
-      
+
     # Service containers to run with `runner-job`
     services:
       # Label used to access the service container
@@ -17,10 +17,10 @@ jobs:
         # Docker Hub image
         image: postgres:9.5
         env:
-          POSTGRES_DB: qiita_test  
-          POSTGRES_USER: postgres  
-          POSTGRES_PASSWORD: 
-          
+          POSTGRES_DB: qiita_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -38,20 +38,20 @@ jobs:
 
       - name: Setup for conda
         uses: conda-incubator/setup-miniconda@v2
-        with:        
+        with:
           auto-update-conda: true
-          python-version: 3.6 
-      
+          python-version: 3.6
+
       - name: Install
         shell: bash -l {0}
         run: |
           # pull out the port so we can modify the configuration file easily
           # pgport=${{ job.services.postgres.ports[5432] }}
           # sed -i "s/self.port = 5432/self.port = $pgport/" [conf.file]
-          
-          # PGPASSWORD is read by pg_restore, which is called by the build_db process. 
-          # export PGPASSWORD=postgres
-          
+
+          # PGPASSWORD is read by pg_restore, which is called by the build_db process.
+          export PGPASSWORD=postgres
+
           conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython
           conda activate qiita
           pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
@@ -61,7 +61,7 @@ jobs:
           ./webdis &
           popd
           travis_retry pip install . --no-binary redbiom
-          
+
           # setting up qiita
           qiita-env make --no-load-ontologies
           qiita-test-install
@@ -81,10 +81,9 @@ jobs:
     - name: flake8
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7
+        python-version: 3.6
     - name: install dependencies
       run: python -m pip install --upgrade pip
     - name: lint
       run: |
         pip install -q flake8
-        make lint
