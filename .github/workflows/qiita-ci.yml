@@ -126,12 +126,12 @@ jobs:
           sleep 5
           cat /tmp/supervisord.log
 
-      - name: Main tests [qiita_pet qiita_core qiita_ware]
-        shell: bash -l {0}
-        run: |
-          export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
-          conda activate qiita
-          nosetests qiita_pet qiita_core qiita_ware --with-doctest --with-coverage --with-timer -v --cover-package=qiita_pet qiita_core qiita_ware -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+          # 7. Setting up SSH
+          ssh-keygen -t rsa -C "ssh test key" -f $PWD/qiita_ware/test/test_data/test_key -P ""
+          mv $PWD/qiita_ware/test/test_data/test_key.pub ~/.ssh/
+          ssh-keyscan localhost >> ~/.ssh/known_hosts
+          cat ~/.ssh/test_key.pub >> ~/.ssh/authorized_keys
+          scp -i $PWD/qiita_ware/test/test_data/test_key localhost:$PWD/qiita_ware/test/test_data/random_key $PWD/qiita_ware/test/test_data/random_key_copy
 
       - name: Main tests [qiita_db]
         shell: bash -l {0}
@@ -139,6 +139,13 @@ jobs:
           export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
           conda activate qiita
           nosetests qiita_db --with-doctest --with-coverage --with-timer -v --cover-package=qiita_db -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+
+      - name: Main tests [qiita_pet qiita_core qiita_ware]
+        shell: bash -l {0}
+        run: |
+          export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
+          conda activate qiita
+          nosetests qiita_pet qiita_core qiita_ware --with-doctest --with-coverage --with-timer -v --cover-package=qiita_pet qiita_core qiita_ware -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
   qiita-ci-lint:
     runs-on: ubuntu-latest
