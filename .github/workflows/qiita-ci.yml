@@ -85,7 +85,7 @@ jobs:
           pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
           pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
-          configure_biom --env-script "conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
+          configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
 
       - name: Starting services
         shell: bash -l {0}
@@ -126,19 +126,19 @@ jobs:
           sleep 5
           cat /tmp/supervisord.log
 
-      - name: Main tests [qiita_db]
-        shell: bash -l {0}
-        run: |
-          export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
-          conda activate qiita
-          nosetests qiita_db --with-doctest --with-coverage --with-timer -v --cover-package=qiita_db -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
-
       - name: Main tests [qiita_pet qiita_core qiita_ware]
         shell: bash -l {0}
         run: |
           export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
           conda activate qiita
           nosetests qiita_pet qiita_core qiita_ware --with-doctest --with-coverage --with-timer -v --cover-package=qiita_pet qiita_core qiita_ware -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+
+      - name: Main tests [qiita_db]
+        shell: bash -l {0}
+        run: |
+          export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
+          conda activate qiita
+          nosetests qiita_db --with-doctest --with-coverage --with-timer -v --cover-package=qiita_db -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
   qiita-ci-lint:
     runs-on: ubuntu-latest
