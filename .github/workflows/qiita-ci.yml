@@ -42,7 +42,7 @@ jobs:
           auto-update-conda: true
           python-version: 3.6
 
-      - name: Install
+      - name: Dependencies Install
         shell: bash -l {0}
         run: |
           # pull out the port so we can modify the configuration file easily
@@ -52,29 +52,70 @@ jobs:
           # PGPASSWORD is read by pg_restore, which is called by the build_db process.
           export PGPASSWORD=postgres
 
-          # 1. Setting up main qiita conda environment
+          # Setting up main qiita conda environment
           conda config --add channels conda-forge
           conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython redis
           conda activate qiita
           pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
 
-          # 2. Setting up redis
+      - name: Webdis Install
+        shell: bash -l {0}
+        run: |
+          sudo apt-get -y install libevent-dev
+          git clone https://github.com/nicolasff/webdis
+          cd webdis
+          make
+
+      - name: Main Install
+        shell: bash -l {0}
+        run: |
+          pip install . --no-binary redbiom
+          pwd
+          mkdir ~/.qiita_plugins
+
+      - name: Install Plugins
+        shell: bash -l {0}
+        run: |
+          wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
+          travis_retry conda env create -q -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
+          rm qiime2-2019.4-py36-linux-conda.yml
+          conda activate qtp-biom
+          pip install -U pip
+          pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
+          pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip
+          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          configure_biom --env-script "conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
+
+      - name: Starting Services
+        shell: bash -l {0}
+        run: |
+          conda activate qiita
+
+          # 1. Setting up redis
           redis-server --daemonize yes --port 7777
           redis-server --daemonize yes --port 6379
 
-          # 3. Setting up webdis/redbiom
-          sudo apt-get -y install libevent-dev
-          git clone https://github.com/nicolasff/webdis
+          # 2. Starting webdis
           pushd webdis
-          make
           ./webdis &
           popd
-          pip install . --no-binary redbiom
+
+          # 3. Starting redbiom
+          export REDBIOM_HOST=http://127.0.0.1:7379
+          curl -s http://127.0.0.1:7379/FLUSHALL > /dev/null
+          redbiom --version
+          redbiom admin scripts-writable
+          redbiom admin create-context --name "qiita-test" --description "qiita-test context"
+          redbiom admin load-sample-metadata --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
+          redbiom admin load-sample-metadata-search --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
+          redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test --tag 4
+          redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table-for_redbiom_tests.biom --context qiita-test --tag 5
 
           # 4. Setting up nginx
           nginx -c ${PWD}/qiita_pet/nginx_example.conf
 
           # setting up qiita
+          conda activate qiita
           qiita-env make --no-load-ontologies
           qiita-test-install
           qiita plugins update
