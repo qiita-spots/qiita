@@ -42,7 +42,7 @@ jobs:
           auto-update-conda: true
           python-version: 3.6
 
-      - name: Dependencies Install
+      - name: Basic dependencies install
         shell: bash -l {0}
         run: |
           # pull out the port so we can modify the configuration file easily
@@ -58,7 +58,7 @@ jobs:
           conda activate qiita
           pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
 
-      - name: Webdis Install
+      - name: Webdis install
         shell: bash -l {0}
         run: |
           sudo apt-get -y install libevent-dev
@@ -66,7 +66,7 @@ jobs:
           cd webdis
           make
 
-      - name: Main Install
+      - name: Main install
         shell: bash -l {0}
         run: |
           conda activate qiita
@@ -74,7 +74,7 @@ jobs:
           pwd
           mkdir ~/.qiita_plugins
 
-      - name: Install Plugins
+      - name: Install plugins
         shell: bash -l {0}
         run: |
           wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
@@ -87,7 +87,7 @@ jobs:
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           configure_biom --env-script "conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
 
-      - name: Starting Services
+      - name: Starting services
         shell: bash -l {0}
         run: |
           conda activate qiita
@@ -115,11 +115,19 @@ jobs:
           # 4. Setting up nginx
           nginx -c ${PWD}/qiita_pet/nginx_example.conf
 
-          # setting up qiita
-          conda activate qiita
+          # 5. setting up qiita
+          export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
           qiita-env make --no-load-ontologies
           qiita-test-install
           qiita plugins update
+
+          # 6. Starting supervisord => multiple qiita instances
+          supervisord -c ${PWD}/qiita_pet/supervisor_example.conf
+          sleep 5
+          cat /tmp/supervisord.log
+
+          # Starting plugins :: make sure all the instances are OK
+          start_biom https://localhost:8383 register ignored
 
       - name: Test
         shell: bash -l {0}
@@ -128,16 +136,16 @@ jobs:
           conda activate qiita
           nosetests qiita_db qiita_pet qiita_core qiita_ware --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: flake8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.6
-    - name: install dependencies
-      run: python -m pip install --upgrade pip
-    - name: lint
-      run: |
-        pip install -q flake8
+    qiita-ci-lint:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v2
+      - name: flake8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - name: install dependencies
+        run: python -m pip install --upgrade pip
+      - name: lint
+        run: |
+          pip install -q flake8
