@@ -136,16 +136,16 @@ jobs:
           conda activate qiita
           nosetests qiita_db qiita_pet qiita_core qiita_ware --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
-    qiita-ci-lint:
-      runs-on: ubuntu-latest
-      steps:
-      - uses: actions/checkout@v2
-      - name: flake8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
-      - name: install dependencies
-        run: python -m pip install --upgrade pip
-      - name: lint
-        run: |
-          pip install -q flake8
+qiita-ci-lint:
+  runs-on: ubuntu-latest
+  steps:
+  - uses: actions/checkout@v2
+  - name: flake8
+    uses: actions/setup-python@v2
+    with:
+      python-version: 3.6
+  - name: install dependencies
+    run: python -m pip install --upgrade pip
+  - name: lint
+    run: |
+      pip install -q flake8
