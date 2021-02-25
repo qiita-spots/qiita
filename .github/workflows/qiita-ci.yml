@@ -1,0 +1,90 @@
+name: qiita-private-api CI
+    
+on: 
+  push:
+    branches: [ dev ]
+  pull_request:
+    
+jobs:
+  # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
+  postgres-runner-job:
+    runs-on: ubuntu-latest
+      
+    # Service containers to run with `runner-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:9.5
+        env:
+          POSTGRES_DB: qiita_test  
+          POSTGRES_USER: postgres  
+          POSTGRES_PASSWORD: 
+          
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # based on https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml#L44-L72
+          - 5432/tcp
+
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Setup for conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:        
+          auto-update-conda: true
+          python-version: 3.6 
+      
+      - name: Install
+        shell: bash -l {0}
+        run: |
+          # pull out the port so we can modify the configuration file easily
+          # pgport=${{ job.services.postgres.ports[5432] }}
+          # sed -i "s/self.port = 5432/self.port = $pgport/" [conf.file]
+          
+          # PGPASSWORD is read by pg_restore, which is called by the build_db process. 
+          # export PGPASSWORD=postgres
+          
+          conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython
+          conda activate qiita
+          pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
+          git clone https://github.com/nicolasff/webdis
+          pushd webdis
+          make
+          ./webdis &
+          popd
+          travis_retry pip install . --no-binary redbiom
+          
+          # setting up qiita
+          qiita-env make --no-load-ontologies
+          qiita-test-install
+          qiita plugins update
+
+      - name: Test
+        shell: bash -l {0}
+        run: |
+          export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
+          conda activate qiita
+          nosetests qiita_db qiita_pet qiita_core qiita_ware --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: flake8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: install dependencies
+      run: python -m pip install --upgrade pip
+    - name: lint
+      run: |
+        pip install -q flake8
+        make lint
