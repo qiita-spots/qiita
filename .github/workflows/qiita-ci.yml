@@ -128,6 +128,7 @@ jobs:
 
           # 7. Setting up SSH
           ssh-keygen -t rsa -C "ssh test key" -f $PWD/qiita_ware/test/test_data/test_key -P ""
+          mkdir ~/.ssh/
           mv $PWD/qiita_ware/test/test_data/test_key.pub ~/.ssh/
           ssh-keyscan localhost >> ~/.ssh/known_hosts
           cat ~/.ssh/test_key.pub >> ~/.ssh/authorized_keys
