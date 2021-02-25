@@ -117,6 +117,7 @@ jobs:
 
           # 5. setting up qiita
           export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
+          qiita-env drop
           qiita-env make --no-load-ontologies
           qiita-test-install
           qiita plugins update
