@@ -7,7 +7,7 @@ on:
 
 jobs:
   # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
-  postgres-runner-job:
+  qiita-ci-runner-job:
     runs-on: ubuntu-latest
 
     # Service containers to run with `runner-job`
@@ -30,6 +30,15 @@ jobs:
         ports:
           # based on https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml#L44-L72
           - 5432/tcp
+      redis:
+        image: redis
+        port:
+          - 6379/tcp
+      redis:
+        image: redis
+        port:
+          - 7777/tcp
+
 
     steps:
       # Downloads a copy of the code in your repository before running CI tests
@@ -52,15 +61,23 @@ jobs:
           # PGPASSWORD is read by pg_restore, which is called by the build_db process.
           export PGPASSWORD=postgres
 
+          # 1. Setting up main qiita conda environment
+          conda config --add channels conda-forge
           conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython
           conda activate qiita
           pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
+
+          # 2. Setting up webdis/redbiom
           git clone https://github.com/nicolasff/webdis
           pushd webdis
           make
           ./webdis &
           popd
-          travis_retry pip install . --no-binary redbiom
+          pip install . --no-binary redbiom
+
+          # 3. Setting up nginx
+          nginx -c ${PWD}/qiita_pet/nginx_example.conf
+
 
           # setting up qiita
           qiita-env make --no-load-ontologies
