@@ -28,6 +28,7 @@ from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
     artifact_types_get_req, artifact_post_req, artifact_get_prep_req,
     artifact_get_info)
+from qiita_db.logger import LogEntry
 
 
 class TestArtifactAPIReadOnly(TestCase):
@@ -311,6 +312,10 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success',
                'message': 'Artifact visibility changed to private'}
         self.assertEqual(obs, exp)
+        # testing that the log message is generated
+        self.assertEqual(
+            LogEntry.newest_records(1)[0].msg,
+            'admin@foo.bar changed artifact 1 (study 1) to private')
 
     def test_artifact_status_put_req_private_bad_permissions(self):
         obs = artifact_status_put_req(1, 'test@foo.bar', 'private')
