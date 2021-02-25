@@ -69,6 +69,7 @@ jobs:
       - name: Main Install
         shell: bash -l {0}
         run: |
+          conda activate qiita
           pip install . --no-binary redbiom
           pwd
           mkdir ~/.qiita_plugins
