@@ -77,7 +77,7 @@ jobs:
         shell: bash -l {0}
         run: |
           wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
-          travis_retry conda env create -q -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
+          conda env create -q -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
           rm qiime2-2019.4-py36-linux-conda.yml
           conda activate qtp-biom
           pip install -U pip
