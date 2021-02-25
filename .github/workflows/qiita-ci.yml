@@ -54,7 +54,7 @@ jobs:
 
           # 1. Setting up main qiita conda environment
           conda config --add channels conda-forge
-          conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython redis
+          conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython redis libevent
           conda activate qiita
           pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
 
