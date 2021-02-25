@@ -1912,10 +1912,13 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             # [0] in_degrees returns a tuple, where [0] is the element we want
             all_nodes = {}
             roots = {}
+
             for node, position in in_degrees:
+                dp = node.default_parameter
+                cmd = dp.command
                 if position == 0:
-                    roots[node] = (node.command, node.parameters)
-                all_nodes[node] = (node.command, node.parameters)
+                    roots[node] = (cmd, dp)
+                all_nodes[node] = (cmd, dp)
 
             # Check that we have all the required parameters
             root_cmds = set(c for c, _ in roots.values())

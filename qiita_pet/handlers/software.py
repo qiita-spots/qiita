@@ -82,5 +82,6 @@ class WorkflowsHandler(BaseHandler):
                     edges.append([cmd_name, name])
 
             workflows.append(
-                {'name': w.name, 'id': w.id, 'nodes': nodes, 'edges': edges})
+                {'name': w.name, 'id': w.id, 'data_types': w.data_type,
+                 'nodes': nodes, 'edges': edges})
         self.render("workflows.html", workflows=workflows)

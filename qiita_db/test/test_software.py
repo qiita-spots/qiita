@@ -585,10 +585,28 @@ class SoftwareTests(TestCase):
         self.assertEqual(tester.start_script, 'start_biom')
 
     def test_default_workflows(self):
-        obs = list(qdb.software.Software(1).default_workflows)
+        obs = list(qdb.software.DefaultWorkflow.iter(True))
         exp = [qdb.software.DefaultWorkflow(1),
                qdb.software.DefaultWorkflow(2),
                qdb.software.DefaultWorkflow(3)]
+        self.assertEqual(obs, exp)
+        obs = list(qdb.software.DefaultWorkflow.iter(False))
+        self.assertEqual(obs, exp)
+
+        qdb.software.DefaultWorkflow(1).active = False
+        obs = list(qdb.software.DefaultWorkflow.iter(False))
+        self.assertEqual(obs, exp)
+
+        obs = list(qdb.software.DefaultWorkflow.iter(True))
+        exp = [qdb.software.DefaultWorkflow(2),
+               qdb.software.DefaultWorkflow(3)]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.DefaultWorkflow(1).data_type
+        exp = ['16S', '18S']
+        self.assertEqual(obs, exp)
+        obs = qdb.software.DefaultWorkflow(2).data_type
+        exp = ['18S']
         self.assertEqual(obs, exp)
 
     def test_type(self):

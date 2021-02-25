@@ -12,7 +12,7 @@ from qiita_pet.test.tornado_test_base import TestHandlerBase
 from mock import Mock
 
 from qiita_db.user import User
-from qiita_db.sql_connection import TRN
+from qiita_db.software import DefaultWorkflow
 from qiita_pet.handlers.base_handlers import BaseHandler
 
 
@@ -36,11 +36,7 @@ class TestSoftware(TestHandlerBase):
 
 class TestWorkflowsHandler(TestHandlerBase):
     def test_get(self):
-        with TRN:
-            TRN.add("""UPDATE qiita.default_workflow
-                       SET active = false
-                       WHERE default_workflow_id = 2""")
-            TRN.execute()
+        DefaultWorkflow(2).active = False
         response = self.get('/workflows/')
         self.assertEqual(response.code, 200)
         body = response.body.decode('ascii')

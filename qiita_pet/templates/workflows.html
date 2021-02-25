@@ -65,7 +65,7 @@ function format_title(name, params) {
     ~~ Click on the spheres to get more information ~~
       {% for i, w in enumerate(workflows) %}
         <div class="col-md-12">
-          <h4>{{w['name']}} ({{w['id']}})</h4>
+          <h4>{{w['name']}} ({{w['id']}}) - Applies to: {{', '.join(w['data_types'])}}</h4>
           <div class="col-md-12 graph" style="width:90%" id="workflow_{{i}}"></div>
           <script type="text/javascript">
             var nodes_{{i}} = new vis.DataSet([

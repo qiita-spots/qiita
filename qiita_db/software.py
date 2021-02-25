@@ -1847,6 +1847,35 @@ class DefaultWorkflow(qdb.base.QiitaObject):
                 yield cls(s_id)
 
     @property
+    def active(self):
+        """Retrieves active status of the default workflow
+
+        Retruns
+        ----------
+        active : bool
+            active value
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT active
+                     FROM qiita.default_workflow
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @active.setter
+    def active(self, active):
+        """Changes active status of the default workflow
+
+        Parameters
+        ----------
+        active : bool
+            New active value
+        """
+        sql = """UPDATE qiita.default_workflow SET active = %s
+                 WHERE default_workflow_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [active, self._id])
+
+    @property
     def name(self):
         with qdb.sql_connection.TRN:
             sql = """SELECT name
@@ -1854,6 +1883,23 @@ class DefaultWorkflow(qdb.base.QiitaObject):
                      WHERE default_workflow_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def data_type(self):
+        """Retrieves all the data_types of the default workflow
+
+        Returns
+        ----------
+        list of str
+            The data types
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT data_type
+                     FROM qiita.default_workflow_data_type
+                     LEFT JOIN qiita.data_type USING (data_type_id)
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchflatten()
 
     @property
     def graph(self):
