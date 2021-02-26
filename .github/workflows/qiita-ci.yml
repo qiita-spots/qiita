@@ -41,23 +41,14 @@ jobs:
         with:
           auto-update-conda: true
           python-version: 3.6
-      #
-      # - name: Setup SSH
-      #   shell: bash -l {0}
-      #   run: |
-      #     cat > sshd_config <<EOF
-      #       SyslogFacility AUTHPRIV
-      #       PermitRootLogin yes
-      #       AuthorizedKeysFile	.ssh/authorized_keys
-      #       PasswordAuthentication yes
-      #       ChallengeResponseAuthentication no
-      #       UsePAM yes
-      #       UseDNS no
-      #       X11Forwarding no
-      #       PrintMotd no
-      #     EOF
-      #     sudo mv sshd_config /etc/ssh/sshd_config
-      #     sudo systemctl restart ssh
+
+      - name: Setup SSH
+        shell: bash -l {0}
+        run: |
+          sudo echo "UseLogin yes" > /etc/ssh/sshd_config
+          sudo echo "PermitRootLogin yes" > /etc/ssh/sshd_config
+          sudo echo "AuthorizedKeysFile .ssh/authorized_keys" > /etc/ssh/sshd_config
+          sudo systemctl restart ssh
 
       - name: Test SSH
         shell: bash -l {0}
