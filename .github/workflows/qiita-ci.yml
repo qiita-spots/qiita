@@ -63,6 +63,13 @@ jobs:
         shell: bash -l {0}
         run: |
           # 7. Setting up SSH
+          echo "--------------"
+          echo "--------------"
+          echo "--------------"
+          cat /etc/ssh/sshd_config
+          echo "--------------"
+          echo "--------------"
+          echo "--------------"
           ssh-keygen -t rsa -b 4096 -N '' -f $PWD/qiita_ware/test/test_data/test_key
           mkdir ~/.ssh/
           mv $PWD/qiita_ware/test/test_data/test_key.pub ~/.ssh/
