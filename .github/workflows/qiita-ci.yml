@@ -45,9 +45,11 @@ jobs:
       - name: Setup SSH
         shell: bash -l {0}
         run: |
-          sudo echo "UseLogin yes" > /etc/ssh/sshd_config
-          sudo echo "PermitRootLogin yes" > /etc/ssh/sshd_config
-          sudo echo "AuthorizedKeysFile .ssh/authorized_keys" > /etc/ssh/sshd_config
+          cp /etc/ssh/sshd_config sshd_config
+          echo "UseLogin yes" > sshd_config
+          echo "PermitRootLogin yes" > sshd_config
+          echo "AuthorizedKeysFile .ssh/authorized_keys" > sshd_config
+          sudo mv sshd_config /etc/ssh/sshd_config
           sudo systemctl restart ssh
 
       - name: Test SSH
