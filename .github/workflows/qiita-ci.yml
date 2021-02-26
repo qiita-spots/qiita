@@ -56,7 +56,7 @@ jobs:
         shell: bash -l {0}
         run: |
           # 7. Setting up SSH
-          ssh-keygen -t rsa -b 4096 -N '' -f $PWD/qiita/qiita_ware/test/test_data/test_key
+          ssh-keygen -t rsa -b 4096 -N '' -f $PWD/qiita_ware/test/test_data/test_key
           mkdir ~/.ssh/
           cp $PWD/qiita_ware/test/test_data/test_key* ~/.ssh/
           cat ~/.ssh/test_key.pub | tee -a ~/.ssh/authorized_keys
@@ -64,6 +64,7 @@ jobs:
           chmod 600 ~/.ssh/authorized_keys
           chmod 700 ~/.ssh/
           ls -la ~/.ssh
+          ls $PWD/qiita/qiita_ware/test/test_data/
           ssh -o StrictHostKeyChecking=no -vvv -i $PWD/qiita/qiita_ware/test/test_data/test_key $USER@localhost
           ssh -o StrictHostKeyChecking=no -vvv -i $PWD/qiita/qiita_ware/test/test_data/test_key $USER@127.0.0.1
           scp -o StrictHostKeyChecking=no -i $PWD/qiita/qiita_ware/test/test_data/test_key $USER@127.0.0.1:$PWD/qiita_ware/test/test_data/random_key $PWD/qiita_ware/test/test_data/random_key_copy
