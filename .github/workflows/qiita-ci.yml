@@ -42,9 +42,8 @@ jobs:
           auto-update-conda: true
           python-version: 3.6
 
-
-
     - name: Run a multi-line script
+      shell: bash -l {0}
       run: |
         # 7. Setting up SSH
         #    modified from: https://stackoverflow.com/a/60367309
