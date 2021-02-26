@@ -49,6 +49,8 @@ jobs:
           echo "UseLogin yes" > sshd_config
           echo "PermitRootLogin yes" > sshd_config
           echo "AuthorizedKeysFile .ssh/authorized_keys" > sshd_config
+          echo "RSAAuthentication yes" > sshd_config
+          echo "PubkeyAuthentication yes" > sshd_config
           sudo mv sshd_config /etc/ssh/sshd_config
           sudo systemctl restart ssh
 
@@ -65,9 +67,6 @@ jobs:
           chmod 700 ~/.ssh/
           ls -la ~/.ssh
           ls $PWD/qiita_ware/test/test_data/
-          echo "deny!!!!"
-          cat /etc/hosts.deny
-
           ssh -o StrictHostKeyChecking=no -vvv -i ~/.ssh/test_key $USER@localhost
           ssh -o StrictHostKeyChecking=no -vvv -i ~/.ssh/test_key $USER@127.0.0.1
           scp -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@127.0.0.1:$PWD/qiita_ware/test/test_data/random_key $PWD/qiita_ware/test/test_data/random_key_copy
