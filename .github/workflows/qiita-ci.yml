@@ -48,7 +48,7 @@ jobs:
         run: |
           # 7. Setting up SSH
           #    modified from: https://stackoverflow.com/a/60367309
-          # ssh-keygen -R hostname
+          ssh-keygen -R localhost
           ssh-keygen -t rsa -C "ssh test key" -f $PWD/qiita_ware/test/test_data/test_key -P ""
           mkdir ~/.ssh/
           mv $PWD/qiita_ware/test/test_data/test_key.pub ~/.ssh/
