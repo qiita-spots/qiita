@@ -42,18 +42,28 @@ jobs:
           auto-update-conda: true
           python-version: 3.6
 
-      - name: Setup SSH
-        uses: appleboy/ssh-action@master
 
-      - name: Configure SSH
-        run: |
-          # 7. Setting up SSH
-          ssh-keygen -t rsa -C "ssh test key" -f $PWD/qiita_ware/test/test_data/test_key -P ""
-          mkdir ~/.ssh/
-          mv $PWD/qiita_ware/test/test_data/test_key.pub ~/.ssh/
-          ssh-keyscan localhost >> ~/.ssh/known_hosts
-          cat ~/.ssh/test_key.pub >> ~/.ssh/authorized_keys
-          scp -i $PWD/qiita_ware/test/test_data/test_key localhost:$PWD/qiita_ware/test/test_data/random_key $PWD/qiita_ware/test/test_data/random_key_copy
+
+    - name: Run a multi-line script
+      run: |
+        # 7. Setting up SSH
+        #    modified from: https://stackoverflow.com/a/60367309
+        ssh-keygen -t rsa -C "ssh test key" -f $PWD/qiita_ware/test/test_data/test_key -P ""
+        mkdir ~/.ssh/
+        mv $PWD/qiita_ware/test/test_data/test_key.pub ~/.ssh/
+        cat > ~/.ssh/config <<EOF
+          Host host.example
+           User $USER
+           HostName 127.0.0.1
+           IdentityFile ~/.ssh/test_key
+        EOF
+        echo -n 'from="127.0.0.1" ' | cat - ~/.ssh/test_key.pub > ~/.ssh/authorized_keys
+        ssh -o 'StrictHostKeyChecking no' host.example id || echo "ssh failed as expected... trying to fix permissions"
+        chmod og-rw ~
+        echo "After fixing permissions on home folder ~ ..."
+        ls -la ~/.ssh
+        ssh -o 'StrictHostKeyChecking no' host.example id
+        scp -i $PWD/qiita_ware/test/test_data/test_key localhost:$PWD/qiita_ware/test/test_data/random_key $PWD/qiita_ware/test/test_data/random_key_copy
 
       - name: Basic dependencies install
         shell: bash -l {0}
