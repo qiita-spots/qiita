@@ -63,7 +63,8 @@ jobs:
           cp $PWD/qiita_ware/test/test_data/test_key* ~/.ssh/
           cat ~/.ssh/test_key.pub > ~/.ssh/authorized_keys
           ls -la ~/.ssh
-          chmod 600 ~/.ssh/authorized_keys
+          chmod 640 $PWD/qiita_ware/test/test_data/test_key*
+          chmod 640 ~/.ssh/*
           chmod 700 ~/.ssh/
           ls -la ~/.ssh
           ls $PWD/qiita_ware/test/test_data/
