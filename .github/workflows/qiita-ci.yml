@@ -45,23 +45,25 @@ jobs:
       - name: Setup SSH
         shell: bash -l {0}
         run: |
+          ps -elf | grep ssh
           cp /etc/ssh/sshd_config sshd_config
           echo "UseLogin yes" > sshd_config
           echo "PermitRootLogin yes" > sshd_config
           echo "AuthorizedKeysFile .ssh/authorized_keys" > sshd_config
           echo "RSAAuthentication yes" > sshd_config
           echo "PubkeyAuthentication yes" > sshd_config
-          echo "PubkeyAcceptedKeyTypes rsa" > sshd_config
+          # echo "PubkeyAcceptedKeyTypes rsa" > sshd_config
           echo "StrictModes no" > sshd_config
           echo "AllowUsers *" > sshd_config
           sudo mv sshd_config /etc/ssh/sshd_config
           sudo systemctl restart ssh
+          ps -elf | grep ssh
 
       - name: Test SSH
         shell: bash -l {0}
         run: |
           # 7. Setting up SSH
-          ssh-keygen -t rsa -b 4096 -N '' -f $PWD/qiita_ware/test/test_data/test_key
+          ssh-keygen -t rsa-sha2-256 -b 4096 -N '' -f $PWD/qiita_ware/test/test_data/test_key
           mkdir ~/.ssh/
           cp $PWD/qiita_ware/test/test_data/test_key* ~/.ssh/
           cat ~/.ssh/test_key.pub > ~/.ssh/authorized_keys
