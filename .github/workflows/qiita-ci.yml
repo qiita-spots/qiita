@@ -48,7 +48,6 @@ jobs:
           ps -elf | grep ssh
           cp /etc/ssh/sshd_config sshd_config
           echo "UseLogin yes" > sshd_config
-          echo "PermitRootLogin yes" > sshd_config
           echo "AuthorizedKeysFile .ssh/authorized_keys" > sshd_config
           echo "RSAAuthentication yes" > sshd_config
           echo "PubkeyAuthentication yes" > sshd_config
