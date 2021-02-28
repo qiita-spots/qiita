@@ -1,4 +1,4 @@
-name: qiita-private-api CI
+name: Qiita CI
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
-  qiita-ci:
+  main:
     runs-on: ubuntu-latest
 
     strategy:
@@ -119,7 +119,7 @@ jobs:
           ./webdis &
           popd
 
-          echo "3. Starting redbiom"
+          echo "3. Starting redbiom: " $REDBIOM_HOST
           curl -s http://127.0.0.1:7379/FLUSHALL > /dev/null
           redbiom --version
           redbiom admin scripts-writable
@@ -159,7 +159,7 @@ jobs:
           conda activate qiita
           nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
-  qiita-lint:
+  lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
