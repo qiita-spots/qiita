@@ -149,6 +149,7 @@ jobs:
         shell: bash -l {0}
         run: |
           export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
+          export REDBIOM_HOST=http://127.0.0.1:7379
           conda activate qiita
           nosetests qiita_pet qiita_core qiita_ware --with-doctest --with-coverage --with-timer -v --cover-package=qiita_pet qiita_core qiita_ware -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
@@ -156,6 +157,7 @@ jobs:
         shell: bash -l {0}
         run: |
           export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
+          export REDBIOM_HOST=http://127.0.0.1:7379
           conda activate qiita
           nosetests qiita_db --with-doctest --with-coverage --with-timer -v --cover-package=qiita_db -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
