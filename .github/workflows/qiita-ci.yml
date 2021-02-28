@@ -27,6 +27,8 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           COVER_PACKAGE: ${{ matrix.cover_package }}
+          QIITA_CONFIG_FP: qiita_core/support_files/config_test.cfg
+          REDBIOM_HOST: http://127.0.0.1:7379
 
         # Set health checks to wait until postgres has started
         options: >-
@@ -118,7 +120,6 @@ jobs:
           popd
 
           echo "3. Starting redbiom"
-          export REDBIOM_HOST=http://127.0.0.1:7379
           curl -s http://127.0.0.1:7379/FLUSHALL > /dev/null
           redbiom --version
           redbiom admin scripts-writable
@@ -132,7 +133,6 @@ jobs:
           nginx -c ${PWD}/qiita_pet/nginx_example.conf
 
           echo "5. setting up qiita"
-          export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
           qiita-env make --no-load-ontologies
           qiita-test-install
           qiita plugins update
@@ -155,8 +155,7 @@ jobs:
       - name: Main tests
         shell: bash -l {0}
         run: |
-          export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
-          export REDBIOM_HOST=http://127.0.0.1:7379
+          echo "Testing: " $COVER_PACKAGE
           conda activate qiita
           nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
