@@ -52,6 +52,8 @@ jobs:
       - name: Basic dependencies install
         shell: bash -l {0}
         run: |
+          echo "Testing: " $COVER_PACKAGE
+  
           # pull out the port so we can modify the configuration file easily
           pgport=${{ job.services.postgres.ports[5432] }}
           sed -i "s/PORT = 5432/PORT = $pgport/" qiita_core/support_files/config_test.cfg
@@ -159,7 +161,6 @@ jobs:
       - name: Main tests
         shell: bash -l {0}
         run: |
-          echo "Testing: " $COVER_PACKAGE
           conda activate qiita
           export QIITA_CONFIG_FP="qiita_core/support_files/config_test.cfg"
           export REDBIOM_HOST="http://127.0.0.1:7379"
