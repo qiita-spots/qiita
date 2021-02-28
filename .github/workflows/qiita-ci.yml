@@ -10,6 +10,12 @@ jobs:
   qiita-ci-runner-job:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        include:
+          - cover_package: "qiita_db"
+          - cover_package: "qiita_pet qiita_core qiita_ware"
+
     # Service containers to run with `runner-job`
     services:
       # Label used to access the service container
@@ -20,6 +26,7 @@ jobs:
           POSTGRES_DB: postgres
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
+          COVER_PACKAGE: ${{ matrix.cover_package }}
 
         # Set health checks to wait until postgres has started
         options: >-
@@ -145,21 +152,13 @@ jobs:
           chmod 700 ~/.ssh/
           scp -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@127.0.0.1:$PWD/qiita_ware/test/test_data/random_key $PWD/qiita_ware/test/test_data/random_key_copy
 
-      - name: Main tests [qiita_pet qiita_core qiita_ware]
+      - name: Main tests
         shell: bash -l {0}
         run: |
           export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST=http://127.0.0.1:7379
           conda activate qiita
-          nosetests qiita_pet qiita_core qiita_ware --with-doctest --with-coverage --with-timer -v --cover-package=qiita_pet qiita_core qiita_ware -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
-
-      - name: Main tests [qiita_db]
-        shell: bash -l {0}
-        run: |
-          export QIITA_CONFIG_FP=qiita_core/support_files/config_test.cfg
-          export REDBIOM_HOST=http://127.0.0.1:7379
-          conda activate qiita
-          nosetests qiita_db --with-doctest --with-coverage --with-timer -v --cover-package=qiita_db -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+          nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
   qiita-ci-lint:
     runs-on: ubuntu-latest
