@@ -7,7 +7,7 @@ on:
 
 jobs:
   # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
-  qiita-ci-runner-job:
+  qiita-ci:
     runs-on: ubuntu-latest
 
     strategy:
@@ -159,7 +159,7 @@ jobs:
           conda activate qiita
           nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
-  qiita-ci-lint:
+  qiita-lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
