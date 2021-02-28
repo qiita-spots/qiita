@@ -72,7 +72,7 @@ class SSHTests(TestCase):
         kpath = join(self.temp_local_dir, 'tmp-key')
         copyfile(self.test_ssh_key, kpath)
         read_file_list = list_remote(
-            'sftp://runner@127.0.0.1:'+self.remote_dir_path, kpath)
+            'sftp://127.0.0.1:'+self.remote_dir_path, kpath)
         self.assertCountEqual(read_file_list, self.exp_files)
         self.assertFalse(exists(kpath))
 
