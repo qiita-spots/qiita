@@ -87,7 +87,7 @@ def _list_valid_files(ssh, directory):
     """
 
     valid_file_extensions = tuple(qiita_config.valid_upload_extension)
-    sftp = SCPClient(ssh.get_transport())
+    sftp = ssh.open_sftp()
     files = sftp.listdir(directory)
 
     valid_files = [f for f in files if f.endswith(valid_file_extensions)]
@@ -163,7 +163,7 @@ def download_remote(URL, private_key, destination):
                 scp.get, local_path=join(destination, basename(f)))
             download(f)
     elif scheme == 'sftp':
-        sftp = SCPClient(ssh.get_transport())
+        sftp = ssh.open_sftp()
         for f in file_paths:
             download = partial(
                 sftp.get, localpath=join(destination, basename(f)))
