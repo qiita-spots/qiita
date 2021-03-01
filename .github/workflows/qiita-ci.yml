@@ -14,7 +14,7 @@ jobs:
       matrix:
         include:
           - cover_package: "qiita_db"
-          - cover_package: "qiita_pet qiita_core qiita_ware"
+          # - cover_package: "qiita_pet qiita_core qiita_ware"
 
     # Service containers to run with `runner-job`
     services:
