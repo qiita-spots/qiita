@@ -90,7 +90,10 @@ jobs:
         shell: bash -l {0}
         run: |
           conda activate qiita
-          export QIITA_CONFIG_FP="qiita_core/support_files/config_test.cfg"
+          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
+          ls $QIITA_SERVER_CERT
+          ls $QIITA_CONFIG_FP
           export REDBIOM_HOST="http://127.0.0.1:7379"
           pip install . --no-binary redbiom
           pwd
@@ -101,21 +104,22 @@ jobs:
         run: |
           wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
           conda env create -q -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
-          export QIITA_CONFIG_FP="qiita_core/support_files/config_test.cfg"
+          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://127.0.0.1:7379"
           rm qiime2-2019.4-py36-linux-conda.yml
           conda activate qtp-biom
           pip install -U pip
           pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
           pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip
-          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
 
       - name: Starting services
         shell: bash -l {0}
         run: |
           conda activate qiita
-          export QIITA_CONFIG_FP="qiita_core/support_files/config_test.cfg"
+          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://127.0.0.1:7379"
 
           echo "1. Setting up redis"
@@ -175,7 +179,8 @@ jobs:
         run: |
           conda activate qiita
           bash -c 'source /home/runner/.profile; conda activate qtp-biom; start_biom --help'
-          export QIITA_CONFIG_FP="qiita_core/support_files/config_test.cfg"
+          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
           export REDBIOM_HOST="http://127.0.0.1:7379"
           nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
