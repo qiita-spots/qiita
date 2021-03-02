@@ -35,9 +35,6 @@ jobs:
         ports:
           # based on https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml#L44-L72
           - 5432/tcp
-
-      qiita:
-        ports:
           - 8383:8383
 
     steps:
