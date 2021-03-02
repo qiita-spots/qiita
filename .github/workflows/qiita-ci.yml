@@ -9,6 +9,12 @@ jobs:
   # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
   main:
     runs-on: ubuntu-latest
+    ports:
+      - 8383:8383
+      - 21174:21174
+      - 21175:21175
+      - 21176:21176
+      - 21177:21177
 
     strategy:
       matrix:
