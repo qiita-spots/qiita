@@ -151,7 +151,7 @@ jobs:
 
           echo "6. Starting supervisord => multiple qiita instances"
           supervisord -c ${PWD}/qiita_pet/supervisor_example.conf
-          sleep 5
+          sleep 10
           cat /tmp/supervisord.log
 
           echo "7. Starting plugins"
@@ -160,8 +160,8 @@ jobs:
           echo "--------------------"
           echo "--------------------"
           echo "--------------------"
-          echo "---> https://127.0.0.1:21174"
-          curl -k -I https://127.0.0.1:21174
+          # echo "---> https://127.0.0.1:21174"
+          # curl -k -I https://127.0.0.1:21174
           echo "--------------------"
           echo "--------------------"
           echo "--------------------"
