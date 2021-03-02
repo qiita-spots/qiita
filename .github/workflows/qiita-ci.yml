@@ -166,6 +166,7 @@ jobs:
           COVER_PACKAGE: ${{ matrix.COVER_PACKAGE }}
         run: |
           conda activate qiita
+          bash -c 'source /home/runner/.profile; conda activate qtp-biom; start_biom --help'
           export QIITA_CONFIG_FP="qiita_core/support_files/config_test.cfg"
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
           export REDBIOM_HOST="http://127.0.0.1:7379"
