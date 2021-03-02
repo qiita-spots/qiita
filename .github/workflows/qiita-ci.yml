@@ -180,11 +180,17 @@ jobs:
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
           nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+          if [[ "$COVER_PACKAGE" == *"$qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
+
+      - uses: codecov/codecov-action@v1
+        with:
+         file: codecov.yml
+         fail_ci_if_error: true
 
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: codecov/codecov-action@v1
     - name: flake8
       uses: actions/setup-python@v2
       with:
