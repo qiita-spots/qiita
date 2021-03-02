@@ -92,7 +92,7 @@ jobs:
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           ls $QIITA_SERVER_CERT
           ls $QIITA_CONFIG_FP
-          export REDBIOM_HOST="http://127.0.0.1:7379"
+          export REDBIOM_HOST="http://localhost:7379"
           pip install . --no-binary redbiom
           pwd
           mkdir ~/.qiita_plugins
@@ -104,7 +104,7 @@ jobs:
           conda env create -q -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
-          export REDBIOM_HOST="http://127.0.0.1:7379"
+          export REDBIOM_HOST="http://localhost:7379"
           rm qiime2-2019.4-py36-linux-conda.yml
           conda activate qtp-biom
           pip install -U pip
@@ -118,7 +118,7 @@ jobs:
           conda activate qiita
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
-          export REDBIOM_HOST="http://127.0.0.1:7379"
+          export REDBIOM_HOST="http://localhost:7379"
 
           echo "1. Setting up redis"
           redis-server --daemonize yes --port 7777
@@ -130,7 +130,7 @@ jobs:
           popd
 
           echo "3. Starting redbiom: " $REDBIOM_HOST
-          curl -s http://127.0.0.1:7379/FLUSHALL > /dev/null
+          curl -s http://localhost:7379/FLUSHALL > /dev/null
           redbiom --version
           redbiom admin scripts-writable
           redbiom admin create-context --name "qiita-test" --description "qiita-test context"
@@ -160,16 +160,16 @@ jobs:
           echo "--------------------"
           echo "--------------------"
           echo "--------------------"
-          # echo "---> https://127.0.0.1:21174"
-          # curl -k -I https://127.0.0.1:21174
+          # echo "---> https://localhost:21174"
+          # curl -k -I https://localhost:21174
           echo "--------------------"
           echo "--------------------"
           echo "--------------------"
-          echo "---> https://127.0.0.1:8383"
-          curl -k -I https://127.0.0.1:8383
+          echo "---> https://localhost:8383"
+          curl -k -I https://localhost:8383
 
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
-          start_biom https://127.0.0.1:8383 register ignored
+          start_biom https://localhost:8383 register ignored
           conda deactivate
 
           echo "8. Setting up SSH"
@@ -180,7 +180,7 @@ jobs:
           chmod 600 $PWD/qiita_ware/test/test_data/test_key*
           chmod 600 ~/.ssh/*
           chmod 700 ~/.ssh/
-          scp -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@127.0.0.1:$PWD/qiita_ware/test/test_data/random_key $PWD/qiita_ware/test/test_data/random_key_copy
+          scp -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@localhost:$PWD/qiita_ware/test/test_data/random_key $PWD/qiita_ware/test/test_data/random_key_copy
 
       - name: Main tests
         shell: bash -l {0}
@@ -192,7 +192,7 @@ jobs:
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
-          export REDBIOM_HOST="http://127.0.0.1:7379"
+          export REDBIOM_HOST="http://localhost:7379"
           nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
   lint:
