@@ -31,9 +31,9 @@ class TestUtil(TestCase):
         self.assertEqual(obs, exp)
 
     def test_is_localhost(self):
+        self.assertTrue(is_localhost('127.0.0.1'))
         self.assertTrue(is_localhost('localhost'))
-        self.assertTrue(is_localhost('localhost'))
-        self.assertTrue(is_localhost('localhost:21174'))
+        self.assertTrue(is_localhost('127.0.0.1:21174'))
 
         self.assertFalse(is_localhost('10.0.0.1'))
         self.assertFalse(is_localhost('10.0.0.1:21174'))

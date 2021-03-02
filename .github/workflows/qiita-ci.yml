@@ -90,8 +90,6 @@ jobs:
           conda activate qiita
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
-          ls $QIITA_SERVER_CERT
-          ls $QIITA_CONFIG_FP
           export REDBIOM_HOST="http://localhost:7379"
           pip install . --no-binary redbiom
           pwd
@@ -102,10 +100,10 @@ jobs:
         run: |
           wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
           conda env create -q -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
+          rm qiime2-2019.4-py36-linux-conda.yml
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
-          rm qiime2-2019.4-py36-linux-conda.yml
           conda activate qtp-biom
           pip install -U pip
           pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
@@ -157,17 +155,6 @@ jobs:
           echo "7. Starting plugins"
           conda deactivate
           conda activate qtp-biom
-          echo "--------------------"
-          echo "--------------------"
-          echo "--------------------"
-          # echo "---> https://localhost:21174"
-          # curl -k -I https://localhost:21174
-          echo "--------------------"
-          echo "--------------------"
-          echo "--------------------"
-          echo "---> https://localhost:8383"
-          curl -k -I https://localhost:8383
-
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
           start_biom https://localhost:8383 register ignored
           conda deactivate
@@ -191,7 +178,6 @@ jobs:
           bash -c 'source /home/runner/.profile; conda activate qtp-biom; start_biom --help'
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
-          export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
           export REDBIOM_HOST="http://localhost:7379"
           nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 

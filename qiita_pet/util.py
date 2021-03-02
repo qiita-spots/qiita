@@ -113,7 +113,7 @@ def is_localhost(host):
     bool
         True if local request
     """
-    localhost = ('localhost', 'localhost')
+    localhost = ('localhost', '127.0.0.1')
     return host.startswith(localhost)
 
 
