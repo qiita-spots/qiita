@@ -68,27 +68,10 @@ class SSHTests(TestCase):
             'scp://runner@127.0.0.1:'+self.remote_dir_path, kpath)
         self.assertCountEqual(read_file_list, self.exp_files)
 
-    def test_list_sftp(self):
-        kpath = join(self.temp_local_dir, 'tmp-key')
-        copyfile(self.test_ssh_key, kpath)
-        read_file_list = list_remote(
-            'sftp://127.0.0.1:'+self.remote_dir_path, kpath)
-        self.assertCountEqual(read_file_list, self.exp_files)
-        self.assertFalse(exists(kpath))
-
     def test_download_scp(self):
         kpath = join(self.temp_local_dir, 'tmp-key')
         copyfile(self.test_ssh_key, kpath)
         download_remote('scp://runner@127.0.0.1:'+self.remote_dir_path,
-                        kpath, self.temp_local_dir)
-        local_files = self._get_valid_files(self.temp_local_dir)
-        self.assertCountEqual(local_files, self.exp_files)
-        self.assertFalse(exists(kpath))
-
-    def test_download_sftp(self):
-        kpath = join(self.temp_local_dir, 'tmp-key')
-        copyfile(self.test_ssh_key, kpath)
-        download_remote('sftp://runner@127.0.0.1:'+self.remote_dir_path,
                         kpath, self.temp_local_dir)
         local_files = self._get_valid_files(self.temp_local_dir)
         self.assertCountEqual(local_files, self.exp_files)

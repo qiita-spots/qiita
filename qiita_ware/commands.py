@@ -50,8 +50,7 @@ def _ssh_session(p_url, private_key):
         port = 22
     username = p_url.username
 
-    if scheme == 'scp' or scheme == 'sftp':
-
+    if scheme == 'scp':
         # if port not specified, use default 22 as port
         if port is None:
             port = 22
@@ -67,7 +66,7 @@ def _ssh_session(p_url, private_key):
         return ssh
     else:
         raise ValueError(
-            'Not valid scheme. Valid options are ssh and scp.')
+            'Not valid scheme. Valid options is scp.')
 
 
 def _list_valid_files(ssh, directory):
@@ -85,13 +84,16 @@ def _list_valid_files(ssh, directory):
     list of str
         list of valid study files (basenames)
     """
-
     valid_file_extensions = tuple(qiita_config.valid_upload_extension)
-    sftp = ssh.open_sftp()
-    files = sftp.listdir(directory)
+
+    stdin, stdout, stderr = ssh.exec_command('ls %s' % directory)
+    stderr = stderr.read().decode("utf-8")
+    if stderr:
+        raise ValueError(stderr)
+    files = stdout.read().decode("utf-8").split('\n')
 
     valid_files = [f for f in files if f.endswith(valid_file_extensions)]
-    sftp.close()
+
     return valid_files
 
 
@@ -154,19 +156,11 @@ def download_remote(URL, private_key, destination):
 
     # step 2: download files
     scheme = p_url.scheme
-    # note that scp/sftp's code seems similar but the local_path/localpath
-    # variable is different within the for loop
     if scheme == 'scp':
         scp = SCPClient(ssh.get_transport())
         for f in file_paths:
             download = partial(
                 scp.get, local_path=join(destination, basename(f)))
-            download(f)
-    elif scheme == 'sftp':
-        sftp = ssh.open_sftp()
-        for f in file_paths:
-            download = partial(
-                sftp.get, localpath=join(destination, basename(f)))
             download(f)
 
     # step 3: close the connection
