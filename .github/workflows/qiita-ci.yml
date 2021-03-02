@@ -157,15 +157,13 @@ jobs:
           echo "7. Starting plugins"
           conda deactivate
           conda activate qtp-biom
-          export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
-          start_biom https://127.0.0.1:8383 register ignored
-          conda deactivate
-
           curl -k -I https://127.0.0.1:21174
           curl -k -I https://127.0.0.1:8383
           curl -k -I https://localhost:8383
 
-
+          export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
+          start_biom https://127.0.0.1:8383 register ignored
+          conda deactivate
 
           echo "8. Setting up SSH"
           ssh-keygen -t rsa-sha2-256 -b 4096 -N '' -f $PWD/qiita_ware/test/test_data/test_key
