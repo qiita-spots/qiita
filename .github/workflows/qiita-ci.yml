@@ -157,9 +157,16 @@ jobs:
           echo "7. Starting plugins"
           conda deactivate
           conda activate qtp-biom
+          echo "--------------------"
+          echo "--------------------"
+          echo "--------------------"
+          echo "---> https://127.0.0.1:21174"
           curl -k -I https://127.0.0.1:21174
+          echo "--------------------"
+          echo "--------------------"
+          echo "--------------------"
+          echo "---> https://127.0.0.1:8383"
           curl -k -I https://127.0.0.1:8383
-          curl -k -I https://localhost:8383
 
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
           start_biom https://127.0.0.1:8383 register ignored
