@@ -13,8 +13,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - cover_package: "qiita_db"
-          - cover_package: "qiita_pet qiita_core qiita_ware"
+          - cover_package: ["qiita_db", "qiita_pet qiita_core qiita_ware"]
 
     services:
       postgres:
@@ -49,7 +48,7 @@ jobs:
 
       - name: Basic dependencies install
         env:
-          COVER_PACKAGE: ${{ matrix.COVER_PACKAGE }}
+          COVER_PACKAGE: ${{ matrix.cover_package }}
         shell: bash -l {0}
         run: |
           echo "Testing: " $COVER_PACKAGE
@@ -74,7 +73,6 @@ jobs:
           echo "StrictModes no" > sshd_config
           sudo mv sshd_config /etc/ssh/sshd_config
           sudo systemctl restart ssh
-          ps -elf | grep ssh
 
       - name: Webdis install
         shell: bash -l {0}
@@ -172,7 +170,7 @@ jobs:
       - name: Main tests
         shell: bash -l {0}
         env:
-          COVER_PACKAGE: ${{ matrix.COVER_PACKAGE }}
+          COVER_PACKAGE: ${{ matrix.cover_package }}
         run: |
           conda activate qiita
           bash -c 'source /home/runner/.profile; conda activate qtp-biom; start_biom --help'
@@ -205,3 +203,4 @@ jobs:
     - name: lint
       run: |
         pip install -q flake8
+        flake8 qiita_* setup.py scripts/qiita*
