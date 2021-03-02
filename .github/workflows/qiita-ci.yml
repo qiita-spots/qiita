@@ -193,13 +193,14 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: codecov/codecov-action@v1
     - name: flake8
       uses: actions/setup-python@v2
       with:
         python-version: 3.6
     - name: install dependencies
       run: python -m pip install --upgrade pip
+    - name: Check out repository code
+      uses: actions/checkout@v2
     - name: lint
       run: |
         pip install -q flake8
