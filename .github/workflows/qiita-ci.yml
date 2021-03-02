@@ -9,12 +9,6 @@ jobs:
   # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
   main:
     runs-on: ubuntu-latest
-    ports:
-      - 8383:8383
-      - 21174:21174
-      - 21175:21175
-      - 21176:21176
-      - 21177:21177
 
     strategy:
       matrix:
@@ -22,9 +16,7 @@ jobs:
           - cover_package: "qiita_db"
           - cover_package: "qiita_pet qiita_core qiita_ware"
 
-    # Service containers to run with `runner-job`
     services:
-      # Label used to access the service container
       postgres:
         # Docker Hub image
         image: postgres:9.5
@@ -43,6 +35,13 @@ jobs:
         ports:
           # based on https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml#L44-L72
           - 5432/tcp
+
+    ports:
+      - 8383:8383
+      - 21174:21174
+      - 21175:21175
+      - 21176:21176
+      - 21177:21177
 
     steps:
       # Downloads a copy of the code in your repository before running CI tests
