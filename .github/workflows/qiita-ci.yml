@@ -35,7 +35,6 @@ jobs:
         ports:
           # based on https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml#L44-L72
           - 5432/tcp
-          - 8383:8383
 
     steps:
       # Downloads a copy of the code in your repository before running CI tests
@@ -147,6 +146,9 @@ jobs:
           conda deactivate
           conda activate qtp-biom
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
+          curl -k -I https://127.0.0.1:21174
+          curl -k -I https://127.0.0.1:8383
+          curl -k -I https://localhost:8383
           start_biom https://127.0.0.1:8383 register ignored
           conda deactivate
 
