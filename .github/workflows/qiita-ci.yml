@@ -143,7 +143,8 @@ jobs:
           echo "5. Starting plugins"
           conda deactivate
           conda activate qtp-biom
-          start_biom https://localhost:8383 register ignored
+          export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
+          start_biom https://127.0.0.1:8383 register ignored
           conda deactivate
 
           echo "6. Setting up qiita"
