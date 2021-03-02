@@ -180,7 +180,12 @@ jobs:
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
           nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
-          if [[ "$COVER_PACKAGE" == *"$qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
+
+          # killing the qiita server to run the next commands
+          QIITA_PID=`cat /tmp/supervisord.pid`
+          kill $QIITA_PID
+          sleep 10
+          if [[ "$COVER_PACKAGE" == *"qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
 
       - uses: codecov/codecov-action@v1
         with:
