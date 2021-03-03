@@ -1233,24 +1233,6 @@ class Software(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
-    def default_workflows(self):
-        """Returns the default workflows attached to the current software
-
-        Returns
-        -------
-        generator of qiita_db.software.DefaultWorkflow
-            The defaultworkflows attached to the software
-        """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT default_workflow_id
-                     FROM qiita.default_workflow
-                     WHERE software_id = %s
-                     ORDER BY default_workflow_id"""
-            qdb.sql_connection.TRN.add(sql, [self.id])
-            for wf_id in qdb.sql_connection.TRN.execute_fetchflatten():
-                yield DefaultWorkflow(wf_id)
-
-    @property
     def type(self):
         """Returns the type of the software
 

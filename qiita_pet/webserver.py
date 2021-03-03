@@ -223,7 +223,6 @@ class Application(tornado.web.Application):
             (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
             (r"/qiita_db/analysis/(.*)/metadata/", APIAnalysisMetadataHandler),
             (r"/qiita_db/archive/observations/", APIArchiveObservations)
-
         ]
 
         # rest endpoints

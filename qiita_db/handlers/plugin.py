@@ -83,8 +83,6 @@ class PluginHandler(OauthBaseHandler):
                 'commands': [c.name for c in plugin.commands],
                 'publications': [{'DOI': doi, 'PubMed': pubmed}
                                  for doi, pubmed in plugin.publications],
-                'default_workflows': [w.name
-                                      for w in plugin.default_workflows],
                 'type': plugin.type,
                 'active': plugin.active}
         self.write(response)
