@@ -232,12 +232,12 @@ class QiitaConfig(TestCase):
                            string_acceptable_version))
 
     def test_redbiom_version(self):
-        acceptable_version = (0, 3, 0)
+        acceptable_version = (0, 3, 5)
         string_acceptable_version = '.'.join(map(str, acceptable_version))
         version = tuple(map(int, redbiom_lib_version.split('.')))
 
         self.assertTrue(acceptable_version == version,
-                        'Unsupported redis version. You have %s but the '
+                        'Unsupported redbiom version. You have %s but the '
                         'minimum required version is %s'
                         % ('.'.join(map(str, version)),
                            string_acceptable_version))

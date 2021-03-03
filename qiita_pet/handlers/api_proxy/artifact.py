@@ -22,6 +22,7 @@ from qiita_db.util import (
 from qiita_db.software import Command, Parameters, Software
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.exceptions import QiitaDBError
+from qiita_db.logger import LogEntry
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
@@ -323,7 +324,8 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
                 'message': 'Unknown visibility value: %s' % visibility}
 
     pd = Artifact(int(artifact_id))
-    access_error = check_access(pd.study.id, user_id)
+    sid = pd.study.id
+    access_error = check_access(sid, user_id)
     if access_error:
         return access_error
     user = User(str(user_id))
@@ -342,6 +344,9 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
             msg = 'User does not have permissions to approve change'
     else:
         pd.visibility = visibility
+
+    LogEntry.create('Warning', '%s changed artifact %s (study %d) to %s' % (
+        user_id, artifact_id, sid, visibility))
 
     return {'status': status,
             'message': msg}
