@@ -71,7 +71,7 @@ future.
   existing studies by submitting a fix proposals to the authors of the study.
 
 
-.. |Build Status| image:: https://travis-ci.org/qiita-spots/qiita.png?branch=master
-   :target: https://travis-ci.org/qiita-spots/qiita
+.. |Build Status| image:: https://github.com/qiita-spots/qiita/actions/workflows/qiita-ci.yml/badge.svg
+   :target: https://github.com/qiita-spots/qiita/actions/workflows/qiita-ci.yml
 .. |Coverage Status| image:: https://codecov.io/gh/qiita-spots/qiita/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/qiita-spots/qiita
