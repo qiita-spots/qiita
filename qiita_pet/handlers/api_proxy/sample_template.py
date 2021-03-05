@@ -10,8 +10,7 @@ from collections import defaultdict
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
-from qiita_db.study import Study
-from qiita_db.artifact import Artifact
+from qiita_db.util import generate_analysis_list_per_study
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.exceptions import QiitaDBColumnError
@@ -207,10 +206,7 @@ def study_available_analyses(study_id, user_id):
     if access_error:
         return access_error
 
-    values = [(a, sorted(set([Artifact(x).prep_templates[0].id
-                              for x in a.samples.keys()
-                              if Artifact(x).study.id == study_id])))
-              for a in Study(study_id).analyses()]
+    values = generate_analysis_list_per_study(study_id)
 
     return {'status': 'success',
             'message': '',

@@ -1976,6 +1976,48 @@ def generate_analysis_list(analysis_ids, public_only=False):
     return results
 
 
+def generate_analysis_list_per_study(study_id):
+    """Get study analyses and their preparations
+
+    Parameters
+    ----------
+    study_id : int
+        The study id
+
+    Returns
+    -------
+    list of dict
+        The available analyses and their general information
+    """
+    sql = """
+        SELECT analysis_id, qiita.analysis.name, email, dflt,
+               array_agg(DISTINCT aa.artifact_id) FILTER (
+                    WHERE aa.artifact_id IS NOT NULL) as artifact_ids,
+               array_agg(DISTINCT prep_template_id) as prep_ids,
+               array_agg(DISTINCT visibility) as visibility
+        FROM qiita.analysis_sample analysiss
+        LEFT JOIN qiita.analysis_artifact aa USING (analysis_id)
+        LEFT JOIN qiita.analysis USING (analysis_id)
+        LEFT JOIN qiita.preparation_artifact pa ON (
+            analysiss.artifact_id = pa.artifact_id)
+        LEFT JOIN qiita.artifact a ON (
+            analysiss.artifact_id = a.artifact_id)
+        LEFT JOIN qiita.visibility USING (visibility_id)
+        WHERE sample_id IN (SELECT sample_id
+                            FROM qiita.study_sample
+                            WHERE study_id = %s)
+        GROUP BY analysis_id, qiita.analysis.name, email, dflt
+        ORDER BY analysis_id
+    """
+    results = []
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add(sql, [study_id])
+        for row in qdb.sql_connection.TRN.execute_fetchindex():
+            results.append(dict(row))
+
+    return results
+
+
 def create_nested_path(path):
     """Wraps makedirs() to make it safe to use across multiple concurrent calls.
     Returns successfully if the path was created, or if it already exists.

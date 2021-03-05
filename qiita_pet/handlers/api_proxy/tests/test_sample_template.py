@@ -132,13 +132,19 @@ class TestSampleAPI(TestCase):
         exp = {'status': 'success', 'message': '', 'values': []}
         self.assertEqual(obs, exp)
 
-        AN = qdb.analysis.Analysis
         obs = study_available_analyses(1, 'test@foo.bar')
         exp = {'status': 'success', 'message': '', 'values': [
-            (AN(1), [1]), (AN(2), [1]), (AN(3), [1])]}
+            {'analysis_id': 1, 'name': 'SomeAnalysis', 'email': 'test@foo.bar',
+             'dflt': False, 'artifact_ids': [8, 9], 'prep_ids': [1],
+             'visibility': ['private']},
+            {'analysis_id': 2, 'name': 'SomeSecondAnalysis',
+             'email': 'admin@foo.bar', 'dflt': False, 'artifact_ids': None,
+             'prep_ids': [1], 'visibility': ['private']},
+            {'analysis_id': 3, 'name': 'test@foo.bar-dflt-1',
+             'email': 'test@foo.bar', 'dflt': True, 'artifact_ids': None,
+             'prep_ids': [1], 'visibility': ['private']}]}
         self.assertEqual(obs, exp)
 
-        AN = qdb.analysis.Analysis
         obs = study_available_analyses(self.new_study.id, 'shared@foo.bar')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}

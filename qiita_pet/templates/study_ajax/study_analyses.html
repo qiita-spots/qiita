@@ -5,6 +5,9 @@
   $('#studies-analyses-table').dataTable();
 </script>
 <h3>Analyses that have used this study</h3>
+
+Note that if an analysis doesn't have a link, it means that is a "User default analysis"; which means that the analysis belows to that user but the user has only selected artifacts but hasn't created the actual anlaysis. Please contact the user and ask them to delete that artifact from their analysis creation page.
+<br/><br/>
 <table id="studies-analyses-table" class="display table-bordered table-hover" style="width:100%">
   <thead>
     <tr>
@@ -12,17 +15,29 @@
       <th>Owner</th>
       <th>Prep IDs Used</th>
       <th>Is Public?</th>
-      <th>Artifacts</th>
+      <th>Artifacts in Analysis</th>
     </tr>
   </thead>
   <tbody>
-    {% for a, preps in analyses %}
+    {% for a in analyses %}
       <tr>
-        <td><a href="{% raw qiita_config.portal_dir %}/analysis/description/{{a.id}}/" target="_blank">{{a.name}} (ID: {{a.id}})</a></td>
-        <td>{{a.owner.email}}</td>
-        <td>{{','.join(map(str, preps))}}</td>
-        <td>{{a.is_public}}</td>
-        <td>{{len(a.artifacts)}}</td>
+        <td>
+          {% if a['dflt'] %}
+            {{a['name']}} (ID: {{a['analysis_id']}})
+          {% else %}
+            <a href="{% raw qiita_config.portal_dir %}/analysis/description/{{a['analysis_id']}}/" target="_blank">{{a['name']}} (ID: {{a['analysis_id']}})</a>
+          {% end %}
+        </td>
+        <td>{{a['email']}}</td>
+        <td>{{','.join(map(str, a['prep_ids']))}}</td>
+        <td>{{a['visibility'] == ['public']}}</td>
+        <td>
+          {% if a['artifact_ids'] is None %}
+            0
+          {% else %}
+            {{len(a['artifact_ids'])}}
+          {% end %}
+        </td>
       </tr>
     {% end %}
   </tbody>
