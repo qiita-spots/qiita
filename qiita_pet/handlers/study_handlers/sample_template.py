@@ -13,6 +13,7 @@ from tempfile import NamedTemporaryFile
 from tornado.web import authenticated, HTTPError
 
 from qiita_core.qiita_settings import r_client
+from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import get_files_from_uploads_folders
 from qiita_db.study import Study
@@ -26,7 +27,7 @@ from qiita_pet.handlers.api_proxy import (
     data_types_get_req, sample_template_samples_get_req,
     prep_template_samples_get_req, study_prep_get_req,
     sample_template_meta_cats_get_req, sample_template_category_get_req,
-    get_sample_template_processing_status,
+    get_sample_template_processing_status, study_available_analyses,
     check_fp)
 
 
@@ -533,3 +534,13 @@ class SampleAJAX(BaseHandler):
                         'message': '',
                         'values': values['values']
                         })
+
+
+class AnalysesAjax(BaseHandler):
+    @authenticated
+    def get(self):
+        user_id = self.current_user.id
+        study_id = to_int(self.get_argument('study_id'))
+        result = study_available_analyses(study_id, user_id)
+        self.render('study_ajax/study_analyses.html',
+                    analyses=result['values'])

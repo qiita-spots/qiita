@@ -1,0 +1,29 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript>">
+  $('#studies-analyses-table').dataTable();
+</script>
+<h3>Analyses that have used this study</h3>
+<table id="studies-analyses-table" class="display table-bordered table-hover" style="width:100%">
+  <thead>
+    <tr>
+      <th>Analysis</th>
+      <th>Owner</th>
+      <th>Prep IDs Used</th>
+      <th>Is Public?</th>
+      <th>Artifacts</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for a, preps in analyses %}
+      <tr>
+        <td><a href="{% raw qiita_config.portal_dir %}/analysis/description/{{a.id}}/" target="_blank">{{a.name}} (ID: {{a.id}})</a></td>
+        <td>{{a.owner.email}}</td>
+        <td>{{','.join(map(str, preps))}}</td>
+        <td>{{a.is_public}}</td>
+        <td>{{len(a.artifacts)}}</td>
+      </tr>
+    {% end %}
+  </tbody>
+</table>
