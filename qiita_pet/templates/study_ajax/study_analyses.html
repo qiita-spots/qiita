@@ -29,7 +29,7 @@ Note that if an analysis doesn't have a link, it means that is a "User default a
           {% end %}
         </td>
         <td>{{a['email']}}</td>
-        <td>{{','.join(map(str, a['prep_ids']))}}</td>
+        <td>{{', '.join(map(str, a['prep_ids']))}}</td>
         <td>{{a['visibility'] == ['public']}}</td>
         <td>
           {% if a['artifact_ids'] is None %}

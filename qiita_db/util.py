@@ -1990,14 +1990,14 @@ def generate_analysis_list_per_study(study_id):
         The available analyses and their general information
     """
     sql = """
-        SELECT analysis_id, qiita.analysis.name, email, dflt,
+        SELECT analysis_id, an.name, email, dflt,
                array_agg(DISTINCT aa.artifact_id) FILTER (
                     WHERE aa.artifact_id IS NOT NULL) as artifact_ids,
                array_agg(DISTINCT prep_template_id) as prep_ids,
                array_agg(DISTINCT visibility) as visibility
         FROM qiita.analysis_sample analysiss
         LEFT JOIN qiita.analysis_artifact aa USING (analysis_id)
-        LEFT JOIN qiita.analysis USING (analysis_id)
+        LEFT JOIN qiita.analysis an USING (analysis_id)
         LEFT JOIN qiita.preparation_artifact pa ON (
             analysiss.artifact_id = pa.artifact_id)
         LEFT JOIN qiita.artifact a ON (
@@ -2006,7 +2006,7 @@ def generate_analysis_list_per_study(study_id):
         WHERE sample_id IN (SELECT sample_id
                             FROM qiita.study_sample
                             WHERE study_id = %s)
-        GROUP BY analysis_id, qiita.analysis.name, email, dflt
+        GROUP BY analysis_id, an.name, email, dflt
         ORDER BY analysis_id
     """
     results = []
