@@ -136,13 +136,13 @@ class TestSampleAPI(TestCase):
         exp = {'status': 'success', 'message': '', 'values': [
             {'analysis_id': 1, 'name': 'SomeAnalysis', 'email': 'test@foo.bar',
              'dflt': False, 'artifact_ids': [8, 9], 'prep_ids': [1],
-             'visibility': ['private']},
+             'visibility': ['sandbox']},
             {'analysis_id': 2, 'name': 'SomeSecondAnalysis',
              'email': 'admin@foo.bar', 'dflt': False, 'artifact_ids': None,
-             'prep_ids': [1], 'visibility': ['private']},
+             'prep_ids': [1], 'visibility': None},
             {'analysis_id': 3, 'name': 'test@foo.bar-dflt-1',
              'email': 'test@foo.bar', 'dflt': True, 'artifact_ids': None,
-             'prep_ids': [1], 'visibility': ['private']}]}
+             'prep_ids': [1], 'visibility': None}]}
         self.assertEqual(obs, exp)
 
         obs = study_available_analyses(self.new_study.id, 'shared@foo.bar')

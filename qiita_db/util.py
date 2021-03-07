@@ -1989,31 +1989,40 @@ def generate_analysis_list_per_study(study_id):
     list of dict
         The available analyses and their general information
     """
-    sql = """
-        SELECT analysis_id, an.name, email, dflt,
-               array_agg(DISTINCT aa.artifact_id) FILTER (
-                    WHERE aa.artifact_id IS NOT NULL) as artifact_ids,
-               array_agg(DISTINCT prep_template_id) as prep_ids,
-               array_agg(DISTINCT visibility) as visibility
-        FROM qiita.analysis_sample analysiss
-        LEFT JOIN qiita.analysis_artifact aa USING (analysis_id)
-        LEFT JOIN qiita.analysis an USING (analysis_id)
-        LEFT JOIN qiita.preparation_artifact pa ON (
-            analysiss.artifact_id = pa.artifact_id)
-        LEFT JOIN qiita.artifact a ON (
-            analysiss.artifact_id = a.artifact_id)
-        LEFT JOIN qiita.visibility USING (visibility_id)
+    analysis_sql = """
+        SELECT DISTINCT analysis_id, array_agg(DISTINCT artifact_id) AS aids
+        FROM qiita.analysis_sample analysis_sample
         WHERE sample_id IN (SELECT sample_id
                             FROM qiita.study_sample
                             WHERE study_id = %s)
-        GROUP BY analysis_id, an.name, email, dflt
+        GROUP BY analysis_id
         ORDER BY analysis_id
+    """
+    extra_sql = """
+        SELECT analysis_id, analysis.name, analysis.email, analysis.dflt,
+            array_agg(DISTINCT aa.artifact_id) FILTER (
+                      WHERE aa.artifact_id IS NOT NULL) as artifact_ids,
+            ARRAY(SELECT DISTINCT prep_template_id
+                  FROM qiita.preparation_artifact
+                  WHERE artifact_id IN %s) as prep_ids,
+            array_agg(DISTINCT visibility.visibility) FILTER (
+                    WHERE aa.artifact_id IS NOT NULL) as visibility
+        FROM qiita.analysis analysis
+        LEFT JOIN qiita.analysis_artifact aa USING (analysis_id)
+        LEFT JOIN qiita.artifact artifact USING (artifact_id)
+        LEFT JOIN qiita.visibility visibility USING (visibility_id)
+        WHERE analysis_id = %s
+        GROUP BY analysis_id, analysis.name, analysis.email, analysis.dflt
     """
     results = []
     with qdb.sql_connection.TRN:
-        qdb.sql_connection.TRN.add(sql, [study_id])
-        for row in qdb.sql_connection.TRN.execute_fetchindex():
-            results.append(dict(row))
+        qdb.sql_connection.TRN.add(analysis_sql, [study_id])
+        aids = qdb.sql_connection.TRN.execute_fetchindex()
+        for aid, artifact_ids in aids:
+            qdb.sql_connection.TRN.add(
+                extra_sql, [tuple(artifact_ids), aid])
+            for row in qdb.sql_connection.TRN.execute_fetchindex():
+                results.append(dict(row))
 
     return results
 
