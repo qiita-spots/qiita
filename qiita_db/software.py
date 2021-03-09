@@ -1783,12 +1783,13 @@ class DefaultWorkflowEdge(qdb.base.QiitaObject):
             the destination command.
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT name, parameter_name
+            sql = """SELECT name, parameter_name, artifact_type
                      FROM qiita.default_workflow_edge_connections c
                         JOIN qiita.command_output o
                             ON c.parent_output_id = o.command_output_id
                         JOIN qiita.command_parameter p
                             ON c.child_input_id = p.command_parameter_id
+                        LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                      WHERE default_workflow_edge_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchindex()
@@ -1897,7 +1898,8 @@ class DefaultWorkflow(qdb.base.QiitaObject):
             # Retrieve all graph workflow nodes
             sql = """SELECT default_workflow_node_id
                      FROM qiita.default_workflow_node
-                     WHERE default_workflow_id = %s"""
+                     WHERE default_workflow_id = %s
+                     ORDER BY default_workflow_node_id"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             db_nodes = qdb.sql_connection.TRN.execute_fetchflatten()
 
@@ -1910,7 +1912,8 @@ class DefaultWorkflow(qdb.base.QiitaObject):
                         JOIN qiita.default_workflow_node n
                             ON e.parent_id = n.default_workflow_node_id
                             OR e.child_id = n.default_workflow_node_id
-                     WHERE default_workflow_id = %s"""
+                     WHERE default_workflow_id = %s
+                     ORDER BY default_workflow_edge_id"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             db_edges = qdb.sql_connection.TRN.execute_fetchindex()
 

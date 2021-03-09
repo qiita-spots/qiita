@@ -1106,7 +1106,8 @@ class DefaultWorkflowEdgeTests(TestCase):
     def test_connections(self):
         tester = qdb.software.DefaultWorkflowEdge(1)
         obs = tester.connections
-        self.assertEqual(obs, [['demultiplexed', 'input_data']])
+        self.assertEqual(
+            obs, [['demultiplexed', 'input_data', 'Demultiplexed']])
 
 
 class DefaultWorkflowTests(TestCase):

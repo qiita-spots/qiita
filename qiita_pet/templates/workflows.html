@@ -70,7 +70,7 @@ function format_title(name, params) {
           <script type="text/javascript">
             var nodes_{{i}} = new vis.DataSet([
               {% for node in w['nodes'] %}
-                {% if node[0].startswith('command') %}
+                {% if node[0].startswith('params') %}
                   {id: "{{node[0]}}", shape: "dot", color: colorScheme['command'], label: "{{node[2]}}", title: format_title("{{node[3]}}", {% raw node[4] %})},
                 {% else %}
                   {id: "{{node[0]}}", shape: "dot", color: colorScheme['artifact'], label: "{{node[2]}}", title: "Artifact: {{node[2]}}"},
