@@ -67,7 +67,6 @@ class WorkflowsHandler(BaseHandler):
                               dp.name, params])
                 for input in rp.values():
                     accepted_values = ' | '.join(input[1])
-                    # {'input_data': ('input_type', [accepted_values])}
                     if order == 0:
                         name = 'input_%d' % order
                         nodes.append([name, cmd.id, accepted_values])

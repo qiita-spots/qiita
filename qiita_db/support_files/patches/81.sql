@@ -21,7 +21,7 @@ CREATE TABLE qiita.default_workflow_data_type (
 );
 ALTER TABLE qiita.default_workflow ADD active BOOL DEFAULT TRUE;
 
--- b. Remocing command_id from qiita.default_workflow_node and default_parameter_set as this information
+-- b. Removing command_id from qiita.default_workflow_node and default_parameter_set as this information
 --    can be accessed via the default_parameter object (the info is duplicated)
 ALTER TABLE qiita.default_workflow_node DROP command_id;
 

@@ -1868,7 +1868,7 @@ class DefaultWorkflow(qdb.base.QiitaObject):
 
     @property
     def data_type(self):
-        """Retrieves all the data_types of the default workflow
+        """Retrieves all the data_types the workflow accepts
 
         Returns
         ----------
