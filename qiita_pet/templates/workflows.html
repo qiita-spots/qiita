@@ -2,12 +2,13 @@
 {% block head %}
 {% from qiita_core.qiita_settings import qiita_config %}
 
-<script type="text/javascript">
-$(document).ready(function() {
-    $('#error-table').dataTable({"order": [[1, "asc"]]});
-    $("#waiting").hide();
-} );
+<style>
+  div.vis-network {
+    background-color: #DCDCDC;
+  }
+</style>
 
+<script type="text/javascript">
 var options = {
   autoResize: true,
   // clickToUse: true,
@@ -66,7 +67,7 @@ function format_title(name, params) {
       {% for i, w in enumerate(workflows) %}
         <div class="col-md-12">
           <h4>{{w['name']}} ({{w['id']}}) - Applies to: {{', '.join(w['data_types'])}}</h4>
-          <div class="col-md-12 graph" style="width:90%" id="workflow_{{i}}"></div>
+          <div class="col-md-12 graph" style="width:80%; background-color: #DCDCDC;" id="workflow_{{i}}"></div>
           <script type="text/javascript">
             var nodes_{{i}} = new vis.DataSet([
               {% for node in w['nodes'] %}

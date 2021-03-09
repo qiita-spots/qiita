@@ -1974,7 +1974,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                     parent_ids.append(source_id)
                     # Get the connections between the job and the source
                     connections = data['connections'].connections
-                    for out, in_param in connections:
+                    for out, in_param, _ in connections:
                         # We take advantage of the fact the parameters are
                         # stored in JSON to encode the name of the output
                         # artifact from the previous job
