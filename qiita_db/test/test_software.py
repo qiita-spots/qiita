@@ -585,10 +585,28 @@ class SoftwareTests(TestCase):
         self.assertEqual(tester.start_script, 'start_biom')
 
     def test_default_workflows(self):
-        obs = list(qdb.software.Software(1).default_workflows)
+        obs = list(qdb.software.DefaultWorkflow.iter(True))
         exp = [qdb.software.DefaultWorkflow(1),
                qdb.software.DefaultWorkflow(2),
                qdb.software.DefaultWorkflow(3)]
+        self.assertEqual(obs, exp)
+        obs = list(qdb.software.DefaultWorkflow.iter(False))
+        self.assertEqual(obs, exp)
+
+        qdb.software.DefaultWorkflow(1).active = False
+        obs = list(qdb.software.DefaultWorkflow.iter(False))
+        self.assertEqual(obs, exp)
+
+        obs = list(qdb.software.DefaultWorkflow.iter(True))
+        exp = [qdb.software.DefaultWorkflow(2),
+               qdb.software.DefaultWorkflow(3)]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.DefaultWorkflow(1).data_type
+        exp = ['16S', '18S']
+        self.assertEqual(obs, exp)
+        obs = qdb.software.DefaultWorkflow(2).data_type
+        exp = ['18S']
         self.assertEqual(obs, exp)
 
     def test_type(self):
@@ -1074,19 +1092,14 @@ class ParametersTests(TestCase):
 
 
 class DefaultWorkflowNodeTests(TestCase):
-    def test_command(self):
+    def test_default_parameter(self):
         obs = qdb.software.DefaultWorkflowNode(1)
-        self.assertEqual(obs.command, qdb.software.Command(1))
+        self.assertEqual(
+            obs.default_parameter, qdb.software.DefaultParameters(1))
 
         obs = qdb.software.DefaultWorkflowNode(2)
-        self.assertEqual(obs.command, qdb.software.Command(3))
-
-    def test_parameters(self):
-        obs = qdb.software.DefaultWorkflowNode(1)
-        self.assertEqual(obs.parameters, qdb.software.DefaultParameters(1))
-
-        obs = qdb.software.DefaultWorkflowNode(2)
-        self.assertEqual(obs.parameters, qdb.software.DefaultParameters(10))
+        self.assertEqual(
+            obs.default_parameter, qdb.software.DefaultParameters(10))
 
 
 class DefaultWorkflowEdgeTests(TestCase):

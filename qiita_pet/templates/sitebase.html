@@ -477,13 +477,24 @@
             <ul class="nav navbar-nav">
               <!-- generic elements -->
               <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Software<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="{% raw qiita_config.portal_dir %}/software/">Available Software</a>
+                  </li>
+                  <li>
+                    <a href="{% raw qiita_config.portal_dir %}/workflows/">Recommended Workflows</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
+              <!-- generic elements -->
+              <li class="dropdown">
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle">More Info<b class="caret"></b></a>
                 <ul class="dropdown-menu">
                   <li>
                     <a href="{% raw qiita_config.portal_dir %}/stats/">Stats</a>
-                  </li>
-                  <li>
-                    <a href="{% raw qiita_config.portal_dir %}/software/">Available Software</a>
                   </li>
                   <li>
                     <a href="http://github.com/biocore/qiita">GitHub</a>

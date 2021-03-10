@@ -55,7 +55,7 @@ from qiita_pet.handlers.download import (
 from qiita_pet.handlers.prep_template import (
     PrepTemplateHandler, PrepTemplateGraphHandler, PrepTemplateJobHandler)
 from qiita_pet.handlers.ontology import OntologyHandler
-from qiita_pet.handlers.software import SoftwareHandler
+from qiita_pet.handlers.software import SoftwareHandler, WorkflowsHandler
 from qiita_db.handlers.processing_job import (
     JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
     ProcessingJobAPItestHandler)
@@ -178,6 +178,7 @@ class Application(tornado.web.Application):
             (r"/check_study/", CreateStudyAJAX),
             (r"/stats/", StatsHandler),
             (r"/software/", SoftwareHandler),
+            (r"/workflows/", WorkflowsHandler),
             (r"/download/(.*)", DownloadHandler),
             (r"/download_study_bioms/(.*)", DownloadStudyBIOMSHandler),
             (r"/download_raw_data/(.*)", DownloadRawData),
@@ -222,7 +223,6 @@ class Application(tornado.web.Application):
             (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
             (r"/qiita_db/analysis/(.*)/metadata/", APIAnalysisMetadataHandler),
             (r"/qiita_db/archive/observations/", APIArchiveObservations)
-
         ]
 
         # rest endpoints

@@ -62,8 +62,8 @@ class AuthCreateHandler(BaseHandler):
                               url_escape(username), url))
             except Exception:
                 msg = ("Unable to send verification email. Please contact the "
-                       "qiita developers at <a href='mailto:qiita-help"
-                       "@gmail.com'>qiita-help@gmail.com</a>")
+                       "qiita developers at <a href='mailto:qiita.help"
+                       "@gmail.com'>qiita.help@gmail.com</a>")
                 self.redirect(u"%s/?level=danger&message=%s"
                               % (qiita_config.portal_dir, url_escape(msg)))
                 return

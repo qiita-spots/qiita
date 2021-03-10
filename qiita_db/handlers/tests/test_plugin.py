@@ -61,9 +61,6 @@ class PluginHandlerTests(OauthTestingBase):
                          'Single Rarefaction'],
             'publications': [{'DOI': '10.1038/nmeth.f.303',
                               'PubMed': '20383131'}],
-            'default_workflows': ['FASTQ upstream workflow',
-                                  'FASTA upstream workflow',
-                                  'Per sample FASTQ upstream workflow'],
             'type': 'artifact transformation',
             'active': False}
         self.assertEqual(loads(obs.body), exp)
