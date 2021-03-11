@@ -1976,7 +1976,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
     return results
 
 
-def generate_analysis_list_per_study(study_id):
+def generate_analyses_list_per_study(study_id):
     """Get study analyses and their preparations
 
     Parameters
@@ -1989,6 +1989,11 @@ def generate_analysis_list_per_study(study_id):
     list of dict
         The available analyses and their general information
     """
+    # for speed and SQL simplicity, we are going to split the search in two
+    # queries: 1. analysis_sql: to find analyses associated with this study
+    # and the artifacts used to generate the analyses; and 2. extra_sql: each
+    # analysis details, including the artifacts (children) that belong to
+    # the analysis.
     analysis_sql = """
         SELECT DISTINCT analysis_id, array_agg(DISTINCT artifact_id) AS aids
         FROM qiita.analysis_sample analysis_sample

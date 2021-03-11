@@ -10,7 +10,7 @@ from collections import defaultdict
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
-from qiita_db.util import generate_analysis_list_per_study
+from qiita_db.util import generate_analyses_list_per_study
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.exceptions import QiitaDBColumnError
@@ -183,7 +183,7 @@ def sample_template_category_get_req(category, samp_id, user_id):
             'values': values}
 
 
-def study_available_analyses(study_id, user_id):
+def analyses_associated_with_study(study_id, user_id):
     """Returns all available analyses in study_id
 
     Parameters
@@ -206,7 +206,7 @@ def study_available_analyses(study_id, user_id):
     if access_error:
         return access_error
 
-    values = generate_analysis_list_per_study(study_id)
+    values = generate_analyses_list_per_study(study_id)
 
     return {'status': 'success',
             'message': '',

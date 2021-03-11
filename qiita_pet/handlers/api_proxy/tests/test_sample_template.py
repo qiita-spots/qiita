@@ -17,7 +17,7 @@ from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_filepaths_get_req, sample_template_get_req,
     _check_sample_template_exists, sample_template_samples_get_req,
     sample_template_category_get_req, sample_template_meta_cats_get_req,
-    get_sample_template_processing_status, study_available_analyses,
+    get_sample_template_processing_status, analyses_associated_with_study,
     SAMPLE_TEMPLATE_KEY_FORMAT)
 
 
@@ -127,12 +127,12 @@ class TestSampleAPI(TestCase):
                                'message': 'Sample template %d does not '
                                'exist' % self.new_study.id})
 
-    def test_study_available_analyses(self):
-        obs = study_available_analyses(self.new_study.id, 'test@foo.bar')
+    def test_analyses_associated_with_study(self):
+        obs = analyses_associated_with_study(self.new_study.id, 'test@foo.bar')
         exp = {'status': 'success', 'message': '', 'values': []}
         self.assertEqual(obs, exp)
 
-        obs = study_available_analyses(1, 'test@foo.bar')
+        obs = analyses_associated_with_study(1, 'test@foo.bar')
         exp = {'status': 'success', 'message': '', 'values': [
             {'analysis_id': 1, 'name': 'SomeAnalysis', 'email': 'test@foo.bar',
              'dflt': False, 'artifact_ids': [8, 9], 'prep_ids': [1],
@@ -145,7 +145,8 @@ class TestSampleAPI(TestCase):
              'prep_ids': [1], 'visibility': None}]}
         self.assertEqual(obs, exp)
 
-        obs = study_available_analyses(self.new_study.id, 'shared@foo.bar')
+        obs = analyses_associated_with_study(
+            self.new_study.id, 'shared@foo.bar')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
