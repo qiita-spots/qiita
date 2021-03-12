@@ -37,7 +37,7 @@ from qiita_pet.handlers.study_handlers import (
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX, StudyDeleteAjax,
     ArtifactAdminAJAX, NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
-    ArtifactGetSamples, ArtifactGetInfo, WorkflowHandler,
+    ArtifactGetSamples, ArtifactGetInfo, WorkflowHandler, AnalysesAjax,
     WorkflowRunHandler, JobAJAX, AutocompleteHandler)
 from qiita_pet.handlers.artifact_handlers import (
     ArtifactSummaryAJAX, ArtifactAJAX, ArtifactSummaryHandler)
@@ -144,6 +144,7 @@ class Application(tornado.web.Application):
             (r"/study/sharing/", ShareStudyAJAX),
             (r"/study/sharing/autocomplete/", AutocompleteHandler),
             (r"/study/new_prep_template/", NewPrepTemplateAjax),
+            (r"/study/analyses/", AnalysesAjax),
             (r"/study/tags/(.*)", StudyTags),
             (r"/study/get_tags/", StudyGetTags),
             (r"/study/([0-9]+)$", Study),
