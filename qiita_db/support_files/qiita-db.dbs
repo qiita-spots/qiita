@@ -526,6 +526,7 @@
 			<column name="default_workflow_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="active" type="boolean" jt="-7" />
+			<column name="description" type="text" jt="12" />
 			<index name="pk_default_workflow" unique="PRIMARY_KEY" >
 				<column name="default_workflow_id" />
 			</index>
@@ -1710,7 +1711,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="data_directory" color="B2CDF7" x="576" y="928" />
 		<entity schema="qiita" name="data_type" color="D0DEF5" x="704" y="1120" />
 		<entity schema="qiita" name="default_parameter_set" color="B2CDF7" x="2416" y="1104" />
-		<entity schema="qiita" name="default_workflow" color="B2CDF7" x="2672" y="1136" />
+		<entity schema="qiita" name="default_workflow" color="B2CDF7" x="2656" y="1120" />
 		<entity schema="qiita" name="default_workflow_data_type" color="C1D8EE" x="2640" y="1008" />
 		<entity schema="qiita" name="default_workflow_edge" color="B2CDF7" x="2656" y="1248" />
 		<entity schema="qiita" name="default_workflow_edge_connections" color="B2CDF7" x="2576" y="1408" />

@@ -10,7 +10,8 @@ ALTER TABLE qiita.prep_template ADD modification_timestamp TIMESTAMP DEFAULT CUR
 
 -- a. Removing software_id from qiita.default_workflow and replacing it by a
 --    table which will like different data_types with the default_workflow +
---    adding an active flag in case we need to deprecate default_workflows
+--    adding an active flag in case we need to deprecate default_workflows +
+--    adding a description column
 ALTER TABLE qiita.default_workflow DROP software_id;
 CREATE TABLE qiita.default_workflow_data_type (
 	default_workflow_id	BIGINT NOT NULL,
@@ -20,6 +21,7 @@ CREATE TABLE qiita.default_workflow_data_type (
   PRIMARY KEY(default_workflow_id, data_type_id)
 );
 ALTER TABLE qiita.default_workflow ADD active BOOL DEFAULT TRUE;
+ALTER TABLE qiita.default_workflow ADD description TEXT;
 
 -- b. Removing command_id from qiita.default_workflow_node and default_parameter_set as this information
 --    can be accessed via the default_parameter object (the info is duplicated)
@@ -37,3 +39,11 @@ INSERT INTO qiita.default_workflow_data_type (default_workflow_id, data_type_id)
   (1, 2),
   (2, 2),
   (3, 3);
+
+-- d. adding descriptions
+UPDATE qiita.default_workflow
+	SET description = 'This accepts html <a href="https://qiita.ucsd.edu">Qiita!</a><br/><br/><b>BYE!</b>'
+	WHERE default_workflow_id = 1;
+UPDATE qiita.default_workflow
+	SET description = 'This is another description'
+	WHERE default_workflow_id = 2;

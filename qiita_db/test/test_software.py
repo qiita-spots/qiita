@@ -609,6 +609,14 @@ class SoftwareTests(TestCase):
         exp = ['18S']
         self.assertEqual(obs, exp)
 
+        dw = qdb.software.DefaultWorkflow(1)
+        exp = ('This accepts html <a href="https://qiita.ucsd.edu">Qiita!</a>'
+               '<br/><br/><b>BYE!</b>')
+        self.assertEqual(dw.description, exp)
+        exp = 'bla!'
+        dw.description = exp
+        self.assertEqual(dw.description, exp)
+
     def test_type(self):
         self.assertEqual(qdb.software.Software(1).type,
                          "artifact transformation")

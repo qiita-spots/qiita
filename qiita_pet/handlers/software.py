@@ -29,8 +29,7 @@ class SoftwareHandler(BaseHandler):
 
 class WorkflowsHandler(BaseHandler):
 
-    def _helper_node_processing(self, node):
-        dp = node.default_parameter
+    def _default_parameters_parsing(self, dp):
         cmd = dp.command
         cmd_name = 'params_%d' % dp.id
         rp = deepcopy(cmd.required_parameters)
@@ -73,19 +72,35 @@ class WorkflowsHandler(BaseHandler):
             # and their order
             main_nodes = dict()
             graph = w.graph
+            inputs = dict()
             for x, y in graph.edges:
                 gconnections = graph[x][y]['connections']
                 connections = ["%s | %s" % (n, at)
                                for n, _, at in gconnections.connections]
-                vals_x, input_x, output_x = self._helper_node_processing(x)
-                name_x = vals_x[0]
+
+                vals_x, input_x, output_x = self._default_parameters_parsing(
+                    x.default_parameter)
+                vals_y, input_y, output_y = self._default_parameters_parsing(
+                    y.default_parameter)
+                # to make sure that commands are actually unique, we need to
+                # use "fullnames", which means x_y for x and y_x for y
+                name_x = '%s_%s' % (vals_x[0], vals_y[0])
+                name_y = '%s_%s' % (vals_y[0], vals_x[0])
+                vals_x[0] = name_x
+                vals_y[0] = name_y
+
                 if vals_x not in (nodes):
                     nodes.append(vals_x)
                     main_nodes[name_x] = dict()
                     for a, b in input_x:
                         name = 'input_%s_%s' % (name_x, b)
+                        if b in inputs:
+                            name = inputs[b]
+                        else:
+                            name = 'input_%s_%s' % (name_x, b)
                         vals = [name, a, b]
                         if vals not in nodes:
+                            inputs[b] = name
                             nodes.append(vals)
                         edges.append([name, vals_x[0]])
                     for a, b in output_x:
@@ -96,8 +111,6 @@ class WorkflowsHandler(BaseHandler):
                         edges.append([name_x, name])
                         main_nodes[name_x][b] = name
 
-                vals_y, input_y, output_y = self._helper_node_processing(y)
-                name_y = vals_y[0]
                 if vals_y not in (nodes):
                     nodes.append(vals_y)
                     main_nodes[name_y] = dict()
@@ -127,5 +140,6 @@ class WorkflowsHandler(BaseHandler):
 
             workflows.append(
                 {'name': w.name, 'id': w.id, 'data_types': w.data_type,
+                 'description': w.description,
                  'nodes': nodes, 'edges': edges})
         self.render("workflows.html", workflows=workflows)

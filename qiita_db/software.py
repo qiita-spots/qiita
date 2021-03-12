@@ -1833,8 +1833,8 @@ class DefaultWorkflow(qdb.base.QiitaObject):
     def active(self):
         """Retrieves active status of the default workflow
 
-        Retruns
-        ----------
+        Returns
+        -------
         active : bool
             active value
         """
@@ -1866,6 +1866,35 @@ class DefaultWorkflow(qdb.base.QiitaObject):
                      WHERE default_workflow_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def description(self):
+        """Retrieves the description of the default workflow
+
+        Returns
+        -------
+        description : str
+            description value
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT description
+                     FROM qiita.default_workflow
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @description.setter
+    def description(self, description):
+        """Changes the description of the default workflow
+
+        Parameters
+        ----------
+        description : str
+            New description value
+        """
+        sql = """UPDATE qiita.default_workflow SET description = %s
+                 WHERE default_workflow_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [description, self._id])
 
     @property
     def data_type(self):
