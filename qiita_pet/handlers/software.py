@@ -29,9 +29,10 @@ class SoftwareHandler(BaseHandler):
 
 class WorkflowsHandler(BaseHandler):
 
-    def _default_parameters_parsing(self, dp):
+    def _default_parameters_parsing(self, node):
+        dp = node.default_parameter
         cmd = dp.command
-        cmd_name = 'params_%d' % dp.id
+        cmd_name = 'params_%d' % node.id
         rp = deepcopy(cmd.required_parameters)
         op = deepcopy(cmd.optional_parameters)
         params = dict()
@@ -46,7 +47,6 @@ class WorkflowsHandler(BaseHandler):
         outputs = []
         for input in rp.values():
             accepted_values = ' | '.join(input[1])
-            # {'input_data': ('input_type', [accepted_values])}
             inputs.append([cmd.id, accepted_values])
         for output in cmd.outputs:
             outputs.append([cmd.id, ' | '.join(output)])
@@ -70,28 +70,27 @@ class WorkflowsHandler(BaseHandler):
 
             # first get edges as this will give us the main connected commands
             # and their order
-            main_nodes = dict()
             graph = w.graph
+            # inputs is {input_type: node_name, ...} for easy look up of
+            # raw_inputs and reuse of the node_name
             inputs = dict()
+            # main_nodes is {main_node_name: {
+            #                   output_type: output_node_name}, ...}
+            # for easy look up and merge of output_names
+            main_nodes = dict()
             for x, y in graph.edges:
-                gconnections = graph[x][y]['connections']
-                connections = ["%s | %s" % (n, at)
-                               for n, _, at in gconnections.connections]
+                connections = []
+                for a, b, c in graph[x][y]['connections'].connections:
+                    connections.append("%s | %s" % (a, c))
 
-                vals_x, input_x, output_x = self._default_parameters_parsing(
-                    x.default_parameter)
-                vals_y, input_y, output_y = self._default_parameters_parsing(
-                    y.default_parameter)
-                # to make sure that commands are actually unique, we need to
-                # use "fullnames", which means x_y for x and y_x for y
-                name_x = '%s_%s' % (vals_x[0], vals_y[0])
-                name_y = '%s_%s' % (vals_y[0], vals_x[0])
-                vals_x[0] = name_x
-                vals_y[0] = name_y
-
+                vals_x, input_x, output_x = self._default_parameters_parsing(x)
+                vals_y, input_y, output_y = self._default_parameters_parsing(y)
+                name_x = vals_x[0]
+                name_y = vals_y[0]
                 if vals_x not in (nodes):
                     nodes.append(vals_x)
-                    main_nodes[name_x] = dict()
+                    if name_x not in main_nodes:
+                        main_nodes[name_x] = dict()
                     for a, b in input_x:
                         name = 'input_%s_%s' % (name_x, b)
                         if b in inputs:
@@ -113,7 +112,8 @@ class WorkflowsHandler(BaseHandler):
 
                 if vals_y not in (nodes):
                     nodes.append(vals_y)
-                    main_nodes[name_y] = dict()
+                    if name_y not in main_nodes:
+                        main_nodes[name_y] = dict()
                 for a, b in input_y:
                     # checking if there is an overlap between the parameter
                     # and the connections; if there is, use the connection
