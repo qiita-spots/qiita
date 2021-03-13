@@ -1,0 +1,44 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript>">
+  $('#studies-analyses-table').dataTable();
+</script>
+<h3>Analyses that have used this study</h3>
+
+Note that if an analysis doesn't have a link, it means that is a "User default analysis"; which means that the analysis belongs to that user but the user has only selected artifacts and hasn't created the actual analysis. Please contact the user and ask them to delete that artifact from their analysis creation page.
+<br/><br/>
+<table id="studies-analyses-table" class="display table-bordered table-hover" style="width:100%">
+  <thead>
+    <tr>
+      <th>Analysis</th>
+      <th>Owner</th>
+      <th>Prep IDs Used</th>
+      <th>Is Public?</th>
+      <th>Artifacts in Analysis</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for a in analyses %}
+      <tr>
+        <td>
+          {% if a['dflt'] %}
+            {{a['name']}} (ID: {{a['analysis_id']}})
+          {% else %}
+            <a href="{% raw qiita_config.portal_dir %}/analysis/description/{{a['analysis_id']}}/" target="_blank">{{a['name']}} (ID: {{a['analysis_id']}})</a>
+          {% end %}
+        </td>
+        <td>{{a['email']}}</td>
+        <td>{{', '.join(map(str, a['prep_ids']))}}</td>
+        <td>{{a['visibility'] == ['public']}}</td>
+        <td>
+          {% if a['artifact_ids'] is None %}
+            0
+          {% else %}
+            {{len(a['artifact_ids'])}}
+          {% end %}
+        </td>
+      </tr>
+    {% end %}
+  </tbody>
+</table>

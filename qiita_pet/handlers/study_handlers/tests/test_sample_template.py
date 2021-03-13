@@ -544,6 +544,15 @@ class TestSampleAJAXReadOnly(TestHandlerBase):
         self.assertIn(line, res.body.decode('ascii'))
 
 
+class TestAnalysesAjax(TestHandlerBase):
+    def test_get(self):
+        res = self.get("/study/analyses/", {'study_id': 1})
+        self.assertEqual(res.code, 200)
+        # making sure at least one analysis is in the page
+        line = '/analysis/description/1/'
+        self.assertIn(line, res.body.decode('ascii'))
+
+
 class TestSampleAJAX(TestHandlerBase):
 
     def test_post(self):
