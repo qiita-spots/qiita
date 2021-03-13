@@ -1,14 +1,18 @@
 .. role:: red
 
-Send data to EBI-ENA
-====================
+Making data Public in Qiita and/or send data to EBI-ENA
+=======================================================
 
 Qiita allows users to deposit their study, sample, experiment and sequence data to the
 `European Nucleotide Archive (ENA) <https://www.ebi.ac.uk/ena>`__, which is the permanent data
 repository of the `European Bioinformatics Institute (EBI) <https://www.ebi.ac.uk/>`__. Submitting to
 this repository will provide you with a unique identifier for your study, which is generally a
 requirement for publications. Your study will be housed with all other Qiita submissions
-and so we require adherence to the `MiXs standard <http://gensc.org/mixs/>`__.
+and so we require adherence to the `MiXs standard <http://gensc.org/mixs/>`__. Note that this also
+applies for studies in sandbox state that will become private or public.
+
+.. warning::
+   direct BIOM uploads cannot become private or public
 
 `Here <https://knightlab.ucsd.edu/wordpress/wp-content/uploads/2016/04/QiitaTemplate_20181218.xlsx>`__ you will find a document outlining these requirements, with examples, when possible.
 
