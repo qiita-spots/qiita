@@ -65,9 +65,9 @@ function format_title(name, params) {
     ~~ Click on the spheres to get more information ~~
       {% for i, w in enumerate(workflows) %}
         <div class="row">
-          <div class="col-sm-8" style="background-color: #DCDCDC; height: 450px" id="workflow_{{i}}"></div>
-          <div class="col-sm-4">
-            <h4>{{w['name']}} ({{w['id']}}) - Applies to: {{', '.join(w['data_types'])}}</h4>
+          <div class="col-sm-7" style="background-color: #DCDCDC; height: 650px" id="workflow_{{i}}"></div>
+          <div class="col-sm-5">
+            <h4>{{w['name']}} </h4><hr/><h5>Applies to: {{', '.join(w['data_types'])}}</h5>
             <div id="workflow_text_{{i}}">
               {% raw w['description'] %}
             </div>
