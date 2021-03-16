@@ -464,6 +464,23 @@ class CommandTests(TestCase):
         tester.activate()
         self.assertTrue(tester.active)
 
+    def test_processing_jobs(self):
+        exp_jids = ['6d368e16-2242-4cf8-87b4-a5dc40bb890b',
+                    '4c7115e8-4c8e-424c-bf25-96c292ca1931',
+                    'b72369f9-a886-4193-8d3d-f7b504168e75',
+                    '46b76f74-e100-47aa-9bf2-c0208bcea52d',
+                    '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f',
+                    '063e553b-327c-4818-ab4a-adfe58e49860',
+                    'ac653cb5-76a6-4a45-929e-eb9b2dee6b63']
+        exp = [qdb.processing_job.ProcessingJob(j) for j in exp_jids]
+        self.assertCountEqual(qdb.software.Command(1).processing_jobs, exp)
+
+        exp_jids = ['bcc7ebcd-39c1-43e4-af2d-822e3589f14d']
+        exp = [qdb.processing_job.ProcessingJob(j) for j in exp_jids]
+        self.assertCountEqual(qdb.software.Command(2).processing_jobs, exp)
+
+        self.assertCountEqual(qdb.software.Command(4).processing_jobs, [])
+
 
 @qiita_test_checker()
 class SoftwareTestsIter(TestCase):

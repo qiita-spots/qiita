@@ -754,6 +754,25 @@ class Command(qdb.base.QiitaObject):
 
         return result[0]
 
+    @property
+    def processing_jobs(self):
+        """All the processing_jobs that used this command
+
+        Returns
+        -------
+        list of qiita_db.processing_job.ProcessingJob
+        """
+
+        with qdb.sql_connection.TRN:
+            sql = """SELECT processing_job_id FROM
+                     qiita.processing_job
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+
+            jids = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        return [qdb.processing_job.ProcessingJob(j) for j in jids]
+
 
 class Software(qdb.base.QiitaObject):
     r"""A software package available in the system
