@@ -67,7 +67,12 @@ function format_title(name, params) {
         <div class="row">
           <div class="col-sm-7" style="background-color: #DCDCDC; height: 650px" id="workflow_{{i}}"></div>
           <div class="col-sm-5">
-            <h4>{{w['name']}} </h4><hr/><h5>Applies to: {{', '.join(w['data_types'])}}</h5>
+            <h4>
+              Application: {{', '.join(w['data_types'])}}
+              <hr/>
+              {{w['name']}}
+            </h4>
+            <br/>
             <div id="workflow_text_{{i}}">
               {% raw w['description'] %}
             </div>
