@@ -761,6 +761,7 @@ class Command(qdb.base.QiitaObject):
         Returns
         -------
         list of qiita_db.processing_job.ProcessingJob
+            List of jobs that used this command.
         """
 
         with qdb.sql_connection.TRN:
