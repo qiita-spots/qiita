@@ -10,7 +10,8 @@ Version 2021.03
 * The Qiita CI now runs as [GitHub Actions](https://github.com/qiita-spots/qiita/actions); moving away from Travis CI.
 * Prep information file object now stores its creation and modification timestamps.
 * Improved creation time for all information files via the to_dataframe() method.
-* Split the "other" category of the storage stats plot (https://qiita.ucsd.edu/stats/) into "other" and "biom" so biom can be its own category
+* Split the "other" category of the storage stats plot (https://qiita.ucsd.edu/stats/) into "other" and "biom" so biom can be its own category.
+* Added a processing_jobs property to qiita_db.software.Command to easily retrieve all jobs in the system that have ran the given command.
 * Fixed the following issues: [#3068](https://github.com/qiita-spots/qiita/issues/3068), [#3072](https://github.com/qiita-spots/qiita/issues/3072), [#3076](https://github.com/qiita-spots/qiita/issues/3076), and [#3070](https://github.com/qiita-spots/qiita/issues/3070).
 
 Version 2021.01
