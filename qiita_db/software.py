@@ -1873,7 +1873,7 @@ class DefaultWorkflow(qdb.base.QiitaObject):
 
         Returns
         -------
-        description : str
+        str
             description value
         """
         with qdb.sql_connection.TRN:
@@ -1898,7 +1898,7 @@ class DefaultWorkflow(qdb.base.QiitaObject):
 
     @property
     def data_type(self):
-        """Retrieves all the data_types of the default workflow
+        """Retrieves all the data_types accepted by the default workflow
 
         Returns
         ----------

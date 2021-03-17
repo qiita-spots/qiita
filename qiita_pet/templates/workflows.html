@@ -62,7 +62,7 @@ function format_title(name, params) {
 {% block content %}
   {% if workflows %}
     <h3>Recommended Workflows</h3>
-    ~~ Click on the spheres to get more information ~~
+    <h5>Click on the spheres to get more information</h5>
       {% for i, w in enumerate(workflows) %}
         <div class="row">
           <div class="col-sm-7" style="background-color: #DCDCDC; height: 650px" id="workflow_{{i}}"></div>
