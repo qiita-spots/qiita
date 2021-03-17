@@ -2,12 +2,13 @@
 {% block head %}
 {% from qiita_core.qiita_settings import qiita_config %}
 
-<script type="text/javascript">
-$(document).ready(function() {
-    $('#error-table').dataTable({"order": [[1, "asc"]]});
-    $("#waiting").hide();
-} );
+<style>
+  div.vis-network {
+    background-color: #DCDCDC;
+  }
+</style>
 
+<script type="text/javascript">
 var options = {
   autoResize: true,
   nodes: {
@@ -61,18 +62,28 @@ function format_title(name, params) {
 {% block content %}
   {% if workflows %}
     <h3>Recommended Workflows</h3>
-    ~~ Click on the spheres to get more information ~~
+    <h5>Click on the spheres to get more information</h5>
       {% for i, w in enumerate(workflows) %}
-        <div class="col-md-12">
-          <h4>{{w['name']}} ({{w['id']}}) - Applies to: {{', '.join(w['data_types'])}}</h4>
-          <div class="col-md-12 graph" style="width:90%" id="workflow_{{i}}"></div>
+        <div class="row">
+          <div class="col-sm-7" style="background-color: #DCDCDC; height: 650px" id="workflow_{{i}}"></div>
+          <div class="col-sm-5">
+            <h4>
+              Application: {{', '.join(w['data_types'])}}
+              <hr/>
+              {{w['name']}}
+            </h4>
+            <br/>
+            <div id="workflow_text_{{i}}">
+              {% raw w['description'] %}
+            </div>
+          </div>
           <script type="text/javascript">
             var nodes_{{i}} = new vis.DataSet([
               {% for node in w['nodes'] %}
-                {% if node[0].startswith('command') %}
-                  {id: "{{node[0]}}", shape: "dot", color: colorScheme['command'], label: "{{node[2]}}", title: format_title("{{node[3]}}", {% raw node[4] %})},
+                {% if node[0].startswith('params') %}
+                  {id: "{{node[0]}}", shape: "dot", color: colorScheme['command'], label: "{% raw node[2].replace(' | ', '\\n') %}", title: format_title("{{node[3]}}", {% raw node[4] %})},
                 {% else %}
-                  {id: "{{node[0]}}", shape: "dot", color: colorScheme['artifact'], label: "{{node[2]}}", title: "Artifact: {{node[2]}}"},
+                  {id: "{{node[0]}}", shape: "dot", color: colorScheme['artifact'], label: "{% raw node[2].replace(' | ', '\\n') %}", title: "Artifact: {{node[2]}}"},
                 {% end %}
               {% end %}
             ]);
@@ -87,6 +98,7 @@ function format_title(name, params) {
             var network = new vis.Network(container, data, options);
           </script>
         </div>
+        <hr/>
       {% end %}
   {% else %}
       <div id="jumbotron" class="jumbotron">
