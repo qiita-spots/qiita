@@ -10,6 +10,7 @@ from collections import defaultdict
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
+from qiita_db.util import generate_analyses_list_per_study
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.exceptions import QiitaDBColumnError
@@ -177,6 +178,36 @@ def sample_template_category_get_req(category, samp_id, user_id):
         return {'status': 'error',
                 'message': 'Category %s does not exist in sample template' %
                 category}
+    return {'status': 'success',
+            'message': '',
+            'values': values}
+
+
+def analyses_associated_with_study(study_id, user_id):
+    """Returns all available analyses in study_id
+
+    Parameters
+    ----------
+    study_id : int or str typecastable to int
+        Study id to get info for
+    user_id : str
+        User requesting the sample template info
+
+    Returns
+    -------
+    dict
+        Returns information in the form
+        {'status': str,
+         'message': str,
+         'values': list of [qiita_db.analysis.Analysis,
+                            prep_ids for this study]}
+    """
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
+
+    values = generate_analyses_list_per_study(study_id)
+
     return {'status': 'success',
             'message': '',
             'values': values}

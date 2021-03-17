@@ -1,0 +1,108 @@
+{% extends sitebase.html %}
+{% block head %}
+{% from qiita_core.qiita_settings import qiita_config %}
+
+<style>
+  div.vis-network {
+    background-color: #DCDCDC;
+  }
+</style>
+
+<script type="text/javascript">
+var options = {
+  autoResize: true,
+  nodes: {
+    font: {
+      size: 15,
+      color: '#000000'
+    },
+    size: 13,
+    borderWidth: 2,
+  },
+  edges: {
+    color: 'grey'
+  },
+  layout: {
+    randomSeed: 1,
+    improvedLayout: true,
+    hierarchical: {
+      direction: "LR",
+      sortMethod : 'directed',
+      levelSeparation: 190,
+      shakeTowards: 'roots'
+    }
+  },
+  interaction: {
+    dragNodes: false,
+    dragView: true,
+    zoomView: true,
+    selectConnectedEdges: true,
+    navigationButtons: true,
+    keyboard: false,
+  }
+};
+
+var colorScheme =  {
+  'command': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}, 'color': '#333333'},
+  'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}, 'color': '#333333'}
+}
+
+function format_title(name, params) {
+  var title = '<b>Name: ' + name + '</b></br>';
+  for (var key in params) {
+    title += '<b>' + key + '</b>: ' + params[key] + '</br>';
+  }
+  return title;
+}
+
+</script>
+
+{% end %}
+
+{% block content %}
+  {% if workflows %}
+    <h3>Recommended Workflows</h3>
+    <h5>Click on the spheres to get more information</h5>
+      {% for i, w in enumerate(workflows) %}
+        <div class="row">
+          <div class="col-sm-7" style="background-color: #DCDCDC; height: 650px" id="workflow_{{i}}"></div>
+          <div class="col-sm-5">
+            <h4>
+              Application: {{', '.join(w['data_types'])}}
+              <hr/>
+              {{w['name']}}
+            </h4>
+            <br/>
+            <div id="workflow_text_{{i}}">
+              {% raw w['description'] %}
+            </div>
+          </div>
+          <script type="text/javascript">
+            var nodes_{{i}} = new vis.DataSet([
+              {% for node in w['nodes'] %}
+                {% if node[0].startswith('params') %}
+                  {id: "{{node[0]}}", shape: "dot", color: colorScheme['command'], label: "{% raw node[2].replace(' | ', '\\n') %}", title: format_title("{{node[3]}}", {% raw node[4] %})},
+                {% else %}
+                  {id: "{{node[0]}}", shape: "dot", color: colorScheme['artifact'], label: "{% raw node[2].replace(' | ', '\\n') %}", title: "Artifact: {{node[2]}}"},
+                {% end %}
+              {% end %}
+            ]);
+
+            var edges_{{i}} = new vis.DataSet([
+              {% for f, t in w['edges'] %}
+                { from: "{{f}}", to: "{{t}}", arrows: "to"},
+              {% end %}
+            ]);
+            var container = document.getElementById("workflow_{{i}}");
+            var data = { nodes: nodes_{{i}}, edges: edges_{{i}} };
+            var network = new vis.Network(container, data, options);
+          </script>
+        </div>
+        <hr/>
+      {% end %}
+  {% else %}
+      <div id="jumbotron" class="jumbotron">
+          <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no workflows in this system. </h1>
+      </div>
+  {% end %}
+{% end %}
