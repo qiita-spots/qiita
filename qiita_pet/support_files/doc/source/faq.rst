@@ -209,6 +209,8 @@ To correct this issue, simply add a column to your preparation information file 
 "run_prefix". In this column, add the sample names from your BIOM table that matches the sample
 names listed in the sample_name column in your preparation information file.
 
+As a reminder, direct BIOM uploads cannot become public in the system.
+
 
 What's a Qiita Artifact?
 ------------------------
