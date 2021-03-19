@@ -419,7 +419,7 @@ Taxa Bar Plot
 
 * **Taxonomic Level**: How specific the taxa will be displayed
 
-  * 1- Kingdom, 2- Phylum, 3- Class, 4- Order, 5- Genus, 6- Species, 7- Subspecies
+  * 1- Kingdom, 2- Phylum, 3- Class, 4- Order, 5- Family, 6- Genus, 7- Species
 
 * **Color Palette**: Changes the coloring of your taxa bar plot
 

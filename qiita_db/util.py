@@ -1756,10 +1756,6 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
             # generating algorithm, by default is ''
             algorithm = ''
-            # set to False because if there is no cid, it means that it
-            # was a direct upload
-            deprecated = None
-            active = None
             if cid is not None:
                 deprecated = commands[cid]['deprecated']
                 active = commands[cid]['active']
@@ -1777,6 +1773,11 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 if algorithm not in algorithm_az:
                     algorithm_az[algorithm] = hashlib.md5(
                         algorithm.encode('utf-8')).hexdigest()
+            else:
+                # there is no cid, thus is a direct upload; setting things
+                # like this so the artifacts are dispayed
+                deprecated = False
+                active = True
 
             if prep_template_id not in ts:
                 qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])
@@ -1971,6 +1972,62 @@ def generate_analysis_list(analysis_ids, public_only=False):
                 'timestamp': ts.strftime("%m/%d/%y %H:%M:%S"),
                 'visibility': av, 'artifacts': artifacts,
                 'mapping_files': mapping_files})
+
+    return results
+
+
+def generate_analyses_list_per_study(study_id):
+    """Get study analyses and their preparations
+
+    Parameters
+    ----------
+    study_id : int
+        The study id
+
+    Returns
+    -------
+    list of dict
+        The available analyses and their general information
+    """
+    # for speed and SQL simplicity, we are going to split the search in two
+    # queries: 1. analysis_sql: to find analyses associated with this study
+    # and the artifacts used to generate the analyses; and 2. extra_sql: each
+    # analysis details, including the artifacts (children) that belong to
+    # the analysis.
+    analysis_sql = """
+        SELECT DISTINCT analysis_id, array_agg(DISTINCT artifact_id) AS aids
+        FROM qiita.analysis_sample analysis_sample
+        WHERE sample_id IN (SELECT sample_id
+                            FROM qiita.study_sample
+                            WHERE study_id = %s)
+        GROUP BY analysis_id
+        ORDER BY analysis_id
+    """
+    extra_sql = """
+        SELECT analysis_id, analysis.name, analysis.email, analysis.dflt,
+            array_agg(DISTINCT aa.artifact_id) FILTER (
+                      WHERE aa.artifact_id IS NOT NULL) as artifact_ids,
+            ARRAY(SELECT DISTINCT prep_template_id
+                  FROM qiita.preparation_artifact
+                  WHERE artifact_id IN %s) as prep_ids,
+            array_agg(DISTINCT visibility.visibility) FILTER (
+                    WHERE aa.artifact_id IS NOT NULL) as visibility
+        FROM qiita.analysis analysis
+        LEFT JOIN qiita.analysis_artifact aa USING (analysis_id)
+        LEFT JOIN qiita.artifact artifact USING (artifact_id)
+        LEFT JOIN qiita.visibility visibility USING (visibility_id)
+        WHERE analysis_id = %s
+        GROUP BY analysis_id, analysis.name, analysis.email, analysis.dflt
+    """
+    results = []
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add(analysis_sql, [study_id])
+        aids = qdb.sql_connection.TRN.execute_fetchindex()
+        for aid, artifact_ids in aids:
+            qdb.sql_connection.TRN.add(
+                extra_sql, [tuple(artifact_ids), aid])
+            for row in qdb.sql_connection.TRN.execute_fetchindex():
+                results.append(dict(row))
 
     return results
 

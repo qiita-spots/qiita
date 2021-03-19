@@ -88,6 +88,10 @@ def load_template_to_dataframe(fn, index='sample_name'):
     the database
 
     Everything in the DataFrame will be read and managed as string
+
+    While reading the file via pandas, it's possible that it will raise a
+    'tokenizing' pd.errors.ParserError which is confusing for users; thus,
+    rewriting the error with an explanation of what it means and how to fix.
     """
     # Load in file lines
     holdfile = None
@@ -144,16 +148,26 @@ def load_template_to_dataframe(fn, index='sample_name'):
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
-    template = pd.read_csv(
-        StringIO(''.join(holdfile)),
-        sep='\t',
-        dtype=str,
-        encoding='utf-8',
-        infer_datetime_format=False,
-        keep_default_na=False,
-        index_col=False,
-        comment='\t',
-        converters={index: lambda x: str(x).strip()})
+    try:
+        template = pd.read_csv(
+            StringIO(''.join(holdfile)),
+            sep='\t',
+            dtype=str,
+            encoding='utf-8',
+            infer_datetime_format=False,
+            keep_default_na=False,
+            index_col=False,
+            comment='\t',
+            converters={index: lambda x: str(x).strip()})
+    except pd.errors.ParserError as e:
+        if 'tokenizing' in str(e):
+            msg = ('Your file has more columns with values than headers. To '
+                   'fix, make sure to delete any extra rows or columns; they '
+                   'might look empty because they have spaces. Then upload '
+                   'and try again.')
+            raise RuntimeError(msg)
+        else:
+            raise e
     # remove newlines and tabs from fields
     template.replace(to_replace='[\t\n\r\x0b\x0c]+', value='',
                      regex=True, inplace=True)

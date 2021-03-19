@@ -26,6 +26,7 @@ Looking for information about getting started? Please see the document here:
 .. toctree::
 
    gettingstartedguide/index.rst
+   qiita-philosophy/index.rst
    qiimp.rst
 
 Looking for information about how to process your data? Please see the document here:
@@ -73,6 +74,5 @@ If you intend to deploy or develop Qiita we recommend that you have a look at th
 
 .. toctree::
 
-   qiita-philosophy/index.rst
    admin/index.rst
    dev/index.rst

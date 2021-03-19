@@ -1,0 +1,207 @@
+# name: Qiita CI
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+
+jobs:
+  # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
+  main:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - cover_package: "qiita_db"
+          - cover_package: "qiita_pet qiita_core qiita_ware"
+
+    services:
+      postgres:
+        # Docker Hub image
+        image: postgres:9.5
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          COVER_PACKAGE: ${{ matrix.cover_package }}
+
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # based on https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml#L44-L72
+          - 5432/tcp
+
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Setup for conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: 3.6
+
+      - name: Basic dependencies install
+        env:
+          COVER_PACKAGE: ${{ matrix.cover_package }}
+        shell: bash -l {0}
+        run: |
+          echo "Testing: " $COVER_PACKAGE
+
+          # pull out the port so we can modify the configuration file easily
+          pgport=${{ job.services.postgres.ports[5432] }}
+          sed -i "s/PORT = 5432/PORT = $pgport/" qiita_core/support_files/config_test.cfg
+
+          # PGPASSWORD is read by pg_restore, which is called by the build_db process.
+          export PGPASSWORD=postgres
+
+          # Setting up main qiita conda environment
+          conda config --add channels conda-forge
+          conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython redis
+          conda activate qiita
+          pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
+
+          # Configuring SSH
+          cp /etc/ssh/sshd_config sshd_config
+          echo "RSAAuthentication yes" > sshd_config
+          echo "PubkeyAuthentication yes" > sshd_config
+          echo "StrictModes no" > sshd_config
+          sudo mv sshd_config /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+
+      - name: Webdis install
+        shell: bash -l {0}
+        run: |
+          sudo apt-get -y install libevent-dev
+          git clone https://github.com/nicolasff/webdis
+          cd webdis
+          make
+
+      - name: Main install
+        shell: bash -l {0}
+        run: |
+          conda activate qiita
+          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
+          export REDBIOM_HOST="http://localhost:7379"
+          pip install . --no-binary redbiom
+          pwd
+          mkdir ~/.qiita_plugins
+
+      - name: Install plugins
+        shell: bash -l {0}
+        run: |
+          wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
+          conda env create -q -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
+          rm qiime2-2019.4-py36-linux-conda.yml
+          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
+          export REDBIOM_HOST="http://localhost:7379"
+          conda activate qtp-biom
+          pip install -U pip
+          pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
+          pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip
+          configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
+
+      - name: Starting services
+        shell: bash -l {0}
+        run: |
+          conda activate qiita
+          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
+          export REDBIOM_HOST="http://localhost:7379"
+
+          echo "1. Setting up redis"
+          redis-server --daemonize yes --port 7777
+          redis-server --daemonize yes --port 6379
+
+          echo "2. Starting webdis"
+          pushd webdis
+          ./webdis &
+          popd
+
+          echo "3. Starting redbiom: " $REDBIOM_HOST
+          curl -s http://localhost:7379/FLUSHALL > /dev/null
+          redbiom --version
+          redbiom admin scripts-writable
+          redbiom admin create-context --name "qiita-test" --description "qiita-test context"
+          redbiom admin load-sample-metadata --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
+          redbiom admin load-sample-metadata-search --metadata `pwd`/qiita_db/support_files/test_data/templates/1_19700101-000000.txt
+          redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test --tag 4
+          redbiom admin load-sample-data --table `pwd`/qiita_db/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table-for_redbiom_tests.biom --context qiita-test --tag 5
+
+          echo "4. Setting up nginx"
+          mkdir -p /usr/share/miniconda/envs/qiita/var/run/nginx/
+          nginx -c ${PWD}/qiita_pet/nginx_example.conf
+
+          echo "5. Setting up qiita"
+          conda activate qiita
+          qiita-env make --no-load-ontologies
+          qiita-test-install
+          qiita plugins update
+
+          echo "6. Starting supervisord => multiple qiita instances"
+          supervisord -c ${PWD}/qiita_pet/supervisor_example.conf
+          sleep 10
+          cat /tmp/supervisord.log
+
+          echo "7. Starting plugins"
+          conda deactivate
+          conda activate qtp-biom
+          export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
+          start_biom https://localhost:8383 register ignored
+          conda deactivate
+
+          echo "8. Setting up SSH"
+          ssh-keygen -t rsa-sha2-256 -b 4096 -N '' -f $PWD/qiita_ware/test/test_data/test_key
+          mkdir ~/.ssh/
+          cp $PWD/qiita_ware/test/test_data/test_key* ~/.ssh/
+          cat ~/.ssh/test_key.pub > ~/.ssh/authorized_keys
+          chmod 600 $PWD/qiita_ware/test/test_data/test_key*
+          chmod 600 ~/.ssh/*
+          chmod 700 ~/.ssh/
+          scp -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@localhost:$PWD/qiita_ware/test/test_data/random_key $PWD/qiita_ware/test/test_data/random_key_copy
+
+      - name: Main tests
+        shell: bash -l {0}
+        env:
+          COVER_PACKAGE: ${{ matrix.cover_package }}
+        run: |
+          conda activate qiita
+          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
+          export REDBIOM_HOST="http://localhost:7379"
+          nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+
+          # killing the qiita server to run the next commands
+          QIITA_PID=`cat /tmp/supervisord.pid`
+          kill $QIITA_PID
+          sleep 10
+          if [[ "$COVER_PACKAGE" == *"qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
+
+      - uses: codecov/codecov-action@v1
+        with:
+         token: ${{ secrets.CODECOV_TOKEN }}
+         file: codecov.yml
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: flake8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+    - name: install dependencies
+      run: python -m pip install --upgrade pip
+    - name: Check out repository code
+      uses: actions/checkout@v2
+    - name: lint
+      run: |
+        pip install -q flake8
+        flake8 qiita_* setup.py scripts/qiita*

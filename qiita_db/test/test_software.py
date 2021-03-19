@@ -464,6 +464,23 @@ class CommandTests(TestCase):
         tester.activate()
         self.assertTrue(tester.active)
 
+    def test_processing_jobs(self):
+        exp_jids = ['6d368e16-2242-4cf8-87b4-a5dc40bb890b',
+                    '4c7115e8-4c8e-424c-bf25-96c292ca1931',
+                    'b72369f9-a886-4193-8d3d-f7b504168e75',
+                    '46b76f74-e100-47aa-9bf2-c0208bcea52d',
+                    '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f',
+                    '063e553b-327c-4818-ab4a-adfe58e49860',
+                    'ac653cb5-76a6-4a45-929e-eb9b2dee6b63']
+        exp = [qdb.processing_job.ProcessingJob(j) for j in exp_jids]
+        self.assertCountEqual(qdb.software.Command(1).processing_jobs, exp)
+
+        exp_jids = ['bcc7ebcd-39c1-43e4-af2d-822e3589f14d']
+        exp = [qdb.processing_job.ProcessingJob(j) for j in exp_jids]
+        self.assertCountEqual(qdb.software.Command(2).processing_jobs, exp)
+
+        self.assertCountEqual(qdb.software.Command(4).processing_jobs, [])
+
 
 @qiita_test_checker()
 class SoftwareTestsIter(TestCase):
@@ -585,11 +602,37 @@ class SoftwareTests(TestCase):
         self.assertEqual(tester.start_script, 'start_biom')
 
     def test_default_workflows(self):
-        obs = list(qdb.software.Software(1).default_workflows)
+        obs = list(qdb.software.DefaultWorkflow.iter(True))
         exp = [qdb.software.DefaultWorkflow(1),
                qdb.software.DefaultWorkflow(2),
                qdb.software.DefaultWorkflow(3)]
         self.assertEqual(obs, exp)
+        obs = list(qdb.software.DefaultWorkflow.iter(False))
+        self.assertEqual(obs, exp)
+
+        qdb.software.DefaultWorkflow(1).active = False
+        obs = list(qdb.software.DefaultWorkflow.iter(False))
+        self.assertEqual(obs, exp)
+
+        obs = list(qdb.software.DefaultWorkflow.iter(True))
+        exp = [qdb.software.DefaultWorkflow(2),
+               qdb.software.DefaultWorkflow(3)]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.DefaultWorkflow(1).data_type
+        exp = ['16S', '18S']
+        self.assertEqual(obs, exp)
+        obs = qdb.software.DefaultWorkflow(2).data_type
+        exp = ['18S']
+        self.assertEqual(obs, exp)
+
+        dw = qdb.software.DefaultWorkflow(1)
+        exp = ('This accepts html <a href="https://qiita.ucsd.edu">Qiita!</a>'
+               '<br/><br/><b>BYE!</b>')
+        self.assertEqual(dw.description, exp)
+        exp = 'bla!'
+        dw.description = exp
+        self.assertEqual(dw.description, exp)
 
     def test_type(self):
         self.assertEqual(qdb.software.Software(1).type,
@@ -1074,26 +1117,22 @@ class ParametersTests(TestCase):
 
 
 class DefaultWorkflowNodeTests(TestCase):
-    def test_command(self):
+    def test_default_parameter(self):
         obs = qdb.software.DefaultWorkflowNode(1)
-        self.assertEqual(obs.command, qdb.software.Command(1))
+        self.assertEqual(
+            obs.default_parameter, qdb.software.DefaultParameters(1))
 
         obs = qdb.software.DefaultWorkflowNode(2)
-        self.assertEqual(obs.command, qdb.software.Command(3))
-
-    def test_parameters(self):
-        obs = qdb.software.DefaultWorkflowNode(1)
-        self.assertEqual(obs.parameters, qdb.software.DefaultParameters(1))
-
-        obs = qdb.software.DefaultWorkflowNode(2)
-        self.assertEqual(obs.parameters, qdb.software.DefaultParameters(10))
+        self.assertEqual(
+            obs.default_parameter, qdb.software.DefaultParameters(10))
 
 
 class DefaultWorkflowEdgeTests(TestCase):
     def test_connections(self):
         tester = qdb.software.DefaultWorkflowEdge(1)
         obs = tester.connections
-        self.assertEqual(obs, [['demultiplexed', 'input_data']])
+        self.assertEqual(
+            obs, [['demultiplexed', 'input_data', 'Demultiplexed']])
 
 
 class DefaultWorkflowTests(TestCase):

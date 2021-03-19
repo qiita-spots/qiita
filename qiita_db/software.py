@@ -754,6 +754,26 @@ class Command(qdb.base.QiitaObject):
 
         return result[0]
 
+    @property
+    def processing_jobs(self):
+        """All the processing_jobs that used this command
+
+        Returns
+        -------
+        list of qiita_db.processing_job.ProcessingJob
+            List of jobs that used this command.
+        """
+
+        with qdb.sql_connection.TRN:
+            sql = """SELECT processing_job_id FROM
+                     qiita.processing_job
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+
+            jids = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        return [qdb.processing_job.ProcessingJob(j) for j in jids]
+
 
 class Software(qdb.base.QiitaObject):
     r"""A software package available in the system
@@ -1231,24 +1251,6 @@ class Software(qdb.base.QiitaObject):
                      WHERE software_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
-
-    @property
-    def default_workflows(self):
-        """Returns the default workflows attached to the current software
-
-        Returns
-        -------
-        generator of qiita_db.software.DefaultWorkflow
-            The defaultworkflows attached to the software
-        """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT default_workflow_id
-                     FROM qiita.default_workflow
-                     WHERE software_id = %s
-                     ORDER BY default_workflow_id"""
-            qdb.sql_connection.TRN.add(sql, [self.id])
-            for wf_id in qdb.sql_connection.TRN.execute_fetchflatten():
-                yield DefaultWorkflow(wf_id)
 
     @property
     def type(self):
@@ -1764,23 +1766,7 @@ class DefaultWorkflowNode(qdb.base.QiitaObject):
     _table = "default_workflow_node"
 
     @property
-    def command(self):
-        """The command to execute in this node
-
-        Returns
-        -------
-        qiita_db.software.Command
-        """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT command_id
-                     FROM qiita.default_workflow_node
-                     WHERE default_workflow_node_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self.id])
-            cmd_id = qdb.sql_connection.TRN.execute_fetchlast()
-            return qdb.software.Command(cmd_id)
-
-    @property
-    def parameters(self):
+    def default_parameter(self):
         """The default parameter set to use in this node
 
         Returns
@@ -1817,12 +1803,13 @@ class DefaultWorkflowEdge(qdb.base.QiitaObject):
             the destination command.
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT name, parameter_name
+            sql = """SELECT name, parameter_name, artifact_type
                      FROM qiita.default_workflow_edge_connections c
                         JOIN qiita.command_output o
                             ON c.parent_output_id = o.command_output_id
                         JOIN qiita.command_parameter p
                             ON c.child_input_id = p.command_parameter_id
+                        LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                      WHERE default_workflow_edge_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchindex()
@@ -1839,6 +1826,58 @@ class DefaultWorkflow(qdb.base.QiitaObject):
     """
     _table = "default_workflow"
 
+    @classmethod
+    def iter(cls, active=True):
+        """Iterates over all active DefaultWorkflow
+
+        Parameters
+        ----------
+        active : bool, optional
+            If True will only return active software
+
+        Returns
+        -------
+        list of qiita_db.software.DefaultWorkflow
+            The DefaultWorkflow objects
+        """
+        sql = """SELECT default_workflow_id
+                 FROM qiita.default_workflow {0}
+                 ORDER BY default_workflow_id""".format(
+                    'WHERE active = True' if active else '')
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            for s_id in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield cls(s_id)
+
+    @property
+    def active(self):
+        """Retrieves active status of the default workflow
+
+        Returns
+        -------
+        active : bool
+            active value
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT active
+                     FROM qiita.default_workflow
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @active.setter
+    def active(self, active):
+        """Changes active status of the default workflow
+
+        Parameters
+        ----------
+        active : bool
+            New active value
+        """
+        sql = """UPDATE qiita.default_workflow SET active = %s
+                 WHERE default_workflow_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [active, self._id])
+
     @property
     def name(self):
         with qdb.sql_connection.TRN:
@@ -1847,6 +1886,52 @@ class DefaultWorkflow(qdb.base.QiitaObject):
                      WHERE default_workflow_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def description(self):
+        """Retrieves the description of the default workflow
+
+        Returns
+        -------
+        str
+            description value
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT description
+                     FROM qiita.default_workflow
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @description.setter
+    def description(self, description):
+        """Changes the description of the default workflow
+
+        Parameters
+        ----------
+        description : str
+            New description value
+        """
+        sql = """UPDATE qiita.default_workflow SET description = %s
+                 WHERE default_workflow_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [description, self._id])
+
+    @property
+    def data_type(self):
+        """Retrieves all the data_types accepted by the default workflow
+
+        Returns
+        ----------
+        list of str
+            The data types
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT data_type
+                     FROM qiita.default_workflow_data_type
+                     LEFT JOIN qiita.data_type USING (data_type_id)
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchflatten()
 
     @property
     def graph(self):
@@ -1862,7 +1947,8 @@ class DefaultWorkflow(qdb.base.QiitaObject):
             # Retrieve all graph workflow nodes
             sql = """SELECT default_workflow_node_id
                      FROM qiita.default_workflow_node
-                     WHERE default_workflow_id = %s"""
+                     WHERE default_workflow_id = %s
+                     ORDER BY default_workflow_node_id"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             db_nodes = qdb.sql_connection.TRN.execute_fetchflatten()
 
@@ -1875,7 +1961,8 @@ class DefaultWorkflow(qdb.base.QiitaObject):
                         JOIN qiita.default_workflow_node n
                             ON e.parent_id = n.default_workflow_node_id
                             OR e.child_id = n.default_workflow_node_id
-                     WHERE default_workflow_id = %s"""
+                     WHERE default_workflow_id = %s
+                     ORDER BY default_workflow_edge_id"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             db_edges = qdb.sql_connection.TRN.execute_fetchindex()
 

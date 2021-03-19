@@ -57,6 +57,8 @@ class MetaUtilTests(TestCase):
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
 
+        # Note that 15 is the biom from the analysis and 16 is the
+        # analysis mapping file and here we are testing access
         for i in [15, 16]:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
@@ -66,6 +68,20 @@ class MetaUtilTests(TestCase):
         for i in [1, 2, 3, 4, 5, 9, 12, 15, 16, 17, 18, 19, 20, 21]:
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
+
+        # Now the Analysis is public so the user should have access again. Note
+        # that we are not using the internal Analysis methods to skip
+        # validation; thus simplifying the test code
+        for a in qdb.analysis.Analysis(1).artifacts:
+            a.visibility = 'public'
+        # Note that 15 is the biom from the analysis and 16 is the
+        # analysis mapping file and here we are testing access
+        for i in [15, 16]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
+        # returning to private
+        for a in qdb.analysis.Analysis(1).artifacts:
+            a.visibility = 'private'
 
         # Now shared has access to public study files
         self._set_artifact_public()
