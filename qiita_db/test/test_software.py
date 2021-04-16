@@ -329,6 +329,16 @@ class CommandTests(TestCase):
                 "This is a command for testing", self.parameters,
                 self.outputs)
 
+        # the output type doesn't exist
+        with self.assertRaisesRegex(ValueError, "Error creating QIIME, Split "
+                                    "libraries - wrong output, This is a "
+                                    "command for testing - Unknown "
+                                    "artifact_type: BLA!"):
+            qdb.software.Command.create(
+                self.software, "Split libraries - wrong output",
+                "This is a command for testing", self.parameters,
+                {'out': 'BLA!'})
+
     def test_create(self):
         # let's deactivate all current plugins and commands; this is not
         # important to test the creation but it is important to test if a
