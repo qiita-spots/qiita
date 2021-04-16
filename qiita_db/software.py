@@ -425,10 +425,14 @@ class Command(qdb.base.QiitaObject):
                              qdb.util.convert_to_id(at[0], 'artifact_type'),
                              at[1]])
                     else:
-                        sql_args.append(
-                            [pname, c_id,
-                             qdb.util.convert_to_id(at, 'artifact_type'),
-                             False])
+                        try:
+                            at_id = qdb.util.convert_to_id(at, 'artifact_type')
+                        except qdb.exceptions.QiitaDBLookupError:
+                            msg = (f'Error creating {software.name}, {name}, '
+                                   f'{description} - Unknown artifact_type: '
+                                   f'{at}')
+                            raise ValueError(msg)
+                        sql_args.append([pname, c_id, at_id, False])
 
                 sql = """INSERT INTO qiita.command_output
                             (name, command_id, artifact_type_id,
