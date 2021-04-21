@@ -11,8 +11,6 @@ Qiita relies on the following JavaScript libraries:
 - [String.js](https://github.com/jprichardson/string.js).
 - [tag-it.js](http://aehlke.github.io/tag-it/).
 - [underscore.js](http://underscorejs.org/).
-- [vis.js](http://visjs.org/).
-- [vis-network.js](https://unpkg.com/browse/vis-network@6.5.2)
 - [vue.js](https://vuejs.org).
 - [ol.js](https://openlayers.org/).
 - [platform.js](https://github.com/bestiejs/platform.js).
