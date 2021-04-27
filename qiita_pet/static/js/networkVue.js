@@ -44,9 +44,11 @@ function formatNodeLabel(label) {
  **/
 function toggleNetworkGraph() {
   if($("#processing-network-div").css('display') == 'none' ) {
+    $("#processing-network-instructions-div").show();
     $("#processing-network-div").show();
     $("#show-hide-network-btn").text("Hide");
   } else {
+    $("#processing-network-instructions-div").hide();
     $("#processing-network-div").hide();
     $("#show-hide-network-btn").text("Show");
   }
@@ -74,7 +76,7 @@ Vue.component('processing-graph', {
                       '<a class="btn btn-success form-control" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run</a>' +
                     '</div>' +
                   '</div>' +
-                  '<div class="row">' +
+                  '<div class="row" id="processing-network-instructions-div">' +
                     '<div class="col-md-12">' +
                       '<b>Click on the graph to navigate through it. Click circles for more information. This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a><br/><span id="circle-explanation"></span></b>' +
                     '</div>' +
@@ -705,13 +707,16 @@ Vue.component('processing-graph', {
       container.innerHTML = "";
       // Making sure the network is available
       $("#processing-network-div").show();
+      $("#processing-network-instructions-div").show();
 
       var layout = {
         name: 'dagre',
         rankDir: 'LR',
         directed: true,
-        grid: true,
         nodeDimensionsIncludeLabels: true,
+        nodeSep: 2,
+        spacingFactor: 1.2,
+        padding: 5
       };
       var style = [{
         selector: 'node',
@@ -737,6 +742,10 @@ Vue.component('processing-graph', {
         zoomOutIcon: 'fa fa-minus',
         resetIcon: 'fa fa-expand'
       };
+
+      // Note: we only need to sort the edges to keep the same structure of the
+      //       graph; in other words, nodes order is not important
+      vm.edges = vm.edges.sort((a, b) => (a.data.source > b.data.source) ? 1 : (a.data.source === b.data.source) ? ((a.data.target > b.data.target) ? 1 : -1) : -1 );
 
       vm.network = cytoscape({
           container: container,
@@ -965,6 +974,7 @@ Vue.component('processing-graph', {
 
           // At this point we can show the graph and hide the job list
           $("#processing-network-div").show();
+          $("#processing-network-instructions-div").show();
           $("#show-hide-network-btn").show();
           $("#processing-job-div").hide();
         }
@@ -1078,6 +1088,8 @@ Vue.component('processing-graph', {
 
     show_loading('processing-network-div');
     $("#processing-network-div").hide();
+    $("#processing-network-instructions-div").hide();
+
 
     $('#run-btn').on('click', function() {
       $('#run-btn').attr('disabled', true);
