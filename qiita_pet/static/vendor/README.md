@@ -13,4 +13,8 @@ Qiita relies on the following JavaScript libraries:
 - [underscore.js](http://underscorejs.org/).
 - [vue.js](https://vuejs.org).
 - [ol.js](https://openlayers.org/).
+- [cytoscape.js](https://github.com/cytoscape/cytoscape.js).
+- [cytoscape-panzoom.js](https://github.com/cytoscape/cytoscape.js-panzoom).
+- [cytoscape-dagre.js](https://github.com/cytoscape/cytoscape.js-dagre).
+- [cytoscape-popper.js](https://github.com/cytoscape/cytoscape.js-popper).
 - [platform.js](https://github.com/bestiejs/platform.js).
