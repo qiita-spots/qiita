@@ -276,6 +276,11 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
             f.write('\n')
         self._clean_up_files.append(fp)
         exp_artifact_count = get_count('qiita.artifact') + 1
+
+        # the main job (c_job) is still not completing so the step hasn't been
+        # updated since creation === None
+        self.assertIsNone(c_job.step)
+
         payload = dumps(
             {'success': True, 'error': '',
              'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
@@ -283,6 +288,12 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         job = self._create_job('complete_job', {'job_id': c_job.id,
                                                 'payload': payload})
         private_task(job.id)
+
+        # the complete job has started so now the step of c_job should report
+        # the complete information
+        self.assertEqual(c_job.step,
+                         f"Completing via {job.id} [Not Available]")
+
         self.assertEqual(job.status, 'success')
         self.assertEqual(c_job.status, 'success')
         self.assertEqual(get_count('qiita.artifact'), exp_artifact_count)

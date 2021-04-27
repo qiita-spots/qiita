@@ -348,7 +348,9 @@ def complete_job(job):
             artifacts = None
             error = payload['error']
         c_job = qdb.processing_job.ProcessingJob(param_vals['job_id'])
+        c_job.step = 'Completing via %s [%s]' % (job.id, job.external_id)
         try:
+
             c_job.complete(payload['success'], artifacts, error)
         except Exception:
             c_job._set_error(traceback.format_exception(*exc_info()))
