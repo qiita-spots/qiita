@@ -107,8 +107,8 @@
       // children
 
       if ((count_ok || (!is_required && num_children === 0))) {
-        if ($("#artifact-type").val() === 'per_sample_FASTQ' && num_samples !== num_children) {
-          message = "per_sample_FASTQ expects the same number of samples and run_prefix.";
+        if (($("#artifact-type").val() === 'per_sample_FASTQ') && (num_samples !== num_children)) {
+          message = "per_sample_FASTQ expects one run_prefix per sample. Check for duplicate or missing run_prefix entries.";
           mark_as_wrong(this, message);
         } else {
           mark_as_correct(this);
