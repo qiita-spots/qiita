@@ -20,6 +20,8 @@
    * that are "checkable"
    */
   function check_files_lists() {
+      $('#file-check-messages').hide();
+
       // Reset the error counter
       $('#files-selector').attr("data-error-count", 0);
       // initialize the error count to the number of file types
@@ -37,9 +39,14 @@
    * as wrong and updates the global error counter accordingly
    *
    */
-  function mark_as_wrong(container) {
+  function mark_as_wrong(container, message=null) {
     $(container).removeClass("highlightCorrect");
     $(container).addClass("highlightWrong");
+    if (message !== null){
+      $('#file-check-messages').show();
+      $('#file-check-messages').html(message);
+    }
+
     if ( $(container).attr("data-correct") === "true" ) {
       // It changed value - update the counters and the value
       $('#files-selector').attr("data-error-count", +$('#files-selector').attr("data-error-count") + 1);
@@ -60,6 +67,7 @@
   function mark_as_correct(container) {
     $(container).removeClass("highlightWrong");
     $(container).addClass("highlightCorrect");
+
     if ( $(container).attr("data-correct") === "false" ) {
       // It changed value - update the counters and the value
       var count = $('#files-selector').attr("data-error-count");
@@ -86,6 +94,7 @@
     var num_children = this.children.length;
     var is_required = $(this).attr("data-file-required") === "True";
     var req_count = +$(this).attr("data-file-count");
+    var num_samples = $("#processing-tab-btn").attr("number-samples");
 
     // If required count is > 0, then we have to check that the number of files
     // in each list that is required or optional but populated, have the same
@@ -96,8 +105,14 @@
       // If the count is correct, then it is always correct. If the count is not
       // correct, it is correct if and only if it is not required and has no
       // children
-      if (count_ok || (!is_required && num_children === 0)) {
-        mark_as_correct(this);
+
+      if ((count_ok || (!is_required && num_children === 0))) {
+        if (($("#artifact-type").val() === 'per_sample_FASTQ') && (num_samples !== num_children)) {
+          message = "per_sample_FASTQ expects one run_prefix per sample. Check for duplicate or missing run_prefix entries.";
+          mark_as_wrong(this, message);
+        } else {
+          mark_as_correct(this);
+        }
       }
       else {
         mark_as_wrong(this);
@@ -229,7 +244,7 @@
           {% raw message.replace('\n', '<br/>') %}
         {% end %}
       </div>
-
+      <div class="alert alert-warning" role="alert" id="file-check-messages"></div>
   </div>
   <div class="col-md-3" id="files-div">
     <p style="text-align: center;"><i>Available Files</i></p>
