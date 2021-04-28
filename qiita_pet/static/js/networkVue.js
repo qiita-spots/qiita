@@ -54,6 +54,16 @@ function toggleNetworkGraph() {
   }
 };
 
+function edge_sorting(a, b){
+  let order = 1;
+  if (a.data.source > b.data.source){
+    order = -1;
+  } else if ((a.data.source === b.data.source) && (a.data.target < b.data.target)){
+    order = -1;
+  }
+  return order;
+}
+
 Vue.component('processing-graph', {
   template: '<div class="row">' +
               '<div class="row" id="network-header-div">' +
@@ -745,7 +755,7 @@ Vue.component('processing-graph', {
 
       // Note: we only need to sort the edges to keep the same structure of the
       //       graph; in other words, nodes order is not important
-      vm.edges = vm.edges.sort((a, b) => (a.data.source > b.data.source) ? 1 : (a.data.source === b.data.source) ? ((a.data.target > b.data.target) ? 1 : -1) : -1 );
+      vm.edges = vm.edges.sort(edge_sorting);
 
       vm.network = cytoscape({
           container: container,
@@ -771,9 +781,9 @@ Vue.component('processing-graph', {
         var data = evt.target.data();
         var element_id = data.id;
 
-        if (data.group == 'artifact') {
+        if (data.group === 'artifact') {
           vm.populateContentArtifact(element_id);
-        } else if (data.group == 'deleting') {
+        } else if (data.group === 'deleting') {
           $("#processing-results").empty();
           $("#processing-results").append("<h4>This artifact is being deleted</h4>");
         } else {
