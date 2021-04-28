@@ -27,6 +27,7 @@ from qiita_pet.handlers.artifact_handlers.base_handlers import (
     check_artifact_access, artifact_summary_get_request,
     artifact_summary_post_request, artifact_patch_request,
     artifact_post_req)
+from qiita_db.logger import LogEntry
 
 
 @qiita_test_checker()
@@ -362,6 +363,10 @@ class TestBaseHandlersUtils(TestCase):
         artifact_patch_request(test_user, 1, 'replace', '/visibility/',
                                req_value='sandbox')
         self.assertEqual(a.visibility, 'sandbox')
+        # checking that we have a new entry in the database for this
+        self.assertEqual(
+            LogEntry.newest_records(1)[0].msg,
+            'test@foo.bar changed artifact 1 (study 1) to sandbox')
 
         # Admin can change to private
         artifact_patch_request(User('admin@foo.bar'), 1, 'replace',
