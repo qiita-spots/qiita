@@ -1475,3 +1475,43 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args)
             return [qdb.processing_job.ProcessingJob(jid)
                     for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
+
+    @property
+    def get_commands(self):
+        """Returns the active commands that can process this kind of artifact
+
+        Returns
+        -------
+        list of qiita_db.software.Command
+            The commands that can process the given artifact tyoes
+        """
+        with qdb.sql_connection.TRN:
+            # get all the possible commands
+            sql = """SELECT DISTINCT qiita.command_parameter.command_id
+                     FROM qiita.artifact
+                     JOIN qiita.parameter_artifact_type
+                        USING (artifact_type_id)
+                     JOIN qiita.command_parameter USING (command_parameter_id)
+                     JOIN qiita.software_command ON (
+                        qiita.command_parameter.command_id =
+                        qiita.software_command.command_id)
+                     WHERE artifact_id = %s AND active = True"""
+            if self.analysis is None:
+                sql += " AND is_analysis = False"
+            else:
+                sql += " AND is_analysis = True"
+
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            cids = set(qdb.sql_connection.TRN.execute_fetchflatten())
+
+            # get the workflows that match this artifact so we can filter the
+            # available commands based on the commands in the worflows for that
+            # artifact
+            dws = [w for w in qdb.software.DefaultWorkflow.iter()
+                   if self.data_type in w.data_type]
+            if dws:
+                cmds = set([n.default_parameter.command.id
+                            for w in dws for n in w.graph.nodes])
+                cids = cmds & cids
+
+            return [qdb.software.Command(cid) for cid in cids]

@@ -9,18 +9,19 @@
 from json import loads
 
 from qiita_db.user import User
+from qiita_db.artifact import Artifact
 from qiita_db.software import Command, Parameters, DefaultParameters
 from qiita_db.processing_job import ProcessingWorkflow, ProcessingJob
 from qiita_db.exceptions import QiitaDBUnknownIDError
 
 
-def list_commands_handler_get_req(artifact_types, exclude_analysis):
+def list_commands_handler_get_req(artifact_id, exclude_analysis):
     """Retrieves the commands that can process the given artifact types
 
     Parameters
     ----------
-    artifact_types : str
-        Comma-separated list of artifact types
+    artifact_id : int
+        artifact id
     exclude_analysis : bool
         If True, return commands that are not part of the analysis pipeline
 
@@ -34,11 +35,9 @@ def list_commands_handler_get_req(artifact_types, exclude_analysis):
                                        'command': str,
                                        'output': list of [str, str]}}
     """
-    artifact_types = artifact_types.split(',')
     cmd_info = [
         {'id': cmd.id, 'command': cmd.name, 'output': cmd.outputs}
-        for cmd in Command.get_commands_by_input_type(
-            artifact_types, exclude_analysis=exclude_analysis)]
+        for cmd in Artifact(artifact_id).get_commands]
 
     return {'status': 'success',
             'message': '',

@@ -613,7 +613,6 @@ Vue.component('processing-graph', {
      **/
     loadArtifactType: function(p_node) {
       let vm = this;
-      var types = [];
       var sel_artifacts_info = {};
       var node, nodeIdSplit, $rowDiv, $colDiv;
       var target = $("#processing-results");
@@ -632,10 +631,9 @@ Vue.component('processing-graph', {
         // This means that either we are going to process a new artifact (nodeIdSplit.length < 2)
         // or that the parent job generating this artifact type node is in construction.
         // In both of this cases, we can add a new job to the workflow
-        types.push(node.type);
         sel_artifacts_info[node.id] = {'type': node.type, 'name': node.label};
 
-        $.get(vm.portal + '/study/process/commands/', {artifact_types: types, include_analysis: vm.isAnalysisPipeline})
+        $.get(vm.portal + '/study/process/commands/', {artifact_id: node.id, include_analysis: vm.isAnalysisPipeline})
           .done(function (data) {
             target.empty();
 
