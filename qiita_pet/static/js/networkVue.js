@@ -44,13 +44,25 @@ function formatNodeLabel(label) {
  **/
 function toggleNetworkGraph() {
   if($("#processing-network-div").css('display') == 'none' ) {
+    $("#processing-network-instructions-div").show();
     $("#processing-network-div").show();
     $("#show-hide-network-btn").text("Hide");
   } else {
+    $("#processing-network-instructions-div").hide();
     $("#processing-network-div").hide();
     $("#show-hide-network-btn").text("Show");
   }
 };
+
+function edge_sorting(a, b){
+  let order = 1;
+  if (a.data.source > b.data.source){
+    order = -1;
+  } else if ((a.data.source === b.data.source) && (a.data.target < b.data.target)){
+    order = -1;
+  }
+  return order;
+}
 
 Vue.component('processing-graph', {
   template: '<div class="row">' +
@@ -74,7 +86,7 @@ Vue.component('processing-graph', {
                       '<a class="btn btn-success form-control" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run</a>' +
                     '</div>' +
                   '</div>' +
-                  '<div class="row">' +
+                  '<div class="row" id="processing-network-instructions-div">' +
                     '<div class="col-md-12">' +
                       '<b>Click on the graph to navigate through it. Click circles for more information. This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a><br/><span id="circle-explanation"></span></b>' +
                     '</div>' +
@@ -153,7 +165,7 @@ Vue.component('processing-graph', {
             // the list, hence accessing with 0
             jobId = value[0]['job_id'];
             jobStatus = value[0]['job_status'];
-            jobNode = vm.nodes_ds.get(jobId);
+            jobNode = vm.network.getElementById(jobId);
 
             if (jobNode === null) {
               // A network node does not exist for this job, this is because this
@@ -177,7 +189,7 @@ Vue.component('processing-graph', {
                 vm.runningJobs.push(jobId);
               }
 
-              if (jobNode['status'] !== jobStatus) {
+              if (jobNode.data('status') !== jobStatus) {
                 // The status of the job changed.
                 // we decide what to do based on the new status.
                 if (jobStatus === 'success' || jobStatus === 'error') {
@@ -187,11 +199,9 @@ Vue.component('processing-graph', {
                 } else {
                   // In this case the job changed to either 'running', 'queued' or 'waiting'. In
                   // this case, we just need to update the internal values of the nodes and the colors
-                  var node_info = vm.colorScheme[jobStatus]
-                  jobNode.color = node_info;
-                  jobNode.shape = node_info['shape'];
-                  jobNode.status = jobStatus;
-                  vm.nodes_ds.update(jobNode);
+                  var node_info = vm.colorScheme[jobStatus];
+                  jobNode.data('color', node_info['background']);
+                  jobNode.data('shape', node_info['shape']);
                 }
               }
             }
@@ -216,12 +226,10 @@ Vue.component('processing-graph', {
         // Clean up the div
         $("#processing-results").empty();
         // Update the artifact node to mark that it is being deleted
-        var node = vm.nodes_ds.get(artifactId.toString());
-        var node_info = vm.colorScheme['deleting'];
-        node.group = 'deleting';
-        node.color = node_info;
-        node.shape = node_info['shape'];
-        vm.nodes_ds.update(node);
+        var node = vm.network.getElementById(artifactId.toString());
+        node.data('color', vm.colorScheme['deleting']['background']);
+        node.data('shape', vm.colorScheme['deleting']['shape']);
+
         // Add the job to the list of jobs to check for deletion.
         vm.runningJobs.push(data.job);
       })
@@ -242,46 +250,11 @@ Vue.component('processing-graph', {
      **/
     removeJobNodeFromGraph: function(jobId) {
       let vm = this;
-      var queue = [jobId];
-      var edge_list = vm.edges_ds.get();
-      var current;
-      var edge;
-      var currentNode;
-      while(queue.length !== 0) {
-        current = queue.pop();
-
-        // Add all children nodes to the queue, and remove the edges
-        // connecting the current node to its children
-        for(var i in edge_list) {
-          edge = edge_list[i];
-          if(edge.from == current) {
-            if($.inArray(edge.to, queue) == -1) {
-              queue.push(edge.to);
-            }
-            vm.edges_ds.remove(edge.id);
-          }
-        }
-
-        currentNode = vm.nodes_ds.get(current);
-        if(currentNode.group === 'job') {
-          if(currentNode.status === 'in_construction') {
-            vm.inConstructionJobs -= 1;
-          }
-        }
-        vm.nodes_ds.remove(current);
-      }
-      var edges_to_remove = vm.edges_ds.get(
-        {filter: function(item) {
-          return item.to == jobId;
-        }});
-      var edge_ids = [];
-      $(edges_to_remove).each(function(i){
-        edge_ids.push(edges_to_remove[i].id);
+      var node = vm.network.getElementById(jobId);
+      node.successors(function( d ){
+        vm.network.remove(d);
       });
-
-      vm.edges_ds.remove(edge_ids);
-      vm.network.redraw();
-
+      vm.network.remove(node);
       if (vm.inConstructionJobs === 0) {
         $('#run-btn-div').hide();
       }
@@ -654,8 +627,8 @@ Vue.component('processing-graph', {
       // generating this artifact type.
       p_node = String(p_node);
       nodeIdSplit = p_node.split(':');
-      node = vm.nodes_ds.get(p_node);
-      if (nodeIdSplit.length < 2 || vm.nodes_ds.get(nodeIdSplit[0]).status === 'in_construction') {
+      node = vm.network.getElementById(p_node).data();
+      if (nodeIdSplit.length < 2 || vm.network.getElementById(nodeIdSplit[0]).data().status === 'in_construction') {
         // This means that either we are going to process a new artifact (nodeIdSplit.length < 2)
         // or that the parent job generating this artifact type node is in construction.
         // In both of this cases, we can add a new job to the workflow
@@ -701,7 +674,7 @@ Vue.component('processing-graph', {
         $('<h4>').append('Future result: ' + node.label).appendTo(target);
         $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
         $('<label>').addClass('col-sm-1').addClass('col-form-label').text('Generated by:').appendTo($rowDiv);
-        $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv).append(vm.nodes_ds.get(nodeIdSplit[0]).label + ' (' + nodeIdSplit[0] + ')');
+        $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv).append(node.label + ' (' + nodeIdSplit[0] + ')');
         $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
         $('<label>').addClass('col-sm-1').addClass('col-form-label').text('Output name:').appendTo($rowDiv);
         $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv).append(nodeIdSplit[1]);
@@ -723,7 +696,7 @@ Vue.component('processing-graph', {
 
       vm.new_job_info = {
         job_id: job_info.id,
-        scale: vm.network.getScale()
+        viewport: {zoom: vm.network.zoom(), pan: vm.network.pan()}
       }
       vm.updateGraph();
     },
@@ -742,79 +715,75 @@ Vue.component('processing-graph', {
       let vm = this;
       var container = document.getElementById('processing-network-div');
       container.innerHTML = "";
+      // Making sure the network is available
+      $("#processing-network-div").show();
+      $("#processing-network-instructions-div").show();
 
-      vm.nodes_ds = new vis.DataSet(vm.nodes);
-      vm.edges_ds = new vis.DataSet(vm.edges);
-      var data = {
-        nodes: vm.nodes_ds,
-        edges: vm.edges_ds
+      var layout = {
+        name: 'dagre',
+        rankDir: 'LR',
+        directed: true,
+        nodeDimensionsIncludeLabels: true,
+        nodeSep: 2,
+        spacingFactor: 1.2,
+        padding: 5
       };
-      var options = {
-        autoResize: true,
-        clickToUse: true,
-        nodes: {
-          font: {
-            size: 15,
-            color: '#000000'
-          },
-          size: 13,
-          borderWidth: 2,
-        },
-        edges: {
-          color: 'grey'
-        },
-        layout: {
-          randomSeed: 1,
-          improvedLayout: true,
-          hierarchical: {
-            direction: "LR",
-            sortMethod : 'directed',
-            levelSeparation: 190,
-            shakeTowards: 'roots'
-          }
-        },
-        interaction: {
-          dragNodes: false,
-          dragView: true,
-          zoomView: true,
-          selectConnectedEdges: true,
-          navigationButtons: true,
-          keyboard: false
-        },
-        groups: {
-          jobs: {
-            color: '#FF9152'
-          },
-          artifact: {
-            color: '#FFFFFF'
-          },
-          type: {
-            color: '#BBBBBB'
-          }
-        }
+      var style = [{
+        selector: 'node',
+        style: {
+          'content': 'data(label)',
+          'background-color': 'data(color)',
+          'shape': 'data(shape)',
+          'text-opacity': 0.7,
+          'text-wrap': "wrap",
+          'border-color': '#BBBBBB',
+          'border-width': '1px'
+        }}, {
+        selector: 'edge',
+        style: {
+          'curve-style': 'bezier',
+          'target-arrow-shape': 'triangle'
+        }},
+      ];
+      var panzoom_options =	{
+        zoomOnly: true,
+        sliderHandleIcon: 'fa fa-minus',
+        zoomInIcon: 'fa fa-plus',
+        zoomOutIcon: 'fa fa-minus',
+        resetIcon: 'fa fa-expand'
       };
 
-      vm.network = new vis.Network(container, data, options);
-      vm.network.on("stabilized", function (params) {
+      // Note: we only need to sort the edges to keep the same structure of the
+      //       graph; in other words, nodes order is not important
+      vm.edges = vm.edges.sort(edge_sorting);
+
+      vm.network = cytoscape({
+          container: container,
+          minZoom: 1e-50,
+          maxZoom: 2,
+          layout: layout, style: style,
+          elements: {
+            nodes: vm.nodes,
+            edges: vm.edges,
+          }
+        });
+      vm.network.panzoom(panzoom_options);
+      vm.network.nodes().lock();
+
+      vm.network.ready(function() {
         if (vm.new_job_info !== null){
-          vm.network.focus(vm.new_job_info["job_id"], {
-            scale: vm.new_job_info["scale"]
-          });
+          vm.network.viewport(vm.new_job_info['viewport']);
           vm.new_job_info = null;
         }
       });
 
-      vm.network.on("click", function (properties) {
-        var ids = properties.nodes;
-        if (ids.length == 0) {
-          return
-        }
-        // [0] cause users can only select 1 node
-        var clickedNode = vm.nodes_ds.get(ids)[0];
-        var element_id = ids[0];
-        if (clickedNode.group == 'artifact') {
+      vm.network.on('tap', 'node', function (evt) {
+        var data = evt.target.data();
+        var element_id = data.id;
+
+        if (data.group === 'artifact') {
           vm.populateContentArtifact(element_id);
-        } else if (clickedNode.group == 'deleting') {
+        } else if (data.group === 'deleting') {
           $("#processing-results").empty();
           $("#processing-results").append("<h4>This artifact is being deleted</h4>");
         } else {
@@ -987,7 +956,7 @@ Vue.component('processing-graph', {
             // forcing a string
             data.edges[i][0] = data.edges[i][0].toString()
             data.edges[i][1] = data.edges[i][1].toString()
-            vm.edges.push({from: data.edges[i][0], to: data.edges[i][1], arrows:'to'});
+            vm.edges.push({data: {source: data.edges[i][0], target: data.edges[i][1]}});
           }
           // Format node list data
           for(var i = 0; i < data.nodes.length; i++) {
@@ -998,7 +967,7 @@ Vue.component('processing-graph', {
             }
             // forcing a string
             data.nodes[i][2] = data.nodes[i][2].toString()
-            vm.nodes.push({id: data.nodes[i][2], shape: node_info['shape'], label: formatNodeLabel(data.nodes[i][3]), type: data.nodes[i][1], group: data.nodes[i][0], color: node_info, status: data.nodes[i][4]});
+            vm.nodes.push({data: {id: data.nodes[i][2], shape: node_info['shape'], label: formatNodeLabel(data.nodes[i][3]), type: data.nodes[i][1], group: data.nodes[i][0], color: node_info['background'], status: data.nodes[i][4]}});
             if (data.nodes[i][1] === 'job') {
               job_status = data.nodes[i][4];
               if (job_status === 'in_construction') {
@@ -1015,6 +984,7 @@ Vue.component('processing-graph', {
 
           // At this point we can show the graph and hide the job list
           $("#processing-network-div").show();
+          $("#processing-network-instructions-div").show();
           $("#show-hide-network-btn").show();
           $("#processing-job-div").hide();
         }
@@ -1113,21 +1083,23 @@ Vue.component('processing-graph', {
     vm.countdownPoll = 15;
     $('#countdown-span').html(vm.countdownPoll);
     vm.colorScheme = {
-      'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}, 'color': '#333333', 'shape': 'dot'},
-      'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}, 'color': '#333333', 'shape': 'dot'},
-      'error': {border: '#ff3333', background: '#ff5b5b', highlight: {border: '#ff3333', background: '#ff8484'}, 'color': '#333333', 'shape': 'dot'},
-      'in_construction': {border: '#634a00', background: '#e59400', highlight: {border: '#634a00', background: '#efbe66'}, 'color': '#333333', 'shape': 'dot'},
-      'queued': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333', 'shape': 'dot'},
-      'waiting': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333', 'shape': 'dot'},
-      'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}, 'color': '#333333', 'shape': 'triangle'},
-      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}, 'color': '#333333', 'shape': 'triangle'},
-      'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}, 'color': '#333333', 'shape': 'triangle'},
-      'outdated': {border: '#666666', background: '#666666', highlight: {border: '#000000', background: '#666666'}, 'color': '#ffffff', 'shape': 'triangle'},
-      'deprecated': {border: '#000000', background: '#000000', highlight: {border: '#000000', background: '#333333'}, 'color': '#ffffff', 'shape': 'triangleDown'}
+      'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}, 'color': '#333333', 'shape': 'ellipse'},
+      'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}, 'color': '#333333', 'shape': 'ellipse'},
+      'error': {border: '#ff3333', background: '#ff5b5b', highlight: {border: '#ff3333', background: '#ff8484'}, 'color': '#333333', 'shape': 'ellipse'},
+      'in_construction': {border: '#634a00', background: '#e59400', highlight: {border: '#634a00', background: '#efbe66'}, 'color': '#333333', 'shape': 'ellipse'},
+      'queued': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333', 'shape': 'ellipse'},
+      'waiting': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333', 'shape': 'ellipse'},
+      'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}, 'color': '#333333', 'shape': 'round-triangle'},
+      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}, 'color': '#333333', 'shape': 'round-triangle'},
+      'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}, 'color': '#333333', 'shape': 'round-triangle'},
+      'outdated': {border: '#666666', background: '#666666', highlight: {border: '#000000', background: '#666666'}, 'color': '#ffffff', 'shape': 'round-triangle'},
+      'deprecated': {border: '#000000', background: '#000000', highlight: {border: '#000000', background: '#333333'}, 'color': '#ffffff', 'shape': 'vee'}
     };
 
     show_loading('processing-network-div');
     $("#processing-network-div").hide();
+    $("#processing-network-instructions-div").hide();
+
 
     $('#run-btn').on('click', function() {
       $('#run-btn').attr('disabled', true);

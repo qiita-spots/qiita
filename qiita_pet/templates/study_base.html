@@ -2,9 +2,6 @@
 {% block head %}
 {% set study_title = study_info['study_title'] %}
 {% set study_title_msg = study_title.replace('"', '\\"') %}
-<link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.min.css" type="text/css">
-<link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis-network.min.css" type="text/css">
-<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis-network.min.js"></script>
 <script type="text/javascript">
   function validate_delete_study_text() {
     if ($("#study-alias").val() == "{% raw study_title_msg %}") {
