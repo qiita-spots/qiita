@@ -1485,6 +1485,7 @@ class Artifact(qdb.base.QiitaObject):
         list of qiita_db.software.Command
             The commands that can process the given artifact tyoes
         """
+        dws = []
         with qdb.sql_connection.TRN:
             # get all the possible commands
             sql = """SELECT DISTINCT qiita.command_parameter.command_id
@@ -1498,17 +1499,17 @@ class Artifact(qdb.base.QiitaObject):
                      WHERE artifact_id = %s AND active = True"""
             if self.analysis is None:
                 sql += " AND is_analysis = False"
+                # get the workflows that match this artifact so we can filter
+                # the available commands based on the commands in the worflows
+                # for that artifact
+                dws = [w for w in qdb.software.DefaultWorkflow.iter()
+                       if self.data_type in w.data_type]
             else:
                 sql += " AND is_analysis = True"
 
             qdb.sql_connection.TRN.add(sql, [self.id])
             cids = set(qdb.sql_connection.TRN.execute_fetchflatten())
 
-            # get the workflows that match this artifact so we can filter the
-            # available commands based on the commands in the worflows for that
-            # artifact
-            dws = [w for w in qdb.software.DefaultWorkflow.iter()
-                   if self.data_type in w.data_type]
             if dws:
                 cmds = set([n.default_parameter.command.id
                             for w in dws for n in w.graph.nodes])
