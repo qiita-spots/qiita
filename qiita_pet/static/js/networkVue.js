@@ -627,12 +627,13 @@ Vue.component('processing-graph', {
       p_node = String(p_node);
       nodeIdSplit = p_node.split(':');
       node = vm.network.getElementById(p_node).data();
+      root = vm.network.nodes()[0].id();
       if (nodeIdSplit.length < 2 || vm.network.getElementById(nodeIdSplit[0]).data().status === 'in_construction') {
         // This means that either we are going to process a new artifact (nodeIdSplit.length < 2)
         // or that the parent job generating this artifact type node is in construction.
         // In both of this cases, we can add a new job to the workflow
         sel_artifacts_info[node.id] = {'type': node.type, 'name': node.label};
-        artifact_id = nodeIdSplit.length < 2 ? node.id : node.type;
+        artifact_id = nodeIdSplit.length < 2 ? node.id : node.type + ':' + root ;
 
         $.get(vm.portal + '/study/process/commands/', {artifact_id: artifact_id, include_analysis: vm.isAnalysisPipeline})
           .done(function (data) {

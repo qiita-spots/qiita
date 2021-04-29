@@ -63,7 +63,7 @@ class Command(qdb.base.QiitaObject):
 
     @classmethod
     def get_commands_by_input_type(cls, artifact_types, active_only=True,
-                                   exclude_analysis=True):
+                                   exclude_analysis=True, prep_type=None):
         """Returns the commands that can process the given artifact types
 
         Parameters
@@ -94,8 +94,17 @@ class Command(qdb.base.QiitaObject):
             if exclude_analysis:
                 sql += " AND is_analysis = False"
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_types)])
-            for c_id in qdb.sql_connection.TRN.execute_fetchflatten():
-                yield cls(c_id)
+            cids = set(qdb.sql_connection.TRN.execute_fetchflatten())
+
+            if prep_type is not None:
+                dws = [w for w in qdb.software.DefaultWorkflow.iter()
+                       if prep_type in w.data_type]
+                if dws:
+                    cmds = set([n.default_parameter.command.id
+                                for w in dws for n in w.graph.nodes])
+                    cids = cmds & cids
+
+            return [cls(cid) for cid in cids]
 
     @classmethod
     def get_html_generator(cls, artifact_type):
