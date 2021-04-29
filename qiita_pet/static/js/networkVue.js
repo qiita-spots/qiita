@@ -773,6 +773,9 @@ Vue.component('processing-graph', {
       vm.network.ready(function() {
         if (vm.new_job_info !== null){
           vm.network.viewport(vm.new_job_info['viewport']);
+          node = vm.network.getElementById(vm.new_job_info.job_id);
+          // center in the children of the new job
+          vm.network.center(node.successors());
           vm.new_job_info = null;
         }
       });

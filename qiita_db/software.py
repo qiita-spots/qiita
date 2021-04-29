@@ -100,8 +100,8 @@ class Command(qdb.base.QiitaObject):
                 dws = [w for w in qdb.software.DefaultWorkflow.iter()
                        if prep_type in w.data_type]
                 if dws:
-                    cmds = set([n.default_parameter.command.id
-                                for w in dws for n in w.graph.nodes])
+                    cmds = {n.default_parameter.command.id
+                            for w in dws for n in w.graph.nodes}
                     cids = cmds & cids
 
             return [cls(cid) for cid in cids]

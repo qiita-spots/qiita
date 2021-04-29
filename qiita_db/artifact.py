@@ -1511,8 +1511,8 @@ class Artifact(qdb.base.QiitaObject):
             cids = set(qdb.sql_connection.TRN.execute_fetchflatten())
 
             if dws:
-                cmds = set([n.default_parameter.command.id
-                            for w in dws for n in w.graph.nodes])
+                cmds = {n.default_parameter.command.id
+                        for w in dws for n in w.graph.nodes}
                 cids = cmds & cids
 
             return [qdb.software.Command(cid) for cid in cids]
