@@ -20,8 +20,8 @@ def list_commands_handler_get_req(artifact_id, exclude_analysis):
 
     Parameters
     ----------
-    artifact_id : int
-        artifact id
+    artifact_id : string
+        artifact id, it can be the integer or the name of the artifact
     exclude_analysis : bool
         If True, return commands that are not part of the analysis pipeline
 
@@ -35,9 +35,14 @@ def list_commands_handler_get_req(artifact_id, exclude_analysis):
                                        'command': str,
                                        'output': list of [str, str]}}
     """
-    cmd_info = [
-        {'id': cmd.id, 'command': cmd.name, 'output': cmd.outputs}
-        for cmd in Artifact(artifact_id).get_commands]
+    if artifact_id.isdigit():
+        commands = Artifact(artifact_id).get_commands
+    else:
+        commands = Command.get_commands_by_input_type(
+            [artifact_id], exclude_analysis=exclude_analysis)
+
+    cmd_info = [{'id': cmd.id, 'command': cmd.name, 'output': cmd.outputs}
+                for cmd in commands]
 
     return {'status': 'success',
             'message': '',

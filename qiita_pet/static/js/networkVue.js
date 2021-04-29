@@ -632,8 +632,9 @@ Vue.component('processing-graph', {
         // or that the parent job generating this artifact type node is in construction.
         // In both of this cases, we can add a new job to the workflow
         sel_artifacts_info[node.id] = {'type': node.type, 'name': node.label};
+        artifact_id = nodeIdSplit.length < 2 ? node.id : node.type;
 
-        $.get(vm.portal + '/study/process/commands/', {artifact_id: node.id, include_analysis: vm.isAnalysisPipeline})
+        $.get(vm.portal + '/study/process/commands/', {artifact_id: artifact_id, include_analysis: vm.isAnalysisPipeline})
           .done(function (data) {
             target.empty();
 
