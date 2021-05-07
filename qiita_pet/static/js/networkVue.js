@@ -613,7 +613,6 @@ Vue.component('processing-graph', {
      **/
     loadArtifactType: function(p_node) {
       let vm = this;
-      var types = [];
       var sel_artifacts_info = {};
       var node, nodeIdSplit, $rowDiv, $colDiv;
       var target = $("#processing-results");
@@ -628,14 +627,15 @@ Vue.component('processing-graph', {
       p_node = String(p_node);
       nodeIdSplit = p_node.split(':');
       node = vm.network.getElementById(p_node).data();
+      root = vm.network.nodes()[0].id();
       if (nodeIdSplit.length < 2 || vm.network.getElementById(nodeIdSplit[0]).data().status === 'in_construction') {
         // This means that either we are going to process a new artifact (nodeIdSplit.length < 2)
         // or that the parent job generating this artifact type node is in construction.
         // In both of this cases, we can add a new job to the workflow
-        types.push(node.type);
         sel_artifacts_info[node.id] = {'type': node.type, 'name': node.label};
+        artifact_id = nodeIdSplit.length < 2 ? node.id : node.type + ':' + root ;
 
-        $.get(vm.portal + '/study/process/commands/', {artifact_types: types, include_analysis: vm.isAnalysisPipeline})
+        $.get(vm.portal + '/study/process/commands/', {artifact_id: artifact_id, include_analysis: vm.isAnalysisPipeline})
           .done(function (data) {
             target.empty();
 
@@ -773,6 +773,9 @@ Vue.component('processing-graph', {
       vm.network.ready(function() {
         if (vm.new_job_info !== null){
           vm.network.viewport(vm.new_job_info['viewport']);
+          node = vm.network.getElementById(vm.new_job_info.job_id);
+          // center in the children of the new job
+          vm.network.center(node.successors());
           vm.new_job_info = null;
         }
       });

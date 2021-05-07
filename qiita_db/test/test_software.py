@@ -74,6 +74,18 @@ class CommandTests(TestCase):
         exp = [qdb.software.Command(1), qdb.software.Command(2), new_cmd]
         self.assertCountEqual(obs, exp)
 
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ'], active_only=False, exclude_analysis=False,
+            prep_type='Metagenomic'))
+        exp = [qdb.software.Command(1), new_cmd]
+        self.assertCountEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ'], active_only=False, exclude_analysis=False,
+            prep_type='18S'))
+        exp = [qdb.software.Command(1)]
+        self.assertCountEqual(obs, exp)
+
     def test_get_html_artifact(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.get_html_generator('BIOM')

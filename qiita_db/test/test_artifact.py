@@ -603,6 +603,22 @@ class ArtifactTestsReadOnly(TestCase):
         exp = []
         self.assertEqual(obs, exp)
 
+    def test_get_commands(self):
+        # we will check only ids for simplicity
+        # checking processing artifacts
+        obs = [c.id for c in qdb.artifact.Artifact(1).get_commands]
+        self.assertEqual(obs, [1])
+        obs = [c.id for c in qdb.artifact.Artifact(2).get_commands]
+        self.assertEqual(obs, [3])
+        # this is a biom in processing, so no commands should be available
+        obs = [c.id for c in qdb.artifact.Artifact(6).get_commands]
+        self.assertEqual(obs, [])
+
+        # checking analysis object - this is a biom in analysis, several
+        # commands should be available
+        obs = [c.id for c in qdb.artifact.Artifact(8).get_commands]
+        self.assertEqual(obs, [9, 10, 11, 12])
+
 
 @qiita_test_checker()
 class ArtifactTests(TestCase):
