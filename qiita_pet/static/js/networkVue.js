@@ -44,7 +44,10 @@ function formatNodeLabel(label) {
  **/
 function toggleNetworkGraph() {
   if($("#processing-network-div").css('display') == 'none' ) {
-    $("#processing-network-instructions-div").show();
+    // if we are displayin the waiting page, do not show the instructions
+    if (!$("#processing-network-div").html().includes('waiting')){
+      $("#processing-network-instructions-div").show();
+    }
     $("#processing-network-div").show();
     $("#show-hide-network-btn").text("Hide");
   } else {
@@ -736,8 +739,8 @@ Vue.component('processing-graph', {
           'shape': 'data(shape)',
           'text-opacity': 0.7,
           'text-wrap': "wrap",
-          'border-color': '#BBBBBB',
-          'border-width': '1px'
+          'border-color': '#333',
+          'border-width': '3px'
         }}, {
         selector: 'edge',
         style: {
@@ -761,6 +764,7 @@ Vue.component('processing-graph', {
           container: container,
           minZoom: 1e-50,
           maxZoom: 2,
+          wheelSensitivity: .5,
           layout: layout, style: style,
           elements: {
             nodes: vm.nodes,
@@ -1097,7 +1101,6 @@ Vue.component('processing-graph', {
     };
 
     show_loading('processing-network-div');
-    $("#processing-network-div").hide();
     $("#processing-network-instructions-div").hide();
 
 
