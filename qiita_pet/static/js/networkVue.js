@@ -764,7 +764,7 @@ Vue.component('processing-graph', {
           container: container,
           minZoom: 1e-50,
           maxZoom: 2,
-          wheelSensitivity: .5,
+          wheelSensitivity: .3,
           layout: layout, style: style,
           elements: {
             nodes: vm.nodes,
