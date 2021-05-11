@@ -1214,8 +1214,10 @@ class Artifact(qdb.base.QiitaObject):
                                 nodes[job.id] = ('job', job)
 
                     elif n_type == 'job':
-                        # Ignore the generate summary jobs
-                        if n_obj.command.name == 'Generate HTML summary':
+                        # Ignore the generate summary and delete jobs
+                        # (they don't create new artifacts)
+                        if n_obj.command.name in {'Generate HTML summary',
+                                                  'delete_artifact'}:
                             continue
                         jstatus = n_obj.status
                         # If the job is in success we don't need to do anything
