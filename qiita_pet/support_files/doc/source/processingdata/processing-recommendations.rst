@@ -6,13 +6,12 @@ Currently, Qiita supports the processing of raw data from:
 #. Target gene barcoded sequencing
 #. Shotgun sequencing
 #. Metatranscriptome sequencing
-
+#. Genome Isolate sequencing
 
 Note that the selected processing recommendations are mainly guided towards performing meta-analyses,
 this is combine different studies, even from different wet lab techniques or
 sequencing technologies. However, these parameters shouldn't prevent you using the
 resulting tables as your primary analytical source.
-
 
 Target gene barcoded sequencing
 -------------------------------
@@ -242,3 +241,15 @@ Additionally, a summary file showing the proportion of reads matching to each of
 Default options have been set to report only the best alignment per read reaching E-value.
 For non ribo-depleted samples (i.e. total RNA), the ribosomal reads obtained from SortMeRNA can be further used in taxonomic/compositional analysis.
 In the case of ribo-depleted samples, only the non-ribosomal reads are used in downstream analyses such as assembly, mapping, differential gene abundance analyses etc.
+
+
+Genome Isolate Processing
+-------------------------
+
+This workflow can be used for assembling (meta)-genomes (isolate and/or metagenomic data) using SPAdes v3.15.2 at set k-mer lengths of 21,33,55,77,99 and 127.
+
+The assembled contigs are stored in per sample FASTA files (originally scaffolds.fna in SPAdes).
+
+The --merge option merges the forward and reverse reads prior to assembly (preferable for isolate or metagenomes with high sequencing depth), the non-merge option works well for shallow shotgun data and/or complex environmental communities.
+
+The --meta flag is used to assemble metagenomic datasets.

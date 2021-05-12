@@ -1,5 +1,13 @@
 # Qiita changelog
 
+Version 2021.05
+---------------
+
+* Replaced vis.js for cytoscape.js to display the processing networks.
+* The commands available to users, originally only filtered by input type, are now also limited by the preparation type. The options are taken from the [recommended workflows](https://qiita.ucsd.edu/workflows/).
+* Added a new [spades](https://github.com/ablab/spades) assembly pipeline for "Genome Isolate".
+* Fixed the following issues: [#3070](https://github.com/qiita-spots/qiita/issues/3070), [#3089](https://github.com/qiita-spots/qiita/issues/3089), [#2968](https://github.com/qiita-spots/qiita/issues/2968), [#3102](https://github.com/qiita-spots/qiita/issues/3102), and [#3079](https://github.com/qiita-spots/qiita/issues/3079).
+
 
 Version 2021.03
 ---------------

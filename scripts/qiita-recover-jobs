@@ -70,7 +70,7 @@ def _count_jobs_in_scheduler():
     j1 = len(check_output(['qstat']).decode('ascii').split("\n"))
     # now, let's count the jobs in job arrays
     lines = check_output(['qstat', '-f']).decode('ascii').split("\n")
-    j2 = sum([int(x.split(',')[-1].split('-')[-1])
+    j2 = sum([int(x.split(' ')[-1].split(',')[-1].split('-')[-1])
               for x in lines if 'job_array_request' in x])
     return j1 + j2
 
