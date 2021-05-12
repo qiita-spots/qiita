@@ -458,7 +458,7 @@
     <ul class="nav nav-pills">
       <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#sample-listing-tab-div">Sample Listing</a></li>
       <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
-      <li style="border: 1px solid #428bca; border-radius: 5px" class="active"><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn">Processing</a></li>
+      <li style="border: 1px solid #428bca; border-radius: 5px" class="active"><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn" number-samples={{num_samples}}>Processing</a></li>
     </ul>
 
     <div class="tab-content">
@@ -494,8 +494,8 @@
         </div>
       </div>
       <div id="summary-tab-div" class="tab-pane fade">
-        <b>Number of samples: </b>{{num_samples}}</br>
-        <b>Number of columns: </b>{{num_columns}}</br>
+        <b>Number of samples: </b>{{num_samples}}<br/>
+        <b>Number of columns: </b>{{num_columns}}<br/>
         {% if editable %}
           <!-- Update prep template -->
           <div class="row">

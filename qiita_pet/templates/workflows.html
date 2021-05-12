@@ -2,44 +2,36 @@
 {% block head %}
 {% from qiita_core.qiita_settings import qiita_config %}
 
-<style>
-  div.vis-network {
-    background-color: #DCDCDC;
-  }
-</style>
-
 <script type="text/javascript">
-var options = {
-  autoResize: true,
-  nodes: {
-    font: {
-      size: 15,
-      color: '#000000'
-    },
-    size: 13,
-    borderWidth: 2,
-  },
-  edges: {
-    color: 'grey'
-  },
-  layout: {
-    randomSeed: 1,
-    improvedLayout: true,
-    hierarchical: {
-      direction: "LR",
-      sortMethod : 'directed',
-      levelSeparation: 190,
-      shakeTowards: 'roots'
-    }
-  },
-  interaction: {
-    dragNodes: false,
-    dragView: true,
-    zoomView: true,
-    selectConnectedEdges: true,
-    navigationButtons: true,
-    keyboard: false,
-  }
+var layout = {
+  name: 'dagre',
+  rankDir: 'LR',
+  directed: true,
+  grid: true,
+  nodeDimensionsIncludeLabels: true,
+};
+var style = [{
+  selector: 'node',
+  style: {
+    'content': 'data(label)',
+    'background-color': 'data(color)',
+    'text-opacity': 0.7,
+    'text-wrap': "wrap",
+    'border-color': '#333',
+    'border-width': '3px'
+  }}, {
+  selector: 'edge',
+  style: {
+    'curve-style': 'bezier',
+    'target-arrow-shape': 'triangle'
+  }},
+];
+var panzoom_options =	{
+  zoomOnly: true,
+  sliderHandleIcon: 'fa fa-minus',
+  zoomInIcon: 'fa fa-plus',
+  zoomOutIcon: 'fa fa-minus',
+  resetIcon: 'fa fa-expand'
 };
 
 var colorScheme =  {
@@ -55,6 +47,16 @@ function format_title(name, params) {
   return title;
 }
 
+function makePopper(node) {
+  node.tippy = tippy(node.popperRef(), {
+    content: () => {
+      let content = document.createElement('div');
+      content.innerHTML = node.data('tooltip');
+      return content;
+    }
+  });
+}
+
 </script>
 
 {% end %}
@@ -62,7 +64,7 @@ function format_title(name, params) {
 {% block content %}
   {% if workflows %}
     <h3>Recommended Workflows</h3>
-    <h5>Click on the spheres to get more information</h5>
+    <h5>Hover on the spheres to get more information</h5>
       {% for i, w in enumerate(workflows) %}
         <div class="row">
           <div class="col-sm-7" style="background-color: #DCDCDC; height: 650px" id="workflow_{{i}}"></div>
@@ -78,24 +80,41 @@ function format_title(name, params) {
             </div>
           </div>
           <script type="text/javascript">
-            var nodes_{{i}} = new vis.DataSet([
-              {% for node in w['nodes'] %}
-                {% if node[0].startswith('params') %}
-                  {id: "{{node[0]}}", shape: "dot", color: colorScheme['command'], label: "{% raw node[2].replace(' | ', '\\n') %}", title: format_title("{{node[3]}}", {% raw node[4] %})},
-                {% else %}
-                  {id: "{{node[0]}}", shape: "dot", color: colorScheme['artifact'], label: "{% raw node[2].replace(' | ', '\\n') %}", title: "Artifact: {{node[2]}}"},
-                {% end %}
-              {% end %}
-            ]);
+            var cy_network_{{i}} = cytoscape({
+              container: document.getElementById('workflow_{{i}}'),
+              wheelSensitivity: .3,
+              layout: layout, style: style,
+              elements: {
+                nodes: [
+                  {% for node in w['nodes'] %}
+                    {% if node[0].startswith('params') %}
+                      {data: {id: "{{node[0]}}", shape: "dot", color: colorScheme['command']['background'], label: "{% raw node[2].replace(' | ', '\\n') %}", tooltip: format_title("{{node[3]}}", {% raw node[4] %})}},
+                    {% else %}
+                      {data: {id: "{{node[0]}}", shape: "dot", color: colorScheme['artifact']['background'], label: "{% raw node[2].replace(' | ', '\\n') %}", tooltip: "Artifact: {{node[2]}}"}},
+                    {% end %}
+                  {% end %}
+                ],
+                edges: [
+                  {% for f, t in w['edges'] %}
+                    {data: { source: "{{f}}", target: "{{t}}"}},
+                  {% end %}
+                ]
+              }
+            });
+            cy_network_{{i}}.panzoom(panzoom_options);
+            cy_network_{{i}}.nodes().lock();
 
-            var edges_{{i}} = new vis.DataSet([
-              {% for f, t in w['edges'] %}
-                { from: "{{f}}", to: "{{t}}", arrows: "to"},
-              {% end %}
-            ]);
-            var container = document.getElementById("workflow_{{i}}");
-            var data = { nodes: nodes_{{i}}, edges: edges_{{i}} };
-            var network = new vis.Network(container, data, options);
+            cy_network_{{i}}.ready(function() {
+              cy_network_{{i}}.nodes().forEach(function(node) {
+                makePopper(node);
+              });
+            });
+
+            cy_network_{{i}}.nodes().unbind('mouseover');
+            cy_network_{{i}}.nodes().bind('mouseover', (event) => event.target.tippy.show());
+
+            cy_network_{{i}}.nodes().unbind('mouseout');
+            cy_network_{{i}}.nodes().bind('mouseout', (event) => event.target.tippy.hide());
           </script>
         </div>
         <hr/>

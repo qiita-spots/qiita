@@ -1284,7 +1284,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if naming_params:
                     params = self.parameters.values
                     art_name = "%s %s" % (
-                        out_name, ' '.join([str(params[p])
+                        out_name, ' '.join([str(params[p]).split('/')[-1]
                                             for p in naming_params]))
                 else:
                     art_name = out_name

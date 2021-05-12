@@ -20,6 +20,7 @@ from qiita_db.artifact import Artifact
 from qiita_db.software import Command, Software, Parameters
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.util import get_visibilities, send_email
+from qiita_db.logger import LogEntry
 
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
@@ -354,9 +355,9 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
             except Exception as e:
                 raise QiitaHTTPError(403, str(e).replace('\n', '<br/>'))
 
+            sid = artifact.study.id
             if artifact.visibility == 'awaiting_approval':
                 email_to = 'qiita.help@gmail.com'
-                sid = artifact.study.id
                 subject = ('QIITA: Artifact %s awaiting_approval. Study %d, '
                            'Prep %d' % (artifact_id, sid,
                                         artifact.prep_templates[0].id))
@@ -370,6 +371,10 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
                            "directly to <a href='mailto:{0}'>{0}</a>.".format(
                                email_to))
                     raise QiitaHTTPError(400, msg)
+            else:
+                msg = '%s changed artifact %s (study %d) to %s' % (
+                    user.email, artifact_id, sid, req_value)
+                LogEntry.create('Warning', msg)
         else:
             # We don't understand the attribute so return an error
             raise QiitaHTTPError(404, 'Attribute "%s" not found. Please, '

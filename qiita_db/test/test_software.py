@@ -74,6 +74,18 @@ class CommandTests(TestCase):
         exp = [qdb.software.Command(1), qdb.software.Command(2), new_cmd]
         self.assertCountEqual(obs, exp)
 
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ'], active_only=False, exclude_analysis=False,
+            prep_type='Metagenomic'))
+        exp = [qdb.software.Command(1), new_cmd]
+        self.assertCountEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ'], active_only=False, exclude_analysis=False,
+            prep_type='18S'))
+        exp = [qdb.software.Command(1)]
+        self.assertCountEqual(obs, exp)
+
     def test_get_html_artifact(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.get_html_generator('BIOM')
@@ -328,6 +340,16 @@ class CommandTests(TestCase):
                 self.software, "Split libraries",
                 "This is a command for testing", self.parameters,
                 self.outputs)
+
+        # the output type doesn't exist
+        with self.assertRaisesRegex(ValueError, "Error creating QIIME, Split "
+                                    "libraries - wrong output, This is a "
+                                    "command for testing - Unknown "
+                                    "artifact_type: BLA!"):
+            qdb.software.Command.create(
+                self.software, "Split libraries - wrong output",
+                "This is a command for testing", self.parameters,
+                {'out': 'BLA!'})
 
     def test_create(self):
         # let's deactivate all current plugins and commands; this is not

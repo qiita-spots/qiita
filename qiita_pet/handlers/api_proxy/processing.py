@@ -9,18 +9,19 @@
 from json import loads
 
 from qiita_db.user import User
+from qiita_db.artifact import Artifact
 from qiita_db.software import Command, Parameters, DefaultParameters
 from qiita_db.processing_job import ProcessingWorkflow, ProcessingJob
 from qiita_db.exceptions import QiitaDBUnknownIDError
 
 
-def list_commands_handler_get_req(artifact_types, exclude_analysis):
+def list_commands_handler_get_req(id, exclude_analysis):
     """Retrieves the commands that can process the given artifact types
 
     Parameters
     ----------
-    artifact_types : str
-        Comma-separated list of artifact types
+    id : string
+        id, it can be the integer or the name of the artifact:network-root
     exclude_analysis : bool
         If True, return commands that are not part of the analysis pipeline
 
@@ -34,11 +35,28 @@ def list_commands_handler_get_req(artifact_types, exclude_analysis):
                                        'command': str,
                                        'output': list of [str, str]}}
     """
-    artifact_types = artifact_types.split(',')
-    cmd_info = [
-        {'id': cmd.id, 'command': cmd.name, 'output': cmd.outputs}
-        for cmd in Command.get_commands_by_input_type(
-            artifact_types, exclude_analysis=exclude_analysis)]
+    if id.isdigit():
+        commands = Artifact(id).get_commands
+    else:
+        pieces = id.split(':')
+        if len(pieces) == 1:
+            aid = pieces[0]
+            root = ''
+        else:
+            aid = pieces[0]
+            root = pieces[1]
+        prep_type = None
+        if root.isdigit():
+            artifact = Artifact(root)
+            if artifact.analysis is None:
+                prep_type = artifact.prep_templates[0].data_type
+
+        commands = Command.get_commands_by_input_type(
+            [aid], exclude_analysis=exclude_analysis,
+            prep_type=prep_type)
+
+    cmd_info = [{'id': cmd.id, 'command': cmd.name, 'output': cmd.outputs}
+                for cmd in commands]
 
     return {'status': 'success',
             'message': '',

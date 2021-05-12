@@ -65,13 +65,14 @@ def _retrieve_queue_jobs():
     return set(qiita_jids)
 
 
-def _count_jobs_in_arrays():
-    # a direct way to calculate how many jobs are in the queue is to count
-    # how many samples are in the preparation information file of the input
-    # artifact
-    jobs = [ProcessingJob(jid) for jid in _retrieve_queue_jobs()
-            if ProcessingJob(jid).command.name in ARRAY_COMMANDS]
-    return sum([len(job.input_artifacts[0].prep_templates[0]) for job in jobs])
+def _count_jobs_in_scheduler():
+    # first let's count all regular jobs
+    j1 = len(check_output(['qstat']).decode('ascii').split("\n"))
+    # now, let's count the jobs in job arrays
+    lines = check_output(['qstat', '-f']).decode('ascii').split("\n")
+    j2 = sum([int(x.split(' ')[-1].split(',')[-1].split('-')[-1])
+              for x in lines if 'job_array_request' in x])
+    return j1 + j2
 
 
 def _get_jids_to_recover(recover_type):
