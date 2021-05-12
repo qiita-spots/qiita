@@ -24,7 +24,7 @@ If you'd like to report bugs or request features, you can do that in the
 `Qiita issue tracker <https://github.com/qiita-spots/qiita/issues>`__.
 
 To install and configure your own Qiita server, see
-`INSTALL.md <https://github.com/qiita-spots/qiita/blob/master/INSTALL.md>`__. However, note that Qiita is a really complex server side software with multiple dependencies and requirements, which makes it not really intended for a "regular" computer or user to install and run for production. Nevertheless, it's meant to run just fine on a laptop or small computer for development. For example, for every single PR and release, we install Qiita from scratch as GitHub Actions, you can follow `these steps <https://github.com/qiita-spots/qiita/actions>`__.
+`INSTALL.md <https://github.com/qiita-spots/qiita/blob/master/INSTALL.md>`__. However, Qiita is not designed to be used locally but rather on a server, we therefore advise against installing your own version on a personal computer. Nevertheless, it can run just fine on a laptop or small computer for development and educational purposes. For example, for every single PR and release, we install Qiita from scratch as GitHub Actions, you can follow `these steps <https://github.com/qiita-spots/qiita/actions>`__.
 
 For more specific details about Qiita's philosophy and design visit `the Qiita main site tutorial <https://qiita.microbio.me/static/doc/html/qiita-philosophy/index.html>`__.
 
@@ -40,7 +40,8 @@ Current features
   part of the European Bioinformatics Institute (EBI) for private and public
   studies.
 * Raw data processing for `Target Gene, Metagenomic, Metabolomic, Genome Isolates and BIOM files <https://qiita.ucsd.edu/static/doc/html/processingdata/index.html#processing-recommendations>`__. NOTE: BIOM files can be added as new preparation files for downstream analyses; however, this cannot be made public in the system.
-* Basic downstream analyses using Qiime2.
+* Basic downstream analyses using QIIME 2. Note that Qiita produces qza/qzv in the analytical steps but you can also convert `non QIIME 2 artifacts <https://qiita.ucsd.edu/static/doc/html/faq.html#how-to-convert-qiita-files-to-qiime2-artifacts>`__.
+* Bulk download of `studies and artifacts <https://qiita.ucsd.edu/static/doc/html/downloading.html>`__.
 * Basic study search in the study listing page.
 * Complex metadata search via redbiom.
 
