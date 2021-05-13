@@ -8,20 +8,6 @@ Version 2021.05
 * Added a new [spades](https://github.com/ablab/spades) assembly pipeline for "Genome Isolate".
 * Fixed the following issues: [#3070](https://github.com/qiita-spots/qiita/issues/3070), [#3089](https://github.com/qiita-spots/qiita/issues/3089), [#2968](https://github.com/qiita-spots/qiita/issues/2968), [#3102](https://github.com/qiita-spots/qiita/issues/3102), and [#3079](https://github.com/qiita-spots/qiita/issues/3079).
 
-
-Version 2021.03
----------------
-
-* Fixed [issue](https://github.com/qiita-spots/qtp-target-gene/issues/32) that left behind non gz per sample FASTQ files.
-* [Recommended Workflows](https://qiita-rc.ucsd.edu/workflows/) are now stored in the database.
-* Added a new button only for owners and admins within the Study page to display a list of all the Analyses generated with that study; helpful to clean up Studies and for general information.
-* The Qiita CI now runs as [GitHub Actions](https://github.com/qiita-spots/qiita/actions); moving away from Travis CI.
-* Prep information file object now stores its creation and modification timestamps.
-* Improved creation time for all information files via the to_dataframe() method.
-* Split the "other" category of the storage stats plot (https://qiita.ucsd.edu/stats/) into "other" and "biom" so biom can be its own category.
-* Added a processing_jobs property to qiita_db.software.Command to easily retrieve all jobs in the system that have ran the given command.
-* Fixed the following issues: [#3068](https://github.com/qiita-spots/qiita/issues/3068), [#3072](https://github.com/qiita-spots/qiita/issues/3072), [#3076](https://github.com/qiita-spots/qiita/issues/3076), and [#3070](https://github.com/qiita-spots/qiita/issues/3070).
-
 Version 2021.03
 ---------------
 
