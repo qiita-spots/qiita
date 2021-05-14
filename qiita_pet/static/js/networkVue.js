@@ -950,6 +950,7 @@ Vue.component('processing-graph', {
         // for the jobs to generate the initial set of artifacts. Update
         // the job list
         if (data.nodes.length == 0) {
+          $("#processing-network-div").hide();
           vm.checkInitialJobs();
         }
         else {
