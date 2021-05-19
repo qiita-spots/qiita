@@ -65,7 +65,7 @@ jobs:
           conda config --add channels conda-forge
           conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython redis
           conda activate qiita
-          pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
+          pip install sphinx sphinx-bootstrap-theme nose-timer Click coveralls
 
           # Configuring SSH
           cp /etc/ssh/sshd_config sshd_config
@@ -185,10 +185,7 @@ jobs:
           sleep 10
           if [[ "$COVER_PACKAGE" == *"qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
 
-          coverage report
-
       # https://github.com/marketplace/actions/coveralls-github-action#complete-parallel-job-example
-
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
