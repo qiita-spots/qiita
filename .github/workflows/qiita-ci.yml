@@ -188,9 +188,11 @@ jobs:
       - name: Run coveralls
         shell: bash -l {0}
         env:
-          COVER_PACKAGE: "${{ matrix.cover_package }}"
+          COVER_PACKAGE: ${{ matrix.cover_package }}
         run: |
           conda activate qiita
+          echo ${COVER_PACKAGE}
+          echo ${COVER_PACKAGE// /,}
           coverage report --include=${COVER_PACKAGE// /,}
 
       - name: Submit coveralls
