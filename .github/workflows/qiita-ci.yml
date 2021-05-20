@@ -65,7 +65,7 @@ jobs:
           conda config --add channels conda-forge
           conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython redis
           conda activate qiita
-          pip install sphinx sphinx-bootstrap-theme nose-timer codecov Click
+          pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
 
           # Configuring SSH
           cp /etc/ssh/sshd_config sshd_config
@@ -177,18 +177,31 @@ jobs:
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
-          nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+
+          nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=${COVER_PACKAGE// / --cover-package=} -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
           # killing the qiita server to run the next commands
           QIITA_PID=`cat /tmp/supervisord.pid`
           kill $QIITA_PID
           sleep 10
-          if [[ "$COVER_PACKAGE" == *"qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
+          if [[ "$COVER_PACKAGE" != *"qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
 
-      - uses: codecov/codecov-action@v1
+      - name: Submit coveralls
+        uses: AndreMiras/coveralls-python-action@develop
         with:
-         token: ${{ secrets.CODECOV_TOKEN }}
-         file: codecov.yml
+          github-token: ${{ secrets.github_token }}
+          flag-name: "${{ matrix.cover_package }}"
+          parallel: true
+
+  coveralls_finish:
+    needs: main
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: AndreMiras/coveralls-python-action@develop
+      with:
+        github-token: ${{ secrets.github_token }}
+        parallel-finished: true
 
   lint:
     runs-on: ubuntu-latest
