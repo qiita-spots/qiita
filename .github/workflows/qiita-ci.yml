@@ -184,7 +184,7 @@ jobs:
           QIITA_PID=`cat /tmp/supervisord.pid`
           kill $QIITA_PID
           sleep 10
-          if [[ "$COVER_PACKAGE" == *"qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
+          if [[ "$COVER_PACKAGE" != *"qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
 
       - name: Run coveralls
         shell: bash -l {0}
@@ -193,13 +193,6 @@ jobs:
         run: |
           conda activate qiita
           coverage report
-
-      - name: Submit coveralls
-        uses: AndreMiras/coveralls-python-action@develop
-        with:
-          github-token: ${{ secrets.github_token }}
-          flag-name: "${{ matrix.cover_package }}"
-          parallel: true
 
   coveralls_finish:
     needs: main
