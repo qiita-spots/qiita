@@ -191,9 +191,8 @@ jobs:
           COVER_PACKAGE: ${{ matrix.cover_package }}
         run: |
           conda activate qiita
-          echo ${COVER_PACKAGE}
-          echo ${COVER_PACKAGE// /,}
-          coverage report --include=${COVER_PACKAGE// /,}
+          echo $COVER_PACKAGE
+          coverage report $COVER_PACKAGE
 
       - name: Submit coveralls
         uses: AndreMiras/coveralls-python-action@develop
