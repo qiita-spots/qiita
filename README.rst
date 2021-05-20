@@ -60,5 +60,5 @@ Accepted raw files
 
 .. |Build Status| image:: https://github.com/qiita-spots/qiita/actions/workflows/qiita-ci.yml/badge.svg
    :target: https://github.com/qiita-spots/qiita/actions/workflows/qiita-ci.yml
-.. |Coverage Status| image:: https://codecov.io/gh/qiita-spots/qiita/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/qiita-spots/qiita
+.. |Coverage Status| image:: https://coveralls.io/repos/github/qiita-spots/qiita/badge.svg?branch=master
+   :target: https://coveralls.io/github/qiita-spots/qiita?branch=master
