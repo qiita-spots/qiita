@@ -177,7 +177,7 @@ jobs:
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
-          nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=$COVER_PACKAGE -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+          nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
           # killing the qiita server to run the next commands
           QIITA_PID=`cat /tmp/supervisord.pid`
@@ -191,7 +191,6 @@ jobs:
           COVER_PACKAGE: ${{ matrix.cover_package }}
         run: |
           conda activate qiita
-          coverage combine
           coverage report
 
       - name: Submit coveralls
