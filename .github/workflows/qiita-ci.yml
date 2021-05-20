@@ -188,16 +188,16 @@ jobs:
       - name: Run coveralls
         shell: bash -l {0}
         env:
-          COVER_PACKAGE: ${{ matrix.cover_package }}
+          COVER_PACKAGE: "${{ matrix.cover_package }}"
         run: |
           conda activate qiita
-          coverage report
+          coverage report "${{ matrix.cover_package }}"
 
       - name: Submit coveralls
         uses: AndreMiras/coveralls-python-action@develop
         with:
           github-token: ${{ secrets.github_token }}
-          flag-name: ${{ matrix.cover_package }}
+          flag-name: "${{ matrix.cover_package }}"
           parallel: true
 
   coveralls_finish:
