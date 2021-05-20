@@ -185,7 +185,15 @@ jobs:
           sleep 10
           if [[ "$COVER_PACKAGE" == *"qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
 
-      - name: Coveralls
+      - name: Run coveralls
+        shell: bash -l {0}
+        env:
+          COVER_PACKAGE: ${{ matrix.cover_package }}
+        run: |
+          conda activate qiita
+          coverage report
+
+      - name: Submit coveralls
         uses: AndreMiras/coveralls-python-action@develop
         with:
           github-token: ${{ secrets.github_token }}
