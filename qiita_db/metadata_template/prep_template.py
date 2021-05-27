@@ -90,6 +90,7 @@ class PrepTemplate(MetadataTemplate):
                         'qiita_study_id',
                         'qiita_prep_id',
                         QIITA_COLUMN_NAME}
+    _max_samples = qdb.util.max_preparation_samples()
 
     @classmethod
     def create(cls, md_template, study, data_type, investigation_type=None,
@@ -142,6 +143,13 @@ class PrepTemplate(MetadataTemplate):
             md_template = cls._clean_validate_template(md_template, study.id)
             _check_duplicated_columns(list(md_template.columns),
                                       study.sample_template.categories)
+
+            # check that we are within the limit of number of samples
+            ms = cls._max_samples
+            nsamples = md_template.shape[0]
+            if ms is not None and nsamples > ms:
+                raise ValueError(f"{nsamples} exceeds the max allowed number "
+                                 f"of samples: {ms}")
 
             # Insert the metadata template
             sql = """INSERT INTO qiita.prep_template

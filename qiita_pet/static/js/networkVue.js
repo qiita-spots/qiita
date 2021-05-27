@@ -1028,7 +1028,7 @@ Vue.component('processing-graph', {
           totalJobs += 1;
           contents = contents + "<b> Job: " + jobid + "</b> Status: " + data[jobid]['status'];
           // Only show step if error if they actually have a useful message
-          if (data[jobid]['step']) {
+          if (data[jobid]['step'] !== null) {
             contents = contents + " Step: " + data[jobid]['step'] + "</br>";
           }
           if (data[jobid]['error']) {
