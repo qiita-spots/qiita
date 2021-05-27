@@ -401,6 +401,20 @@ def get_work_base_dir():
         return qdb.sql_connection.TRN.execute_fetchlast()
 
 
+def max_preparation_samples():
+    r"""Returns the max number of samples allowed in a single preparation
+
+    Returns
+    -------
+    int
+        The max number of samples allowed in a single preparation
+    """
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add(
+            "SELECT max_preparation_samples FROM settings")
+        return qdb.sql_connection.TRN.execute_fetchlast()
+
+
 def compute_checksum(path):
     r"""Returns the checksum of the file pointed by path
 

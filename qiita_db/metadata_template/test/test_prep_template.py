@@ -1371,6 +1371,23 @@ class TestPrepTemplate(TestCase):
                           '%s.SKD8.640184' % self.test_study.id,
                           '%s.SKB7.640196' % self.test_study.id}
         self.assertEqual(pt._get_sample_ids(), exp_sample_ids)
+
+        # test error due to max number of samples during extend
+        pt._max_samples = 3
+        df = pd.DataFrame.from_dict(
+            {'SKB1.640202': {'barcode': 'CCTCTGAGAGCT'}},
+            orient='index', dtype=str)
+        with self.assertRaisesRegex(ValueError, "4 exceeds the max allowed "
+                                    "number of samples: 3"):
+            pt.extend(df)
+
+        # now test creation
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        PT._max_samples = 2
+        with self.assertRaisesRegex(ValueError, "3 exceeds the max allowed "
+                                    "number of samples: 2"):
+            PT.create(self.metadata, self.test_study, self.data_type)
+
         # cleaning
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 

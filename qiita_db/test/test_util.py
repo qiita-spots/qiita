@@ -40,6 +40,11 @@ class DBUtilTestsBase(TestCase):
 
 
 class DBUtilTests(DBUtilTestsBase):
+    def test_max_preparation_samples(self):
+        """Test that we get the correct max_preparation_samples"""
+        obs = qdb.util.max_preparation_samples()
+        self.assertEqual(obs, 800)
+
     def test_filepath_id_to_object_id(self):
         # filepaths 1, 2 belongs to artifact 1
         self.assertEqual(qdb.util.filepath_id_to_object_id(1), 1)

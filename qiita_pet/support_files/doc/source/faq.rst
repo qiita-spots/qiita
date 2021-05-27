@@ -72,6 +72,10 @@ per sample. Thus, we cannot have more than 3.5K samples. Note that this number d
 the number of metadata columns in your sample information file and the number of characters
 in the values of each sample and metadata column.
 
+To enforce these ideas, Qiita has a limit of 800 samples per preparation (remember, you can add as
+many samples as you want to your sample information). This number was selected because is the maximum
+number of unique target gene barcodes for the EMP.
+
 Please do not hesitate to send us an email if you have questions about this.
 
 
