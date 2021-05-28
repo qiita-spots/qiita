@@ -1214,10 +1214,11 @@ class Artifact(qdb.base.QiitaObject):
                                 nodes[job.id] = ('job', job)
 
                     elif n_type == 'job':
-                        # Ignore the generate summary and delete jobs
-                        # (they don't create new artifacts)
-                        if n_obj.command.name in {'Generate HTML summary',
-                                                  'delete_artifact'}:
+                        # skip private and artifact definition jobs as they
+                        # don't create new artifacts and they would create
+                        # edges without artifacts + they can be safely ignored
+                        if n_obj.command.software.type in {
+                                'private', 'artifact definition'}:
                             continue
                         jstatus = n_obj.status
                         # If the job is in success we don't need to do anything

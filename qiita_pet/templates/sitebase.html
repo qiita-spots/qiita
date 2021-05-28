@@ -441,12 +441,8 @@
             </ul>
             <!-- otherwise show the login form -->
             {% else %}
-            <ul class="nav navbar-nav">
-              <li>
-                <a href="{% raw qiita_config.portal_dir %}/auth/forgot/">Forgot Password</a>
-              </li>
-            </ul>
             <form action="{% raw qiita_config.portal_dir %}/auth/create/" class="navbar-form navbar-right">
+              <a class="btn btn-primary" href="{% raw qiita_config.portal_dir %}/auth/forgot/"> Reset Password </a>
               <input type="submit" value="Sign up" class="btn btn-info">
             </form>
             <form class="navbar-form navbar-right" role="form" action="{% raw qiita_config.portal_dir %}/auth/login/" method="post">
