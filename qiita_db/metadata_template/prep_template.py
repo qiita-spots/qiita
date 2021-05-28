@@ -710,6 +710,6 @@ class PrepTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    @classmethod
-    def max_samples(self):
+    @staticmethod
+    def max_samples():
         return qdb.util.max_preparation_samples()
