@@ -352,6 +352,6 @@ class SampleTemplate(MetadataTemplate):
 
         return df
 
-    @classmethod
-    def max_samples(self):
+    @staticmethod
+    def max_samples():
         return None
