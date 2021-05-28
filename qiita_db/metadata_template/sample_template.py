@@ -69,7 +69,6 @@ class SampleTemplate(MetadataTemplate):
                         'qiita_study_id',
                         'qiita_prep_id',
                         QIITA_COLUMN_NAME}
-    _max_samples = None
 
     @classmethod
     def create(cls, md_template, study):
@@ -352,3 +351,7 @@ class SampleTemplate(MetadataTemplate):
                 lambda sid: accessions[sid])
 
         return df
+
+    @classmethod
+    def max_samples(self):
+        return None

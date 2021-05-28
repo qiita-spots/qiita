@@ -90,7 +90,6 @@ class PrepTemplate(MetadataTemplate):
                         'qiita_study_id',
                         'qiita_prep_id',
                         QIITA_COLUMN_NAME}
-    _max_samples = qdb.util.max_preparation_samples()
 
     @classmethod
     def create(cls, md_template, study, data_type, investigation_type=None,
@@ -145,7 +144,7 @@ class PrepTemplate(MetadataTemplate):
                                       study.sample_template.categories)
 
             # check that we are within the limit of number of samples
-            ms = cls._max_samples
+            ms = cls.max_samples()
             nsamples = md_template.shape[0]
             if ms is not None and nsamples > ms:
                 raise ValueError(f"{nsamples} exceeds the max allowed number "
@@ -710,3 +709,7 @@ class PrepTemplate(MetadataTemplate):
                      WHERE prep_template_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @classmethod
+    def max_samples(self):
+        return qdb.util.max_preparation_samples()
