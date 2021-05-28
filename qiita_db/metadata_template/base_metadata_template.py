@@ -835,6 +835,13 @@ class MetadataTemplate(qdb.base.QiitaObject):
             existing_samples = curr_samples.intersection(sample_ids)
             new_samples = set(sample_ids).difference(existing_samples)
 
+            # check that we are within the limit of number of samples
+            ms = self.max_samples()
+            nsamples = len(existing_samples) + len(new_samples) + len(self)
+            if ms is not None and nsamples > ms:
+                raise ValueError(f'{nsamples} exceeds the max allowed number '
+                                 f'of samples: {ms}')
+
             # Check if we are adding new columns
             headers = md_template.keys().tolist()
             new_cols = set(headers).difference(self.categories)

@@ -351,3 +351,7 @@ class SampleTemplate(MetadataTemplate):
                 lambda sid: accessions[sid])
 
         return df
+
+    @staticmethod
+    def max_samples():
+        return None

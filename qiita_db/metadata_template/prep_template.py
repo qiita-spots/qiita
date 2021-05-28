@@ -143,6 +143,13 @@ class PrepTemplate(MetadataTemplate):
             _check_duplicated_columns(list(md_template.columns),
                                       study.sample_template.categories)
 
+            # check that we are within the limit of number of samples
+            ms = cls.max_samples()
+            nsamples = md_template.shape[0]
+            if ms is not None and nsamples > ms:
+                raise ValueError(f"{nsamples} exceeds the max allowed number "
+                                 f"of samples: {ms}")
+
             # Insert the metadata template
             sql = """INSERT INTO qiita.prep_template
                         (data_type_id, investigation_type)
@@ -702,3 +709,7 @@ class PrepTemplate(MetadataTemplate):
                      WHERE prep_template_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @staticmethod
+    def max_samples():
+        return qdb.util.max_preparation_samples()
