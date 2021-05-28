@@ -1373,7 +1373,9 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(pt._get_sample_ids(), exp_sample_ids)
 
         # test error due to max number of samples during extend
-        pt._max_samples = 3
+        cmax = qdb.util.max_preparation_samples()
+        sql = 'UPDATE settings SET max_preparation_samples = %s'
+        qdb.sql_connection.perform_as_transaction(sql, [3])
         df = pd.DataFrame.from_dict(
             {'SKB1.640202': {'barcode': 'CCTCTGAGAGCT'}},
             orient='index', dtype=str)
@@ -1383,12 +1385,13 @@ class TestPrepTemplate(TestCase):
 
         # now test creation
         PT = qdb.metadata_template.prep_template.PrepTemplate
-        PT._max_samples = 2
+        qdb.sql_connection.perform_as_transaction(sql, [2])
         with self.assertRaisesRegex(ValueError, "3 exceeds the max allowed "
                                     "number of samples: 2"):
             PT.create(self.metadata, self.test_study, self.data_type)
 
         # cleaning
+        qdb.sql_connection.perform_as_transaction(sql, [cmax])
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_extend_add_samples_error(self):

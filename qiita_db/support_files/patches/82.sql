@@ -5,7 +5,8 @@
 DO $do$
 BEGIN
   IF NOT EXISTS (
-       SELECT max_preparation_samples FROM settings
+    SELECT DISTINCT table_name FROM information_schema.columns
+        WHERE table_name = 'settings' AND column_name = 'max_preparation_samples'
      ) THEN
      ALTER TABLE settings ADD COLUMN max_preparation_samples INT DEFAULT 800;
   END IF;
