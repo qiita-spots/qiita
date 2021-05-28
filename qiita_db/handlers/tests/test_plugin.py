@@ -188,7 +188,8 @@ class CommandHandlerTests(OauthTestingBase):
                         'max_primer_mismatch': 0,
                         'max_homopolymer': 6,
                         'qual_score_window': 0,
-                        'barcode_type': 'hamming_8'}}}
+                        'barcode_type': 'hamming_8'}},
+               'outputs': [['demultiplexed', 'Demultiplexed']]}
         self.assertEqual(loads(obs.body), exp)
 
 

@@ -219,7 +219,8 @@ class CommandHandler(OauthBaseHandler):
                 'required_parameters': cmd.required_parameters,
                 'optional_parameters': cmd.optional_parameters,
                 'default_parameter_sets': {
-                    p.name: p.values for p in cmd.default_parameter_sets}}
+                    p.name: p.values for p in cmd.default_parameter_sets},
+                'outputs': cmd.outputs}
         self.write(response)
 
 
