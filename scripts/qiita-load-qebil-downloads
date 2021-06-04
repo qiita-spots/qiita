@@ -30,9 +30,10 @@ for folder in glob(f'{EBIDIR}/*'):
     if not isdir(folder):
         print(f'Ignoring: {folder}')
         continue
-    # note necessry but nice for debugging
     print(f'\n\n\n+++> Processing {folder}, you have {SLEEP_TIME} '
           'seconds to ctrl-c')
+    # Note: this sleep is not necessary but nice for debugging so we have time
+    #       to ctrl-c
     sleep(10)
 
     files = glob(f'{folder}/*')
@@ -68,6 +69,8 @@ for folder in glob(f'{EBIDIR}/*'):
     sample_info = load_sample_template_from_cmd(sample_fp, study.id)
     st.ebi_sample_accessions = st.get_category('secondary_sample_accession')
     st.biosample_accessions = st.get_category('sample_accession')
+    # ToDo: in the future we should check that these accessions do not
+    #       exist in the system - we need to decide what to do with these.
 
     preps = dict()
     for f in files:
@@ -157,7 +160,8 @@ for folder in glob(f'{EBIDIR}/*'):
 
             filepaths = []
             for rp in run_prefixes:
-                matches = sorted([f for f in files if rp in f])
+                matches = sorted([f for f in files
+                                  if basename(f).startswith(rp)])
                 if library_layout == {'PAIRED'}:
                     if len(matches) != 2:
                         warnings.append(f"{pt.id}: {rp} doesn't match PAIRED "
