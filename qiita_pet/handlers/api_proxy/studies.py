@@ -206,6 +206,7 @@ def study_prep_get_req(study_id, user_id):
     prep_info = defaultdict(list)
     editable = study.can_edit(User(user_id))
     for dtype in study.data_types:
+        dtype_infos = list()
         for prep in study.prep_templates(dtype):
             if prep.status != 'public' and not editable:
                 continue
@@ -214,11 +215,18 @@ def study_prep_get_req(study_id, user_id):
                 'name': prep.name,
                 'id': prep.id,
                 'status': prep.status,
+                'total_samples': len(prep),
+                'creation_timestamp': prep.creation_timestamp,
+                'modification_timestamp': prep.modification_timestamp
             }
             if start_artifact is not None:
                 youngest_artifact = prep.artifact.youngest_artifact
                 info['start_artifact'] = start_artifact.artifact_type
                 info['start_artifact_id'] = start_artifact.id
+                info['num_artifact_children'] = len(start_artifact.children)
+                info['youngest_artifact_name'] = youngest_artifact.name
+                info['youngest_artifact_type'] = \
+                    youngest_artifact.artifact_type
                 info['youngest_artifact'] = '%s - %s' % (
                     youngest_artifact.name, youngest_artifact.artifact_type)
                 info['ebi_experiment'] = len(
@@ -228,9 +236,15 @@ def study_prep_get_req(study_id, user_id):
                 info['start_artifact'] = None
                 info['start_artifact_id'] = None
                 info['youngest_artifact'] = None
-                info['ebi_experiment'] = False
+                info['ebi_experiment'] = 0
 
-            prep_info[dtype].append(info)
+            dtype_infos.append(info)
+
+        # default sort is in ascending order of creation timestamp
+        sorted_info = sorted(dtype_infos,
+                             key=lambda k: k['creation_timestamp'],
+                             reverse=False)
+        prep_info[dtype] = sorted_info
 
     return {'status': 'success',
             'message': '',
