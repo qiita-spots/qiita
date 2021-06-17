@@ -12,19 +12,24 @@ from glob import glob
 from os.path import isdir, basename, join
 from shutil import copyfile
 
+from qiita_db.user import User
 from qiita_db.study import Study
 from qiita_db.artifact import Artifact
 from qiita_db.commands import (
     load_study_from_cmd, load_sample_template_from_cmd,
     load_prep_template_from_cmd)
-from qiita_db.util import get_data_types, get_mountpoint
+from qiita_db.util import get_data_types, get_mountpoint, create_nested_path
 
 
 SLEEP_TIME = 10
 EBIDIR = '/panfs/panfs1.ucsd.edu/panscratch/qiita/qebil/vertebrates/'
 data_types = set([x.replace(' ', '_') for x in get_data_types()])
 
-for folder in glob(f'{EBIDIR}/*'):
+folders = glob(f'{EBIDIR}/*')
+shared_with_emails = ['sjsong@eng.ucsd.edu']
+shared_with = [User(x) for x in shared_with_emails]
+
+for folder in folders:
     warnings = []
     extra_notes = dict()
     if not isdir(folder):
@@ -65,10 +70,11 @@ for folder in glob(f'{EBIDIR}/*'):
 
     study.autoloaded = True
     study.ebi_study_accession = study.info['study_alias'].split(';')[0]
-    st = study.sample_template
     sample_info = load_sample_template_from_cmd(sample_fp, study.id)
-    st.ebi_sample_accessions = st.get_category('secondary_sample_accession')
-    st.biosample_accessions = st.get_category('sample_accession')
+    sample_info.ebi_sample_accessions = sample_info.get_category(
+        'secondary_sample_accession')
+    sample_info.biosample_accessions = sample_info.get_category(
+        'sample_accession')
     # ToDo: in the future we should check that these accessions do not
     #       exist in the system - we need to decide what to do with these.
 
@@ -202,10 +208,13 @@ for folder in glob(f'{EBIDIR}/*'):
     missing_files = [x for x in set(files) - set(files_used)]
     if missing_files:
         uploads_fp = join(get_mountpoint("uploads")[0][1], str(study.id))
+        create_nested_path(uploads_fp)
         notes = f'{notes}<b>Extra files:</b><ul>'
+
         for mf in missing_files:
-            copyfile(mf, uploads_fp)
-            notes = f'{notes}<li>%s</li>' % basename(mf)
+            bn = basename(mf)
+            copyfile(mf, join(uploads_fp, bn))
+            notes = f'{notes}<li>{bn}</li>'
         notes = f'{notes}</ul>'
     if extra_notes:
         notes = f'{notes}<b>Extra Notes:</b><ul>%s</ul>' % ''.join(
@@ -213,3 +222,6 @@ for folder in glob(f'{EBIDIR}/*'):
 
     if notes:
         study.notes = notes
+
+    for x in shared_with:
+        study.share(x)
