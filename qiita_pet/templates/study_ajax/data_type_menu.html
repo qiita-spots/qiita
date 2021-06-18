@@ -40,18 +40,12 @@
           <div class="panel-body" style="padding: 0px 0px 0px 0px; border: none;">
             {% for prep in prep_info[dt] %}
               <div class="panel-body-element" style="padding: 20px 20px 20px 20px;">
-                Samples: {{ prep['total_samples'] }}
-                {% if prep['ebi_experiment'] %}
-                  , <img src="{% raw qiita_config.portal_dir %}/static/img/ena.png" style="width:20px;height:20px;"> {{prep['ebi_experiment']}}
-                {% end %}
+                Samples: {{ prep['total_samples'] }}{% if prep['ebi_experiment'] %}, <img src="{% raw qiita_config.portal_dir %}/static/img/ena.png" style="width:20px;height:20px;"> {{prep['ebi_experiment']}} {% end %}
                 <a href="#" style="display:block;color:black;" onclick="toggle_color_prep($(this).parent()); populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep['id']}}, study_id: {{study_id}} });">
                   <span id="prep-header-{{prep['id']}}">
                     {{prep['name']}} - ID: {{prep['id']}} - {{prep['status']}}
                   </span><br/>
-                    Progress: Raw files {% if prep['start_artifact'] == 'FASTQ' %}<i class="fa fa-check green"></i>{% else %}<i class="fa fa-times red"></i>{% end %}
-                   , processed {% if prep['num_artifact_children'] > 0 %}<i class="fa fa-check green"></i> {% if prep['num_artifact_children'] > 1 %} <i class="fa fa-check green"></i> {% end%} {% else %} <i class="fa fa-times red"></i>{% end %}
-                   , BIOM {% if prep['youngest_artifact_type'] == 'BIOM' %}<i class="fa fa-check green"></i>{% else %}<i class="fa fa-times red"></i>{% end %}
-                   , ok to submit {% if prep['start_artifact'] == 'FASTQ' and prep['num_artifact_children'] > 0  %}<i class="fa fa-check green"></i>{% else %}<i class="fa fa-times red"></i>{% end %}
+                    Raw files {% if prep['start_artifact'] == 'FASTQ' %}<i class="fa fa-check green"></i>{% else %}<i class="fa fa-times red"></i>{% end %}, processed {% if prep['num_artifact_children'] > 0 %}<i class="fa fa-check green"></i> {% if prep['num_artifact_children'] > 1 %} <i class="fa fa-check green"></i>{% end%}{% else %}<i class="fa fa-times red"></i>{% end %}, BIOM {% if prep['youngest_artifact_type'] == 'BIOM' %}<i class="fa fa-check green"></i>{% else %}<i class="fa fa-times red"></i>{% end %}
                   <br />
                   Created: {{prep['creation_timestamp'].strftime('%B %-d, %Y')}}, last updated: {{prep['modification_timestamp'].strftime('%B %-d, %Y')}}
                 </a>
