@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from json import loads
+from json import loads, dumps
 
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
@@ -63,13 +63,16 @@ def list_commands_handler_get_req(id, exclude_analysis):
             'commands': cmd_info}
 
 
-def list_options_handler_get_req(command_id):
+def list_options_handler_get_req(command_id, artifact_id=None):
     """Returns the available default parameters set for the given command
 
     Parameters
     ----------
     command_id : int
         The command id
+    artifact_id : int, optional
+        The artifact id so to limit options based on how it has already been
+        processed
 
     Returns
     -------
@@ -80,9 +83,30 @@ def list_options_handler_get_req(command_id):
          'options': list of dicts of {'id: str', 'name': str,
                                       'values': dict of {str: str}}}
     """
+    def _helper_process_params(params):
+        return dumps(
+            {k: str(v).lower() for k, v in params.items()}, sort_keys=True)
+
     command = Command(command_id)
+    rparamers = command.required_parameters.keys()
+    eparams = []
+    if artifact_id is not None:
+        artifact = Artifact(artifact_id)
+        for job in artifact.jobs(cmd=command):
+            jstatus = job.status
+            outputs = job.outputs if job.status == 'success' else None
+            # this ignore any jobs that weren't successful or are in
+            # construction, or the results have been deleted [outputs == {}]
+            if jstatus not in {'success', 'in_construction'} or outputs == {}:
+                continue
+            params = job.parameters.values
+            for k in rparamers:
+                del params[k]
+            eparams.append(_helper_process_params(params))
+
     options = [{'id': p.id, 'name': p.name, 'values': p.values}
-               for p in command.default_parameter_sets]
+               for p in command.default_parameter_sets
+               if _helper_process_params(p.values) not in eparams]
     return {'status': 'success',
             'message': '',
             'options': options,

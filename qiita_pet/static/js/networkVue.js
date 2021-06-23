@@ -548,7 +548,9 @@ Vue.component('processing-graph', {
      */
     loadCommandOptions: function(cmd_id, sel_artifacts_info) {
       let vm = this;
-      $.get(vm.portal + '/study/process/commands/options/', {command_id: cmd_id})
+      // [0] cause there is only one
+      let artifact_id = Object.keys(sel_artifacts_info)[0];
+      $.get(vm.portal + '/study/process/commands/options/', {command_id: cmd_id, artifact_id: artifact_id})
         .done(function(data){
             // Put first the required parameters
             $("#cmd-opts-div").append($('<h4>').text('Required parameters:'));
