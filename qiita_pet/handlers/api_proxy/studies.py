@@ -236,6 +236,9 @@ def study_prep_get_req(study_id, user_id):
                 info['start_artifact'] = None
                 info['start_artifact_id'] = None
                 info['youngest_artifact'] = None
+                info['num_artifact_children'] = 0
+                info['youngest_artifact_name'] = None
+                info['youngest_artifact_type'] = None
                 info['ebi_experiment'] = 0
 
             dtype_infos.append(info)

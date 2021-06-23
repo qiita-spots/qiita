@@ -110,10 +110,10 @@ Vue.component('processing-graph', {
                 '</div>' +
               '</div>' +
             '</div>',
-  props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback', 'is-analysis-pipeline'],
+  props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback', 'is-analysis-pipeline', 'element-id'],
   methods: {
     /**
-     *
+
      * Resets the zoom view of the graph
      *
      **/
@@ -995,6 +995,11 @@ Vue.component('processing-graph', {
           $("#processing-network-instructions-div").show();
           $("#show-hide-network-btn").show();
           $("#processing-job-div").hide();
+          if (vm.workflowId === null && vm.isAnalysisPipeline === false) {
+            $("#add-default-workflow").show();
+          } else {
+            $("#add-default-workflow").hide();
+          }
         }
       })
         .fail(function(object, status, error_msg) {
@@ -1136,6 +1141,10 @@ Vue.component('processing-graph', {
       '<tr>' +
         '<td><small>Job status (circles):</small></td>' +
         '<td>' + circle_statuses.join('') + '</td>' +
+        '<td rowspan="2" width="20px">&nbsp;</td>' +
+        '<td rowspan="2">' +
+            '<a class="btn btn-success form-control" id="add-default-workflow"><span class="glyphicon glyphicon-flash"></span> Add Default Workflow</a>' +
+        '</td>' +
       '</tr>' +
       '<tr>' +
         '<td><small>Artifact status (triangles):</small>' +
@@ -1143,6 +1152,16 @@ Vue.component('processing-graph', {
       '</tr>' +
     '</table>';
     $('#circle-explanation').html(full_text);
+
+    $('#add-default-workflow').on('click', function () {
+      $.post(vm.portal + '/study/process/workflow/default/', {prep_id: vm.elementId}, function(data) {
+        if ('error' in data){
+          bootstrapAlert('Error generating workflow: ' + data['error'].replace("\n", "<br/>"));
+        } else {
+          vm.updateGraph();
+        }
+      })
+    });
 
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available
