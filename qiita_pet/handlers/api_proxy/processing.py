@@ -99,7 +99,7 @@ def list_options_handler_get_req(command_id, artifact_id=None):
             # construction, or the results have been deleted [outputs == {}]
             if jstatus not in {'success', 'in_construction'} or outputs == {}:
                 continue
-            params = job.parameters.values
+            params = job.parameters.values.copy()
             for k in rparamers:
                 del params[k]
             eparams.append(_helper_process_params(params))
