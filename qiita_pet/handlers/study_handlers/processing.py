@@ -29,7 +29,8 @@ class ListOptionsHandler(BaseHandler):
     @authenticated
     def get(self):
         command_id = self.get_argument("command_id")
-        self.write(list_options_handler_get_req(command_id))
+        artifact_id = self.get_argument("artifact_id")
+        self.write(list_options_handler_get_req(command_id, artifact_id))
 
 
 class WorkflowRunHandler(BaseHandler):
