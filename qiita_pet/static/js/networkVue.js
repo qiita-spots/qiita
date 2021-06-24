@@ -113,7 +113,7 @@ Vue.component('processing-graph', {
   props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback', 'is-analysis-pipeline', 'element-id'],
   methods: {
     /**
-
+     *
      * Resets the zoom view of the graph
      *
      **/
@@ -1156,13 +1156,17 @@ Vue.component('processing-graph', {
     $('#circle-explanation').html(full_text);
 
     $('#add-default-workflow').on('click', function () {
+      $('#add-default-workflow').attr('disabled', true);
+      document.getElementById('add-default-workflow').innerHTML = 'Submitting!';
       $.post(vm.portal + '/study/process/workflow/default/', {prep_id: vm.elementId}, function(data) {
-        if ('error' in data){
-          bootstrapAlert('Error generating workflow: ' + data['error'].replace("\n", "<br/>"));
+        if (data['msg_error'] !== null){
+          $('#add-default-workflow').attr('disabled', false);
+          bootstrapAlert('Error generating workflow: ' + data['msg_error'].replace("\n", "<br/>"));
         } else {
           vm.updateGraph();
         }
-      })
+      });
+      document.getElementById('add-default-workflow').innerHTML = ' Add Default Workflow';
     });
 
     // This call to udpate graph will take care of updating the jobs

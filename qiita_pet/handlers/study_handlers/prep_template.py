@@ -37,14 +37,16 @@ class AddDefaultWorkflowHandler(BaseHandler):
     @authenticated
     def post(self):
         prep_id = self.get_argument('prep_id')
+        msg_error = None
+        data = None
         try:
             workflow = PrepTemplate(prep_id).add_default_workflow(
                 self.current_user)
             data = workflow.id
         except Exception as error:
-            data = {'error': str(error)}
+            msg_error = str(error)
 
-        self.write(data)
+        self.write({'data': data, 'msg_error': msg_error})
 
 
 class PrepTemplateSummaryAJAX(BaseHandler):
