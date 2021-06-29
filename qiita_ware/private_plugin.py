@@ -402,9 +402,6 @@ def list_remote_files(job):
             job._set_error(traceback.format_exception(*exc_info()))
         else:
             job._set_status('success')
-        finally:
-            # making sure to always delete the key so Qiita never keeps it
-            remove(private_key)
 
 
 def download_remote_files(job):
