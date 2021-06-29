@@ -50,8 +50,10 @@ def _retrive_workflows(active):
             inputs.append([cmd.id, accepted_values])
         for output in cmd.outputs:
             outputs.append([cmd.id, ' | '.join(output)])
+        fcmd_name = cmd.name if not cmd.naming_order else \
+            f'{cmd.name} | {dp.name}'
 
-        return ([cmd_name, cmd.id, cmd.name, dp.name, params],
+        return ([cmd_name, cmd.id, fcmd_name, dp.name, params],
                 inputs, outputs)
 
     workflows = []
