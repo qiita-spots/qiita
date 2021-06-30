@@ -1340,11 +1340,36 @@ class TestPrepTemplate(TestCase):
 
     def test_artifact_setter(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
-            self.metadata, self.test_study, self.data_type_id)
+            self.metadata, self.test_study, '16S')
         self.assertEqual(pt.artifact, None)
         artifact = qdb.artifact.Artifact.create(
             self.filepaths, "FASTQ", prep_template=pt)
         self.assertEqual(pt.artifact, artifact)
+
+        # here we can test that we can properly create a workflow
+        wk = pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+        self.assertEqual(len(wk.graph.nodes), 2)
+        self.assertEqual(len(wk.graph.edges), 1)
+        self.assertEqual(
+            [x.command.name for x in wk.graph.nodes],
+            ['Split libraries FASTQ', 'Pick closed-reference OTUs'])
+
+        # now let's try to generate again and it should fail cause the jobs
+        # are alrady created
+        with self.assertRaisesRegex(ValueError, "Cannot create job because "
+                                    "the parameters are the same as jobs"):
+            pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+
+        # now let's test that an error is raised when there is no valid initial
+        # input data; this moves the data type from FASTQ to taxa_summary
+        qdb.sql_connection.perform_as_transaction(
+            'UPDATE qiita.artifact SET artifact_type_id = 10 WHERE '
+            f'artifact_id = {pt.artifact.id}')
+        with self.assertRaisesRegex(ValueError, 'Missing Artifact type: '
+                                    '"FASTQ" in this preparation; are you '
+                                    'missing a step to start?'):
+            pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+
         # cleaning
         qdb.artifact.Artifact.delete(artifact.id)
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)

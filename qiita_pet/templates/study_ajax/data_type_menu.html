@@ -62,7 +62,7 @@
                   <span id="prep-header-{{prep['id']}}">
                     {{prep['name']}} - ID: {{prep['id']}} - {{prep['status']}}
                   </span><br/>
-                    Raw files {% if prep['start_artifact'] == 'FASTQ' %}<i class="fa fa-check green"></i>{% else %}<i class="fa fa-times red"></i>{% end %}, processed {% if prep['num_artifact_children'] > 0 %}<i class="fa fa-check green"></i> {% if prep['num_artifact_children'] > 1 %} <i class="fa fa-check green"></i>{% end%}{% else %}<i class="fa fa-times red"></i>{% end %}, BIOM {% if prep['youngest_artifact_type'] == 'BIOM' %}<i class="fa fa-check green"></i>{% else %}<i class="fa fa-times red"></i>{% end %}
+                    Raw files {% if prep['start_artifact'] in ('per_sample_FASTQ', 'FASTA', 'FASTQ') %}<i class="fa fa-check green"></i>{% else %}<i class="fa fa-times red"></i>{% end %}, processed {% if prep['num_artifact_children'] > 0 %}<i class="fa fa-check green"></i> {% if prep['num_artifact_children'] > 1 %} <i class="fa fa-check green"></i>{% end%}{% else %}<i class="fa fa-times red"></i>{% end %}, BIOM {% if prep['youngest_artifact_type'] == 'BIOM' %}<i class="fa fa-check green"></i>{% else %}<i class="fa fa-times red"></i>{% end %}
                   <br />
                   Created: {{prep['creation_timestamp'].strftime('%B %-d, %Y')}}, last updated: {{prep['modification_timestamp'].strftime('%B %-d, %Y')}}
                 </a>

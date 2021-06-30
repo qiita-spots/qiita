@@ -713,3 +713,196 @@ class PrepTemplate(MetadataTemplate):
     @staticmethod
     def max_samples():
         return qdb.util.max_preparation_samples()
+
+    def add_default_workflow(self, user):
+        """The modification timestamp of the prep information
+
+        Parameters
+        ----------
+        user : qiita_db.user.User
+            The user that requested to add the default workflows
+
+        Returns
+        -------
+        ProcessingWorkflow
+            The workflow created
+
+        Raises
+        ------
+        ValueError
+            a. If this preparation doesn't have valid workflows
+            b. This preparation has been fully processed (no new steps needed)
+            c. If there is no valid initial artifact to start the workflow
+        """
+        # helper functions to avoid duplication of code
+
+        def _get_node_info(workflow, node):
+            # retrieves the merging scheme of a node
+            parent = list(workflow.graph.predecessors(node))
+            if parent:
+                parent = parent.pop()
+                pdp = parent.default_parameter
+                pcmd = pdp.command
+                pparams = pdp.values
+            else:
+                pcmd = None
+                pparams = {}
+
+            dp = node.default_parameter
+            cparams = dp.values
+            ccmd = dp.command
+
+            parent_cmd_name = None
+            parent_merging_scheme = None
+            if pcmd is not None:
+                parent_cmd_name = pcmd.name
+                parent_merging_scheme = pcmd.merging_scheme
+
+            return qdb.util.human_merging_scheme(
+                ccmd.name, ccmd.merging_scheme, parent_cmd_name,
+                parent_merging_scheme, cparams, [], pparams)
+
+        def _get_predecessors(workflow, node):
+            # recursive method to get predecessors of a given node
+            pred = []
+            for pnode in workflow.graph.predecessors(node):
+                pred = _get_predecessors(workflow, pnode)
+                cxns = {x[0]: x[2]
+                        for x in workflow.graph.get_edge_data(
+                            pnode, node)['connections'].connections}
+                data = [pnode, node, cxns]
+                if pred is None:
+                    pred = [data]
+                else:
+                    pred.append(data)
+                return pred
+
+        # Note: we are going to use the final BIOMs to figure out which
+        #       processing is missing from the back/end to the front, as this
+        #       will prevent generating unnecessary steps (AKA already provided
+        #       by another command), like "Split Library of Demuxed",
+        #       when "Split per Sample" is alrady generated
+        #
+        # The steps to generate the default workflow are as follow:
+        # 1. retrieve all valid merging schemes from valid jobs in the
+        #    current preparation
+        # 2. retrive all the valid workflows for the preparation data type and
+        #    find the final BIOM missing from the valid available merging
+        #    schemes
+        # 3. loop over the missing merging schemes and create the commands
+        #    missing to get to those processed samples and add them to a new
+        #    workflow
+
+        # 1.
+        prep_jobs = [j for c in self.artifact.descendants.nodes()
+                     for j in c.jobs(show_hidden=True)
+                     if j.command.software.type == 'artifact transformation']
+        merging_schemes = {
+            qdb.archive.Archive.get_merging_scheme_from_job(j): {
+                x: y.id for x, y in j.outputs.items()}
+            for j in prep_jobs if j.status == 'success' and not j.hidden}
+
+        # 2.
+        pt_dt = self.data_type()
+        workflows = [wk for wk in qdb.software.DefaultWorkflow.iter()
+                     if pt_dt in wk.data_type]
+        if not workflows:
+            # raises option a.
+            raise ValueError(f'This preparation data type: "{pt_dt}" does not '
+                             'have valid workflows')
+        missing_artifacts = dict()
+        for wk in workflows:
+            missing_artifacts[wk] = dict()
+            for node, degree in wk.graph.out_degree():
+                if degree != 0:
+                    continue
+                mscheme = _get_node_info(wk, node)
+                if mscheme not in merging_schemes:
+                    missing_artifacts[wk][mscheme] = node
+            if not missing_artifacts[wk]:
+                del missing_artifacts[wk]
+        if not missing_artifacts:
+            # raises option b.
+            raise ValueError('This preparation is complete')
+
+        # 3.
+        workflow = None
+        for wk, wk_data in missing_artifacts.items():
+            previous_jobs = dict()
+            for ma, node in wk_data.items():
+                predecessors = _get_predecessors(wk, node)
+                predecessors.reverse()
+                cmds_to_create = []
+                init_artifacts = None
+                for i, (pnode, cnode, cxns) in enumerate(predecessors):
+                    cdp = cnode.default_parameter
+                    cdp_cmd = cdp.command
+                    params = cdp.values.copy()
+
+                    icxns = {y: x for x, y in cxns.items()}
+                    reqp = {x: icxns[y[1][0]]
+                            for x, y in cdp_cmd.required_parameters.items()}
+                    cmds_to_create.append([cdp_cmd, params, reqp])
+
+                    info = _get_node_info(wk, pnode)
+                    if info in merging_schemes:
+                        if set(merging_schemes[info]) >= set(cxns):
+                            init_artifacts = merging_schemes[info]
+                            break
+                if init_artifacts is None:
+                    pdp = pnode.default_parameter
+                    pdp_cmd = pdp.command
+                    params = pdp.values.copy()
+                    reqp = {x: y[1][0]
+                            for x, y in pdp_cmd.required_parameters.items()}
+                    cmds_to_create.append([pdp_cmd, params, reqp])
+
+                    init_artifacts = {
+                        self.artifact.artifact_type: self.artifact.id}
+
+                cmds_to_create.reverse()
+                current_job = None
+                for i, (cmd, params, rp) in enumerate(cmds_to_create):
+                    previous_job = current_job
+                    if previous_job is None:
+                        req_params = dict()
+                        for iname, dname in rp.items():
+                            if dname not in init_artifacts:
+                                msg = (f'Missing Artifact type: "{dname}" in '
+                                       'this preparation; are you missing a '
+                                       'step to start?')
+                                # raises option c.
+                                raise ValueError(msg)
+                            req_params[iname] = init_artifacts[dname]
+                    else:
+                        req_params = dict()
+                        connections = dict()
+                        for iname, dname in rp.items():
+                            req_params[iname] = f'{previous_job.id}{dname}'
+                            connections[dname] = iname
+                    params.update(req_params)
+                    job_params = qdb.software.Parameters.load(
+                        cmd, values_dict=params)
+
+                    if job_params in previous_jobs.values():
+                        for x, y in previous_jobs.items():
+                            if job_params == y:
+                                current_job = x
+                        continue
+
+                    if workflow is None:
+                        PW = qdb.processing_job.ProcessingWorkflow
+                        workflow = PW.from_scratch(user, job_params)
+                        current_job = [j for j in workflow.graph.nodes()][0]
+                    else:
+                        if previous_job is None:
+                            current_job = workflow.add(
+                                job_params, req_params=req_params)
+                        else:
+                            current_job = workflow.add(
+                                job_params, req_params=req_params,
+                                connections={previous_job: connections})
+
+                    previous_jobs[current_job] = job_params
+
+        return workflow

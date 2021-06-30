@@ -238,6 +238,9 @@ class TestStudyAPI1(TestStudyAPI):
              'start_artifact_id': None,
              'creation_timestamp': pt.creation_timestamp,
              'modification_timestamp': pt.modification_timestamp,
+             'num_artifact_children': 0,
+             'youngest_artifact_name': None,
+             'youngest_artifact_type': None,
              'total_samples': 3}]
 
         exp = {
@@ -577,6 +580,9 @@ class TestStudyAPI2(TestStudyAPI):
                              'start_artifact_id': None,
                              'start_artifact': None,
                              'youngest_artifact': None,
+                             'num_artifact_children': 0,
+                             'youngest_artifact_name': None,
+                             'youngest_artifact_type': None,
                              'ebi_experiment': 0}]
         exp = {'status': 'success',
                'message': '',
