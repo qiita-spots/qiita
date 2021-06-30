@@ -1360,6 +1360,16 @@ class TestPrepTemplate(TestCase):
                                     "the parameters are the same as jobs"):
             pt.add_default_workflow(qdb.user.User('test@foo.bar'))
 
+        # now let's test that an error is raised when there is no valid initial
+        # input data; this moves the data type from FASTQ to taxa_summary
+        qdb.sql_connection.perform_as_transaction(
+            'UPDATE qiita.artifact SET artifact_type_id = 10 WHERE '
+            f'artifact_id = {pt.artifact.id}')
+        with self.assertRaisesRegex(ValueError, 'Missing Artifact type: '
+                                    '"FASTQ" in this preparation; are you '
+                                    'missing a step to start?'):
+            pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+
         # cleaning
         qdb.artifact.Artifact.delete(artifact.id)
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
