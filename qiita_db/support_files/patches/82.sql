@@ -46,3 +46,10 @@ ALTER TABLE qiita.processing_job_workflow
     FOREIGN KEY (email)
     REFERENCES qiita.qiita_user(email)
     ON UPDATE CASCADE;
+
+ALTER TABLE qiita.study
+  DROP CONSTRAINT fk_study_user,
+  ADD CONSTRAINT fk_study_user
+    FOREIGN KEY (email)
+    REFERENCES qiita.qiita_user(email)
+    ON UPDATE CASCADE;
