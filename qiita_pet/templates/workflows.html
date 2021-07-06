@@ -63,8 +63,25 @@ function makePopper(node) {
 
 {% block content %}
   {% if workflows %}
-    <h3>Recommended Workflows</h3>
+    <h3>Recommended Default Workflows</h3>
+    <div class="row">
+      <div class="col-sm-10">
+        In this page you will find our recommendations on how to processes each data type available in Qiita and the minimum processing requirements to make your data public.
+        <br/><br/>
+        For convenience, there is a "Add Default Workflow" button on each preparation, that will allow you to add all this steps to
+        your raw data; however, all data is different and some of these steps will not work with it so we recommend checking that at least
+        the initial steps work for your data. An example of this, for target gene we assume you are uploading raw multiplexed EMP data with
+        reversed barcodes in your mapping file and index sequence file (EMP default). If that specific step doesn't apply to your data, you
+        can add and run whatever processing steps makes the most sense to your data and then add the rest of the steps by using that button.
+        <br/><br/>
+        By the way, if you have already performed one of the processes in this pipeline, the button "Add Default Workflow" will not re-run that step but instead will
+        run any other steps that havehas not been completed.
+        <br/><br/>
+        Note that this is not a full inclusive list of data types accepted by Qiita but those that have a <u>defined</u> workflow.
+      </div>
+    </div>
     <h5>Hover on the spheres to get more information</h5>
+
       {% for i, w in enumerate(workflows) %}
         <div class="row">
           <div class="col-sm-7" style="background-color: #DCDCDC; height: 650px" id="workflow_{{i}}"></div>

@@ -1144,8 +1144,10 @@ Vue.component('processing-graph', {
         '<td><small>Job status (circles):</small></td>' +
         '<td>' + circle_statuses.join('') + '</td>' +
         '<td rowspan="2" width="20px">&nbsp;</td>' +
-        '<td rowspan="2">' +
+        '<td rowspan="2">&nbsp;&nbsp;&nbsp;</td>' +
+        '<td rowspan="2" align="center">' +
             '<a class="btn btn-success form-control" id="add-default-workflow"><span class="glyphicon glyphicon-flash"></span> Add Default Workflow</a>' +
+             "<br/><a href='https://qiita.ucsd.edu/workflows/' target='_blank'>What's a Default Workflow?</a>" +
         '</td>' +
       '</tr>' +
       '<tr>' +
