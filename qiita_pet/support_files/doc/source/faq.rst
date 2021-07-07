@@ -231,8 +231,33 @@ for close reference picking), and summaries.
 How to convert Qiita files to QIIME2 artifacts?
 -----------------------------------------------
 
-Please visit the `Transferring Qiita Artifacts to Qiime2 Tutorial <https://forum.qiime2.org/t/transferring-qiita-artifacts-to-qiime2/4790>`__
-in the `QIIME2 forum <https://forum.qiime2.org>`__. Note that all feature table (bioms) and analytical steps will generate qza and qzv, which are QIIME2 artifacts.
+As a reminder, Qiita and QIIME 2 artifacts are similar as they encapsulate multiple files. However, a big
+difference is that QIIME 2 only has 2 main artifact types: QZA (all kinds of files) and QZV (visualization).
+
+Here is quick reference conversion table, but please visit the `Transferring Qiita Artifacts to Qiime2 Tutorial <https://forum.qiime2.org/t/transferring-qiita-artifacts-to-qiime2/4790>`__
+in the `QIIME2 forum <https://forum.qiime2.org>`__. for more details:
+
++----------------------------+----------------------------------------------------------------------+
+| Qiita                      | QIIME 2                                                              |
++============================+======================================================================+
+| beta diversity .tsv        |  DistanceMatrix (QZA)                                                |
++----------------------------+----------------------------------------------------------------------+
+| FASTA sequence files       | FeatureData[Taxonomy | Sequence] (QZA)                               |
++----------------------------+----------------------------------------------------------------------+
+| .biom tables               | FeatureTable[Frequency | RelativeFrequency | PresenceAbsence] (QZA)  |
++----------------------------+----------------------------------------------------------------------+
+| ordination .txt            | PCoAResults (QZA)                                                    |
++----------------------------+----------------------------------------------------------------------+
+| phylogentic tree .txt      | Phylogeny[Rooted] (QZA)                                              |
++----------------------------+----------------------------------------------------------------------+
+| alpha diversity .tsv       | SampleData[AlphaDiversity] (QZA)                                     |
++----------------------------+----------------------------------------------------------------------+
+| taxonomic classifier       | Taxonomic Classifier (QZA)                                           |
++----------------------------+----------------------------------------------------------------------+
+| all QIIME 2 visualizations | Visualization (QZV)                                                  |
++----------------------------+----------------------------------------------------------------------+
+
+Note that all feature table (bioms) and analytical steps will generate QZA and QZV, which are native QIIME2 artifacts.
 
 
 How to add extra files to a Qiita study?
