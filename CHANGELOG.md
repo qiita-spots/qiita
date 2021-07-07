@@ -8,6 +8,7 @@ Version 2021.07
 * We limit the parameters displayed to the user per command based on which have already been run successfully; for example if a preparation has already a "Trim 100" job, this option will not be shown.
 * Re-added Coveralls to Qiita and removed codecov.
 * We are limiting the number of samples in a [preparation file to 800](https://qiita.ucsd.edu/static/doc/html/faq.html#how-should-i-split-my-samples-within-preparations).
+* Added User.update_email which allows to update a Users email.
 * Fixed the following issues: [#3113](https://github.com/qiita-spots/qiita/issues/3113), and [#3079](https://github.com/qiita-spots/qiita/issues/3079).
 
 Version 2021.05
