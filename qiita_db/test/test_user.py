@@ -498,6 +498,17 @@ class UserTest(TestCase):
         # no jobs
         self.assertEqual(qdb.user.User('admin@foo.bar').jobs(), [])
 
+    def test_update_email(self):
+        user = qdb.user.User('shared@foo.bar')
+        with self.assertRaisesRegex(IncorrectEmailError, 'Bad email given:'):
+            user.update_email('bladfa.adferqerq@$EWE')
+
+        with self.assertRaisesRegex(IncorrectEmailError,
+                                    'This email already exists'):
+            user.update_email('test@foo.bar')
+
+        user.update_email('bla@ble.bli')
+
 
 if __name__ == "__main__":
     main()
