@@ -884,25 +884,24 @@ class PrepTemplate(MetadataTemplate):
                     job_params = qdb.software.Parameters.load(
                         cmd, values_dict=params)
 
-                    if job_params in previous_jobs.values():
+                    if params in previous_jobs.values():
                         for x, y in previous_jobs.items():
-                            if job_params == y:
+                            if params == y:
                                 current_job = x
-                        continue
-
-                    if workflow is None:
-                        PW = qdb.processing_job.ProcessingWorkflow
-                        workflow = PW.from_scratch(user, job_params)
-                        current_job = [j for j in workflow.graph.nodes()][0]
                     else:
-                        if previous_job is None:
-                            current_job = workflow.add(
-                                job_params, req_params=req_params)
+                        if workflow is None:
+                            PW = qdb.processing_job.ProcessingWorkflow
+                            workflow = PW.from_scratch(user, job_params)
+                            current_job = [
+                                j for j in workflow.graph.nodes()][0]
                         else:
-                            current_job = workflow.add(
-                                job_params, req_params=req_params,
-                                connections={previous_job: connections})
-
-                    previous_jobs[current_job] = job_params
+                            if previous_job is None:
+                                current_job = workflow.add(
+                                    job_params, req_params=req_params)
+                            else:
+                                current_job = workflow.add(
+                                    job_params, req_params=req_params,
+                                    connections={previous_job: connections})
+                        previous_jobs[current_job] = params
 
         return workflow
