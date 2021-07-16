@@ -15,13 +15,54 @@ from qiita_db.processing_job import ProcessingWorkflow, ProcessingJob
 
 
 class TestListCommandsHandler(TestHandlerBase):
-    # TODO: Missing tests
-    pass
+    def test_get(self):
+        response = self.get('/study/process/commands/',
+                            {'artifact_id': '8', 'include_analysis': 'true'})
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'success', 'message': '', 'commands': [
+            {'id': 9, 'command': 'Summarize Taxa',
+             'output': [['taxa_summary', 'taxa_summary']]},
+            {'id': 10, 'command': 'Beta Diversity', 'output': [
+                ['distance_matrix', 'beta_div_plots']]},
+            {'id': 11, 'command': 'Alpha Rarefaction', 'output': [
+                ['rarefaction_curves', 'rarefaction_curves']]},
+            {'id': 12, 'command': 'Single Rarefaction', 'output': [
+                ['rarefied_table', 'BIOM']]}]}
+
+        response = self.get('/study/process/commands/',
+                            {'artifact_id': '3', 'include_analysis': 'false'})
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'success', 'message': '', 'commands': [
+            {'id': 3, 'command': 'Pick closed-reference OTUs', 'output': [
+                ['OTU table', 'BIOM']]}]}
+        self.assertEqual(loads(response.body), exp)
 
 
 class TestListOptionsHandler(TestHandlerBase):
-    # TODO: Missing tests
-    pass
+    def test_get(self):
+        response = self.get('/study/process/commands/options/',
+                            {'command_id': '3', 'artifact_id': '8'})
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'success', 'message': '', 'options': [
+            {'id': 10, 'name': 'Defaults', 'values':
+             {'reference': 1, 'sortmerna_e_value': 1,
+              'sortmerna_max_pos': 10000, 'similarity': 0.97,
+              'sortmerna_coverage': 0.97, 'threads': 1}}],
+              'req_options': {'input_data': ['artifact', ['Demultiplexed']]},
+              'opt_options': {'reference': ['reference', '1'],
+                              'sortmerna_e_value': ['float', '1'],
+                              'sortmerna_max_pos': ['integer', '10000'],
+                              'similarity': ['float', '0.97'],
+                              'sortmerna_coverage': ['float', '0.97'],
+                              'threads': ['integer', '1']}}
+        self.assertEqual(loads(response.body), exp)
+
+        # test that it works fine with a job_id:artifact_type
+        response = self.get('/study/process/commands/options/',
+                            {'command_id': '3',
+                             'artifact_id': 'job_id:artifact_type'})
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
 
 
 class TestJobAJAX(TestHandlerBase):
