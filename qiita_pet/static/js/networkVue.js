@@ -1145,8 +1145,8 @@ Vue.component('processing-graph', {
         '<td>' + circle_statuses.join('') + '</td>' +
         '<td rowspan="2" width="20px">&nbsp;</td>' +
         '<td rowspan="2">&nbsp;&nbsp;&nbsp;</td>' +
-        '<td rowspan="2" align="center">' +
-            '<a class="btn btn-success form-control" id="add-default-workflow"><span class="glyphicon glyphicon-flash"></span> Add Default Workflow</a>' +
+        '<td rowspan="2" align="center" id="add-default-workflow">' +
+            '<a class="btn btn-success form-control" id="add-default-workflow-btn"><span class="glyphicon glyphicon-flash"></span> Add Default Workflow</a>' +
              "<br/><br/><a href='https://qiita.ucsd.edu/workflows/' target='_blank'> "+
                 '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">' +
                     '<path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 ' +
@@ -1164,18 +1164,18 @@ Vue.component('processing-graph', {
     '</table>';
     $('#circle-explanation').html(full_text);
 
-    $('#add-default-workflow').on('click', function () {
+    $('#add-default-workflow-btn').on('click', function () {
       $('#add-default-workflow').attr('disabled', true);
-      document.getElementById('add-default-workflow').innerHTML = 'Submitting!';
+      document.getElementById('add-default-workflow-btn').innerHTML = 'Submitting!';
       $.post(vm.portal + '/study/process/workflow/default/', {prep_id: vm.elementId}, function(data) {
         if (data['msg_error'] !== null){
-          $('#add-default-workflow').attr('disabled', false);
+          $('#add-default-workflow-btn').attr('disabled', false);
           bootstrapAlert('Error generating workflow: ' + data['msg_error'].replace("\n", "<br/>"));
         } else {
           vm.updateGraph();
         }
       });
-      document.getElementById('add-default-workflow').innerHTML = ' Add Default Workflow';
+      document.getElementById('add-default-workflow-btn').innerHTML = ' Add Default Workflow';
     });
 
     // This call to udpate graph will take care of updating the jobs
