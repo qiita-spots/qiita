@@ -708,6 +708,17 @@ class User(qdb.base.QiitaObject):
             return [qdb.processing_job.ProcessingJob(p[0])
                     for p in qdb.sql_connection.TRN.execute_fetchindex()]
 
+    def update_email(self, email):
+        if not validate_email(email):
+            raise IncorrectEmailError(f'Bad email given: {email}')
+
+        if self.exists(email):
+            raise IncorrectEmailError(f'This email already exists: {email}')
+
+        with qdb.sql_connection.TRN:
+            sql = 'UPDATE qiita.qiita_user SET email = %s where email = %s'
+            qdb.sql_connection.TRN.add(sql, [email, self.email])
+
 
 def validate_email(email):
     """Validates an email

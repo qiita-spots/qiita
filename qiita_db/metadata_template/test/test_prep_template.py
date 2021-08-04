@@ -1340,11 +1340,87 @@ class TestPrepTemplate(TestCase):
 
     def test_artifact_setter(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
-            self.metadata, self.test_study, self.data_type_id)
+            self.metadata, self.test_study, '16S')
         self.assertEqual(pt.artifact, None)
         artifact = qdb.artifact.Artifact.create(
             self.filepaths, "FASTQ", prep_template=pt)
         self.assertEqual(pt.artifact, artifact)
+
+        # here we can test that we can properly create a workflow but we are
+        # going to add lot more steps to make it more complex by adding a
+        # couple of new scenarios
+        # 1/2. adds a new path that should be kept separate all the way; this
+        #      is to emulate what happens with different trimming (different
+        #      default parameter) and deblur (same for each of the previous
+        #      steps)
+        sql = """
+            INSERT INTO qiita.default_workflow_node (
+                default_workflow_id, default_parameter_set_id)
+            VALUES (1, 2), (1, 10);
+            INSERT INTO qiita.default_workflow_edge (
+                parent_id, child_id)
+            VALUES (7, 8);
+            INSERT INTO qiita.default_workflow_edge_connections (
+                default_workflow_edge_id, parent_output_id, child_input_id)
+            VALUES (4, 1, 3)"""
+        qdb.sql_connection.perform_as_transaction(sql)
+        # 2/2. adds a new path that should be kept together and then separate;
+        #      this is to simulate what happens with MTX/WGS processing, one
+        #      single QC step (together) and 2 separete profilers
+        sql = """
+            INSERT INTO qiita.default_parameter_set (
+                command_id, parameter_set_name, parameter_set)
+            VALUES (3, '100%',
+                    ('{"reference":1,"sortmerna_e_value":1,'
+                     || '"sortmerna_max_pos":'
+                     || '10000,"similarity":1.0,"sortmerna_coverage":1.00,'
+                     || '"threads":1}')::json);
+            INSERT INTO qiita.default_workflow_node (
+                default_workflow_id, default_parameter_set_id)
+            VALUES (1, 17);
+            INSERT INTO qiita.default_workflow_edge (
+                parent_id, child_id)
+            VALUES (7, 9);
+            INSERT INTO qiita.default_workflow_edge_connections (
+                default_workflow_edge_id, parent_output_id, child_input_id)
+            VALUES (5, 1, 3)
+            """
+        qdb.sql_connection.perform_as_transaction(sql)
+        # Finally, we need to "activate" the merging scheme values of the
+        # commands so they are actually different:
+        # 31->'Pick closed-reference OTUs', 6->'Split libraries FASTQ'
+        sql = """
+            UPDATE qiita.command_parameter
+            SET check_biom_merge = true
+            WHERE command_parameter_id IN (31, 6)"""
+        qdb.sql_connection.perform_as_transaction(sql)
+
+        wk = pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+        self.assertEqual(len(wk.graph.nodes), 5)
+        self.assertEqual(len(wk.graph.edges), 3)
+        self.assertCountEqual(
+            [x.command.name for x in wk.graph.nodes],
+            # we should have 2 split libraries and 3 close reference
+            ['Split libraries FASTQ', 'Split libraries FASTQ',
+             'Pick closed-reference OTUs', 'Pick closed-reference OTUs',
+             'Pick closed-reference OTUs'])
+
+        # now let's try to generate again and it should fail cause the jobs
+        # are alrady created
+        with self.assertRaisesRegex(ValueError, "Cannot create job because "
+                                    "the parameters are the same as jobs"):
+            pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+
+        # now let's test that an error is raised when there is no valid initial
+        # input data; this moves the data type from FASTQ to taxa_summary
+        qdb.sql_connection.perform_as_transaction(
+            'UPDATE qiita.artifact SET artifact_type_id = 10 WHERE '
+            f'artifact_id = {pt.artifact.id}')
+        with self.assertRaisesRegex(ValueError, 'Missing Artifact type: '
+                                    '"FASTQ" in this preparation; are you '
+                                    'missing a step to start?'):
+            pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+
         # cleaning
         qdb.artifact.Artifact.delete(artifact.id)
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)

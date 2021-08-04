@@ -91,7 +91,7 @@
   <hr/>
 </div>
 <div id='analysis-graph-vue' style="margin-left: 15px">
-  <processing-graph v-bind:is-analysis-pipeline='true' ref="procGraph" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/analysis/description/{{analysis_id}}/graph/" jobs-endpoint="/analysis/description/{{analysis_id}}/jobs/"></processing-graph>
+  <processing-graph v-bind:is-analysis-pipeline='true' ref="procGraph" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/analysis/description/{{analysis_id}}/graph/" jobs-endpoint="/analysis/description/{{analysis_id}}/jobs/" element-id="{{analysis_id}}"></processing-graph>
 </div>
 <div class="row" id='processing-content-div'></div>
 

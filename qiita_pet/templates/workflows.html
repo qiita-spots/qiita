@@ -63,8 +63,26 @@ function makePopper(node) {
 
 {% block content %}
   {% if workflows %}
-    <h3>Recommended Workflows</h3>
+    <h3>Recommended Default Workflows</h3>
+    <div class="row">
+      <div class="col-sm-10">
+        In this page you will find our recommendations on how to processes each data type available in Qiita and the minimum processing requirements to make your data public.
+        <br/><br/>
+        For convenience, there is an "Add Default Workflow" button for each preparation that will add the recommended workflow steps for your raw data which then you can process.
+        It is important to note however that some steps in this default workflow will not work with all raw data; for example, for target gene the workflow is based on the
+        default Earth Microbiome Project protocol and so assumes the uploaded data are multiplexed sequences with the reversed barcodes in your mapping file and index sequence
+        file (<a href="https://earthmicrobiome.org/protocols-and-standards/" target="_blank">see here</a> for more details). Thus, if the protocol does not apply to your data
+        you can still use the Default Workflow, however, you should first manually process your data using the appropriate steps until you have a defined step; in our example,
+        demultiplexed your reads. After demultiplexing the Default Workflow is safe to use with any protocol.
+        <br/><br/>
+        If you have already manually performed one of the processing steps in the Defaul Workflow pipeline, the "Add Default Workflow" button will not re-select those steps but
+        instead will only select any remaining steps that have not been completed. You can also add additional workflows on top of the recommended Default Workflow at any time.
+        <br/><br/>
+        Note that this is not a full inclusive list of data types accepted by Qiita but only those that have a defined workflow.
+      </div>
+    </div>
     <h5>Hover on the spheres to get more information</h5>
+
       {% for i, w in enumerate(workflows) %}
         <div class="row">
           <div class="col-sm-7" style="background-color: #DCDCDC; height: 650px" id="workflow_{{i}}"></div>

@@ -29,7 +29,11 @@ class ListOptionsHandler(BaseHandler):
     @authenticated
     def get(self):
         command_id = self.get_argument("command_id")
-        self.write(list_options_handler_get_req(command_id))
+        artifact_id = self.get_argument("artifact_id")
+        # if the artifact id has ':' it means that it's a job in construction
+        if ':' in artifact_id:
+            artifact_id = None
+        self.write(list_options_handler_get_req(command_id, artifact_id))
 
 
 class WorkflowRunHandler(BaseHandler):

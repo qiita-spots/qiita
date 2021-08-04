@@ -12,6 +12,7 @@ from qiita_pet.test.tornado_test_base import TestHandlerBase
 from mock import Mock
 from copy import deepcopy
 
+from qiita_db.sql_connection import TRN
 from qiita_db.user import User
 from qiita_db.software import DefaultWorkflow
 from qiita_db.sql_connection import perform_as_transaction
@@ -61,6 +62,32 @@ class TestWorkflowsHandler(TestHandlerBase):
         DefaultWorkflow(2).active = False
         exp = deepcopy(WORKFLOWS)
         self.assertCountEqual(_retrive_workflows(False), exp)
+
+        # validating that the params_name is not being used
+        self.assertNotIn(
+            'Split libraries | Defaults with Golay 12 barcodes',
+            [x[2] for x in _retrive_workflows(False)[1]['nodes']])
+        # now it should be there
+        with TRN:
+            # Hard-coded values; 19 -> barcode_type
+            sql = """UPDATE qiita.command_parameter
+                     SET name_order = 0
+                     WHERE command_parameter_id = 19"""
+            TRN.add(sql)
+            TRN.execute()
+        self.assertIn(
+            'Split libraries | Defaults with Golay 12 barcodes',
+            [x[2] for x in _retrive_workflows(False)[1]['nodes']])
+        # and gone again
+        with TRN:
+            sql = """UPDATE qiita.command_parameter
+                     SET name_order = NULL
+                     WHERE command_parameter_id = 19"""
+            TRN.add(sql)
+            TRN.execute()
+        self.assertNotIn(
+            'Split libraries | Defaults with Golay 12 barcodes',
+            [x[2] for x in _retrive_workflows(False)[1]['nodes']])
 
         # we should not see the middle one
         del exp[1]
