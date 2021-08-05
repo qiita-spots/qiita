@@ -228,7 +228,8 @@ class DBUtilTests(DBUtilTestsBase):
             qdb.sql_connection.TRN.add(
                 "SELECT last_value FROM qiita.filepath_filepath_id_seq")
             exp_new_id = 1 + qdb.sql_connection.TRN.execute_fetchflatten()[0]
-        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data", copy=True)
+        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data",
+                                        move_files=False, copy=True)
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
@@ -246,6 +247,19 @@ class DBUtilTests(DBUtilTestsBase):
         exp_fp = "2_%s" % basename(fp)
         exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5, 1]]
         self.assertEqual(obs, exp)
+
+        # let's do that again but with move_files = True
+        exp_new_id += 1
+        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data",
+                                        move_files=True, copy=True)
+        self.assertEqual(obs, [exp_new_id])
+
+        # Check that the files have been copied correctly
+        exp_fp = join(qdb.util.get_db_files_base_dir(), "raw_data",
+                      "2_%s" % basename(fp))
+        self.assertTrue(exists(exp_fp))
+        self.assertTrue(exists(fp))
+        self.files_to_remove.append(exp_fp)
 
         qdb.util.purge_filepaths()
 
