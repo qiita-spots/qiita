@@ -610,7 +610,7 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
         dd_id, mp, subdir = get_mountpoint(table, retrieve_subdir=True)[0]
         base_fp = join(get_db_files_base_dir(), mp)
 
-        if move_files:
+        if move_files or copy:
             db_path = partial(join, base_fp)
             if subdir:
                 # Generate the new filepaths, format:
