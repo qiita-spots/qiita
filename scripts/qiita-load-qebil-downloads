@@ -12,7 +12,6 @@ from glob import glob
 from os.path import isdir, basename, join
 from shutil import copyfile
 
-from qiita_db.user import User
 from qiita_db.study import Study
 from qiita_db.artifact import Artifact
 from qiita_db.commands import (
@@ -21,25 +20,11 @@ from qiita_db.commands import (
 from qiita_db.util import get_data_types, get_mountpoint, create_nested_path
 
 
-SLEEP_TIME = 10
-EBIDIR = '/panfs/panfs1.ucsd.edu/panscratch/qiita/qebil/vertebrates/'
-data_types = set([x.replace(' ', '_') for x in get_data_types()])
+def load_qebil_study(folder, shared_with):
+    data_types = set([x.replace(' ', '_') for x in get_data_types()])
 
-folders = glob(f'{EBIDIR}/*')
-shared_with_emails = ['sjsong@eng.ucsd.edu']
-shared_with = [User(x) for x in shared_with_emails]
-
-for folder in folders:
     warnings = []
     extra_notes = dict()
-    if not isdir(folder):
-        print(f'Ignoring: {folder}')
-        continue
-    print(f'\n\n\n+++> Processing {folder}, you have {SLEEP_TIME} '
-          'seconds to ctrl-c')
-    # Note: this sleep is not necessary but nice for debugging so we have time
-    #       to ctrl-c
-    sleep(10)
 
     files = glob(f'{folder}/*')
     files_used = []
@@ -48,7 +33,7 @@ for folder in folders:
         qebil_status = fp.readlines()[0]
     if 'complete' not in qebil_status:
         print(f'Skipping {qebil_status_fp}, not ready: {qebil_status}')
-        continue
+        return
     files_used.append(qebil_status_fp)
 
     title_fp = [f for f in files if f.endswith('_study_title.txt')][0]
@@ -63,10 +48,17 @@ for folder in folders:
 
     if Study.exists(title):
         print(f'======> {folder}: {title} already loaded')
-        continue
+        return
 
     with open(config_fp, 'r') as fp:
         study = load_study_from_cmd('qiita.help@gmail.com', title, fp)
+
+    print('===================')
+    print('===================')
+    print('===================')
+    print(f'study {study.id} created')
+    print('===================')
+    print('===================')
 
     study.autoloaded = True
     study.ebi_study_accession = study.info['study_alias'].split(';')[0]
@@ -201,6 +193,11 @@ for folder in folders:
 
             artifact = Artifact.create(filepaths, 'per_sample_FASTQ',
                                        prep_template=pt, move_files=False)
+            print("      ")
+            print("      ")
+            print(f"      artifact {artifact.id} was created for {pt.id}")
+            print("      ")
+            print("      ")
     notes = ''
     if warnings:
         notes = '<b>Warnings</b>:<ol>%s</ol>\n' % ''.join(
@@ -225,3 +222,23 @@ for folder in folders:
 
     for x in shared_with:
         study.share(x)
+
+
+# data is a list [str, [list of Users]]
+data = [
+    # ["folder filepath", [list of Users to add as shared_with]]
+]
+
+for folder, shared_with in data:
+    SLEEP_TIME = 10
+
+    if not isdir(folder):
+        print(f'Ignoring: {folder}')
+        continue
+    print(f'\n\n\n+++> Processing {folder}, you have {SLEEP_TIME} '
+          'seconds to ctrl-c')
+    # Note: this sleep is not necessary but nice for debugging so we have time
+    #       to ctrl-c
+    sleep(10)
+
+    load_qebil_study(folder, shared_with)
