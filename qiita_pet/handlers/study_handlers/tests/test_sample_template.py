@@ -308,7 +308,7 @@ class TestHelpers(TestHandlerBase):
                'data_types': ['16S', '18S', 'Genomics', 'ITS', 'Metabolomic',
                               'Metagenomic', 'Metatranscriptomics',
                               'Multiomic', 'Proteomic', 'Transcriptomics',
-                              'Viromics'],
+                              'Viromics', 'job_output_folder'],
                'user_can_edit': True,
                'job': None,
                'download_id': None,

@@ -476,7 +476,7 @@ class Artifact(qdb.base.QiitaObject):
                 instance = _common_creation_steps(
                     artifact_type, None, data_type, None)
                 # Associate the artifact with the analysis
-                if analysis is not None:
+                if bool(analysis):
                     analysis.add_artifact(instance)
 
             # Associate the artifact with its filepaths
