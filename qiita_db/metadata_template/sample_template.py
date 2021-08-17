@@ -268,17 +268,6 @@ class SampleTemplate(MetadataTemplate):
             fp_id = qdb.util.convert_to_id("sample_template", "filepath_type")
             self.add_filepath(fp, fp_id=fp_id)
 
-            # generating all new QIIME mapping files
-            for pt in qdb.study.Study(self._id).prep_templates():
-                if samples is not None and samples and (
-                        columns is None or not columns):
-                    overlapping = set(samples) & set(pt.keys())
-                    # if the prep has no overlapping sample ids, we can skip
-                    # generationg the prep
-                    if not overlapping:
-                        continue
-                pt.generate_files(samples, columns)
-
     @property
     def ebi_sample_accessions(self):
         """The EBI sample accessions for the samples in the sample template
