@@ -1197,11 +1197,15 @@ class ProcessingJob(qdb.base.QiitaObject):
                                 AND processing_job_id = %s"""
                     qdb.sql_connection.TRN.add(sql, [an.id, self.id])
                     data_type = qdb.sql_connection.TRN.execute_fetchlast()
-                else:
+                elif job_params['template'] is not None:
                     pt = qdb.metadata_template.prep_template.PrepTemplate(
                         job_params['template'])
                     an = None
                     data_type = None
+                else:
+                    pt = None
+                    an = None
+                    data_type = 'job_output_folder'
 
                 qdb.artifact.Artifact.create(
                     filepaths, atype, prep_template=pt, analysis=an,

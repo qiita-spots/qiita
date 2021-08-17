@@ -71,9 +71,11 @@ class JobHandler(OauthBaseHandler):
             cmd = job.command.name
             params = job.parameters.values
             status = job.status
+            msg = '' if status != 'error' else job.log.msg
 
         response = {'command': cmd, 'parameters': params,
-                    'status': status}
+                    'status': status, 'msg': msg}
+
         self.write(response)
 
 

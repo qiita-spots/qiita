@@ -337,7 +337,7 @@ class Artifact(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBArtifactCreationError(
                 "When provided, both parents and processing parameters should "
                 "be provided")
-        elif bool(analysis) != bool(data_type):
+        elif bool(analysis) and not bool(data_type):
             # When provided, analysis and data_type both should be
             # provided (this is effectively doing an XOR)
             raise qdb.exceptions.QiitaDBArtifactCreationError(
@@ -476,7 +476,8 @@ class Artifact(qdb.base.QiitaObject):
                 instance = _common_creation_steps(
                     artifact_type, None, data_type, None)
                 # Associate the artifact with the analysis
-                analysis.add_artifact(instance)
+                if analysis is not None:
+                    analysis.add_artifact(instance)
 
             # Associate the artifact with its filepaths
             fp_ids = qdb.util.insert_filepaths(
