@@ -124,8 +124,9 @@ class BaseHandlerDownload(BaseHandler):
         for pt in artifact.prep_templates:
             # the latest prep template file is always the first [0] tuple and
             # we need the filepath [1]
-            pt_fp = pt.get_filepaths()[0][1]
-            if pt_fp is not None:
+            pt_fp = pt.get_filepaths()
+            if pt_fp:
+                pt_fp = pt_fp[0][1]
                 spt_fp = pt_fp
                 if pt_fp.startswith(basedir):
                     spt_fp = pt_fp[basedir_len:]
