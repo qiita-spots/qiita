@@ -156,7 +156,8 @@ class DBUtilTests(DBUtilTestsBase):
         obs = qdb.util.get_data_types()
         exp = {'16S': 1, '18S': 2, 'ITS': 3, 'Proteomic': 4, 'Metabolomic': 5,
                'Metagenomic': 6, 'Multiomic': 7, 'Metatranscriptomics': 8,
-               'Viromics': 9, 'Genomics': 10, 'Transcriptomics': 11}
+               'Viromics': 9, 'Genomics': 10, 'Transcriptomics': 11,
+               'Job Output Folder': 12}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_data_types(key='data_type_id')

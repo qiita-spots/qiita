@@ -51,7 +51,8 @@ class JobHandlerTests(OauthTestingBase):
                   "phred_quality_threshold": 3, "barcode_type": "golay_12",
                   "max_barcode_errors": 1.5, "input_data": 1,
                   'phred_offset': 'auto'}
-        exp = {'command': cmd, 'parameters': params, 'status': 'success'}
+        exp = {'command': cmd, 'parameters': params, 'status': 'success',
+               'msg': ''}
         self.assertEqual(loads(obs.body), exp)
 
     def test_get_no_header(self):
