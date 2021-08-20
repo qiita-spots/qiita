@@ -1205,7 +1205,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 else:
                     pt = None
                     an = None
-                    data_type = 'job_output_folder'
+                    data_type = 'Job Output Folder'
 
                 qdb.artifact.Artifact.create(
                     filepaths, atype, prep_template=pt, analysis=an,

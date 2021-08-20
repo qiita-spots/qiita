@@ -55,7 +55,7 @@ class TestPrepAPIReadOnly(TestCase):
             'data_types': ['16S', '18S', 'Genomics', 'ITS', 'Metabolomic',
                            'Metagenomic', 'Metatranscriptomics', 'Multiomic',
                            'Proteomic', 'Transcriptomics', 'Viromics',
-                           'job_output_folder'],
+                           'Job Output Folder'],
             'ontology': {
                 'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
                         'Forensic or Paleo-genomics', 'Gene Regulation Study',

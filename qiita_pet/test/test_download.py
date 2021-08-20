@@ -426,7 +426,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
                          'are: 16S, 18S, ITS, Proteomic, Metabolomic, '
                          'Metagenomic, Multiomic, Metatranscriptomics, '
                          'Viromics, Genomics, Transcriptomics, '
-                         'job_output_folder')
+                         'Job Output Folder')
 
         response = self.get(
             '/public_download/?data=raw&study_id=1&data_type=Genomics')
