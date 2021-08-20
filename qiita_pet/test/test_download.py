@@ -149,26 +149,42 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         exp = (
-               '\- \d+ /protected/processed_data/1_study_1001_closed_reference_otu_table.biom processed_data/1_study_1001_closed_reference_otu_table.biom\n'
-               '\- \d+ /protected/templates/1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt mapping_files/\d_mapping_file.txt\n'
-               '\- \d+ /protected/processed_data/1_study_1001_closed_reference_otu_table.biom processed_data/1_study_1001_closed_reference_otu_table.biom\n'
-               '\- \d+ /protected/templates/1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt mapping_files/\d_mapping_file.txt\n'
-               '\- \d+ /protected/processed_data/1_study_1001_closed_reference_otu_table_Silva.biom processed_data/1_study_1001_closed_reference_otu_table_Silva.biom\n'
-               '\- \d+ /protected/templates/1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt mapping_files/6_mapping_file.txt\n'
-               '\- \d+ /protected/BIOM/7/biom_table.biom BIOM/7/biom_table.biom\n'
-               '\- \d+ /protected/templates/1_prep_2_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt mapping_files/7_mapping_file.txt\n'
-               '\- \d+ /protected/BIOM/10/otu_table.biom BIOM/10/otu_table.biom\n'
-               '\- \d+ /protected/BIOM/10/sortmerna_picked_otus/seqs_otus.log BIOM/10/sortmerna_picked_otus/seqs_otus.log\n'
-               '\- \d+ /protected/templates/1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt mapping_files/10_mapping_file.txt\n'
+               '\- \d+ /protected/processed_data/'
+               '1_study_1001_closed_reference_otu_table.biom processed_data/'
+               '1_study_1001_closed_reference_otu_table.biom\n'
+               '\- \d+ /protected/templates/'
+               '1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt '
+               'mapping_files/\d_mapping_file.txt\n'
+               '\- \d+ /protected/processed_data/'
+               '1_study_1001_closed_reference_otu_table.biom '
+               'processed_data/1_study_1001_closed_reference_otu_table.biom\n'
+               '\- \d+ /protected/templates/'
+               '1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt mapping_files/'
+               '\d_mapping_file.txt\n'
+               '\- \d+ /protected/processed_data/'
+               '1_study_1001_closed_reference_otu_table_Silva.biom '
+               'processed_data/'
+               '1_study_1001_closed_reference_otu_table_Silva.biom\n'
+               '\- \d+ /protected/templates/'
+               '1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt '
+               'mapping_files/6_mapping_file.txt\n'
+               '\- \d+ /protected/BIOM/7/biom_table.biom BIOM/7/'
+               'biom_table.biom\n'
+               '\- \d+ /protected/templates/'
+               '1_prep_2_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt '
+               'mapping_files/7_mapping_file.txt\n'
+               '\- \d+ /protected/BIOM/10/otu_table.biom '
+               'BIOM/10/otu_table.biom\n'
+               '\- \d+ /protected/BIOM/10/sortmerna_picked_otus/seqs_otus.log '
+               'BIOM/10/sortmerna_picked_otus/seqs_otus.log\n'
+               '\- \d+ /protected/templates/'
+               '1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt '
+               'mapping_files/10_mapping_file.txt\n'
                )
 
         obs = response.body.decode('ascii')
-        with open('A', 'w') as f:
-            f.write("%s\n" % obs)
-        with open('B', 'w') as f:
-            f.write("%s\n" % exp)
 
-        self.assertRegex(response.body.decode('ascii'), exp)
+        self.assertRegex(obs, exp)
 
         response = self.get('/download_study_bioms/200')
         self.assertEqual(response.code, 405)
