@@ -499,7 +499,7 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
                          'target_subfragment': 'V4',
                          'center_project_name': 'Test Project'}},
             orient='index', dtype=str)
-        pt = PrepTemplate.create(metadata, new_study, '16S')
+        PrepTemplate.create(metadata, new_study, '16S')
 
         job = self._create_job('delete_study', {'study': new_study.id})
         private_task(job.id)
