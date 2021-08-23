@@ -481,6 +481,26 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
             "lab_person_id": StudyPerson(1)}
         new_study = Study.create(User('test@foo.bar'),
                                  "Fried Chicken Microbiome %s" % time(), info)
+        # creating a sample information file
+        metadata = pd.DataFrame.from_dict({
+            'Sample1': {'physical_specimen_location': 'location1',
+                        'taxon_id': '9606',
+                        'scientific_name': 'homo sapiens'},
+            'Sample2': {'physical_specimen_location': 'location1',
+                        'taxon_id': '9606',
+                        'scientific_name': 'homo sapiens'},
+            'Sample3': {'physical_specimen_location': 'location1',
+                        'taxon_id': '9606',
+                        'scientific_name': 'homo sapiens'}}, orient='index')
+        SampleTemplate.create(metadata, new_study)
+        # creating a preparation information file
+        metadata = pd.DataFrame.from_dict(
+            {'Sample1': {'center_name': 'ANL',
+                         'target_subfragment': 'V4',
+                         'center_project_name': 'Test Project'}},
+            orient='index', dtype=str)
+        pt = PrepTemplate.create(metadata, new_study, '16S')
+
         job = self._create_job('delete_study', {'study': new_study.id})
         private_task(job.id)
         self.assertEqual(job.status, 'success')
