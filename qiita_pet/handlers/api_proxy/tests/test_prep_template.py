@@ -76,8 +76,7 @@ class TestPrepAPIReadOnly(TestCase):
                'name': "Prep information 1",
                'files': ["uploaded_file.txt"],
                'download_prep_id': 24,
-               'other_filepaths': ['1_prep_1_qiime_19700101-000000.txt',
-                                   '1_prep_1_19700101-000000.txt',
+               'other_filepaths': ['1_prep_1_19700101-000000.txt',
                                    '1_prep_1_qiime_19700101-000000.txt',
                                    '1_prep_1_19700101-000000.txt'],
                'num_samples': 27,
@@ -200,7 +199,7 @@ class TestPrepAPIReadOnly(TestCase):
         self.assertEqual(obs['message'], '')
         # [0] the fp_id is the first element, that should change
         fp_ids = [fp[0] for fp in obs['filepaths']]
-        self.assertCountEqual(fp_ids, [18, 19, 20, 21, 24])
+        self.assertCountEqual(fp_ids, [18, 19, 20, 21])
 
     def test_prep_template_filepaths_get_req_no_access(self):
         obs = prep_template_filepaths_get_req(1, 'demo@microbio.me')
