@@ -13,6 +13,10 @@ For an owner to make their study raw data available the owner needs to make the
 artifacts public and select "Allow Qiita users to download raw data files" from
 the main study page.
 
+.. note::
+   Note that all Qiita downloads are zip files but the name of the file will change based on the tool you use to download them. For example if you are using wget, we recommend adding the URL in quotes and using the -O flag to save the file with a correct name; like this: wget "your-qiita-URL" -O your_filename.zip
+
+
 Downloading All Public Data in BIOM format
 ------------------------------------------
 
