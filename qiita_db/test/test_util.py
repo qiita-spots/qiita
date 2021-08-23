@@ -763,7 +763,7 @@ class DBUtilTests(DBUtilTestsBase):
         obs = qdb.util.generate_analysis_list([1, 2, 3, 5])
         exp = [{'mapping_files': [
                 (16, qdb.util.get_filepath_information(16)['fullpath'])],
-                'description': 'A test analysis', 'artifacts': [9], 'name':
+                'description': 'A test analysis', 'artifacts': [8, 9], 'name':
                 'SomeAnalysis', 'analysis_id': 1, 'visibility': 'private'},
                {'mapping_files': [], 'description': 'Another test analysis',
                 'artifacts': [], 'name': 'SomeSecondAnalysis',
