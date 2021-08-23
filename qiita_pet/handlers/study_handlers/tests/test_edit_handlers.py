@@ -65,6 +65,7 @@ class TestStudyEditHandler(TestHandlerBase):
                      'study_abstract': "dummy abstract",
                      'study_description': 'dummy description',
                      'principal_investigator': '-2',
+                     'notes': '',
                      'lab_person': '1'}
 
         self.post('/study/create/', post_data)
@@ -101,6 +102,7 @@ class TestStudyEditHandler(TestHandlerBase):
                 [doi for doi, _ in study.publications]),
             'study_abstract': study_info['study_abstract'],
             'study_description': study_info['study_description'],
+            'notes': '',
             'principal_investigator': study_info['principal_investigator'].id,
             'lab_person': study_info['lab_person'].id}
 
@@ -126,6 +128,7 @@ class TestStudyEditHandler(TestHandlerBase):
             'publications_doi': '',
             'study_abstract': study_info['study_abstract'],
             'study_description': study_info['study_description'],
+            'notes': '',
             'principal_investigator': study_info['principal_investigator'].id,
             'lab_person': study_info['lab_person'].id}
 

@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-
 from tornado.web import HTTPError
 
 from qiita_core.exceptions import QiitaError

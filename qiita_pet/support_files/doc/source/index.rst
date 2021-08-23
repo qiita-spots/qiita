@@ -26,6 +26,7 @@ Looking for information about getting started? Please see the document here:
 .. toctree::
 
    gettingstartedguide/index.rst
+   qiita-philosophy/index.rst
    qiimp.rst
 
 Looking for information about how to process your data? Please see the document here:
@@ -52,13 +53,19 @@ Looking for information about analyzing your data? Please see the document here:
 
    analyzingsamples/index.rst
 
+Interested in how you can access and use public data available on Qiita? Please see the document here:
+
+   .. toctree::
+
+     reanalysis/reanalysis.rst
+
 Looking for available guides? Please see these documents:
 
 .. toctree::
 
    tutorials/index.rst
    faq.rst
-   tutorials/downloading
+   downloading
    glossary.rst
    references.rst
 
@@ -67,7 +74,5 @@ If you intend to deploy or develop Qiita we recommend that you have a look at th
 
 .. toctree::
 
-   qiita-philosophy/index.rst
    admin/index.rst
    dev/index.rst
-   resources.rst

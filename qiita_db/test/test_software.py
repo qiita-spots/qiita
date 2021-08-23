@@ -74,6 +74,18 @@ class CommandTests(TestCase):
         exp = [qdb.software.Command(1), qdb.software.Command(2), new_cmd]
         self.assertCountEqual(obs, exp)
 
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ'], active_only=False, exclude_analysis=False,
+            prep_type='Metagenomic'))
+        exp = [qdb.software.Command(1), new_cmd]
+        self.assertCountEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ'], active_only=False, exclude_analysis=False,
+            prep_type='18S'))
+        exp = [qdb.software.Command(1)]
+        self.assertCountEqual(obs, exp)
+
     def test_get_html_artifact(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.get_html_generator('BIOM')
@@ -142,12 +154,10 @@ class CommandTests(TestCase):
         results = dumps(results)
 
         # modify table directly, in order to test method
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software_command
-                     SET post_processing_cmd = %s
-                     WHERE command_id = 1"""
-            qdb.sql_connection.TRN.add(sql, [results])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software_command
+                 SET post_processing_cmd = %s
+                 WHERE command_id = 1"""
+        qdb.sql_connection.perform_as_transaction(sql, [results])
 
         results = qdb.software.Command(1).post_processing_cmd
 
@@ -159,12 +169,10 @@ class CommandTests(TestCase):
         self.assertEqual(results['script_params'], {'a': 'A', 'b': 'B'})
 
         # clean up table
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.software_command
-                     SET post_processing_cmd = NULL
-                     WHERE command_id = 1"""
-            qdb.sql_connection.TRN.add(sql)
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.software_command
+                 SET post_processing_cmd = NULL
+                 WHERE command_id = 1"""
+        qdb.sql_connection.perform_as_transaction(sql)
 
     def test_description(self):
         self.assertEqual(
@@ -333,7 +341,24 @@ class CommandTests(TestCase):
                 "This is a command for testing", self.parameters,
                 self.outputs)
 
+        # the output type doesn't exist
+        with self.assertRaisesRegex(ValueError, "Error creating QIIME, Split "
+                                    "libraries - wrong output, This is a "
+                                    "command for testing - Unknown "
+                                    "artifact_type: BLA!"):
+            qdb.software.Command.create(
+                self.software, "Split libraries - wrong output",
+                "This is a command for testing", self.parameters,
+                {'out': 'BLA!'})
+
     def test_create(self):
+        # let's deactivate all current plugins and commands; this is not
+        # important to test the creation but it is important to test if a
+        # command is active as the new commands should take precedence and
+        # should make the old commands active if they have the same name
+        qdb.software.Software.deactivate_all()
+
+        # note that here we are adding commands to an existing software
         obs = qdb.software.Command.create(
             self.software, "Test Command", "This is a command for testing",
             self.parameters, self.outputs)
@@ -355,6 +380,7 @@ class CommandTests(TestCase):
                          {'parameters': [], 'outputs': [],
                           'ignore_parent_command': False})
 
+        # here we are creating a new software that we will add new commads to
         obs = qdb.software.Command.create(
             self.software, "Test Command 2", "This is a command for testing",
             self.parameters, analysis_only=True)
@@ -379,23 +405,24 @@ class CommandTests(TestCase):
             'analysis': ('analysis', None),
             'files': ('string', None),
             'artifact_type': ('string', None)}
-        obs = qdb.software.Command.create(
+        validate = qdb.software.Command.create(
             software, "Validate", "Test creating a validate command",
             parameters)
-        self.assertEqual(obs.name, "Validate")
-        self.assertEqual(obs.description, "Test creating a validate command")
+        self.assertEqual(validate.name, "Validate")
+        self.assertEqual(
+            validate.description, "Test creating a validate command")
         exp_required = {
             'template': ('prep_template', [None]),
             'analysis': ('analysis', [None]),
             'files': ('string', [None]),
             'artifact_type': ('string', [None])}
-        self.assertEqual(obs.required_parameters, exp_required)
+        self.assertEqual(validate.required_parameters, exp_required)
         exp_optional = {'name': ['string', 'dflt_name'],
                         'provenance': ['string', None]}
-        self.assertEqual(obs.optional_parameters, exp_optional)
-        self.assertFalse(obs.analysis_only)
-        self.assertEqual(obs.naming_order, [])
-        self.assertEqual(obs.merging_scheme,
+        self.assertEqual(validate.optional_parameters, exp_optional)
+        self.assertFalse(validate.analysis_only)
+        self.assertEqual(validate.naming_order, [])
+        self.assertEqual(validate.merging_scheme,
                          {'parameters': [], 'outputs': [],
                           'ignore_parent_command': False})
 
@@ -426,12 +453,55 @@ class CommandTests(TestCase):
                'ignore_parent_command': False}
         self.assertEqual(obs.merging_scheme, exp)
 
+        # now that we are done with the regular creation testing we can create
+        # a new command with the name of an old deprecated command and make
+        # sure that is not deprecated now
+        # 1. let's find the previous command and make sure is deprecated
+        cmd_name = 'Split libraries FASTQ'
+        old_cmd = [cmd for cmd in self.software.commands
+                   if cmd.name == cmd_name][0]
+        self.assertFalse(old_cmd.active)
+
+        # 2. let's create a new command with the same name and check that now
+        #    the old and the new are active. Remember the new command is going
+        #    to be created in a new software that has a Validate command which
+        #    is an 'artifact definition', so this will allow us to test that
+        #    a previous Validate command is not active
+        new_cmd = qdb.software.Command.create(
+            software, cmd_name, cmd_name, parameters, outputs=outputs)
+        self.assertEqual(old_cmd.name, new_cmd.name)
+        self.assertTrue(old_cmd.active)
+        self.assertTrue(new_cmd.active)
+        # find an old Validate command
+        old_validate = [c for c in qdb.software.Software.from_name_and_version(
+            'BIOM type', '2.1.4 - Qiime2').commands if c.name == 'Validate'][0]
+        self.assertEqual(old_validate.name, validate.name)
+        self.assertTrue(validate.active)
+        self.assertFalse(old_validate.active)
+
     def test_activate(self):
         qdb.software.Software.deactivate_all()
         tester = qdb.software.Command(1)
         self.assertFalse(tester.active)
         tester.activate()
         self.assertTrue(tester.active)
+
+    def test_processing_jobs(self):
+        exp_jids = ['6d368e16-2242-4cf8-87b4-a5dc40bb890b',
+                    '4c7115e8-4c8e-424c-bf25-96c292ca1931',
+                    'b72369f9-a886-4193-8d3d-f7b504168e75',
+                    '46b76f74-e100-47aa-9bf2-c0208bcea52d',
+                    '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f',
+                    '063e553b-327c-4818-ab4a-adfe58e49860',
+                    'ac653cb5-76a6-4a45-929e-eb9b2dee6b63']
+        exp = [qdb.processing_job.ProcessingJob(j) for j in exp_jids]
+        self.assertCountEqual(qdb.software.Command(1).processing_jobs, exp)
+
+        exp_jids = ['bcc7ebcd-39c1-43e4-af2d-822e3589f14d']
+        exp = [qdb.processing_job.ProcessingJob(j) for j in exp_jids]
+        self.assertCountEqual(qdb.software.Command(2).processing_jobs, exp)
+
+        self.assertCountEqual(qdb.software.Command(4).processing_jobs, [])
 
 
 @qiita_test_checker()
@@ -462,6 +532,28 @@ class SoftwareTestsIter(TestCase):
         self.assertEqual(obs, [s1, s2, s3])
         obs = list(qdb.software.Software.iter(False))
         self.assertEqual(obs, [s1, s2, s3, s4])
+
+        # test command resouce allocations here to be able to delete
+        # allocations so we can tests errors.
+
+        # Command 2 is Split libraries and has defined resources
+        self.assertEqual(
+            qdb.software.Command(2).resource_allocation,
+            '-q qiita -l nodes=1:ppn=1 -l mem=60gb -l walltime=25:00:00')
+
+        # Command 9 is Summarize Taxa and has no defined resources so it goes
+        # to defaults
+        self.assertEqual(
+            qdb.software.Command(9).resource_allocation,
+            '-q qiita -l nodes=1:ppn=5 -l pmem=8gb -l walltime=168:00:00')
+
+        # delete allocations to test errors
+        qdb.sql_connection.perform_as_transaction(
+            "DELETE FROM qiita.processing_job_resource_allocation")
+
+        with self.assertRaisesRegex(ValueError, "Could not match 'Split "
+                                    "libraries' to a resource allocation!"):
+            qdb.software.Command(2).resource_allocation
 
 
 @qiita_test_checker()
@@ -532,11 +624,37 @@ class SoftwareTests(TestCase):
         self.assertEqual(tester.start_script, 'start_biom')
 
     def test_default_workflows(self):
-        obs = list(qdb.software.Software(1).default_workflows)
+        obs = list(qdb.software.DefaultWorkflow.iter(True))
         exp = [qdb.software.DefaultWorkflow(1),
                qdb.software.DefaultWorkflow(2),
                qdb.software.DefaultWorkflow(3)]
         self.assertEqual(obs, exp)
+        obs = list(qdb.software.DefaultWorkflow.iter(False))
+        self.assertEqual(obs, exp)
+
+        qdb.software.DefaultWorkflow(1).active = False
+        obs = list(qdb.software.DefaultWorkflow.iter(False))
+        self.assertEqual(obs, exp)
+
+        obs = list(qdb.software.DefaultWorkflow.iter(True))
+        exp = [qdb.software.DefaultWorkflow(2),
+               qdb.software.DefaultWorkflow(3)]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.DefaultWorkflow(1).data_type
+        exp = ['16S', '18S']
+        self.assertEqual(obs, exp)
+        obs = qdb.software.DefaultWorkflow(2).data_type
+        exp = ['18S']
+        self.assertEqual(obs, exp)
+
+        dw = qdb.software.DefaultWorkflow(1)
+        exp = ('This accepts html <a href="https://qiita.ucsd.edu">Qiita!</a>'
+               '<br/><br/><b>BYE!</b>')
+        self.assertEqual(dw.description, exp)
+        exp = 'bla!'
+        dw.description = exp
+        self.assertEqual(dw.description, exp)
 
     def test_type(self):
         self.assertEqual(qdb.software.Software(1).type,
@@ -1021,26 +1139,22 @@ class ParametersTests(TestCase):
 
 
 class DefaultWorkflowNodeTests(TestCase):
-    def test_command(self):
+    def test_default_parameter(self):
         obs = qdb.software.DefaultWorkflowNode(1)
-        self.assertEqual(obs.command, qdb.software.Command(1))
+        self.assertEqual(
+            obs.default_parameter, qdb.software.DefaultParameters(1))
 
         obs = qdb.software.DefaultWorkflowNode(2)
-        self.assertEqual(obs.command, qdb.software.Command(3))
-
-    def test_parameters(self):
-        obs = qdb.software.DefaultWorkflowNode(1)
-        self.assertEqual(obs.parameters, qdb.software.DefaultParameters(1))
-
-        obs = qdb.software.DefaultWorkflowNode(2)
-        self.assertEqual(obs.parameters, qdb.software.DefaultParameters(10))
+        self.assertEqual(
+            obs.default_parameter, qdb.software.DefaultParameters(10))
 
 
 class DefaultWorkflowEdgeTests(TestCase):
     def test_connections(self):
         tester = qdb.software.DefaultWorkflowEdge(1)
         obs = tester.connections
-        self.assertEqual(obs, [['demultiplexed', 'input_data']])
+        self.assertEqual(
+            obs, [['demultiplexed', 'input_data', 'Demultiplexed']])
 
 
 class DefaultWorkflowTests(TestCase):

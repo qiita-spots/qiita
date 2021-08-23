@@ -5,10 +5,9 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
-
 from tornado.web import authenticated, HTTPError
 from tornado.escape import json_decode
+from markdown2 import Markdown
 
 from qiita_pet.util import EBI_LINKIFIER
 from qiita_pet.handlers.util import to_int, doi_linkifier, pubmed_linkifier
@@ -61,6 +60,9 @@ class StudyBaseInfoAJAX(BaseHandler):
             links = ''.join([EBI_LINKIFIER.format(a)
                              for a in ebi_study_accession.split(',')])
             ebi_info = '%s (%s)' % (links, study_info['ebi_submission_status'])
+
+        markdowner = Markdown()
+        study_info['notes'] = markdowner.convert(study_info['notes'])
 
         self.render('study_ajax/base_info.html',
                     study_info=study_info, publications=', '.join(pdoi + ppid),

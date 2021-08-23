@@ -11,6 +11,7 @@ from os.path import exists, join, isdir
 from os import remove
 from shutil import rmtree
 from tempfile import mkdtemp
+from collections import defaultdict
 
 import pandas as pd
 import numpy.testing as npt
@@ -86,7 +87,7 @@ class TestStudyAPI1(TestStudyAPI):
                 'study_alias': 'Cannabis Soils', 'study_id': 1,
                 'most_recent_contact': datetime(2014, 5, 19, 16, 11),
                 'ebi_study_accession': 'EBI123456-BB', 'num_samples': 27,
-                'public_raw_download': False,
+                'public_raw_download': False, 'notes': '', 'autoloaded': False,
                 'study_title': (
                     'Identification of the Microbiomes for Cannabis Soils')},
             'message': '',
@@ -115,7 +116,7 @@ class TestStudyAPI1(TestStudyAPI):
             'owner': 'test@foo.bar', 'message': '', 'funding': None,
             'show_biom_download_button': False, 'publication_pid': [],
             'vamps_id': None, 'first_contact': datetime(2015, 5, 19, 16, 10),
-            'ebi_submission_status': 'not submitted',
+            'ebi_submission_status': 'not submitted', 'autoloaded': False,
             'show_raw_download_button': False, 'timeseries_type_id': 1,
             'study_abstract': 'ABS', 'status': 'sandbox',
             'spatial_series': None, 'study_description': 'DESC',
@@ -124,7 +125,7 @@ class TestStudyAPI1(TestStudyAPI):
             'principal_investigator': {
                 'affiliation': 'Wash U', 'name': 'PIDude',
                 'email': 'PI_dude@foo.bar'}, 'study_alias': 'FCM',
-            'study_id': new_study.id,
+            'study_id': new_study.id, 'notes': '',
             'most_recent_contact': datetime(2015, 5, 19, 16, 11),
             'ebi_study_accession': None, 'specimen_id_column': None,
             'study_title': 'Some New Study for test'}, 'message': '',
@@ -228,15 +229,22 @@ class TestStudyAPI1(TestStudyAPI):
 
         # actual test
         obs = study_prep_get_req(study.id, user_email)
+        temp_info = defaultdict(list)
+        temp_info['16S'] = [
+            {"status": 'sandbox',
+             'name': 'Prep information %d' % pt.id,
+             'start_artifact': None, 'youngest_artifact': None,
+             'ebi_experiment': False, 'id': pt.id,
+             'start_artifact_id': None,
+             'creation_timestamp': pt.creation_timestamp,
+             'modification_timestamp': pt.modification_timestamp,
+             'num_artifact_children': 0,
+             'youngest_artifact_name': None,
+             'youngest_artifact_type': None,
+             'total_samples': 3}]
+
         exp = {
-            'info': {
-                '16S': [
-                    {'status': 'sandbox',
-                     'name': 'Prep information %d' % pt.id,
-                     'start_artifact': None, 'youngest_artifact': None,
-                     'ebi_experiment': False, 'id': pt.id,
-                     'start_artifact_id': None}]
-            },
+            'info': temp_info,
             'message': '',
             'status': 'success'}
         self.assertEqual(obs, exp)
@@ -516,24 +524,43 @@ class TestStudyAPI2(TestStudyAPI):
     # This test expects a clean DB so creating it's own class
     def test_study_prep_get_req(self):
         obs = study_prep_get_req(1, 'test@foo.bar')
+        obs_info = obs['info']['18S']
+        temp_info = defaultdict(list)
+        temp_info['18S'] = [{
+            'id': 1,
+            'status': 'private',
+            'name': 'Prep information 1',
+            'start_artifact_id': 1,
+            'start_artifact': 'FASTQ',
+            'youngest_artifact': 'BIOM - BIOM',
+            'youngest_artifact_name': 'BIOM',
+            'youngest_artifact_type': 'BIOM',
+            'num_artifact_children': 2,
+            'total_samples': 27,
+            'ebi_experiment': 27,
+            'modification_timestamp':
+                obs_info[0]['modification_timestamp'],
+            'creation_timestamp':
+                obs_info[0]['creation_timestamp']}, {
+            'id': 2,
+            'status': 'private',
+            'name': 'Prep information 2',
+            'start_artifact': 'BIOM',
+            'youngest_artifact': 'BIOM - BIOM',
+            'youngest_artifact_name': 'BIOM',
+            'youngest_artifact_type': 'BIOM',
+            'total_samples': 27,
+            'num_artifact_children': 0,
+            'ebi_experiment': 27,
+            'start_artifact_id': 7,
+            'modification_timestamp':
+                obs_info[1]['modification_timestamp'],
+            'creation_timestamp':
+                obs_info[1]['creation_timestamp']
+        }]
         exp = {'status': 'success',
                'message': '',
-               'info': {
-                   '18S': [{
-                       'id': 1,
-                       'status': 'private',
-                       'name': 'Prep information 1',
-                       'start_artifact_id': 1,
-                       'start_artifact': 'FASTQ',
-                       'youngest_artifact': 'BIOM - BIOM',
-                       'ebi_experiment': 27}, {
-                       'id': 2,
-                       'status': 'private',
-                       'name': 'Prep information 2',
-                       'start_artifact': 'BIOM',
-                       'youngest_artifact': 'BIOM - BIOM',
-                       'ebi_experiment': 27,
-                       'start_artifact_id': 7}]}}
+               'info': temp_info}
         self.assertEqual(obs, exp)
 
         # Add a new prep template
@@ -543,30 +570,23 @@ class TestStudyAPI2(TestStudyAPI):
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
             qdb.study.Study(1), '16S')
         obs = study_prep_get_req(1, 'test@foo.bar')
+        temp_info['16S'] = [{'id': pt.id,
+                             'status': 'sandbox',
+                             'name': 'Prep information %d' % pt.id,
+                             'creation_timestamp': pt.creation_timestamp,
+                             'modification_timestamp':
+                                 pt.modification_timestamp,
+                             'total_samples': 1,
+                             'start_artifact_id': None,
+                             'start_artifact': None,
+                             'youngest_artifact': None,
+                             'num_artifact_children': 0,
+                             'youngest_artifact_name': None,
+                             'youngest_artifact_type': None,
+                             'ebi_experiment': 0}]
         exp = {'status': 'success',
                'message': '',
-               'info': {
-                   '18S': [{'id': 1,
-                            'status': 'private',
-                            'name': 'Prep information 1',
-                            'start_artifact_id': 1,
-                            'start_artifact': 'FASTQ',
-                            'youngest_artifact': 'BIOM - BIOM',
-                            'ebi_experiment': 27},
-                           {'id': 2,
-                            'status': 'private',
-                            'name': 'Prep information 2',
-                            'start_artifact_id': 7,
-                            'start_artifact': 'BIOM',
-                            'youngest_artifact': 'BIOM - BIOM',
-                            'ebi_experiment': 27}],
-                   '16S': [{'id': pt.id,
-                            'status': 'sandbox',
-                            'name': 'Prep information %d' % pt.id,
-                            'start_artifact_id': None,
-                            'start_artifact': None,
-                            'youngest_artifact': None,
-                            'ebi_experiment': 0}]}}
+               'info': temp_info}
         self.assertEqual(obs, exp)
 
         obs = study_prep_get_req(1, 'admin@foo.bar')
@@ -574,16 +594,27 @@ class TestStudyAPI2(TestStudyAPI):
 
         qdb.artifact.Artifact(1).visibility = 'public'
         obs = study_prep_get_req(1, 'demo@microbio.me')
+        temp_info = defaultdict(list)
+        temp_info['18S'] = [{
+            'id': 1,
+            'status': 'public',
+            'name': 'Prep information 1',
+            'start_artifact_id': 1,
+            'start_artifact': 'FASTQ',
+            'youngest_artifact': 'BIOM - BIOM',
+            'youngest_artifact_name': 'BIOM',
+            'youngest_artifact_type': 'BIOM',
+            'num_artifact_children': 2,
+            'total_samples': 27,
+            'ebi_experiment': 27,
+            'modification_timestamp':
+                obs_info[0]['modification_timestamp'],
+            'creation_timestamp':
+                obs_info[0]['creation_timestamp']}]
+        temp_info['16S'] = []
         exp = {'status': 'success',
                'message': '',
-               'info': {
-                   '18S': [{'id': 1,
-                            'status': 'public',
-                            'name': 'Prep information 1',
-                            'start_artifact_id': 1,
-                            'start_artifact': 'FASTQ',
-                            'youngest_artifact': 'BIOM - BIOM',
-                            'ebi_experiment': 27}]}}
+               'info': temp_info}
         self.assertEqual(obs, exp)
         # Reset visibility of the artifacts
         for i in range(4, 0, -1):

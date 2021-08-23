@@ -9,22 +9,32 @@
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine
 
-from future.utils import viewitems
 from os.path import basename, getsize, join, isdir
 from os import walk
-from datetime import datetime
 
 from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy.util import check_access
+from qiita_pet.handlers.artifact_handlers.base_handlers \
+    import check_artifact_access
 from qiita_db.study import Study
+from qiita_db.artifact import Artifact
+from qiita_db.user import User
+from qiita_db.download_link import DownloadLink
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
                            get_filepath_information, get_mountpoint,
-                           filepath_id_to_object_id, get_data_types)
+                           filepath_id_to_object_id, get_data_types,
+                           retrieve_filepaths)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_core.util import execute_as_transaction, get_release_info
+from qiita_core.qiita_settings import qiita_config
+
+from jose import jwt as jose_jwt
+from uuid import uuid4
+from base64 import b64encode
+from datetime import datetime, timedelta, timezone
 
 
 class BaseHandlerDownload(BaseHandler):
@@ -36,10 +46,7 @@ class BaseHandlerDownload(BaseHandler):
                 study_info['message'], self.current_user.email, sid))
         return Study(sid)
 
-    def _generate_files(self, header_name, accessions, filename):
-        text = "sample_name\t%s\n%s" % (header_name, '\n'.join(
-            ["%s\t%s" % (k, v) for k, v in viewitems(accessions)]))
-
+    def _finish_generate_files(self, filename, text):
         self.set_header('Content-Description', 'text/csv')
         self.set_header('Expires', '0')
         self.set_header('Cache-Control', 'no-cache')
@@ -47,6 +54,12 @@ class BaseHandlerDownload(BaseHandler):
                         'filename=%s' % filename)
         self.write(text)
         self.finish()
+
+    def _generate_files(self, header_name, accessions, filename):
+        text = "sample_name\t%s\n%s" % (header_name, '\n'.join(
+            ["%s\t%s" % (k, v) for k, v in accessions.items()]))
+
+        self._finish_generate_files(filename, text)
 
     def _list_dir_files_nginx(self, dirpath):
         """Generates a nginx list of files in the given dirpath for nginx
@@ -103,19 +116,21 @@ class BaseHandlerDownload(BaseHandler):
             elif x['fp'].startswith(basedir):
                 spath = x['fp'][basedir_len:]
                 to_download.append(
-                    (spath, spath, str(x['checksum']), str(x['fp_size'])))
+                    (spath, spath, '-', str(x['fp_size'])))
             else:
                 to_download.append(
-                    (x['fp'], x['fp'], str(x['checksum']), str(x['fp_size'])))
+                    (x['fp'], x['fp'], '-', str(x['fp_size'])))
 
         for pt in artifact.prep_templates:
-            qmf = pt.qiime_map_fp
-            if qmf is not None:
-                sqmf = qmf
-                if qmf.startswith(basedir):
-                    sqmf = qmf[basedir_len:]
+            # the latest prep template file is always the first [0] tuple and
+            # we need the filepath [1]
+            pt_fp = pt.get_filepaths()[0][1]
+            if pt_fp is not None:
+                spt_fp = pt_fp
+                if pt_fp.startswith(basedir):
+                    spt_fp = pt_fp[basedir_len:]
                 fname = 'mapping_files/%s_mapping_file.txt' % artifact.id
-                to_download.append((sqmf, fname, '-', str(getsize(qmf))))
+                to_download.append((spt_fp, fname, '-', str(getsize(pt_fp))))
         return to_download
 
     def _write_nginx_file_list(self, to_download):
@@ -250,7 +265,7 @@ class DownloadRelease(BaseHandlerDownload):
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('X-Accel-Redirect',
-                        '/protected-working_dir/' + relpath)
+                        '/protected-working_dir/' + relpath.decode('ascii'))
         self.finish()
 
 
@@ -315,6 +330,25 @@ class DownloadEBIPrepAccessions(BaseHandlerDownload):
             'ebi_experiment_accessions_study_%s_prep_%s.tsv' % (sid, pid))
 
 
+class DownloadSampleInfoPerPrep(BaseHandlerDownload):
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def get(self, prep_template_id):
+        pid = int(prep_template_id)
+        pt = PrepTemplate(pid)
+        sid = pt.study_id
+
+        self._check_permissions(sid)
+
+        st = SampleTemplate(sid)
+
+        text = st.to_dataframe(samples=list(pt)).to_csv(None, sep='\t')
+
+        self._finish_generate_files(
+            'sample_information_from_prep_%s.tsv' % pid, text)
+
+
 class DownloadUpload(BaseHandlerDownload):
     @authenticated
     @coroutine
@@ -345,16 +379,61 @@ class DownloadPublicHandler(BaseHandlerDownload):
     def get(self):
         data = self.get_argument("data", None)
         study_id = self.get_argument("study_id",  None)
+        prep_id = self.get_argument("prep_id",  None)
         data_type = self.get_argument("data_type",  None)
         dtypes = get_data_types().keys()
 
-        if data is None or study_id is None or data not in ('raw', 'biom'):
+        templates = ['sample_information', 'prep_information']
+        valid_data = ['raw', 'biom'] + templates
+
+        to_download = []
+        if data is None or (study_id is None and prep_id is None) or \
+                data not in valid_data:
             raise HTTPError(422, reason='You need to specify both data (the '
-                            'data type you want to download - raw/biom) and '
-                            'study_id')
+                            'data type you want to download - %s) and '
+                            'study_id or prep_id' % '/'.join(valid_data))
         elif data_type is not None and data_type not in dtypes:
             raise HTTPError(422, reason='Not a valid data_type. Valid types '
                             'are: %s' % ', '.join(dtypes))
+        elif data in templates and prep_id is None and study_id is None:
+            raise HTTPError(422, reason='If downloading a sample or '
+                            'preparation file you need to define study_id or'
+                            ' prep_id')
+        elif data in templates:
+            if data_type is not None:
+                raise HTTPError(422, reason='If requesting an information '
+                                'file you cannot specify the data_type')
+            elif prep_id is not None and data == 'prep_information':
+                fname = 'preparation_information_%s' % prep_id
+                prep_id = int(prep_id)
+                try:
+                    infofile = PrepTemplate(prep_id)
+                except QiitaDBUnknownIDError:
+                    raise HTTPError(
+                        422, reason='Preparation information does not exist')
+            elif study_id is not None and data == 'sample_information':
+                fname = 'sample_information_%s' % study_id
+                study_id = int(study_id)
+                try:
+                    infofile = SampleTemplate(study_id)
+                except QiitaDBUnknownIDError:
+                    raise HTTPError(
+                        422, reason='Sample information does not exist')
+            else:
+                raise HTTPError(422, reason='Review your parameters, not a '
+                                'valid combination')
+            x = retrieve_filepaths(
+                infofile._filepath_table, infofile._id_column, infofile.id,
+                sort='descending')[0]
+
+            basedir_len = len(get_db_files_base_dir()) + 1
+            fp = x['fp'][basedir_len:]
+            to_download.append((fp, fp, '-', str(x['fp_size'])))
+            self._write_nginx_file_list(to_download)
+
+            zip_fn = '%s_%s.zip' % (
+                fname, datetime.now().strftime('%m%d%y-%H%M%S'))
+            self._set_nginx_headers(zip_fn)
         else:
             study_id = int(study_id)
             try:
@@ -364,7 +443,7 @@ class DownloadPublicHandler(BaseHandlerDownload):
             else:
                 public_raw_download = study.public_raw_download
                 if study.status != 'public':
-                    raise HTTPError(422, reason='Study is not public. If this '
+                    raise HTTPError(404, reason='Study is not public. If this '
                                     'is a mistake contact: '
                                     'qiita.help@gmail.com')
                 elif data == 'raw' and not public_raw_download:
@@ -372,14 +451,54 @@ class DownloadPublicHandler(BaseHandlerDownload):
                                     'is a mistake contact: '
                                     'qiita.help@gmail.com')
                 else:
-                    to_download = []
-                    for a in study.artifacts(dtype=data_type,
-                                             artifact_type='BIOM'
-                                             if data == 'biom' else None):
+                    # raw data
+                    artifacts = [a for a in study.artifacts(dtype=data_type)
+                                 if not a.parents]
+                    # bioms
+                    if data == 'biom':
+                        artifacts = study.artifacts(
+                            dtype=data_type, artifact_type='BIOM')
+                    for a in artifacts:
                         if a.visibility != 'public':
                             continue
                         to_download.extend(self._list_artifact_files_nginx(a))
 
+                if not to_download:
+                    raise HTTPError(422, reason='Nothing to download. If '
+                                    'this is a mistake contact: '
+                                    'qiita.help@gmail.com')
+                else:
+                    self._write_nginx_file_list(to_download)
+
+                    zip_fn = 'study_%d_%s_%s.zip' % (
+                        study_id, data, datetime.now().strftime(
+                            '%m%d%y-%H%M%S'))
+
+                    self._set_nginx_headers(zip_fn)
+
+        self.finish()
+
+
+class DownloadPublicArtifactHandler(BaseHandlerDownload):
+    @coroutine
+    @execute_as_transaction
+    def get(self):
+        artifact_id = self.get_argument("artifact_id", None)
+
+        if artifact_id is None:
+            raise HTTPError(422, reason='You need to specify an artifact id')
+        else:
+            try:
+                artifact = Artifact(artifact_id)
+            except QiitaDBUnknownIDError:
+                raise HTTPError(404, reason='Artifact does not exist')
+            else:
+                if artifact.visibility != 'public':
+                    raise HTTPError(404, reason='Artifact is not public. If '
+                                    'this is a mistake contact: '
+                                    'qiita.help@gmail.com')
+                else:
+                    to_download = self._list_artifact_files_nginx(artifact)
                     if not to_download:
                         raise HTTPError(422, reason='Nothing to download. If '
                                         'this is a mistake contact: '
@@ -387,9 +506,103 @@ class DownloadPublicHandler(BaseHandlerDownload):
                     else:
                         self._write_nginx_file_list(to_download)
 
-                        zip_fn = 'study_%d_%s_%s.zip' % (
-                            study_id, data, datetime.now().strftime(
+                        zip_fn = 'artifact_%s_%s.zip' % (
+                            artifact_id, datetime.now().strftime(
                                 '%m%d%y-%H%M%S'))
 
                         self._set_nginx_headers(zip_fn)
         self.finish()
+
+
+class DownloadPrivateArtifactHandler(BaseHandlerDownload):
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def post(self, artifact_id):
+        # Generate a new download link:
+        #   1. Build a signed jwt specifying the user and
+        #      the artifact they wish to download
+        #   2. Write that jwt to the database keyed by its jti
+        #      (jwt ID/ json token identifier)
+        #   3. Return the jti as a short url to be used for download
+
+        user = self.current_user
+        artifact = Artifact(artifact_id)
+
+        # Check that user is currently allowed to access artifact, else throw
+        check_artifact_access(user, artifact)
+
+        # Generate a jwt id as a random uuid in base64
+        jti = b64encode(uuid4().bytes).decode("utf-8")
+        # Sign a jwt allowing access
+        utcnow = datetime.now(timezone.utc)
+        jwt = jose_jwt.encode({
+                "artifactId": str(artifact_id),
+                "perm": "download",
+                "sub": str(user._id),
+                "email": str(user.email),
+                "iat": int(utcnow.timestamp() * 1000),
+                "exp": int((utcnow + timedelta(days=7)).timestamp() * 1000),
+                "jti": jti
+            },
+            qiita_config.jwt_secret,
+            algorithm='HS256'
+        )
+
+        # Save the jwt to the database
+        DownloadLink.create(jwt)
+
+        url = qiita_config.base_url + '/private_download/' + jti
+        user_msg = "This link will expire in 7 days on: " + \
+                   (utcnow + timedelta(days=7)).strftime('%Y-%m-%d')
+
+        self.set_status(200)
+        self.finish({"url": url, "msg": user_msg})
+
+    @coroutine
+    @execute_as_transaction
+    def get(self, jti):
+        # Grab the jwt out of the database
+        jwt = DownloadLink.get(jti)
+
+        # If no jwt, error response
+        if jwt is None:
+            raise HTTPError(
+                404,
+                reason='Download Not Found.  Link may have expired.')
+
+        # If jwt doesn't validate, error response
+        jwt_data = jose_jwt.decode(jwt, qiita_config.jwt_secret, 'HS256')
+        if jwt_data is None:
+            raise HTTPError(403, reason='Invalid JWT')
+
+        # Triple check expiration and user permissions
+        user = User(jwt_data["sub"])
+        artifact = Artifact(jwt_data["artifactId"])
+
+        utc_millis = datetime.now(timezone.utc).timestamp() * 1000
+
+        if utc_millis < jwt_data["iat"]:
+            raise HTTPError(403, reason="This download link is not yet valid")
+        if utc_millis > jwt_data["exp"]:
+            raise HTTPError(403, reason="This download link has expired")
+        if jwt_data["perm"] != "download":
+            raise HTTPError(403, reason="This download link is invalid")
+
+        check_artifact_access(user, artifact)
+
+        # All checks out, let's give them the files then!
+        to_download = self._list_artifact_files_nginx(artifact)
+        if not to_download:
+            raise HTTPError(422, reason='Nothing to download. If '
+                                        'this is a mistake contact: '
+                                        'qiita.help@gmail.com')
+        else:
+            self._write_nginx_file_list(to_download)
+
+            zip_fn = 'artifact_%s_%s.zip' % (
+                jwt_data["artifactId"], datetime.now().strftime(
+                    '%m%d%y-%H%M%S'))
+
+            self._set_nginx_headers(zip_fn)
+            self.finish()

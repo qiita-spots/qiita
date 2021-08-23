@@ -5,14 +5,13 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from future.builtins import zip
 from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
 from os.path import join, exists
 from collections import Iterable
 from copy import deepcopy
+from datetime import datetime
 
 import numpy.testing as npt
 import pandas as pd
@@ -687,6 +686,12 @@ class TestPrepTemplate(TestCase):
             u'illumina_technology', u'sample_center', u'pcr_primers',
             u'study_center', 'qiita_prep_id'})
 
+        # test with add_ebi_accessions as True
+        obs = self.tester.to_dataframe(True)
+        self.assertEqual(
+            self.tester.ebi_experiment_accessions,
+            obs.qiita_ebi_experiment_accessions.to_dict())
+
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
         """
@@ -905,7 +910,7 @@ class TestPrepTemplate(TestCase):
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
-        self.assertCountEqual(pt.categories(), exp_categories)
+        self.assertCountEqual(pt.categories, exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
                 'barcode': 'CCTCTGAGAGCT',
@@ -950,9 +955,9 @@ class TestPrepTemplate(TestCase):
         for s_id in exp_sample_ids:
             self.assertEqual(pt[s_id]._to_dict(), exp_dict[s_id])
 
-        # prep and qiime files have been created
+        # prep files have been created
         filepaths = pt.get_filepaths()
-        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(len(filepaths), 1)
 
     def test_validate_restrictions(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
@@ -974,7 +979,14 @@ class TestPrepTemplate(TestCase):
         self.assertFalse(success)
 
         metadata['target_gene'] = '16S rRNA'
+        # as we are testing the update functionality of a prep info file, we
+        # can also test that the timestamps are working correctly
+        current_ct = pt.creation_timestamp
+        current_mt = pt.modification_timestamp
+        self.assertTrue(current_ct < current_mt)
         pt.update(metadata)
+        self.assertEqual(current_ct, pt.creation_timestamp)
+        self.assertTrue(current_mt < pt.modification_timestamp)
         success, message = pt.validate_restrictions()
         success, message = pt.validate_restrictions()
         self.assertEqual(message, '')
@@ -990,6 +1002,12 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type,
             name='New Prep For Test')
         self._common_creation_checks(pt, fp_count, "New Prep For Test")
+        # checking that the creation and modification timestamps are within
+        # 2 seconds of current time
+        dsecs = (datetime.now() - pt.modification_timestamp).total_seconds()
+        self.assertTrue(dsecs < 2)
+        dsecs = (datetime.now() - pt.creation_timestamp).total_seconds()
+        self.assertTrue(dsecs < 2)
         # cleaning
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
@@ -1015,28 +1033,9 @@ class TestPrepTemplate(TestCase):
         fp_count = qdb.util.get_count("qiita.filepath")
         self.tester.generate_files()
         obs = qdb.util.get_count("qiita.filepath")
-        # We just make sure that the count has been increased by 2, since
+        # We just make sure that the count has been increased by 1, since
         # the contents of the files have been tested elsewhere.
-        self.assertEqual(obs, fp_count + 2)
-
-    def test_create_qiime_mapping_file(self):
-        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
-
-        # creating prep template file
-        _id, fp = qdb.util.get_mountpoint('templates')[0]
-
-        obs_fp = pt.create_qiime_mapping_file()
-        exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
-
-        obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=False,
-                          parse_dates=False, index_col=False, comment='\t')
-        exp = pd.read_csv(
-            exp_fp, sep='\t', infer_datetime_format=False,
-            parse_dates=False, index_col=False, comment='\t')
-        obs = obs.reindex(sorted(obs.columns), axis=1)
-        exp = exp.reindex(sorted(exp.columns), axis=1)
-
-        assert_frame_equal(obs, exp, check_like=True)
+        self.assertEqual(obs, fp_count + 1)
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
@@ -1073,7 +1072,7 @@ class TestPrepTemplate(TestCase):
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
-        self.assertCountEqual(pt.categories(), exp_categories)
+        self.assertCountEqual(pt.categories, exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
                 'ebi_submission_accession': None,
@@ -1115,9 +1114,9 @@ class TestPrepTemplate(TestCase):
         for s_id in exp_sample_ids:
             self.assertEqual(pt[s_id]._to_dict(), exp_dict[s_id])
 
-        # prep and qiime files have been created
+        # prep files have been created
         filepaths = pt.get_filepaths()
-        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(len(filepaths), 1)
 
         # cleaning
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
@@ -1241,6 +1240,14 @@ class TestPrepTemplate(TestCase):
         pt.investigation_type = 'RNASeq'
         self.assertEqual(pt.investigation_type, 'RNASeq')
 
+    def test_deprecated_setter(self):
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        self.assertFalse(pt.deprecated)
+        pt.deprecated = True
+        self.assertTrue(pt.deprecated)
+        pt.deprecated = False
+        self.assertFalse(pt.deprecated)
+
     def test_status(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
         self.assertEqual(pt.status, 'private')
@@ -1333,11 +1340,87 @@ class TestPrepTemplate(TestCase):
 
     def test_artifact_setter(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
-            self.metadata, self.test_study, self.data_type_id)
+            self.metadata, self.test_study, '16S')
         self.assertEqual(pt.artifact, None)
         artifact = qdb.artifact.Artifact.create(
             self.filepaths, "FASTQ", prep_template=pt)
         self.assertEqual(pt.artifact, artifact)
+
+        # here we can test that we can properly create a workflow but we are
+        # going to add lot more steps to make it more complex by adding a
+        # couple of new scenarios
+        # 1/2. adds a new path that should be kept separate all the way; this
+        #      is to emulate what happens with different trimming (different
+        #      default parameter) and deblur (same for each of the previous
+        #      steps)
+        sql = """
+            INSERT INTO qiita.default_workflow_node (
+                default_workflow_id, default_parameter_set_id)
+            VALUES (1, 2), (1, 10);
+            INSERT INTO qiita.default_workflow_edge (
+                parent_id, child_id)
+            VALUES (7, 8);
+            INSERT INTO qiita.default_workflow_edge_connections (
+                default_workflow_edge_id, parent_output_id, child_input_id)
+            VALUES (4, 1, 3)"""
+        qdb.sql_connection.perform_as_transaction(sql)
+        # 2/2. adds a new path that should be kept together and then separate;
+        #      this is to simulate what happens with MTX/WGS processing, one
+        #      single QC step (together) and 2 separete profilers
+        sql = """
+            INSERT INTO qiita.default_parameter_set (
+                command_id, parameter_set_name, parameter_set)
+            VALUES (3, '100%',
+                    ('{"reference":1,"sortmerna_e_value":1,'
+                     || '"sortmerna_max_pos":'
+                     || '10000,"similarity":1.0,"sortmerna_coverage":1.00,'
+                     || '"threads":1}')::json);
+            INSERT INTO qiita.default_workflow_node (
+                default_workflow_id, default_parameter_set_id)
+            VALUES (1, 17);
+            INSERT INTO qiita.default_workflow_edge (
+                parent_id, child_id)
+            VALUES (7, 9);
+            INSERT INTO qiita.default_workflow_edge_connections (
+                default_workflow_edge_id, parent_output_id, child_input_id)
+            VALUES (5, 1, 3)
+            """
+        qdb.sql_connection.perform_as_transaction(sql)
+        # Finally, we need to "activate" the merging scheme values of the
+        # commands so they are actually different:
+        # 31->'Pick closed-reference OTUs', 6->'Split libraries FASTQ'
+        sql = """
+            UPDATE qiita.command_parameter
+            SET check_biom_merge = true
+            WHERE command_parameter_id IN (31, 6)"""
+        qdb.sql_connection.perform_as_transaction(sql)
+
+        wk = pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+        self.assertEqual(len(wk.graph.nodes), 5)
+        self.assertEqual(len(wk.graph.edges), 3)
+        self.assertCountEqual(
+            [x.command.name for x in wk.graph.nodes],
+            # we should have 2 split libraries and 3 close reference
+            ['Split libraries FASTQ', 'Split libraries FASTQ',
+             'Pick closed-reference OTUs', 'Pick closed-reference OTUs',
+             'Pick closed-reference OTUs'])
+
+        # now let's try to generate again and it should fail cause the jobs
+        # are alrady created
+        with self.assertRaisesRegex(ValueError, "Cannot create job because "
+                                    "the parameters are the same as jobs"):
+            pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+
+        # now let's test that an error is raised when there is no valid initial
+        # input data; this moves the data type from FASTQ to taxa_summary
+        qdb.sql_connection.perform_as_transaction(
+            'UPDATE qiita.artifact SET artifact_type_id = 10 WHERE '
+            f'artifact_id = {pt.artifact.id}')
+        with self.assertRaisesRegex(ValueError, 'Missing Artifact type: '
+                                    '"FASTQ" in this preparation; are you '
+                                    'missing a step to start?'):
+            pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+
         # cleaning
         qdb.artifact.Artifact.delete(artifact.id)
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
@@ -1364,7 +1447,27 @@ class TestPrepTemplate(TestCase):
                           '%s.SKD8.640184' % self.test_study.id,
                           '%s.SKB7.640196' % self.test_study.id}
         self.assertEqual(pt._get_sample_ids(), exp_sample_ids)
+
+        # test error due to max number of samples during extend
+        cmax = qdb.util.max_preparation_samples()
+        sql = 'UPDATE settings SET max_preparation_samples = %s'
+        qdb.sql_connection.perform_as_transaction(sql, [3])
+        df = pd.DataFrame.from_dict(
+            {'SKB1.640202': {'barcode': 'CCTCTGAGAGCT'}},
+            orient='index', dtype=str)
+        with self.assertRaisesRegex(ValueError, "4 exceeds the max allowed "
+                                    "number of samples: 3"):
+            pt.extend(df)
+
+        # now test creation
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        qdb.sql_connection.perform_as_transaction(sql, [2])
+        with self.assertRaisesRegex(ValueError, "3 exceeds the max allowed "
+                                    "number of samples: 2"):
+            PT.create(self.metadata, self.test_study, self.data_type)
+
         # cleaning
+        qdb.sql_connection.perform_as_transaction(sql, [cmax])
         qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_extend_add_samples_error(self):
@@ -1635,7 +1738,7 @@ class TestPrepTemplate(TestCase):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
         pt.delete_column('str_column')
-        self.assertNotIn('str_column', pt.categories())
+        self.assertNotIn('str_column', pt.categories)
 
         # testing errors
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)

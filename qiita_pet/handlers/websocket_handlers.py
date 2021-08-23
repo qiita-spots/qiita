@@ -15,7 +15,6 @@ import toredis
 from tornado.web import authenticated
 from tornado.websocket import WebSocketHandler
 from tornado.gen import engine, Task
-from future.utils import viewvalues
 
 from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -141,5 +140,5 @@ class SelectSamplesHandler(WebSocketHandler, BaseHandler):
         # Count total number of unique samples selected and return
         self.write_message(dumps({
             'sel': len(set(
-                chain.from_iterable(s for s in viewvalues(msginfo['sel']))))
+                chain.from_iterable(s for s in msginfo['sel'].values())))
         }))

@@ -10,11 +10,11 @@
 from setuptools import setup
 from glob import glob
 
-__version__ = "072019"
+__version__ = "2021.07"
 
 
 classes = """
-    Development Status :: 3 - Alpha
+    Development Status :: 5 - Production/Stable
     License :: OSI Approved :: BSD License
     Topic :: Scientific/Engineering :: Bio-Informatics
     Topic :: Software Development :: Libraries :: Application Frameworks
@@ -101,8 +101,8 @@ setup(name='qiita-spots',
               ]},
       scripts=glob('scripts/*'),
       # making sure that numpy is installed before biom
-      setup_requires=['numpy'],
-      install_requires=['psycopg2', 'click', 'future', 'bcrypt', 'pandas',
+      setup_requires=['numpy', 'cython'],
+      install_requires=['psycopg2', 'click', 'bcrypt', 'pandas',
                         'biom-format', 'tornado<6.0', 'toredis', 'redis',
                         'scp', 'pyparsing', 'h5py',  'natsort', 'nose', 'pep8',
                         'networkx', 'humanize', 'scikit-bio', 'wtforms',
@@ -111,6 +111,7 @@ setup(name='qiita-spots',
                         'paramiko', 'seaborn',  'matplotlib', 'scipy', 'nose',
                         'flake8', 'six', 'qiita-files @ https://github.com/'
                         'qiita-spots/qiita-files/archive/master.zip', 'mock',
+                        'python-jose', 'markdown2',
                         'supervisor @ https://github.com/Supervisor/'
                         'supervisor/archive/master.zip', 'joblib'],
       classifiers=classifiers

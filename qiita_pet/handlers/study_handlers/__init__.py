@@ -16,14 +16,14 @@ from .base import (StudyIndexHandler, StudyBaseInfoAJAX, StudyDeleteAjax,
                    DataTypesMenuAJAX, StudyFilesAJAX, StudyGetTags, StudyTags,
                    Study)
 from .prep_template import (
-    PrepTemplateAJAX, PrepFilesHandler,
+    PrepTemplateAJAX, PrepFilesHandler, AddDefaultWorkflowHandler,
     NewPrepTemplateAjax, PrepTemplateSummaryAJAX)
 from .processing import (ListCommandsHandler, ListOptionsHandler,
                          WorkflowHandler, WorkflowRunHandler, JobAJAX)
 from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
                        ArtifactAdminAJAX, ArtifactGetSamples, ArtifactGetInfo)
 from .sample_template import (
-    SampleTemplateHandler, SampleTemplateOverviewHandler,
+    SampleTemplateHandler, SampleTemplateOverviewHandler, AnalysesAjax,
     SampleTemplateColumnsHandler, SampleAJAX)
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
@@ -31,11 +31,11 @@ __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'VAMPSHandler', 'ListStudiesAJAX', 'ArtifactGraphAJAX',
            'ArtifactAdminAJAX', 'StudyIndexHandler', 'StudyBaseInfoAJAX',
            'SampleTemplateHandler', 'SampleTemplateOverviewHandler',
-           'SampleTemplateColumnsHandler',
+           'SampleTemplateColumnsHandler', 'AddDefaultWorkflowHandler',
            'PrepTemplateAJAX', 'NewArtifactHandler', 'PrepFilesHandler',
            'ListCommandsHandler', 'ListOptionsHandler', 'SampleAJAX',
            'StudyDeleteAjax', 'NewPrepTemplateAjax',
            'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX',
-           'WorkflowHandler', 'WorkflowRunHandler',
+           'WorkflowHandler', 'WorkflowRunHandler', 'AnalysesAjax',
            'JobAJAX', 'AutocompleteHandler', 'StudyGetTags', 'StudyTags',
            'Study', 'ArtifactGetSamples', 'ArtifactGetInfo']

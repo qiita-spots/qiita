@@ -9,15 +9,13 @@
 from unittest import TestCase, main
 from os import environ, close, remove
 from tempfile import mkstemp
-from future import standard_library
 from functools import partial
 import warnings
 
 from qiita_core.exceptions import MissingConfigSection
 from qiita_core.configuration_manager import ConfigurationManager
 
-with standard_library.hooks():
-    from configparser import ConfigParser
+from configparser import ConfigParser
 
 
 class ConfigurationManagerTests(TestCase):
@@ -125,6 +123,7 @@ class ConfigurationManagerTests(TestCase):
 
         conf_setter = partial(self.conf.set, 'main')
         conf_setter('COOKIE_SECRET', '')
+        conf_setter('JWT_SECRET', '')
         conf_setter('BASE_DATA_DIR', '')
         conf_setter('PLUGIN_DIR', '')
         conf_setter('CERTIFICATE_FILE', '')
@@ -137,7 +136,9 @@ class ConfigurationManagerTests(TestCase):
             obs._get_main(self.conf)
 
             obs_warns = [str(w.message) for w in warns]
-            exp_warns = ['Random cookie secret generated.']
+            exp_warns = ['Random cookie secret generated.',
+                         'Random JWT secret generated.  Non Public Artifact '
+                         'Download Links will expire upon system restart.']
             self.assertCountEqual(obs_warns, exp_warns)
 
         self.assertNotEqual(obs.cookie_secret, "SECRET")
@@ -269,6 +270,9 @@ KEY_FILE = /tmp/server.key
 #   from uuid import uuid4;\
 #   print b64encode(uuid4().bytes + uuid4().bytes)"
 COOKIE_SECRET = SECRET
+
+# The value used to secure JWTs for delegated permission artifact download.
+JWT_SECRET = SUPER_SECRET
 
 # ----------------------------- SMTP settings -----------------------------
 [smtp]

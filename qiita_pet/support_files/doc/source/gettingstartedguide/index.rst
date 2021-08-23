@@ -291,9 +291,11 @@ For all valid values for instrument_model per platform, view the values in the t
 |                 |  ``Illumina Genome Analyzer IIx``, ``Illumina HiScanSQ``, ``Illumina HiSeq 1000``,                       |
 |                 |  ``Illumina HiSeq 1500``,, ``Illumina HiSeq 2000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 3000``,    |
 |                 |  ``Illumina HiSeq 4000``, ``Illumina MiSeq``, ``Illumina MiniSeq``, ``Illumina NovaSeq 6000``,           |
-|                 |  ``NextSeq 500``, ``NextSeq 550``, or ``unspecified``                                                    |
+|                 |  ``NextSeq 500``, ``NextSeq 550``, ``Illumina NovaSeq 6000`` or `unspecified``                           |
 +-----------------+----------------------------------------------------------------------------------------------------------+
-| ``Ion Torrent`` |  ``Ion Torrent PGM``, ``Ion Torrent Proton``, ``Ion Torrent S5``, ``Ion Torrent S5 XL``                  |
+| ``Ion_Torrent`` |  ``Ion Torrent PGM``, ``Ion Torrent Proton``, ``Ion Torrent S5``, ``Ion Torrent S5 XL``                  |
++-----------------+----------------------------------------------------------------------------------------------------------+
+| ``PacBio_SMRT`` |  ``PacBio RS``, ``PacBio RS II``, ``Sequel ``, ``Sequel II``                                             |
 +-----------------+----------------------------------------------------------------------------------------------------------+
 
 

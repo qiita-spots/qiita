@@ -13,8 +13,10 @@ import redbiom.search
 import redbiom._requests
 import redbiom.util
 import redbiom.fetch
+import redbiom.admin
 from tornado.gen import coroutine, Task
 from tornado.web import HTTPError
+from requests.exceptions import HTTPError as rHTTPError
 
 from qiita_core.util import execute_as_transaction
 from qiita_db.util import generate_study_list_without_artifacts
@@ -27,9 +29,18 @@ class RedbiomPublicSearch(BaseHandler):
     def get(self, search):
         # making sure that if someone from a portal forces entry to this URI
         # we go to the main portal
+        try:
+            timestamps = redbiom.admin.get_timestamps()
+        except (rHTTPError):
+            timestamps = []
+
+        if timestamps:
+            latest_release = timestamps[0]
+        else:
+            latest_release = 'Not reported'
         if self.request.uri != '/redbiom/':
             self.redirect('/redbiom/')
-        self.render('redbiom.html')
+        self.render('redbiom.html', latest_release=latest_release)
 
     def _redbiom_metadata_search(self, query, contexts):
         study_artifacts = defaultdict(lambda: defaultdict(list))
@@ -49,13 +60,12 @@ class RedbiomPublicSearch(BaseHandler):
             study_artifacts = defaultdict(lambda: defaultdict(list))
             for ctx in contexts:
                 # redbiom.fetch.data_from_samples returns a biom, which we
-                # will ignore, and a dict
+                # will ignore, and a dict: {sample_id_in_table: original_id}
                 _, data = redbiom.fetch.data_from_samples(ctx, redbiom_samples)
-                for vals in data.values():
-                    for idx in vals:
-                        aid, sample_id = idx.split('_', 1)
-                        sid = sample_id.split('.', 1)[0]
-                        study_artifacts[sid][aid].append(sample_id)
+                for idx in data.keys():
+                    sample_id, aid = idx.rsplit('.', 1)
+                    sid = sample_id.split('.', 1)[0]
+                    study_artifacts[sid][aid].append(sample_id)
 
         return message, study_artifacts
 

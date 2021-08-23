@@ -133,6 +133,39 @@
     }
   }
 
+
+  /*
+   *
+   * Updates deprecated flag in the prep information <fieldset>
+   *
+   * @param prep_id the prep template id
+   * @param new_value the new deprecate value
+   *
+   * This function executes an AJAX call to update the deprecated flag
+   *
+   */
+  function deprecate_preparation(prep_id, new_value) {
+    var status = 'deprecate';
+    if (!new_value){
+      status = 'DE-deprecate'
+    }
+    if(confirm("Are you sure you want to " + status + " this preparation?")) {
+      $.ajax({
+        url: '{% raw qiita_config.portal_dir %}/prep_template/',
+        type: 'PATCH',
+        data: {'op': 'update-deprecated', 'path': '/' + prep_id + '/' + new_value},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}} });
+          }
+        }
+      });
+    }
+  }
+
   /*
    *
    * Deletes a column from the prep template
@@ -388,14 +421,25 @@
 <div class="row">
   <div class="col-md-12">
     <h4>
+      {% if deprecated %}
+        <span class="label label-danger">This Preparation Information has been DEPRECATED</span>
+        <br/><br/>
+      {% end %}
+
       <span id="prep-name-span">{{name}}</span> - ID {{prep_id}} ({{data_type}})
       <a class="btn btn-default" data-toggle="modal" data-target="#update-prep-name"><span class="glyphicon glyphicon-pencil"></span> Edit name</a>
       <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
-      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_qiime_id}}"><span class="glyphicon glyphicon-download-alt"></span> QIIME map</a>
+      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_sample_info_per_prep/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Sample info (only this prep)</a>
       {% if is_submitted_to_ebi %}
         <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download_ebi_accessions/experiments/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> EBI experiment accessions</a>
       {% end %}
       {% if editable %}
+        <br/>
+        {% if deprecated %}
+          <a class="btn btn-warning" onclick="deprecate_preparation({{prep_id}}, false);"><span class="glyphicon glyphicon-pushpin"></span> Remove Deprecation</a>
+        {% else%}
+          <a class="btn btn-warning" onclick="deprecate_preparation({{prep_id}}, true);"><span class="glyphicon glyphicon-pushpin"></span> Deprecate</a>
+        {% end %}
         <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}
       {% if prep_restrictions %}
@@ -414,7 +458,7 @@
     <ul class="nav nav-pills">
       <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#sample-listing-tab-div">Sample Listing</a></li>
       <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
-      <li style="border: 1px solid #428bca; border-radius: 5px" class="active"><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn">Processing</a></li>
+      <li style="border: 1px solid #428bca; border-radius: 5px" class="active"><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn" number-samples={{num_samples}}>Processing</a></li>
     </ul>
 
     <div class="tab-content">
@@ -450,8 +494,8 @@
         </div>
       </div>
       <div id="summary-tab-div" class="tab-pane fade">
-        <b>Number of samples: </b>{{num_samples}}</br>
-        <b>Number of columns: </b>{{num_columns}}</br>
+        <b>Number of samples: </b>{{num_samples}}<br/>
+        <b>Number of columns: </b>{{num_columns}}<br/>
         {% if editable %}
           <!-- Update prep template -->
           <div class="row">
@@ -513,7 +557,7 @@
         </div>
       </div>
       <div id="processing-graph-vue" class="tab-pane fade in active">
-        <processing-graph ref="procGraph" v-bind:is-analysis-pipeline='false' v-bind:no-init-jobs-callback="load_new_artifact" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/prep_template/{{prep_id}}/graph/" jobs-endpoint="/prep_template/{{prep_id}}/jobs/"></processing-graph>
+        <processing-graph ref="procGraph" v-bind:is-analysis-pipeline='false' v-bind:no-init-jobs-callback="load_new_artifact" portal="{% raw qiita_config.portal_dir %}" graph-endpoint="/prep_template/{{prep_id}}/graph/" jobs-endpoint="/prep_template/{{prep_id}}/jobs/" element-id="{{prep_id}}"></processing-graph>
       </div>
     </div>
   </div>

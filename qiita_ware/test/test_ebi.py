@@ -1,5 +1,3 @@
-from __future__ import division
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -19,22 +17,22 @@ import pandas as pd
 import warnings
 from datetime import date
 from skbio.util import safe_md5
-from future.utils import viewitems
 
 from h5py import File
 from qiita_files.demux import to_hdf5
 
-from qiita_ware.ebi import EBISubmission
-from qiita_ware.exceptions import EBISubmissionError
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.util import get_mountpoint
+from qiita_core.util import qiita_test_checker
+from qiita_db.util import get_mountpoint, convert_to_id
 from qiita_db.study import Study, StudyPerson
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
 from qiita_db.software import Parameters, DefaultParameters
-from qiita_core.util import qiita_test_checker
+from qiita_db.ontology import Ontology
+from qiita_ware.ebi import EBISubmission
+from qiita_ware.exceptions import EBISubmissionError
 
 
 @qiita_test_checker()
@@ -168,7 +166,7 @@ class TestEBISubmission(TestCase):
         submission = EBISubmission(3, 'ADD')
         self.files_to_remove.append(submission.full_ebi_dir)
         obs = ET.tostring(submission.generate_study_xml())
-        exp = ''.join([l.strip() for l in STUDYXML.splitlines()])
+        exp = ''.join([line.strip() for line in STUDYXML.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
     def test_generate_sample_xml(self):
@@ -177,7 +175,9 @@ class TestEBISubmission(TestCase):
 
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_sample_xml(samples=samples))
-        exp = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
+        exp = ('<SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-'
+               'instance" xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.'
+               'uk/meta/xsd/sra_1_3/SRA.sample.xsd" />')
         self.assertEqual(obs.decode('ascii'), exp)
 
         # removing samples so test text is easier to read
@@ -194,7 +194,6 @@ class TestEBISubmission(TestCase):
             del(submission.samples[k])
             del(submission.samples_prep[k])
         obs = ET.tostring(submission.generate_sample_xml())
-        exp = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
         obs = ET.tostring(submission.generate_sample_xml(samples=[]))
@@ -206,7 +205,7 @@ class TestEBISubmission(TestCase):
         elm = ET.Element('design', {'foo': 'bar'})
 
         e._generate_spot_descriptor(elm, 'LS454')
-        exp = ''.join([l.strip() for l in GENSPOTDESC.splitlines()])
+        exp = ''.join([line.strip() for line in GENSPOTDESC.splitlines()])
         obs = ET.tostring(elm)
         self.assertEqual(obs.decode('ascii'), exp)
 
@@ -221,7 +220,7 @@ class TestEBISubmission(TestCase):
         exp = SUBMISSIONXML % {
             'submission_alias': submission._get_submission_alias(),
             'center_name': qiita_config.ebi_center_name}
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
         submission.study_xml_fp = "/some/path/study.xml"
@@ -234,7 +233,7 @@ class TestEBISubmission(TestCase):
         exp = SUBMISSIONXML_FULL % {
             'submission_alias': submission._get_submission_alias(),
             'center_name': qiita_config.ebi_center_name}
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
     def test_write_xml_file(self):
@@ -501,15 +500,17 @@ class TestEBISubmission(TestCase):
             'study_id': artifact.study.id,
             'pt_id': artifact.prep_templates[0].id
         }
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
-        submission = EBISubmission(3, 'ADD')
+        artifact_id = 3
+
+        submission = EBISubmission(artifact_id, 'ADD')
         self.files_to_remove.append(submission.full_ebi_dir)
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_experiment_xml(samples=samples))
         exp = EXPERIMENTXML
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
         # removing samples so test text is easier to read
@@ -529,6 +530,25 @@ class TestEBISubmission(TestCase):
         obs = ET.tostring(submission.generate_experiment_xml())
         self.assertEqual(obs.decode('ascii'), exp)
 
+        # changing investigation_type to test user defined terms, first let's
+        # create a new term
+        new_term = 'ULTIMATE TERM'
+        ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        ena_ontology.add_user_defined_term(new_term)
+        # set the preparation with the new term
+        submission.prep_template.investigation_type = new_term
+        # regenerate submission to make sure everything is just fine ...
+        submission = EBISubmission(artifact_id, 'ADD')
+        self.assertEqual(submission.investigation_type, 'Other')
+        self.assertEqual(submission.new_investigation_type, new_term)
+
+        obs = ET.tostring(submission.generate_experiment_xml())
+        exp = '<LIBRARY_STRATEGY>%s</LIBRARY_STRATEGY>' % new_term
+        self.assertIn(exp, obs.decode('ascii'))
+
+        # returnging investigation_type to it's value
+        submission.prep_template.investigation_type = 'Metagenomics'
+
     def test_generate_run_xml(self):
         artifact = self.generate_new_study_with_preprocessed_data()
         submission = EBISubmission(artifact.id, 'ADD')
@@ -537,7 +557,7 @@ class TestEBISubmission(TestCase):
         obs = ET.tostring(submission.generate_run_xml())
 
         md5_sums = {}
-        for s, fp in viewitems(submission.sample_demux_fps):
+        for s, fp in submission.sample_demux_fps.items():
             md5_sums[s] = safe_md5(
                 open(fp + submission.FWD_READ_SUFFIX, 'rb')).hexdigest()
 
@@ -553,7 +573,7 @@ class TestEBISubmission(TestCase):
             'sample_2': md5_sums['%d.Sample2' % self.study_id],
             'sample_3': md5_sums['%d.Sample3' % self.study_id]
         }
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
         artifact = self.write_demux_files(PrepTemplate(1))
@@ -576,7 +596,7 @@ class TestEBISubmission(TestCase):
             'organization_prefix': qiita_config.ebi_organization_prefix,
             'center_name': qiita_config.ebi_center_name,
             'artifact_id': artifact.id}
-        exp = ''.join([l.strip() for l in exp.splitlines()])
+        exp = ''.join([line.strip() for line in exp.splitlines()])
         self.assertEqual(obs.decode('ascii'), exp)
 
     def test_generate_xml_files(self):
@@ -682,7 +702,7 @@ class TestEBISubmission(TestCase):
         # we can test that the script uses the correct names during
         # copy/gz-generation
         files = []
-        for sn, seqs in viewitems(sequences):
+        for sn, seqs in sequences.items():
             fn = join(self.temp_dir, sn + 'should_rename.fastq')
             with open(fn, 'w') as fh:
                 fh.write(seqs)
@@ -1284,8 +1304,7 @@ shrubland biome</VALUE>
     </SAMPLE_ATTRIBUTES>
   </SAMPLE>
  </SAMPLE_SET>
- """ % {'organization_prefix': qiita_config.ebi_organization_prefix,
-        'center_name': qiita_config.ebi_center_name}
+ """ % {'center_name': qiita_config.ebi_center_name}
 
 STUDYXML = """
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
@@ -1295,7 +1314,7 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
       <STUDY_TITLE>
         Identification of the Microbiomes for Cannabis Soils
       </STUDY_TITLE>
-      <STUDY_TYPE existing_study_type="Metagenomics" />
+      <STUDY_TYPE existing_study_type="Other" />
       <STUDY_ABSTRACT>
         This is a preliminary study to examine the microbiota associated with \
 the Cannabis plant. Soils samples from the bulk soil, soil associated with \
@@ -1341,6 +1360,7 @@ experiment.xsd">
 %(study_id)s.Sample1" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>%(study_id)s.Sample1</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1375,6 +1395,7 @@ experiment.xsd">
 %(study_id)s.Sample2" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>%(study_id)s.Sample2</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1409,6 +1430,7 @@ experiment.xsd">
 %(study_id)s.Sample3" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>%(study_id)s.Sample3</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1449,6 +1471,7 @@ center_name="%(center_name)s">
       <SAMPLE_DESCRIPTOR accession="ERS000008" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB2.640194</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1537,6 +1560,7 @@ center_name="%(center_name)s">
       <SAMPLE_DESCRIPTOR accession="ERS000024" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB3.640195</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>

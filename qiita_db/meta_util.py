@@ -22,8 +22,6 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
-
 from os import stat, rename
 from os.path import join, relpath, basename
 from time import strftime, localtime
@@ -32,8 +30,8 @@ import matplotlib as mpl
 from base64 import b64encode
 from urllib.parse import quote
 from io import BytesIO
-from future.utils import viewitems
 from datetime import datetime
+from collections import defaultdict, Counter
 from tarfile import open as topen, TarInfo
 from hashlib import md5
 from re import sub
@@ -162,8 +160,8 @@ def validate_filepath_access_by_user(user, filepath_id):
             # [0] cause we should only have 1
             aid = anid[0]
             analysis = qdb.analysis.Analysis(aid)
-            return analysis in (
-                user.private_analyses | user.shared_analyses)
+            return analysis.is_public | (analysis in (
+                user.private_analyses | user.shared_analyses))
         return False
 
 
@@ -176,61 +174,85 @@ def update_redis_stats():
         artifact filepaths that are not present in the file system
     """
     STUDY = qdb.study.Study
-    studies = {'public': STUDY.get_by_status('public'),
-               'private': STUDY.get_by_status('private'),
-               'sandbox': STUDY.get_by_status('sandbox')}
-    number_studies = {k: len(v) for k, v in viewitems(studies)}
 
-    number_of_samples = {}
-    ebi_samples_prep = {}
+    number_studies = {'public': 0, 'private': 0, 'sandbox': 0}
+    number_of_samples = {'public': 0, 'private': 0, 'sandbox': 0}
+    num_studies_ebi = 0
     num_samples_ebi = 0
-    for k, sts in viewitems(studies):
-        number_of_samples[k] = 0
-        for s in sts:
-            st = s.sample_template
-            if st is not None:
-                number_of_samples[k] += len(list(st.keys()))
+    number_samples_ebi_prep = 0
+    stats = []
+    missing_files = []
+    per_data_type_stats = Counter()
+    for study in STUDY.iter():
+        st = study.sample_template
+        if st is None:
+            continue
 
-            ebi_samples_prep_count = 0
-            for pt in s.prep_templates():
-                ebi_samples_prep_count += len([
-                    1 for _, v in viewitems(pt.ebi_experiment_accessions)
-                    if v is not None and v != ''])
-            ebi_samples_prep[s.id] = ebi_samples_prep_count
+        # counting samples submitted to EBI-ENA
+        len_samples_ebi = sum([esa is not None
+                               for esa in st.ebi_sample_accessions.values()])
+        if len_samples_ebi != 0:
+            num_studies_ebi += 1
+            num_samples_ebi += len_samples_ebi
 
-            if s.sample_template is not None:
-                num_samples_ebi += len([
-                    1 for _, v in viewitems(
-                        s.sample_template.ebi_sample_accessions)
-                    if v is not None and v != ''])
+        samples_status = defaultdict(set)
+        for pt in study.prep_templates():
+            pt_samples = list(pt.keys())
+            pt_status = pt.status
+            if pt_status == 'public':
+                per_data_type_stats[pt.data_type()] += len(pt_samples)
+            samples_status[pt_status].update(pt_samples)
+            # counting experiments (samples in preps) submitted to EBI-ENA
+            number_samples_ebi_prep += sum([
+                esa is not None
+                for esa in pt.ebi_experiment_accessions.values()])
+
+        # counting studies
+        if 'public' in samples_status:
+            number_studies['public'] += 1
+        elif 'private' in samples_status:
+            number_studies['private'] += 1
+        else:
+            # note that this is a catch all for other status; at time of
+            # writing there is status: awaiting_approval
+            number_studies['sandbox'] += 1
+
+        # counting samples; note that some of these lines could be merged with
+        # the block above but I decided to split it in 2 for clarity
+        if 'public' in samples_status:
+            number_of_samples['public'] += len(samples_status['public'])
+        if 'private' in samples_status:
+            number_of_samples['private'] += len(samples_status['private'])
+        if 'sandbox' in samples_status:
+            number_of_samples['sandbox'] += len(samples_status['sandbox'])
+
+        # processing filepaths
+        for artifact in study.artifacts():
+            for adata in artifact.filepaths:
+                try:
+                    s = stat(adata['fp'])
+                except OSError:
+                    missing_files.append(adata['fp'])
+                else:
+                    stats.append(
+                        (adata['fp_type'], s.st_size, strftime('%Y-%m',
+                         localtime(s.st_mtime))))
 
     num_users = qdb.util.get_count('qiita.qiita_user')
     num_processing_jobs = qdb.util.get_count('qiita.processing_job')
 
     lat_longs = dumps(get_lat_longs())
 
-    num_studies_ebi = len([k for k, v in viewitems(ebi_samples_prep)
-                           if v >= 1])
-    number_samples_ebi_prep = sum([v for _, v in viewitems(ebi_samples_prep)])
-
-    # generating file size stats
-    stats = []
-    missing_files = []
-    for k, sts in viewitems(studies):
-        for s in sts:
-            for a in s.artifacts():
-                for x in a.filepaths:
-                    try:
-                        s = stat(x['fp'])
-                        stats.append(
-                            (x['fp_type'], s.st_size, strftime('%Y-%m',
-                             localtime(s.st_ctime))))
-                    except OSError:
-                        missing_files.append(x['fp'])
-
     summary = {}
     all_dates = []
+    # these are some filetypes that are too small to plot alone so we'll merge
+    # in other
+    group_other = {'html_summary', 'tgz', 'directory', 'raw_fasta', 'log',
+                   'raw_sff', 'raw_qual', 'qza', 'html_summary_dir',
+                   'qza', 'plain_text', 'raw_barcodes'}
     for ft, size, ym in stats:
+        if ft in group_other:
+            ft = 'other'
         if ft not in summary:
             summary[ft] = {}
         if ym not in summary[ft]:
@@ -240,12 +262,8 @@ def update_redis_stats():
     all_dates = sorted(set(all_dates))
 
     # sorting summaries
-    rm_from_data = ['html_summary', 'tgz', 'directory', 'raw_fasta', 'log',
-                    'biom', 'raw_sff', 'raw_qual']
     ordered_summary = {}
     for dt in summary:
-        if dt in rm_from_data:
-            continue
         new_list = []
         current_value = 0
         for ad in all_dates:
@@ -293,9 +311,14 @@ def update_redis_stats():
     time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
 
     portal = qiita_config.portal
+    # making sure per_data_type_stats has some data so hmset doesn't fail
+    if per_data_type_stats == {}:
+        per_data_type_stats['No data'] = 0
+
     vals = [
         ('number_studies', number_studies, r_client.hmset),
         ('number_of_samples', number_of_samples, r_client.hmset),
+        ('per_data_type_stats', dict(per_data_type_stats), r_client.hmset),
         ('num_users', num_users, r_client.set),
         ('lat_longs', (lat_longs), r_client.set),
         ('num_studies_ebi', num_studies_ebi, r_client.set),
@@ -309,6 +332,12 @@ def update_redis_stats():
         # important to "flush" variables to avoid errors
         r_client.delete(redis_key)
         f(redis_key, v)
+
+    # preparing vals to insert into DB
+    vals = dumps(dict([x[:-1] for x in vals]))
+    sql = """INSERT INTO qiita.stats_daily (stats, stats_timestamp)
+             VALUES (%s, NOW())"""
+    qdb.sql_connection.perform_as_transaction(sql, [vals])
 
     return missing_files
 
@@ -383,7 +412,7 @@ def generate_biom_and_metadata_release(study_status='public'):
                     continue
                 fp = relpath(x['fp'], bdir)
                 for pt in a.prep_templates:
-                    categories = pt.categories()
+                    categories = pt.categories
                     platform = ''
                     target_gene = ''
                     if 'platform' in categories:

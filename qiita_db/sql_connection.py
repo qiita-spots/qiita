@@ -26,7 +26,6 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from contextlib import contextmanager
 from itertools import chain
 from functools import wraps
@@ -204,7 +203,7 @@ class Transaction(object):
 
     @_checker
     def add(self, sql, sql_args=None, many=False):
-        """Add an sql query to the transaction
+        """Add a sql query to the transaction
 
         Parameters
         ----------
@@ -492,6 +491,24 @@ class Transaction(object):
 # Singleton pattern, create the transaction for the entire system
 TRN = Transaction()
 TRNADMIN = Transaction(admin=True)
+
+
+def perform_as_transaction(sql, parameters=None):
+    """Opens, adds and executes sql as a single transaction
+
+    Parameters
+    ----------
+    sql : str
+        The SQL to execute
+    parameters: object, optional
+        The object of parameters to pass to the TRN.add command
+    """
+    with TRN:
+        if parameters:
+            TRN.add(sql, parameters)
+        else:
+            TRN.add(sql)
+        TRN.execute()
 
 
 def create_new_transaction():

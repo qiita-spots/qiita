@@ -265,6 +265,24 @@ class ProcessingJobTest(TestCase):
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             job.submit()
 
+    def test_submit_environment(self):
+        job = _create_job()
+        software = job.command.software
+        current = software.environment_script
+
+        # temporal update and then rollback to not commit change
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software SET environment_script = %s
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [
+                f'{current} ENVIRONMENT', software.id])
+
+            job.submit()
+
+            self.assertEqual(job.status, 'error')
+
+            qdb.sql_connection.TRN.rollback()
+
     def test_complete_multiple_outputs(self):
         # This test performs the test of multiple functions at the same
         # time. "release", "release_validators" and
@@ -446,6 +464,10 @@ class ProcessingJobTest(TestCase):
              qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
     def test_complete_success(self):
+        # Note that here we are submitting and creating other multiple jobs;
+        # thus here is the best place to test any intermediary steps/functions
+        # of the job creation, submission, exectution, and completion.
+        #
         # This first part of the test is just to test that by default the
         # naming of the output artifact will be the name of the output
         fd, fp = mkstemp(suffix='_table.biom')
@@ -457,11 +479,22 @@ class ProcessingJobTest(TestCase):
                                             'artifact_type': 'BIOM'}}
         job = _create_job()
         job._set_status('running')
+
+        # here we can test that job.release_validator_job hasn't been created
+        # yet so it has to be None
+        self.assertIsNone(job.release_validator_job)
         job.complete(True, artifacts_data=artifacts_data)
         self._wait_for_job(job)
+        # let's check for the job that released the validators
+        self.assertIsNotNone(job.release_validator_job)
+        self.assertEqual(job.release_validator_job.parameters.values['job'],
+                         job.id)
         # Retrieve the job that is performing the validation:
         validators = list(job.validator_jobs)
         self.assertEqual(len(validators), 1)
+        # the validator actually runs on the system so it gets an external_id
+        # assigned, let's test that is not None
+        self.assertFalse(validators[0].external_id == 'Not Available')
         # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(
@@ -515,10 +548,16 @@ class ProcessingJobTest(TestCase):
         # Retrieve the job that is performing the validation:
         validators = list(job.validator_jobs)
         self.assertEqual(len(validators), 1)
+        # here we can test that the validator shape and allocation is correct
+        validator = validators[0]
+        self.assertEqual(validator.parameters.values['artifact_type'], 'BIOM')
+        self.assertEqual(validator.get_resource_allocation_info(), '-q qiita '
+                         '-l nodes=1:ppn=1 -l mem=90gb -l walltime=150:00:00')
+        self.assertEqual(validator.shape, (27, 31, None))
         # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(
-            loads(validators[0].parameters.values['provenance'])['name'],
+            loads(validator.parameters.values['provenance'])['name'],
             "demultiplexed golay_12 1.5")
 
     def test_complete_failure(self):
@@ -729,6 +768,81 @@ class ProcessingJobTest(TestCase):
         job.hide()
         self.assertTrue(job.hidden)
 
+    def test_shape(self):
+        jids = {
+            # Split libraries FASTQ
+            '6d368e16-2242-4cf8-87b4-a5dc40bb890b': (27, 31, 116),
+            # Pick closed-reference OTUs
+            '80bf25f3-5f1d-4e10-9369-315e4244f6d5': (27, 31, 0),
+            # Single Rarefaction / Analysis
+            '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0': (5, 56, 3770436),
+            # Split libraries
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d': (27, 31, 116)}
+
+        for jid, shape in jids.items():
+            job = qdb.processing_job.ProcessingJob(jid)
+            self.assertEqual(job.shape, shape)
+
+    def test_get_resource_allocation_info(self):
+        jids = {
+            # Split libraries FASTQ
+            '6d368e16-2242-4cf8-87b4-a5dc40bb890b':
+                '-q qiita -l nodes=1:ppn=1 -l mem=120gb -l walltime=80:00:00',
+            # Pick closed-reference OTUs
+            '80bf25f3-5f1d-4e10-9369-315e4244f6d5':
+                '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00',
+            # Single Rarefaction / Analysis
+            '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0':
+                '-q qiita -l nodes=1:ppn=5 -l pmem=8gb -l walltime=168:00:00',
+            # Split libraries
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d':
+                '-q qiita -l nodes=1:ppn=1 -l mem=60gb -l walltime=25:00:00'}
+
+        for jid, allocation in jids.items():
+            job = qdb.processing_job.ProcessingJob(jid)
+            self.assertEqual(job.get_resource_allocation_info(), allocation)
+
+        # now let's test get_resource_allocation_info formulas, fun!!
+        job_changed = qdb.processing_job.ProcessingJob(
+            '6d368e16-2242-4cf8-87b4-a5dc40bb890b')
+        job_not_changed = qdb.processing_job.ProcessingJob(
+            '80bf25f3-5f1d-4e10-9369-315e4244f6d5')
+
+        # helper to set memory allocations easier
+        def _set_allocation(memory):
+            sql = """UPDATE qiita.processing_job_resource_allocation
+                     SET allocation = '{0}'
+                     WHERE name = 'Split libraries FASTQ'""".format(
+                        '-q qiita -l mem=%s' % memory)
+            qdb.sql_connection.perform_as_transaction(sql)
+
+        # let's start with something simple, samples*1000
+        #                                         27*1000 ~ 27000
+        _set_allocation('{samples}*1000')
+        self.assertEqual(
+            job_not_changed.get_resource_allocation_info(),
+            '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00')
+        self.assertEqual(job_changed.get_resource_allocation_info(),
+                         '-q qiita -l mem=26K')
+
+        # a little more complex ((samples+columns)*1000000)+4000000
+        #                       ((   27  +  31   )*1000000)+4000000 ~ 62000000
+        _set_allocation('(({samples}+{columns})*1000000)+4000000')
+        self.assertEqual(
+            job_not_changed.get_resource_allocation_info(),
+            '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00')
+        self.assertEqual(job_changed.get_resource_allocation_info(),
+                         '-q qiita -l mem=59M')
+
+        # now something real input_size+(2*1e+9)
+        #                        116   +(2*1e+9) ~ 2000000116
+        _set_allocation('{input_size}+(2*1e+9)')
+        self.assertEqual(
+            job_not_changed.get_resource_allocation_info(),
+            '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00')
+        self.assertEqual(job_changed.get_resource_allocation_info(),
+                         '-q qiita -l mem=2G')
+
 
 @qiita_test_checker()
 class ProcessingWorkflowTests(TestCase):
@@ -772,8 +886,9 @@ class ProcessingWorkflowTests(TestCase):
             tester._raise_if_not_in_construction()
 
     def test_submit(self):
-        # In order to test a success, we need to actually run the jobs, which
-        # will mean to run split libraries, for example.
+        # The submit method is being tested in test_complete_success via
+        # a job, its release validators and validators submissions.
+        # Leaving this note here in case it's helpful for future development
         pass
 
     def test_from_default_workflow(self):

@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import authenticated, HTTPError
-from future.utils import viewitems
 from wtforms import Form, StringField, validators
 
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -49,7 +48,7 @@ class UserProfileHandler(BaseHandler):
             form_data = UserProfile()
             form_data.process(data=self.request.arguments)
             profile = {name: data[0].decode('ascii') for name, data in
-                       viewitems(form_data.data)}
+                       form_data.data.items()}
 
             # Turn default value as list into default strings
             for field in form_data:

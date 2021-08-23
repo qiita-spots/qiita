@@ -8,21 +8,24 @@
 
 import networkx as nx
 import qiita_db as qdb
+import pandas as pd
+
 from collections import defaultdict, Iterable
 from datetime import datetime
-from future.utils import viewitems, viewvalues
 from itertools import chain
 from json import dumps, loads
 from multiprocessing import Process, Queue, Event
-from qiita_core.qiita_settings import qiita_config
-from qiita_db.util import create_nested_path
 from re import search, findall
 from subprocess import Popen, PIPE
 from time import sleep, time
 from uuid import UUID
 from os.path import join
 from threading import Thread
+from humanize import naturalsize
+
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
+from qiita_db.util import create_nested_path
 
 
 class Watcher(Process):
@@ -413,7 +416,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def by_ext_id(cls, external_id):
+    def by_external_id(cls, external_id):
         """Return Qiita Job UUID associated with external_id
 
         Parameters
@@ -430,7 +433,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             sql = """SELECT processing_job_id FROM qiita.processing_job
                      WHERE external_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [external_id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            return cls(qdb.sql_connection.TRN.execute_fetchlast())
 
     def get_resource_allocation_info(self):
         """Return resource allocation defined for this job. For
@@ -454,6 +457,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                 jtype = 'RELEASE_VALIDATORS_RESOURCE_PARAM'
                 tmp = ProcessingJob(self.parameters.values['job'])
                 name = tmp.parameters.command.name
+            elif self.command.name == 'Validate':
+                jtype = 'VALIDATOR'
+                name = self.parameters.values['artifact_type']
             elif self.id == 'register':
                 jtype = 'REGISTER'
                 name = 'REGISTER'
@@ -484,9 +490,52 @@ class ProcessingJob(qdb.base.QiitaObject):
                     AssertionError(
                         "Could not match %s to a resource allocation!" % name)
 
-            # [0] sending one element as execute_fetchflatten returns
-            # an array
-            return result[0]
+            allocation = result[0]
+
+            if ('{samples}' in allocation or '{columns}' in allocation or
+                    '{input_size}' in allocation):
+                samples, columns, input_size = self.shape
+                parts = []
+                for part in allocation.split(' '):
+                    if ('{samples}' in part or '{columns}' in part or
+                            '{input_size}' in part):
+                        variable, value = part.split('=')
+                        error_msg = ('Obvious incorrect allocation. Please '
+                                     'contact qiita.help@gmail.com')
+                        # to make sure that the formula is correct and avoid
+                        # possible issues with conversions, we will check that
+                        # all the variables {samples}/{columns}/{input_size}
+                        # present in the formula are not None, if any is None
+                        # we will set the job's error (will stop it) and the
+                        # message is gonna be shown to the user within the job
+                        if (('{samples}' in value and samples is None) or
+                                ('{columns}' in value and columns is None) or
+                                ('{input_size}' in value and input_size is
+                                 None)):
+                            self._set_error(error_msg)
+                            return 'Not valid'
+
+                        try:
+                            # if eval has something that can't be processed
+                            # it will raise a NameError
+                            mem = eval(value.format(
+                                samples=samples, columns=columns,
+                                input_size=input_size))
+                        except NameError:
+                            self._set_error(error_msg)
+                            return 'Not valid'
+                        else:
+                            if mem <= 0:
+                                self._set_error(error_msg)
+                                return 'Not valid'
+                            value = naturalsize(mem, gnu=True, format='%.0f')
+                            part = '%s=%s' % (variable, value)
+
+                    parts.append(part)
+
+                allocation = ' '.join(parts)
+
+            return allocation
 
     @classmethod
     def create(cls, user, parameters, force=False):
@@ -531,7 +580,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             # we need to use ILIKE because of booleans as they can be
             # false or False
             params = []
-            for k, v in viewitems(parameters.values):
+            for k, v in parameters.values.items():
                 # this is necessary in case we have an Iterable as a value
                 # but that is string
                 if isinstance(v, Iterable) and not isinstance(v, str):
@@ -591,6 +640,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                         TTRN.add(sql, [artifact_info, job_id])
                     else:
                         pending[artifact_info[0]][pname] = artifact_info[1]
+                elif pname == 'artifact':
+                    TTRN.add(sql, [parameters.values[pname], job_id])
+
             if pending:
                 sql = """UPDATE qiita.processing_job
                          SET pending = %s
@@ -732,7 +784,21 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [new_status, self.id])
             qdb.sql_connection.TRN.execute()
 
-    def _set_ext_id(self, value):
+    @property
+    def external_id(self):
+        """Retrieves the external id"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT external_job_id
+                     FROM qiita.processing_job
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            result = qdb.sql_connection.TRN.execute_fetchlast()
+            if result is None:
+                result = 'Not Available'
+            return result
+
+    @external_id.setter
+    def external_id(self, value):
         """Sets the external job id of the job
 
         Parameters
@@ -748,12 +814,35 @@ class ProcessingJob(qdb.base.QiitaObject):
             - If the current status of the job is 'running' and `value` is
             'queued'
         """
+        sql = """UPDATE qiita.processing_job
+                 SET external_job_id = %s
+                 WHERE processing_job_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
+
+    @property
+    def release_validator_job(self):
+        """Retrieves the release validator job
+
+        Returns
+        -------
+        qiita_db.processing_job.ProcessingJob or None
+            The release validator job of this job
+        """
+        rvalidator = None
         with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.processing_job
-                     SET external_job_id = %s
-                     WHERE processing_job_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+            sql = """SELECT processing_job_id
+                     FROM qiita.processing_job
+                     WHERE command_id in (
+                         SELECT command_id
+                         FROM qiita.software_command
+                         WHERE name = 'release_validators')
+                             AND command_parameters->>'job' = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            results = qdb.sql_connection.TRN.execute_fetchflatten()
+            if results:
+                rvalidator = ProcessingJob(results[0])
+
+        return rvalidator
 
     def submit(self, parent_job_id=None, dependent_jobs_list=None):
         """Submits the job to execution
@@ -791,12 +880,30 @@ class ProcessingJob(qdb.base.QiitaObject):
         # portal server that submitted the job
         url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
 
+        # if the word ENVIRONMENT is in the plugin_env_script we have a special
+        # case where we are going to execute some command and then wait for the
+        # plugin to return their own id (first implemented for
+        # fast-bowtie2+woltka)
+        if 'ENVIRONMENT' in plugin_env_script:
+            # the job has to be in running state so the plugin can change its`
+            # status
+            with qdb.sql_connection.TRN:
+                self._set_status('running')
+                qdb.sql_connection.TRN.commit()
+
+            create_nested_path(job_dir)
+            cmd = (f'{plugin_env_script}; {plugin_start_script} '
+                   f'{url} {self.id} {job_dir}')
+            stdout, stderr, return_value = _system_call(cmd)
+            if return_value != 0 or stderr != '':
+                self._set_error(stderr)
+            job_id = stdout
         # note that dependent jobs, such as m validator jobs marshalled into
         # n 'queues' require the job_id returned by an external scheduler such
         # as Torque's MOAB, rather than a job name that can be defined within
         # Qiita. Hence, this method must be able to handle the case where a job
         # requires metadata from a late-defined and time-sensitive source.
-        if qiita_config.plugin_launcher in ProcessingJob._launch_map:
+        elif qiita_config.plugin_launcher in ProcessingJob._launch_map:
             launcher = ProcessingJob._launch_map[qiita_config.plugin_launcher]
             if launcher['execute_in_process']:
                 # run this launcher function within this process.
@@ -818,12 +925,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                                               self.id,
                                               job_dir,
                                               parent_job_id, resource_params)
-
-                # note that at this point, self.id is Qiita's UUID for a Qiita
-                # job. job_id at this point is an external ID (e.g. Torque Job
-                # ID). Record the mapping between job_id and self.id using
-                # _set_ext_id().
-                self._set_ext_id(job_id)
 
                 if dependent_jobs_list:
                     # a dependent_jobs_list will always have at least one
@@ -858,6 +959,8 @@ class ProcessingJob(qdb.base.QiitaObject):
 
                 p.start()
 
+                job_id = p.pid
+
                 if dependent_jobs_list:
                     # for now, treat dependents as independent when
                     # running locally. This means they will not be
@@ -878,6 +981,13 @@ class ProcessingJob(qdb.base.QiitaObject):
         else:
             error = "plugin_launcher should be one of two values for now"
             raise AssertionError(error)
+
+        # note that at this point, self.id is Qiita's UUID for a Qiita
+        # job. job_id at this point is an external ID (e.g. Torque Job
+        # ID). Record the mapping between job_id and self.id using
+        # external_id.
+        if job_id is not None:
+            self.external_id = job_id
 
     def release(self):
         """Releases the job from the waiting status and creates the artifact
@@ -938,73 +1048,74 @@ class ProcessingJob(qdb.base.QiitaObject):
 
     def release_validators(self):
         """Allows all the validator job spawned by this job to complete"""
-        with qdb.sql_connection.TRN:
-            if self.command.software.type not in ('artifact transformation',
-                                                  'private'):
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Only artifact transformation and private jobs can "
-                    "release validators")
+        if self.command.software.type not in ('artifact transformation',
+                                              'private'):
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "Only artifact transformation and private jobs can "
+                "release validators")
 
-            # Check if all the validators are completed. Validator jobs can be
-            # in two states when completed: 'waiting' in case of success
-            # or 'error' otherwise
+        # Check if all the validators are completed. Validator jobs can be
+        # in two states when completed: 'waiting' in case of success
+        # or 'error' otherwise
 
-            validator_ids = [j.id for j in self.validator_jobs
+        validator_ids = ['%s [%s]' % (j.id, j.external_id)
+                         for j in self.validator_jobs
+                         if j.status not in ['waiting', 'error']]
+
+        # Active polling - wait until all validator jobs are completed
+        # TODO: As soon as we see one errored validator, we should kill
+        # the other jobs and exit early. Don't wait for all of the jobs
+        # to complete.
+        while validator_ids:
+            jids = ', '.join(validator_ids)
+            self.step = ("Validating outputs (%d remaining) via "
+                         "job(s) %s" % (len(validator_ids), jids))
+            sleep(10)
+            validator_ids = ['%s [%s]' % (j.id, j.external_id)
+                             for j in self.validator_jobs
                              if j.status not in ['waiting', 'error']]
 
-            # Active polling - wait until all validator jobs are completed
-            # TODO: As soon as we see one errored validator, we should kill
-            # the other jobs and exit early. Don't wait for all of the jobs
-            # to complete.
-            while validator_ids:
-                jids = ', '.join([j[0] for j in validator_ids])
-                self.step = ("Validating outputs (%d remaining) via "
-                             "job(s) %s" % (len(validator_ids), jids))
-                sleep(10)
-                validator_ids = [j.id for j in self.validator_jobs
-                                 if j.status not in ['waiting', 'error']]
+        # Check if any of the validators errored
+        errored = [j for j in self.validator_jobs
+                   if j.status == 'error']
+        if errored:
+            # At least one of the validators failed, Set the rest of the
+            # validators and the current job as failed
+            waiting = [j.id for j in self.validator_jobs
+                       if j.status == 'waiting']
 
-            # Check if any of the validators errored
-            errored = [j for j in self.validator_jobs
-                       if j.status == 'error']
-            if errored:
-                # At least one of the validators failed, Set the rest of the
-                # validators and the current job as failed
-                waiting = [j.id for j in self.validator_jobs
-                           if j.status == 'waiting']
+            common_error = "\n".join(
+                ["Validator %s error message: %s" % (j.id, j.log.msg)
+                 for j in errored])
 
-                common_error = "\n".join(
-                    ["Validator %s error message: %s" % (j.id, j.log.msg)
-                     for j in errored])
+            val_error = "%d sister validator jobs failed: %s" % (
+                len(errored), common_error)
+            for j in waiting:
+                ProcessingJob(j)._set_error(val_error)
 
-                val_error = "%d sister validator jobs failed: %s" % (
-                    len(errored), common_error)
-                for j in waiting:
-                    ProcessingJob(j)._set_error(val_error)
+            self._set_error('%d validator jobs failed: %s'
+                            % (len(errored), common_error))
+        else:
+            mapping = {}
+            # Loop through all validator jobs and release them, allowing
+            # to create the artifacts. Note that if any artifact creation
+            # fails, the rollback operation will make sure that the
+            # previously created artifacts are not in there
+            for vjob in self.validator_jobs:
+                mapping.update(vjob.release())
 
-                self._set_error('%d validator jobs failed: %s'
-                                % (len(errored), common_error))
-            else:
-                mapping = {}
-                # Loop through all validator jobs and release them, allowing
-                # to create the artifacts. Note that if any artifact creation
-                # fails, the rollback operation will make sure that the
-                # previously created artifacts are not in there
-                for vjob in self.validator_jobs:
-                    mapping.update(vjob.release())
-
-                if mapping:
-                    sql = """INSERT INTO
-                                qiita.artifact_output_processing_job
-                                (artifact_id, processing_job_id,
-                                command_output_id)
-                             VALUES (%s, %s, %s)"""
-                    sql_args = [[aid, self.id, outid]
-                                for outid, aid in viewitems(mapping)]
+            if mapping:
+                sql = """INSERT INTO
+                            qiita.artifact_output_processing_job
+                            (artifact_id, processing_job_id,
+                            command_output_id)
+                         VALUES (%s, %s, %s)"""
+                sql_args = [[aid, self.id, outid]
+                            for outid, aid in mapping.items()]
+                with qdb.sql_connection.TRN:
                     qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-
-                    self._update_and_launch_children(mapping)
-                self._set_status('success')
+                self._update_and_launch_children(mapping)
+            self._set_status('success')
 
     def _complete_artifact_definition(self, artifact_data):
         """"Performs the needed steps to complete an artifact definition job
@@ -1020,6 +1131,14 @@ class ProcessingJob(qdb.base.QiitaObject):
             Dict with the artifact information. `filepaths` contains the list
             of filepaths and filepath types for the artifact and
             `artifact_type` the type of the artifact
+
+        Notes
+        -----
+        The `provenance` in the job.parameters can contain a `direct_creation`
+        flag to avoid having to wait for the complete job to create a new
+        artifact, which is normally ran during regular processing. Skipping is
+        fine because we are adding an artifact to an existing job outside of
+        regular processing
         """
         with qdb.sql_connection.TRN:
             atype = artifact_data['artifact_type']
@@ -1030,18 +1149,41 @@ class ProcessingJob(qdb.base.QiitaObject):
             if job_params['provenance'] is not None:
                 # The artifact is a result from a previous job
                 provenance = loads(job_params['provenance'])
-                if provenance.get('data_type') is not None:
-                    artifact_data = {'data_type': provenance['data_type'],
-                                     'artifact_data': artifact_data}
+                if provenance.get('direct_creation', False):
+                    original_job = ProcessingJob(provenance['job'])
+                    artifact = qdb.artifact.Artifact.create(
+                        filepaths, atype,
+                        parents=original_job.input_artifacts,
+                        processing_parameters=original_job.parameters,
+                        analysis=job_params['analysis'],
+                        name=job_params['name'])
 
-                sql = """UPDATE qiita.processing_job_validator
-                         SET artifact_info = %s
-                         WHERE validator_id = %s"""
-                qdb.sql_connection.TRN.add(
-                    sql, [dumps(artifact_data), self.id])
-                qdb.sql_connection.TRN.execute()
-                # Can't create the artifact until all validators are completed
-                self._set_status('waiting')
+                    sql = """
+                        INSERT INTO qiita.artifact_output_processing_job
+                            (artifact_id, processing_job_id,
+                             command_output_id)
+                         VALUES (%s, %s, %s)"""
+                    qdb.sql_connection.TRN.add(
+                        sql, [artifact.id, original_job.id,
+                              provenance['cmd_out_id']])
+                    qdb.sql_connection.TRN.execute()
+
+                    self._set_status('success')
+                else:
+                    if provenance.get('data_type') is not None:
+                        artifact_data = {'data_type': provenance['data_type'],
+                                         'artifact_data': artifact_data}
+
+                    sql = """UPDATE qiita.processing_job_validator
+                             SET artifact_info = %s
+                             WHERE validator_id = %s"""
+                    qdb.sql_connection.TRN.add(
+                        sql, [dumps(artifact_data), self.id])
+                    qdb.sql_connection.TRN.execute()
+
+                    # Can't create the artifact until all validators
+                    # are completed
+                    self._set_status('waiting')
             else:
                 # The artifact is uploaded by the user or is the initial
                 # artifact of an analysis
@@ -1090,7 +1232,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         validator_jobs = []
         with qdb.sql_connection.TRN:
             cmd_id = self.command.id
-            for out_name, a_data in viewitems(artifacts_data):
+            for out_name, a_data in artifacts_data.items():
                 # Correct the format of the filepaths parameter so we can
                 # create a validate job
                 filepaths = defaultdict(list)
@@ -1142,7 +1284,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if naming_params:
                     params = self.parameters.values
                     art_name = "%s %s" % (
-                        out_name, ' '.join([str(params[p])
+                        out_name, ' '.join([str(params[p]).split('/')[-1]
                                             for p in naming_params]))
                 else:
                     art_name = out_name
@@ -1169,7 +1311,8 @@ class ProcessingJob(qdb.base.QiitaObject):
 
             # Change the current step of the job
             self.step = "Validating outputs (%d remaining) via job(s) %s" % (
-                len(validator_jobs), ', '.join([j.id for j in validator_jobs]))
+                len(validator_jobs), ', '.join(['%s [%s]' % (
+                    j.id, j.external_id) for j in validator_jobs]))
 
             # Link all the validator jobs with the current job
             self._set_validator_jobs(validator_jobs)
@@ -1379,16 +1522,14 @@ class ProcessingJob(qdb.base.QiitaObject):
         qiita_db.exceptions.QiitaDBOperationNotPermittedError
             If the status of the job is not 'running'
         """
-        with qdb.sql_connection.TRN:
-            if self.status != 'running':
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Cannot change the step of a job whose status is not "
-                    "'running'")
-            sql = """UPDATE qiita.processing_job
-                     SET step = %s
-                     WHERE processing_job_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        if self.status != 'running':
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "Cannot change the step of a job whose status is not "
+                "'running'")
+        sql = """UPDATE qiita.processing_job
+                 SET step = %s
+                 WHERE processing_job_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
     @property
     def children(self):
@@ -1464,7 +1605,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             for c in self.children:
                 qdb.sql_connection.TRN.add(sql, [c.id])
                 params, pending = qdb.sql_connection.TRN.execute_fetchflatten()
-                for pname, out_name in viewitems(pending[self.id]):
+                for pname, out_name in pending[self.id].items():
                     a_id = new_map[out_name]
                     params[pname] = str(a_id)
                     del pending[self.id]
@@ -1495,6 +1636,9 @@ class ProcessingJob(qdb.base.QiitaObject):
         # Submit all the children that already have all the input parameters
         for c in ready:
             c.submit()
+            # some jobs create several children jobs/validators and this can
+            # clog the submission process; giving it a second to avoid this
+            sleep(1)
 
     @property
     def outputs(self):
@@ -1597,6 +1741,96 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [True, self.id])
             qdb.sql_connection.TRN.execute()
 
+    @property
+    def shape(self):
+        """Number of samples, metadata columns and input size of this job
+
+        Returns
+        -------
+        int, int, int
+            Number of samples, metadata columns and input size. None means it
+            couldn't be calculated
+        """
+        samples = None
+        columns = None
+        study_id = None
+        analysis_id = None
+        artifact = None
+        input_size = None
+
+        parameters = self.parameters.values
+
+        if self.command.name == 'Validate':
+            # Validate only has two options to calculate it's size: template (a
+            # job that has a preparation linked) or analysis (is from an
+            # analysis). However, 'template' can be present and be None
+            if 'template' in parameters and parameters['template'] is not None:
+                try:
+                    pt = qdb.metadata_template.prep_template.PrepTemplate(
+                        parameters['template'])
+                except qdb.exceptions.QiitaDBUnknownIDError:
+                    pass
+                else:
+                    study_id = pt.study_id
+            elif 'analysis' in parameters:
+                analysis_id = parameters['analysis']
+        elif self.command.name == 'build_analysis_files':
+            # build analysis is a special case because the analysis doesn't
+            # exist yet
+            sanalysis = qdb.analysis.Analysis(parameters['analysis']).samples
+            samples = sum([len(sams) for sams in sanalysis.values()])
+            input_size = sum([fp['fp_size'] for aid in sanalysis
+                              for fp in qdb.artifact.Artifact(aid).filepaths])
+        elif self.command.software.name == 'Qiita':
+            if 'study' in parameters:
+                study_id = parameters['study']
+            elif 'study_id' in parameters:
+                study_id = parameters['study_id']
+            elif 'analysis' in parameters:
+                analysis_id = parameters['analysis']
+            elif 'analysis_id' in parameters:
+                analysis_id = parameters['analysis_id']
+            elif 'artifact' in parameters:
+                try:
+                    artifact = qdb.artifact.Artifact(parameters['artifact'])
+                except qdb.exceptions.QiitaDBUnknownIDError:
+                    pass
+        elif self.input_artifacts:
+            artifact = self.input_artifacts[0]
+            input_size = sum([fp['fp_size'] for a in self.input_artifacts
+                              for fp in a.filepaths])
+
+        # if there is an artifact, then we need to get the study_id/analysis_id
+        if artifact is not None:
+            if artifact.study is not None:
+                study_id = artifact.study.id
+            elif artifact.analysis is not None:
+                analysis_id = artifact.analysis.id
+
+        # now retrieve the sample/columns based on study_id/analysis_id
+        if study_id is not None:
+            try:
+                st = qdb.study.Study(study_id).sample_template
+            except qdb.exceptions.QiitaDBUnknownIDError:
+                pass
+            else:
+                samples = len(st)
+                columns = len(st.categories)
+        elif analysis_id is not None:
+            try:
+                analysis = qdb.analysis.Analysis(analysis_id)
+            except qdb.exceptions.QiitaDBUnknownIDError:
+                pass
+            else:
+                mfp = qdb.util.get_filepath_information(
+                    analysis.mapping_file)['fullpath']
+                samples, columns = pd.read_csv(
+                    mfp, sep='\t', dtype=str).shape
+                input_size = sum([fp['fp_size'] for aid in analysis.samples for
+                                  fp in qdb.artifact.Artifact(aid).filepaths])
+
+        return samples, columns, input_size
+
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
     """Models a workflow defined by the user
@@ -1678,13 +1912,16 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             # [0] in_degrees returns a tuple, where [0] is the element we want
             all_nodes = {}
             roots = {}
+
             for node, position in in_degrees:
+                dp = node.default_parameter
+                cmd = dp.command
                 if position == 0:
-                    roots[node] = (node.command, node.parameters)
-                all_nodes[node] = (node.command, node.parameters)
+                    roots[node] = (cmd, dp)
+                all_nodes[node] = (cmd, dp)
 
             # Check that we have all the required parameters
-            root_cmds = set(c for c, _ in viewvalues(roots))
+            root_cmds = set(c for c, _ in roots.values())
             if root_cmds != set(req_params):
                 error_msg = ['Provided required parameters do not match the '
                              'initial set of commands for the workflow.']
@@ -1707,7 +1944,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                     user,
                     qdb.software.Parameters.from_default_params(
                         p, req_params[c]), force)
-                for n, (c, p) in viewitems(roots)}
+                for n, (c, p) in roots.items()}
             root_jobs = node_to_job.values()
 
             # SQL used to create the edges between jobs
@@ -1737,7 +1974,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                     parent_ids.append(source_id)
                     # Get the connections between the job and the source
                     connections = data['connections'].connections
-                    for out, in_param in connections:
+                    for out, in_param, _ in connections:
                         # We take advantage of the fact the parameters are
                         # stored in JSON to encode the name of the output
                         # artifact from the previous job
@@ -1920,9 +2157,9 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 req_params = req_params if req_params else {}
                 # Loop through all the connections to add the relevant
                 # parameters
-                for source, mapping in viewitems(connections):
+                for source, mapping in connections.items():
                     source_id = source.id
-                    for out, in_param in viewitems(mapping):
+                    for out, in_param in mapping.items():
                         req_params[in_param] = [source_id, out]
 
                 new_job = ProcessingJob.create(
@@ -2021,7 +2258,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             # the root nodes
             in_degrees = dict(g.in_degree())
             roots = []
-            for job, degree in viewitems(in_degrees):
+            for job, degree in in_degrees.items():
                 if degree == 0:
                     roots.append(job)
                 else:

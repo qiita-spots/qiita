@@ -7,13 +7,11 @@
 # -----------------------------------------------------------------------------
 
 from functools import partial
-from future import standard_library
 from json import loads
 
 import qiita_db as qdb
 
-with standard_library.hooks():
-    from configparser import ConfigParser
+from configparser import ConfigParser
 
 
 SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',

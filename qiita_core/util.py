@@ -124,11 +124,11 @@ def get_release_info(study_status='public'):
     # replacing None values for empty strings as the text is displayed nicely
     # in the GUI
     if md5sum is None:
-        md5sum = ''
+        md5sum = b''
     if filepath is None:
-        filepath = ''
+        filepath = b''
     if timestamp is None:
-        timestamp = ''
+        timestamp = b''
     biom_metadata_release = ((md5sum, filepath, timestamp))
 
     md5sum = r_client.get('release-archive:md5sum')
@@ -137,11 +137,11 @@ def get_release_info(study_status='public'):
     # replacing None values for empty strings as the text is displayed nicely
     # in the GUI
     if md5sum is None:
-        md5sum = ''
+        md5sum = b''
     if filepath is None:
-        filepath = ''
+        filepath = b''
     if timestamp is None:
-        timestamp = ''
+        timestamp = b''
     archive_release = ((md5sum, filepath, timestamp))
 
     return (biom_metadata_release, archive_release)

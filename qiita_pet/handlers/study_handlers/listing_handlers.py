@@ -5,9 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from json import dumps
-from future.utils import viewitems
 from collections import defaultdict
 
 from tornado.web import authenticated, HTTPError
@@ -50,7 +48,7 @@ class StudyApprovalList(BaseHandler):
         for artifact in Artifact.iter_by_visibility('awaiting_approval'):
             studies[artifact.study].append(artifact.id)
         parsed_studies = [(s.id, s.title, s.owner.email, pds)
-                          for s, pds in viewitems(studies)]
+                          for s, pds in studies.items()]
 
         self.render('admin_approval.html',
                     study_info=parsed_studies)

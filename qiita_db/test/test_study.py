@@ -204,10 +204,8 @@ class TestStudy(TestCase):
         # Change the status of the studies by changing the status of their
         # artifacts
         id_status = qdb.util.convert_to_id(new_status, 'visibility')
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE qiita.artifact SET visibility_id = %s", (id_status,))
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "UPDATE qiita.artifact SET visibility_id = %s", (id_status,))
 
     def test_get_info(self):
         # Test get all info for single study
@@ -226,7 +224,7 @@ class TestStudy(TestCase):
                              {'f1': '10.100/7891011', 'f2': True},
                              {'f1': '7891011', 'f2': False}],
             'study_alias': 'Cannabis Soils',
-            'spatial_series': False,
+            'spatial_series': False, 'notes': '',
             'study_abstract': 'This is a preliminary study to examine the '
             'microbiota associated with the Cannabis plant. Soils samples from'
             ' the bulk soil, soil associated with the roots, and the '
@@ -245,6 +243,7 @@ class TestStudy(TestCase):
             'Soils',
             'ebi_submission_status': 'submitted',
             'ebi_study_accession': 'EBI123456-BB',
+            'autoloaded': False,
             'specimen_id_column': None}
         self.assertDictEqual(obs, exp)
 
@@ -323,6 +322,13 @@ class TestStudy(TestCase):
     def test_owner(self):
         self.assertEqual(self.study.owner, qdb.user.User("test@foo.bar"))
 
+    def test_autoloaded(self):
+        self.assertFalse(self.study.autoloaded)
+        self.study.autoloaded = True
+        self.assertTrue(self.study.autoloaded)
+        self.study.autoloaded = False
+        self.assertFalse(self.study.autoloaded)
+
     def test_public_raw_download(self):
         self.assertFalse(self.study.public_raw_download)
         self.study.public_raw_download = True
@@ -333,9 +339,8 @@ class TestStudy(TestCase):
     def test_share(self):
         # Clear all sharing associations
         self._change_processed_data_status('sandbox')
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add("delete from qiita.study_users")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "delete from qiita.study_users")
         self.assertEqual(self.study.shared_with, [])
 
         # Try to share with the owner, which should not work
@@ -433,6 +438,7 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
+               'notes': '',
                'specimen_id_column': None}
         self.assertEqual(obs_info, exp)
         # Check the timestamp separately, since it is set by the database
@@ -476,6 +482,11 @@ class TestStudy(TestCase):
                 [new.id])
             obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs, [[1, new.id]])
+
+        # testing Study.iter()
+        self.assertCountEqual(list(qdb.study.Study.iter()),
+                              [qdb.study.Study(1), new])
+
         qdb.study.Study.delete(new.id)
 
     def test_create_study_all_data(self):
@@ -487,7 +498,8 @@ class TestStudy(TestCase):
             'metadata_complete': False,
             'reprocess': True,
             'first_contact': "10/24/2014 12:47PM",
-            'study_id': 3827
+            'study_id': 3827,
+            'notes': 'an analysis was performed \n here and \n here'
             })
         obs = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'), "Fried chicken microbiome 3",
@@ -509,6 +521,7 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
+               'notes': 'an analysis was performed \n here and \n here',
                'specimen_id_column': None}
         self.assertEqual(obs.info, exp)
         self.assertEqual(obs.shared_with, [])
@@ -521,6 +534,11 @@ class TestStudy(TestCase):
         self.assertEqual(obs._portals, ['QIITA'])
         self.assertEqual(obs.ebi_study_accession, None)
         self.assertEqual(obs.ebi_submission_status, "not submitted")
+
+        # testing Study.iter()
+        self.assertCountEqual(list(qdb.study.Study.iter()),
+                              [qdb.study.Study(1), obs])
+
         qdb.study.Study.delete(obs.id)
 
     def test_create_missing_required(self):
@@ -639,6 +657,7 @@ class TestStudy(TestCase):
             "metadata_complete": False,
             "lab_person_id": qdb.study.StudyPerson(2),
             "vamps_id": 'MBE_111222',
+            'notes': 'These are my notes!!! \n ... and more notes ...'
         }
         self.info['first_contact'] = "6/11/2014"
         new = qdb.study.Study.create(

@@ -2,9 +2,6 @@
 {% block head %}
 {% set study_title = study_info['study_title'] %}
 {% set study_title_msg = study_title.replace('"', '\\"') %}
-<link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.min.css" type="text/css">
-<link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis-network.min.css" type="text/css">
-<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.min.js"></script>
 <script type="text/javascript">
   function validate_delete_study_text() {
     if ($("#study-alias").val() == "{% raw study_title_msg %}") {
@@ -98,6 +95,7 @@
       {% if editable %}
         <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
         <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/new_prep_template/', { study_id: {{study_info['study_id']}} })" id="add-new-preparation-btn"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
+        <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/analyses/', { study_id: {{study_info['study_id']}} })" id="analyses-btn"><span class="glyphicon glyphicon-info-sign"></span> Analyses using artifacts from this Study</button>
       {% end %}
       {% if study_info['show_biom_download_button'] %}
         <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/download_study_bioms/{{study_info['study_id']}}"><span class="glyphicon glyphicon-download-alt"></span> All QIIME maps and BIOMs</a>

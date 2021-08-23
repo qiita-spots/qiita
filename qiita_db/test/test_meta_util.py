@@ -34,17 +34,13 @@ class MetaUtilTests(TestCase):
 
     def _set_artifact_private(self):
         id_status = qdb.util.convert_to_id('private', 'visibility')
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
 
     def _set_artifact_public(self):
         id_status = qdb.util.convert_to_id('public', 'visibility')
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "UPDATE qiita.artifact SET visibility_id = %d" % id_status)
 
     def test_validate_filepath_access_by_user(self):
         self._set_artifact_private()
@@ -61,6 +57,8 @@ class MetaUtilTests(TestCase):
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
 
+        # Note that 15 is the biom from the analysis and 16 is the
+        # analysis mapping file and here we are testing access
         for i in [15, 16]:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
@@ -70,6 +68,20 @@ class MetaUtilTests(TestCase):
         for i in [1, 2, 3, 4, 5, 9, 12, 15, 16, 17, 18, 19, 20, 21]:
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
+
+        # Now the Analysis is public so the user should have access again. Note
+        # that we are not using the internal Analysis methods to skip
+        # validation; thus simplifying the test code
+        for a in qdb.analysis.Analysis(1).artifacts:
+            a.visibility = 'public'
+        # Note that 15 is the biom from the analysis and 16 is the
+        # analysis mapping file and here we are testing access
+        for i in [15, 16]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
+        # returning to private
+        for a in qdb.analysis.Analysis(1).artifacts:
+            a.visibility = 'private'
 
         # Now shared has access to public study files
         self._set_artifact_public()
@@ -108,10 +120,8 @@ class MetaUtilTests(TestCase):
                 self.assertTrue(obs)
 
         # test in case there is a prep template that failed
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             obs = qdb.meta_util.validate_filepath_access_by_user(user, i)
             if i < 3:
@@ -246,6 +256,16 @@ class MetaUtilTests(TestCase):
         qdb.study.Study.delete(study.id)
 
     def test_update_redis_stats(self):
+        # helper function to get the values in the stats_daily table
+        def _get_daily_stats():
+            with qdb.sql_connection.TRN:
+                qdb.sql_connection.TRN.add('SELECT * FROM qiita.stats_daily')
+                return qdb.sql_connection.TRN.execute_fetchindex()
+
+        # checking empty status of stats in DB
+        self.assertEqual([], _get_daily_stats())
+
+        # generate daily stats
         qdb.meta_util.update_redis_stats()
 
         portal = qiita_config.portal
@@ -254,7 +274,8 @@ class MetaUtilTests(TestCase):
             ('number_studies', {b'sandbox': b'0', b'public': b'0',
                                 b'private': b'1'}, r_client.hgetall),
             ('number_of_samples', {b'sandbox': b'0', b'public': b'0',
-                                   b'private': b'27'}, r_client.hgetall)]
+                                   b'private': b'27'}, r_client.hgetall),
+            ('per_data_type_stats', {b'No data': b'0'}, r_client.hgetall)]
         for k, exp, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
             self.assertDictEqual(f(redis_key), exp)
@@ -270,9 +291,27 @@ class MetaUtilTests(TestCase):
             # ('img', r_client.get),
             # ('time', r_client.get)
         ]
+        # checking empty status of stats in DB
+        db_stats = _get_daily_stats()
+        # there should be only one set of values
+        self.assertEqual(1, len(db_stats))
+        db_stats = dict(db_stats[0])
+
         for k, exp, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
+            # checking redis values
             self.assertEqual(f(redis_key), exp)
+            # checking DB values; note that redis stores all values as bytes,
+            # thus we have to convert what's in the DB to bytes
+            self.assertEqual(
+                f(redis_key), str.encode(str(db_stats['stats'][k])))
+
+        # regenerating stats to make sure that we have 2 rows in the DB
+        qdb.meta_util.update_redis_stats()
+
+        db_stats = _get_daily_stats()
+        # there should be only one set of values
+        self.assertEqual(2, len(db_stats))
 
     def test_generate_biom_and_metadata_release(self):
         level = 'private'
@@ -333,7 +372,7 @@ class MetaUtilTests(TestCase):
 
         tmp = topen(tgz, "r:gz")
         fhd = tmp.extractfile(txt)
-        txt_obs = [l.decode('ascii') for l in fhd.readlines()]
+        txt_obs = [line.decode('ascii') for line in fhd.readlines()]
         tmp.close()
         txt_exp = [
             'biom fp\tsample fp\tprep fp\tqiita artifact id\tplatform\t'
@@ -416,7 +455,7 @@ class MetaUtilTests(TestCase):
 
         tmp = topen(tgz, "r:gz")
         fhd = tmp.extractfile(txt)
-        txt_obs = [l.decode('ascii') for l in fhd.readlines()]
+        txt_obs = [line.decode('ascii') for line in fhd.readlines()]
         tmp.close()
 
         txt_exp = [
@@ -438,10 +477,8 @@ class MetaUtilTests(TestCase):
         self.assertEqual(txt_obs, txt_exp)
 
         # returning configuration
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET base_data_dir = '%s'" % obdr)
-            bdr = qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "UPDATE settings SET base_data_dir = '%s'" % obdr)
 
         # testing public/default release
         qdb.meta_util.generate_biom_and_metadata_release()
@@ -459,7 +496,7 @@ class MetaUtilTests(TestCase):
 
         tmp = topen(tgz, "r:gz")
         fhd = tmp.extractfile(txt)
-        txt_obs = [l.decode('ascii') for l in fhd.readlines()]
+        txt_obs = [line.decode('ascii') for line in fhd.readlines()]
         tmp.close()
 
         # we should only get the header

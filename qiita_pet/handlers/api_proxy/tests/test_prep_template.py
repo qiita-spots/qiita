@@ -68,13 +68,15 @@ class TestPrepAPIReadOnly(TestCase):
 
     def test_prep_template_ajax_get_req(self):
         obs = prep_template_ajax_get_req('test@foo.bar', 1)
+
         exp = {'status': 'success',
                'message': '',
                'name': "Prep information 1",
                'files': ["uploaded_file.txt"],
                'download_prep_id': 24,
-               'download_qiime_id': 25,
-               'other_filepaths': ['1_prep_1_19700101-000000.txt',
+               'other_filepaths': ['1_prep_1_qiime_19700101-000000.txt',
+                                   '1_prep_1_19700101-000000.txt',
+                                   '1_prep_1_qiime_19700101-000000.txt',
                                    '1_prep_1_19700101-000000.txt'],
                'num_samples': 27,
                'num_columns': 22,
@@ -104,7 +106,9 @@ class TestPrepAPIReadOnly(TestCase):
                            '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
                            '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
                            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'],
+               'deprecated': False,
                'alert_message': ''}
+
         self.assertDictEqual(obs, exp)
 
         obs = prep_template_ajax_get_req('admin@foo.bar', 1)
@@ -194,7 +198,7 @@ class TestPrepAPIReadOnly(TestCase):
         self.assertEqual(obs['message'], '')
         # [0] the fp_id is the first element, that should change
         fp_ids = [fp[0] for fp in obs['filepaths']]
-        self.assertCountEqual(fp_ids, [18, 19, 20, 21, 24, 25])
+        self.assertCountEqual(fp_ids, [18, 19, 20, 21, 24])
 
     def test_prep_template_filepaths_get_req_no_access(self):
         obs = prep_template_filepaths_get_req(1, 'demo@microbio.me')
@@ -454,11 +458,7 @@ class TestPrepAPI(TestCase):
                    '\tDemultiplexing disabled.: barcode;', '\tDemultiplexing '
                    'with multiple input files disabled.: barcode, primer, '
                    'run_prefix.', 'See the Templates tutorial for a '
-                   'description of these fields.', 'Some columns required to '
-                   'generate a QIIME-compliant mapping file are not present '
-                   'in the template. A placeholder value (XXQIITAXX) '
-                   'has been used to populate these columns. Missing columns: '
-                   'BarcodeSequence, LinkerPrimerSequence'],
+                   'description of these fields.'],
                'file': 'update.txt',
                'id': 'ignored in test'}
 
@@ -535,7 +535,7 @@ class TestPrepAPI(TestCase):
         exp = {'status': 'success', 'message': '', 'row_id': '10'}
         self.assertEqual(obs, exp)
         self._wait_for_parallel_job('prep_template_%s' % pt.id)
-        self.assertNotIn('target_subfragment', pt.categories())
+        self.assertNotIn('target_subfragment', pt.categories)
 
         # Change the name of the prep template
         obs = prep_template_patch_req(

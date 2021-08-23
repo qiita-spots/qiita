@@ -15,13 +15,6 @@ system, from raw sequence to contingency tables or even data visualizations,
 permits the system to store any kind of data but also define within each
 pipelines which commands and parameters can applied to them.
 
-The current plugins available are:
-
-* Target gene processing via `QIIME <http://qiime.org>`__: sequence
-  demultiplexing, and QC of SFF, fasta/qual, fastq and per sample fastq.
-  Closed reference OTU picking.
-* BIOM table analysis via `QIIME2 <http://qiime2.org>`__: rarefaction, filtering, alpha diversity, beta diversity, alpha correlation, beta correlation, and principal coordinate analysis
-
 A Study
 -------
 
@@ -69,6 +62,8 @@ public, both in Qiita and the permanent repository, Figure 2.
    users in the system, and the study can be found by searching from the
    study listing page.
 
+
+.. _complex_example:
 
 Qiita allows for complex study designs
 --------------------------------------

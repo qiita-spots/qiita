@@ -295,9 +295,7 @@ class UserTest(TestCase):
                         user_verify_code='verifycode',
                         pass_reset_code='resetcode'
                     WHERE email=%s"""
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(sql, [email])
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(sql, [email])
 
         self.assertFalse(
             qdb.user.User.verify_code(email, 'wrongcode', 'create'))
@@ -499,6 +497,17 @@ class UserTest(TestCase):
 
         # no jobs
         self.assertEqual(qdb.user.User('admin@foo.bar').jobs(), [])
+
+    def test_update_email(self):
+        user = qdb.user.User('shared@foo.bar')
+        with self.assertRaisesRegex(IncorrectEmailError, 'Bad email given:'):
+            user.update_email('bladfa.adferqerq@$EWE')
+
+        with self.assertRaisesRegex(IncorrectEmailError,
+                                    'This email already exists'):
+            user.update_email('test@foo.bar')
+
+        user.update_email('bla@ble.bli')
 
 
 if __name__ == "__main__":

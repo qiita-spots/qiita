@@ -135,7 +135,8 @@
     <thead>
       <tr>
         <th>Studies</th>
-        <th>Samples</th>
+        <th>Unique Samples per Visibility Status</th>
+        <th>Public Samples per Data Type</th>
         <th>Users</th>
         <th>Jobs</th>
       </tr>
@@ -150,14 +151,19 @@
           {% end %}
         </td>
         <td>
-          {% for k in number_of_samples %}
-            <i>{{k}}</i>: {{ "{:,}".format(int(number_of_samples[k])) }} <br/>
+          {% for k, v in number_of_samples.items() %}
+            <i>{{k}}</i>: {{ "{:,}".format(int(v)) }} <br/>
           {% end %}
           {% if num_samples_ebi and num_samples_ebi is not None %}
             <i>submitted to EBI</i>: {{ "{:,}".format(int(num_samples_ebi)) }} <br/>
           {% end %}
           {% if number_samples_ebi_prep and number_samples_ebi_prep is not None %}
             <i>submitted to EBI (prep)</i>: {{ "{:,}".format(int(number_samples_ebi_prep)) }}
+          {% end %}
+        </td>
+        <td>
+          {% for k, v in per_data_type_stats.items() %}
+            <i>{{k}}</i>: {{ "{:,}".format(int(v)) }} <br/>
           {% end %}
         </td>
 

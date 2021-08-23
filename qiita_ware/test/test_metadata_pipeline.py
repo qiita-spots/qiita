@@ -72,12 +72,12 @@ class TestMetadataPipeline(TestCase):
                "dna_extracted", "sample_type", "host_subject_id", "latitude",
                "longitude", "taxon_id", "scientific_name",
                "collection_timestamp", "description"}
-        self.assertEqual(set(obs_st.categories()), exp)
+        self.assertEqual(set(obs_st.categories), exp)
 
         exp = {"barcode", "primer", "center_name", "run_prefix", "platform",
                "library_construction_protocol", "instrument_model",
                "experiment_design_description"}
-        self.assertEqual(set(obs_pt.categories()), exp)
+        self.assertEqual(set(obs_pt.categories), exp)
 
     def test_create_templates_from_qiime_mapping_file_reverse_linker(self):
         with TRN:
@@ -101,12 +101,12 @@ class TestMetadataPipeline(TestCase):
                "dna_extracted", "sample_type", "host_subject_id", "latitude",
                "longitude", "taxon_id", "scientific_name",
                "collection_timestamp", "description"}
-        self.assertEqual(set(obs_st.categories()), exp)
+        self.assertEqual(set(obs_st.categories), exp)
 
         exp = {"barcode", "primer", "center_name", "run_prefix", "platform",
                "library_construction_protocol", "instrument_model",
                "experiment_design_description", "reverselinkerprimer"}
-        self.assertEqual(set(obs_pt.categories()), exp)
+        self.assertEqual(set(obs_pt.categories), exp)
 
     def test_create_templates_from_qiime_mapping_file_error(self):
         with self.assertRaises(QiitaWareError):

@@ -54,8 +54,8 @@ class PrepTemplateHandlerTests(OauthTestingBase):
         self.assertEqual(obs['investigation_type'], 'Metagenomics')
         self.assertEqual(obs['study'], 1)
         self.assertEqual(obs['status'], 'private')
-        self.assertTrue(obs['qiime-map'].startswith(
-            path_builder('1_prep_1_qiime_')))
+        self.assertTrue(obs['sample-file'].startswith(
+            path_builder('1_')))
         self.assertTrue(obs['prep-file'].startswith(
             path_builder('1_prep_1_')))
 

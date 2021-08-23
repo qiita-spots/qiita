@@ -56,7 +56,11 @@ class BaseHandler(RequestHandler):
         request_info = ''.join(["<strong>%s</strong>: %s\n" %
                                (k, req_dict[k]) for k in
                                 req_dict.keys() if k != 'files'])
-        error = str(exc_info[1]).split(':', 1)[1]
+        error = str(exc_info[1]).split(':', 1)
+        if len(error) > 1:
+            error = error[1]
+        else:
+            error = error[0]
 
         # render error page
         self.render('error.html', status_code=status_code, is_admin=is_admin,

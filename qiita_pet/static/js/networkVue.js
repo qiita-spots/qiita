@@ -44,13 +44,28 @@ function formatNodeLabel(label) {
  **/
 function toggleNetworkGraph() {
   if($("#processing-network-div").css('display') == 'none' ) {
+    // if we are displayin the waiting page, do not show the instructions
+    if (!$("#processing-network-div").html().includes('waiting')){
+      $("#processing-network-instructions-div").show();
+    }
     $("#processing-network-div").show();
     $("#show-hide-network-btn").text("Hide");
   } else {
+    $("#processing-network-instructions-div").hide();
     $("#processing-network-div").hide();
     $("#show-hide-network-btn").text("Show");
   }
 };
+
+function edge_sorting(a, b){
+  let order = 1;
+  if (a.data.source > b.data.source){
+    order = -1;
+  } else if ((a.data.source === b.data.source) && (a.data.target < b.data.target)){
+    order = -1;
+  }
+  return order;
+}
 
 Vue.component('processing-graph', {
   template: '<div class="row">' +
@@ -70,11 +85,11 @@ Vue.component('processing-graph', {
                     '<div class="col-md-2">' +
                       '<h4><span class="blinking-message">Start workflow:</h4></span>' +
                     '</div>' +
-                    '<div class="col-md-1">' +
+                    '<div class="col-md-2">' +
                       '<a class="btn btn-success form-control" id="run-btn"><span class="glyphicon glyphicon-play"></span> Run</a>' +
                     '</div>' +
                   '</div>' +
-                  '<div class="row">' +
+                  '<div class="row" id="processing-network-instructions-div">' +
                     '<div class="col-md-12">' +
                       '<b>Click on the graph to navigate through it. Click circles for more information. This graph will refresh in <span id="countdown-span"></span> seconds or reload <a href="#" id="refresh-now-link">now</a><br/><span id="circle-explanation"></span></b>' +
                     '</div>' +
@@ -95,7 +110,7 @@ Vue.component('processing-graph', {
                 '</div>' +
               '</div>' +
             '</div>',
-  props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback', 'is-analysis-pipeline'],
+  props: ['portal', 'graph-endpoint', 'jobs-endpoint', 'no-init-jobs-callback', 'is-analysis-pipeline', 'element-id'],
   methods: {
     /**
      *
@@ -153,7 +168,7 @@ Vue.component('processing-graph', {
             // the list, hence accessing with 0
             jobId = value[0]['job_id'];
             jobStatus = value[0]['job_status'];
-            jobNode = vm.nodes_ds.get(jobId);
+            jobNode = vm.network.getElementById(jobId);
 
             if (jobNode === null) {
               // A network node does not exist for this job, this is because this
@@ -177,7 +192,7 @@ Vue.component('processing-graph', {
                 vm.runningJobs.push(jobId);
               }
 
-              if (jobNode['status'] !== jobStatus) {
+              if (jobNode.data('status') !== jobStatus) {
                 // The status of the job changed.
                 // we decide what to do based on the new status.
                 if (jobStatus === 'success' || jobStatus === 'error') {
@@ -187,11 +202,9 @@ Vue.component('processing-graph', {
                 } else {
                   // In this case the job changed to either 'running', 'queued' or 'waiting'. In
                   // this case, we just need to update the internal values of the nodes and the colors
-                  var node_info = vm.colorScheme[jobStatus]
-                  jobNode.color = node_info;
-                  jobNode.shape = node_info['shape'];
-                  jobNode.status = jobStatus;
-                  vm.nodes_ds.update(jobNode);
+                  var node_info = vm.colorScheme[jobStatus];
+                  jobNode.data('color', node_info['background']);
+                  jobNode.data('shape', node_info['shape']);
                 }
               }
             }
@@ -216,12 +229,10 @@ Vue.component('processing-graph', {
         // Clean up the div
         $("#processing-results").empty();
         // Update the artifact node to mark that it is being deleted
-        var node = vm.nodes_ds.get(artifactId);
-        var node_info = vm.colorScheme['deleting'];
-        node.group = 'deleting';
-        node.color = node_info;
-        node.shape = node_info['shape'];
-        vm.nodes_ds.update(node);
+        var node = vm.network.getElementById(artifactId.toString());
+        node.data('color', vm.colorScheme['deleting']['background']);
+        node.data('shape', vm.colorScheme['deleting']['shape']);
+
         // Add the job to the list of jobs to check for deletion.
         vm.runningJobs.push(data.job);
       })
@@ -242,46 +253,11 @@ Vue.component('processing-graph', {
      **/
     removeJobNodeFromGraph: function(jobId) {
       let vm = this;
-      var queue = [jobId];
-      var edge_list = vm.edges_ds.get();
-      var current;
-      var edge;
-      var currentNode;
-      while(queue.length !== 0) {
-        current = queue.pop();
-
-        // Add all children nodes to the queue, and remove the edges
-        // connecting the current node to its children
-        for(var i in edge_list) {
-          edge = edge_list[i];
-          if(edge.from == current) {
-            if($.inArray(edge.to, queue) == -1) {
-              queue.push(edge.to);
-            }
-            vm.edges_ds.remove(edge.id);
-          }
-        }
-
-        currentNode = vm.nodes_ds.get(current);
-        if(currentNode.group === 'job') {
-          if(currentNode.status === 'in_construction') {
-            vm.inConstructionJobs -= 1;
-          }
-        }
-        vm.nodes_ds.remove(current);
-      }
-      var edges_to_remove = vm.edges_ds.get(
-        {filter: function(item) {
-          return item.to == jobId;
-        }});
-      var edge_ids = [];
-      $(edges_to_remove).each(function(i){
-        edge_ids.push(edges_to_remove[i].id);
+      var node = vm.network.getElementById(jobId);
+      node.successors(function( d ){
+        vm.network.remove(d);
       });
-
-      vm.edges_ds.remove(edge_ids);
-      vm.network.redraw();
-
+      vm.network.remove(node);
       if (vm.inConstructionJobs === 0) {
         $('#run-btn-div').hide();
       }
@@ -341,6 +317,8 @@ Vue.component('processing-graph', {
      *
      */
     runWorkflow: function() {
+      $('#run-btn').attr('disabled', true);
+      $('#run-btn').html('<span class="glyphicon glyphicon-stop"></span> Submitting');
       let vm = this;
       $.post(vm.portal + "/study/process/workflow/run/", {workflow_id: vm.workflowId}, function(data){
         bootstrapAlert("Workflow " + vm.workflowId + " submitted", "success");
@@ -350,6 +328,11 @@ Vue.component('processing-graph', {
       })
         .fail(function(object, status, error_msg) {
           bootstrapAlert("Error submitting workflow: " + object.statusText, "danger");
+        })
+        .always(function() {
+          // return button to regular state
+          $('#run-btn').attr('disabled', false);
+          $('#run-btn').html('<span class="glyphicon glyphicon-play"></span> Run');
         });
     },
 
@@ -369,7 +352,7 @@ Vue.component('processing-graph', {
         $("#processing-results").empty();
 
         // Create the header of the page
-        var h = $("<h3>").text('Job ' + data['job_id'] + ' ').appendTo("#processing-results");
+        var h = $("<h3>").text('Job ' + data['job_id'] + ' [' + data['job_external_id'] + '] ').appendTo("#processing-results");
 
         // Only add the delete job button if the job is "in_construction"
         // or "error"
@@ -565,7 +548,9 @@ Vue.component('processing-graph', {
      */
     loadCommandOptions: function(cmd_id, sel_artifacts_info) {
       let vm = this;
-      $.get(vm.portal + '/study/process/commands/options/', {command_id: cmd_id})
+      // [0] cause there is only one
+      let artifact_id = Object.keys(sel_artifacts_info)[0];
+      $.get(vm.portal + '/study/process/commands/options/', {command_id: cmd_id, artifact_id: artifact_id})
         .done(function(data){
             // Put first the required parameters
             $("#cmd-opts-div").append($('<h4>').text('Required parameters:'));
@@ -633,7 +618,6 @@ Vue.component('processing-graph', {
      **/
     loadArtifactType: function(p_node) {
       let vm = this;
-      var types = [];
       var sel_artifacts_info = {};
       var node, nodeIdSplit, $rowDiv, $colDiv;
       var target = $("#processing-results");
@@ -647,15 +631,16 @@ Vue.component('processing-graph', {
       // generating this artifact type.
       p_node = String(p_node);
       nodeIdSplit = p_node.split(':');
-      node = vm.nodes_ds.get(p_node);
-      if (nodeIdSplit.length < 2 || vm.nodes_ds.get(nodeIdSplit[0]).status === 'in_construction') {
+      node = vm.network.getElementById(p_node).data();
+      root = vm.network.nodes()[0].id();
+      if (nodeIdSplit.length < 2 || vm.network.getElementById(nodeIdSplit[0]).data().status === 'in_construction') {
         // This means that either we are going to process a new artifact (nodeIdSplit.length < 2)
         // or that the parent job generating this artifact type node is in construction.
         // In both of this cases, we can add a new job to the workflow
-        types.push(node.type);
         sel_artifacts_info[node.id] = {'type': node.type, 'name': node.label};
+        artifact_id = nodeIdSplit.length < 2 ? node.id : node.type + ':' + root ;
 
-        $.get(vm.portal + '/study/process/commands/', {artifact_types: types, include_analysis: vm.isAnalysisPipeline})
+        $.get(vm.portal + '/study/process/commands/', {artifact_id: artifact_id, include_analysis: vm.isAnalysisPipeline})
           .done(function (data) {
             target.empty();
 
@@ -694,7 +679,7 @@ Vue.component('processing-graph', {
         $('<h4>').append('Future result: ' + node.label).appendTo(target);
         $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
         $('<label>').addClass('col-sm-1').addClass('col-form-label').text('Generated by:').appendTo($rowDiv);
-        $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv).append(vm.nodes_ds.get(nodeIdSplit[0]).label + ' (' + nodeIdSplit[0] + ')');
+        $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv).append(node.label + ' (' + nodeIdSplit[0] + ')');
         $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
         $('<label>').addClass('col-sm-1').addClass('col-form-label').text('Output name:').appendTo($rowDiv);
         $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv).append(nodeIdSplit[1]);
@@ -713,22 +698,12 @@ Vue.component('processing-graph', {
      **/
     addJobNodeToGraph: function(job_info) {
       let vm = this;
-      // Fun fact - although it seems counterintuitive, in vis.Network we
-      // first need to add the edge and then we can add the node. It doesn't
-      // make sense, but it is how it works
-      $(job_info.inputs).each(function(){
-        vm.edges_ds.add({id: vm.edges_ds.length + 1, from: this, to: job_info.id});
-      });
-      var node_info = vm.colorScheme.in_construction;
-      vm.nodes_ds.add({id: job_info.id, shape: node_info['shape'], group: "job", shape: 'dot', label: formatNodeLabel(job_info.label), color: node_info, status: 'in_construction'});
-      $(job_info.outputs).each(function(){
-        var out_name = this[0];
-        var out_type = this[1];
-        var n_id = job_info.id + ":" + out_name;
-        vm.edges_ds.add({id: vm.edges_ds.length + 1, from: job_info.id, to: n_id });
-        vm.nodes_ds.add({id: n_id, shape: 'dot', label: formatNodeLabel(out_name + "\n(" + out_type + ")"), group: "type", name: out_name, type: out_type});
-      });
-      vm.network.redraw();
+
+      vm.new_job_info = {
+        job_id: job_info.id,
+        viewport: {zoom: vm.network.zoom(), pan: vm.network.pan()}
+      }
+      vm.updateGraph();
     },
 
     /**
@@ -745,66 +720,79 @@ Vue.component('processing-graph', {
       let vm = this;
       var container = document.getElementById('processing-network-div');
       container.innerHTML = "";
+      // Making sure the network is available
+      $("#processing-network-div").show();
+      $("#processing-network-instructions-div").show();
 
-      vm.nodes_ds = new vis.DataSet(vm.nodes);
-      vm.edges_ds = new vis.DataSet(vm.edges);
-      var data = {
-        nodes: vm.nodes_ds,
-        edges: vm.edges_ds
+      var layout = {
+        name: 'dagre',
+        rankDir: 'LR',
+        directed: true,
+        nodeDimensionsIncludeLabels: true,
+        nodeSep: 2,
+        spacingFactor: 1.2,
+        padding: 5
       };
-      var options = {
-        clickToUse: true,
-        nodes: {
-          font: {
-            size: 16,
-            color: '#000000'
-          },
-          size: 13,
-          borderWidth: 2,
-        },
-        edges: {
-          color: 'grey'
-        },
-        layout: {
-          hierarchical: {
-            direction: "LR",
-            sortMethod: "directed",
-            levelSeparation: 260
-          }
-        },
-        interaction: {
-          dragNodes: false,
-          dragView: true,
-          zoomView: true,
-          selectConnectedEdges: true,
-          navigationButtons: true,
-          keyboard: false
-        },
-        groups: {
-          jobs: {
-            color: '#FF9152'
-          },
-          artifact: {
-            color: '#FFFFFF'
-          },
-          type: {
-            color: '#BBBBBB'
-          }
-        }
+      var style = [{
+        selector: 'node',
+        style: {
+          'content': 'data(label)',
+          'background-color': 'data(color)',
+          'shape': 'data(shape)',
+          'text-opacity': 0.7,
+          'text-wrap': "wrap",
+          'border-color': '#333',
+          'border-width': '3px'
+        }}, {
+        selector: 'edge',
+        style: {
+          'curve-style': 'bezier',
+          'target-arrow-shape': 'triangle'
+        }},
+      ];
+      var panzoom_options =	{
+        zoomOnly: true,
+        sliderHandleIcon: 'fa fa-minus',
+        zoomInIcon: 'fa fa-plus',
+        zoomOutIcon: 'fa fa-minus',
+        resetIcon: 'fa fa-expand'
       };
 
-      vm.network = new vis.Network(container, data, options);
-      vm.network.on("click", function (properties) {
-        var ids = properties.nodes;
-        if (ids.length == 0) {
-          return
+      // Note: we only need to sort the edges to keep the same structure of the
+      //       graph; in other words, nodes order is not important
+      vm.edges = vm.edges.sort(edge_sorting);
+
+      vm.network = cytoscape({
+          container: container,
+          minZoom: 1e-50,
+          maxZoom: 2,
+          wheelSensitivity: .3,
+          layout: layout, style: style,
+          elements: {
+            nodes: vm.nodes,
+            edges: vm.edges,
+          }
+        });
+      vm.network.panzoom(panzoom_options);
+      vm.network.nodes().lock();
+
+      vm.network.ready(function() {
+        if (vm.new_job_info !== null){
+          vm.network.viewport(vm.new_job_info['viewport']);
+          node = vm.network.getElementById(vm.new_job_info.job_id);
+          // center in the children of the new job
+          vm.network.center(node.successors());
+          vm.new_job_info = null;
         }
-        // [0] cause users can only select 1 node
-        var clickedNode = vm.nodes_ds.get(ids)[0];
-        var element_id = ids[0];
-        if (clickedNode.group == 'artifact') {
+      });
+
+      vm.network.on('tap', 'node', function (evt) {
+        var data = evt.target.data();
+        var element_id = data.id;
+
+        if (data.group === 'artifact') {
           vm.populateContentArtifact(element_id);
-        } else if (clickedNode.group == 'deleting') {
+        } else if (data.group === 'deleting') {
           $("#processing-results").empty();
           $("#processing-results").append("<h4>This artifact is being deleted</h4>");
         } else {
@@ -964,6 +952,7 @@ Vue.component('processing-graph', {
         // for the jobs to generate the initial set of artifacts. Update
         // the job list
         if (data.nodes.length == 0) {
+          $("#processing-network-div").hide();
           vm.checkInitialJobs();
         }
         else {
@@ -974,12 +963,21 @@ Vue.component('processing-graph', {
           // data in a way that Vis.Network likes it
           // Format edge list data
           for(var i = 0; i < data.edges.length; i++) {
-            vm.edges.push({from: data.edges[i][0], to: data.edges[i][1], arrows:'to'});
+            // forcing a string
+            data.edges[i][0] = data.edges[i][0].toString()
+            data.edges[i][1] = data.edges[i][1].toString()
+            vm.edges.push({data: {source: data.edges[i][0], target: data.edges[i][1]}});
           }
           // Format node list data
           for(var i = 0; i < data.nodes.length; i++) {
             var node_info = vm.colorScheme[data.nodes[i][4]];
-            vm.nodes.push({id: data.nodes[i][2], shape: node_info['shape'], label: formatNodeLabel(data.nodes[i][3]), type: data.nodes[i][1], group: data.nodes[i][0], color: node_info, status: data.nodes[i][4]});
+            if (data.artifacts_being_deleted.includes(data.nodes[i][2])) {
+              data.nodes[i][0] = 'deleting'
+              node_info = vm.colorScheme['deleting']
+            }
+            // forcing a string
+            data.nodes[i][2] = data.nodes[i][2].toString()
+            vm.nodes.push({data: {id: data.nodes[i][2], shape: node_info['shape'], label: formatNodeLabel(data.nodes[i][3]), type: data.nodes[i][1], group: data.nodes[i][0], color: node_info['background'], status: data.nodes[i][4]}});
             if (data.nodes[i][1] === 'job') {
               job_status = data.nodes[i][4];
               if (job_status === 'in_construction') {
@@ -996,7 +994,14 @@ Vue.component('processing-graph', {
 
           // At this point we can show the graph and hide the job list
           $("#processing-network-div").show();
+          $("#processing-network-instructions-div").show();
+          $("#show-hide-network-btn").show();
           $("#processing-job-div").hide();
+          if (vm.workflowId === null && vm.isAnalysisPipeline === false) {
+            $("#add-default-workflow").show();
+          } else {
+            $("#add-default-workflow").hide();
+          }
         }
       })
         .fail(function(object, status, error_msg) {
@@ -1020,6 +1025,7 @@ Vue.component('processing-graph', {
       $.get(vm.portal + vm.jobsEndpoint, function(data) {
         $("#processing-job-div").html("");
         $("#processing-job-div").append("<p>Hang tight, we are processing your request: </p>");
+        $("#show-hide-network-btn").hide();
         var nonCompletedJobs = 0;
         var successJobs = 0;
         var totalJobs = 0;
@@ -1029,7 +1035,7 @@ Vue.component('processing-graph', {
           totalJobs += 1;
           contents = contents + "<b> Job: " + jobid + "</b> Status: " + data[jobid]['status'];
           // Only show step if error if they actually have a useful message
-          if (data[jobid]['step']) {
+          if (data[jobid]['step'] !== null) {
             contents = contents + " Step: " + data[jobid]['step'] + "</br>";
           }
           if (data[jobid]['error']) {
@@ -1084,6 +1090,7 @@ Vue.component('processing-graph', {
    **/
   mounted() {
     let vm = this;
+    vm.new_job_info = null;
     // This initialPoll is used ONLY if the graph doesn't exist yet
     vm.initialPoll = false;
     // This variable is used to show the update countdown on the interface
@@ -1091,23 +1098,28 @@ Vue.component('processing-graph', {
     vm.countdownPoll = 15;
     $('#countdown-span').html(vm.countdownPoll);
     vm.colorScheme = {
-      'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}, 'color': '#333333', 'shape': 'dot'},
-      'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}, 'color': '#333333', 'shape': 'dot'},
-      'error': {border: '#ff3333', background: '#ff5b5b', highlight: {border: '#ff3333', background: '#ff8484'}, 'color': '#333333', 'shape': 'dot'},
-      'in_construction': {border: '#634a00', background: '#e59400', highlight: {border: '#634a00', background: '#efbe66'}, 'color': '#333333', 'shape': 'dot'},
-      'queued': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333', 'shape': 'dot'},
-      'waiting': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333', 'shape': 'dot'},
-      'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}, 'color': '#333333', 'shape': 'triangle'},
-      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}, 'color': '#333333', 'shape': 'triangle'},
-      'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}, 'color': '#333333', 'shape': 'triangle'},
-      'outdated': {border: '#666666', background: '#666666', highlight: {border: '#000000', background: '#666666'}, 'color': '#ffffff', 'shape': 'triangle'},
-      'deprecated': {border: '#000000', background: '#000000', highlight: {border: '#000000', background: '#333333'}, 'color': '#ffffff', 'shape': 'triangleDown'}
+      'success': {border: '#00cc00', background: '#7FE57F', highlight: {border: '#00cc00', background: '#a5eda5'}, 'color': '#333333', 'shape': 'ellipse'},
+      'running': {border: '#b28500', background: '#ffbf00', highlight: {border: '#b28500', background: '#ffdc73'}, 'color': '#333333', 'shape': 'ellipse'},
+      'error': {border: '#ff3333', background: '#ff5b5b', highlight: {border: '#ff3333', background: '#ff8484'}, 'color': '#333333', 'shape': 'ellipse'},
+      'in_construction': {border: '#634a00', background: '#e59400', highlight: {border: '#634a00', background: '#efbe66'}, 'color': '#333333', 'shape': 'ellipse'},
+      'queued': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333', 'shape': 'ellipse'},
+      'waiting': {border: '#4f5b66', background: '#a7adba', highlight: {border: '#4f5b66', background: '#c0c5ce'}, 'color': '#333333', 'shape': 'ellipse'},
+      'artifact': {border: '#BBBBBB', background: '#FFFFFF', highlight: {border: '#999999', background: '#FFFFFF'}, 'color': '#333333', 'shape': 'round-triangle'},
+      'type': {border: '#BBBBBB', background: '#CCCCCC', highlight: {border: '#999999', background: '#DDDDDD'}, 'color': '#333333', 'shape': 'round-triangle'},
+      'deleting': {border: '#ff3333', background: '#ff6347', highlight: {border: '#ff3333', background: '#ff6347'}, 'color': '#333333', 'shape': 'round-triangle'},
+      'outdated': {border: '#666666', background: '#666666', highlight: {border: '#000000', background: '#666666'}, 'color': '#ffffff', 'shape': 'round-triangle'},
+      'deprecated': {border: '#000000', background: '#000000', highlight: {border: '#000000', background: '#333333'}, 'color': '#ffffff', 'shape': 'vee'}
     };
 
     show_loading('processing-network-div');
-    $("#processing-network-div").hide();
+    $("#processing-network-instructions-div").hide();
 
-    $('#run-btn').on('click', function() { vm.runWorkflow(); });
+
+    $('#run-btn').on('click', function() {
+      $('#run-btn').attr('disabled', true);
+      this.innerHTML = 'Submitting!';
+      vm.runWorkflow();
+    });
     $('#run-btn-div').hide();
 
     $('#refresh-now-link').on('click', function () {
@@ -1131,6 +1143,19 @@ Vue.component('processing-graph', {
       '<tr>' +
         '<td><small>Job status (circles):</small></td>' +
         '<td>' + circle_statuses.join('') + '</td>' +
+        '<td rowspan="2" width="20px">&nbsp;</td>' +
+        '<td rowspan="2">&nbsp;&nbsp;&nbsp;</td>' +
+        '<td rowspan="2" align="center" id="add-default-workflow">' +
+            '<a class="btn btn-success form-control" id="add-default-workflow-btn"><span class="glyphicon glyphicon-flash"></span> Add Default Workflow</a>' +
+             "<br/><br/><a href='https://qiita.ucsd.edu/workflows/' target='_blank'> "+
+                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">' +
+                    '<path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 ' +
+                        '1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 ' +
+                        '13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"></path>' +
+                    '<path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"></path>' +
+                '</svg>' +
+             " Important note about Default Workflow</a>" +
+        '</td>' +
       '</tr>' +
       '<tr>' +
         '<td><small>Artifact status (triangles):</small>' +
@@ -1138,6 +1163,20 @@ Vue.component('processing-graph', {
       '</tr>' +
     '</table>';
     $('#circle-explanation').html(full_text);
+
+    $('#add-default-workflow-btn').on('click', function () {
+      $('#add-default-workflow').attr('disabled', true);
+      document.getElementById('add-default-workflow-btn').innerHTML = 'Submitting!';
+      $.post(vm.portal + '/study/process/workflow/default/', {prep_id: vm.elementId}, function(data) {
+        if (data['msg_error'] !== null){
+          $('#add-default-workflow-btn').attr('disabled', false);
+          bootstrapAlert('Error generating workflow: ' + data['msg_error'].replace("\n", "<br/>"));
+        } else {
+          vm.updateGraph();
+        }
+      });
+      document.getElementById('add-default-workflow-btn').innerHTML = ' Add Default Workflow';
+    });
 
     // This call to udpate graph will take care of updating the jobs
     // if the graph is not available

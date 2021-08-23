@@ -142,6 +142,7 @@ class TestListStudiesAJAX(TestHandlerBase):
                 'study_id': 1,
                 'study_alias': 'Cannabis Soils',
                 'owner': 'Dude',
+                'autoloaded': False,
                 'ebi_study_accession': 'EBI123456-BB',
                 'shared': ('<a target="_blank" href="mailto:shared@foo.bar">'
                            'Shared</a>'),

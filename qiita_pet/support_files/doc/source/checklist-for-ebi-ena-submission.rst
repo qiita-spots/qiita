@@ -1,14 +1,18 @@
 .. role:: red
 
-Send data to EBI-ENA
-====================
+Making data Public in Qiita and/or send data to EBI-ENA
+=======================================================
 
 Qiita allows users to deposit their study, sample, experiment and sequence data to the
 `European Nucleotide Archive (ENA) <https://www.ebi.ac.uk/ena>`__, which is the permanent data
 repository of the `European Bioinformatics Institute (EBI) <https://www.ebi.ac.uk/>`__. Submitting to
 this repository will provide you with a unique identifier for your study, which is generally a
 requirement for publications. Your study will be housed with all other Qiita submissions
-and so we require adherence to the `MiXs standard <http://gensc.org/mixs/>`__.
+and so we require adherence to the `MiXs standard <http://gensc.org/mixs/>`__. Note that this also
+applies for studies in sandbox state that will become private or public.
+
+.. warning::
+   direct BIOM uploads cannot become private or public
 
 `Here <https://knightlab.ucsd.edu/wordpress/wp-content/uploads/2016/04/QiitaTemplate_20181218.xlsx>`__ you will find a document outlining these requirements, with examples, when possible.
 
@@ -44,10 +48,7 @@ For each preparation that needs to be uploaded to EBI-ENA we will check:
   1. Data processing
 
     a. Only datasets where raw sequences are available and linked to the preparation can be submitted. Studies where the starting point is a BIOM table cannot be submitted, since EBI is a sequence archive
-    b. The data is processed and the owner confirms the data is correct:
-
-      1. For target gene: data is demultiplexed (review split_library_log to make sure each sample has roughly the expected number of sequences) and there is at least a closed-reference (GG for 16S, Silva for 18S, UNITE for ITS) or trim/deblur artifacts. Trimming should be done with 90, 100 and 150 base pairs (preferred)
-      2. For shotgun: data is uploaded via per_sample_FASTQ and processed using Shogun/utree. Remember to remove sequencing data for any human subject via `the HMP SOP <https://www.hmpdacc.org/hmp/doc/HumanSequenceRemoval_SOP.pdf>`__ or `the Knight Lab SOP <https://github.com/qiita-spots/qp-shogun/blob/master/notebooks/host_filtering.rst>`__
+    b. The data is processed and the owner confirms the data is correct and followed our :doc:`processingdata/processing-recommendations`.
 
   2. Verify the sample information
 

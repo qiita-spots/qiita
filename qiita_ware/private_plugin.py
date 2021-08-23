@@ -75,10 +75,9 @@ def release_validators(job):
     job : qiita_db.processing_job.ProcessingJob
         The processing job with the information of the parent job
     """
-    with qdb.sql_connection.TRN:
-        qdb.processing_job.ProcessingJob(
-            job.parameters.values['job']).release_validators()
-        job._set_status('success')
+    qdb.processing_job.ProcessingJob(
+        job.parameters.values['job']).release_validators()
+    job._set_status('success')
 
 
 def submit_to_VAMPS(job):
@@ -174,7 +173,7 @@ def create_sample_template(job):
             remove(fp)
 
             if warns:
-                msg = '\n'.join(set(str(w) for w in warns))
+                msg = '\n'.join(set(str(w.message) for w in warns))
                 r_client.set("sample_template_%s" % study.id,
                              dumps({'job_id': job.id, 'alert_type': 'warning',
                                     'alert_msg': msg}))
@@ -203,7 +202,7 @@ def update_sample_template(job):
             # Join all the warning messages into one. Note that this info
             # will be ignored if an exception is raised
             if warns:
-                msg = '\n'.join(set(str(w) for w in warns))
+                msg = '\n'.join(set(str(w.message) for w in warns))
                 r_client.set("sample_template_%s" % study_id,
                              dumps({'job_id': job.id, 'alert_type': 'warning',
                                     'alert_msg': msg}))
@@ -247,7 +246,7 @@ def update_prep_template(job):
             # Join all the warning messages into one. Note that this info
             # will be ignored if an exception is raised
             if warns:
-                msg = '\n'.join(set(str(w) for w in warns))
+                msg = '\n'.join(set(str(w.message) for w in warns))
                 r_client.set("prep_template_%s" % prep_id,
                              dumps({'job_id': job.id, 'alert_type': 'warning',
                                     'alert_msg': msg}))
@@ -291,6 +290,14 @@ def delete_sample_or_column(job):
         job._set_status('success')
 
 
+def _delete_analysis_artifacts(analysis):
+    aids = [a.id for a in analysis.artifacts]
+    aids.sort(reverse=True)
+    for aid in aids:
+        qdb.artifact.Artifact.delete(aid)
+    qdb.analysis.Analysis.delete(analysis.id)
+
+
 def delete_study(job):
     """Deletes a full study
 
@@ -306,16 +313,7 @@ def delete_study(job):
 
         # deleting analyses
         for analysis in study.analyses():
-            # selecting roots of the analysis, can be multiple
-            artifacts = [a for a in analysis.artifacts
-                         if a.processing_parameters is None]
-            # deleting each of the processing graphs
-            for a in artifacts:
-                to_delete = list(a.descendants.nodes())
-                to_delete.reverse()
-                for td in to_delete:
-                    qdb.artifact.Artifact.delete(td.id)
-            qdb.analysis.Analysis.delete(analysis.id)
+            _delete_analysis_artifacts(analysis)
 
         for pt in study.prep_templates():
             to_delete = list(pt.artifact.descendants.nodes())
@@ -350,6 +348,7 @@ def complete_job(job):
             artifacts = None
             error = payload['error']
         c_job = qdb.processing_job.ProcessingJob(param_vals['job_id'])
+        c_job.step = 'Completing via %s [%s]' % (job.id, job.external_id)
         try:
             c_job.complete(payload['success'], artifacts, error)
         except Exception:
@@ -376,16 +375,7 @@ def delete_analysis(job):
         analysis_id = job.parameters.values['analysis_id']
         analysis = qdb.analysis.Analysis(analysis_id)
 
-        # selecting roots of the analysis, can be multiple
-        artifacts = [a for a in analysis.artifacts
-                     if a.processing_parameters is None]
-        # deleting each of the processing graphs
-        for a in artifacts:
-            to_delete = list(a.descendants.nodes())
-            to_delete.reverse()
-            for td in to_delete:
-                qdb.artifact.Artifact.delete(td.id)
-        qdb.analysis.Analysis.delete(analysis_id)
+        _delete_analysis_artifacts(analysis)
 
         r_client.delete('analysis_delete_%d' % analysis_id)
 
@@ -412,9 +402,6 @@ def list_remote_files(job):
             job._set_error(traceback.format_exception(*exc_info()))
         else:
             job._set_status('success')
-        finally:
-            # making sure to always delete the key so Qiita never keeps it
-            remove(private_key)
 
 
 def download_remote_files(job):

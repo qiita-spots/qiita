@@ -37,8 +37,9 @@ from qiita_pet.handlers.study_handlers import (
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX, StudyDeleteAjax,
     ArtifactAdminAJAX, NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
-    ArtifactGetSamples, ArtifactGetInfo, WorkflowHandler,
-    WorkflowRunHandler, JobAJAX, AutocompleteHandler)
+    ArtifactGetSamples, ArtifactGetInfo, WorkflowHandler, AnalysesAjax,
+    WorkflowRunHandler, AddDefaultWorkflowHandler, JobAJAX,
+    AutocompleteHandler)
 from qiita_pet.handlers.artifact_handlers import (
     ArtifactSummaryAJAX, ArtifactAJAX, ArtifactSummaryHandler)
 from qiita_pet.handlers.websocket_handlers import (
@@ -50,16 +51,18 @@ from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import (
     DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease,
     DownloadRawData, DownloadEBISampleAccessions, DownloadEBIPrepAccessions,
-    DownloadUpload, DownloadPublicHandler)
+    DownloadUpload, DownloadPublicHandler, DownloadPublicArtifactHandler,
+    DownloadSampleInfoPerPrep, DownloadPrivateArtifactHandler)
 from qiita_pet.handlers.prep_template import (
     PrepTemplateHandler, PrepTemplateGraphHandler, PrepTemplateJobHandler)
 from qiita_pet.handlers.ontology import OntologyHandler
-from qiita_pet.handlers.software import SoftwareHandler
+from qiita_pet.handlers.software import SoftwareHandler, WorkflowsHandler
 from qiita_db.handlers.processing_job import (
     JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
     ProcessingJobAPItestHandler)
 from qiita_db.handlers.artifact import (
-    ArtifactHandler, ArtifactAPItestHandler, ArtifactTypeHandler)
+    ArtifactHandler, ArtifactAPItestHandler, ArtifactTypeHandler,
+    APIArtifactHandler)
 from qiita_db.handlers.sample_information import SampleInfoDBHandler
 from qiita_db.handlers.user import UserInfoDBHandler, UsersListDBHandler
 from qiita_db.handlers.prep_template import (
@@ -76,6 +79,7 @@ from qiita_db.handlers.archive import APIArchiveObservations
 from qiita_db.util import get_mountpoint
 from qiita_pet.handlers.rest import ENDPOINTS as REST_ENDPOINTS
 from qiita_pet.handlers.qiita_redbiom import RedbiomPublicSearch
+from qiita_pet.handlers.public import PublicHandler
 
 if qiita_config.portal == "QIITA":
     from qiita_pet.handlers.portal import (
@@ -124,7 +128,6 @@ class Application(tornado.web.Application):
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
             (r"/admin/artifact/", ArtifactAdminAJAX),
-            (r"/admin/software/", SoftwareHandler),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
             # Study handlers
             (r"/study/create/", StudyEditHandler),
@@ -132,6 +135,7 @@ class Application(tornado.web.Application):
             (r"/study/list/", ListStudiesHandler),
             (r"/study/process/commands/options/", ListOptionsHandler),
             (r"/study/process/commands/", ListCommandsHandler),
+            (r"/study/process/workflow/default/", AddDefaultWorkflowHandler),
             (r"/study/process/workflow/run/", WorkflowRunHandler),
             (r"/study/process/workflow/", WorkflowHandler),
             (r"/study/process/job/", JobAJAX),
@@ -142,6 +146,7 @@ class Application(tornado.web.Application):
             (r"/study/sharing/", ShareStudyAJAX),
             (r"/study/sharing/autocomplete/", AutocompleteHandler),
             (r"/study/new_prep_template/", NewPrepTemplateAjax),
+            (r"/study/analyses/", AnalysesAjax),
             (r"/study/tags/(.*)", StudyTags),
             (r"/study/get_tags/", StudyGetTags),
             (r"/study/([0-9]+)$", Study),
@@ -175,16 +180,23 @@ class Application(tornado.web.Application):
             (r"/upload/", UploadFileHandler),
             (r"/check_study/", CreateStudyAJAX),
             (r"/stats/", StatsHandler),
+            (r"/software/", SoftwareHandler),
+            (r"/workflows/", WorkflowsHandler),
             (r"/download/(.*)", DownloadHandler),
             (r"/download_study_bioms/(.*)", DownloadStudyBIOMSHandler),
             (r"/download_raw_data/(.*)", DownloadRawData),
             (r"/download_ebi_accessions/samples/(.*)",
                 DownloadEBISampleAccessions),
+            (r"/download_sample_info_per_prep/(.*)",
+                DownloadSampleInfoPerPrep),
             (r"/download_ebi_accessions/experiments/(.*)",
                 DownloadEBIPrepAccessions),
             (r"/download_upload/(.*)", DownloadUpload),
             (r"/release/download/(.*)", DownloadRelease),
             (r"/public_download/", DownloadPublicHandler),
+            (r"/public_artifact_download/", DownloadPublicArtifactHandler),
+            (r"/private_download/(.*)", DownloadPrivateArtifactHandler),
+            (r"/public/", PublicHandler),
             (r"/vamps/(.*)", VAMPSHandler),
             (r"/redbiom/(.*)", RedbiomPublicSearch),
             (r"/iframe/", IFrame),
@@ -200,6 +212,7 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)", JobHandler),
             (r"/qiita_db/artifacts/types/", ArtifactTypeHandler),
             (r"/qiita_db/artifacts/(.*)/", ArtifactHandler),
+            (r"/qiita_db/artifact/", APIArtifactHandler),
             (r"/qiita_db/users/", UsersListDBHandler),
             (r"/qiita_db/user/(.*)/data/", UserInfoDBHandler),
             (r"/qiita_db/sample_information/(.*)/data/", SampleInfoDBHandler),
@@ -213,7 +226,6 @@ class Application(tornado.web.Application):
             (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
             (r"/qiita_db/analysis/(.*)/metadata/", APIAnalysisMetadataHandler),
             (r"/qiita_db/archive/observations/", APIArchiveObservations)
-
         ]
 
         # rest endpoints

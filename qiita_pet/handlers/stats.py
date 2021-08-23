@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-
 from random import choice
 
 from tornado.gen import coroutine, Task
@@ -28,6 +25,7 @@ class StatsHandler(BaseHandler):
             ('number_studies', r_client.hgetall),
             ('number_of_samples', r_client.hgetall),
             ('num_users', r_client.get),
+            ('per_data_type_stats', r_client.hgetall),
             ('lat_longs', r_client.get),
             ('num_studies_ebi', r_client.get),
             ('num_samples_ebi', r_client.get),
@@ -63,6 +61,7 @@ class StatsHandler(BaseHandler):
                     number_studies=stats['number_studies'],
                     number_of_samples=stats['number_of_samples'],
                     num_users=stats['num_users'],
+                    per_data_type_stats=stats['per_data_type_stats'],
                     lat_longs=eval(
                         stats['lat_longs']) if stats['lat_longs'] else [],
                     num_studies_ebi=stats['num_studies_ebi'],

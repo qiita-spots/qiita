@@ -5,8 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
-
 from tornado.web import authenticated, HTTPError
 from wtforms import (Form, StringField, SelectField, SelectMultipleField,
                      TextAreaField, validators)
@@ -63,6 +61,10 @@ class StudyEditorForm(Form):
                                          coerce=lambda x: x)
 
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
+    notes = TextAreaField('Analytical Notes', description=(
+        'Any relevant information about the samples or the processing that '
+        'other users should be aware of (e.g. problematic samples, '
+        'explaining certain metadata columns, etc) - renders as markdown'))
 
     @execute_as_transaction
     def __init__(self, study=None, **kwargs):
@@ -98,6 +100,7 @@ class StudyEditorForm(Form):
                 'principal_investigator'].id
             self.lab_person.data = (study_info['lab_person'].id
                                     if study_info['lab_person'] else None)
+            self.notes.data = study.notes
 
 
 class StudyEditorExtendedForm(StudyEditorForm):
@@ -258,7 +261,8 @@ class StudyEditHandler(BaseHandler):
             'mixs_compliant': True,
             'study_description': fd['study_description'][0].decode('utf-8'),
             'study_alias': fd['study_alias'][0].decode('utf-8'),
-            'study_abstract': fd['study_abstract'][0].decode('utf-8')}
+            'study_abstract': fd['study_abstract'][0].decode('utf-8'),
+            'notes': fd['notes'][0].decode('utf-8')}
 
         if 'timeseries' in fd and fd['timeseries']:
             info['timeseries_type_id'] = fd['timeseries'][0].decode('utf-8')

@@ -21,6 +21,7 @@ from biom import example_table as et
 from biom.util import biom_open
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.testing import wait_for_processing_job
 import qiita_db as qdb
 
 
@@ -602,6 +603,22 @@ class ArtifactTestsReadOnly(TestCase):
         exp = []
         self.assertEqual(obs, exp)
 
+    def test_get_commands(self):
+        # we will check only ids for simplicity
+        # checking processing artifacts
+        obs = [c.id for c in qdb.artifact.Artifact(1).get_commands]
+        self.assertEqual(obs, [1])
+        obs = [c.id for c in qdb.artifact.Artifact(2).get_commands]
+        self.assertEqual(obs, [3])
+        # this is a biom in processing, so no commands should be available
+        obs = [c.id for c in qdb.artifact.Artifact(6).get_commands]
+        self.assertEqual(obs, [])
+
+        # checking analysis object - this is a biom in analysis, several
+        # commands should be available
+        obs = [c.id for c in qdb.artifact.Artifact(8).get_commands]
+        self.assertEqual(obs, [9, 10, 11, 12])
+
 
 @qiita_test_checker()
 class ArtifactTests(TestCase):
@@ -1064,10 +1081,18 @@ class ArtifactTests(TestCase):
             qdb.artifact.Artifact(test.id)
 
     def test_delete_with_html(self):
+
+        # creating a single file html_summary
         fd, html_fp = mkstemp(suffix=".html")
         close(fd)
         self.filepaths_root.append((html_fp, 'html_summary'))
         self._clean_up_files.append(html_fp)
+
+        # creating a folder with a file for html_summary_dir
+        summary_dir = mkdtemp()
+        open(join(summary_dir, 'index.html'), 'w').write('this is a test')
+        self.filepaths_root.append((summary_dir, 'html_summary_dir'))
+        self._clean_up_files.append(summary_dir)
 
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
@@ -1084,6 +1109,7 @@ class ArtifactTests(TestCase):
             qdb.artifact.Artifact(test.id)
 
         self.assertFalse(exists(join(uploads_fp, basename(html_fp))))
+        self.assertFalse(exists(join(uploads_fp, basename(summary_dir))))
 
     def test_delete_with_jobs(self):
         test = qdb.artifact.Artifact.create(
@@ -1113,6 +1139,44 @@ class ArtifactTests(TestCase):
 
         # Check that the job still exists, so we cap keep track of system usage
         qdb.processing_job.ProcessingJob(job.id)
+
+    def test_being_deleted_by(self):
+        test = qdb.artifact.Artifact.create(
+            self.filepaths_root, "FASTQ", prep_template=self.prep_template)
+        uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
+                          str(test.study.id))
+        self._clean_up_files.extend(
+            [join(uploads_fp, basename(x['fp'])) for x in test.filepaths])
+
+        # verifying that there are no jobs in the list
+        self.assertIsNone(test.being_deleted_by)
+
+        # creating new deleting job
+        qiita_plugin = qdb.software.Software.from_name_and_version(
+            'Qiita', 'alpha')
+        cmd = qiita_plugin.get_command('delete_artifact')
+        params = qdb.software.Parameters.load(
+            cmd, values_dict={'artifact': test.id})
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params, True)
+        job._set_status('running')
+
+        # verifying that there is a job and is the same than above
+        self.assertEqual(job, test.being_deleted_by)
+
+        # let's set it as error and now we should not have it anymore
+        job._set_error('Killed by admin')
+        self.assertIsNone(test.being_deleted_by)
+
+        # now, let's actually remove
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params, True)
+        job.submit()
+        # let's wait for job
+        wait_for_processing_job(job.id)
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.artifact.Artifact(test.id)
 
     def test_delete_as_output_job(self):
         fd, fp = mkstemp(suffix='_table.biom')

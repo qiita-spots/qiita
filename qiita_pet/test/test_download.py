@@ -6,12 +6,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import pandas as pd
 from unittest import main
 from mock import Mock
 from os.path import exists, isdir, join, basename
 from os import remove, makedirs, close
 from shutil import rmtree
 from tempfile import mkdtemp, mkstemp
+from io import StringIO
 
 from biom.util import biom_open
 from biom import example_table as et
@@ -22,6 +24,9 @@ from qiita_db.user import User
 from qiita_db.study import Study
 from qiita_db.artifact import Artifact
 from qiita_db.software import Parameters, Command
+
+from urllib.parse import urlparse
+import json
 
 
 class TestDownloadHandler(TestHandlerBase):
@@ -143,31 +148,31 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         exp = (
-            '1579715020 1256812 /protected/processed_data/1_study_1001_closed_'
-            'reference_otu_table.biom processed_data/1_study_1001_closed_'
-            'reference_otu_table.biom\n'
-            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
-            '[0-9]*.txt mapping_files/4_mapping_file.txt\n'
-            '1579715020 1256812 /protected/processed_data/'
+            '- 1256812 /protected/processed_data/'
             '1_study_1001_closed_reference_otu_table.biom processed_data/'
             '1_study_1001_closed_reference_otu_table.biom\n'
-            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
-            '[0-9]*.txt mapping_files/5_mapping_file.txt\n'
-            '1579715020 1256812 /protected/processed_data/'
-            '1_study_1001_closed_reference_otu_table_Silva.biom processed_data'
-            '/1_study_1001_closed_reference_otu_table_Silva.biom\n'
-            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-'
-            '[0-9]*.txt mapping_files/6_mapping_file.txt\n'
-            '1756512010 1093210 /protected/BIOM/7/biom_table.biom '
+            '- [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt '
+            'mapping_files/4_mapping_file.txt\n'
+            '- 1256812 /protected/processed_data/'
+            '1_study_1001_closed_reference_otu_table.biom processed_data/'
+            '1_study_1001_closed_reference_otu_table.biom\n'
+            '- [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt '
+            'mapping_files/5_mapping_file.txt\n'
+            '- 1256812 /protected/processed_data/1_study_1001_'
+            'closed_reference_otu_table_Silva.biom processed_data/'
+            '1_study_1001_closed_reference_otu_table_Silva.biom\n'
+            '- [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt '
+            'mapping_files/6_mapping_file.txt\n'
+            '- 1093210 /protected/BIOM/7/biom_table.biom '
             'BIOM/7/biom_table.biom\n'
-            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-'
-            '[0-9]*.txt mapping_files/7_mapping_file.txt\n'
-            '[0-9]* [0-9]* /protected/BIOM/{0}/otu_table.biom '
+            '- [0-9]* /protected/templates/1_prep_2_[0-9]*-[0-9]*.txt '
+            'mapping_files/7_mapping_file.txt\n'
+            '- [0-9]* /protected/BIOM/{0}/otu_table.biom '
             'BIOM/{0}/otu_table.biom\n'
-            '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
+            '- 1 /protected/BIOM/10/sortmerna_picked_otus/seqs_otus.log '
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
-            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
-            'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
+            '- [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt '
+            'mapping_files/{0}_mapping_file.txt\n'.format(a.id))
         self.assertRegex(response.body.decode('ascii'), exp)
 
         response = self.get('/download_study_bioms/200')
@@ -194,12 +199,6 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
 
 
 class TestDownloadRelease(TestHandlerBase):
-
-    def setUp(self):
-        super(TestDownloadRelease, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadRelease, self).tearDown()
 
     def test_download(self):
         # check success
@@ -240,17 +239,15 @@ class TestDownloadRawData(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         exp = (
-            '2125826711 58 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
+            '- 58 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
             'raw_data/1_s_G1_L001_sequences.fastq.gz\n'
-            '2125826711 58 /protected/raw_data/'
+            '- 58 /protected/raw_data/'
             '1_s_G1_L001_sequences_barcodes.fastq.gz '
             'raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
-            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt '
             'mapping_files/1_mapping_file.txt\n'
-            '1756512010 1093210 /protected/BIOM/7/biom_table.biom '
-            'BIOM/7/biom_table.biom\n'
-            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
-            'mapping_files/7_mapping_file.txt\n')
+            '- 1093210 /protected/BIOM/7/biom_table.biom '
+            'BIOM/7/biom_table.biom\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
         response = self.get('/download_study_bioms/200')
@@ -276,19 +273,12 @@ class TestDownloadRawData(TestHandlerBase):
             return_value=User("demo@microbio.me"))
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
-        exp = (
-            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
-            'mapping_files/7_mapping_file.txt\n')
+        exp = ('- [0-9]* /protected/templates/1_prep_2_[0-9]*-[0-9]*.txt '
+               'mapping_files/7_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
 
 class TestDownloadEBISampleAccessions(TestHandlerBase):
-
-    def setUp(self):
-        super(TestDownloadEBISampleAccessions, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadEBISampleAccessions, self).tearDown()
 
     def test_download(self):
         # check success
@@ -322,12 +312,6 @@ class TestDownloadEBISampleAccessions(TestHandlerBase):
 
 class TestDownloadEBIPrepAccessions(TestHandlerBase):
 
-    def setUp(self):
-        super(TestDownloadEBIPrepAccessions, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadEBIPrepAccessions, self).tearDown()
-
     def test_download(self):
         # check success
         response = self.get('/download_ebi_accessions/experiments/1')
@@ -358,13 +342,26 @@ class TestDownloadEBIPrepAccessions(TestHandlerBase):
         self.assertEqual(response.code, 405)
 
 
+class TestDownloadSampleInfoPerPrep(TestHandlerBase):
+
+    def test_download(self):
+        # check success
+        response = self.get('/download_sample_info_per_prep/1')
+        self.assertEqual(response.code, 200)
+
+        df = pd.read_csv(StringIO(response.body.decode('ascii')), sep='\t')
+        # just testing shape as the actual content is tested in the dataframe
+        # generation
+        self.assertEqual(df.shape, (27, 33))
+
+        # changing user so we can test the failures
+        BaseHandler.get_current_user = Mock(
+            return_value=User("demo@microbio.me"))
+        response = self.get('/download_sample_info_per_prep/1')
+        self.assertEqual(response.code, 405)
+
+
 class TestDownloadUpload(TestHandlerBase):
-
-    def setUp(self):
-        super(TestDownloadUpload, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadUpload, self).tearDown()
 
     def test_download(self):
         # check failure
@@ -379,26 +376,21 @@ class TestDownloadUpload(TestHandlerBase):
 
 class TestDownloadPublicHandler(TestHandlerBase):
 
-    def setUp(self):
-        super(TestDownloadPublicHandler, self).setUp()
-
-    def tearDown(self):
-        super(TestDownloadPublicHandler, self).tearDown()
-
     def test_download(self):
         # check failures
         response = self.get('/public_download/')
         self.assertEqual(response.code, 422)
         self.assertEqual(response.reason, 'You need to specify '
                          'both data (the data type you want to download - '
-                         'raw/biom) and study_id')
+                         'raw/biom/sample_information/prep_information) and '
+                         'study_id or prep_id')
 
         response = self.get('/public_download/?data=raw&study_id=10000')
         self.assertEqual(response.code, 422)
         self.assertEqual(response.reason, 'Study does not exist')
 
         response = self.get('/public_download/?data=raw&study_id=1')
-        self.assertEqual(response.code, 422)
+        self.assertEqual(response.code, 404)
         self.assertEqual(response.reason, 'Study is not public. '
                          'If this is a mistake contact: qiita.help@gmail.com')
 
@@ -413,9 +405,8 @@ class TestDownloadPublicHandler(TestHandlerBase):
         # check success
         response = self.get('/public_download/?data=biom&study_id=1')
         self.assertEqual(response.code, 200)
-        exp = (
-            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
-            'mapping_files/7_mapping_file.txt\n')
+        exp = ('- [0-9]* /protected/templates/1_prep_2_[0-9]*-[0-9]*.txt '
+               'mapping_files/7_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
         Study(1).public_raw_download = True
@@ -423,7 +414,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
         response = self.get('/public_download/?data=raw&study_id=1')
         self.assertEqual(response.code, 200)
         exp = (
-            '- [0-9]* /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_2_[0-9]*-[0-9]*.txt '
             'mapping_files/7_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
@@ -447,7 +438,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
         self.assertEqual(response.reason, 'Nothing to download. If this is a '
                          'mistake contact: qiita.help@gmail.com')
 
-        # check succcess
+        # check success
         Artifact(5).visibility = 'public'
         response = self.get(
             '/public_download/?data=raw&study_id=1&data_type=18S')
@@ -455,7 +446,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
         exp = (
             '[0-9]* [0-9]* /protected/raw_data/1_s_G1_L001_sequences_barcodes'
             '.fastq.gz raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
-            '- 36762 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt '
             'mapping_files/1_mapping_file.txt')
         self.assertRegex(response.body.decode('ascii'), exp)
 
@@ -463,15 +454,118 @@ class TestDownloadPublicHandler(TestHandlerBase):
             '/public_download/?data=biom&study_id=1&data_type=18S')
         self.assertEqual(response.code, 200)
         exp = (
-            '[0-9]* [0-9]* /protected/processed_data/1_study_1001_closed_'
+            '- [0-9]* /protected/processed_data/1_study_1001_closed_'
             'reference_otu_table.biom processed_data/1_study_1001_closed_'
             'reference_otu_table.biom\n- [0-9]* /protected/templates/1_prep_'
-            '1_qiime_[0-9]*-[0-9]*.txt mapping_files/4_mapping_file.txt\n'
-            '[0-9]* [0-9]* /protected/processed_data/1_study_1001_closed_'
+            '1_[0-9]*-[0-9]*.txt mapping_files/4_mapping_file.txt\n'
+            '- [0-9]* /protected/processed_data/1_study_1001_closed_'
             'reference_otu_table.biom processed_data/1_study_1001_closed_'
             'reference_otu_table.biom\n- [0-9]* /protected/templates/1_prep_1'
-            '_qiime_[0-9]*-[0-9]*.txt mapping_files/5_mapping_file.txt\n')
+            '_[0-9]*-[0-9]*.txt mapping_files/5_mapping_file.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
+
+    def test_download_sample_information(self):
+        response = self.get('/public_download/?data=sample_information')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(
+            response.reason, 'You need to specify both data (the data type '
+            'you want to download - raw/biom/sample_information/'
+            'prep_information) and study_id or prep_id')
+
+        response = self.get('/public_download/?data=sample_information&'
+                            'data_type=16S&study_id=1')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'If requesting an information file '
+                         'you cannot specify the data_type')
+
+        response = self.get(
+            '/public_download/?data=sample_information&prep_id=1')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Review your parameters, not a '
+                         'valid combination')
+
+        response = self.get(
+            '/public_download/?data=sample_information&study_id=10000')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'Sample information does not exist')
+
+        response = self.get(
+            '/public_download/?data=prep_information&prep_id=10000')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(
+            response.reason, 'Preparation information does not exist')
+
+        response = self.get(
+            '/public_download/?data=sample_information&study_id=1')
+        self.assertEqual(response.code, 200)
+        exp = ('[0-9]* [0-9]* /protected/templates/1_[0-9]*-[0-9]*.txt '
+               'templates/1_[0-9]*-[0-9]*.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        response = self.get(
+            '/public_download/?data=prep_information&prep_id=1')
+        self.assertEqual(response.code, 200)
+        exp = ('[0-9]* [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]'
+               '*.txt templates/1_prep_1_[0-9]*-[0-9]*.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+
+class TestDownloadPublicArtifactHandler(TestHandlerBase):
+
+    def test_download(self):
+        # check failures
+        response = self.get('/public_artifact_download/')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'You need to specify an artifact id')
+
+        response = self.get('/public_artifact_download/?artifact_id=10000')
+        self.assertEqual(response.code, 404)
+        self.assertEqual(response.reason, 'Artifact does not exist')
+
+        response = self.get('/public_artifact_download/?artifact_id=3')
+        self.assertEqual(response.code, 404)
+        self.assertEqual(response.reason, 'Artifact is not public. If this is '
+                         'a mistake contact: qiita.help@gmail.com')
+
+        # check success
+        Artifact(5).visibility = 'public'
+        response = self.get('/public_artifact_download/?artifact_id=5')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '- [0-9]* /protected/processed_data/'
+            '1_study_1001_closed_reference_otu_table.biom '
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\n'
+            '- [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt '
+            'mapping_files/5_mapping_file.txt')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+    def test_download_sample_information(self):
+        response = self.get('/public_artifact_download/')
+        self.assertEqual(response.code, 422)
+        self.assertEqual(response.reason, 'You need to specify an artifact id')
+
+
+class TestDownloadPrivateArtifactHandler(TestHandlerBase):
+
+    def test_download(self):
+        # you can't post None, you must post an empty byte array
+        response = self.post('/private_download/1', b'')
+        self.assertEqual(response.code, 200)
+
+        resp_dict = json.loads(response.body)
+        o = urlparse(resp_dict["url"])
+        response_file = self.get(o.path)
+        self.assertEqual(response_file.code, 200)
+
+        exp = (
+            '- 58 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
+            'raw_data/1_s_G1_L001_sequences.fastq.gz\n'
+            '- 58 /protected/raw_data/1_s_G1_L001_sequences_barcodes.'
+            'fastq.gz raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
+            '- [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt '
+            'mapping_files/1_mapping_file.txt\n'
+        )
+        self.assertRegex(response_file.body.decode('ascii'), exp)
 
 
 if __name__ == '__main__':

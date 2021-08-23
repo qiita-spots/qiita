@@ -5,8 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
-
 from tornado.web import authenticated, HTTPError
 from tornado.escape import url_escape
 from json import dumps
@@ -60,7 +58,7 @@ class EBISubmitHandler(BaseHandler):
         sample_template = study.sample_template
         stats = {
             'Number of samples': len(prep_template),
-            'Number of metadata headers': len(sample_template.categories()),
+            'Number of metadata headers': len(sample_template.categories),
             'Number of sequences': 'N/A',
             'Total forward': 'N/A',
             'Total reverse': 'N/A'

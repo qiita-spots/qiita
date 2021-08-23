@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-
 from tornado.web import authenticated
 
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -22,17 +19,21 @@ class ListCommandsHandler(BaseHandler):
     def get(self):
         # Fun fact - if the argument is a list, JS adds '[]' to the
         # argument name
-        artifact_types = self.get_argument("artifact_types[]")
+        artifact_id = self.get_argument("artifact_id")
         exclude_analysis = self.get_argument('include_analysis') == 'false'
         self.write(
-            list_commands_handler_get_req(artifact_types, exclude_analysis))
+            list_commands_handler_get_req(artifact_id, exclude_analysis))
 
 
 class ListOptionsHandler(BaseHandler):
     @authenticated
     def get(self):
         command_id = self.get_argument("command_id")
-        self.write(list_options_handler_get_req(command_id))
+        artifact_id = self.get_argument("artifact_id")
+        # if the artifact id has ':' it means that it's a job in construction
+        if ':' in artifact_id:
+            artifact_id = None
+        self.write(list_options_handler_get_req(command_id, artifact_id))
 
 
 class WorkflowRunHandler(BaseHandler):

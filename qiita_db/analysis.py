@@ -16,12 +16,10 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from itertools import product
 from os.path import join, exists
 from os import mkdir
 
-from future.utils import viewitems
 from biom import load_table
 from biom.util import biom_open
 from biom.exception import DisjointIDError
@@ -315,7 +313,7 @@ class Analysis(qdb.base.QiitaObject):
             sql = """SELECT portal
                      FROM qiita.analysis_portal
                         JOIN qiita.portal_type USING (portal_type_id)
-                     WHERE analysis_id = %s""".format(self._table)
+                     WHERE analysis_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.sql_connection.TRN.execute_fetchflatten()
 
@@ -357,11 +355,9 @@ class Analysis(qdb.base.QiitaObject):
         QiitaDBStatusError
             Analysis is public
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{0} SET description = %s
-                     WHERE analysis_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [description, self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0} SET description = %s
+                 WHERE analysis_id = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(sql, [description, self._id])
 
     @property
     def samples(self):
@@ -515,11 +511,9 @@ class Analysis(qdb.base.QiitaObject):
         -----
         An analysis should only ever have one PMID attached to it.
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.{0} SET pmid = %s
-                     WHERE analysis_id = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [pmid, self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0} SET pmid = %s
+                 WHERE analysis_id = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(sql, [pmid, self._id])
 
     @property
     def can_be_publicized(self):
@@ -620,13 +614,11 @@ class Analysis(qdb.base.QiitaObject):
         error_msg : str
             The error message
         """
-        with qdb.sql_connection.TRN:
-            le = qdb.logger.LogEntry.create('Runtime', error_msg)
-            sql = """UPDATE qiita.analysis
-                     SET logging_id = %s
-                     WHERE analysis_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [le.id, self.id])
-            qdb.sql_connection.TRN.execute()
+        le = qdb.logger.LogEntry.create('Runtime', error_msg)
+        sql = """UPDATE qiita.analysis
+                 SET logging_id = %s
+                 WHERE analysis_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [le.id, self.id])
 
     def has_access(self, user):
         """Returns whether the given user has access to the analysis
@@ -698,11 +690,9 @@ class Analysis(qdb.base.QiitaObject):
         if user.id == self.owner or user.id in self.shared_with:
             return
 
-        with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.analysis_users (analysis_id, email)
-                     VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [self._id, user.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """INSERT INTO qiita.analysis_users (analysis_id, email)
+                 VALUES (%s, %s)"""
+        qdb.sql_connection.perform_as_transaction(sql, [self._id, user.id])
 
     def unshare(self, user):
         """Unshare the analysis with another user
@@ -712,11 +702,9 @@ class Analysis(qdb.base.QiitaObject):
         user: User object
             The user to unshare the analysis with
         """
-        with qdb.sql_connection.TRN:
-            sql = """DELETE FROM qiita.analysis_users
-                     WHERE analysis_id = %s AND email = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id, user.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """DELETE FROM qiita.analysis_users
+                 WHERE analysis_id = %s AND email = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [self._id, user.id])
 
     def _lock_samples(self):
         """Only dflt analyses can have samples added/removed
@@ -745,7 +733,7 @@ class Analysis(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             self._lock_samples()
 
-            for aid, samps in viewitems(samples):
+            for aid, samps in samples.items():
                 # get previously selected samples for aid and filter them out
                 sql = """SELECT sample_id
                          FROM qiita.analysis_sample
@@ -837,7 +825,6 @@ class Analysis(qdb.base.QiitaObject):
             # the command id
             # Note that grouped_samples is basically how many biom tables we
             # are going to create
-            rename_dup_samples = False
             grouped_samples = {}
 
             # post_processing_cmds is a list of dictionaries, each describing
@@ -846,7 +833,7 @@ class Analysis(qdb.base.QiitaObject):
             # multiple post_processing_cmds are implemented, ensure proper
             # order before passing off to _build_biom_tables().
             post_processing_cmds = dict()
-            for aid, asamples in viewitems(samples):
+            for aid, asamples in samples.items():
                 # find the artifact info, [0] there should be only one info
                 ainfo = [bi for bi in bioms_info
                          if bi['artifact_id'] == aid][0]
@@ -867,25 +854,10 @@ class Analysis(qdb.base.QiitaObject):
                                 merging_scheme, cmd)
                     grouped_samples[label] = []
                 grouped_samples[label].append((aid, asamples))
-            # 2. if rename_dup_samples is still False, make sure that we don't
-            #    need to rename samples by checking that there are not
-            #    duplicated samples per group
-            if not rename_dup_samples:
-                for _, t in viewitems(grouped_samples):
-                    # this element only has one table, continue
-                    if len(t) == 1:
-                        continue
-                    dup_samples = set()
-                    for _, s in t:
-                        # this set is not to make the samples unique, cause
-                        # they already are, but cast it as a set so we can
-                        # perform the following operations
-                        s = set(s)
-                        if dup_samples & s:
-                            rename_dup_samples = merge_duplicated_sample_ids
-                            break
-                        dup_samples = dup_samples | s
 
+            # We need to negate merge_duplicated_sample_ids because in
+            # _build_mapping_file is acually rename: merge yes == rename no
+            rename_dup_samples = not merge_duplicated_sample_ids
             self._build_mapping_file(samples, rename_dup_samples)
 
             if post_processing_cmds:
@@ -917,10 +889,10 @@ class Analysis(qdb.base.QiitaObject):
                 mkdir(base_fp)
 
             biom_files = []
-            for label, tables in viewitems(grouped_samples):
+            for label, tables in grouped_samples.items():
 
                 data_type, algorithm = [
-                    l.strip() for l in label.split('||')]
+                    line.strip() for line in label.split('||')]
 
                 new_table = None
                 artifact_ids = []
@@ -1051,7 +1023,7 @@ class Analysis(qdb.base.QiitaObject):
                     # the file path to the new tree, depending on p's
                     # return code.
                     if rv != 0:
-                        raise ValueError('Error %d: %s' % (rv, p_out))
+                        raise ValueError('Error %d: %s' % (rv, p_err))
                     p_out = loads(p_out)
 
                     if p_out['archive'] is not None:
@@ -1068,17 +1040,21 @@ class Analysis(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             all_ids = set()
             to_concat = []
-            for aid, samps in viewitems(samples):
-                qiime_map_fp = qdb.artifact.Artifact(
-                    aid).prep_templates[0].qiime_map_fp
+            sample_infos = dict()
+            for aid, samps in samples.items():
+                artifact = qdb.artifact.Artifact(aid)
+                si = artifact.study.sample_template
+                if si not in sample_infos:
+                    sample_infos[si] = si.to_dataframe()
+                pt = artifact.prep_templates[0]
+                pt_df = pt.to_dataframe()
 
-                # Parse the mapping file
-                qm = qdb.metadata_template.util.load_template_to_dataframe(
-                    qiime_map_fp, index='#SampleID')
+                qm = pt_df.join(sample_infos[si], lsuffix="_prep")
 
                 # if we are not going to merge the duplicated samples
                 # append the aid to the sample name
                 qm['qiita_artifact_id'] = aid
+                qm['qiita_prep_deprecated'] = pt.deprecated
                 if rename_dup_samples:
                     qm['original_SampleID'] = qm.index
                     qm['#SampleID'] = "%d." % aid + qm.index
@@ -1102,15 +1078,6 @@ class Analysis(qdb.base.QiitaObject):
                 to_concat.append(qm)
 
             merged_map = pd.concat(to_concat)
-
-            # forcing QIIME column order
-            cols = merged_map.columns.values.tolist()
-            cols.remove('BarcodeSequence')
-            cols.remove('LinkerPrimerSequence')
-            cols.remove('Description')
-            cols = (['BarcodeSequence', 'LinkerPrimerSequence'] + cols +
-                    ['Description'])
-            merged_map = merged_map[cols]
 
             # Save the mapping file
             _, base_fp = qdb.util.get_mountpoint(self._table)[0]

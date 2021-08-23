@@ -27,6 +27,7 @@ from qiita_pet.handlers.artifact_handlers.base_handlers import (
     check_artifact_access, artifact_summary_get_request,
     artifact_summary_post_request, artifact_patch_request,
     artifact_post_req)
+from qiita_db.logger import LogEntry
 
 
 @qiita_test_checker()
@@ -79,28 +80,34 @@ class TestBaseHandlersUtils(TestCase):
 
     def test_artifact_summary_get_request(self):
         user = User('test@foo.bar')
+        main_buttons = (
+            '<button onclick="if (confirm(' "\'Are you sure you want to make "
+            "public artifact id: 1?')) { set_artifact_visibility('public', 1) "
+            '}" class="btn btn-primary btn-sm">Make public</button> <button '
+            'onclick="if (confirm(' "'Are you sure you want to revert to "
+            "sandbox artifact id: 1?')) { set_artifact_visibility('sandbox', 1"
+            ') }" class="btn btn-primary btn-sm">Revert to sandbox</button> ')
+        private_download_button = (
+            '<button class="btn btn-primary btn-sm" type="button" '
+            'aria-expanded="false" aria-controls="privateDownloadLink" '
+            'onclick="generate_private_download_link(%s)">Generate Download '
+            'Link</button><div class="collapse" id="privateDownloadLink"><div '
+            'class="card card-body" id="privateDownloadText">Generating '
+            'Download Link...</div></div>')
         # Artifact w/o summary
         obs = artifact_summary_get_request(user, 1)
         exp_files = [
             (1, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)',
-             '2125826711', '58 Bytes'),
+             '2125826711', '58B'),
             (2, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)',
-             '2125826711', '58 Bytes')]
+             '2125826711', '58B')]
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
-               'artifact_type': 'FASTQ',
+               'artifact_type': 'FASTQ', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 1?\')) { '
-                           'set_artifact_visibility(\'public\', 1) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button>'),
+               'buttons': main_buttons + private_download_button % 1,
                'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
@@ -118,19 +125,11 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
-               'artifact_type': 'FASTQ',
+               'artifact_type': 'FASTQ', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 1?\')) { '
-                           'set_artifact_visibility(\'public\', 1) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button>'),
+               'buttons': main_buttons + private_download_button % 1,
                'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
@@ -150,25 +149,17 @@ class TestBaseHandlersUtils(TestCase):
         exp_files.append(
             (a.html_summary_fp[0],
              '%s (html summary)' % basename(a.html_summary_fp[1]),
-             '1642196267', '33 Bytes'))
+             '1642196267', '33B'))
         exp_summary_path = relpath(
             a.html_summary_fp[1], qiita_config.base_data_dir)
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
-               'artifact_type': 'FASTQ',
+               'artifact_type': 'FASTQ', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'private',
                'editable': True,
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 1?\')) { '
-                           'set_artifact_visibility(\'public\', 1) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '1?\')) { set_artifact_visibility(\'sandbox\', 1) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button>'),
+               'buttons': main_buttons + private_download_button % 1,
                'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
@@ -187,7 +178,7 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(demo_u, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
-               'artifact_type': 'FASTQ',
+               'artifact_type': 'FASTQ', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'public',
                'editable': False,
@@ -205,11 +196,11 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
-               'artifact_type': 'FASTQ',
+               'artifact_type': 'FASTQ', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 09:10',
                'visibility': 'sandbox',
                'editable': True,
-               'buttons': '',
+               'buttons': private_download_button % 1,
                'processing_info': {},
                'files': exp_files,
                'is_from_analysis': False,
@@ -224,12 +215,12 @@ class TestBaseHandlersUtils(TestCase):
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
         exp_files = [
-            (3, '1_seqs.fna (preprocessed fasta)', '', '0 Bytes'),
-            (4, '1_seqs.qual (preprocessed fastq)', '', '0 Bytes'),
-            (5, '1_seqs.demux (preprocessed demux)', '', '0 Bytes')]
+            (3, '1_seqs.fna (preprocessed fasta)', '', '0B'),
+            (4, '1_seqs.qual (preprocessed fastq)', '', '0B'),
+            (5, '1_seqs.demux (preprocessed demux)', '', '0B')]
         exp = {'name': 'Demultiplexed 1',
                'artifact_id': 2,
-               'artifact_type': 'Demultiplexed',
+               'artifact_type': 'Demultiplexed', 'being_deleted': False,
                'artifact_timestamp': '2012-10-01 10:10',
                'visibility': 'private',
                'editable': True,
@@ -246,7 +237,8 @@ class TestBaseHandlersUtils(TestCase):
                            'class="glyphicon glyphicon-export"></span> '
                            'Submit to EBI</a> <a class="btn btn-primary '
                            'btn-sm" href="/vamps/2"><span class="glyphicon '
-                           'glyphicon-export"></span> Submit to VAMPS</a>'),
+                           'glyphicon-export"></span> Submit to VAMPS</a> ' +
+                           private_download_button % 2),
                'processing_info': {
                  'command_active': True, 'software_deprecated': False,
                  'command': 'Split libraries FASTQ',
@@ -266,19 +258,35 @@ class TestBaseHandlersUtils(TestCase):
                'errored_summary_jobs': []}
         self.assertEqual(obs, exp)
 
+        # the buttons shouldn't be present when the study is autoloaded
+        study = a.study
+        study.autoloaded = True
+        exp['buttons'] = ('<button onclick="if (confirm(\'Are you sure you '
+                          'want to make public artifact id: 2?\')) { '
+                          'set_artifact_visibility(\'public\', 2) }" '
+                          'class="btn btn-primary btn-sm">Make public'
+                          '</button> <button onclick="if (confirm(\'Are you '
+                          'sure you want to revert to sandbox artifact id: '
+                          '2?\')) { set_artifact_visibility(\'sandbox\', 2) '
+                          '}" class="btn btn-primary btn-sm">Revert to '
+                          'sandbox</button> ' + private_download_button % 2)
+        obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
+        self.assertEqual(obs, exp)
+        study.autoloaded = False
+
         # analysis artifact
         obs = artifact_summary_get_request(user, 8)
         exp = {'name': 'noname',
                'artifact_id': 8,
-               'artifact_type': 'BIOM',
+               'artifact_type': 'BIOM', 'being_deleted': False,
                # this value changes on build so copy from obs
                'artifact_timestamp': obs['artifact_timestamp'],
                'visibility': 'sandbox',
                'editable': True,
-               'buttons': '',
+               'buttons': private_download_button % 8,
                'processing_info': {},
                'files': [(22, 'biom_table.biom (biom)', '1756512010',
-                          '1.1 MB')],
+                          '1.0M')],
                'is_from_analysis': True,
                'summary': None,
                'job': None,
@@ -355,6 +363,10 @@ class TestBaseHandlersUtils(TestCase):
         artifact_patch_request(test_user, 1, 'replace', '/visibility/',
                                req_value='sandbox')
         self.assertEqual(a.visibility, 'sandbox')
+        # checking that we have a new entry in the database for this
+        self.assertEqual(
+            LogEntry.newest_records(1)[0].msg,
+            'test@foo.bar changed artifact 1 (study 1) to sandbox')
 
         # Admin can change to private
         artifact_patch_request(User('admin@foo.bar'), 1, 'replace',

@@ -83,8 +83,6 @@ class PluginHandler(OauthBaseHandler):
                 'commands': [c.name for c in plugin.commands],
                 'publications': [{'DOI': doi, 'PubMed': pubmed}
                                  for doi, pubmed in plugin.publications],
-                'default_workflows': [w.name
-                                      for w in plugin.default_workflows],
                 'type': plugin.type,
                 'active': plugin.active}
         self.write(response)
@@ -221,7 +219,8 @@ class CommandHandler(OauthBaseHandler):
                 'required_parameters': cmd.required_parameters,
                 'optional_parameters': cmd.optional_parameters,
                 'default_parameter_sets': {
-                    p.name: p.values for p in cmd.default_parameter_sets}}
+                    p.name: p.values for p in cmd.default_parameter_sets},
+                'outputs': cmd.outputs}
         self.write(response)
 
 

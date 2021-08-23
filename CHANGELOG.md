@@ -1,5 +1,139 @@
 # Qiita changelog
 
+Version 2021.07
+---------------
+
+* Added a new "Add Default Workflow" button to the preparation tab so we automatically add all the "recommended" steps in a preparation based on our workflows.
+* New Preparation Listing GUI + searching within preparation types, thank you @AmandaBirmingham!
+* We limit the parameters displayed to the user per command based on which have already been run successfully; for example if a preparation has already a "Trim 100" job, this option will not be shown.
+* Re-added Coveralls to Qiita and removed codecov.
+* We are limiting the number of samples in a [preparation file to 800](https://qiita.ucsd.edu/static/doc/html/faq.html#how-should-i-split-my-samples-within-preparations).
+* Added User.update_email which allows to update a Users email.
+* Fixed the following issues: [#3113](https://github.com/qiita-spots/qiita/issues/3113), and [#3079](https://github.com/qiita-spots/qiita/issues/3079).
+
+Version 2021.05
+---------------
+
+* Replaced vis.js for cytoscape.js to display the processing networks.
+* The commands available to users, originally only filtered by input type, are now also limited by the preparation type. The options are taken from the [recommended workflows](https://qiita.ucsd.edu/workflows/).
+* Added a new [spades](https://github.com/ablab/spades) assembly pipeline for "Genome Isolate".
+* Fixed the following issues: [#3070](https://github.com/qiita-spots/qiita/issues/3070), [#3089](https://github.com/qiita-spots/qiita/issues/3089), [#2968](https://github.com/qiita-spots/qiita/issues/2968), [#3102](https://github.com/qiita-spots/qiita/issues/3102), and [#3079](https://github.com/qiita-spots/qiita/issues/3079).
+
+Version 2021.03
+---------------
+
+* Fixed [issue](https://github.com/qiita-spots/qtp-target-gene/issues/32) that left behind non gz per sample FASTQ files.
+* [Recommended Workflows](https://qiita-rc.ucsd.edu/workflows/) are now stored in the database.
+* Added a new button only for owners and admins within the Study page to display a list of all the Analyses generated with that study; helpful to clean up Studies and for general information.
+* The Qiita CI now runs as [GitHub Actions](https://github.com/qiita-spots/qiita/actions); moving away from Travis CI.
+* Prep information file object now stores its creation and modification timestamps.
+* Improved creation time for all information files via the to_dataframe() method.
+* Split the "other" category of the storage stats plot (https://qiita.ucsd.edu/stats/) into "other" and "biom" so biom can be its own category.
+* Added a processing_jobs property to qiita_db.software.Command to easily retrieve all jobs in the system that have ran the given command.
+* Fixed the following issues: [#3068](https://github.com/qiita-spots/qiita/issues/3068), [#3072](https://github.com/qiita-spots/qiita/issues/3072), [#3076](https://github.com/qiita-spots/qiita/issues/3076), and [#3070](https://github.com/qiita-spots/qiita/issues/3070).
+
+Version 2021.01
+---------------
+
+* Moved the qiita repo from biocore to [qiita-spots](https://github.com/qiita-spots/qiita/).
+* Created the [Qiita portal for the Cancer Microbiome](https://qiita.ucsd.edu/cancer/).
+* The EBI-ENA code now verifies that the sample information file has a description column; this wasn't previously required because it was automatically prefilled by the QIIME 1 mapping file.
+* Now it is possible to download the per preparation sample information file and the sample-preparation summary.
+* Added a faster metagenomic/metatranscriptomic adaptor and host removal step based on fastp and minimap2. The previous version, using atropos and bowtie2 for QC host filtering, is now deprecated.
+* Added qiime2.2020.11 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization.
+* Added [WoL](https://biocore.github.io/wol/) tree for phylogenetic analyses (/projects/wol/release/databases/qiime2/phylogeny.qza) with per-genome WoL artifacts.
+* Fixed the following issues: [#3060](https://github.com/qiita-spots/qiita/issues/3060), [#3049](https://github.com/qiita-spots/qiita/issues/3049), and [#2751](https://github.com/qiita-spots/qiita/issues/2751).
+
+Version 2020.11
+---------------
+
+* Deprecated the automatic creation of the per template QIIME1 mapping file. If you want to merge a preparation and a BIOM table you must first create a meta-analysis.
+* Added a new autoloaded boolean flag to the Study object so we can control if a study was autoloaded via an automatic EBI-ENA or SRA loading job.
+* We stopped adding the CRC32 information from mod_zip, which should remove the warnings about CRC incorrect checksums.
+* Removed the show/hide button from an analysis while the analysis was being built to avoid possible confusion.
+* A new per-sample, fast, bowtie2 and Woltka plugin for WGS and Metatrascriptomics processing has been added, deprecating the Shogun plugin and moving the rest of the commands to a new qp-meta plugin.
+* Added the possibility for plugins to submit and control their own jobs vs. Qiita automatically submitting for them. For specifics of this new functionality, visit (![#3040](https://github.com/biocore/qiita/pull/3040/files))
+* We increased the number of workers in qiita.ucsd.edu for the web interface (from eight to twenty), redbiom (from eight to ten), and the plugin interactions (from eight to twenty). This should speed up responses and improve general performance.
+* For the qp-qiime2 plugin, we removed some unsupported alpha rarefaction metrics from the options, following QIIME2 guidelines.
+* For the qp-qiime2 plugin, if the user selects a tree but it doesn't exist, it will not try to parse and skip it.
+
+Version 092020
+--------------
+
+* Added a new endpoint to inject artifacts to existing preparations or jobs: `/qiita_db/artifact/`
+* Outdated commands with the exact same name than newer commands will be marked as not outdated. This is helpful for cases where the commands haven't changed between version
+* Added the `add_ebi_accessions` to the `to_dataframe()` method of the information files so it can be used to `redbiom`. This will allow searching via sample or experiment accessions
+* Added the `release_validator_job` method to `ProcessingJob` method to easily retrieve the `release_validator` job of a `processing_job`
+* Re-added `STUDY_TYPE` to the EBI-ENA submission as they are required but deprecated so just adding as Other
+* Added qiime2.2020.08 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
+* Shogun processing using Woltka will now produce 2 extra artifacts: a per genome and per gene artifacts
+
+Version 072020
+--------------
+
+* Added per preparation LIBRARY_STRATEGY and removed the study wide STUDY_TYPE values for EBI-ENA submissions to comply with newer metadata standards
+* Changed `Ion Torrent` to `Ion_Torrent` as described by EBI-ENA
+* Added a VALIDATOR job_type to be able to specify job validator resources
+* Added a job.shape method that returns the number of columns, samples and input size of each job based its input artifacts
+* Added the possibility of requesting memory resources for a job based on the input size, number of samples and/or columns
+* Warnings from commands will only use the message part of the warning/errors (#2898)
+* Fixed error when deleting multiple artifacts with summaries and support_files
+* Button now will be disabled when submitting a workflow via GUI to avoid double clicking from users
+* Jobs will now display their "external job id" to users, in practice their barnacle job id
+* Fixed bug that prevented delete of full analyses when the processing tree had multiple paths
+* Added initial script for nightly auto-processing of workflows
+* Removed legacy future dependencies from Python2.7
+* Users can see the available system plugins, their commands and resource allocations: https://qiita.ucsd.edu/software/
+* Added qiime2.2020.06 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
+* Shogun v1.0.8 for Metagenomic and Metatrascriptomics processing; this new version includes bowtie2 v2.4.1 as aligner and [Web of Life](https://biocore.github.io/wol/) and [rep200](ftp://ftp.ncbi.nlm.nih.gov/refseq/release/).
+
+Version 052020
+--------------
+
+* Added Metatrascriptomics as a data type, added a Ribosomal read filtering step and documentation on how to use it in the processing recommendations
+* Fixed issue that prevented creating new artifacts when it was the children of a public parent
+* Qiita now keeps track of artifact deletion jobs, prevents submitting duplicated deletions, and the GUI is updated when an artifact is being deleted
+* We now display the `redbiom` DB release date in the redbiom Qiita page
+* Fixed EBA-ENA duplicated sample submission in multiple preparations - this could happen when a sample existed in more than one preparation
+* Add the ability to deprecate a preparation; this is useful when there is an unsuccessful run or preparation
+* The study page now has a markdown `Notes` section so users add problematic samples, explaining certain metadata columns, etc
+* Added user documentation to better explain how to split your samples in preparations
+* Fix a bug where repeated sample names were incorrectly handled during meta-analysis (#2978). Removed unused-legacy code to deal with duplicated sample names while building analyses
+* Improved headings in the stats page to avoid confusions
+* Fixed issue that only deleted selected samples within the page's viewing frame
+* Qiita now uses `gnu=True` in the `humanize.naturalsize` so the size display matches what a user sees when they `ls` the file
+* Updated code so it works with `pandas v1.0.3`
+* Added qiime2.2020.02 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
+
+Version 012020
+--------------
+
+* Fixed issues with adding sample information files directly to the study and skipping the upload folder
+* Added the option to generate unique URL (per artifact) for sandboxed or private studies; see https://qiita.ucsd.edu/static/doc/html/downloading.html
+* Added the possibility of just downloading sample or preparation information files
+* Updated vis.js and vis-network.js to version 6.5.2; this fixed some network display issues
+* Deployed Atropos v1.1.24 and Shogun v1.0.7 for Metagenomic processing; this new version includes bowtie2 v2.3.5, burst15 v0.99.8 and utree v2.0RF as aligners and [Web of Life](https://biocore.github.io/wol/) and [rep94](ftp://ftp.ncbi.nlm.nih.gov/refseq/release/) ([more info](https://github.com/knights-lab/BURST/blob/master/bin/README.md) on processing) as databases
+
+Version 112019
+--------------
+
+* Added PacBio_SMRT to the list of platform and PacBio RS, PacBio RS II, Sequel, Sequel II as valid instrument models
+* Improved downloads for public data (BIOM, raw data, etc.; see https://qiita.ucsd.edu/static/doc/html/downloading.html)
+* Added the possibility of just downloading sample or preparation information files
+* During a meta-analysis if `sample_name` and `sample_id`/`sample-id` are present, Qiita will drop the columns `sample_id`/`sample-id` to avoid issues with QIIME2
+* The redbiom webpage only accepts ' or " for escaping strings
+* Added qiime2.2019.10 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
+
+Version 092019
+--------------
+
+* Improved stats Qiita page
+* Fixed Glossary Terms in Help pages (thanks, @JTFouquier)
+* Fixed redbiom Help pages that prevented from copy/pasting examples
+* Fixed broken code that prevented downloading biom/archive releases
+* Added new public page for study and artifact summaries
+* qtp-target-gene validates that the input files are not empty (for example FASTQ)
+
 Version 072019
 --------------
 

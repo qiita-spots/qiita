@@ -201,7 +201,7 @@ class TestHelpers(TestHandlerBase):
 
         # Wait until the job is done
         wait_for_processing_job(loads(job_info)['job_id'])
-        self.assertNotIn('col2', st.categories())
+        self.assertNotIn('col2', st.categories)
 
         # TESTS FOR OPERATION: replace
         # Test incorrect path parameter with replace
@@ -541,6 +541,15 @@ class TestSampleAJAXReadOnly(TestHandlerBase):
         self.assertEqual(res.code, 200)
         # Make sure metadata read properly
         line = '<option value="altitude">altitude</option>'
+        self.assertIn(line, res.body.decode('ascii'))
+
+
+class TestAnalysesAjax(TestHandlerBase):
+    def test_get(self):
+        res = self.get("/study/analyses/", {'study_id': 1})
+        self.assertEqual(res.code, 200)
+        # making sure at least one analysis is in the page
+        line = '/analysis/description/1/'
         self.assertIn(line, res.body.decode('ascii'))
 
 

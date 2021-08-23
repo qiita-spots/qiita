@@ -12,7 +12,6 @@ from tempfile import mkstemp, mkdtemp
 from shutil import rmtree
 from unittest import TestCase, main
 from six import StringIO
-from future import standard_library
 from functools import partial
 
 import pandas as pd
@@ -21,8 +20,7 @@ from qiita_core.util import qiita_test_checker
 
 import qiita_db as qdb
 
-with standard_library.hooks():
-    import configparser
+import configparser
 
 
 @qiita_test_checker()
@@ -108,7 +106,7 @@ class TestLoadArtifactFromCmd(TestCase):
         self.files_to_remove.extend([x['fp'] for x in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
-            qdb.util.check_count('qiita.filepath', self.fp_count + 5))
+            qdb.util.check_count('qiita.filepath', self.fp_count + 4))
 
     def test_load_artifact_from_cmd_processed(self):
         fd, file1 = mkstemp()
@@ -278,10 +276,8 @@ class TestPatch(TestCase):
     def test_unpatched(self):
         """Test patching from unpatched state"""
         # Reset the settings table to the unpatched state
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET current_patch = 'unpatched'")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "UPDATE settings SET current_patch = 'unpatched'")
 
         self._assert_current_patch('unpatched')
         qdb.environment_manager.patch(self.patches_dir)
@@ -291,10 +287,8 @@ class TestPatch(TestCase):
 
     def test_skip_patch(self):
         """Test patching from a patched state"""
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET current_patch = '2.sql'")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "UPDATE settings SET current_patch = '2.sql'")
         self._assert_current_patch('2.sql')
 
         # If it tried to apply patch 2.sql again, this will error
@@ -308,10 +302,8 @@ class TestPatch(TestCase):
 
     def test_nonexistent_patch(self):
         """Test case where current patch does not exist"""
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET current_patch = 'nope.sql'")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "UPDATE settings SET current_patch = 'nope.sql'")
         self._assert_current_patch('nope.sql')
 
         with self.assertRaises(RuntimeError):
@@ -324,10 +316,8 @@ class TestPatch(TestCase):
             f.write(PY_PATCH)
 
         # Reset the settings table to the unpatched state
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET current_patch = 'unpatched'")
-            qdb.sql_connection.TRN.execute()
+        qdb.sql_connection.perform_as_transaction(
+            "UPDATE settings SET current_patch = 'unpatched'")
 
         self._assert_current_patch('unpatched')
 

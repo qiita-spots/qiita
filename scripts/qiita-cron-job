@@ -12,13 +12,13 @@ import click
 
 from qiita_db.util import (
     purge_filepaths as qiita_purge_filepaths,
-    empty_trash_upload_folder as qiita_empty_trash_upload_folder,
-    purge_files_from_filesystem as qiita_purge_files_from_filesystem)
+    empty_trash_upload_folder as qiita_empty_trash_upload_folder)
 from qiita_db.meta_util import (
     update_redis_stats as qiita_update_redis_stats,
     generate_biom_and_metadata_release as
     qiita_generate_biom_and_metadata_release,
     generate_plugin_releases as qiita_generate_plugin_releases)
+from qiita_db.download_link import DownloadLink
 
 
 @click.group()
@@ -32,14 +32,6 @@ def commands():
               'are not linked to any other table')
 def purge_filepaths(remove):
     qiita_purge_filepaths(remove)
-
-
-@commands.command()
-@click.option('--remove/--no-remove', default=False,
-              help='check the filesystem mounts and remove files not used in '
-              'the database')
-def purge_files_from_filesystem(remove):
-    qiita_purge_files_from_filesystem(remove)
 
 
 @commands.command()
@@ -58,6 +50,11 @@ def update_redis_stats():
 @commands.command()
 def generate_biom_and_metadata_release():
     qiita_generate_biom_and_metadata_release('public')
+
+
+@commands.command()
+def purge_json_web_tokens():
+    DownloadLink.delete_expired()
 
 
 @commands.command()

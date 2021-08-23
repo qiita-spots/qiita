@@ -7,13 +7,10 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division, print_function
-
 import errno
 import socket
 from datetime import datetime, timedelta
 from os.path import join, abspath, dirname
-from future.utils import viewitems
 from time import sleep, ctime
 from multiprocessing import active_children
 
@@ -267,7 +264,7 @@ def log(n):
 
         info = []
         for i in e.info:
-            for field, value in viewitems(i):
+            for field, value in i.items():
                 info.append('{}:{}'.format(field, value))
 
         lines.append(template.format(e.time, e.msg, '\n'.join(info)))
@@ -322,18 +319,18 @@ def start(port, master):
             if 'error_msg' in msg:
                 job_error = msg['error_msg']
 
-            qid = qdb.processing_job.ProcessingJob.by_ext_id(msg['Job_Id'])
-
-            if qid:
-                # Qiita recognizes the external ID from Watcher, and has
-                # mapped it to a Qiita ID. Now, create a Job object to
-                # register the job's changed status in Qiita.
-                job_obj = qdb.processing_job.ProcessingJob(qid)
-                job_obj.complete(job_state, error=job_error)
-            else:
+            try:
+                qjob = qdb.processing_job.ProcessingJob.by_external_id(
+                    msg['Job_Id'])
+            except qdb.exceptions.QiitaDBUnknownIDError:
                 # ignore any job owned by Qiita, but can't be
                 # mapped to a ProcessJob.
                 pass
+            else:
+                # Qiita recognizes the external ID from Watcher, and has
+                # mapped it to a Qiita ID. Now, create a Job object to
+                # register the job's changed status in Qiita.
+                qjob.complete(job_state, error=job_error)
 
     if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
         if master:

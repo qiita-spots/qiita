@@ -5,14 +5,12 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from future import standard_library
 from os.path import join, dirname, abspath
 
 from qiita_core.exceptions import MissingConfigSection
 from qiita_core.qiita_settings import qiita_config
 
-with standard_library.hooks():
-    from configparser import ConfigParser
+from configparser import ConfigParser
 
 
 class PortalStyleManager(object):

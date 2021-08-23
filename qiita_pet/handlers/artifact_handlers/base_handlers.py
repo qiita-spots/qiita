@@ -20,6 +20,7 @@ from qiita_db.artifact import Artifact
 from qiita_db.software import Command, Software, Parameters
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.util import get_visibilities, send_email
+from qiita_db.logger import LogEntry
 
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
@@ -132,7 +133,6 @@ def artifact_summary_get_request(user, artifact_id):
         '<button onclick="if (confirm(\'Are you sure you want to %s '
         'artifact id: {0}?\')) {{ set_artifact_visibility(\'%s\', {0}) }}" '
         'class="btn btn-primary btn-sm">%s</button>').format(artifact_id)
-
     if not analysis:
         # If the artifact is part of a study, the buttons shown depend in
         # multiple factors (see each if statement for an explanation of those)
@@ -161,7 +161,7 @@ def artifact_summary_get_request(user, artifact_id):
             buttons.append(btn_base % ('revert to sandbox', 'sandbox',
                                        'Revert to sandbox'))
 
-        if user.level == 'admin':
+        if user.level == 'admin' and not study.autoloaded:
             if artifact.can_be_submitted_to_ebi:
                 buttons.append(
                     '<a class="btn btn-primary btn-sm" '
@@ -175,9 +175,24 @@ def artifact_summary_get_request(user, artifact_id):
                         '<span class="glyphicon glyphicon-export"></span>'
                         ' Submit to VAMPS</a>' % artifact_id)
 
+    if visibility != 'public':
+        # Have no fear, this is just python to generate html with an onclick in
+        # javascript that makes an ajax call to a separate url, takes the
+        # response and writes it to the newly uncollapsed div.  Do note that
+        # you have to be REALLY CAREFUL with properly escaping quotation marks.
+        private_download = (
+            '<button class="btn btn-primary btn-sm" type="button" '
+            'aria-expanded="false" aria-controls="privateDownloadLink" '
+            'onclick="generate_private_download_link(%d)">Generate '
+            'Download Link</button><div class="collapse" '
+            'id="privateDownloadLink"><div class="card card-body" '
+            'id="privateDownloadText">Generating Download Link...'
+            '</div></div>') % artifact_id
+        buttons.append(private_download)
+
     files = [(x['fp_id'], "%s (%s)" % (basename(x['fp']),
                                        x['fp_type'].replace('_', ' ')),
-              x['checksum'], naturalsize(x['fp_size']))
+              x['checksum'], naturalsize(x['fp_size'], gnu=True))
              for x in artifact.filepaths if x['fp_type'] != 'directory']
 
     # TODO: https://github.com/biocore/qiita/issues/1724 Remove this hardcoded
@@ -220,6 +235,7 @@ def artifact_summary_get_request(user, artifact_id):
             'job': job_info,
             'artifact_timestamp': artifact.timestamp.strftime(
                 "%Y-%m-%d %H:%m"),
+            'being_deleted': artifact.being_deleted_by is not None,
             'errored_summary_jobs': errored_summary_jobs}
 
 
@@ -339,9 +355,9 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
             except Exception as e:
                 raise QiitaHTTPError(403, str(e).replace('\n', '<br/>'))
 
+            sid = artifact.study.id
             if artifact.visibility == 'awaiting_approval':
                 email_to = 'qiita.help@gmail.com'
-                sid = artifact.study.id
                 subject = ('QIITA: Artifact %s awaiting_approval. Study %d, '
                            'Prep %d' % (artifact_id, sid,
                                         artifact.prep_templates[0].id))
@@ -355,6 +371,10 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
                            "directly to <a href='mailto:{0}'>{0}</a>.".format(
                                email_to))
                     raise QiitaHTTPError(400, msg)
+            else:
+                msg = '%s changed artifact %s (study %d) to %s' % (
+                    user.email, artifact_id, sid, req_value)
+                LogEntry.create('Warning', msg)
         else:
             # We don't understand the attribute so return an error
             raise QiitaHTTPError(404, 'Attribute "%s" not found. Please, '
@@ -378,23 +398,30 @@ def artifact_post_req(user, artifact_id):
     artifact = Artifact(artifact_id)
     check_artifact_access(user, artifact)
 
-    analysis = artifact.analysis
+    being_deleted_by = artifact.being_deleted_by
 
-    if analysis:
-        # Do something when deleting in the analysis part to keep track of it
-        redis_key = "analysis_%s" % analysis.id
+    if being_deleted_by is None:
+        analysis = artifact.analysis
+
+        if analysis:
+            # Do something when deleting in the analysis part to keep
+            # track of it
+            redis_key = "analysis_%s" % analysis.id
+        else:
+            pt_id = artifact.prep_templates[0].id
+            redis_key = PREP_TEMPLATE_KEY_FORMAT % pt_id
+
+        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
+        cmd = qiita_plugin.get_command('delete_artifact')
+        params = Parameters.load(cmd, values_dict={'artifact': artifact_id})
+        job = ProcessingJob.create(user, params, True)
+
+        r_client.set(
+            redis_key, dumps({'job_id': job.id, 'is_qiita_job': True}))
+
+        job.submit()
     else:
-        pt_id = artifact.prep_templates[0].id
-        redis_key = PREP_TEMPLATE_KEY_FORMAT % pt_id
-
-    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-    cmd = qiita_plugin.get_command('delete_artifact')
-    params = Parameters.load(cmd, values_dict={'artifact': artifact_id})
-    job = ProcessingJob.create(user, params, True)
-
-    r_client.set(redis_key, dumps({'job_id': job.id, 'is_qiita_job': True}))
-
-    job.submit()
+        job = being_deleted_by
 
     return {'job': job.id}
 
