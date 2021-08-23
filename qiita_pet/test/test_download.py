@@ -435,7 +435,8 @@ class TestDownloadPublicHandler(TestHandlerBase):
         self.assertEqual(response.reason, 'Not a valid data_type. Valid types '
                          'are: 16S, 18S, ITS, Proteomic, Metabolomic, '
                          'Metagenomic, Multiomic, Metatranscriptomics, '
-                         'Viromics, Genomics, Transcriptomics')
+                         'Viromics, Genomics, Transcriptomics, '
+                         'Job Output Folder')
 
         response = self.get(
             '/public_download/?data=raw&study_id=1&data_type=Genomics')
