@@ -147,44 +147,29 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
 
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
-
         exp = (
-               '\- \d+ /protected/processed_data/'
-               '1_study_1001_closed_reference_otu_table.biom processed_data/'
-               '1_study_1001_closed_reference_otu_table.biom\n'
-               '\- \d+ /protected/templates/'
-               '1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt '
-               'mapping_files/\d_mapping_file.txt\n'
-               '\- \d+ /protected/processed_data/'
-               '1_study_1001_closed_reference_otu_table.biom '
-               'processed_data/1_study_1001_closed_reference_otu_table.biom\n'
-               '\- \d+ /protected/templates/'
-               '1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt mapping_files/'
-               '\d_mapping_file.txt\n'
-               '\- \d+ /protected/processed_data/'
-               '1_study_1001_closed_reference_otu_table_Silva.biom '
-               'processed_data/'
-               '1_study_1001_closed_reference_otu_table_Silva.biom\n'
-               '\- \d+ /protected/templates/'
-               '1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt '
-               'mapping_files/6_mapping_file.txt\n'
-               '\- \d+ /protected/BIOM/7/biom_table.biom BIOM/7/'
-               'biom_table.biom\n'
-               '\- \d+ /protected/templates/'
-               '1_prep_2_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt '
-               'mapping_files/7_mapping_file.txt\n'
-               '\- \d+ /protected/BIOM/10/otu_table.biom '
-               'BIOM/10/otu_table.biom\n'
-               '\- \d+ /protected/BIOM/10/sortmerna_picked_otus/seqs_otus.log '
-               'BIOM/10/sortmerna_picked_otus/seqs_otus.log\n'
-               '\- \d+ /protected/templates/'
-               '1_prep_1_\d\d\d\d\d\d\d\d-\d\d\d\d\d\d.txt '
-               'mapping_files/10_mapping_file.txt\n'
-               )
-
-        obs = response.body.decode('ascii')
-
-        self.assertRegex(obs, exp)
+            '- \\d+ /protected/processed_data/1_study_1001_closed_reference_'
+            'otu_table.biom processed_data/1_study_1001_closed_reference_otu'
+            '_table.biom\n'
+            '- \\d+ /protected/templates/1_prep_1_qiime_19700101-000000.txt '
+            'mapping_files/4_mapping_file.txt\n'
+            '- \\d+ /protected/processed_data/1_study_1001_closed_reference_'
+            'otu_table.biom processed_data/1_study_1001_closed_reference_otu'
+            '_table.biom\n'
+            '- \\d+ /protected/templates/1_prep_1_qiime_19700101-000000.txt '
+            'mapping_files/5_mapping_file.txt\n'
+            '- \\d+ /protected/processed_data/1_study_1001_closed_reference_'
+            'otu_table_Silva.biom processed_data/1_study_1001_closed_'
+            'reference_otu_table_Silva.biom\n'
+            '- \\d+ /protected/templates/1_prep_1_qiime_19700101-000000.txt '
+            'mapping_files/6_mapping_file.txt\n'
+            '- \\d+ /protected/BIOM/7/biom_table.biom BIOM/7/biom_table.biom\n'
+            '- \\d+ /protected/BIOM/10/otu_table.biom BIOM/10/otu_table.biom\n'
+            '- \\d+ /protected/BIOM/10/sortmerna_picked_otus/seqs_otus.log '
+            'BIOM/10/sortmerna_picked_otus/seqs_otus.log\n'
+            '- \\d+ /protected/templates/1_prep_1_qiime_19700101-000000.txt '
+            'mapping_files/10_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
 
         response = self.get('/download_study_bioms/200')
         self.assertEqual(response.code, 405)
@@ -201,9 +186,8 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         a.visibility = 'private'
         self.assertEqual(response.code, 200)
         # we should have the same files than the previous test, except artifact
-        # and mapping file 7: position 6 and 7; thus removing 6 twice
+        # and mapping file 7: position 6; thus removing 6
         exp = exp.split('\n')
-        exp.pop(6)
         exp.pop(6)
         exp = '\n'.join(exp)
         self.assertRegex(response.body.decode('ascii'), exp)
@@ -255,7 +239,7 @@ class TestDownloadRawData(TestHandlerBase):
             '- 58 /protected/raw_data/'
             '1_s_G1_L001_sequences_barcodes.fastq.gz '
             'raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
-            '- [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]*.txt '
+            '- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/1_mapping_file.txt\n'
             '- 1093210 /protected/BIOM/7/biom_table.biom '
             'BIOM/7/biom_table.biom\n')
@@ -284,8 +268,8 @@ class TestDownloadRawData(TestHandlerBase):
             return_value=User("demo@microbio.me"))
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
-        exp = ('- [0-9]* /protected/templates/1_prep_2_[0-9]*-[0-9]*.txt '
-               'mapping_files/7_mapping_file.txt\n')
+        exp = ('- [0-9]* /protected/BIOM/7/biom_table.biom '
+               'BIOM/7/biom_table.biom\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
 
@@ -517,8 +501,8 @@ class TestDownloadPublicHandler(TestHandlerBase):
         response = self.get(
             '/public_download/?data=prep_information&prep_id=1')
         self.assertEqual(response.code, 200)
-        exp = ('[0-9]* [0-9]* /protected/templates/1_prep_1_[0-9]*-[0-9]'
-               '*.txt templates/1_prep_1_[0-9]*-[0-9]*.txt\n')
+        exp = ('- [0-9]* /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]'
+               '*.txt templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt\n')
         self.assertRegex(response.body.decode('ascii'), exp)
 
 
