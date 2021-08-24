@@ -4,7 +4,7 @@ Version 2021.09
 ---------------
 
 * Double the number of possible connections for the Qiita database: 100 -> 200 simultaneous connections.
-* Added a new data type: "Job Output Folder" and artifact type definition: "job-output-folder" to initially only support admin only standalone commands in Qiita.
+* Added a new data type: "Job Output Folder" and artifact type definition: "job-output-folder" to initially support admin-only standalone commands in Qiita.
 * The study listing is now sorted by descending study id and then ascending number of available artifacts.
 * Removed old code from the Sample Information update method that regenerated all preparations in that study - this is no longer necessary as the per preparation sample information files are built on the fly.
 * Fixed a bug that did not copy the raw files when adding a new artifact via the CLI.
