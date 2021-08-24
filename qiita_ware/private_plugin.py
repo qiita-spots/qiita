@@ -316,10 +316,11 @@ def delete_study(job):
             _delete_analysis_artifacts(analysis)
 
         for pt in study.prep_templates():
-            to_delete = list(pt.artifact.descendants.nodes())
-            to_delete.reverse()
-            for td in to_delete:
-                qdb.artifact.Artifact.delete(td.id)
+            if pt.artifact:
+                to_delete = list(pt.artifact.descendants.nodes())
+                to_delete.reverse()
+                for td in to_delete:
+                    qdb.artifact.Artifact.delete(td.id)
             MT.prep_template.PrepTemplate.delete(pt.id)
 
         if MT.sample_template.SampleTemplate.exists(study_id):
