@@ -23,6 +23,9 @@ def _sample_details(study, samples):
                 'ebi_experiment_accession': None,
                 'preparation_visibility': None,
                 'preparation_type': None}
+
+        assert set(kwargs).issubset(set(base)), "Unexpected key to set"
+
         base.update(kwargs)
         return base
 
