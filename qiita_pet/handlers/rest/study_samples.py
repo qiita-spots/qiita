@@ -38,12 +38,28 @@ def _sample_details(study, samples):
     # map of {sample_id: [indices, of, light, prep, info, ...]}
     sample_prep_mapping = defaultdict(list)
     pt_light = []
-    for idx, pt in enumerate(study.prep_templates()):
-        pt_light.append((pt.id, pt.ebi_experiment_accessions,
-                         pt.status, pt.data_type()))
+    offset = 0
+    incoming_samples = set(samples)
+    for pt in study.prep_templates():
+        prep_samples = set(pt)
+        overlap = incoming_samples & prep_samples
 
-        for ptsample in pt:
-            sample_prep_mapping[ptsample].append(idx)
+        if overlap:
+            # cache if any of or query samples are present on the prep
+
+            # reduce accessions to only samples of interest
+            accessions = pt.ebi_experiment_accessions
+            overlap_accessions = {i: accessions[i] for i in overlap}
+
+            # store the detail we need
+            pt_light.append((pt.id, overlap_accessions,
+                             pt.status, pt.data_type()))
+
+            # only care about mapping the incoming samples
+            for ptsample in overlap:
+                sample_prep_mapping[ptsample].append(offset)
+
+            offset += 1
 
     details = []
     for sample in samples:
