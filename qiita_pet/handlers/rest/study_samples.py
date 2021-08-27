@@ -30,7 +30,7 @@ def _sample_details(study, samples):
         return base
 
     # cache sample detail for lookup
-    study_samples = set(study.sample_template.keys())
+    study_samples = set(study.sample_template)
     sample_accessions = study.sample_template.ebi_sample_accessions
 
     # cache preparation information that we'll need
@@ -42,7 +42,7 @@ def _sample_details(study, samples):
         pt_light.append((pt.id, pt.ebi_experiment_accessions,
                          pt.status, pt.data_type()))
 
-        for ptsample in pt.keys():
+        for ptsample in pt:
             sample_prep_mapping[ptsample].append(idx)
 
     details = []
