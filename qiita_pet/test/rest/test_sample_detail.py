@@ -6,11 +6,43 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from unittest import main
+from unittest import main, TestCase
 
 from tornado.escape import json_decode
 
+import qiita_db
+
 from qiita_pet.test.rest.test_base import RESTHandlerTestCase
+from qiita_pet.handlers.rest.study_samples import _sample_details
+
+
+class SupportTests(TestCase):
+    def test_samples_detail(self):
+        exp = [{'sample_id': '1.SKD7.640191',
+                'sample_found': True,
+                'ebi_sample_accession': 'ERS000021',
+                'preparation_id': 1,
+                'ebi_experiment_accession': 'ERX0000021',
+                'preparation_visibility': 'private',
+                'preparation_type': '18S'},
+               {'sample_id': '1.SKD7.640191',
+                'sample_found': True,
+                'ebi_sample_accession': 'ERS000021',
+                'preparation_id': 2,
+                'ebi_experiment_accession': 'ERX0000021',
+                'preparation_visibility': 'private',
+                'preparation_type': '18S'},
+               {'sample_id': 'doesnotexist',
+                'sample_found': False,
+                'ebi_sample_accession': None,
+                'preparation_id': None,
+                'ebi_experiment_accession': None,
+                'preparation_visibility': None,
+                'preparation_type': None}]
+        obs = _sample_details(qiita_db.study.Study(1),
+                              ['1.SKD7.640191', 'doesnotexist'])
+        self.assertEqual(len(obs), len(exp))
+        self.assertEqual(obs, exp)
 
 
 class SampleDetailHandlerTests(RESTHandlerTestCase):
@@ -25,7 +57,7 @@ class SampleDetailHandlerTests(RESTHandlerTestCase):
 
         response = self.get('/api/v1/study/1/sample/doesnotexist/status',
                             headers=self.headers)
-        self.assertEqual(response.code, 404)
+        self.assertEqual(response.code, 200)
         obs = json_decode(response.body)
         self.assertEqual(obs, exp)
 
@@ -34,14 +66,14 @@ class SampleDetailHandlerTests(RESTHandlerTestCase):
                 'sample_found': True,
                 'ebi_sample_accession': 'ERS000021',
                 'preparation_id': 1,
-                'exi_experiment_accession': 'ERX0000021',
+                'ebi_experiment_accession': 'ERX0000021',
                 'preparation_visibility': 'private',
                 'preparation_type': '18S'},
                {'sample_id': '1.SKD7.640191',
                 'sample_found': True,
                 'ebi_sample_accession': 'ERS000021',
                 'preparation_id': 2,
-                'exi_experiment_accession': 'ERX0000021',
+                'ebi_experiment_accession': 'ERX0000021',
                 'preparation_visibility': 'private',
                 'preparation_type': '18S'}]
 
@@ -55,7 +87,7 @@ class SampleDetailHandlerTests(RESTHandlerTestCase):
         body = {'malformed': 'with garbage'}
         response = self.post('/api/v1/study/1/samples/status',
                              headers=self.headers,
-                             body=body, as_json=True)
+                             data=body, asjson=True)
         self.assertEqual(response.code, 400)
 
     def test_post_samples_status(self):
@@ -63,14 +95,14 @@ class SampleDetailHandlerTests(RESTHandlerTestCase):
                 'sample_found': True,
                 'ebi_sample_accession': 'ERS000021',
                 'preparation_id': 1,
-                'exi_experiment_accession': 'ERX0000021',
+                'ebi_experiment_accession': 'ERX0000021',
                 'preparation_visibility': 'private',
                 'preparation_type': '18S'},
                {'sample_id': '1.SKD7.640191',
                 'sample_found': True,
                 'ebi_sample_accession': 'ERS000021',
                 'preparation_id': 2,
-                'exi_experiment_accession': 'ERX0000021',
+                'ebi_experiment_accession': 'ERX0000021',
                 'preparation_visibility': 'private',
                 'preparation_type': '18S'},
                {'sample_id': 'doesnotexist',
@@ -80,18 +112,18 @@ class SampleDetailHandlerTests(RESTHandlerTestCase):
                 'ebi_experiment_accession': None,
                 'preparation_visibility': None,
                 'preparation_type': None},
-               {'sample_id': '1.SKD7.640177',
+               {'sample_id': '1.SKM5.640177',
                 'sample_found': True,
                 'ebi_sample_accession': 'ERS000005',
                 'preparation_id': 1,
-                'exi_experiment_accession': 'ERX0000005',
+                'ebi_experiment_accession': 'ERX0000005',
                 'preparation_visibility': 'private',
                 'preparation_type': '18S'},
-               {'sample_id': '1.SKD7.640177',
+               {'sample_id': '1.SKM5.640177',
                 'sample_found': True,
                 'ebi_sample_accession': 'ERS000005',
                 'preparation_id': 2,
-                'exi_experiment_accession': 'ERX0000005',
+                'ebi_experiment_accession': 'ERX0000005',
                 'preparation_visibility': 'private',
                 'preparation_type': '18S'}]
 
@@ -99,7 +131,7 @@ class SampleDetailHandlerTests(RESTHandlerTestCase):
                                '1.SKM5.640177']}
         response = self.post('/api/v1/study/1/samples/status',
                              headers=self.headers,
-                             body=body, as_json=True)
+                             data=body, asjson=True)
         self.assertEqual(response.code, 200)
         obs = json_decode(response.body)
         self.assertEqual(obs, exp)

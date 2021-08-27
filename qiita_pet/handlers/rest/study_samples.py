@@ -5,11 +5,102 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from collections import defaultdict
+
 from tornado.escape import json_encode, json_decode
 import pandas as pd
 
 from qiita_db.handlers.oauth2 import authenticate_oauth
 from .rest_handler import RESTHandler
+
+
+def _sample_details(study, samples):
+    def detail_maker(**kwargs):
+        base = {'sample_id': None,
+                'sample_found': False,
+                'ebi_sample_accession': None,
+                'preparation_id': None,
+                'ebi_experiment_accession': None,
+                'preparation_visibility': None,
+                'preparation_type': None}
+        base.update(kwargs)
+        return base
+
+    # cache sample detail for lookup
+    study_samples = set(study.sample_template.keys())
+    sample_accessions = study.sample_template.ebi_sample_accessions
+
+    # cache preparation information that we'll need
+
+    # map of {sample_id: [indices, of, light, prep, info, ...]}
+    sample_prep_mapping = defaultdict(list)
+    pt_light = []
+    for idx, pt in enumerate(study.prep_templates()):
+        pt_light.append((pt.id, pt.ebi_experiment_accessions,
+                         pt.status, pt.data_type()))
+
+        for ptsample in pt.keys():
+            sample_prep_mapping[ptsample].append(idx)
+
+    details = []
+    for sample in samples:
+        if sample in study_samples:
+            # if the sample exists
+            sample_acc = sample_accessions.get(sample)
+
+            if sample in sample_prep_mapping:
+                # if the sample is present in any prep, pull out the detail
+                # specific to those preparations
+                for pt_idx in sample_prep_mapping[sample]:
+                    ptid, ptacc, ptstatus, ptdtype = pt_light[pt_idx]
+
+                    details.append(detail_maker(
+                        sample_id=sample,
+                        sample_found=True,
+                        ebi_sample_accession=sample_acc,
+                        preparation_id=ptid,
+                        ebi_experiment_accession=ptacc.get(sample),
+                        preparation_visibility=ptstatus,
+                        preparation_type=ptdtype))
+            else:
+                # the sample is not present on any preparations
+                details.append(detail_maker(
+                    sample_id=sample,
+                    sample_found=True,
+
+                    # it would be weird to have an EBI sample accession
+                    # but not be present on a preparation...?
+                    ebi_sample_accession=sample_acc))
+        else:
+            # the is not present, let's note and move ona
+            details.append(detail_maker(sample_id=sample))
+
+    return details
+
+
+class StudySampleDetailHandler(RESTHandler):
+    @authenticate_oauth
+    def get(self, study_id, sample_id):
+        study = self.safe_get_study(study_id)
+        sample_detail = _sample_details(study, [sample_id, ])
+        self.write(json_encode(sample_detail))
+        self.finish()
+
+
+class StudySamplesDetailHandler(RESTHandler):
+    @authenticate_oauth
+    def post(self, study_id):
+        samples = json_decode(self.request.body)
+
+        if 'sample_ids' not in samples:
+            self.fail('Missing sample_id key', 400)
+            return
+
+        study = self.safe_get_study(study_id)
+        samples_detail = _sample_details(study, samples['sample_ids'])
+
+        self.write(json_encode(samples_detail))
+        self.finish()
 
 
 class StudySamplesHandler(RESTHandler):
