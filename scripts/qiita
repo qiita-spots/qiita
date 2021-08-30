@@ -403,10 +403,9 @@ def start(port, master):
             active_software = list(qdb.software.Software.iter())
             sdefinition = [s for s in active_software
                            if s.type == 'artifact definition']
+            # this will load the artifact transformation and private plugins
             stransformation = [s for s in active_software
-                               if s.type == 'artifact transformation']
-
-            # registering definition artifacts
+                               if s.type != 'artifact definition']
 
             for s in sdefinition:
                 print('Registering: %s...' % (s.name))
