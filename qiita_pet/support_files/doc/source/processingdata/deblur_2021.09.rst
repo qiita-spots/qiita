@@ -15,7 +15,7 @@ Sample counts implications
 --------------------------
 
 At the time of writing Qiita had 978,052 16S deblured private or pubic samples.
-In the figure below, we have at different trimming lengths how samples we will recover
+In the figure below, we have at different trimming lengths how many samples we recover
 based on the minimum number of sequences per sample - this is an important consideration
 as we normally need to remove samples below a given threshold for beta diversity
 calculations (via rarefactoin) or differential abundance testing.
@@ -27,7 +27,7 @@ A few conclusions from this plot:
 
 - The maximum number of samples that we will recover are 6,771 at `Trimming (length: 150)`
   and min_seqs of 1,500; which represents a 0.7% increment in private and public samples.
-- At all Trimming lengths the curve tends to go up at up and then down based on min_seq,
+- At all Trimming lengths the curve tends to go up and then down based on min_seq,
   which is a common trend seen in rarefacion plots
 
 
@@ -35,7 +35,7 @@ Reaching out to affected study owners
 -------------------------------------
 
 As you saw in the previous section the effect of the missing fragments depends on the
-study, the trimming length and the minimal sequence count per sample selected. As a
+study, the trimming length and the minimum per sample sequence count. As a
 general rule of thumb, as a first analytical pass for meta-analysis for 16S data, we use
 5,000 sequences per sample and we prefer 150 base pair trimming. Thus, we directly
 contacted all study owners that would recover more than 5% of the samples in their study
