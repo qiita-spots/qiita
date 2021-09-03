@@ -172,6 +172,7 @@ Looking for information about debluring? Please see the document here:
 .. toctree::
 
    deblur_quality.rst
+   deblur_2021.09.rst
 
 Closed-Reference OTU Picking
 ----------------------------

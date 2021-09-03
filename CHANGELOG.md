@@ -3,6 +3,7 @@
 Version 2021.09
 ---------------
 
+* Updated the qp-deblur plugin to version 2021.09; [more information](https://qiita.ucsd.edu/static/doc/html/processingdata/deblur_2021.09.html).
 * Double the number of possible connections for the Qiita database: 100 -> 200 simultaneous connections.
 * Added a new data type: "Job Output Folder" and artifact type definition: "job-output-folder" to initially support admin-only standalone commands in Qiita.
 * The study listing is now sorted by descending study id and then ascending number of available artifacts.
