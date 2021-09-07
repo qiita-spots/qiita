@@ -155,7 +155,6 @@
         _helper_clean_objects();
       }
     });
-    console.log(fd)
     return false
   }
 
@@ -193,17 +192,42 @@
       });
   }
 
-  $(document).ready(function(){
-    $('#private-jobs-table').dataTable({
-        "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
-        "order": [[ 3, "desc" ], [ 0, "asc" ]],
-        "language": {
-            "search": "Filter results by any of the columns",
-            "loadingRecords": "Please wait - loading information ...",
-            "zeroRecords": "No Jobs found"
-        },
-    });
-  });
+  // $('#private-jobs-table').dataTable({
+  //   "deferRender": true,
+  //   "iDisplayLength": 50,
+  //   "oLanguage": {
+  //     "sZeroRecords": "No studies belong to selected portal"
+  //   },
+  //   "columns": [
+  //     {"className": 'select', "data": null},
+  //     {"data": "x, y, z"},
+  //     {"data": "y, z"},
+  //   ],
+  //     // 'aoColumnDefs': [
+  //     //   { 'mRender': render_checkbox, 'mData': 2, 'aTargets': [ 0 ] }
+  //     // ],
+  //   "ajax": {
+  //     "url": "/admin/processing_jobs/list?sEcho=" + Math.floor(Math.random()*1001),
+  //     "aoColumns": [
+  //       {"sSortDataType": "dom-checkbox", "bSearchable": false, "bSortable": false},
+  //       {"data": "x, y, z"},
+  //       {"data": "y, z"},
+  //     ],
+  //     "error": function(jqXHR, textStatus, ex) {
+  //         $("#add-button").prop('disabled', true);
+  //         $("#remove-button").prop('disabled', true);
+  //         $("#errors").append("<li id='comm-error'>Internal Server Error, please try again later</li>");
+  //     }
+  //   }
+  // });
+
+  $('#private-jobs-table').dataTable( {
+  "ajax": {
+    "url": "/admin/processing_jobs/list?sEcho=" + Math.floor(Math.random()*1001),
+    "type": "POST"
+  }
+} );
+
 
   function display_artifact_info(artifactId){
     $.get('/artifact/' + artifactId + '/summary/', function(data){
@@ -263,55 +287,8 @@
     </div>
   </div>
 
-  <h3 class="gray-msg">Private Jobs</h3>
-  <table id="private-jobs-table" class="table table-bordered gray-msg">
-    <thead>
-      <tr>
-        <th>Command</th>
-        <th>Status</th>
-        <th>Parameters</th>
-        <th>Creation Timestamp</th>
-      </tr>
-    </thead>
-    {% for j in jobs %}
-      <tr>
-        <td>
-          {{j.command.name}}<br/>{{j.id}}
-        </td>
-        <td>
-          {% if j.log is not None %}
-            {{j.log.msg}}
-          {% else %}
-            {% if j.status == 'success'%}
-              {% for k, v in j.outputs.items() %}
-                <a class="btn btn-info" data-toggle="modal" data-target="#modal-artifact-description" onclick="display_artifact_info({{v.id}});"><span class="glyphicon glyphicon-eye-open"></span> {{k}}</a>
-              {% end %}
-            {% else %}
-              {{j.status}}
-              {% if list(j.validator_jobs) %}
-                 || validating via:
-                {% for v in j.validator_jobs %}
-                  {{v.id}}
-                {% end %}
-              {% end %}
-            {% end %}
-          {% end %}
-        </td>
-        <td>
-          {% for k, v in j.parameters.values.items() %}
-            <b>{{k}}</b>:
-            {% if isinstance(v, dict) and v %}
-              {{v['filename']}} ({{v['content_type']}})
-            {% else %}
-              {{v}}
-            {% end %}
-          {% end %}
-        </td>
-        <td>
-          {{j.heartbeat}}
-        </td>
-      </tr>
-    {% end %}
-  </table>
+  <h3 class="gray-msg">Previous Jobs</h3>
+  <table id="private-jobs-table" class="table table-bordered gray-msg"></table>
+
 
 {% end %}
