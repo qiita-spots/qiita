@@ -8,7 +8,9 @@
 
 from .study import StudyHandler, StudyCreatorHandler, StudyStatusHandler
 from .study_samples import (StudySamplesHandler, StudySamplesInfoHandler,
-                            StudySamplesCategoriesHandler)
+                            StudySamplesCategoriesHandler,
+                            StudySamplesDetailHandler,
+                            StudySampleDetailHandler)
 from .study_person import StudyPersonHandler
 from .study_preparation import (StudyPrepCreatorHandler,
                                 StudyPrepArtifactCreatorHandler)
@@ -26,6 +28,9 @@ ENDPOINTS = (
     (r"/api/v1/study/([0-9]+)/samples/categories=([a-zA-Z\-0-9\.:,_]*)",
         StudySamplesCategoriesHandler),
     (r"/api/v1/study/([0-9]+)/samples", StudySamplesHandler),
+    (r"/api/v1/study/([0-9]+)/samples/status", StudySamplesDetailHandler),
+    (r"/api/v1/study/([0-9]+)/sample/([a-zA-Z\-0-9\.]+)/status",
+        StudySampleDetailHandler),
     (r"/api/v1/study/([0-9]+)/samples/info", StudySamplesInfoHandler),
     (r"/api/v1/person(.*)", StudyPersonHandler),
     (r"/api/v1/study/([0-9]+)/preparation/([0-9]+)/artifact",
