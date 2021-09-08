@@ -51,11 +51,22 @@ the time of writing of this documentation Qiita had 1,484 16S preparations that 
 
 - 96.6% of preparations had 0-10% of features lost
 - 12.6% had 10-20% of the features lost
--  9.7% 30-40%
--  6.9% 40-50%
+-  9.7% 20-30%
+-  6.9% 30-40%
+-  4.9% 40-50%
+-  3.3% 50-60%
+-  2.0% 60-70%
+-  1.3% 70-80%
+-  0.6% 80-90%
+-  0.2% 90-100%
 
-Remember that the percentage reported above is inclusive at the next level, for example the studies with
-40-50% lost are also accounted for at lower levels.
+Remember that the percentage reported above is inclusive at the next level, for example
+the studies with 40-50% lost are also accounted for at lower levels.
+
+Additionally, after a Qiita wide review, we did not find a strong patterns among the
+studies that were most greatly affected, whether they were from a specific sample type
+(according to EMPO 3 category) or target 16S variable region (according to the reported
+target_subfragment).
 
 Reaching out to affected study owners
 -------------------------------------
