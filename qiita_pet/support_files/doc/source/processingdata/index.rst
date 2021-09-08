@@ -164,11 +164,6 @@ Deblurring
 
 * **Deblur Final Table** :ref:`[5]<reference5>` : Contains all the sequences.
 
-Deblur Quality Filtering
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Looking for information about debluring? Please see the document here:
-
 .. toctree::
 
    deblur_quality.rst

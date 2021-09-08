@@ -11,10 +11,22 @@ meta-analyses.
 
 This bug was resolved in this `pull request <https://github.com/qiita-spots/qp-deblur/pull/60>`__.
 
+It is important to note that this bug only applies to the fragments inserted into the tree, which is
+only part of the `deblur reference hit table`.
+
+How do I know if my study processing had this bug?
+----------------------------------------------------
+
+The easiest is to check the table summary reported `Number rejected fragments`. If the number is
+different between the qp-deblur v1.1.0 and qp-deblur v2021.09 then your study had this bug. To
+see the table summary, you need to navigate to the processing graph, click on the
+`deblur reference hit table` artifact and see the table summary.
+
+
 Sample counts implications
 --------------------------
 
-At the time of writing Qiita had 978,052 16S deblured private or pubic samples.
+At the time of writing of this documentation Qiita had 978,052 16S deblured private or pubic samples.
 In the figure below, we have at different trimming lengths how samples we will recover
 based on the minimum number of sequences per sample - this is an important consideration
 as we normally need to remove samples below a given threshold for beta diversity
@@ -30,6 +42,20 @@ A few conclusions from this plot:
 - At all Trimming lengths the curve tends to go up at up and then down based on min_seq,
   which is a common trend seen in rarefacion plots
 
+How perversive is this bug?
+---------------------------
+
+For a better assessment we are going to focus on only on the 150 bps trimming length. At
+the time of writing of this documentation Qiita had 1,484 16S preparations that have a
+150 bps deblur table. Of those:
+
+- 96.6% of preparations had 0-10% of features lost
+- 12.6% had 10-20% of the features lost
+-  9.7% 30-40%
+-  6.9% 40-50%
+
+Remember that the percentage reported above is inclusive at the next level, for example the studies with
+40-50% lost are also accounted for at lower levels.
 
 Reaching out to affected study owners
 -------------------------------------
