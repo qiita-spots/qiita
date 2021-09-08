@@ -169,7 +169,7 @@ class TestWorkflowHandler(TestHandlerBase):
 
         # test with files
         response = self.post('/study/process/workflow/',
-                             {'command_id': '4', 'params': '{"input_data": 1}',
+                             {'command_id': '3', 'params': '{"input_data": 3}',
                               'files': '{"template": {"body": b""}}',
                               'headers': {
                                   'Content-Type': 'application/json',
