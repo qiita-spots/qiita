@@ -65,6 +65,7 @@ jobs:
           conda config --add channels conda-forge
           conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython redis
           conda activate qiita
+          pip install -U pip
           pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
 
           # Configuring SSH
