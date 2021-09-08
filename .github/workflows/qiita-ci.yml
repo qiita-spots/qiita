@@ -44,7 +44,7 @@ jobs:
       - name: Setup for conda
         uses: conda-incubator/setup-miniconda@v2
         with:
-        #   auto-update-conda: true
+          auto-update-conda: true
           python-version: 3.6
 
       - name: Basic dependencies install
@@ -62,12 +62,11 @@ jobs:
           export PGPASSWORD=postgres
 
           # Setting up main qiita conda environment
-          conda --version
           conda config --add channels conda-forge
           conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython redis
           conda activate qiita
           pip install -U pip
-          pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
+          pip install 'sphinx==4.1.2' sphinx-bootstrap-theme nose-timer Click coverage
 
           # Configuring SSH
           cp /etc/ssh/sshd_config sshd_config
