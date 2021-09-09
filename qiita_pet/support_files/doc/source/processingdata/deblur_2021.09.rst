@@ -5,8 +5,7 @@ The deblur version 2021.09 addresses a bug with the fragment insertion parsing a
 cache that ignored some fragments for getting an accurate placement in the tree. In
 summary, in some occasions SEPP will return multiple fragments in a single entry; which
 was unexpected by the qp-deblur plugin parser, which assumed only one entry - the
-extra features will be seen as missing by the plugin and that information was
-sent and stored in the cache provided by Qiita, then propagated to future studies and
+extra features will be seen as missing by the plugin and recorded in the cache as such. As these fragments were reported as missing in the cache, the effect was propagated to future studies and
 meta-analyses.
 
 This bug was resolved in this `pull request <https://github.com/qiita-spots/qp-deblur/pull/60>`__.
@@ -30,7 +29,7 @@ At the time of writing of this documentation Qiita had 978,052 16S deblured priv
 In the figure below, we have at different trimming lengths how samples we will recover
 based on the minimum number of sequences per sample - this is an important consideration
 as we normally need to remove samples below a given threshold for beta diversity
-calculations (via rarefactoin) or differential abundance testing.
+calculations (via rarefaction) or differential abundance testing.
 
 .. figure::  deblur2021.09_private_public.png
    :align:   center
