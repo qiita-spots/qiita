@@ -2,6 +2,131 @@
 
 {% block head %}
 <script type="text/javascript">
+  var jobsTable;
+
+  // This modal view is used to display job details when a job has errored or
+  // succeeded. Needs to be in the main scope because this function is called
+  // from the "onclick" attribute of some elements.
+  var populate_modal = function(title, main, artifact_id) {
+    $('#job-output-modal').find('[name="modal-title"]').html(title);
+    var $main = $('#job-output-modal').find('[name="modal-main-text"]');
+
+    if (artifact_id === undefined) {
+      $main.html(unescape(decodeURIComponent(main)));
+    }
+    else {
+      $.get('/artifact/' + artifact_id + '/summary/', function(data){
+        $main.html(data);
+      })
+        .fail(function(object, status, error_msg) {
+          $main.html("Error loading artifact information: " + status + " " + object.statusText);
+        }
+      );
+    }
+  }
+
+  // Initialize the previous jobs table once the document is ready
+  $(function() {
+    var renderJobArguments = function(data, type, row, meta) {
+      // select how you want to render the data
+      var lines = [], container;
+
+      for (key in data) {
+        lines.push('<b>' + key + '</b>:');
+        if (typeof data[key] === 'string'){
+          lines.push(data[key]);
+        }
+        else if (typeof data[key] === 'object') {
+          container = data[key];
+
+          // if we have all these attributes then render a named hyperlink to
+          //download the data
+          if (container['body'] !== undefined &&
+              container['filename'] !== undefined &&
+              container['content_type'] !== undefined) {
+              lines.push('<a download="' + container['filename'] +
+                         '" href="data:text/plain;charset=utf-8,' +
+                         encodeURIComponent(container['body']) + '">' +
+                         container['filename'] + '</a>');
+          }
+          else {
+            lines.push('Unsupported JavaScript Object')
+          }
+        }
+        else {
+          lines.push(data[key]);
+        }
+      }
+
+      return lines.join('<br>');
+    }
+
+    var renderRichDescription = function(data, type, row, meta) {
+      var out = [], status = row[2];
+      var statusToClass = {
+        'error': 'text-danger',
+        'success': 'text-success',
+        'queued': 'text-muted',
+        'running': 'text-info'
+      };
+
+      out.push('<b class="' + statusToClass[status] + '">' + status +
+               '</b>: ');
+
+      if (status === 'running' || status === 'queued') {
+        out.push(row[0] + ' <i>' + row[3] + '</i>')
+      }
+      else {
+        // We write a callback attribute on the link to be able to display a
+        // modal window with the additional success/error details. Note, the
+        // quotation is a bit hard to follow but all in all it's ensuring any
+        // text we get back from the server is properly formatted for
+        // inclusion in an HTML attribute.
+        var callback = 'populate_modal("' + row[0] + " completed on " +
+                       row[6] + '",';
+        out.push('<a href="#" data-toggle="modal" data-target="#job-output-modal" onclick=\'' + callback)
+
+        if (status === 'success') {
+          // job output is in the fourth element
+          // We only expect one output with the artifact id in the 2 element
+          out.push('undefined, ' + row[4][0][1] +')\'');
+          out.push('>View results</a>')
+
+        }
+        else if (status === 'error') {
+          out.push('"' + escape(encodeURIComponent(row[3])) + '")\'');
+          out.push('>View error log summary</a>')
+        }
+      }
+        return out.join('');
+      }
+
+    jobsTable = $('#private-jobs-table').DataTable({
+      "order": [[2, "desc"]],
+      "oLanguage": {
+        "sZeroRecords": "There are no jobs available",
+        "search": "Filter results",
+        "loadingRecords": "Please wait - loading previous jobs ...",
+      },
+      "destroy": true,
+      "autoWidth": false,
+      "columnDefs": [
+        {'width': '80%', 'targets': 0, 'data': 0, 'render': renderRichDescription},
+        {'width': '10%', 'targets': 1, 'data': 7, 'render': renderJobArguments},
+        {'width': '10%', 'targets': 2, 'data': 6},
+      ],
+    });
+
+    // update the table every 10 seconds
+    setInterval(function () {
+      if (jobsTable.ajax.url()) {
+        // user paging is not reset on reload
+        jobsTable.ajax.reload(null, false);
+      }
+    }, 10000);
+
+  });
+
   /**
    * This is a modified version of loadParameterGUI in networkVue.js
    **/
@@ -148,6 +273,9 @@
           })
           .always(function() {
             _helper_clean_objects();
+
+            // trigger a courtesy reload of the table to show the new job
+            jobsTable.ajax.reload(null, false);
           });
       },
       error: function (object, status, error_msg) {
@@ -160,6 +288,7 @@
 
   function generate_summary(option_selected){
     var command_id = option_selected.attr('value');
+    var command_name = option_selected.text();
     $('#cmd-description').html(option_selected.attr('description'));
     $("#parameters").empty();
 
@@ -189,57 +318,15 @@
               this.disabled = false;
             });
 
-      });
+          // load the jobs table for the selected command
+          $('#previous-jobs').show();
+          $('#previous-jobs-tin').html('Previous "' + command_name + '" jobs');
+
+          // update the table
+          jobsTable.ajax.url("/admin/processing_jobs/list?sEcho=" + Math.floor(Math.random()*10001) + "&commandId=" + command_id).load();
+
+        });
   }
-
-  // $('#private-jobs-table').dataTable({
-  //   "deferRender": true,
-  //   "iDisplayLength": 50,
-  //   "oLanguage": {
-  //     "sZeroRecords": "No studies belong to selected portal"
-  //   },
-  //   "columns": [
-  //     {"className": 'select', "data": null},
-  //     {"data": "x, y, z"},
-  //     {"data": "y, z"},
-  //   ],
-  //     // 'aoColumnDefs': [
-  //     //   { 'mRender': render_checkbox, 'mData': 2, 'aTargets': [ 0 ] }
-  //     // ],
-  //   "ajax": {
-  //     "url": "/admin/processing_jobs/list?sEcho=" + Math.floor(Math.random()*1001),
-  //     "aoColumns": [
-  //       {"sSortDataType": "dom-checkbox", "bSearchable": false, "bSortable": false},
-  //       {"data": "x, y, z"},
-  //       {"data": "y, z"},
-  //     ],
-  //     "error": function(jqXHR, textStatus, ex) {
-  //         $("#add-button").prop('disabled', true);
-  //         $("#remove-button").prop('disabled', true);
-  //         $("#errors").append("<li id='comm-error'>Internal Server Error, please try again later</li>");
-  //     }
-  //   }
-  // });
-
-  $('#private-jobs-table').dataTable( {
-  "ajax": {
-    "url": "/admin/processing_jobs/list?sEcho=" + Math.floor(Math.random()*1001),
-    "type": "POST"
-  }
-} );
-
-
-  function display_artifact_info(artifactId){
-    $.get('/artifact/' + artifactId + '/summary/', function(data){
-      $("#modal-body").html(data);
-    })
-      .fail(function(object, status, error_msg) {
-        $("#modal-body").html("Error loading artifact information: " + status + " " + object.statusText);
-      }
-    );
-  }
-
-
 </script>
 
 {% end %}
@@ -287,8 +374,36 @@
     </div>
   </div>
 
-  <h3 class="gray-msg">Previous Jobs</h3>
-  <table id="private-jobs-table" class="table table-bordered gray-msg"></table>
+  <!-- Job Output Modal -->
+  <div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" id="job-output-modal">
+    <div class="modal-dialog modal-med">
+      <div class="modal-content">
+      <div class="modal-header">
+         <h3 name="modal-title"></h3>
+      </div>
+      <div class="modal-body" name="modal-main-text">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+      </div>
+    </div>
+  </div>
 
+  <div id="previous-jobs" style="display: none;" class="row">
+    <div class="col-sm-12">
+      <h3 id="previous-jobs-tin" class="gray-msg">Previous Jobs</h3>
+      <table id="private-jobs-table" class="table table-bordered gray-msg" style="width: 30px!">
+        <thead>
+          <tr>
+            <th class="sorting sorting_asc" tabindex="0" aria-controls="private-jobs-table" rowspan="1" colspan="1" aria-sort="ascending" aria-label="Last Updated">Summary</th>
+            <th class="sorting sorting_asc" tabindex="0" aria-controls="private-jobs-table" rowspan="1" colspan="1" aria-sort="ascending" aria-label="Last Updated">Arguments</th>
+            <th class="sorting sorting_asc" tabindex="0" aria-controls="private-jobs-table" rowspan="1" colspan="1" aria-sort="ascending" aria-label="Last Updated">Last Updated</th>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 {% end %}

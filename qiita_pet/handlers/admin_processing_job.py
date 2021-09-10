@@ -51,18 +51,29 @@ class AJAXAdminProcessingJobListing(AdminProcessingJobBaseClass):
     def get(self):
         self._check_access()
         echo = self.get_argument('sEcho')
+        command_id = int(self.get_argument('commandId'))
 
         jobs = []
         for ps in self._get_private_software():
             for cmd in ps.commands:
+                if cmd.id != command_id:
+                    continue
+
                 for job in cmd.processing_jobs:
                     msg = '' if job.status != 'error' else job.log.msg
+                    msg = msg.replace('\n', '</br>')
                     outputs = []
                     if job.status == 'success':
                         outputs = [[k, v.id] for k, v in job.outputs.items()]
                     validator_jobs = [v.id for v in job.validator_jobs]
+
+                    if job.heartbeat is not None:
+                        heartbeat = job.heartbeat.strftime('%Y-%m-%d %H:%M:%S')
+                    else:
+                        heartbeat = 'N/A'
+
                     jobs.append([job.id, job.command.name, job.status, msg,
-                                 outputs, validator_jobs, job.heartbeat,
+                                 outputs, validator_jobs, heartbeat,
                                  job.parameters.values])
         results = {
             "sEcho": echo,
