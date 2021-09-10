@@ -113,6 +113,7 @@ class EBISubmission(object):
                                     'NEXTSEQ 500',
                                     'NEXTSEQ 550',
                                     'UNSPECIFIED'],
+                       'OXFORD_NANOPORE': ['GRIDION'],
                        'PACBIO_SMRT': ['PACBIO RS',
                                        'PACBIO RS II',
                                        'SEQUEL',
