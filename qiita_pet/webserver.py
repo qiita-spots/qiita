@@ -24,6 +24,8 @@ from qiita_pet.handlers.auth_handlers import (
 from qiita_pet.handlers.user_handlers import (
     ChangeForgotPasswordHandler, ForgotPasswordHandler, UserProfileHandler,
     UserMessagesHander, UserJobs)
+from qiita_pet.handlers.admin_processing_job import (
+    AdminProcessingJob, AJAXAdminProcessingJobListing)
 from qiita_pet.handlers.analysis_handlers import (
     ListAnalysesHandler, AnalysisSummaryAJAX, SelectedSamplesHandler,
     AnalysisDescriptionHandler, AnalysisGraphHandler, CreateAnalysisHandler,
@@ -128,6 +130,8 @@ class Application(tornado.web.Application):
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
             (r"/admin/artifact/", ArtifactAdminAJAX),
+            (r"/admin/processing_jobs/", AdminProcessingJob),
+            (r"/admin/processing_jobs/list", AJAXAdminProcessingJobListing),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
             # Study handlers
             (r"/study/create/", StudyEditHandler),

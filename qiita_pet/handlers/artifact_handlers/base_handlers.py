@@ -126,14 +126,17 @@ def artifact_summary_get_request(user, artifact_id):
     # Check if the artifact is editable by the given user
     study = artifact.study
     analysis = artifact.analysis
-    editable = study.can_edit(user) if study else analysis.can_edit(user)
+    if artifact_type == 'job-output-folder':
+        editable = False
+    else:
+        editable = study.can_edit(user) if study else analysis.can_edit(user)
 
     buttons = []
     btn_base = (
         '<button onclick="if (confirm(\'Are you sure you want to %s '
         'artifact id: {0}?\')) {{ set_artifact_visibility(\'%s\', {0}) }}" '
         'class="btn btn-primary btn-sm">%s</button>').format(artifact_id)
-    if not analysis:
+    if not analysis and artifact_type != 'job-output-folder':
         # If the artifact is part of a study, the buttons shown depend in
         # multiple factors (see each if statement for an explanation of those)
         if qiita_config.require_approval:

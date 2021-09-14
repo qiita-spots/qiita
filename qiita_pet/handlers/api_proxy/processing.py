@@ -135,18 +135,26 @@ def workflow_handler_post_req(user_id, command_id, params):
          'message': str,
          'workflow_id': int}
     """
-    parameters = Parameters.load(Command(command_id), json_str=params)
-
     status = 'success'
     message = ''
     try:
-        wf = ProcessingWorkflow.from_scratch(User(user_id), parameters)
+        parameters = Parameters.load(Command(command_id), json_str=params)
     except Exception as exc:
         wf = None
         wf_id = None
         job_info = None
         status = 'error'
         message = str(exc)
+
+    if status == 'success':
+        try:
+            wf = ProcessingWorkflow.from_scratch(User(user_id), parameters)
+        except Exception as exc:
+            wf = None
+            wf_id = None
+            job_info = None
+            status = 'error'
+            message = str(exc)
 
     if wf is not None:
         # this is safe as we are creating the workflow for the first time
