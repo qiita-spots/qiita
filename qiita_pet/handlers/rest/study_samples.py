@@ -158,9 +158,8 @@ class StudySamplesHandler(RESTHandler):
         buffer = io.StringIO()
         rawdata.to_csv(buffer, sep='\t', index=True, header=True)
         buffer.seek(0)
-        
         # validate on load
-        data = load_template_to_dataframe(rawdata)
+        data = load_template_to_dataframe(buffer)
 
         if len(data.index) == 0:
             self.fail('No samples provided', 400)
