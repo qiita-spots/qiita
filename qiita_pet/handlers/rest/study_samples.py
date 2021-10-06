@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 from collections import defaultdict
 import io
+from qiita_db.metadata_template.util import load_template_to_dataframe
 
 from tornado.escape import json_encode, json_decode
 import pandas as pd
@@ -159,7 +160,7 @@ class StudySamplesHandler(RESTHandler):
         buffer.seek(0)
         
         # validate on load
-        data = qiita_db.metadata_template.util.load_template_to_dataframe(rawdata)
+        data = load_template_to_dataframe(rawdata)
 
         if len(data.index) == 0:
             self.fail('No samples provided', 400)
