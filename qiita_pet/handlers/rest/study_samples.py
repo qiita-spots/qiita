@@ -155,6 +155,8 @@ class StudySamplesHandler(RESTHandler):
         # convert from json into a format that qiita can validate
         rawdata = pd.DataFrame.from_dict(json_decode(self.request.body),
                                          orient='index')
+        rawdata.index.name = 'sample_name'
+        rawdata.reset_index(inplace=True)
         buffer = io.StringIO()
         rawdata.to_csv(buffer, sep='\t', index=True, header=True)
         buffer.seek(0)
