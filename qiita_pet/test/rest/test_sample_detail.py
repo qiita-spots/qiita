@@ -42,7 +42,7 @@ class SupportTests(TestCase):
         obs = _sample_details(qiita_db.study.Study(1),
                               ['1.SKD7.640191', 'doesnotexist'])
         self.assertEqual(len(obs), len(exp))
-        self.assertEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
 
 class SampleDetailHandlerTests(RESTHandlerTestCase):
@@ -81,7 +81,7 @@ class SampleDetailHandlerTests(RESTHandlerTestCase):
                             headers=self.headers)
         self.assertEqual(response.code, 200)
         obs = json_decode(response.body)
-        self.assertEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_post_samples_status_bad_request(self):
         body = {'malformed': 'with garbage'}
@@ -134,7 +134,7 @@ class SampleDetailHandlerTests(RESTHandlerTestCase):
                              data=body, asjson=True)
         self.assertEqual(response.code, 200)
         obs = json_decode(response.body)
-        self.assertEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
 
 if __name__ == '__main__':

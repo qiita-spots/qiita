@@ -60,6 +60,8 @@ class AJAXAdminProcessingJobListing(AdminProcessingJobBaseClass):
                     continue
 
                 for job in cmd.processing_jobs:
+                    if job.hidden:
+                        continue
                     msg = '' if job.status != 'error' else job.log.msg
                     msg = msg.replace('\n', '</br>')
                     outputs = []

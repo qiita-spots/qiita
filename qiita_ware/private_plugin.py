@@ -291,7 +291,7 @@ def delete_sample_or_column(job):
 
 
 def _delete_analysis_artifacts(analysis):
-    aids = [a.id for a in analysis.artifacts]
+    aids = list(set([a.id for a in analysis.artifacts]))
     aids.sort(reverse=True)
     for aid in aids:
         qdb.artifact.Artifact.delete(aid)
@@ -317,10 +317,13 @@ def delete_study(job):
 
         for pt in study.prep_templates():
             if pt.artifact:
-                to_delete = list(pt.artifact.descendants.nodes())
+                to_delete = list(set(pt.artifact.descendants.nodes()))
                 to_delete.reverse()
                 for td in to_delete:
-                    qdb.artifact.Artifact.delete(td.id)
+                    try:
+                        qdb.artifact.Artifact.delete(td.id)
+                    except qdb.exceptions.QiitaDBUnknownIDError:
+                        pass
             MT.prep_template.PrepTemplate.delete(pt.id)
 
         if MT.sample_template.SampleTemplate.exists(study_id):

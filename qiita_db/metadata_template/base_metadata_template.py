@@ -837,7 +837,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             # check that we are within the limit of number of samples
             ms = self.max_samples()
-            nsamples = len(existing_samples) + len(new_samples) + len(self)
+            nsamples = len(existing_samples) + len(new_samples)
             if ms is not None and nsamples > ms:
                 raise ValueError(f'{nsamples} exceeds the max allowed number '
                                  f'of samples: {ms}')

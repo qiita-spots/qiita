@@ -443,8 +443,7 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
         job = self._create_job('delete_study', {'study': 1})
         private_task(job.id)
         self.assertEqual(job.status, 'error')
-        self.assertIn("Cannot delete artifact 2: Artifact 2 has been "
-                      "submitted to EBI", job.log.msg)
+        self.assertIn("Artifact 2 has been submitted to EBI", job.log.msg)
         # making sure the analysis, first thing to delete, still exists
         self.assertTrue(Analysis.exists(1))
 
@@ -462,7 +461,6 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
 
             job = self._create_job('delete_study', {'study': 1})
             private_task(job.id)
-
             self.assertEqual(job.status, 'success')
             with self.assertRaises(QiitaDBUnknownIDError):
                 Study(1)

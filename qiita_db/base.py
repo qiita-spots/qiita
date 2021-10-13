@@ -184,7 +184,12 @@ class QiitaObject(object):
 
         with qdb.sql_connection.TRN:
             self._check_subclass()
-            if not self._check_id(id_):
+            try:
+                _id = self._check_id(id_)
+            except Exception:
+                _id = False
+
+            if not _id:
                 raise qdb.exceptions.QiitaDBUnknownIDError(id_, self._table)
 
             if not self._check_portal(id_):
