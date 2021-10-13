@@ -45,6 +45,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           # auto-update-conda: true
+          default-python: 3.6
           python-version: 3.6
 
       - name: Basic dependencies install
@@ -60,6 +61,10 @@ jobs:
 
           # PGPASSWORD is read by pg_restore, which is called by the build_db process.
           export PGPASSWORD=postgres
+
+          # displaying defult versions
+          python --version
+          conda --version
 
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
