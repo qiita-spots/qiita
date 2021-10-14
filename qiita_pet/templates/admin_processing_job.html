@@ -1,0 +1,409 @@
+{% extends sitebase.html %}
+
+{% block head %}
+<script type="text/javascript">
+  var jobsTable;
+
+  // This modal view is used to display job details when a job has errored or
+  // succeeded. Needs to be in the main scope because this function is called
+  // from the "onclick" attribute of some elements.
+  var populate_modal = function(title, main, artifact_id) {
+    $('#job-output-modal').find('[name="modal-title"]').html(title);
+    var $main = $('#job-output-modal').find('[name="modal-main-text"]');
+
+    if (artifact_id === undefined) {
+      $main.html(unescape(decodeURIComponent(main)));
+    }
+    else {
+      $.get('/artifact/' + artifact_id + '/summary/', function(data){
+        $main.html(data);
+      })
+        .fail(function(object, status, error_msg) {
+          $main.html("Error loading artifact information: " + status + " " + object.statusText);
+        }
+      );
+    }
+  }
+
+  // Initialize the previous jobs table once the document is ready
+  $(function() {
+    var renderJobArguments = function(data, type, row, meta) {
+      // select how you want to render the data
+      var lines = [], container;
+
+      for (key in data) {
+        lines.push('<b>' + key + '</b>:');
+        if (typeof data[key] === 'string'){
+          lines.push(data[key]);
+        }
+        else if (typeof data[key] === 'object') {
+          container = data[key];
+
+          // if we have all these attributes then render a named hyperlink to
+          //download the data
+          if (container['body'] !== undefined &&
+              container['filename'] !== undefined &&
+              container['content_type'] !== undefined) {
+              lines.push('<a download="' + container['filename'] +
+                         '" href="data:text/plain;charset=utf-8,' +
+                         encodeURIComponent(container['body']) + '">' +
+                         container['filename'] + '</a>');
+          }
+          else {
+            lines.push('Unsupported JavaScript Object')
+          }
+        }
+        else {
+          lines.push(data[key]);
+        }
+      }
+
+      return lines.join('<br>');
+    }
+
+    var renderRichDescription = function(data, type, row, meta) {
+      var out = [], status = row[2];
+      var statusToClass = {
+        'error': 'text-danger',
+        'success': 'text-success',
+        'queued': 'text-muted',
+        'running': 'text-info'
+      };
+
+      out.push('<b class="' + statusToClass[status] + '">' + status +
+               '</b>: ');
+
+      if (status === 'running' || status === 'queued') {
+        out.push(row[0] + ' <i>' + row[3] + '</i>')
+      }
+      else {
+        // We write a callback attribute on the link to be able to display a
+        // modal window with the additional success/error details. Note, the
+        // quotation is a bit hard to follow but all in all it's ensuring any
+        // text we get back from the server is properly formatted for
+        // inclusion in an HTML attribute.
+        var callback = 'populate_modal("' + row[0] + " completed on " +
+                       row[6] + '",';
+        out.push('<a href="#" data-toggle="modal" data-target="#job-output-modal" onclick=\'' + callback)
+
+        if (status === 'success') {
+          // job output is in the fourth element
+          // We only expect one output with the artifact id in the 2 element
+          out.push('undefined, ' + row[4][0][1] +')\'');
+          out.push('>View results</a>')
+
+        }
+        else if (status === 'error') {
+          out.push('"' + escape(encodeURIComponent(row[3])) + '")\'');
+          out.push('>View error log summary</a>')
+        }
+      }
+        return out.join('');
+      }
+
+    jobsTable = $('#private-jobs-table').DataTable({
+      "order": [[2, "desc"]],
+      "oLanguage": {
+        "sZeroRecords": "There are no jobs available",
+        "search": "Filter results",
+        "loadingRecords": "Please wait - loading previous jobs ...",
+      },
+      "destroy": true,
+      "autoWidth": false,
+      "columnDefs": [
+        {'width': '80%', 'targets': 0, 'data': 0, 'render': renderRichDescription},
+        {'width': '10%', 'targets': 1, 'data': 7, 'render': renderJobArguments},
+        {'width': '10%', 'targets': 2, 'data': 6},
+      ],
+    });
+
+    // update the table every 10 seconds
+    setInterval(function () {
+      if (jobsTable.ajax.url()) {
+        // user paging is not reset on reload
+        jobsTable.ajax.reload(null, false);
+      }
+    }, 10000);
+
+  });
+
+  /**
+   * This is a modified version of loadParameterGUI in networkVue.js
+   **/
+  function loadParameterGUI(p_name, param_info, sel_artifacts_info, target, dflt_val) {
+    let vm = this;
+    // Create the parameter interface
+    var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
+    // Replace the '_' by ' ' in the parameter name for readability
+    $('<label>').addClass('col-sm-2').addClass('col-form-label').text(p_name.replace('_', ' ') + ': ').appendTo($rowDiv).attr('for', p_name);
+    var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
+
+    var p_type = param_info[0];
+    var allowed_types = param_info[1];
+    var $inp;
+
+    if (p_type == 'artifact' || p_type.startsWith('choice') || p_type.startsWith('mchoice')) {
+      // The parameter type is an artifact or choice, the input type is a dropdown
+      $inp = $('<select>');
+      // show a dropdown menu with the
+      var options = [];
+      if (p_type.startsWith('choice') || p_type.startsWith('mchoice')) {
+        $.each(JSON.parse(p_type.split(':')[1]), function (idx, val) { options.push([val, val]); });
+
+        if (p_type.startsWith('mchoice')) {
+          $inp.attr('multiple', true);
+        }
+      }
+
+      options.sort(function(a, b){return a[0].localeCompare(b[0], 'en', {'sensitivity': 'base'});});
+      $.each(options, function(idx, val) {
+        $inp.append($("<option>").attr('value', val[0]).text(val[1]));
+      });
+    }
+    else {
+      // The rest of parameter types are represented with an input
+      $inp = $('<input>');
+      // It just changes the type of input
+      if (p_name.startsWith("qp-hide")) {
+        // adding the hide attributes
+        $inp.attr('type', 'hidden');
+        $rowDiv.css('display', 'none');
+      }
+      else if (p_type == 'integer') {
+        // For the integer type, show an input of type number
+        $inp.attr('type', 'number');
+      }
+      else if (p_type == 'float') {
+        // For the float type, show an input of type number, with a step of 0.001
+        $inp.attr('type', 'number').attr('step', 0.001);
+      }
+      else if (p_type == 'string') {
+        // For the float type, show an input of type text
+        $inp.attr('type', 'text');
+      }
+      else if (p_type == 'boolean') {
+        // For the boolean type, show an input of type checkbox
+        $inp.attr('type', 'checkbox');
+      }
+      else if (p_type == 'prep_template') {
+        $inp.attr('type', 'file');
+      }
+      else {
+        bootstrapAlert("Error: Parameter type (" + p_type + ") not recognized. Please, take a screenshot and <a href='mailto:qiita.help@gmail.com'>contact us</a>", "danger");
+      }
+    }
+
+    if (dflt_val !== undefined) {
+      if (p_type == 'boolean') {
+        // The boolean type works differently than the others, so we needed
+        // to special case it here.
+        if (dflt_val !== 'false' && dflt_val !== false) {
+          $inp.prop('checked', true);
+        } else {
+          $inp.prop('checked', false);
+        }
+      }
+      else {
+        $inp.val(dflt_val);
+      }
+      $inp.addClass('parameter');
+    }
+    else {
+      $inp.addClass('parameter');
+    }
+
+    $inp.appendTo($colDiv).attr('id', p_name).attr('name', p_name).addClass('form-control');
+  }
+
+  function add_and_submit_job(command_id) {
+    // creating a form to send data, this is neccesary so we can send the
+    // file; we could do a regular $.post if we didn't need to send a file
+    var fd = new FormData(), params = {}, missing = [], files = {};
+
+    $(".parameter").each( function () {
+      var value = this.value;
+      // file is a special case
+      if ( $(this).attr('type') === 'file' ){
+        fd.set(this.id, this.files[0]);
+      } else {
+        if ( $(this).attr('type') === 'checkbox' ) {
+          value = this.checked;
+        }
+        if (value === "") {
+          missing.push(this.id)
+        }
+        params[this.id] = value;
+      }
+    });
+
+    if (missing.length !== 0){
+      alert('You are missing these parameters: ' + missing)
+      return false;
+    }
+
+    fd.set('command_id', command_id);
+    fd.set('params', JSON.stringify(params));
+
+    function _helper_clean_objects(){
+        $('#cmd-description').empty();
+        $('#parameters').empty();
+        $("#cmd_select").val([]);
+    }
+
+    // Creating Job
+    $('#parameters').empty();
+    $('#parameters').html("Creating Job");
+
+
+    $.ajax({
+      url: '/study/process/workflow/',
+      type: 'POST',
+      processData: false,
+      contentType: false,
+      data: fd,
+      success: function(data) {
+        // Submitting Job
+        $('#parameters').html("Submitting Job: <b>" + data.job + '</b>');
+
+        $.post("/study/process/workflow/run/", {workflow_id: data.workflow_id}, function(data_submit){
+          bootstrapAlert("Workflow " + data.workflow_id + " submitted", "success");
+          })
+          .fail(function(object, status, error_msg) {
+            bootstrapAlert("Error submitting workflow: " + object.statusText, "danger");
+          })
+          .always(function() {
+            _helper_clean_objects();
+
+            // trigger a courtesy reload of the table to show the new job
+            jobsTable.ajax.reload(null, false);
+          });
+      },
+      error: function (object, status, error_msg) {
+        bootstrapAlert(error_msg, "danger");
+        _helper_clean_objects();
+      }
+    });
+    return false
+  }
+
+  function generate_summary(option_selected){
+    var command_id = option_selected.attr('value');
+    var command_name = option_selected.text();
+    $('#cmd-description').html(option_selected.attr('description'));
+    $("#parameters").empty();
+
+    $.get('/study/process/commands/options/', {command_id: command_id})
+      .done(function(data){
+          $('<div>').appendTo($("#parameters")).attr('id', 'cmd-opts-div').attr('name', 'cmd-opts-div');
+
+          sel_artifacts_info = ''
+
+          $("#cmd-opts-div").append($('<h4>').text('Parameters:'));
+          var keys = Object.keys(data.req_options).sort(function(a, b){return a.localeCompare(b, 'en', {'sensitivity': 'base'});});
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            loadParameterGUI(key, data.req_options[key], sel_artifacts_info, $("#cmd-opts-div"));
+          }
+
+          var keys = Object.keys(data.opt_options).sort(function(a, b){return a.localeCompare(b, 'en', {'sensitivity': 'base'});});
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            loadParameterGUI(key, data.opt_options[key], sel_artifacts_info, $("#cmd-opts-div"));
+          }
+
+          $('<button>').appendTo($("#cmd-opts-div")).addClass('btn btn-info').text('Create Job').click(
+            function() {
+              this.disabled = true;
+              add_and_submit_job(command_id);
+              this.disabled = false;
+            });
+
+          // load the jobs table for the selected command
+          $('#previous-jobs').show();
+          $('#previous-jobs-tin').html('Previous "' + command_name + '" jobs');
+
+          // update the table
+          jobsTable.ajax.url("/admin/processing_jobs/list?sEcho=" + Math.floor(Math.random()*10001) + "&commandId=" + command_id).load();
+
+        });
+  }
+</script>
+
+{% end %}
+
+{%block content %}
+  <h3 class="gray-msg">Available Commands</h3>
+  <table border="0">
+    <tr>
+      <td>
+        <select id="cmd_select" class="select" size="5" onchange="generate_summary($('option:selected', this));">
+        {% for ps in private_software %}
+          <optgroup label="{{ps.name}}">
+          {% for cmd in ps.commands %}
+            <option value="{{cmd.id}}" description="{{cmd.description}}">{{cmd.name}}</option>
+          {% end %}
+          </optgroup>
+        {% end %}
+        </select>
+      </td>
+      <td width="10px"></td>
+      <td width="300px">
+        <div id="cmd-description"></div>
+      </td>
+    </tr>
+  </table>
+
+  <div id="artifact-info"></div>
+
+  <div id="parameters"></div>
+
+  <div class="modal fade" id="modal-artifact-description" tabindex="-1" role="dialog" aria-labelledby="title" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="title">Artifact Summary</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Output Modal -->
+  <div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" id="job-output-modal">
+    <div class="modal-dialog modal-med">
+      <div class="modal-content">
+      <div class="modal-header">
+         <h3 name="modal-title"></h3>
+      </div>
+      <div class="modal-body" name="modal-main-text">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="previous-jobs" style="display: none;" class="row">
+    <div class="col-sm-12">
+      <h3 id="previous-jobs-tin" class="gray-msg">Previous Jobs</h3>
+      <table id="private-jobs-table" class="table table-bordered gray-msg" style="width: 30px!">
+        <thead>
+          <tr>
+            <th class="sorting sorting_asc" tabindex="0" aria-controls="private-jobs-table" rowspan="1" colspan="1" aria-sort="ascending" aria-label="Last Updated">Summary</th>
+            <th class="sorting sorting_asc" tabindex="0" aria-controls="private-jobs-table" rowspan="1" colspan="1" aria-sort="ascending" aria-label="Last Updated">Arguments</th>
+            <th class="sorting sorting_asc" tabindex="0" aria-controls="private-jobs-table" rowspan="1" colspan="1" aria-sort="ascending" aria-label="Last Updated">Last Updated</th>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% end %}

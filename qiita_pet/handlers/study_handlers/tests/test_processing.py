@@ -64,6 +64,12 @@ class TestListOptionsHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
 
+        # test that it works fine with no artifact_id
+        response = self.get('/study/process/commands/options/',
+                            {'command_id': '3'})
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
 
 class TestJobAJAX(TestHandlerBase):
     def test_get(self):
@@ -135,6 +141,47 @@ class TestJobAJAX(TestHandlerBase):
         exp = {'status': 'success',
                'message': ''}
         self.assertEqual(loads(response.body), exp)
+
+
+class TestWorkflowHandler(TestHandlerBase):
+    def test_post(self):
+        # test error
+        response = self.post('/study/process/workflow/',
+                             {'command_id': '3', 'params': '{}'})
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'error', 'workflow_id': None, 'job': None,
+               'message': "The provided JSON string doesn't encode a parameter"
+                          " set for command 3. Missing required parameter: "
+                          "input_data"}
+        self.assertDictEqual(loads(response.body), exp)
+
+        # test success
+        response = self.post('/study/process/workflow/',
+                             {'command_id': '3',
+                              'params': '{"input_data": 1}'})
+        self.assertEqual(response.code, 200)
+        obs = loads(response.body)
+        # we are going to copy the workflow_id/job information because we only
+        # care about the reply
+        exp = {'status': 'success', 'workflow_id': obs['workflow_id'],
+               'job': obs['job'], 'message': ''}
+        self.assertEqual(obs, exp)
+
+        # test with files
+        response = self.post('/study/process/workflow/',
+                             {'command_id': '3', 'params': '{"input_data": 3}',
+                              'files': '{"template": {"body": b""}}',
+                              'headers': {
+                                  'Content-Type': 'application/json',
+                                  'Origin': 'localhost'
+                              }, })
+        self.assertEqual(response.code, 200)
+        obs = loads(response.body)
+        # we are going to copy the workflow_id/job information because we only
+        # care about the reply
+        exp = {'status': 'success', 'workflow_id': obs['workflow_id'],
+               'job': obs['job'], 'message': ''}
+        self.assertEqual(obs, exp)
 
 
 if __name__ == "__main__":

@@ -1015,11 +1015,16 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # This job is resulting from a private job
                 parents = None
                 params = None
-                cmd_out_id = None
                 name = None
                 data_type = a_info['data_type']
-                analysis = qdb.analysis.Analysis(
-                    job.parameters.values['analysis'])
+                pvals = job.parameters.values
+                if 'analysis' in pvals:
+                    cmd_out_id = None
+                    analysis = qdb.analysis.Analysis(
+                        job.parameters.values['analysis'])
+                else:
+                    cmd_out_id = provenance['cmd_out_id']
+                    analysis = None
                 a_info = a_info['artifact_data']
             else:
                 # This job is resulting from a plugin job
@@ -1264,7 +1269,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                         "is allowed, found %d" % len(templates))
                 elif len(templates) == 1:
                     template = templates.pop()
-                else:
+                elif self.input_artifacts:
                     # In this case we have 0 templates. What this means is that
                     # this artifact is being generated in the analysis pipeline
                     # All the artifacts included in the analysis pipeline
@@ -1296,6 +1301,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                 provenance = {'job': self.id,
                               'cmd_out_id': cmd_out_id,
                               'name': art_name}
+
+                if self.command.software.type == 'private':
+                    provenance['data_type'] = 'Job Output Folder'
 
                 # Get the validator command for the current artifact type and
                 # create a new job
