@@ -78,6 +78,7 @@ from qiita_db.handlers.plugin import (
     ReloadPluginAPItestHandler)
 from qiita_db.handlers.analysis import APIAnalysisMetadataHandler
 from qiita_db.handlers.archive import APIArchiveObservations
+from qiita_db.handlers.studies import APIStudiesListing
 from qiita_db.util import get_mountpoint
 from qiita_pet.handlers.rest import ENDPOINTS as REST_ENDPOINTS
 from qiita_pet.handlers.qiita_redbiom import RedbiomPublicSearch
@@ -229,7 +230,8 @@ class Application(tornado.web.Application):
             (r"/qiita_db/plugins/(.*)/(.*)/commands/", CommandListHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
             (r"/qiita_db/analysis/(.*)/metadata/", APIAnalysisMetadataHandler),
-            (r"/qiita_db/archive/observations/", APIArchiveObservations)
+            (r"/qiita_db/archive/observations/", APIArchiveObservations),
+            (r"/qiita_db/studies/(.*)", APIStudiesListing)
         ]
 
         # rest endpoints
