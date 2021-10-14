@@ -465,6 +465,8 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
             with self.assertRaises(QiitaDBUnknownIDError):
                 Study(1)
 
+            TRN.rollback()
+
     def test_delete_study_empty_study(self):
         info = {
             "timeseries_type_id": '1',
