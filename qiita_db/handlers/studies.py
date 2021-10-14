@@ -31,10 +31,10 @@ def _generate_study_list_for_api(visibility, only_biom=True):
 
     sql = f"""
         SELECT study_id, array_agg(DISTINCT artifact_id) FROM qiita.study
-            LEFT JOIN qiita.study_artifact USING (study_id)
-            LEFT JOIN qiita.artifact USING (artifact_id)
-            LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-            LEFT JOIN qiita.visibility USING (visibility_id)
+            INNER JOIN qiita.study_artifact USING (study_id)
+            INNER JOIN qiita.artifact USING (artifact_id)
+            INNER JOIN qiita.artifact_type USING (artifact_type_id)
+            INNER JOIN qiita.visibility USING (visibility_id)
         WHERE visibility = %s
         {artifact_type}
         GROUP BY study_id
