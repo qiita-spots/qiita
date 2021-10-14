@@ -44,8 +44,7 @@ jobs:
       - name: Setup for conda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          # auto-update-conda: true
-          default-python: 3.6
+          auto-update-conda: true
           python-version: 3.6
 
       - name: Basic dependencies install
@@ -62,16 +61,11 @@ jobs:
           # PGPASSWORD is read by pg_restore, which is called by the build_db process.
           export PGPASSWORD=postgres
 
-          # displaying defult versions
-          python --version
-          conda --version
-
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
-          conda create -q --yes -n qiita python=3.6 libgfortran numpy nginx cython redis
+          conda create -q --yes -n qiita python=3.6 pip==9.0.3 libgfortran numpy nginx cython redis
           conda activate qiita
           pip install -U pip
-          pip install 'setuptools<=58.0.1'
           pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
 
           # Configuring SSH
