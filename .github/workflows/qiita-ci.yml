@@ -63,7 +63,7 @@ jobs:
 
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
-          conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx cython redis
+          conda create -q --yes -n qiita python=3.6 libgfortran numpy nginx cython redis
           conda activate qiita
           pip install -U pip
           pip install 'setuptools<=58.0.1'
