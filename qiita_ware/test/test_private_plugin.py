@@ -436,9 +436,29 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertIn('1 validator jobs failed', job.log.msg)
 
 
+# @qiita_test_checker()
+# class TestPrivatePluginDeleteStudy_1(BaseTestPrivatePlugin):
+#     def test_delete_study_success(self):
+#         # delete everything from the EBI submissions and the processing
+#         # job so we can delete: test success (with tags)
+#         with TRN:
+#             sql = """DELETE FROM qiita.ebi_run_accession"""
+#             TRN.add(sql)
+#             sql = """DELETE FROM qiita.artifact_processing_job"""
+#             TRN.add(sql)
+#             TRN.execute()
+#
+#         with TRN:
+#             job = self._create_job('delete_study', {'study': 1})
+#             private_task(job.id)
+#             print (job.status)
+#             if job.status == 'error':
+#                 print (job.log.msg)
+
+
 @qiita_test_checker()
 class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
-    def test_delete_study(self):
+    def test_delete_study_error(self):
         # as samples have been submitted to EBI, this will fail
         job = self._create_job('delete_study', {'study': 1})
         private_task(job.id)
@@ -446,26 +466,6 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
         self.assertIn("Artifact 2 has been submitted to EBI", job.log.msg)
         # making sure the analysis, first thing to delete, still exists
         self.assertTrue(Analysis.exists(1))
-
-        # delete everything from the EBI submissions and the processing job so
-        # we can try again: test success (with tags)
-        with TRN:
-            sql = """DELETE FROM qiita.ebi_run_accession"""
-            TRN.add(sql)
-            sql = """DELETE FROM qiita.artifact_processing_job"""
-            TRN.add(sql)
-            TRN.execute()
-
-            # adding tags
-            Study(1).update_tags(self.user, ['my new tag!'])
-
-            job = self._create_job('delete_study', {'study': 1})
-            private_task(job.id)
-            self.assertEqual(job.status, 'success')
-            with self.assertRaises(QiitaDBUnknownIDError):
-                Study(1)
-
-            TRN.rollback()
 
     def test_delete_study_empty_study(self):
         info = {
@@ -481,6 +481,10 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
             "lab_person_id": StudyPerson(1)}
         new_study = Study.create(User('test@foo.bar'),
                                  "Fried Chicken Microbiome %s" % time(), info)
+
+        # adding tags
+        new_study.update_tags(User('test@foo.bar'), ['my new tag!'])
+
         # creating a sample information file
         metadata = pd.DataFrame.from_dict({
             'Sample1': {'physical_specimen_location': 'location1',
