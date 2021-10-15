@@ -436,29 +436,9 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertIn('1 validator jobs failed', job.log.msg)
 
 
-# @qiita_test_checker()
-# class TestPrivatePluginDeleteStudy_1(BaseTestPrivatePlugin):
-#     def test_delete_study_success(self):
-#         # delete everything from the EBI submissions and the processing
-#         # job so we can delete: test success (with tags)
-#         with TRN:
-#             sql = """DELETE FROM qiita.ebi_run_accession"""
-#             TRN.add(sql)
-#             sql = """DELETE FROM qiita.artifact_processing_job"""
-#             TRN.add(sql)
-#             TRN.execute()
-#
-#         with TRN:
-#             job = self._create_job('delete_study', {'study': 1})
-#             private_task(job.id)
-#             print (job.status)
-#             if job.status == 'error':
-#                 print (job.log.msg)
-
-
 @qiita_test_checker()
 class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
-    def test_delete_study_error(self):
+    def test_delete_study(self):
         # as samples have been submitted to EBI, this will fail
         job = self._create_job('delete_study', {'study': 1})
         private_task(job.id)
@@ -467,7 +447,6 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
         # making sure the analysis, first thing to delete, still exists
         self.assertTrue(Analysis.exists(1))
 
-    def test_delete_study_empty_study(self):
         info = {
             "timeseries_type_id": '1',
             "metadata_complete": 'true',
