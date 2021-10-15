@@ -156,16 +156,15 @@ class StudySamplesHandler(RESTHandler):
         rawdata = pd.DataFrame.from_dict(json_decode(self.request.body),
                                          orient='index')
         rawdata.index.name = 'sample_name'
-        rawdata.reset_index(inplace=True)
+        if len(rawdata.index) == 0:
+            self.fail('No samples provided', 400)
+            return
+
         buffer = io.StringIO()
         rawdata.to_csv(buffer, sep='\t', index=True, header=True)
         buffer.seek(0)
         # validate on load
         data = load_template_to_dataframe(buffer)
-
-        if len(data.index) == 0:
-            self.fail('No samples provided', 400)
-            return
 
         categories = set(study.sample_template.categories)
 
