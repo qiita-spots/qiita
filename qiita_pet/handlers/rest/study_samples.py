@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from collections import defaultdict
+import io
+from qiita_db.metadata_template.util import load_template_to_dataframe
 
 from tornado.escape import json_encode, json_decode
 import pandas as pd
@@ -150,12 +152,19 @@ class StudySamplesHandler(RESTHandler):
         else:
             sample_info = study.sample_template.to_dataframe()
 
-        data = pd.DataFrame.from_dict(json_decode(self.request.body),
-                                      orient='index')
-
-        if len(data.index) == 0:
+        # convert from json into a format that qiita can validate
+        rawdata = pd.DataFrame.from_dict(json_decode(self.request.body),
+                                         orient='index')
+        rawdata.index.name = 'sample_name'
+        if len(rawdata.index) == 0:
             self.fail('No samples provided', 400)
             return
+
+        buffer = io.StringIO()
+        rawdata.to_csv(buffer, sep='\t', index=True, header=True)
+        buffer.seek(0)
+        # validate on load
+        data = load_template_to_dataframe(buffer)
 
         categories = set(study.sample_template.categories)
 
