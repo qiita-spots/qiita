@@ -25,7 +25,6 @@ Classes
 # -----------------------------------------------------------------------------
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
-from psycopg2.errors import InvalidTextRepresentation
 import qiita_db as qdb
 
 
@@ -187,7 +186,9 @@ class QiitaObject(object):
             self._check_subclass()
             try:
                 _id = self._check_id(id_)
-            except InvalidTextRepresentation:
+            except ValueError as error:
+                if 'INVALID_TEXT_REPRESENTATION' not in str(error):
+                    raise error
                 _id = False
 
             if not _id:
