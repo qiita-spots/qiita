@@ -11,6 +11,7 @@ from tempfile import mkstemp
 from os import close, remove
 from os.path import basename, exists, relpath
 from json import loads
+from mock import Mock
 
 from tornado.web import HTTPError
 
@@ -23,6 +24,7 @@ from qiita_db.processing_job import ProcessingJob
 from qiita_db.software import Parameters, Command
 from qiita_pet.exceptions import QiitaHTTPError
 from qiita_pet.test.tornado_test_base import TestHandlerBase
+from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.artifact_handlers.base_handlers import (
     check_artifact_access, artifact_summary_get_request,
     artifact_summary_post_request, artifact_patch_request,
@@ -429,6 +431,14 @@ class TestBaseHandlers(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertEqual(response.body.decode('ascii'),
                          '<b>HTML TEST - not important</b>\n')
+
+        # testing with a not log user should return the login page
+        BaseHandler.get_current_user = Mock(return_value=None)
+        response = self.get('/artifact/html_summary/%s' % summary)
+        self.assertEqual(response.code, 200)
+        exp = ('<button tabindex="3" type="submit" class="btn btn-success">'
+               'Sign in</button>')
+        self.assertIn(exp, response.body.decode())
 
 
 if __name__ == '__main__':

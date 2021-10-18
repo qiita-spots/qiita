@@ -457,6 +457,7 @@ class ArtifactAJAX(BaseHandler):
 
 
 class ArtifactSummaryHandler(StaticFileHandler, BaseHandler):
+    @authenticated
     def validate_absolute_path(self, root, absolute_path):
         """Overrides StaticFileHandler's method to include authentication"""
         user = self.current_user
