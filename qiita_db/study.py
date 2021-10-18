@@ -1152,7 +1152,8 @@ class Study(qdb.base.QiitaObject):
             sql = """SELECT prep_template_id
                      FROM qiita.study_prep_template
                         JOIN qiita.prep_template USING (prep_template_id)
-                     WHERE study_id = %s{0}""".format(spec_data)
+                     WHERE study_id = %s{0}
+                     ORDER BY prep_template_id""".format(spec_data)
             qdb.sql_connection.TRN.add(sql, args)
             return [qdb.metadata_template.prep_template.PrepTemplate(ptid)
                     for ptid in qdb.sql_connection.TRN.execute_fetchflatten()]
