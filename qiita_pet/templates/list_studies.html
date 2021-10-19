@@ -56,6 +56,7 @@ $(document).ready(function() {
   qiita_websocket.add_callback('sel', show_alert);
 
   $('#user-studies-table').dataTable({
+      "processing": true,
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
       "sDom": 'l<"top">rti<"bottom"p>',
@@ -115,8 +116,9 @@ $(document).ready(function() {
         }, targets: [6]},
         ],
       "language": {
-          "loadingRecords": "Please wait - loading information ...",
-          "zeroRecords": "No studies found"
+          "loadingRecords": 'Please wait ...',
+          "processing": "~~ Loading information ~~",
+          "zeroRecords": "No studies found",
       },
       "ajax": {
           "url": user_studies_ajaxURL + "&query=",
@@ -130,6 +132,7 @@ $(document).ready(function() {
   });
 
   $('#studies-table').dataTable({
+      "processing": true,
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
       "sDom": '<"top">rti<"bottom"p><"clear">',
@@ -180,8 +183,9 @@ $(document).ready(function() {
         }, targets: [1]},
         ],
       "language": {
-          "loadingRecords": "Please wait - loading information ...",
-          "zeroRecords": "No studies found"
+          "loadingRecords": 'Please wait ...',
+          "processing": "~~ Loading information ~~",
+          "zeroRecords": "No studies found",
       },
       "ajax": {
           "url": studies_ajaxURL + "&query=",
