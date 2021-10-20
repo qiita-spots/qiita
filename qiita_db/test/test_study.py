@@ -796,7 +796,7 @@ class TestStudy(TestCase):
         qdb.study.Study.delete(new.id)
 
     def test_retrieve_prep_templates(self):
-        self.assertEqual(
+        self.assertCountEqual(
             self.study.prep_templates(),
             [qdb.metadata_template.prep_template.PrepTemplate(1),
              qdb.metadata_template.prep_template.PrepTemplate(2)])

@@ -291,7 +291,7 @@ def delete_sample_or_column(job):
 
 
 def _delete_analysis_artifacts(analysis):
-    aids = [a.id for a in analysis.artifacts]
+    aids = [a.id for a in analysis.artifacts if not a.parents]
     aids.sort(reverse=True)
     for aid in aids:
         qdb.artifact.Artifact.delete(aid)
@@ -316,11 +316,10 @@ def delete_study(job):
             _delete_analysis_artifacts(analysis)
 
         for pt in study.prep_templates():
-            if pt.artifact:
-                to_delete = list(pt.artifact.descendants.nodes())
-                to_delete.reverse()
-                for td in to_delete:
-                    qdb.artifact.Artifact.delete(td.id)
+            if pt.artifact is not None:
+                # Artifact.delete will delete descendants so just delete
+                # the root
+                qdb.artifact.Artifact.delete(pt.artifact.id)
             MT.prep_template.PrepTemplate.delete(pt.id)
 
         if MT.sample_template.SampleTemplate.exists(study_id):

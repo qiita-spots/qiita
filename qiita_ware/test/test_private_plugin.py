@@ -443,31 +443,10 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
         job = self._create_job('delete_study', {'study': 1})
         private_task(job.id)
         self.assertEqual(job.status, 'error')
-        self.assertIn("Cannot delete artifact 2: Artifact 2 has been "
-                      "submitted to EBI", job.log.msg)
+        self.assertIn("Artifact 2 has been submitted to EBI", job.log.msg)
         # making sure the analysis, first thing to delete, still exists
         self.assertTrue(Analysis.exists(1))
 
-        # delete everything from the EBI submissions and the processing job so
-        # we can try again: test success (with tags)
-        with TRN:
-            sql = """DELETE FROM qiita.ebi_run_accession"""
-            TRN.add(sql)
-            sql = """DELETE FROM qiita.artifact_processing_job"""
-            TRN.add(sql)
-            TRN.execute()
-
-            # adding tags
-            Study(1).update_tags(self.user, ['my new tag!'])
-
-            job = self._create_job('delete_study', {'study': 1})
-            private_task(job.id)
-
-            self.assertEqual(job.status, 'success')
-            with self.assertRaises(QiitaDBUnknownIDError):
-                Study(1)
-
-    def test_delete_study_empty_study(self):
         info = {
             "timeseries_type_id": '1',
             "metadata_complete": 'true',
@@ -481,6 +460,10 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
             "lab_person_id": StudyPerson(1)}
         new_study = Study.create(User('test@foo.bar'),
                                  "Fried Chicken Microbiome %s" % time(), info)
+
+        # adding tags
+        new_study.update_tags(User('test@foo.bar'), ['my new tag!'])
+
         # creating a sample information file
         metadata = pd.DataFrame.from_dict({
             'Sample1': {'physical_specimen_location': 'location1',

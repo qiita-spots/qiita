@@ -520,7 +520,7 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it is public")
 
-            all_artifacts = list(instance.descendants.nodes())
+            all_artifacts = list(set(instance.descendants.nodes()))
             all_artifacts.reverse()
             all_ids = tuple([a.id for a in all_artifacts])
 
