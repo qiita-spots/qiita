@@ -41,7 +41,7 @@ def check_artifact_access(user, artifact):
     QiitaHTTPError
         If the user doesn't have access to the given artifact
     """
-    if user.level == 'admin':
+    if user.level in ('admin', 'wetlab admin'):
         return
     if artifact.visibility != 'public':
         study = artifact.study

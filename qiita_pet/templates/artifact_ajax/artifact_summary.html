@@ -143,7 +143,7 @@
 
         {% if artifact_type == 'BIOM' and not is_from_analysis %}
           <input type="button" class="btn btn-default btn-sm" value="Add to Analysis" onclick="send_samples_to_analysis(this, [{{artifact_id}}]);">
-        {% else %}
+        {% elif artifact_type != 'job-output-folder' %}
           <a class="btn btn-default btn-sm" id="process-btn"><span class="glyphicon glyphicon-play"></span> Process</a>
         {% end %}
 
@@ -182,7 +182,7 @@
   </div>
 </div>
 
-{% if files %}
+{% if files and artifact_type != 'job-output-folder' %}
 <div class='row'>
   <div class='col-md-12'>
     <b>Available files:</b>
