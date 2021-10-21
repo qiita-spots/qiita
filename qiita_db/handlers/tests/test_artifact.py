@@ -287,6 +287,22 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
                         data=data)
         self.assertEqual(obs.code, 200)
 
+    def test_get(self):
+        obs = self.get('/qiita_db/artifacts/types/', headers=self.header)
+        self.assertEqual(obs.code, 200)
+
+        basedir = qdb.util.get_db_files_base_dir()
+        exp = {
+            "SFF": f"{basedir}/SFF",
+            "FASTA": f"{basedir}/FASTA",
+            "FASTA_Sanger": f"{basedir}/FASTA_Sanger",
+            "Demultiplexed": f"{basedir}/Demultiplexed",
+            "FASTQ": f"{basedir}/FASTQ",
+            "per_sample_FASTQ": f"{basedir}/per_sample_FASTQ",
+            "BIOM": f"{basedir}/BIOM",
+            "uploads": f"{basedir}/uploads"}
+        self.assertDictEqual(loads(obs.body), exp)
+
 
 class APIArtifactHandlerTests(OauthTestingBase):
     def setUp(self):

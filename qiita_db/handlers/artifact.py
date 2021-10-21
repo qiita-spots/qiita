@@ -200,6 +200,26 @@ class ArtifactAPItestHandler(OauthBaseHandler):
 
 class ArtifactTypeHandler(OauthBaseHandler):
     @authenticate_oauth
+    def get(self):
+        """Returns the artifact types and their local mountpoint location
+
+        Returns
+        -------
+        dict
+            'artifact_type': local mountpoint
+        """
+        atypes = dict()
+        for atype in qdb.util.get_artifact_types():
+            mountpoints = qdb.util.get_mountpoint(atype)
+            if mountpoints:
+                # [0][1]: get latest/active and the actual location
+                atypes[atype] = mountpoints[0][1]
+        # add the upload location
+        atypes['uploads'] = qdb.util.get_mountpoint('uploads')[0][1]
+
+        self.write(atypes)
+
+    @authenticate_oauth
     def post(self):
         """Creates a new artifact type
 
