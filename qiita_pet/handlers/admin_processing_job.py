@@ -19,7 +19,7 @@ from json import dumps
 
 class AdminProcessingJobBaseClass(BaseHandler):
     def _check_access(self):
-        if self.current_user.level not in {'admin', 'dev'}:
+        if self.current_user.level not in {'admin', 'wet-lab admin'}:
             raise HTTPError(403, reason="User %s doesn't have sufficient "
                             "privileges to view error page" %
                             self.current_user.email)
@@ -62,7 +62,11 @@ class AJAXAdminProcessingJobListing(AdminProcessingJobBaseClass):
                 for job in cmd.processing_jobs:
                     if job.hidden:
                         continue
-                    msg = '' if job.status != 'error' else job.log.msg
+                    msg = ''
+                    if job.status == 'error':
+                        msg = job.log.msg
+                    elif job.status == 'running':
+                        msg = job.step
                     msg = msg.replace('\n', '</br>')
                     outputs = []
                     if job.status == 'success':
