@@ -8,7 +8,7 @@
 
 from tornado import gen
 from tornado.web import HTTPError
-from iostream import StreamClosedError
+from tornado.iostream import StreamClosedError
 from json import dumps
 
 import qiita_db as qdb
