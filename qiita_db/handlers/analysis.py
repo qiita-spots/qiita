@@ -8,7 +8,6 @@
 
 from tornado import gen
 from tornado.web import HTTPError
-from tornado.iostream import StreamClosedError
 from json import dumps
 
 import qiita_db as qdb
@@ -67,6 +66,7 @@ class APIAnalysisMetadataHandler(OauthBaseHandler):
         """
         chunk_len = 1024 * 1024 * 1  # 1 MiB
 
+        respose = None
         with qdb.sql_connection.TRN:
             a = _get_analysis(analysis_id)
             mf_fp = qdb.util.get_filepath_information(
@@ -76,17 +76,19 @@ class APIAnalysisMetadataHandler(OauthBaseHandler):
                     mf_fp, index='#SampleID')
                 response = dumps(df.to_dict(orient='index'))
 
-                crange = range(chunk_len, len(response)+chunk_len, chunk_len)
-                for i, (win) in enumerate(crange):
-                    chunk = response[i*chunk_len:win]
-                    try:
-                        self.write(chunk)
-                        await self.flush()
-                    except StreamClosedError:
-                        break
-                    finally:
-                        del chunk
-                        # pause the coroutine so other handlers can run
-                        await gen.sleep(0.000000001)  # 1 nanosecond
-            else:
-                self.write(None)
+        if respose is not None:
+            crange = range(chunk_len, len(response)+chunk_len, chunk_len)
+            for i, (win) in enumerate(crange):
+                # sending the chunk and flushing
+                chunk = response[i*chunk_len:win]
+                self.write(chunk)
+                await self.flush()
+
+                # cleaning chuck and pause the coroutine so other handlers
+                # can run, note that this is required/important based on the
+                # original implementation in https://bit.ly/3CPvyjd
+                del chunk
+                await gen.sleep(0.000000001)  # 1 nanosecond
+
+        else:
+            respose.write(None)
