@@ -66,7 +66,7 @@ class APIAnalysisMetadataHandler(OauthBaseHandler):
         """
         chunk_len = 1024 * 1024 * 1  # 1 MiB
 
-        respose = None
+        response = None
         with qdb.sql_connection.TRN:
             a = _get_analysis(analysis_id)
             mf_fp = qdb.util.get_filepath_information(
@@ -76,7 +76,7 @@ class APIAnalysisMetadataHandler(OauthBaseHandler):
                     mf_fp, index='#SampleID')
                 response = dumps(df.to_dict(orient='index'))
 
-        if respose is not None:
+        if response is not None:
             crange = range(chunk_len, len(response)+chunk_len, chunk_len)
             for i, (win) in enumerate(crange):
                 # sending the chunk and flushing
@@ -91,4 +91,4 @@ class APIAnalysisMetadataHandler(OauthBaseHandler):
                 await gen.sleep(0.000000001)  # 1 nanosecond
 
         else:
-            respose.write(None)
+            self.write(None)
