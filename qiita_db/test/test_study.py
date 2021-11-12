@@ -207,6 +207,14 @@ class TestStudy(TestCase):
         qdb.sql_connection.perform_as_transaction(
             "UPDATE qiita.artifact SET visibility_id = %s", (id_status,))
 
+    def test_from_title(self):
+        study = qdb.study.Study.from_title(
+            'Identification of the Microbiomes for Cannabis Soils')
+        self.assertEqual(study, qdb.study.Study(1))
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.study.Study.from_title('Study title')
+
     def test_get_info(self):
         # Test get all info for single study
         qiita_config.portal = 'QIITA'
