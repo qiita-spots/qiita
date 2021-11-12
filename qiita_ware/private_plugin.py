@@ -108,7 +108,7 @@ def submit_to_EBI(job):
         artifact = qdb.artifact.Artifact(artifact_id)
 
         for info in artifact.study._ebi_submission_jobs():
-            jid, aid, js, cbste, era = info
+            jid, aid, js = info
             if js in ('running', 'queued') and jid != job.id:
                 error_msg = ("Cannot perform parallel EBI submission for "
                              "the same study. Current job running: %s" % js)

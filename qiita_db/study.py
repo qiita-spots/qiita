@@ -995,30 +995,45 @@ class Study(qdb.base.QiitaObject):
                  WHERE study_id = %s""".format(self._table)
         qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
-    def _ebi_submission_jobs(self):
-        """Helper code to avoid duplication"""
+    def _ebi_submission_jobs(
+            self, can_be_submitted_to_ebi=True, skip_with_era=True):
+        """Helper code to avoid duplication
+
+        Parameters
+        ----------
+        can_be_submitted_to_ebi : bool, optional
+            If True only jobs from artifacts that can be submitted to EBI-ENA
+        skip_with_era : bool, optional
+            If True limit results to those without ERA accessions
+        """
         plugin = qdb.software.Software.from_name_and_version(
             'Qiita', 'alpha')
         cmd = plugin.get_command('submit_to_EBI')
 
-        sql = """SELECT processing_job_id,
+        sql_era = ''
+        if skip_with_era:
+            sql_era = ('AND NOT EXISTS(SELECT * FROM qiita.ebi_run_accession '
+                       'era WHERE era.artifact_id = artifact_id)')
+
+        sql = f"""SELECT processing_job_id,
                     pj.command_parameters->>'artifact' as aid,
-                    processing_job_status, can_be_submitted_to_ebi,
-                    array_agg(ebi_run_accession)
+                    processing_job_status
                  FROM qiita.processing_job pj
                  LEFT JOIN qiita.processing_job_status
                     USING (processing_job_status_id)
                  LEFT JOIN qiita.artifact ON (
                     artifact_id = (
                         pj.command_parameters->>'artifact')::INT)
-                 LEFT JOIN qiita.ebi_run_accession era USING (artifact_id)
                  LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                  WHERE pj.command_parameters->>'artifact' IN (
                     SELECT artifact_id::text
-                    FROM qiita.study_artifact WHERE study_id = {0})
-                    AND pj.command_id = {1}
-                 GROUP BY processing_job_id, aid, processing_job_status,
-                    can_be_submitted_to_ebi""".format(self._id, cmd.id)
+                    FROM qiita.study_artifact
+                    WHERE study_id = {self._id}
+                        AND can_be_submitted_to_ebi = {can_be_submitted_to_ebi}
+                        {sql_era}
+                        )
+                    AND pj.command_id = {cmd.id}"""
+
         qdb.sql_connection.TRN.add(sql)
 
         return qdb.sql_connection.TRN.execute_fetchindex()
@@ -1047,10 +1062,7 @@ class Study(qdb.base.QiitaObject):
                 status = 'submitted'
 
             jobs = defaultdict(dict)
-            for info in self._ebi_submission_jobs():
-                jid, aid, js, cbste, era = info
-                if not cbste or era != [None]:
-                    continue
+            for jid, aid, js in self._ebi_submission_jobs():
                 jobs[js][aid] = jid
 
             if 'queued' in jobs or 'running' in jobs:
