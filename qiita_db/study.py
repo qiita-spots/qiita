@@ -1046,8 +1046,10 @@ class Study(qdb.base.QiitaObject):
                 status = 'submitted'
 
             jobs = defaultdict(dict)
+            artifacts = defaultdict()
             for jid, aid, js in self._ebi_submission_jobs():
                 jobs[js][aid] = jid
+                artifacts[aid] = None
 
             if 'queued' in jobs or 'running' in jobs:
                 status = 'submitting'
@@ -1056,10 +1058,14 @@ class Study(qdb.base.QiitaObject):
                 aids_other = []
                 for s, aids in jobs.items():
                     for aid in aids.keys():
-                        a = qdb.artifact.Artifact(aid)
-                        if (s == 'error'
-                                and a.can_be_submitted_to_ebi
-                                and not a.ebi_run_accessions):
+                        if artifacts[aid] is None:
+                            a = qdb.artifact.Artifact(aid)
+                            cbste = a.can_be_submitted_to_ebi
+                            era = False
+                            if cbste:
+                                era = bool(a.ebi_run_accessions)
+                            artifacts[aid] = [cbste, era]
+                        if s == 'error' and artifacts[aid] == [True, False]:
                             aids_error.append(aid)
                         else:
                             aids_other.append(aid)
