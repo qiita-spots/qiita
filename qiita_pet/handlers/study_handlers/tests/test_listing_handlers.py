@@ -138,7 +138,6 @@ class TestListStudiesAJAX(TestHandlerBase):
                 'study_title': ('Identification of the Microbiomes for '
                                 'Cannabis Soils'),
                 'metadata_complete': True,
-                'ebi_submission_status': 'submitted',
                 'study_id': 1,
                 'study_alias': 'Cannabis Soils',
                 'owner': 'Dude',

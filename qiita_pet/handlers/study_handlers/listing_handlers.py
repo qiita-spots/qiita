@@ -136,13 +136,12 @@ class ListStudiesAJAX(BaseHandler):
 
             info[i]['pi'] = study_person_linkifier(info[i]['pi'])
 
-            info[i]['ebi_info'] = info[i]['ebi_submission_status']
+            info[i]['ebi_info'] = ''
             ebi_study_accession = info[i]['ebi_study_accession']
             if ebi_study_accession:
-                info[i]['ebi_info'] = '%s (%s)' % (
-                    ''.join([EBI_LINKIFIER.format(a)
-                             for a in ebi_study_accession.split(',')]),
-                    info[i]['ebi_submission_status'])
+                info[i]['ebi_info'] = ''.join([
+                    EBI_LINKIFIER.format(a)
+                    for a in ebi_study_accession.split(',')])
 
         # build the table json
         results = {

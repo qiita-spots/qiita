@@ -1558,9 +1558,7 @@ def generate_study_list(user, visibility):
                 del info["shared_with_name"]
                 del info["shared_with_email"]
 
-                study = qdb.study.Study(info['study_id'])
-                info['status'] = study.status
-                info['ebi_submission_status'] = study.ebi_submission_status
+                info['status'] = qdb.study.Study(info['study_id']).status
                 infolist.append(info)
     return infolist
 
@@ -1642,9 +1640,7 @@ def generate_study_list_without_artifacts(study_ids, portal=None):
             del info["pi_email"]
             del info["pi_name"]
 
-            study = qdb.study.Study(info['study_id'])
-            info['status'] = study.status
-            info['ebi_submission_status'] = study.ebi_submission_status
+            info['status'] = qdb.study.Study(info['study_id']).status
             infolist.append(info)
     return infolist
 

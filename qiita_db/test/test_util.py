@@ -869,7 +869,6 @@ class UtilTests(TestCase):
             'status': 'sandbox', 'study_title': 'test_study_1',
             'metadata_complete': True, 'publication_pid': [],
             'artifact_biom_ids': [], 'autoloaded': False,
-            'ebi_submission_status': 'not submitted',
             'study_id': new_study.id, 'ebi_study_accession': None,
             'owner': 'Shared', 'shared': [],
             'study_abstract': 'Some abstract goes here',
@@ -980,7 +979,7 @@ class UtilTests(TestCase):
             {'status': 'private', 'study_title': (
                 'Identification of the Microbiomes for Cannabis Soils'),
              'metadata_complete': True, 'publication_pid': [
-                '123456', '7891011'], 'ebi_submission_status': 'submitted',
+                '123456', '7891011'],
              'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
              'autoloaded': False,
              'study_abstract': (
@@ -998,7 +997,7 @@ class UtilTests(TestCase):
              'study_alias': 'Cannabis Soils', 'number_samples_collected': 27},
             {'status': 'sandbox', 'study_title': 'test_study_1',
              'metadata_complete': True, 'publication_pid': [],
-             'ebi_submission_status': 'not submitted', 'autoloaded': False,
+             'autoloaded': False,
              'study_id': new_study.id, 'ebi_study_accession': None,
              'study_abstract': 'Some abstract goes here',
              'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
@@ -1300,7 +1299,6 @@ STUDY_INFO = {
     'metadata_complete': True,
     'autoloaded': False,
     'ebi_study_accession': 'EBI123456-BB',
-    'ebi_submission_status': 'submitted',
     'study_title':
         'Identification of the Microbiomes for Cannabis Soils',
     'number_samples_collected': 27,
