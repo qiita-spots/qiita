@@ -88,6 +88,39 @@ class Study(qdb.base.QiitaObject):
                 "Illegal operation on non-sandbox study!")
 
     @classmethod
+    def from_title(cls, title):
+        """Instantiate Study from title
+
+        Parameters
+        ----------
+        title : str
+            Tht title to search for
+
+        Returns
+        -------
+        Study
+            The study with the given title
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If the title doesn't exist
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT study_id
+                     FROM qiita.{}
+                     WHERE study_title = %s""".format(cls._table)
+
+            qdb.sql_connection.TRN.add(sql, [title])
+            sid = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        if not sid:
+            raise qdb.exceptions.QiitaDBUnknownIDError(
+                cls._table, f'"{title}" does not exist')
+
+        return qdb.study.Study(sid[0])
+
+    @classmethod
     def iter(cls):
         """Iterate over all studies in the database
 
