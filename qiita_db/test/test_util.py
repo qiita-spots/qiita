@@ -866,10 +866,9 @@ class UtilTests(TestCase):
             USER('shared@foo.bar'), 'test_study_1', info=info)
 
         snew_info = {
-            'status': 'sandbox', 'study_title': 'test_study_1',
+            'study_title': 'test_study_1',
             'metadata_complete': True, 'publication_pid': [],
             'artifact_biom_ids': [], 'autoloaded': False,
-            'ebi_submission_status': 'not submitted',
             'study_id': new_study.id, 'ebi_study_accession': None,
             'owner': 'Shared', 'shared': [],
             'study_abstract': 'Some abstract goes here',
@@ -943,8 +942,6 @@ class UtilTests(TestCase):
 
         # make artifacts of prep 2 public
         PREP(2).artifact.visibility = 'public'
-        exp1[0]['status'] = 'public'
-        exp_both[0]['status'] = 'public'
         _avoid_duplicated_tests()
 
         # make artifacts of prep 1 awaiting_approval
@@ -977,10 +974,10 @@ class UtilTests(TestCase):
             qdb.user.User('shared@foo.bar'), 'test_study_1', info=info)
 
         exp_info = [
-            {'status': 'private', 'study_title': (
+            {'study_title': (
                 'Identification of the Microbiomes for Cannabis Soils'),
              'metadata_complete': True, 'publication_pid': [
-                '123456', '7891011'], 'ebi_submission_status': 'submitted',
+                '123456', '7891011'],
              'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
              'autoloaded': False,
              'study_abstract': (
@@ -996,9 +993,9 @@ class UtilTests(TestCase):
                 'lifecycle.'), 'pi': ('PI_dude@foo.bar', 'PIDude'),
              'publication_doi': ['10.100/123456', '10.100/7891011'],
              'study_alias': 'Cannabis Soils', 'number_samples_collected': 27},
-            {'status': 'sandbox', 'study_title': 'test_study_1',
+            {'study_title': 'test_study_1',
              'metadata_complete': True, 'publication_pid': [],
-             'ebi_submission_status': 'not submitted', 'autoloaded': False,
+             'autoloaded': False,
              'study_id': new_study.id, 'ebi_study_accession': None,
              'study_abstract': 'Some abstract goes here',
              'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
@@ -1284,7 +1281,6 @@ STUDY_INFO = {
     'study_id': 1,
     'owner': 'Dude',
     'study_alias': 'Cannabis Soils',
-    'status': 'private',
     'study_abstract':
         'This is a preliminary study to examine the microbiota '
         'associated with the Cannabis plant. Soils samples '
@@ -1300,7 +1296,6 @@ STUDY_INFO = {
     'metadata_complete': True,
     'autoloaded': False,
     'ebi_study_accession': 'EBI123456-BB',
-    'ebi_submission_status': 'submitted',
     'study_title':
         'Identification of the Microbiomes for Cannabis Soils',
     'number_samples_collected': 27,

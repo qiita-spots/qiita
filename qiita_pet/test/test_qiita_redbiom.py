@@ -134,10 +134,9 @@ class TestRedbiom(TestHandlerBase):
 
 
 DATA = [
-    {'status': 'private',
-     'study_title': 'Identification of the Microbiomes for Cannabis Soils',
+    {'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'metadata_complete': True, 'publication_pid': ['123456', '7891011'],
-     'ebi_submission_status': 'submitted', 'autoloaded': False,
+     'autoloaded': False,
      'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
      'study_abstract': ('This is a preliminary study to examine the '
                         'microbiota associated with the Cannabis plant. Soils '
