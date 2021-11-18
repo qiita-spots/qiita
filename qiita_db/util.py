@@ -1464,7 +1464,7 @@ def generate_study_list(user, visibility):
             (SELECT COUNT(sample_id) FROM qiita.study_sample
                 WHERE study_id=qiita.study.study_id)
                 AS number_samples_collected,
-            (SELECT EXIST(
+            (SELECT EXISTS(
                 SELECT 1 FROM qiita.study_sample
                     WHERE study_id = qiita.study.study_id LIMIT 1))
                     AS has_sample_info,
@@ -1563,7 +1563,9 @@ def generate_study_list(user, visibility):
                 del info["shared_with_email"]
 
                 # add extra info about sample information file
-                has_sample_info = info['has_sample_info']
+                if info['has_sample_info']:
+                    qdb.metadata_template.sample_template.SampleTemplate(
+                        info['study_id'])
                 del info['has_sample_info']
 
                 infolist.append(info)
