@@ -369,7 +369,7 @@ def exists_table(table):
     """
     with qdb.sql_connection.TRN:
         sql = """SELECT exists(
-                    SELECT * FROM information_schema.tables
+                    SELECT table_name FROM information_schema.tables
                     WHERE table_name=%s)"""
         qdb.sql_connection.TRN.add(sql, [table])
         return qdb.sql_connection.TRN.execute_fetchlast()
@@ -1464,6 +1464,10 @@ def generate_study_list(user, visibility):
             (SELECT COUNT(sample_id) FROM qiita.study_sample
                 WHERE study_id=qiita.study.study_id)
                 AS number_samples_collected,
+            (SELECT EXIST(
+                SELECT 1 FROM qiita.study_sample
+                    WHERE study_id = qiita.study.study_id LIMIT 1))
+                    AS has_sample_info,
             (SELECT array_agg(row_to_json((prep_template_id, data_type,
                  artifact_id, artifact_type, deprecated,
                  qiita.bioms_from_preparation_artifacts(prep_template_id)),
@@ -1557,6 +1561,10 @@ def generate_study_list(user, visibility):
                         info['shared'].append((email, name))
                 del info["shared_with_name"]
                 del info["shared_with_email"]
+
+                # add extra info about sample information file
+                has_sample_info = info['has_sample_info']
+                del info['has_sample_info']
 
                 infolist.append(info)
     return infolist
