@@ -1504,71 +1504,95 @@ def generate_study_list(user, visibility):
     if sids:
         with qdb.sql_connection.TRN:
             qdb.sql_connection.TRN.add(sql, [tuple(sids)])
-            for info in qdb.sql_connection.TRN.execute_fetchindex():
-                info = dict(info)
+            results = qdb.sql_connection.TRN.execute_fetchindex()
 
-                # cleaning owners name
-                if info['owner'] in (None, ''):
-                    info['owner'] = info['owner_email']
-                del info['owner_email']
+        for info in results:
+            info = dict(info)
 
-                preparation_data_types = []
-                artifact_biom_ids = []
-                if info['preparation_information'] is not None:
-                    for pinfo in info['preparation_information']:
-                        # 'f1': prep_template_id, 'f2': data_type,
-                        # 'f3': artifact_id, 'f4': artifact_type,
-                        # 'f5':deprecated, 'f6': biom artifacts
-                        if pinfo['f5']:
-                            continue
-                        preparation_data_types.append(pinfo['f2'])
-                        if pinfo['f4'] == 'BIOM':
-                            artifact_biom_ids.append(pinfo['f3'])
-                        if pinfo['f6'] is not None:
-                            artifact_biom_ids.extend(
-                                map(int, pinfo['f6'].split(',')))
-                del info['preparation_information']
-                info['artifact_biom_ids'] = list(set(artifact_biom_ids))
-                info['preparation_data_types'] = list(set(
-                    preparation_data_types))
+            # cleaning owners name
+            if info['owner'] in (None, ''):
+                info['owner'] = info['owner_email']
+            del info['owner_email']
 
-                # publication info
-                info['publication_doi'] = []
-                info['publication_pid'] = []
-                if info['publications'] is not None:
-                    for p in info['publications']:
-                        # f1-2 are the default names given by pgsql
-                        pub = p['f1']
-                        is_doi = p['f2']
-                        if is_doi:
-                            info['publication_doi'].append(pub)
-                        else:
-                            info['publication_pid'].append(pub)
-                del info['publications']
+            preparation_data_types = []
+            artifact_biom_ids = []
+            if info['preparation_information'] is not None:
+                for pinfo in info['preparation_information']:
+                    # 'f1': prep_template_id, 'f2': data_type,
+                    # 'f3': artifact_id, 'f4': artifact_type,
+                    # 'f5':deprecated, 'f6': biom artifacts
+                    if pinfo['f5']:
+                        continue
+                    preparation_data_types.append(pinfo['f2'])
+                    if pinfo['f4'] == 'BIOM':
+                        artifact_biom_ids.append(pinfo['f3'])
+                    if pinfo['f6'] is not None:
+                        artifact_biom_ids.extend(
+                            map(int, pinfo['f6'].split(',')))
+            del info['preparation_information']
+            info['artifact_biom_ids'] = list(set(artifact_biom_ids))
+            info['preparation_data_types'] = list(set(
+                preparation_data_types))
 
-                # pi info
-                info["pi"] = (info['pi_email'], info['pi_name'])
-                del info["pi_email"]
-                del info["pi_name"]
+            # publication info
+            info['publication_doi'] = []
+            info['publication_pid'] = []
+            if info['publications'] is not None:
+                for p in info['publications']:
+                    # f1-2 are the default names given by pgsql
+                    pub = p['f1']
+                    is_doi = p['f2']
+                    if is_doi:
+                        info['publication_doi'].append(pub)
+                    else:
+                        info['publication_pid'].append(pub)
+            del info['publications']
 
-                # shared with
-                info['shared'] = []
-                if info['shared_with_name'] and info['shared_with_email']:
-                    for name, email in zip(info['shared_with_name'],
-                                           info['shared_with_email']):
-                        if not name:
-                            name = email
-                        info['shared'].append((email, name))
-                del info["shared_with_name"]
-                del info["shared_with_email"]
+            # pi info
+            info["pi"] = (info['pi_email'], info['pi_name'])
+            del info["pi_email"]
+            del info["pi_name"]
 
-                # add extra info about sample information file
-                if info['has_sample_info']:
-                    qdb.metadata_template.sample_template.SampleTemplate(
-                        info['study_id'])
-                del info['has_sample_info']
+            # shared with
+            info['shared'] = []
+            if info['shared_with_name'] and info['shared_with_email']:
+                for name, email in zip(info['shared_with_name'],
+                                       info['shared_with_email']):
+                    if not name:
+                        name = email
+                    info['shared'].append((email, name))
+            del info["shared_with_name"]
+            del info["shared_with_email"]
 
-                infolist.append(info)
+            # # add extra info about sample information file
+            # if info['has_sample_info']:
+            #     # the fix for #3091 should go here; please reference that
+            #     # issue for more information of why it hasn't been closed
+            #     with qdb.sql_connection.TRN:
+            #         # check if host_scientific_name is part of the metadata
+            #         BMT = qdb.metadata_template.base_metadata_template
+            #         QCN = BMT.QIITA_COLUMN_NAME
+            #         sql = """SELECT POSITION('host_scientific_name' IN
+            #                                  sample_values->>'columns')
+            #                  FROM qiita.sample_%d
+            #                  WHERE sample_id = '%s'""" % (
+            #                     info['study_id'], QCN)
+            #         qdb.sql_connection.TRN.add(sql)
+            #         has_hsn = qdb.sql_connection.TRN.execute_fetchflatten()
+            #         # if it has that column, we can retrieve the information
+            #         if has_hsn[0] != 0:
+            #             sql = """SELECT array_agg(
+            #                         DISTINCT
+            #                         sample_values->>'host_scientific_name')
+            #                      FROM qiita.sample_%d
+            #                      WHERE sample_id != '%s'""" % (
+            #                         info['study_id'], QCN))
+            #             qdb.sql_connection.TRN.add(sql)
+            #             hsn = qdb.sql_connection.TRN.execute_fetchflatten()
+            #             info['host_scientific_name'] = hsn
+            del info['has_sample_info']
+
+            infolist.append(info)
     return infolist
 
 
