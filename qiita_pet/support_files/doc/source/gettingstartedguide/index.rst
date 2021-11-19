@@ -87,20 +87,6 @@ Example files
 You can download an example sample information file from
 `here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__.
 
-EBI-ENA NULL values vocabulary
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-For all public studies including those being submitted to EBI, no blanks are allowed in the sample information.
-We support the following null values: *not applicable*, *not collected*, *not provided*,
-*restricted access*.
-
-For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
-
-.. warning::
-   Column names in your information files cannot be named as a Postgres reserved word. For example, a column cannot be named
-   `CONDITION`, but could instead be named `DISEASE_CONDITION`. For a full list of these reserved words, see this
-   `link <https://www.postgresql.org/docs/9.3/static/sql-keywords-appendix.html>`__.
-
 
 Sample information file
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -123,10 +109,11 @@ sample information file to be added to the system:
 |                   |                             | characters are alphabetic ``[A-Za-z]``, numeric ``[0-9]``, and periods ``.``. |
 +-------------------+-----------------------------+-------------------------------------------------------------------------------+
 
-Required fields for EBI submission
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Required fields for EBI submission and to make a study public
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In order to submit your data to EBI, certain fields are required in your sample information file. You can download a spread sheet containing these required fields on the `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__ under "MetaData Template".
+In order to submit your data to EBI, please review :ref:`checklist-for-ebi-ena-submission`.
+
 
 Attaching the Sample Information to the Study
 ---------------------------------------------
@@ -271,34 +258,6 @@ prep information file to be added to the system:
 |                   |                               | alphabetic ``[A-Za-z]``, numeric ``[0-9]``, and periods ``.``. Must    |
 |                   |                               | match the sample_name in the sample template.                          |
 +-------------------+-------------------------------+------------------------------------------------------------------------+
-
-Required fields for EBI submission
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-In order to submit your data to EBI, certain fields are required in your preparation information file. You can download a spread sheet containing these required fields on the `Knight Lab website <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__ under "Prep Template".
-
-
-For all valid values for instrument_model per platform, view the values in the table below:
-
-+---------------------+----------------------------------------------------------------------------------------------------------+
-| Platform            | Valid instrument_model options                                                                           |
-+=====================+==========================================================================================================+
-| ``LS454``           |  ``454 GS``, ``454 GS 20``, ``454 GS FLX``, ``454 GS FLX+``, ``454 GS FLX Titanium``, ``454 GS Junior``, |
-|                     |  ``454 GS Junior`` or ``unspecified``                                                                    |
-+---------------------+----------------------------------------------------------------------------------------------------------+
-| ``Illumina``        |  ``HiSeq X Five``, ``HiSeq X Ten``, ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``,       |
-|                     |  ``Illumina Genome Analyzer IIx``, ``Illumina HiScanSQ``, ``Illumina HiSeq 1000``,                       |
-|                     |  ``Illumina HiSeq 1500``,, ``Illumina HiSeq 2000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 3000``,    |
-|                     |  ``Illumina HiSeq 4000``, ``Illumina MiSeq``, ``Illumina MiniSeq``, ``Illumina NovaSeq 6000``,           |
-|                     |  ``NextSeq 500``, ``NextSeq 550``, ``Illumina NovaSeq 6000`` or ``unspecified``                          |
-+---------------------+----------------------------------------------------------------------------------------------------------+
-| ``Ion_Torrent``     |  ``Ion Torrent PGM``, ``Ion Torrent Proton``, ``Ion Torrent S5``, ``Ion Torrent S5 XL``                  |
-+---------------------+----------------------------------------------------------------------------------------------------------+
-| ``PacBio_SMRT``     |  ``PacBio RS``, ``PacBio RS II``, ``Sequel``, ``Sequel II``                                              |
-+---------------------+----------------------------------------------------------------------------------------------------------+
-| ``Oxford_Nanopore`` |  ``GridION``                                                                                             |
-+---------------------+----------------------------------------------------------------------------------------------------------+
 
 
 Required fields for pre-processing target gene data
