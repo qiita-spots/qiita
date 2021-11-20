@@ -46,7 +46,7 @@ For the latest definitions and explanation visit the `EBI/ENA Missing value repo
 Checklist
 ---------
 
-For each preparation that needs to be uploaded to EBI-ENA we will check:
+Remember, metadata is the most important part for an analysis, without it we only have sequences; thus, for each preparation that needs to be uploaded to EBI-ENA or become public we will check:
 
   1. Data processing
 
