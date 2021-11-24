@@ -156,7 +156,8 @@ class DBUtilTests(DBUtilTestsBase):
         obs = qdb.util.get_data_types()
         exp = {'16S': 1, '18S': 2, 'ITS': 3, 'Proteomic': 4, 'Metabolomic': 5,
                'Metagenomic': 6, 'Multiomic': 7, 'Metatranscriptomics': 8,
-               'Viromics': 9, 'Genomics': 10, 'Transcriptomics': 11}
+               'Viromics': 9, 'Genomics': 10, 'Transcriptomics': 11,
+               'Job Output Folder': 12}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_data_types(key='data_type_id')
@@ -762,7 +763,7 @@ class DBUtilTests(DBUtilTestsBase):
         obs = qdb.util.generate_analysis_list([1, 2, 3, 5])
         exp = [{'mapping_files': [
                 (16, qdb.util.get_filepath_information(16)['fullpath'])],
-                'description': 'A test analysis', 'artifacts': [9], 'name':
+                'description': 'A test analysis', 'artifacts': [8, 9], 'name':
                 'SomeAnalysis', 'analysis_id': 1, 'visibility': 'private'},
                {'mapping_files': [], 'description': 'Another test analysis',
                 'artifacts': [], 'name': 'SomeSecondAnalysis',

@@ -1942,8 +1942,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
 
     sql = """
         SELECT analysis_id, a.name, a.description, a.timestamp,
-            array_agg(DISTINCT CASE WHEN command_id IS NOT NULL
-                      THEN artifact_id END),
+            array_agg(DISTINCT artifact_id),
             array_agg(DISTINCT visibility),
             array_agg(DISTINCT CASE WHEN filepath_type = 'plain_text'
                       THEN filepath_id END)
