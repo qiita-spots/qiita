@@ -1,4 +1,5 @@
 .. role:: red
+.. _checklist-for-ebi-ena-submission:
 
 Making data Public in Qiita and/or send data to EBI-ENA
 =======================================================
@@ -22,6 +23,8 @@ time to request a submission is when you are writing your paper. Remember that t
 data can be submitted to EBI and can be kept private and simply make public when
 the paper is accepted. Note that EBI/ENA takes up to 15 days to change the status
 from private to public, so consider this when submitting data and your manuscript.
+If need help send an email to `qiita.help@gmail.com <mailto:qiita.help@gmail.com>`__
+and please include your study ID.
 
 .. note::
    For convenience Qiita allows you to upload a QIIME mapping file to process your data. However,
@@ -43,7 +46,7 @@ For the latest definitions and explanation visit the `EBI/ENA Missing value repo
 Checklist
 ---------
 
-For each preparation that needs to be uploaded to EBI-ENA we will check:
+Remember, metadata is the most important part for an analysis, without it we only have sequences; thus, for each preparation that needs to be uploaded to EBI-ENA or become public we will check:
 
   1. Data processing
 
@@ -60,9 +63,11 @@ For each preparation that needs to be uploaded to EBI-ENA we will check:
       3. *sample_type*
       4. *taxon_id* - needs to match *scientific_name* value
       5. *scientific_name* - needs to match *taxon_id* value - this is the name of the `metagenome <https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Tree&id=12908&lvl=3&srchmode=1&keep=1&unlock>`__ referenced in the column *taxon_id* and that the two values match.  Submission will not work if the user puts *host_scientific_name* or *host_taxid* instead.  Do not accept EBI null values. For null values use *scientific_name* “metagenome” and *taxon_id* “256318”
-      6. *env_biome*, *env_feature*, *env_material*, *env_package*, for options `visit the ENVO section in <http://ols.wordvis.com/>`__
+      6. *env_biome*, *env_feature*, *env_material*, *env_package*, for options `visit ENVO <http://ols.wordvis.com/>`__
       7. *elevation*, *latitude*, *longitude*
-      8. *empo_1*, *empo_2*, *empo_3*
+      8. *physical_specimen_location*
+      9. *collection_timestamp*
+      10. *empo_1*, *empo_2*, *empo_3*
 
          .. table::
             :widths: auto
@@ -132,6 +137,28 @@ For each preparation that needs to be uploaded to EBI-ENA we will check:
       8. *library_construction_protocol*
       9. *instrument_model*
       10. *sequencing_method*
+
+      .. note::
+        The current valid values for instrument_model per platform are - please contact us if you would like to add yours to this list:
+        +---------------------+----------------------------------------------------------------------------------------------------------+
+        | Platform            | Valid instrument_model options                                                                           |
+        +=====================+==========================================================================================================+
+        | ``LS454``           |  ``454 GS``, ``454 GS 20``, ``454 GS FLX``, ``454 GS FLX+``, ``454 GS FLX Titanium``, ``454 GS Junior``, |
+        |                     |  ``454 GS Junior`` or ``unspecified``                                                                    |
+        +---------------------+----------------------------------------------------------------------------------------------------------+
+        | ``Illumina``        |  ``HiSeq X Five``, ``HiSeq X Ten``, ``Illumina Genome Analyzer``, ``Illumina Genome Analyzer II``,       |
+        |                     |  ``Illumina Genome Analyzer IIx``, ``Illumina HiScanSQ``, ``Illumina HiSeq 1000``,                       |
+        |                     |  ``Illumina HiSeq 1500``,, ``Illumina HiSeq 2000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 3000``,    |
+        |                     |  ``Illumina HiSeq 4000``, ``Illumina MiSeq``, ``Illumina MiniSeq``, ``Illumina NovaSeq 6000``,           |
+        |                     |  ``NextSeq 500``, ``NextSeq 550``, ``Illumina NovaSeq 6000`` or ``unspecified``                          |
+        +---------------------+----------------------------------------------------------------------------------------------------------+
+        | ``Ion_Torrent``     |  ``Ion Torrent PGM``, ``Ion Torrent Proton``, ``Ion Torrent S5``, ``Ion Torrent S5 XL``                  |
+        +---------------------+----------------------------------------------------------------------------------------------------------+
+        | ``PacBio_SMRT``     |  ``PacBio RS``, ``PacBio RS II``, ``Sequel``, ``Sequel II``                                              |
+        +---------------------+----------------------------------------------------------------------------------------------------------+
+        | ``Oxford_Nanopore`` |  ``GridION``                                                                                             |
+        +---------------------+----------------------------------------------------------------------------------------------------------+
+
 
     c. Additional minimal columns, if possible:
 
