@@ -7,8 +7,8 @@
 # -----------------------------------------------------------------------------
 from tornado.web import authenticated, HTTPError
 from wtforms import (Form, StringField, SelectField, SelectMultipleField,
-                     TextAreaField, validators)
-
+                     TextAreaField)
+from wtforms.validators import InputRequired
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.study import Study, StudyPerson
 from qiita_db.util import get_timeseries_types, get_environmental_packages
@@ -45,19 +45,19 @@ class StudyEditorForm(Form):
     StudyEditorExtendedForm
     wtforms.Form
     """
-    study_title = StringField('Study Title', [validators.Required()])
-    study_alias = StringField('Study Alias', [validators.Required()])
+    study_title = StringField('Study Title', [InputRequired()])
+    study_alias = StringField('Study Alias', [InputRequired()])
     publication_doi = StringField(
         'DOI', description=('Just values, no links, comma separated values'))
     publication_pid = StringField(
         'PUBMED ID', description=('Just values, no links, comma '
                                   'separated values'))
-    study_abstract = TextAreaField('Study Abstract', [validators.Required()])
+    study_abstract = TextAreaField('Study Abstract', [InputRequired()])
     study_description = StringField('Study Description',
-                                    [validators.Required()])
+                                    [InputRequired()])
     # The choices for these "people" fields will be filled from the database
     principal_investigator = SelectField('Principal Investigator',
-                                         [validators.Required()],
+                                         [InputRequired()],
                                          coerce=lambda x: x)
 
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
@@ -125,7 +125,7 @@ class StudyEditorExtendedForm(StudyEditorForm):
     wtforms.Form
     """
     environmental_packages = SelectMultipleField('Environmental Packages',
-                                                 [validators.Required()])
+                                                 [InputRequired()])
     timeseries = SelectField('Event-Based Data', coerce=lambda x: x)
 
     @execute_as_transaction

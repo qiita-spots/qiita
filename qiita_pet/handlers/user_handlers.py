@@ -7,7 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import authenticated, HTTPError
-from wtforms import Form, StringField, validators
+from wtforms import Form, StringField
+from wtforms.validators import InputRequired
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import user_jobs_get_req
@@ -21,7 +22,7 @@ from qiita_core.qiita_settings import qiita_config
 
 
 class UserProfile(Form):
-    name = StringField("Name", [validators.required()])
+    name = StringField("Name", [InputRequired()])
     affiliation = StringField("Affiliation")
     address = StringField("Address")
     phone = StringField("Phone")
