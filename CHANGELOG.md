@@ -1,5 +1,22 @@
 # Qiita changelog
 
+Version 2021.11
+---------------
+
+* Upgrading PostgreSQL from 9.5 to 13.4 as 9.5 is no longer supported
+* Updated SortMeRNA within qt-meta to filter RNA reads to run as job arrays to speed up processing. A full NovaSeq run will now take ~15hrs vs. ~161hrs.
+* Added qiime2.2021.11 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization.
+* Jobs no longer need to be linked to studies or analyses; this allows us to create general purpose jobs like "admin like" jobs that can be fully traced in Qiita.
+* Added a new user level: "wet-lab admin" so they can start "admin like" jobs in the system without having to be an actual admin.
+* Added a new plugin: "qp-knight-lab-processing" that provides the general Knight Lab sequence processing: from BCL to per_sample_FASTQ to the upload folders in Qiita.
+* Added "Oxford_Nanopore" as a valid "platform" with "GridION" as valid "instrument_model" to the system; this allows submission of this data to EBI-ENA.
+* Allow chucked download of metadata files in analyses; this allows to process large meta-analysis (like those for The Microsetta Initiative) without worker blockage.
+* Added to the qp-qiime2 plugin the possibility of filtering tables based on system available "FeatureData[Sequence]"; to start we added 90/100/150 bps bloom tables.
+* Now we can instantiate a study via their title (Study.from_title); this will facilitate orchestration with qebil.
+* Speed up Study listing for admins and general users; the admin study display came down from 20 to 2 seconds.  
+* Fixed the following issues: [3142](https://github.com/qiita-spots/qiita/issues/3142), [3149](https://github.com/qiita-spots/qiita/issues/3149), [3150](https://github.com/qiita-spots/qiita/issues/3150), [3119](https://github.com/qiita-spots/qiita/issues/3119), and [3160](https://github.com/qiita-spots/qiita/issues/3160).
+
+
 Version 2021.09
 ---------------
 
