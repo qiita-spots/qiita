@@ -64,7 +64,7 @@ jobs:
 
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
-          conda create -q --yes -n qiita python=${{ matrix.python-version }} pip==9.0.3 libgfortran numpy nginx cython redis
+          conda create -q --yes -n qiita python=${{ matrix.python-version }} pip libgfortran numpy nginx cython redis
           conda activate qiita
           pip install -U pip
           pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
