@@ -8,7 +8,7 @@
 from itertools import chain
 from os.path import join
 from copy import deepcopy
-from skbio.util import find_duplicates
+from iteration_utilities import duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
@@ -34,7 +34,7 @@ def _check_duplicated_columns(prep_cols, sample_cols):
         If there are duplicated columns names in the sample and the prep
     """
     prep_cols.extend(sample_cols)
-    dups = find_duplicates(prep_cols)
+    dups = duplicates(prep_cols)
     if dups:
         raise qdb.exceptions.QiitaDBColumnError(
             'Duplicated column names in the sample and prep info '

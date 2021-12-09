@@ -16,7 +16,7 @@ from functools import partial
 import pandas as pd
 import warnings
 from datetime import date
-from skbio.util import safe_md5
+import hashlib
 
 from h5py import File
 from qiita_files.demux import to_hdf5
@@ -558,8 +558,8 @@ class TestEBISubmission(TestCase):
 
         md5_sums = {}
         for s, fp in submission.sample_demux_fps.items():
-            md5_sums[s] = safe_md5(
-                open(fp + submission.FWD_READ_SUFFIX, 'rb')).hexdigest()
+            md5_sums[s] = hashlib.md5(
+                open(fp + submission.FWD_READ_SUFFIX, 'rb'))
 
         exp = RUNXML_NEWSTUDY % {
             'study_alias': submission._get_study_alias(),

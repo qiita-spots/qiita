@@ -105,13 +105,13 @@ setup(name='qiita-spots',
       install_requires=['psycopg2', 'click', 'bcrypt', 'pandas',
                         'biom-format', 'tornado<6.0', 'toredis', 'redis',
                         'scp', 'pyparsing', 'h5py',  'natsort', 'nose', 'pep8',
-                        'networkx', 'humanize', 'scikit-bio', 'wtforms<3.0.0',
+                        'networkx', 'humanize', 'wtforms<3.0.0',
                         'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx', 'nltk',
                         'gitpython', 'redbiom', 'pyzmq', 'sphinx_rtd_theme',
                         'paramiko', 'seaborn',  'matplotlib', 'scipy', 'nose',
                         'flake8', 'six', 'qiita-files @ https://github.com/'
                         'qiita-spots/qiita-files/archive/master.zip', 'mock',
-                        'python-jose', 'markdown2',
+                        'python-jose', 'markdown2', 'iteration_utilities',
                         'supervisor @ https://github.com/Supervisor/'
                         'supervisor/archive/master.zip', 'joblib'],
       classifiers=classifiers
