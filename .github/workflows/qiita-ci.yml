@@ -64,7 +64,7 @@ jobs:
 
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
-          conda create -q --yes -n qiita python=${{ matrix.python-version }} pip libgfortran numpy nginx cython redis scikit-bio
+          conda create -q --yes -n qiita python=${{ matrix.python-version }} pip libgfortran numpy nginx cython redis
           conda activate qiita
           pip install -U pip
           pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
@@ -92,6 +92,11 @@ jobs:
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
+          pip install https://github.com/biocore/redbiom/archive/refs/heads/master.zip
+
+          echo "now installing main"
+          echo "now installing main"
+          echo "now installing main"
           pip install . --no-binary redbiom
           pwd
           mkdir ~/.qiita_plugins
