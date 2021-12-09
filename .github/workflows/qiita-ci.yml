@@ -92,6 +92,7 @@ jobs:
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
+          pip install https://github.com/biocore/redbiom/archive/refs/heads/master.zip
           pip install . --no-binary redbiom
           pwd
           mkdir ~/.qiita_plugins
