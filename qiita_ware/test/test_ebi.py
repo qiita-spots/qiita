@@ -574,6 +574,15 @@ class TestEBISubmission(TestCase):
             'sample_3': md5_sums['%d.Sample3' % self.study_id]
         }
         exp = ''.join([line.strip() for line in exp.splitlines()])
+
+        print('--------------')
+        print('--------------')
+        print('--------------')
+        print(exp)
+        print(obs.decode('ascii'))
+        print('--------------')
+        print('--------------')
+        print('--------------')
         self.assertEqual(obs.decode('ascii'), exp)
 
         artifact = self.write_demux_files(PrepTemplate(1))
