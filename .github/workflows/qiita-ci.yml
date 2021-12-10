@@ -12,7 +12,6 @@ jobs:
 
     strategy:
       matrix:
-        python-version: "3.9"
         include:
           - cover_package: "qiita_db"
           - cover_package: "qiita_pet qiita_core qiita_ware"
@@ -46,7 +45,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.9'
 
       - name: Basic dependencies install
         env:
@@ -64,7 +63,7 @@ jobs:
 
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
-          conda create -q --yes -n qiita python=${{ matrix.python-version }} pip libgfortran numpy nginx cython redis
+          conda create -q --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
           conda activate qiita
           pip install -U pip
           pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
@@ -214,7 +213,7 @@ jobs:
     - name: flake8
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.9'
     - name: install dependencies
       run: python -m pip install --upgrade pip
     - name: Check out repository code
