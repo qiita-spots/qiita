@@ -63,7 +63,8 @@ jobs:
 
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
-          conda create -q --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
+          conda install mamba
+          mamba create -n qiita python=3.9 pip libgfortran numpy nginx cython redis
           conda activate qiita
           pip install -U pip
           pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
@@ -91,7 +92,6 @@ jobs:
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
-          pip install https://github.com/biocore/redbiom/archive/refs/heads/master.zip
 
           pip install . --no-binary redbiom
           pwd
@@ -101,8 +101,7 @@ jobs:
         shell: bash -l {0}
         run: |
           wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
-          conda install mamba
-          mamba env create -q -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
+          mamba env create -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
           rm qiime2-2019.4-py36-linux-conda.yml
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
