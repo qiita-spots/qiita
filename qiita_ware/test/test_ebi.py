@@ -1683,9 +1683,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000004" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="0dc19bc7ad4ab613c3f738cc9eb57e2c" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKM4.640180.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="0dc19bc7ad4ab613c3f738cc9eb57e2c" \
+filename="%(ebi_dir)s/1.SKM4.640180.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
