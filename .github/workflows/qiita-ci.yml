@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9"]
         include:
           - cover_package: "qiita_db"
           - cover_package: "qiita_pet qiita_core qiita_ware"
