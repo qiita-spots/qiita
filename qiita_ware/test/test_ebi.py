@@ -559,7 +559,7 @@ class TestEBISubmission(TestCase):
         md5_sums = {}
         for s, fp in submission.sample_demux_fps.items():
             md5_sums[s] = hashlib.md5(
-                open(fp + submission.FWD_READ_SUFFIX, 'rb').read())
+                open(fp + submission.FWD_READ_SUFFIX, 'rb').read()).hexdigest()
 
         exp = RUNXML_NEWSTUDY % {
             'study_alias': submission._get_study_alias(),
