@@ -131,7 +131,7 @@ def load_template_to_dataframe(fn, index='sample_name'):
                     raise ValueError(
                         'Your file has empty columns headers.')
                 raise qdb.exceptions.QiitaDBDuplicateHeaderError(
-                    duplicates(newcols))
+                    set(duplicates(newcols)))
         else:
             # .strip will remove odd chars, newlines, tabs and multiple
             # spaces but we need to read a new line at the end of the

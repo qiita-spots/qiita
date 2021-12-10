@@ -34,7 +34,7 @@ def _check_duplicated_columns(prep_cols, sample_cols):
         If there are duplicated columns names in the sample and the prep
     """
     prep_cols.extend(sample_cols)
-    dups = duplicates(prep_cols)
+    dups = set(duplicates(prep_cols))
     if dups:
         raise qdb.exceptions.QiitaDBColumnError(
             'Duplicated column names in the sample and prep info '

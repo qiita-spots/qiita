@@ -584,7 +584,7 @@ class EBISubmission(object):
 
         file_path = self.sample_demux_fps[sample_name] + suffix
         with open(file_path, 'rb') as fp:
-            md5 = hashlib.md5(fp).hexdigest()
+            md5 = hashlib.md5(fp.read()).hexdigest()
 
         file_details = {'filetype': file_type,
                         'quality_scoring_system': 'phred',

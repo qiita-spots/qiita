@@ -525,7 +525,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
         if len(set(md_template.index)) != len(md_template.index):
             raise qdb.exceptions.QiitaDBDuplicateSamplesError(
-                duplicates(md_template.index))
+                set(duplicates(md_template.index)))
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
@@ -584,7 +584,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
             raise qdb.exceptions.QiitaDBDuplicateHeaderError(
-                duplicates(md_template.columns))
+                set(duplicates(md_template.columns)))
 
         return md_template
 
