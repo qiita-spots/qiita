@@ -1650,9 +1650,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000008" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="a32357beb845f5b598f1a712fb3b4c70" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB2.640194.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="a32357beb845f5b598f1a712fb3b4c70" \
+filename="%(ebi_dir)s/1.SKB2.640194.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1661,9 +1661,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000024" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="deb905ced92812a65a2158fdcfd0f84d" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB3.640195.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="deb905ced92812a65a2158fdcfd0f84d" \
+filename="%(ebi_dir)s/1.SKB3.640195.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1672,9 +1672,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000025" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="847ba142770397a2fae3a8acfbc70640" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB6.640176.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="847ba142770397a2fae3a8acfbc70640" \
+filename="%(ebi_dir)s/1.SKB6.640176.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
