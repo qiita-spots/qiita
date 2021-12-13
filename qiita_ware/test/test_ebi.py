@@ -16,7 +16,7 @@ from functools import partial
 import pandas as pd
 import warnings
 from datetime import date
-from skbio.util import safe_md5
+import hashlib
 
 from h5py import File
 from qiita_files.demux import to_hdf5
@@ -558,8 +558,8 @@ class TestEBISubmission(TestCase):
 
         md5_sums = {}
         for s, fp in submission.sample_demux_fps.items():
-            md5_sums[s] = safe_md5(
-                open(fp + submission.FWD_READ_SUFFIX, 'rb')).hexdigest()
+            md5_sums[s] = hashlib.md5(
+                open(fp + submission.FWD_READ_SUFFIX, 'rb').read()).hexdigest()
 
         exp = RUNXML_NEWSTUDY % {
             'study_alias': submission._get_study_alias(),
@@ -1650,9 +1650,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000008" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="a32357beb845f5b598f1a712fb3b4c70" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB2.640194.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="a32357beb845f5b598f1a712fb3b4c70" \
+filename="%(ebi_dir)s/1.SKB2.640194.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1661,9 +1661,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000024" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="deb905ced92812a65a2158fdcfd0f84d" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB3.640195.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="deb905ced92812a65a2158fdcfd0f84d" \
+filename="%(ebi_dir)s/1.SKB3.640195.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1672,9 +1672,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000025" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="847ba142770397a2fae3a8acfbc70640" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB6.640176.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="847ba142770397a2fae3a8acfbc70640" \
+filename="%(ebi_dir)s/1.SKB6.640176.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1683,9 +1683,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000004" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="0dc19bc7ad4ab613c3f738cc9eb57e2c" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKM4.640180.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="0dc19bc7ad4ab613c3f738cc9eb57e2c" \
+filename="%(ebi_dir)s/1.SKM4.640180.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1701,9 +1701,9 @@ Sample1" center_name="%(center_name)s">
 %(study_id)s.Sample1" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="%(sample_1)s" \
-checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample1.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="%(sample_1)s" \
+filename="%(ebi_dir)s/%(study_id)s.Sample1.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1713,9 +1713,9 @@ Sample2" center_name="%(center_name)s">
 %(study_id)s.Sample2" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="%(sample_2)s" \
-checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample2.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="%(sample_2)s" \
+filename="%(ebi_dir)s/%(study_id)s.Sample2.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1725,9 +1725,9 @@ Sample3" center_name="%(center_name)s">
 %(study_id)s.Sample3" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="%(sample_3)s" \
-checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample3.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="%(sample_3)s" \
+filename="%(ebi_dir)s/%(study_id)s.Sample3.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>

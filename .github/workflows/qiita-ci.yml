@@ -45,7 +45,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
-          python-version: 3.6
+          python-version: '3.9'
 
       - name: Basic dependencies install
         env:
@@ -63,7 +63,10 @@ jobs:
 
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
-          conda create -q --yes -n qiita python=3.6 pip==9.0.3 libgfortran numpy nginx cython redis
+          conda deactivate
+          conda install --quiet mamba
+          mamba create --quiet --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
+          conda env list
           conda activate qiita
           pip install -U pip
           pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
@@ -91,6 +94,7 @@ jobs:
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
+
           pip install . --no-binary redbiom
           pwd
           mkdir ~/.qiita_plugins
@@ -99,7 +103,7 @@ jobs:
         shell: bash -l {0}
         run: |
           wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
-          conda env create -q -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
+          mamba env create --quiet -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
           rm qiime2-2019.4-py36-linux-conda.yml
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
@@ -210,7 +214,7 @@ jobs:
     - name: flake8
       uses: actions/setup-python@v2
       with:
-        python-version: 3.6
+        python-version: '3.9'
     - name: install dependencies
       run: python -m pip install --upgrade pip
     - name: Check out repository code

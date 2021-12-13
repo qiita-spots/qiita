@@ -10,7 +10,7 @@ from six import StringIO
 import pandas as pd
 import numpy as np
 import warnings
-from skbio.util import find_duplicates
+from iteration_utilities import duplicates
 
 import qiita_db as qdb
 
@@ -131,7 +131,7 @@ def load_template_to_dataframe(fn, index='sample_name'):
                     raise ValueError(
                         'Your file has empty columns headers.')
                 raise qdb.exceptions.QiitaDBDuplicateHeaderError(
-                    find_duplicates(newcols))
+                    set(duplicates(newcols)))
         else:
             # .strip will remove odd chars, newlines, tabs and multiple
             # spaces but we need to read a new line at the end of the

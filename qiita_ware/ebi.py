@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import hashlib
 from os.path import basename, join, isdir, isfile, exists
 from shutil import copyfile, rmtree
 from os import remove, listdir, makedirs
@@ -18,7 +19,6 @@ from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
 from h5py import File
-from skbio.util import safe_md5
 from qiita_files.demux import to_per_sample_ascii
 
 from qiita_core.qiita_settings import qiita_config
@@ -584,7 +584,7 @@ class EBISubmission(object):
 
         file_path = self.sample_demux_fps[sample_name] + suffix
         with open(file_path, 'rb') as fp:
-            md5 = safe_md5(fp).hexdigest()
+            md5 = hashlib.md5(fp.read()).hexdigest()
 
         file_details = {'filetype': file_type,
                         'quality_scoring_system': 'phred',
