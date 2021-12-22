@@ -83,8 +83,6 @@ class PluginHandler(OauthBaseHandler):
                 'commands': [c.name for c in plugin.commands],
                 'publications': [{'DOI': doi, 'PubMed': pubmed}
                                  for doi, pubmed in plugin.publications],
-                'default_workflows': [w.name
-                                      for w in plugin.default_workflows],
                 'type': plugin.type,
                 'active': plugin.active}
         self.write(response)
@@ -126,6 +124,9 @@ class CommandListHandler(OauthBaseHandler):
                             "default, name_order, check_biom_merge)}. Found: "
                             "%s for parameter name %s"
                             % (vals, p_name))
+                # adding an extra element to make sure the parser knows this is
+                # an optional parameter
+                opt_params[p_name].extend(['qiita_optional_parameter'])
 
             outputs = self.get_argument('outputs', None)
             if outputs:
@@ -218,7 +219,8 @@ class CommandHandler(OauthBaseHandler):
                 'required_parameters': cmd.required_parameters,
                 'optional_parameters': cmd.optional_parameters,
                 'default_parameter_sets': {
-                    p.name: p.values for p in cmd.default_parameter_sets}}
+                    p.name: p.values for p in cmd.default_parameter_sets},
+                'outputs': cmd.outputs}
         self.write(response)
 
 
@@ -249,8 +251,9 @@ class ReloadPluginAPItestHandler(OauthBaseHandler):
         """Reloads the plugins"""
         conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
         for fp in conf_files:
-            s = qdb.software.Software.from_file(fp, update=True)
-            s.activate()
-            s.register_commands()
+            software = qdb.software.Software.from_file(fp, update=True)
+            software.activate()
+
+            software.register_commands()
 
         self.finish()

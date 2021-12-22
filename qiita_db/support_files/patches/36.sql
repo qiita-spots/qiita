@@ -431,8 +431,8 @@ ALTER TABLE qiita.software ALTER COLUMN software_type_id SET NOT NULL;
 -- analysis and almost all plugins will need. However, the rest of the types
 -- are specific for the target gene plugin.
 INSERT INTO qiita.software (name, version, description, environment_script, start_script, software_type_id)
-    VALUES ('BIOM type', '2.1.4 - Qiime2', 'The Biological Observation Matrix format', '. activate qtp-biom', 'start_biom', 2),
-           ('Target Gene type', '0.1.0', 'Target gene artifact types plugin', 'source activate qiita', 'start_target_gene_types', 2);
+    VALUES ('BIOM type', '2.1.4 - Qiime2', 'The Biological Observation Matrix format', 'source ~/virtualenv/python2.7/bin/activate; export PATH=$HOME/miniconda3/bin/:$PATH; . activate qtp-biom', 'start_biom', 2),
+           ('Target Gene type', '0.1.0', 'Target gene artifact types plugin', 'source ~/virtualenv/python2.7/bin/activate; export PATH=$HOME/miniconda3/bin/:$PATH; source activate qiita', 'start_target_gene_types', 2);
 -- Add BIOM publication
 INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.1186/2047-217X-1-7', '23587224');
 INSERT INTO qiita.software_publication (software_id, publication_doi) VALUES (2, '10.1186/2047-217X-1-7');

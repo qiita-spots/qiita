@@ -9,7 +9,6 @@
 from functools import partial
 from json import dumps, loads
 from collections import defaultdict
-from future.utils import viewitems
 
 from tornado.web import authenticated
 
@@ -24,7 +23,6 @@ from qiita_db.util import generate_analysis_list
 from qiita_db.analysis import Analysis
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.software import Parameters
-from qiita_db.reference import Reference
 from qiita_db.artifact import Artifact
 from qiita_db.software import Software
 
@@ -109,30 +107,13 @@ class SelectedSamplesHandler(BaseHandler):
         sel_data = defaultdict(dict)
         proc_data_info = {}
         sel_samps = self.current_user.default_analysis.samples
-        for aid, samples in viewitems(sel_samps):
-            a = Artifact(aid)
-            sel_data[a.study][aid] = samples
-            # Also get processed data info
-            processing_parameters = a.processing_parameters
-            if processing_parameters is None:
-                params = None
-                algorithm = None
-            else:
-                cmd = processing_parameters.command
-                params = processing_parameters.values
-                if 'reference' in params:
-                    ref = Reference(params['reference'])
-                    del params['reference']
-
-                    params['reference_name'] = ref.name
-                    params['reference_version'] = ref.version
-                algorithm = '%s (%s)' % (cmd.software.name, cmd.name)
-
+        for aid, samples in sel_samps.items():
+            artifact = Artifact(aid)
+            sel_data[artifact.study][aid] = samples
             proc_data_info[aid] = {
-                'processed_date': str(a.timestamp),
-                'algorithm': algorithm,
-                'data_type': a.data_type,
-                'params': params
+                'processed_date': str(artifact.timestamp),
+                'merging_scheme': artifact.merging_scheme,
+                'data_type': artifact.data_type
             }
 
         self.render("analysis_selected.html", sel_data=sel_data,

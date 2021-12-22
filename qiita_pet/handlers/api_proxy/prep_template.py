@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 import warnings
 from os import remove
 from os.path import basename
@@ -18,6 +17,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_pet.util import get_network_nodes_edges
+from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
@@ -107,6 +107,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
     """
     pt = PrepTemplate(prep_id)
     name = pt.name
+    deprecated = pt.deprecated
 
     # Initialize variables here
     processing = False
@@ -136,33 +137,29 @@ def prep_template_ajax_get_req(user_id, prep_id):
 
     # The call to list is needed because keys is an iterator
     num_samples = len(list(pt.keys()))
-    num_columns = len(pt.categories())
+    num_columns = len(pt.categories)
     investigation_type = pt.investigation_type
 
     download_prep_id = None
-    download_qiime_id = None
     other_filepaths = []
     for fp_id, fp in pt.get_filepaths():
         fp = basename(fp)
-        if 'qiime' in fp:
-            if download_qiime_id is None:
-                download_qiime_id = fp_id
+        if download_prep_id is None:
+            download_prep_id = fp_id
         else:
-            if download_prep_id is None:
-                download_prep_id = fp_id
-            else:
-                other_filepaths.append(fp)
+            other_filepaths.append(fp)
 
     ontology = _get_ENA_ontology()
 
     editable = Study(study_id).can_edit(User(user_id)) and not processing
+
+    success, restrictions = pt.validate_restrictions()
 
     return {'status': 'success',
             'message': '',
             'name': name,
             'files': files,
             'download_prep_id': download_prep_id,
-            'download_qiime_id': download_qiime_id,
             'other_filepaths': other_filepaths,
             'num_samples': num_samples,
             'num_columns': num_columns,
@@ -174,6 +171,9 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'data_type': pt.data_type(),
             'alert_type': alert_type,
             'is_submitted_to_ebi': pt.is_submitted_to_ebi,
+            'prep_restrictions': restrictions,
+            'samples': sorted(list(pt.keys())),
+            'deprecated': deprecated,
             'alert_message': alert_msg}
 
 
@@ -301,7 +301,7 @@ def prep_template_summary_get_req(prep_id, user_id):
 
     cols = sorted(list(df.columns))
     for column in cols:
-        counts = df[column].value_counts()
+        counts = df[column].value_counts(dropna=False)
         out['summary'].append(
             (str(column), [(str(key), counts[key])
                            for key in natsorted(counts.index)]))
@@ -485,6 +485,21 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
                      dumps({'job_id': job.id}))
         job.submit()
         return {'status': 'success', 'message': '', 'row_id': row_id}
+    elif req_op == 'update-deprecated':
+        if len(req_path) != 2:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter'}
+        prep_id = int(req_path[0])
+        value = req_path[1] == 'true'
+
+        # Check if the user actually has access to the study
+        pt = PrepTemplate(prep_id)
+        access_error = check_access(pt.study_id, user_id)
+        if access_error:
+            return access_error
+
+        pt.deprecated = value
+        return {'status': 'success', 'message': ''}
     else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. '
@@ -639,11 +654,17 @@ def prep_template_graph_get_req(prep_id, user_id):
     G = artifact.descendants_with_jobs
 
     nodes, edges, wf_id = get_network_nodes_edges(G, full_access)
+    # nodes returns [node_type, node_name, element_id]; here we are looking
+    # for the node_type == artifact, and check by the element/artifact_id if
+    # it's being deleted
+    artifacts_being_deleted = [a[2] for a in nodes if a[0] == 'artifact' and
+                               Artifact(a[2]).being_deleted_by is not None]
 
     return {'edges': edges,
             'nodes': nodes,
             'workflow': wf_id,
             'status': 'success',
+            'artifacts_being_deleted': artifacts_being_deleted,
             'message': ''}
 
 

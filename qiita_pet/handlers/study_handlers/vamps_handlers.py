@@ -5,8 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
-
 from tornado.web import authenticated, HTTPError
 from qiita_files.demux import stats as demux_stats
 
@@ -50,10 +48,10 @@ class VAMPSHandler(BaseHandler):
         sample_template = study.sample_template
         stats = [('Number of samples', len(prep_template)),
                  ('Number of metadata headers',
-                  len(sample_template.categories()))]
+                  len(sample_template.categories))]
 
-        demux = [path for _, path, ftype in preprocessed_data.filepaths
-                 if ftype == 'preprocessed_demux']
+        demux = [x['fp'] for x in preprocessed_data.filepaths
+                 if x['fp_type'] == 'preprocessed_demux']
         demux_length = len(demux)
 
         if not demux_length:

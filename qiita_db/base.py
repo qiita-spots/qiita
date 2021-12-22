@@ -23,9 +23,6 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
@@ -175,21 +172,26 @@ class QiitaObject(object):
         # the User object) are strings. Moreover, some integer IDs are passed
         # as strings (e.g., '5'). Therefore, explicit type-checking is needed
         # here to accommodate these possibilities.
-        if not isinstance(id_, (int, long, str, unicode)):
+        if not isinstance(id_, (int, str)):
             raise TypeError("id_ must be a numerical or text type (not %s) "
                             "when instantiating "
                             "%s" % (id_.__class__.__name__,
                                     self.__class__.__name__))
 
-        if isinstance(id_, (str, unicode)):
+        if isinstance(id_, (str)):
             if id_.isdigit():
                 id_ = int(id_)
-        elif isinstance(id_, long):
-            id_ = int(id_)
 
         with qdb.sql_connection.TRN:
             self._check_subclass()
-            if not self._check_id(id_):
+            try:
+                _id = self._check_id(id_)
+            except ValueError as error:
+                if 'INVALID_TEXT_REPRESENTATION' not in str(error):
+                    raise error
+                _id = False
+
+            if not _id:
                 raise qdb.exceptions.QiitaDBUnknownIDError(id_, self._table)
 
             if not self._check_portal(id_):

@@ -28,7 +28,7 @@ class SampleInfoDBHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        self.assertEqual(obs.keys(), ['data'])
+        self.assertCountEqual(obs.keys(), ['data'])
 
         # for simplicity we will only test that the keys are the same
         # and that one of the key's info is correct
@@ -42,7 +42,7 @@ class SampleInfoDBHandlerTests(OauthTestingBase):
                '1.SKD3.640198', '1.SKB5.640181', '1.SKB4.640189',
                '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
                '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191']
-        self.assertItemsEqual(obs.keys(), exp)
+        self.assertCountEqual(list(obs.keys()), exp)
 
         obs = obs['1.SKB1.640202']
         exp = {'qiita_study_id': '1', 'physical_specimen_location': 'ANL',
@@ -61,6 +61,7 @@ class SampleInfoDBHandlerTests(OauthTestingBase):
                'physical_specimen_remaining': 'true', 'dna_extracted': 'true',
                'taxon_id': '410658', 'samp_salinity': '7.15',
                'host_subject_id': '1001:M2', 'sample_type': 'ENVO:soil',
+               'env_package': 'soil',
                'season_environment': 'winter', 'temp': '15',
                'country': 'GAZ:United States of America',
                'longitude': '63.5115213108', 'tot_nitro': '1.41',

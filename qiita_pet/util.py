@@ -21,7 +21,6 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from future.utils import viewitems
 from tornado.escape import linkify as tornado_linkify, xhtml_unescape
 
 from qiita_core.util import execute_as_transaction
@@ -96,7 +95,7 @@ def generate_param_str(param):
     ref = Reference(values['reference'])
     result = ["<b>Reference:</b> %s %s" % (ref.name, ref.version)]
     result.extend("<b>%s:</b> %s" % (name, value)
-                  for name, value in viewitems(values)
+                  for name, value in values.items()
                   if name != 'reference')
     return "<br/>".join(result)
 
@@ -188,6 +187,9 @@ def get_network_nodes_edges(graph, full_access, nodes=None, edges=None):
     # n[1] is the object
     for n in graph.nodes():
         if n[0] == 'job':
+            # ignoring internal Jobs
+            if n[1].command.software.name == 'Qiita':
+                continue
             atype = 'job'
             name = n[1].command.name
             status = n[1].status

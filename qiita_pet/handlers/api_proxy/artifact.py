@@ -9,7 +9,6 @@ from os.path import join
 from functools import partial
 from json import dumps
 
-from future.utils import viewitems
 from itertools import chain
 
 from qiita_core.util import execute_as_transaction
@@ -22,6 +21,8 @@ from qiita_db.util import (
     get_mountpoint, get_visibilities, get_artifacts_information)
 from qiita_db.software import Command, Parameters, Software
 from qiita_db.processing_job import ProcessingJob
+from qiita_db.exceptions import QiitaDBError
+from qiita_db.logger import LogEntry
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
@@ -94,14 +95,14 @@ def artifact_get_prep_req(user_id, artifact_ids):
     """
     samples = {}
 
-    for aid in artifact_ids:
+    for aid in sorted(artifact_ids):
         artifact = Artifact(aid)
         access_error = check_access(artifact.study.id, user_id)
         if access_error:
             return access_error
 
         samples[aid] = list(chain(
-            *[pt.keys() for pt in Artifact(aid).prep_templates]))
+            *[sorted(pt.keys()) for pt in Artifact(aid).prep_templates]))
 
     return {'status': 'success', 'msg': '', 'data': samples}
 
@@ -186,7 +187,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         path_builder = partial(join, uploads_path, str(study_id))
         cleaned_filepaths = {}
 
-        for ftype, file_list in viewitems(filepaths):
+        for ftype, file_list in filepaths.items():
             # JavaScript sends us this list as a comma-separated list
             for fp in file_list.split(','):
                 # JavaScript will send this value as an empty string if the
@@ -211,9 +212,12 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             return {'status': 'error',
                     'message': "Can't create artifact, no files provided."}
 
-        # TODO: It might be good to have an API call that wraps to a lower
-        # level method that creates this job.
-        command = Command.get_validator(artifact_type)
+        # This try/except will catch the case when the plugins are not
+        # activated so there is no Validate for the given artifact_type
+        try:
+            command = Command.get_validator(artifact_type)
+        except QiitaDBError as e:
+            return {'status': 'error', 'message': str(e)}
         job = ProcessingJob.create(
             user,
             Parameters.load(command, values_dict={
@@ -231,64 +235,6 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
                  dumps({'job_id': job.id, 'is_qiita_job': True}))
 
     return {'status': 'success', 'message': ''}
-
-
-def artifact_patch_request(user_id, req_op, req_path, req_value=None,
-                           req_from=None):
-    """Modifies an attribute of the artifact
-
-    Parameters
-    ----------
-    user_id : str
-        The id of the user performing the patch operation
-    req_op : str
-        The operation to perform on the artifact
-    req_path : str
-        The prep information and attribute to patch
-    req_value : str, optional
-        The value that needs to be modified
-    req_from : str, optional
-        The original path of the element
-
-    Returns
-    -------
-    dict of {str, str}
-        A dictionary with the following keys:
-        - status: str, whether if the request is successful or not
-        - message: str, if the request is unsuccessful, a human readable error
-    """
-    if req_op == 'replace':
-        req_path = [v for v in req_path.split('/') if v]
-        if len(req_path) != 2:
-            return {'status': 'error',
-                    'message': 'Incorrect path parameter'}
-
-        artifact_id = req_path[0]
-        attribute = req_path[1]
-
-        # Check if the user actually has access to the artifact
-        artifact = Artifact(artifact_id)
-        access_error = check_access(artifact.study.id, user_id)
-        if access_error:
-            return access_error
-
-        if not req_value:
-            return {'status': 'error',
-                    'message': 'A value is required'}
-
-        if attribute == 'name':
-            artifact.name = req_value
-            return {'status': 'success',
-                    'message': ''}
-        else:
-            # We don't understand the attribute so return an error
-            return {'status': 'error',
-                    'message': 'Attribute "%s" not found. '
-                               'Please, check the path parameter' % attribute}
-    else:
-        return {'status': 'error',
-                'message': 'Operation "%s" not supported. '
-                           'Current supported operations: replace' % req_op}
 
 
 def artifact_types_get_req():
@@ -375,10 +321,11 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
     """
     if visibility not in get_visibilities():
         return {'status': 'error',
-                'message': 'Unknown visiblity value: %s' % visibility}
+                'message': 'Unknown visibility value: %s' % visibility}
 
     pd = Artifact(int(artifact_id))
-    access_error = check_access(pd.study.id, user_id)
+    sid = pd.study.id
+    access_error = check_access(sid, user_id)
     if access_error:
         return access_error
     user = User(str(user_id))
@@ -397,6 +344,9 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
             msg = 'User does not have permissions to approve change'
     else:
         pd.visibility = visibility
+
+    LogEntry.create('Warning', '%s changed artifact %s (study %d) to %s' % (
+        user_id, artifact_id, sid, visibility))
 
     return {'status': status,
             'message': msg}

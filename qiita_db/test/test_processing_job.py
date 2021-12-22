@@ -265,6 +265,24 @@ class ProcessingJobTest(TestCase):
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             job.submit()
 
+    def test_submit_environment(self):
+        job = _create_job()
+        software = job.command.software
+        current = software.environment_script
+
+        # temporal update and then rollback to not commit change
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software SET environment_script = %s
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [
+                f'{current} ENVIRONMENT', software.id])
+
+            job.submit()
+
+            self.assertEqual(job.status, 'error')
+
+            qdb.sql_connection.TRN.rollback()
+
     def test_complete_multiple_outputs(self):
         # This test performs the test of multiple functions at the same
         # time. "release", "release_validators" and
@@ -421,7 +439,7 @@ class ProcessingJobTest(TestCase):
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
@@ -442,10 +460,14 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
         self._clean_up_files.extend(
-            [afp for _, afp, _ in
+            [x['fp'] for x in
              qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
     def test_complete_success(self):
+        # Note that here we are submitting and creating other multiple jobs;
+        # thus here is the best place to test any intermediary steps/functions
+        # of the job creation, submission, exectution, and completion.
+        #
         # This first part of the test is just to test that by default the
         # naming of the output artifact will be the name of the output
         fd, fp = mkstemp(suffix='_table.biom')
@@ -457,11 +479,22 @@ class ProcessingJobTest(TestCase):
                                             'artifact_type': 'BIOM'}}
         job = _create_job()
         job._set_status('running')
+
+        # here we can test that job.release_validator_job hasn't been created
+        # yet so it has to be None
+        self.assertIsNone(job.release_validator_job)
         job.complete(True, artifacts_data=artifacts_data)
         self._wait_for_job(job)
+        # let's check for the job that released the validators
+        self.assertIsNotNone(job.release_validator_job)
+        self.assertEqual(job.release_validator_job.parameters.values['job'],
+                         job.id)
         # Retrieve the job that is performing the validation:
         validators = list(job.validator_jobs)
         self.assertEqual(len(validators), 1)
+        # the validator actually runs on the system so it gets an external_id
+        # assigned, let's test that is not None
+        self.assertFalse(validators[0].external_id == 'Not Available')
         # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(
@@ -515,10 +548,16 @@ class ProcessingJobTest(TestCase):
         # Retrieve the job that is performing the validation:
         validators = list(job.validator_jobs)
         self.assertEqual(len(validators), 1)
+        # here we can test that the validator shape and allocation is correct
+        validator = validators[0]
+        self.assertEqual(validator.parameters.values['artifact_type'], 'BIOM')
+        self.assertEqual(validator.get_resource_allocation_info(), '-q qiita '
+                         '-l nodes=1:ppn=1 -l mem=90gb -l walltime=150:00:00')
+        self.assertEqual(validator.shape, (27, 31, None))
         # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(
-            loads(validators[0].parameters.values['provenance'])['name'],
+            loads(validator.parameters.values['provenance'])['name'],
             "demultiplexed golay_12 1.5")
 
     def test_complete_failure(self):
@@ -632,13 +671,13 @@ class ProcessingJobTest(TestCase):
         tester = qdb.processing_job.ProcessingWorkflow.from_scratch(
             exp_user, exp_params, name=name, force=True)
 
-        parent = tester.graph.nodes()[0]
+        parent = list(tester.graph.nodes())[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
         tester.add(dflt_params, connections=connections)
         # we could get the child using tester.graph.nodes()[1] but networkx
         # doesn't assure order so using the actual graph to get the child
-        child = nx.topological_sort(tester.graph)[1]
+        child = list(nx.topological_sort(tester.graph))[1]
 
         mapping = {1: 3}
         obs = parent._update_children(mapping)
@@ -682,7 +721,7 @@ class ProcessingJobTest(TestCase):
         artifact = qdb.artifact.Artifact(exp_artifact_count)
         obs = job.outputs
         self.assertEqual(obs, {'OTU table': artifact})
-        self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
+        self._clean_up_files.extend([x['fp'] for x in artifact.filepaths])
         self.assertEqual(artifact.name, 'outArtifact')
 
     def test_processing_job_workflow(self):
@@ -729,6 +768,81 @@ class ProcessingJobTest(TestCase):
         job.hide()
         self.assertTrue(job.hidden)
 
+    def test_shape(self):
+        jids = {
+            # Split libraries FASTQ
+            '6d368e16-2242-4cf8-87b4-a5dc40bb890b': (27, 31, 116),
+            # Pick closed-reference OTUs
+            '80bf25f3-5f1d-4e10-9369-315e4244f6d5': (27, 31, 0),
+            # Single Rarefaction / Analysis
+            '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0': (5, 56, 3770436),
+            # Split libraries
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d': (27, 31, 116)}
+
+        for jid, shape in jids.items():
+            job = qdb.processing_job.ProcessingJob(jid)
+            self.assertEqual(job.shape, shape)
+
+    def test_get_resource_allocation_info(self):
+        jids = {
+            # Split libraries FASTQ
+            '6d368e16-2242-4cf8-87b4-a5dc40bb890b':
+                '-q qiita -l nodes=1:ppn=1 -l mem=120gb -l walltime=80:00:00',
+            # Pick closed-reference OTUs
+            '80bf25f3-5f1d-4e10-9369-315e4244f6d5':
+                '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00',
+            # Single Rarefaction / Analysis
+            '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0':
+                '-q qiita -l nodes=1:ppn=5 -l pmem=8gb -l walltime=168:00:00',
+            # Split libraries
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d':
+                '-q qiita -l nodes=1:ppn=1 -l mem=60gb -l walltime=25:00:00'}
+
+        for jid, allocation in jids.items():
+            job = qdb.processing_job.ProcessingJob(jid)
+            self.assertEqual(job.get_resource_allocation_info(), allocation)
+
+        # now let's test get_resource_allocation_info formulas, fun!!
+        job_changed = qdb.processing_job.ProcessingJob(
+            '6d368e16-2242-4cf8-87b4-a5dc40bb890b')
+        job_not_changed = qdb.processing_job.ProcessingJob(
+            '80bf25f3-5f1d-4e10-9369-315e4244f6d5')
+
+        # helper to set memory allocations easier
+        def _set_allocation(memory):
+            sql = """UPDATE qiita.processing_job_resource_allocation
+                     SET allocation = '{0}'
+                     WHERE name = 'Split libraries FASTQ'""".format(
+                        '-q qiita -l mem=%s' % memory)
+            qdb.sql_connection.perform_as_transaction(sql)
+
+        # let's start with something simple, samples*1000
+        #                                         27*1000 ~ 27000
+        _set_allocation('{samples}*1000')
+        self.assertEqual(
+            job_not_changed.get_resource_allocation_info(),
+            '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00')
+        self.assertEqual(job_changed.get_resource_allocation_info(),
+                         '-q qiita -l mem=26K')
+
+        # a little more complex ((samples+columns)*1000000)+4000000
+        #                       ((   27  +  31   )*1000000)+4000000 ~ 62000000
+        _set_allocation('(({samples}+{columns})*1000000)+4000000')
+        self.assertEqual(
+            job_not_changed.get_resource_allocation_info(),
+            '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00')
+        self.assertEqual(job_changed.get_resource_allocation_info(),
+                         '-q qiita -l mem=59M')
+
+        # now something real input_size+(2*1e+9)
+        #                        116   +(2*1e+9) ~ 2000000116
+        _set_allocation('{input_size}+(2*1e+9)')
+        self.assertEqual(
+            job_not_changed.get_resource_allocation_info(),
+            '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00')
+        self.assertEqual(job_changed.get_resource_allocation_info(),
+                         '-q qiita -l mem=2G')
+
 
 @qiita_test_checker()
 class ProcessingWorkflowTests(TestCase):
@@ -748,8 +862,8 @@ class ProcessingWorkflowTests(TestCase):
                 'b72369f9-a886-4193-8d3d-f7b504168e75'),
             qdb.processing_job.ProcessingJob(
                 'd19f76ee-274e-4c1b-b3a2-a12d73507c55')]
-        self.assertItemsEqual(obs.nodes(), exp_nodes)
-        self.assertEqual(obs.edges(), [(exp_nodes[0], exp_nodes[1])])
+        self.assertCountEqual(obs.nodes(), exp_nodes)
+        self.assertEqual(list(obs.edges()), [(exp_nodes[0], exp_nodes[1])])
 
     def test_graph_only_root(self):
         obs = qdb.processing_job.ProcessingWorkflow(2).graph
@@ -757,8 +871,8 @@ class ProcessingWorkflowTests(TestCase):
         exp_nodes = [
             qdb.processing_job.ProcessingJob(
                 'ac653cb5-76a6-4a45-929e-eb9b2dee6b63')]
-        self.assertItemsEqual(obs.nodes(), exp_nodes)
-        self.assertEqual(obs.edges(), [])
+        self.assertCountEqual(obs.nodes(), exp_nodes)
+        self.assertEqual(list(obs.edges()), [])
 
     def test_raise_if_not_in_construction(self):
         # We just need to test that the execution continues (i.e. no raise)
@@ -772,8 +886,9 @@ class ProcessingWorkflowTests(TestCase):
             tester._raise_if_not_in_construction()
 
     def test_submit(self):
-        # In order to test a success, we need to actually run the jobs, which
-        # will mean to run split libraries, for example.
+        # The submit method is being tested in test_complete_success via
+        # a job, its release validators and validators submissions.
+        # Leaving this note here in case it's helpful for future development
         pass
 
     def test_from_default_workflow(self):
@@ -791,8 +906,8 @@ class ProcessingWorkflowTests(TestCase):
         self.assertEqual(len(obs_graph.nodes()), 2)
         obs_edges = obs_graph.edges()
         self.assertEqual(len(obs_edges), 1)
-        obs_src = obs_edges[0][0]
-        obs_dst = obs_edges[0][1]
+        obs_edges = list(obs_edges)[0]
+        obs_src, obs_dst = list(obs_edges)
         self.assertTrue(isinstance(obs_src, qdb.processing_job.ProcessingJob))
         self.assertTrue(isinstance(obs_dst, qdb.processing_job.ProcessingJob))
         self.assertTrue(obs_src.command, qdb.software.Command(1))
@@ -856,8 +971,8 @@ class ProcessingWorkflowTests(TestCase):
         self.assertTrue(isinstance(obs_graph, nx.DiGraph))
         nodes = obs_graph.nodes()
         self.assertEqual(len(nodes), 1)
-        self.assertEqual(nodes[0].parameters, exp_params)
-        self.assertEqual(obs_graph.edges(), [])
+        self.assertEqual(list(nodes)[0].parameters, exp_params)
+        self.assertEqual(list(obs_graph.edges()), [])
 
     def test_add(self):
         exp_command = qdb.software.Command(1)
@@ -876,7 +991,7 @@ class ProcessingWorkflowTests(TestCase):
         obs = qdb.processing_job.ProcessingWorkflow.from_scratch(
             exp_user, exp_params, name=name, force=True)
 
-        parent = obs.graph.nodes()[0]
+        parent = list(obs.graph.nodes())[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
         obs.add(dflt_params, connections=connections, force=True)
@@ -887,8 +1002,8 @@ class ProcessingWorkflowTests(TestCase):
         self.assertEqual(len(obs_nodes), 2)
         obs_edges = obs_graph.edges()
         self.assertEqual(len(obs_edges), 1)
-        obs_src = obs_edges[0][0]
-        obs_dst = obs_edges[0][1]
+        obs_edges = list(obs_edges)[0]
+        obs_src, obs_dst = list(obs_edges)
         self.assertEqual(obs_src, parent)
         self.assertTrue(isinstance(obs_dst, qdb.processing_job.ProcessingJob))
         obs_params = obs_dst.parameters.values
@@ -952,19 +1067,20 @@ class ProcessingWorkflowTests(TestCase):
         tester = qdb.processing_job.ProcessingWorkflow.from_scratch(
             exp_user, exp_params, name=name, force=True)
 
-        parent = tester.graph.nodes()[0]
+        parent = list(tester.graph.nodes())[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
         tester.add(dflt_params, connections=connections)
 
         self.assertEqual(len(tester.graph.nodes()), 2)
-        tester.remove(tester.graph.edges()[0][1])
+        element = list(tester.graph.edges())[0]
+        tester.remove(element[1])
 
         g = tester.graph
         obs_nodes = g.nodes()
         self.assertEqual(len(obs_nodes), 1)
-        self.assertEqual(obs_nodes[0], parent)
-        self.assertEqual(g.edges(), [])
+        self.assertEqual(list(obs_nodes)[0], parent)
+        self.assertEqual(list(g.edges()), [])
 
         # Test with cascade = true
         exp_user = qdb.user.User('test@foo.bar')
@@ -975,9 +1091,10 @@ class ProcessingWorkflowTests(TestCase):
         tester = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
             exp_user, dflt_wf, req_params, name=name, force=True)
 
-        tester.remove(tester.graph.edges()[0][0], cascade=True)
+        element = list(tester.graph.edges())[0]
+        tester.remove(element[0], cascade=True)
 
-        self.assertEqual(tester.graph.nodes(), [])
+        self.assertEqual(list(tester.graph.nodes()), [])
 
     def test_remove_error(self):
         with self.assertRaises(
@@ -996,7 +1113,8 @@ class ProcessingWorkflowTests(TestCase):
 
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
-            tester.remove(tester.graph.edges()[0][0])
+            element = list(tester.graph.edges())[0]
+            tester.remove(element[0])
 
 
 @qiita_test_checker()
@@ -1004,17 +1122,17 @@ class ProcessingJobDuplicated(TestCase):
     def test_create_duplicated(self):
         job = _create_job()
         job._set_status('success')
-        with self.assertRaisesRegexp(ValueError, 'Cannot create job because '
-                                     'the parameters are the same as jobs '
-                                     'that are queued, running or already '
-                                     'have succeeded:') as context:
+        with self.assertRaisesRegex(ValueError, 'Cannot create job because '
+                                    'the parameters are the same as jobs '
+                                    'that are queued, running or already '
+                                    'have succeeded:') as context:
             _create_job(False)
 
         # If it failed it's because we have jobs in non finished status so
         # setting them as error. This is basically testing that the duplicated
         # job creation allows to create if all jobs are error and if success
         # that the job doesn't have children
-        for jobs in context.exception.message.split('\n')[1:]:
+        for jobs in str(context.exception).split('\n')[1:]:
             jid, status = jobs.split(': ')
             if status != 'success':
                 qdb.processing_job.ProcessingJob(jid)._set_status('error')

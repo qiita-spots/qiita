@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from future.utils import viewitems
 from datetime import datetime
 
 from qiita_db.metadata_template.constants import (
@@ -19,14 +18,14 @@ from qiita_db.sql_connection import TRN
 
 # getting columns in each info file that we need to check for
 cols_sample = [col
-               for key, vals in viewitems(SAMPLE_TEMPLATE_COLUMNS)
-               for col, dt in viewitems(vals.columns) if dt == datetime]
+               for key, vals in SAMPLE_TEMPLATE_COLUMNS.items()
+               for col, dt in vals.columns.items() if dt == datetime]
 cols_prep = [col
-             for key, vals in viewitems(PREP_TEMPLATE_COLUMNS)
-             for col, dt in viewitems(vals.columns) if dt == datetime].extend(
+             for key, vals in PREP_TEMPLATE_COLUMNS.items()
+             for col, dt in vals.columns.items() if dt == datetime].extend(
                 [col
-                 for key, vals in viewitems(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
-                 for col, dt in viewitems(vals.columns)])
+                 for key, vals in PREP_TEMPLATE_COLUMNS_TARGET_GENE.items()
+                 for col, dt in vals.columns.items()])
 
 
 def transform_date(value):
@@ -82,7 +81,7 @@ if cols_sample:
         # note that we are looking for those columns with duplicated names in
         # the headers
         TRN.add(sql, [tuple(set(cols_sample))])
-        for table, columns in viewitems(dict(TRN.execute_fetchindex())):
+        for table, columns in dict(TRN.execute_fetchindex()).items():
             # [1] the format is table_# so taking the #
             st = SampleTemplate(int(table.split('_')[1]))
             # getting just the columns of interest
@@ -107,7 +106,7 @@ if cols_prep:
         # note that we are looking for those columns with duplicated names in
         # the headers
         TRN.add(sql, [tuple(set(cols_prep))])
-        for table, columns in viewitems(dict(TRN.execute_fetchindex())):
+        for table, columns in dict(TRN.execute_fetchindex()).items():
             # [1] the format is table_# so taking the #
             pt = PrepTemplate(int(table.split('_')[1]))
             # getting just the columns of interest

@@ -5,23 +5,16 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-from future.utils import PY3, viewitems
 from six import StringIO
-from collections import defaultdict
 
 import pandas as pd
 import numpy as np
 import warnings
-from skbio.util import find_duplicates
+from iteration_utilities import duplicates
 
 import qiita_db as qdb
 
-if PY3:
-    from string import ascii_letters as letters, digits
-else:
-    from string import letters, digits
+from string import ascii_letters, digits
 
 
 def prefix_sample_names_with_id(md_template, study_id):
@@ -35,8 +28,9 @@ def prefix_sample_names_with_id(md_template, study_id):
         The study to which the metadata belongs to
     """
     # loop over the samples and prefix those that aren't prefixed
+    sid = str(study_id)
     md_template['qiita_sample_name_with_id'] = pd.Series(
-        [idx if idx.split('.', 1)[0] == str(study_id)
+        [idx if idx.split('.', 1)[0] == sid and idx != sid
          else '%d.%s' % (study_id, idx)
          for idx in md_template.index], index=md_template.index)
 
@@ -94,29 +88,16 @@ def load_template_to_dataframe(fn, index='sample_name'):
     the database
 
     Everything in the DataFrame will be read and managed as string
+
+    While reading the file via pandas, it's possible that it will raise a
+    'tokenizing' pd.errors.ParserError which is confusing for users; thus,
+    rewriting the error with an explanation of what it means and how to fix.
     """
     # Load in file lines
     holdfile = None
-    with qdb.util.open_file(fn, mode='U') as f:
-        errors = defaultdict(list)
+    with qdb.util.open_file(fn, newline=None,
+                            encoding="utf8", errors='ignore') as f:
         holdfile = f.readlines()
-        # here we are checking for non UTF-8 chars
-        for row, line in enumerate(holdfile):
-            for col, block in enumerate(line.split('\t')):
-                try:
-                    tblock = block.encode('utf-8')
-                except UnicodeDecodeError:
-                    tblock = unicode(block, errors='replace')
-                    tblock = tblock.replace(u'\ufffd', '&#128062;')
-                    errors[tblock].append('(%d, %d)' % (row, col))
-        if bool(errors):
-            raise ValueError(
-                "There are invalid (non UTF-8) characters in your information "
-                "file. The offending fields and their location (row, column) "
-                "are listed below, invalid characters are represented using "
-                "&#128062;: %s" % '; '.join(
-                    ['"%s" = %s' % (k, ', '.join(v))
-                     for k, v in viewitems(errors)]))
 
     if not holdfile:
         raise ValueError('Empty file passed!')
@@ -150,7 +131,7 @@ def load_template_to_dataframe(fn, index='sample_name'):
                     raise ValueError(
                         'Your file has empty columns headers.')
                 raise qdb.exceptions.QiitaDBDuplicateHeaderError(
-                    find_duplicates(newcols))
+                    set(duplicates(newcols)))
         else:
             # .strip will remove odd chars, newlines, tabs and multiple
             # spaces but we need to read a new line at the end of the
@@ -167,16 +148,26 @@ def load_template_to_dataframe(fn, index='sample_name'):
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
-    template = pd.read_csv(
-        StringIO(''.join(holdfile)),
-        sep='\t',
-        dtype=str,
-        encoding='utf-8',
-        infer_datetime_format=False,
-        keep_default_na=False,
-        index_col=False,
-        comment='\t',
-        converters={index: lambda x: str(x).strip()})
+    try:
+        template = pd.read_csv(
+            StringIO(''.join(holdfile)),
+            sep='\t',
+            dtype=str,
+            encoding='utf-8',
+            infer_datetime_format=False,
+            keep_default_na=False,
+            index_col=False,
+            comment='\t',
+            converters={index: lambda x: str(x).strip()})
+    except pd.errors.ParserError as e:
+        if 'tokenizing' in str(e):
+            msg = ('Your file has more columns with values than headers. To '
+                   'fix, make sure to delete any extra rows or columns; they '
+                   'might look empty because they have spaces. Then upload '
+                   'and try again.')
+            raise RuntimeError(msg)
+        else:
+            raise e
     # remove newlines and tabs from fields
     template.replace(to_replace='[\t\n\r\x0b\x0c]+', value='',
                      regex=True, inplace=True)
@@ -212,6 +203,19 @@ def load_template_to_dataframe(fn, index='sample_name'):
             'all their values are empty: %s'
             % ', '.join(dropped_cols), qdb.exceptions.QiitaDBWarning)
 
+    # removing 'sample-id' and 'sample_id' as per issue #2906
+    sdrop = []
+    if 'sample-id' in template.columns:
+        sdrop.append('sample-id')
+    if 'sample_id' in template.columns:
+        sdrop.append('sample_id')
+    if sdrop:
+        template.drop(columns=sdrop, inplace=True)
+        warnings.warn(
+            'The following column(s) were removed from the template because '
+            'they will cause conflicts with sample_name: %s'
+            % ', '.join(sdrop), qdb.exceptions.QiitaDBWarning)
+
     # Pandas represents data with np.nan rather than Nones, change it to None
     # because psycopg2 knows that a None is a Null in SQL, while it doesn't
     # know what to do with NaN
@@ -240,7 +244,7 @@ def get_invalid_sample_names(sample_names):
     """
 
     # from the QIIME mapping file documentation
-    valid = set(letters+digits+'.')
+    valid = set(ascii_letters+digits+'.')
     inv = []
 
     for s in sample_names:
@@ -272,7 +276,7 @@ def looks_like_qiime_mapping_file(fp):
     some other different column.
     """
     first_line = None
-    with qdb.util.open_file(fp, mode='U') as f:
+    with qdb.util.open_file(fp, newline=None, errors='replace') as f:
         first_line = f.readline()
     if not first_line:
         return False
@@ -354,7 +358,7 @@ def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
                 comments.append(line)
         else:
             # Will add empty string to empty fields
-            tmp_line = map(strip_f, line.split('\t'))
+            tmp_line = list(map(strip_f, line.split('\t')))
             if len(tmp_line) < len(header):
                 tmp_line.extend([''] * (len(header) - len(tmp_line)))
             mapping_data.append(tmp_line)
@@ -380,3 +384,17 @@ def get_pgsql_reserved_words():
         sql = "SELECT word FROM pg_get_keywords() WHERE catcode = 'R';"
         qdb.sql_connection.TRN.add(sql)
         return set(qdb.sql_connection.TRN.execute_fetchflatten())
+
+
+def get_qiime2_reserved_words():
+    """Returns a list of the current reserved words in qiime2
+
+    Returns
+    -------
+    set: str
+        The reserved words
+    """
+    qiime2_reserved_column_names = ['feature id', 'feature-id', 'featureid',
+                                    'id', 'sample id', 'sample-id', 'sampleid']
+
+    return set(qiime2_reserved_column_names)

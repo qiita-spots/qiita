@@ -108,7 +108,9 @@ class UserTest(TestCase):
         sql = """SELECT *
                  FROM qiita.qiita_user
                  WHERE email = 'testcreateuser@test.bar'"""
-        obs = self.conn_handler.execute_fetchall(sql)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
         exp = {
@@ -129,8 +131,10 @@ class UserTest(TestCase):
                  WHERE email = 'testcreateuser@test.bar'"""
         m_id = qdb.util.get_count('qiita.message')
         # the user should have the latest message (m_id) and the one before
-        self.assertEqual(self.conn_handler.execute_fetchall(sql), [[m_id-1],
-                                                                   [m_id]])
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
+        self.assertEqual(obs, [[m_id-1], [m_id]])
         qdb.util.clear_system_messages()
 
     def test_create_user_info(self):
@@ -140,7 +144,9 @@ class UserTest(TestCase):
         sql = """SELECT *
                  FROM qiita.qiita_user
                  WHERE email = 'testcreateuserinfo@test.bar'"""
-        obs = self.conn_handler.execute_fetchall(sql)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
         exp = {
@@ -289,7 +295,7 @@ class UserTest(TestCase):
                         user_verify_code='verifycode',
                         pass_reset_code='resetcode'
                     WHERE email=%s"""
-        self.conn_handler.execute(sql, [email])
+        qdb.sql_connection.perform_as_transaction(sql, [email])
 
         self.assertFalse(
             qdb.user.User.verify_code(email, 'wrongcode', 'create'))
@@ -313,7 +319,9 @@ class UserTest(TestCase):
         # make sure default analyses created
         sql = ("SELECT email, name, description, dflt FROM qiita.analysis "
                "WHERE email = %s")
-        obs = self.conn_handler.execute_fetchall(sql, [email])
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql, [email])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [[email, 'testverifycode@test.bar-dflt-2', 'dflt', True],
                [email, 'testverifycode@test.bar-dflt-1', 'dflt', True]]
         self.assertEqual(obs, exp)
@@ -324,7 +332,10 @@ class UserTest(TestCase):
                     JOIN qiita.analysis_portal USING (analysis_id)
                     JOIN qiita.portal_type USING (portal_type_id)
                  WHERE email = 'testverifycode@test.bar' AND dflt = true"""
-        self.assertEqual(self.conn_handler.execute_fetchone(sql)[0], 2)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            obs = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+        self.assertEqual(obs, 2)
 
     def _check_pass(self, user, passwd):
         self.assertEqual(qdb.util.hash_password(passwd, user.password),
@@ -358,13 +369,17 @@ class UserTest(TestCase):
     def test_generate_reset_code(self):
         user = qdb.user.User.create('new@test.bar', 'password')
         sql = "SELECT LOCALTIMESTAMP"
-        before = self.conn_handler.execute_fetchone(sql)[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            before = qdb.sql_connection.TRN.execute_fetchflatten()[0]
         user.generate_reset_code()
-        after = self.conn_handler.execute_fetchone(sql)[0]
-        sql = ("SELECT pass_reset_code, pass_reset_timestamp FROM "
-               "qiita.qiita_user WHERE email = %s")
-        obscode, obstime = self.conn_handler.execute_fetchone(
-            sql, ('new@test.bar',))
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            after = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+            sql = ("SELECT pass_reset_code, pass_reset_timestamp FROM "
+                   "qiita.qiita_user WHERE email = %s")
+            qdb.sql_connection.TRN.add(sql, ('new@test.bar',))
+            obscode, obstime = qdb.sql_connection.TRN.execute_fetchindex()[0]
         self.assertEqual(len(obscode), 20)
         self.assertTrue(before < obstime < after)
 
@@ -402,7 +417,7 @@ class UserTest(TestCase):
             'sit amet, venenatis bibendum sem. Curabitur vel odio sed est '
             'rutrum rutrum. Quisque efficitur ut purus in ultrices. '
             'Pellentesque eu auctor justo.', 'message <a href="#">3</a>']
-        self.assertItemsEqual([(x[1]) for x in obs], exp_msg)
+        self.assertCountEqual([(x[1]) for x in obs], exp_msg)
         self.assertTrue(all(x[2] < datetime.now() for x in obs))
         self.assertFalse(all(x[3] for x in obs))
         self.assertEqual([x[4] for x in obs], [True, False, False, False])
@@ -482,6 +497,17 @@ class UserTest(TestCase):
 
         # no jobs
         self.assertEqual(qdb.user.User('admin@foo.bar').jobs(), [])
+
+    def test_update_email(self):
+        user = qdb.user.User('shared@foo.bar')
+        with self.assertRaisesRegex(IncorrectEmailError, 'Bad email given:'):
+            user.update_email('bladfa.adferqerq@$EWE')
+
+        with self.assertRaisesRegex(IncorrectEmailError,
+                                    'This email already exists'):
+            user.update_email('test@foo.bar')
+
+        user.update_email('bla@ble.bli')
 
 
 if __name__ == "__main__":

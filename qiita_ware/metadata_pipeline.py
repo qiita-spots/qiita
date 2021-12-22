@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from future.utils import viewvalues, viewkeys
-
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -62,14 +59,14 @@ def create_templates_from_qiime_mapping_file(fp, study, data_type):
 
     # Figure out which columns belong to the prep template
     def _col_iterator(restriction_set):
-        for restriction in viewvalues(restriction_set):
-            for cols in viewkeys(restriction.columns):
+        for restriction in restriction_set.values():
+            for cols in restriction.columns.keys():
                 yield cols
 
     pt_cols = set(col for col in _col_iterator(PREP_TEMPLATE_COLUMNS))
 
     data_type_str = (convert_from_id(data_type, "data_type")
-                     if isinstance(data_type, (int, long)) else data_type)
+                     if isinstance(data_type, int) else data_type)
 
     if data_type_str in TARGET_GENE_DATA_TYPES:
         pt_cols.update(
@@ -80,8 +77,8 @@ def create_templates_from_qiime_mapping_file(fp, study, data_type):
     pt_cols = qiime_cols.intersection(pt_cols)
     st_cols = qiime_cols.difference(pt_cols)
 
-    st_md = qiime_map.ix[:, st_cols]
-    pt_md = qiime_map.ix[:, pt_cols]
+    st_md = qiime_map.loc[:, st_cols]
+    pt_md = qiime_map.loc[:, pt_cols]
 
     return (SampleTemplate.create(st_md, study),
             PrepTemplate.create(pt_md, study, data_type))

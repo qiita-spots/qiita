@@ -52,9 +52,11 @@ class TestPrepAPIReadOnly(TestCase):
         exp = {
             'status': 'success',
             'prep_files': ['uploaded_file.txt'],
-            'data_types': ['16S', '18S', 'Genomics', 'ITS', 'Metabolomic',
-                           'Metagenomic', 'Metatranscriptomics', 'Multiomic',
-                           'Proteomic', 'Transcriptomics', 'Viromics'],
+            'data_types': ['16S', '18S', 'Genomics', 'ITS',
+                           'Job Output Folder', 'Metabolomic',
+                           'Metagenomic', 'Metatranscriptomics',
+                           'Multiomic', 'Proteomic', 'Transcriptomics',
+                           'Viromics'],
             'ontology': {
                 'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
                         'Forensic or Paleo-genomics', 'Gene Regulation Study',
@@ -68,13 +70,14 @@ class TestPrepAPIReadOnly(TestCase):
 
     def test_prep_template_ajax_get_req(self):
         obs = prep_template_ajax_get_req('test@foo.bar', 1)
+
         exp = {'status': 'success',
                'message': '',
                'name': "Prep information 1",
                'files': ["uploaded_file.txt"],
-               'download_prep_id': 24,
-               'download_qiime_id': 25,
+               'download_prep_id': 21,
                'other_filepaths': ['1_prep_1_19700101-000000.txt',
+                                   '1_prep_1_qiime_19700101-000000.txt',
                                    '1_prep_1_19700101-000000.txt'],
                'num_samples': 27,
                'num_columns': 22,
@@ -94,8 +97,20 @@ class TestPrepAPIReadOnly(TestCase):
                'data_type': '18S',
                'alert_type': '',
                'is_submitted_to_ebi': True,
+               'prep_restrictions': '',
+               'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+                           '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+                           '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+                           '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+                           '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+                           '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+                           '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+                           '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+                           '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'],
+               'deprecated': False,
                'alert_message': ''}
-        self.assertEqual(obs, exp)
+
+        self.assertDictEqual(obs, exp)
 
         obs = prep_template_ajax_get_req('admin@foo.bar', 1)
         self.assertEqual(obs, exp)
@@ -115,10 +130,11 @@ class TestPrepAPIReadOnly(TestCase):
 
     def test_prep_template_get_req(self):
         obs = prep_template_get_req(1, 'test@foo.bar')
-        self.assertItemsEqual(obs.keys(), ['status', 'message', 'template'])
+        self.assertCountEqual(
+            list(obs.keys()), ['status', 'message', 'template'])
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(obs['message'], '')
-        self.assertEqual(obs['template'].keys(), [
+        self.assertCountEqual(obs['template'].keys(), [
             '1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195', '1.SKB6.640176',
             '1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182', '1.SKM8.640201',
             '1.SKM2.640199', '1.SKD2.640178', '1.SKB7.640196', '1.SKD4.640185',
@@ -183,7 +199,7 @@ class TestPrepAPIReadOnly(TestCase):
         self.assertEqual(obs['message'], '')
         # [0] the fp_id is the first element, that should change
         fp_ids = [fp[0] for fp in obs['filepaths']]
-        self.assertItemsEqual(fp_ids, [18, 19, 20, 21, 24, 25])
+        self.assertCountEqual(fp_ids, [18, 19, 20, 21])
 
     def test_prep_template_filepaths_get_req_no_access(self):
         obs = prep_template_filepaths_get_req(1, 'demo@microbio.me')
@@ -204,55 +220,55 @@ class TestPrepAPIReadOnly(TestCase):
 
     def test_prep_template_summary_get_req(self):
         obs = prep_template_summary_get_req(1, 'test@foo.bar')
-        exp = {
-            'status': 'success', 'message': '',
-            'summary': [('barcode', [
-                ('AACTCCTGTGGA', 1), ('ACCTCAGTCAAG', 1), ('ACGCACATACAA', 1),
-                ('AGCAGGCACGAA', 1), ('AGCGCTCACATC', 1), ('ATATCGCGATGA', 1),
-                ('ATGGCCTGACTA', 1), ('CATACACGCACC', 1), ('CCACCCAGTAAC', 1),
-                ('CCGATGCCTTGA', 1), ('CCTCGATGCAGT', 1), ('CCTCTGAGAGCT', 1),
-                ('CGAGGTTCTGAT', 1), ('CGCCGGTAATCT', 1), ('CGGCCTAAGTTC', 1),
-                ('CGTAGAGCTCTC', 1), ('CGTGCACAATTG', 1), ('GATAGCACTCGT', 1),
-                ('GCGGACTATTCA', 1), ('GTCCGCAAGTTA', 1), ('TAATGGTCGTAG', 1),
-                ('TAGCGCGAACTT', 1), ('TCGACCAAACAC', 1), ('TGAGTGGTCTGT', 1),
-                ('TGCTACAGACGT', 1), ('TGGTTATGGCAC', 1), ('TTGCACCGTCGA', 1)
-            ]), ('center_name', [('ANL', 27)]), ('center_project_name', []),
-                ('emp_status', [('EMP', 27)]),
-                ('experiment_center', [('ANL', 27)]),
-                ('experiment_design_description', [
-                    ('micro biome of soil and rhizosphere of cannabis plants '
-                     'from CA', 27)]),
-                ('experiment_title', [('Cannabis Soil Microbiome', 27)]),
-                ('illumina_technology', [('MiSeq', 27)]),
-                ('instrument_model', [('Illumina MiSeq', 27)]),
-                ('library_construction_protocol', [
-                    ('This analysis was done as in Caporaso et al 2011 Genome '
-                     'research. The PCR primers (F515/R806) were developed '
-                     'against the V4 region of the 16S rRNA (both bacteria '
-                     'and archaea), which we determined would yield optimal '
-                     'community clustering with reads of this length using a '
-                     'procedure similar to that of ref. 15. [For reference, '
-                     'this primer pair amplifies the region 533_786 in the '
-                     'Escherichia coli strain 83972 sequence (greengenes '
-                     'accession no. prokMSA_id:470367).] The reverse PCR '
-                     'primer is barcoded with a 12-base error-correcting '
-                     'Golay code to facilitate multiplexing of up to 1,500 '
-                     'samples per lane, and both PCR primers contain '
-                     'sequencer adapter regions.', 27)]),
-                ('pcr_primers', [(
-                    'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 27)]),
-                ('platform', [('Illumina', 27)]),
-                ('primer', [('GTGCCAGCMGCCGCGGTAA', 27)]),
-                ('qiita_prep_id', [('1', 27)]), ('run_center', [('ANL', 27)]),
-                ('run_date', [('8/1/12', 27)]),
-                ('run_prefix', [('s_G1_L001_sequences', 27)]),
-                ('samp_size', [('.25,g', 27)]),
-                ('sample_center', [('ANL', 27)]),
-                ('sequencing_meth', [('Sequencing by synthesis', 27)]),
-                ('study_center', [('CCME', 27)]),
-                ('target_gene', [('16S rRNA', 27)]),
-                ('target_subfragment', [('V4', 27)])],
-            'editable': True, 'num_samples': 27}
+        exp = {'num_samples': 27, 'summary': [
+            ('barcode', [('AACTCCTGTGGA', 1), ('ACCTCAGTCAAG', 1),
+                         ('ACGCACATACAA', 1), ('AGCAGGCACGAA', 1),
+                         ('AGCGCTCACATC', 1), ('ATATCGCGATGA', 1),
+                         ('ATGGCCTGACTA', 1), ('CATACACGCACC', 1),
+                         ('CCACCCAGTAAC', 1), ('CCGATGCCTTGA', 1),
+                         ('CCTCGATGCAGT', 1), ('CCTCTGAGAGCT', 1),
+                         ('CGAGGTTCTGAT', 1), ('CGCCGGTAATCT', 1),
+                         ('CGGCCTAAGTTC', 1), ('CGTAGAGCTCTC', 1),
+                         ('CGTGCACAATTG', 1), ('GATAGCACTCGT', 1),
+                         ('GCGGACTATTCA', 1), ('GTCCGCAAGTTA', 1),
+                         ('TAATGGTCGTAG', 1), ('TAGCGCGAACTT', 1),
+                         ('TCGACCAAACAC', 1), ('TGAGTGGTCTGT', 1),
+                         ('TGCTACAGACGT', 1), ('TGGTTATGGCAC', 1),
+                         ('TTGCACCGTCGA', 1)]), ('center_name', [('ANL', 27)]),
+            ('center_project_name', [('nan', 27)]),
+            ('emp_status', [('EMP', 27)]),
+            ('experiment_center', [('ANL', 27)]),
+            ('experiment_design_description', [('micro biome of soil and '
+             'rhizosphere of cannabis plants from CA', 27)]),
+            ('experiment_title', [('Cannabis Soil Microbiome', 27)]),
+            ('illumina_technology', [('MiSeq', 27)]),
+            ('instrument_model', [('Illumina MiSeq', 27)]),
+            ('library_construction_protocol', [(
+                'This analysis was done as in Caporaso et al 2011 Genome '
+                'research. The PCR primers (F515/R806) were developed against '
+                'the V4 region of the 16S rRNA (both bacteria and archaea), '
+                'which we determined would yield optimal community clustering '
+                'with reads of this length using a procedure similar to that '
+                'of ref. 15. [For reference, this primer pair amplifies the '
+                'region 533_786 in the Escherichia coli strain 83972 sequence '
+                '(greengenes accession no. prokMSA_id:470367).] The reverse '
+                'PCR primer is barcoded with a 12-base error-correcting Golay '
+                'code to facilitate multiplexing of up to 1,500 samples per '
+                'lane, and both PCR primers contain sequencer adapter '
+                'regions.', 27)]),
+            ('pcr_primers', [('FWD:GTGCCAGCMGCCGCGGTAA; '
+             'REV:GGACTACHVGGGTWTCTAAT', 27)]),
+            ('platform', [('Illumina', 27)]),
+            ('primer', [('GTGCCAGCMGCCGCGGTAA', 27)]),
+            ('qiita_prep_id', [('1', 27)]), ('run_center', [('ANL', 27)]),
+            ('run_date', [('8/1/12', 27)]),
+            ('run_prefix', [('s_G1_L001_sequences', 27)]),
+            ('samp_size', [('.25,g', 27)]), ('sample_center', [('ANL', 27)]),
+            ('sequencing_meth', [('Sequencing by synthesis', 27)]),
+            ('study_center', [('CCME', 27)]),
+            ('target_gene', [('16S rRNA', 27)]),
+            ('target_subfragment', [('V4', 27)])], 'status': 'success',
+            'message': '', 'editable': True}
         self.assertEqual(obs, exp)
 
     def test_prep_template_summary_get_req_no_access(self):
@@ -384,7 +400,7 @@ class TestPrepAPI(TestCase):
                              'primer': 'GTGCCAGCMGCCGCGGTAA',
                              'barcode': 'GTCCGCAAGTTA',
                              'run_prefix': "s_G1_L001_sequences",
-                             'platform': 'ILLUMINA',
+                             'platform': 'Illumina',
                              'instrument_model': 'Illumina MiSeq',
                              'library_construction_protocol': 'AAAA',
                              'experiment_design_description': 'BBBB'}},
@@ -403,8 +419,8 @@ class TestPrepAPI(TestCase):
         self._wait_for_parallel_job('prep_template_%s' % pt.id)
         obs = prep_template_jobs_get_req(pt.id, 'test@foo.bar')
         self.assertEqual(len(obs), 1)
-        self.assertEqual(obs.values(),
-                         [{'error': '', 'status': 'success', 'step': None}])
+        self.assertCountEqual(
+            obs.values(), [{'error': '', 'status': 'success', 'step': None}])
 
         obs = prep_template_jobs_get_req(pt.id, 'demo@microbio.me')
         exp = {'status': 'error',
@@ -434,25 +450,20 @@ class TestPrepAPI(TestCase):
                                      '16S', name="  ")
         exp = {'status': 'warning',
                'message': [
-                    ('Some columns required to generate a QIIME-compliant '
-                     'mapping file are not present in the template. A '
-                     'placeholder value (XXQIITAXX) has been used to populate '
-                     'these columns. Missing columns: BarcodeSequence, '
-                     'LinkerPrimerSequence'),
-                    ('Some functionality will be disabled due to missing '
-                     'columns:'),
-                    ('\tDemultiplexing with multiple input files disabled.: '
-                     'barcode, primer, run_prefix;'),
-                    '\tDemultiplexing disabled.: barcode;',
-                    ('\tEBI submission disabled: center_name, '
-                     'experiment_design_description, instrument_model, '
-                     'library_construction_protocol, platform.'),
-                    ('See the Templates tutorial for a description of these '
-                     'fields.')],
+                   'Both a converter and dtype were specified for column '
+                   'sample_name - only the converter will be used', 'Some '
+                   'functionality will be disabled due to missing columns:',
+                   '\tEBI submission disabled: center_name, '
+                   'experiment_design_description, instrument_model, '
+                   'library_construction_protocol, platform;',
+                   '\tDemultiplexing disabled.: barcode;', '\tDemultiplexing '
+                   'with multiple input files disabled.: barcode, primer, '
+                   'run_prefix.', 'See the Templates tutorial for a '
+                   'description of these fields.'],
                'file': 'update.txt',
                'id': 'ignored in test'}
 
-        self.assertItemsEqual(obs['message'].split('\n'), exp['message'])
+        self.assertCountEqual(obs['message'].split('\n'), exp['message'])
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['file'], exp['file'])
         self.assertIsInstance(obs['id'], int)
@@ -496,7 +507,7 @@ class TestPrepAPI(TestCase):
                              'primer': 'GTGCCAGCMGCCGCGGTAA',
                              'barcode': 'GTCCGCAAGTTA',
                              'run_prefix': "s_G1_L001_sequences",
-                             'platform': 'ILLUMINA',
+                             'platform': 'Illumina',
                              'instrument_model': 'Illumina MiSeq',
                              'library_construction_protocol': 'AAAA',
                              'experiment_design_description': 'BBBB'}},
@@ -525,7 +536,7 @@ class TestPrepAPI(TestCase):
         exp = {'status': 'success', 'message': '', 'row_id': '10'}
         self.assertEqual(obs, exp)
         self._wait_for_parallel_job('prep_template_%s' % pt.id)
-        self.assertNotIn('target_subfragment', pt.categories())
+        self.assertNotIn('target_subfragment', pt.categories)
 
         # Change the name of the prep template
         obs = prep_template_patch_req(

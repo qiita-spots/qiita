@@ -5,10 +5,8 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-
 from tornado.web import authenticated
+from json import loads, dumps
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
@@ -22,17 +20,21 @@ class ListCommandsHandler(BaseHandler):
     def get(self):
         # Fun fact - if the argument is a list, JS adds '[]' to the
         # argument name
-        artifact_types = self.get_argument("artifact_types[]")
+        artifact_id = self.get_argument("artifact_id")
         exclude_analysis = self.get_argument('include_analysis') == 'false'
         self.write(
-            list_commands_handler_get_req(artifact_types, exclude_analysis))
+            list_commands_handler_get_req(artifact_id, exclude_analysis))
 
 
 class ListOptionsHandler(BaseHandler):
     @authenticated
     def get(self):
         command_id = self.get_argument("command_id")
-        self.write(list_options_handler_get_req(command_id))
+        artifact_id = self.get_argument("artifact_id", None)
+        # if the artifact id has ':' it means that it's a job in construction
+        if artifact_id is not None and ':' in artifact_id:
+            artifact_id = None
+        self.write(list_options_handler_get_req(command_id, artifact_id))
 
 
 class WorkflowRunHandler(BaseHandler):
@@ -47,6 +49,17 @@ class WorkflowHandler(BaseHandler):
     def post(self):
         command_id = self.get_argument('command_id')
         params = self.get_argument('params')
+
+        if self.request.files:
+            parameters = loads(params)
+            for k, v in self.request.files.items():
+                # [0] there is only one file -- this block is needed because
+                # 'body' is a byte and JSON doesn't know how to translate it
+                parameters[k] = {'body': v[0]['body'].decode("utf-8"),
+                                 'filename': v[0]['filename'],
+                                 'content_type': v[0]['content_type']}
+            params = dumps(parameters)
+
         self.write(workflow_handler_post_req(
             self.current_user.id, command_id, params))
 

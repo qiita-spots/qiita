@@ -6,11 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import hashlib
 from os.path import basename, join, isdir, isfile, exists
 from shutil import copyfile, rmtree
-from os import remove, listdir
+from os import remove, listdir, makedirs
 from datetime import date, timedelta
-from urllib import quote
+from urllib.parse import quote
 from itertools import zip_longest
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import ParseError
@@ -18,8 +19,6 @@ from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
 from h5py import File
-from future.utils import viewitems, viewkeys
-from skbio.util import safe_md5, create_dir
 from qiita_files.demux import to_per_sample_ascii
 
 from qiita_core.qiita_settings import qiita_config
@@ -47,7 +46,7 @@ def clean_whitespace(text):
     str
         fixed text
     """
-    return ' '.join(unicode(str(text), 'utf8').split())
+    return ' '.join(str(text).split())
 
 
 class EBISubmission(object):
@@ -94,7 +93,7 @@ class EBISubmission(object):
     valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
                                  '454 GS FLX+', '454 GS FLX TITANIUM',
                                  '454 GS JUNIOR', 'UNSPECIFIED'],
-                       'ION TORRENT': ['ION TORRENT PGM', 'ION TORRENT PROTON',
+                       'ION_TORRENT': ['ION TORRENT PGM', 'ION TORRENT PROTON',
                                        'ION TORRENT S5', 'ION TORRENT S5 XL'],
                        'ILLUMINA': ['HISEQ X FIVE',
                                     'HISEQ X TEN',
@@ -113,11 +112,15 @@ class EBISubmission(object):
                                     'ILLUMINA NOVASEQ 6000',
                                     'NEXTSEQ 500',
                                     'NEXTSEQ 550',
-                                    'UNSPECIFIED']}
+                                    'UNSPECIFIED'],
+                       'OXFORD_NANOPORE': ['GRIDION'],
+                       'PACBIO_SMRT': ['PACBIO RS',
+                                       'PACBIO RS II',
+                                       'SEQUEL',
+                                       'SEQUEL II']}
 
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
-    experiment_library_fields = ['library_strategy']
 
     def __init__(self, artifact_id, action):
         error_msgs = []
@@ -209,7 +212,7 @@ class EBISubmission(object):
         get_output_fp = partial(join, self.full_ebi_dir)
         nvp = []
         nvim = []
-        for k, sample_prep in viewitems(self.prep_template):
+        for k, sample_prep in self.prep_template.items():
             # validating required fields
             if ('platform' not in sample_prep or
                     sample_prep['platform'] is None):
@@ -354,17 +357,10 @@ class EBISubmission(object):
         study_title = ET.SubElement(descriptor, 'STUDY_TITLE')
         study_title.text = escape(clean_whitespace(self.study_title))
 
-        if self.investigation_type == 'Other':
-            ET.SubElement(descriptor, 'STUDY_TYPE', {
-                'existing_study_type': 'Other',
-                'new_study_type': escape(clean_whitespace(
-                    self.new_investigation_type))}
-            )
-        else:
-            ET.SubElement(descriptor, 'STUDY_TYPE', {
-                'existing_study_type': escape(clean_whitespace(
-                    self.investigation_type))}
-            )
+        # study type is deprecated and not displayed anywhere on EBI-ENA;
+        # however it's required for submission so just injecting with Other
+        ET.SubElement(
+            descriptor, 'STUDY_TYPE', {'existing_study_type': 'Other'})
 
         study_abstract = ET.SubElement(descriptor, 'STUDY_ABSTRACT')
         study_abstract.text = clean_whitespace(escape(self.study_abstract))
@@ -380,7 +376,7 @@ class EBISubmission(object):
 
         return study_set
 
-    def generate_sample_xml(self, samples=None):
+    def generate_sample_xml(self, samples=None, ignore_columns=None):
         """Generates the sample XML file
 
         Parameters
@@ -388,6 +384,9 @@ class EBISubmission(object):
         samples : list of str, optional
             The list of samples to be included in the sample xml. If not
             provided or an empty list is provided, all the samples are used
+        ignore_columns : list of str, optional
+            The list of columns to ignore during submission; helpful for when
+            the submissions are too large
 
         Returns
         -------
@@ -399,19 +398,23 @@ class EBISubmission(object):
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "sample"})
 
         if not samples:
-            samples = viewkeys(self.samples)
+            samples = self.samples.keys()
 
         for sample_name in sorted(samples):
             sample_info = dict(self.samples[sample_name])
 
-            if self._ebi_sample_accessions[sample_name] is None:
-                sample = ET.SubElement(sample_set, 'SAMPLE', {
-                    'alias': self._get_sample_alias(sample_name),
-                    'center_name': qiita_config.ebi_center_name}
-                )
+            sample_accession = self._ebi_sample_accessions[sample_name]
+            if self.action in ('ADD', 'VALIDATE'):
+                if sample_accession is not None:
+                    continue
+                else:
+                    sample = ET.SubElement(sample_set, 'SAMPLE', {
+                        'alias': self._get_sample_alias(sample_name),
+                        'center_name': qiita_config.ebi_center_name}
+                    )
             else:
                 sample = ET.SubElement(sample_set, 'SAMPLE', {
-                    'accession': self._ebi_sample_accessions[sample_name],
+                    'accession': sample_accession,
                     'center_name': qiita_config.ebi_center_name}
                 )
 
@@ -433,6 +436,9 @@ class EBISubmission(object):
             description.text = escape(clean_whitespace(text))
 
             if sample_info:
+                if ignore_columns is not None:
+                    for key in ignore_columns:
+                        del sample_info[key]
                 sample_attributes = ET.SubElement(sample, 'SAMPLE_ATTRIBUTES')
                 self._add_dict_as_tags_and_values(sample_attributes,
                                                   'SAMPLE_ATTRIBUTE',
@@ -446,7 +452,7 @@ class EBISubmission(object):
         Therefore, we can break it out into its own method.
         """
         # This section applies only to the LS454 platform
-        if platform is not 'LS454':
+        if platform != 'LS454':
             return
 
         # There is some hard-coded information in here, but this is what we
@@ -487,7 +493,12 @@ class EBISubmission(object):
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "experiment"})
 
-        samples = samples if samples is not None else viewkeys(self.samples)
+        samples = samples if samples is not None else self.samples.keys()
+
+        if self.investigation_type == 'Other':
+            library_strategy = self.new_investigation_type
+        else:
+            library_strategy = self.investigation_type
 
         for sample_name in sorted(samples):
             experiment_alias = self._get_experiment_alias(sample_name)
@@ -521,6 +532,9 @@ class EBISubmission(object):
             library_name = ET.SubElement(library_descriptor, 'LIBRARY_NAME')
             library_name.text = self._get_library_name(sample_name)
 
+            lg = ET.SubElement(library_descriptor, 'LIBRARY_STRATEGY')
+            lg.text = escape(clean_whitespace(library_strategy.upper()))
+
             # hardcoding some values,
             # see https://github.com/biocore/qiita/issues/1485
             library_source = ET.SubElement(library_descriptor,
@@ -540,13 +554,6 @@ class EBISubmission(object):
                                 "LIBRARY_CONSTRUCTION_PROTOCOL")
             lcp.text = escape(clean_whitespace(
                 sample_prep.pop('library_construction_protocol')))
-
-            # these are not requiered field but present add them in the right
-            # format
-            for field in self.experiment_library_fields:
-                if field in sample_prep:
-                    element = ET.SubElement(library_descriptor, field.upper())
-                    element.text = sample_prep.pop(field)
 
             self._generate_spot_descriptor(design, platform)
 
@@ -576,8 +583,8 @@ class EBISubmission(object):
             suffix = self.REV_READ_SUFFIX
 
         file_path = self.sample_demux_fps[sample_name] + suffix
-        with open(file_path) as fp:
-            md5 = safe_md5(fp).hexdigest()
+        with open(file_path, 'rb') as fp:
+            md5 = hashlib.md5(fp.read()).hexdigest()
 
         file_details = {'filetype': file_type,
                         'quality_scoring_system': 'phred',
@@ -598,7 +605,7 @@ class EBISubmission(object):
         run_set = ET.Element('RUN_SET', {
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "run"})
-        for sample_name, sample_prep in sorted(viewitems(self.samples_prep)):
+        for sample_name, sample_prep in sorted(self.samples_prep.items()):
             sample_prep = dict(sample_prep)
 
             if self._ebi_experiment_accessions[sample_name]:
@@ -704,8 +711,10 @@ class EBISubmission(object):
         fp : str
             The filepath to which the XML will be written
         """
-        create_dir(self.xml_dir)
-        ET.ElementTree(element).write(fp, encoding='UTF-8')
+        if not exists(self.xml_dir):
+            makedirs(self.xml_dir)
+        ET.ElementTree(element).write(
+            fp, encoding='UTF-8', xml_declaration=True)
 
     def generate_xml_files(self):
         """Generate all the XML files"""
@@ -725,8 +734,8 @@ class EBISubmission(object):
             # are samples in the current submission that do NOT have an
             # ebi_sample_accession
             new_samples = {
-                sample for sample, accession in viewitems(
-                    self.sample_template.ebi_sample_accessions)
+                sample for sample, accession in
+                self.sample_template.ebi_sample_accessions.items()
                 if accession is None}
             new_samples = new_samples.intersection(self.samples)
             if new_samples:
@@ -738,8 +747,8 @@ class EBISubmission(object):
             # samples in the current submission that do NO have an
             # ebi_experiment_accession
             new_samples = {
-                sample for sample, accession in viewitems(
-                    self.prep_template.ebi_experiment_accessions)
+                sample for sample, accession in
+                self.prep_template.ebi_experiment_accessions.items()
                 if accession is None}
             new_samples = new_samples.intersection(self.samples)
             if new_samples:
@@ -859,7 +868,7 @@ class EBISubmission(object):
           be generated before executing this function
         """
         fastqs = []
-        for _, sfp in viewitems(self.sample_demux_fps):
+        for _, sfp in self.sample_demux_fps.items():
             fastqs.append(sfp + self.FWD_READ_SUFFIX)
             if self.per_sample_FASTQ_reverse:
                 sfp = sfp + self.REV_READ_SUFFIX
@@ -990,11 +999,11 @@ class EBISubmission(object):
 
         fwd_reads = []
         rev_reads = []
-        for _, fp, fpt in self.artifact.filepaths:
-            if fpt == 'raw_forward_seqs':
-                fwd_reads.append((basename(fp), fp))
-            elif fpt == 'raw_reverse_seqs':
-                rev_reads.append((basename(fp), fp))
+        for x in self.artifact.filepaths:
+            if x['fp_type'] == 'raw_forward_seqs':
+                fwd_reads.append((basename(x['fp']), x['fp']))
+            elif x['fp_type'] == 'raw_reverse_seqs':
+                rev_reads.append((basename(x['fp']), x['fp']))
         fwd_reads.sort(key=lambda x: x[1])
         rev_reads.sort(key=lambda x: x[1])
         if rev_reads:
@@ -1011,9 +1020,9 @@ class EBISubmission(object):
             rev_read = r[1] if r is not None else None
             fps.append((sample_name, (fwd_read, rev_read)))
 
-        if 'run_prefix' in self.prep_template.categories():
-            rps = [(k, v) for k, v in viewitems(
-                self.prep_template.get_category('run_prefix'))]
+        if 'run_prefix' in self.prep_template.categories:
+            rps = [(k, v) for k, v in
+                   self.prep_template.get_category('run_prefix').items()]
         else:
             rps = [(v, v.split('.', 1)[1]) for v in self.prep_template.keys()]
         rps.sort(key=lambda x: x[1])
@@ -1048,8 +1057,8 @@ class EBISubmission(object):
         # `preprocessed_demux`. Thus, we only use the first one
         # (the only one present)
         ar = self.artifact
-        demux = [path for _, path, ftype in ar.filepaths
-                 if ftype == 'preprocessed_demux'][0]
+        demux = [x['fp'] for x in ar.filepaths
+                 if x['fp_type'] == 'preprocessed_demux'][0]
 
         demux_samples = set()
         with open_file(demux) as demux_fh:
@@ -1060,6 +1069,7 @@ class EBISubmission(object):
                 raise EBISubmissionError(error_msg)
             for s, i in to_per_sample_ascii(demux_fh,
                                             self.prep_template.keys()):
+                s = s.decode('ascii')
                 sample_fp = self.sample_demux_fps[s] + self.FWD_READ_SUFFIX
                 wrote_sequences = False
                 with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:

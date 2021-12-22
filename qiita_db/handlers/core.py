@@ -13,4 +13,5 @@ import qiita_db as qdb
 class ResetAPItestHandler(OauthBaseHandler):
     @authenticate_oauth
     def post(self):
-        qdb.environment_manager.drop_and_rebuild_tst_database()
+        drop_labcontrol = self.get_argument('drop_labcontrol', False)
+        qdb.environment_manager.drop_and_rebuild_tst_database(drop_labcontrol)

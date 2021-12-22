@@ -10,11 +10,12 @@ from json import dumps, loads
 from sys import exc_info
 from time import sleep
 from os import remove
+from os.path import join
 import traceback
 import warnings
 
 import qiita_db as qdb
-from qiita_core.qiita_settings import r_client
+from qiita_core.qiita_settings import r_client, qiita_config
 from qiita_ware.commands import (download_remote, list_remote,
                                  submit_VAMPS, submit_EBI)
 from qiita_ware.metadata_pipeline import (
@@ -74,10 +75,9 @@ def release_validators(job):
     job : qiita_db.processing_job.ProcessingJob
         The processing job with the information of the parent job
     """
-    with qdb.sql_connection.TRN:
-        qdb.processing_job.ProcessingJob(
-            job.parameters.values['job']).release_validators()
-        job._set_status('success')
+    qdb.processing_job.ProcessingJob(
+        job.parameters.values['job']).release_validators()
+    job._set_status('success')
 
 
 def submit_to_VAMPS(job):
@@ -290,6 +290,14 @@ def delete_sample_or_column(job):
         job._set_status('success')
 
 
+def _delete_analysis_artifacts(analysis):
+    aids = [a.id for a in analysis.artifacts if not a.parents]
+    aids.sort(reverse=True)
+    for aid in aids:
+        qdb.artifact.Artifact.delete(aid)
+    qdb.analysis.Analysis.delete(analysis.id)
+
+
 def delete_study(job):
     """Deletes a full study
 
@@ -303,19 +311,15 @@ def delete_study(job):
         study_id = job.parameters.values['study']
         study = qdb.study.Study(study_id)
 
-        for a in study.analyses():
-            artifacts = sorted(
-                a.artifacts, key=lambda a: a.id, reverse=True)
-            for artifact in artifacts:
-                qdb.artifact.Artifact.delete(artifact.id)
-            qdb.analysis.Analysis.delete(a.id)
-
-        artifacts = sorted(
-            study.artifacts(), key=lambda a: a.id, reverse=True)
-        for a in artifacts:
-            qdb.artifact.Artifact.delete(a.id)
+        # deleting analyses
+        for analysis in study.analyses():
+            _delete_analysis_artifacts(analysis)
 
         for pt in study.prep_templates():
+            if pt.artifact is not None:
+                # Artifact.delete will delete descendants so just delete
+                # the root
+                qdb.artifact.Artifact.delete(pt.artifact.id)
             MT.prep_template.PrepTemplate.delete(pt.id)
 
         if MT.sample_template.SampleTemplate.exists(study_id):
@@ -344,6 +348,7 @@ def complete_job(job):
             artifacts = None
             error = payload['error']
         c_job = qdb.processing_job.ProcessingJob(param_vals['job_id'])
+        c_job.step = 'Completing via %s [%s]' % (job.id, job.external_id)
         try:
             c_job.complete(payload['success'], artifacts, error)
         except Exception:
@@ -370,13 +375,7 @@ def delete_analysis(job):
         analysis_id = job.parameters.values['analysis_id']
         analysis = qdb.analysis.Analysis(analysis_id)
 
-        artifacts = sorted(
-            analysis.artifacts, key=lambda a: a.id, reverse=True)
-
-        for artifact in artifacts:
-            qdb.artifact.Artifact.delete(artifact.id)
-
-        qdb.analysis.Analysis.delete(analysis_id)
+        _delete_analysis_artifacts(analysis)
 
         r_client.delete('analysis_delete_%d' % analysis_id)
 
@@ -403,9 +402,6 @@ def list_remote_files(job):
             job._set_error(traceback.format_exception(*exc_info()))
         else:
             job._set_status('success')
-        finally:
-            # making sure to always delete the key so Qiita never keeps it
-            remove(private_key)
 
 
 def download_remote_files(job):
@@ -428,6 +424,31 @@ def download_remote_files(job):
             job._set_status('success')
 
 
+def INSDC_download(job):
+    """Download an accession from INSDC
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcessingJob
+        The processing job performing the task
+    """
+    with qdb.sql_connection.TRN:
+        param_vals = job.parameters.values
+        download_source = param_vals['download_source']
+        accession = param_vals['accession']
+
+        if job.user.level != 'admin':
+            job._set_error('INSDC_download is only for administrators')
+
+        job_dir = join(qiita_config.working_dir, job.id)
+        qdb.util.create_nested_path(job_dir)
+
+        # code doing something
+        print(download_source, accession)
+
+        job._set_status('success')
+
+
 TASK_DICT = {'build_analysis_files': build_analysis_files,
              'release_validators': release_validators,
              'submit_to_VAMPS': submit_to_VAMPS,
@@ -443,7 +464,8 @@ TASK_DICT = {'build_analysis_files': build_analysis_files,
              'complete_job': complete_job,
              'delete_analysis': delete_analysis,
              'list_remote_files': list_remote_files,
-             'download_remote_files': download_remote_files}
+             'download_remote_files': download_remote_files,
+             'INSDC_download': INSDC_download}
 
 
 def private_task(job_id):

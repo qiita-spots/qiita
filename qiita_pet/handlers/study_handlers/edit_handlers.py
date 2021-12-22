@@ -5,8 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
-
 from tornado.web import authenticated, HTTPError
 from wtforms import (Form, StringField, SelectField, SelectMultipleField,
                      TextAreaField, validators)
@@ -63,6 +61,10 @@ class StudyEditorForm(Form):
                                          coerce=lambda x: x)
 
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
+    notes = TextAreaField('Analytical Notes', description=(
+        'Any relevant information about the samples or the processing that '
+        'other users should be aware of (e.g. problematic samples, '
+        'explaining certain metadata columns, etc) - renders as markdown'))
 
     @execute_as_transaction
     def __init__(self, study=None, **kwargs):
@@ -70,9 +72,7 @@ class StudyEditorForm(Form):
 
         # Get people from the study_person table to populate the PI and
         # lab_person fields
-        choices = [(sp.id, u"%s, %s"
-                    % (sp.name.decode('utf-8'),
-                       sp.affiliation.decode('utf-8')))
+        choices = [(sp.id, u"%s, %s" % (sp.name, sp.affiliation))
                    for sp in StudyPerson.iter()]
         choices.insert(0, ('', ''))
 
@@ -83,8 +83,8 @@ class StudyEditorForm(Form):
         if study:
             study_info = study.info
 
-            self.study_title.data = study.title.decode('utf-8')
-            self.study_alias.data = study_info['study_alias'].decode('utf-8')
+            self.study_title.data = study.title
+            self.study_alias.data = study_info['study_alias']
             dois = []
             pids = []
             for p, is_doi in study.publications:
@@ -92,16 +92,15 @@ class StudyEditorForm(Form):
                     dois.append(p)
                 else:
                     pids.append(p)
-            self.publication_doi.data = ",".join(dois).decode('utf-8')
-            self.publication_pid.data = ",".join(pids).decode('utf-8')
-            self.study_abstract.data = study_info[
-                'study_abstract'].decode('utf-8')
-            self.study_description.data = study_info[
-                'study_description'].decode('utf-8')
+            self.publication_doi.data = ",".join(dois)
+            self.publication_pid.data = ",".join(pids)
+            self.study_abstract.data = study_info['study_abstract']
+            self.study_description.data = study_info['study_description']
             self.principal_investigator.data = study_info[
                 'principal_investigator'].id
             self.lab_person.data = (study_info['lab_person'].id
                                     if study_info['lab_person'] else None)
+            self.notes.data = study.notes
 
 
 class StudyEditorExtendedForm(StudyEditorForm):
@@ -254,19 +253,21 @@ class StudyEditHandler(BaseHandler):
             lab_person = None
 
         # TODO: MIXS compliant?  Always true, right?
+        fd = form_data.data
         info = {
             'lab_person_id': lab_person,
             'principal_investigator_id': PI,
             'metadata_complete': False,
             'mixs_compliant': True,
-            'study_description': form_data.data['study_description'][0],
-            'study_alias': form_data.data['study_alias'][0],
-            'study_abstract': form_data.data['study_abstract'][0]}
+            'study_description': fd['study_description'][0].decode('utf-8'),
+            'study_alias': fd['study_alias'][0].decode('utf-8'),
+            'study_abstract': fd['study_abstract'][0].decode('utf-8'),
+            'notes': fd['notes'][0].decode('utf-8')}
 
-        if 'timeseries' in form_data.data and form_data.data['timeseries']:
-            info['timeseries_type_id'] = form_data.data['timeseries'][0]
+        if 'timeseries' in fd and fd['timeseries']:
+            info['timeseries_type_id'] = fd['timeseries'][0].decode('utf-8')
 
-        study_title = form_data.data['study_title'][0]
+        study_title = fd['study_title'][0].decode('utf-8')
 
         if the_study:
             # We are under editing, so just update the values
@@ -275,8 +276,7 @@ class StudyEditHandler(BaseHandler):
 
             msg = ('Study <a href="%s/study/description/%d">%s</a> '
                    'successfully updated' %
-                   (qiita_config.portal_dir, the_study.id,
-                    form_data.data['study_title'][0]))
+                   (qiita_config.portal_dir, the_study.id, study_title))
         else:
             # create the study
             # TODO: Fix this EFO once ontology stuff from emily is added
@@ -284,26 +284,26 @@ class StudyEditHandler(BaseHandler):
 
             msg = ('Study <a href="%s/study/description/%d">%s</a> '
                    'successfully created' %
-                   (qiita_config.portal_dir, the_study.id,
-                    form_data.data['study_title'][0]))
+                   (qiita_config.portal_dir, the_study.id, study_title))
 
         # Add the environmental packages, this attribute can only be edited
         # if the study is not public, otherwise this cannot be changed
         if isinstance(form_data, StudyEditorExtendedForm):
-            the_study.environmental_packages = form_data.data[
-                'environmental_packages']
+            vals = [
+                eval(v).decode('utf-8') for v in fd['environmental_packages']]
+            the_study.environmental_packages = vals
 
         pubs = []
-        dois = form_data.data['publication_doi']
+        dois = fd['publication_doi']
         if dois and dois[0]:
             # The user can provide a comma-seprated list
-            dois = dois[0].split(',')
+            dois = dois[0].decode('utf-8').split(',')
             # Make sure that we strip the spaces from the pubmed ids
             pubs.extend([(doi.strip(), True) for doi in dois])
-        pids = form_data.data['publication_pid']
+        pids = fd['publication_pid']
         if pids and pids[0]:
             # The user can provide a comma-seprated list
-            pids = pids[0].split(',')
+            pids = pids[0].decode('utf-8').split(',')
             # Make sure that we strip the spaces from the pubmed ids
             pubs.extend([(pid.strip(), False) for pid in pids])
         the_study.publications = pubs

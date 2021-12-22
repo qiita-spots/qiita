@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import main
-from StringIO import StringIO
+from io import StringIO
 import os
 
 import pandas as pd
@@ -42,7 +42,7 @@ class StudyPrepCreatorTests(RESTHandlerTestCase):
                              headers=self.headers, asjson=True)
         self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
-        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertCountEqual(obs.keys(), ['message'])
         self.assertGreater(len(obs['message']), 0)
 
     def test_post_valid_study(self):
@@ -100,7 +100,7 @@ class StudyPrepArtifactCreatorTests(RESTHandlerTestCase):
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
         self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
-        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertCountEqual(obs.keys(), ['message'])
         self.assertGreater(len(obs['message']), 0)
 
     def test_post_unknown_filepath_type_id(self):
@@ -112,7 +112,7 @@ class StudyPrepArtifactCreatorTests(RESTHandlerTestCase):
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
         self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
-        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertCountEqual(obs.keys(), ['message'])
         self.assertGreater(len(obs['message']), 0)
 
     def test_post_files_notfound(self):
@@ -124,7 +124,7 @@ class StudyPrepArtifactCreatorTests(RESTHandlerTestCase):
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
         self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
-        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertCountEqual(obs.keys(), ['message'])
         self.assertGreater(len(obs['message']), 0)
 
     def test_post_valid(self):
@@ -167,13 +167,13 @@ EXP_PREP_TEMPLATE = (
     'instrument_model\tlibrary_construction_protocol\tplatform\tprimer\t'
     'bar\trun_prefix\tstr_column\n'
     '{0}.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\tfoo\t'
+    'Illumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\tfoo\t'
     's_G1_L002_sequences\tValue for sample 3\n'
     '{0}.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\tfoo\t'
+    'Illumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\tfoo\t'
     's_G1_L001_sequences\tValue for sample 1\n'
     '{0}.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\tfoo\t'
+    'Illumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\tfoo\t'
     's_G1_L001_sequences\tValue for sample 2\n')
 
 

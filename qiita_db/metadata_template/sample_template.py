@@ -5,8 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
 from os.path import join
 from time import strftime
 
@@ -270,17 +268,6 @@ class SampleTemplate(MetadataTemplate):
             fp_id = qdb.util.convert_to_id("sample_template", "filepath_type")
             self.add_filepath(fp, fp_id=fp_id)
 
-            # generating all new QIIME mapping files
-            for pt in qdb.study.Study(self._id).prep_templates():
-                if samples is not None and samples and (
-                        columns is None or not columns):
-                    overlapping = set(samples) & set(pt.keys())
-                    # if the prep has no overlapping sample ids, we can skip
-                    # generationg the prep
-                    if not overlapping:
-                        continue
-                pt.generate_files(samples, columns)
-
     @property
     def ebi_sample_accessions(self):
         """The EBI sample accessions for the samples in the sample template
@@ -334,3 +321,26 @@ class SampleTemplate(MetadataTemplate):
             If a sample in `value` already has an accession number
         """
         self._update_accession_numbers('biosample_accession', value)
+
+    def to_dataframe(self, add_ebi_accessions=False, samples=None):
+        """Returns the metadata template as a dataframe
+
+        Parameters
+        ----------
+        add_ebi_accessions : bool, optional
+            If this should add the ebi accessions
+        samples list of string, optional
+            A list of the sample names we actually want to retrieve
+        """
+        df = self._common_to_dataframe_steps(samples=samples)
+
+        if add_ebi_accessions:
+            accessions = self.ebi_sample_accessions
+            df['qiita_ebi_sample_accessions'] = df.index.map(
+                lambda sid: accessions[sid])
+
+        return df
+
+    @staticmethod
+    def max_samples():
+        return None

@@ -9,15 +9,13 @@
 from functools import partial
 from os.path import join, dirname, abspath, isdir, expanduser, exists
 from os import environ, mkdir
-from future import standard_library
 from base64 import b64encode
 from uuid import uuid4
 import warnings
 
 from .exceptions import MissingConfigSection
 
-with standard_library.hooks():
-    from configparser import ConfigParser, Error, NoOptionError
+from configparser import ConfigParser, Error, NoOptionError
 
 
 class ConfigurationManager(object):
@@ -136,8 +134,8 @@ class ConfigurationManager(object):
 
         # Parse the configuration file
         config = ConfigParser()
-        with open(conf_fp, 'U') as conf_file:
-            config.readfp(conf_file)
+        with open(conf_fp, newline=None) as conf_file:
+            config.read_file(conf_file)
 
         _required_sections = {'main', 'redis', 'postgres', 'smtp', 'ebi',
                               'portal'}
@@ -224,6 +222,12 @@ class ConfigurationManager(object):
         if not self.cookie_secret:
             self.cookie_secret = b64encode(uuid4().bytes + uuid4().bytes)
             warnings.warn("Random cookie secret generated.")
+
+        self.jwt_secret = config.get('main', 'JWT_SECRET')
+        if not self.jwt_secret:
+            self.jwt_secret = b64encode(uuid4().bytes + uuid4().bytes)
+            warnings.warn("Random JWT secret generated.  Non Public Artifact "
+                          "Download Links will expire upon system restart.")
 
         self.key_file = config.get('main', 'KEY_FILE')
         if not self.key_file:

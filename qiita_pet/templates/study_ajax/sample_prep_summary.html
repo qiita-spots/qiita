@@ -4,16 +4,18 @@
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/slick.grid.js"></script>
 <script type="text/javascript">
   var column_width_factor = 10;
-  var rows = {% raw rows.values() %};
+  var rows = {% raw list(rows.values()) %};
   // setting up checkboxes
+  var prep_colums = jQuery.map(
+    Object.keys(rows[0]), function(e) { if (e.startsWith("prep")) return e });
   for(var i=0;i<rows.length;i++) {
     rows[i]['sample-delete'] = '';
   }
   function toggleCheckboxes(element){
     var checked = element.checked ? 'checked' : '';
-    $('.sample-delete').each(function(){
-        $(this).prop('checked', element.checked);
-        rows[$(this).prop('value')]['sample-delete'] = checked;
+    $.each(rows, function(i, d){
+      $('.sample-delete[name="' + d['sample'] + '"]').prop('checked', checked);
+      rows[i]['sample-delete'] = checked;
     });
   }
   function toggleCheckbox(element){
@@ -28,11 +30,71 @@
       return ""
     {% end %}
   }
+  function deleteIndividualSamples(){
+    var sample_names = [];
+    $.each(rows, function (i, d) {
+      if (d['sample-delete'] == 'checked') {
+        sample_names.push(d['sample'])
+      }
+    });
+    sampleTemplatePage.$refs.stElem.deleteSamples(sample_names);
+  }
+  function deleteNonOverlappingSamplePrepSamples(){
+    if (confirm('Are you sure you want to delete all samples that have _not_ been linked to a preparation?')){
+      var to_delete = [];
+      $.each(rows, function(i, row){
+        var sample_delete = jQuery.map(
+          prep_colums, function(pc) { if (row[pc] === 'X') return pc });
+        if (sample_delete.length === 0){
+          to_delete.push(row['sample'])
+        }
+      });
+      sampleTemplatePage.$refs.stElem.deleteSamples(to_delete);
+    }
+  }
+
+  /**
+   *
+   * Function to download the data displayed in the page
+   *
+   */
+  function download_summary(){
+    var information = [];
+    var prep_names = {% raw columns %};
+
+    // adding header
+    var header = ['sample_id']
+    $.each(prep_colums, function(i, prep){
+      header.push(prep_names[prep]);
+    });
+    information.push(header.join('\t'))
+
+    // adding data
+    $.each(rows, function (i, row){
+      var line = [row['sample']]
+      $.each(prep_colums, function(i, prep){
+        line.push(row[prep]);
+      });
+      information.push(line.join('\t'));
+    });
+
+    information = information.join('\n');
+
+    // downloading file
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(information));
+    element.setAttribute('download', 'study_{{study_id}}_sample_preparations_summary.tsv');
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
+
   var columns = [
       { 'name': '<input type="checkbox" onchange="toggleCheckboxes(this)">',
         'field': 'sample-delete', 'id': 'sample-delete', width: 69, sortable: false, formatter: linkFormatter },
       { 'name': 'sample_name', 'field': 'sample', 'id': 'sample_name', width: 200, sortable: true },
-      {% for k, v in columns.viewitems() %}
+      {% for k, v in columns.items() %}
         { 'name': '{% raw v %}', 'field': '{% raw k %}', 'id': '{% raw k %}', 'width': {{ len(v) }}*column_width_factor, 'sortable': true },
       {% end %}
   ];
@@ -247,12 +309,19 @@
     <tr>
       <td>
         <h3>Sample Summary</h3><br/>
-        <button class="btn btn-danger st-interactive" onclick="sampleTemplatePage.$refs.stElem.deleteSamples($('.sample-delete:checkbox:checked'));">
+        <button class="btn btn-default st-interactive" onclick="download_summary();">
+            <span class="glyphicon glyphicon-download-alt"></span> Summary
+        </button>
+        <button class="btn btn-danger st-interactive" onclick="deleteIndividualSamples()">
             <span class="glyphicon glyphicon-trash"></span> Delete Selected
+        </button>
+        <button class="btn btn-danger st-interactive" onclick="deleteNonOverlappingSamplePrepSamples()">
+            <span class="glyphicon glyphicon-trash"></span> Delete Non Overlapping Samples
         </button>
       </td>
       <td style="text-align: right">
         Add sample column information to table
+        <br/>
         <select id="metadata_category" name="metadata_category">
           <option value=""></option>
           {% for col in categories %}

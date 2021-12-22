@@ -17,6 +17,7 @@ from qiita_pet.handlers.analysis_handlers import check_analysis_access
 from qiita_pet.handlers.util import to_int
 from qiita_pet.util import get_network_nodes_edges
 from qiita_db.analysis import Analysis
+from qiita_db.artifact import Artifact
 
 
 class CreateAnalysisHandler(BaseHandler):
@@ -24,8 +25,12 @@ class CreateAnalysisHandler(BaseHandler):
     def post(self):
         name = self.get_argument('name')
         desc = self.get_argument('description')
-        analysis = Analysis.create(self.current_user, name, desc,
-                                   from_default=True)
+        mdsi = self.get_argument('merge_duplicated_sample_ids', False)
+        if mdsi in (b'on', 'on'):
+            mdsi = True
+        analysis = Analysis.create(
+            self.current_user, name, desc, merge_duplicated_sample_ids=mdsi,
+            from_default=True)
 
         self.redirect(u"%s/analysis/description/%s/"
                       % (qiita_config.portal_dir, analysis.id))
@@ -61,6 +66,12 @@ def analysis_description_handler_get_request(analysis_id, user):
                     alert_type = redis_info['return']['status']
                     alert_msg = redis_info['return']['message'].replace(
                         '\n', '</br>')
+    artifacts = {}
+    for aid, samples in analysis.samples.items():
+        artifact = Artifact(aid)
+        study = artifact.study
+        artifacts[aid] = (
+            study.id, study.title, artifact.merging_scheme, samples)
 
     return {'analysis_name': analysis.name,
             'analysis_id': analysis.id,
@@ -68,6 +79,7 @@ def analysis_description_handler_get_request(analysis_id, user):
             'analysis_description': analysis.description,
             'analysis_mapping_id': analysis.mapping_file,
             'alert_type': alert_type,
+            'artifacts': artifacts,
             'alert_msg': alert_msg}
 
 
@@ -133,6 +145,7 @@ def analyisis_graph_handler_get_request(analysis_id, user):
 
     nodes = []
     edges = []
+    artifacts_being_deleted = []
     wf_id = None
     # Loop through all the initial artifacts of the analysis
     for a in analysis.artifacts:
@@ -141,13 +154,22 @@ def analyisis_graph_handler_get_request(analysis_id, user):
             nodes, edges, a_wf_id = get_network_nodes_edges(
                 g, full_access, nodes=nodes, edges=edges)
 
+            # nodes returns [node_type, node_name, element_id]; here we
+            # are looking for the node_type == artifact, and check by
+            # the element/artifact_id if it's being deleted
+            for a in nodes:
+                if (a[0] == 'artifact' and
+                        Artifact(a[2]).being_deleted_by is not None):
+                    artifacts_being_deleted.append(a[2])
+
             if wf_id is None:
                 wf_id = a_wf_id
             elif a_wf_id is not None and wf_id != a_wf_id:
                 # This should never happen, but worth having a useful message
                 raise ValueError('More than one workflow in a single analysis')
 
-    return {'edges': edges, 'nodes': nodes, 'workflow': wf_id}
+    return {'edges': edges, 'nodes': nodes, 'workflow': wf_id,
+            'artifacts_being_deleted': artifacts_being_deleted}
 
 
 class AnalysisGraphHandler(BaseHandler):

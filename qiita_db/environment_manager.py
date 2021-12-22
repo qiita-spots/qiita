@@ -13,16 +13,11 @@ import gzip
 from glob import glob
 from natsort import natsorted
 
-from future import standard_library
-from future.utils import viewitems
-
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config, r_client
 import qiita_db as qdb
 
-
-with standard_library.hooks():
-    from urllib.request import urlretrieve
+from urllib.request import urlretrieve
 
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
@@ -37,22 +32,6 @@ POPULATE_FP = get_support_file('populate_test_db.sql')
 PATCHES_DIR = get_support_file('patches')
 
 
-def _check_db_exists(db, conn_handler):
-    r"""Checks if the database db exists on the postgres server
-
-    Parameters
-    ----------
-    db : str
-        The database
-    conn_handler : SQLConnectionHandler
-        The connection to the database
-    """
-    dbs = conn_handler.execute_fetchall('SELECT datname FROM pg_database')
-
-    # It's a list of tuples, so just create the tuple to check if exists
-    return (db,) in dbs
-
-
 def create_layout(test=False, verbose=False):
     r"""Builds the SQL layout
 
@@ -65,20 +44,20 @@ def create_layout(test=False, verbose=False):
         if verbose:
             print('Building SQL layout')
         # Create the schema
-        with open(LAYOUT_FP, 'U') as f:
+        with open(LAYOUT_FP, newline=None) as f:
             qdb.sql_connection.TRN.add(f.read())
         qdb.sql_connection.TRN.execute()
 
 
 def _populate_test_db():
     with qdb.sql_connection.TRN:
-        with open(POPULATE_FP, 'U') as f:
+        with open(POPULATE_FP, newline=None) as f:
             qdb.sql_connection.TRN.add(f.read())
         qdb.sql_connection.TRN.execute()
 
 
 def _add_ontology_data():
-    print ('Loading Ontology Data')
+    print('Loading Ontology Data')
     if not exists(reference_base_dir):
         mkdir(reference_base_dir)
 
@@ -128,7 +107,7 @@ def _download_reference_files():
                           'ftp://ftp.microbio.me/greengenes_release/'
                           'gg_13_8_otus/rep_set/97_otus.fasta')}
 
-    for file_type, (local_fp, url) in viewitems(files):
+    for file_type, (local_fp, url) in files.items():
         # Do not download the file if it exists already
         if exists(local_fp):
             print("SKIPPING %s: file already exists at %s. To "
@@ -176,25 +155,28 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                                "configuration")
 
     # Connect to the postgres server
-    admin_conn = qdb.sql_connection.SQLConnectionHandler(
-        admin='admin_without_database')
+    with qdb.sql_connection.TRNADMIN:
+        sql = 'SELECT datname FROM pg_database WHERE datname = %s'
+        qdb.sql_connection.TRNADMIN.add(sql, [qiita_config.database])
 
-    # Check that it does not already exists
-    if _check_db_exists(qiita_config.database, admin_conn):
-        raise QiitaEnvironmentError(
-            "Database {0} already present on the system. You can drop it "
-            "by running 'qiita-env drop'".format(qiita_config.database))
+        if qdb.sql_connection.TRNADMIN.execute_fetchflatten():
+            raise QiitaEnvironmentError(
+                "Database {0} already present on the system. You can drop it "
+                "by running 'qiita-env drop'".format(qiita_config.database))
 
     # Create the database
     print('Creating database')
     create_settings_table = True
-    admin_conn.autocommit = True
     try:
-        admin_conn.execute('CREATE DATABASE %s' % qiita_config.database)
+        with qdb.sql_connection.TRNADMIN:
+            qdb.sql_connection.TRNADMIN.add(
+                'CREATE DATABASE %s' % qiita_config.database)
+            qdb.sql_connection.TRNADMIN.execute()
+        qdb.sql_connection.TRN.close()
     except ValueError as error:
         # if database exists ignore
         msg = 'database "%s" already exists' % qiita_config.database
-        if msg in error.message:
+        if msg in str(error):
             print("Database exits, let's make sure it's test")
             with qdb.sql_connection.TRN:
                 # Insert the settings values to the database
@@ -207,10 +189,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                 create_settings_table = False
         else:
             raise
-    admin_conn.autocommit = False
-
-    del admin_conn
-    qdb.sql_connection.SQLConnectionHandler.close()
+    qdb.sql_connection.TRNADMIN.close()
 
     with qdb.sql_connection.TRN:
         print('Inserting database metadata')
@@ -218,7 +197,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
         verbose = True
         if create_settings_table:
             # Build the SQL layout into the database
-            with open(SETTINGS_FP, 'U') as f:
+            with open(SETTINGS_FP, newline=None) as f:
                 qdb.sql_connection.TRN.add(f.read())
             qdb.sql_connection.TRN.execute()
 
@@ -297,11 +276,10 @@ def drop_environment(ask_for_confirmation):
     # to close it in order to drop the environment
     qdb.sql_connection.TRN.close()
     # Connect to the postgres server
-    conn = qdb.sql_connection.SQLConnectionHandler()
-    settings_sql = "SELECT test FROM settings"
-    is_test_environment = conn.execute_fetchone(settings_sql)[0]
-
-    del conn
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT test FROM settings")
+        is_test_environment = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+    qdb.sql_connection.TRN.close()
 
     if is_test_environment:
         do_drop = True
@@ -309,30 +287,37 @@ def drop_environment(ask_for_confirmation):
         if ask_for_confirmation:
             confirm = ''
             while confirm not in ('Y', 'y', 'N', 'n'):
-                confirm = raw_input("THIS IS NOT A TEST ENVIRONMENT.\n"
-                                    "Proceed with drop? (y/n)")
+                confirm = input("THIS IS NOT A TEST ENVIRONMENT.\n"
+                                "Proceed with drop? (y/n)")
 
             do_drop = confirm in ('Y', 'y')
         else:
             do_drop = True
 
     if do_drop:
-        qdb.sql_connection.SQLConnectionHandler.close()
-        admin_conn = qdb.sql_connection.SQLConnectionHandler(
-            admin='admin_without_database')
-        admin_conn.autocommit = True
-        admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
-        admin_conn.autocommit = False
+        with qdb.sql_connection.TRNADMIN:
+            qdb.sql_connection.TRNADMIN.add(
+                'DROP DATABASE %s' % qiita_config.database)
+            qdb.sql_connection.TRNADMIN.execute()
     else:
         print('ABORTING')
 
 
-def drop_and_rebuild_tst_database():
+def drop_and_rebuild_tst_database(drop_labcontrol=False):
     """Drops the qiita schema and rebuilds the test database
+
+       Parameters
+       ----------
+       drop_labcontrol : bool
+           Whether or not to drop labcontrol
     """
     with qdb.sql_connection.TRN:
         r_client.flushdb()
-        # Drop the schema
+        # Drop the schema, note that we are also going to drop labman because
+        # if not it will raise an error if you have both systems on your
+        # computer due to foreing keys
+        if drop_labcontrol:
+            qdb.sql_connection.TRN.add("DROP SCHEMA IF EXISTS labman CASCADE")
         qdb.sql_connection.TRN.add("DROP SCHEMA IF EXISTS qiita CASCADE")
         # Set the database to unpatched
         qdb.sql_connection.TRN.add(
@@ -351,7 +336,7 @@ def reset_test_database(wrapped_fn):
 
     def decorated_wrapped_fn(*args, **kwargs):
         # Reset the test database
-        drop_and_rebuild_tst_database()
+        drop_and_rebuild_tst_database(True)
         # Execute the wrapped function
         return wrapped_fn(*args, **kwargs)
 
@@ -366,10 +351,10 @@ def clean_test_environment():
     re-populating it.
     """
     # First, we check that we are not in a production environment
-    conn_handler = qdb.sql_connection.SQLConnectionHandler()
-    # It is possible that we are connecting to a production database
-    test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
-    # Or the loaded configuration file belongs to a production environment
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT test FROM settings")
+        test_db = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+
     if not qiita_config.test_environment or not test_db:
         raise RuntimeError("Working in a production environment. Not "
                            "executing the test cleanup to keep the production "
@@ -425,7 +410,7 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                 _populate_test_db()
 
         with qdb.sql_connection.TRN:
-            with open(sql_patch_fp, 'U') as patch_file:
+            with open(sql_patch_fp, newline=None) as patch_file:
                 if verbose:
                     print('\tApplying patch %s...' % sql_patch_filename)
                 qdb.sql_connection.TRN.add(patch_file.read())
@@ -438,12 +423,15 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                 if verbose:
                     print('\t\tApplying python patch %s...'
                           % py_patch_filename)
-                execfile(py_patch_fp, {})
+                with open(py_patch_fp) as py_patch:
+                    exec(py_patch.read(), globals())
 
         # before moving to jsonb for sample/prep info files (patch 69.sql),
         # one of the patches used to regenerate the sample information file
-        # for the test Study (1) so alot of the tests actually expect this.
+        # for the test Study (1) so a lot of the tests actually expect this.
         # Now, trying to regenerate directly in the populate_test_db might
         # require too many dev hours so the easiest is just do it here
-        if test and sql_patch_filename == '69.sql':
+        # UPDATE 01/25/2021: moving to 81.sql as we added timestamps to
+        #                    prep info files
+        if test and sql_patch_filename == '81.sql':
             qdb.study.Study(1).sample_template.generate_files()

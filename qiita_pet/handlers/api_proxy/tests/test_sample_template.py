@@ -17,7 +17,7 @@ from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_filepaths_get_req, sample_template_get_req,
     _check_sample_template_exists, sample_template_samples_get_req,
     sample_template_category_get_req, sample_template_meta_cats_get_req,
-    get_sample_template_processing_status,
+    get_sample_template_processing_status, analyses_associated_with_study,
     SAMPLE_TEMPLATE_KEY_FORMAT)
 
 
@@ -28,12 +28,9 @@ class TestSampleAPI(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }
@@ -76,7 +73,7 @@ class TestSampleAPI(TestCase):
 
     def test_sample_template_get_req(self):
         obs = sample_template_get_req(1, 'test@foo.bar')
-        self.assertEqual(obs.keys(), ['status', 'message', 'template'])
+        self.assertCountEqual(obs.keys(), ['status', 'message', 'template'])
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(obs['message'], '')
         self.assertEqual(len(obs['template']), 27)
@@ -109,6 +106,7 @@ class TestSampleAPI(TestCase):
             'samp_salinity': '7.15',
             'host_subject_id': '1001:B4',
             'season_environment': 'winter',
+            'env_package': 'soil',
             'temp': '15',
             'qiita_study_id': '1',
             'country': 'GAZ:United States of America',
@@ -128,6 +126,30 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs, {'status': 'error',
                                'message': 'Sample template %d does not '
                                'exist' % self.new_study.id})
+
+    def test_analyses_associated_with_study(self):
+        obs = analyses_associated_with_study(self.new_study.id, 'test@foo.bar')
+        exp = {'status': 'success', 'message': '', 'values': []}
+        self.assertEqual(obs, exp)
+
+        obs = analyses_associated_with_study(1, 'test@foo.bar')
+        exp = {'status': 'success', 'message': '', 'values': [
+            {'analysis_id': 1, 'name': 'SomeAnalysis', 'email': 'test@foo.bar',
+             'dflt': False, 'artifact_ids': [8, 9], 'prep_ids': [1],
+             'visibility': ['sandbox']},
+            {'analysis_id': 2, 'name': 'SomeSecondAnalysis',
+             'email': 'admin@foo.bar', 'dflt': False, 'artifact_ids': None,
+             'prep_ids': [1], 'visibility': None},
+            {'analysis_id': 3, 'name': 'test@foo.bar-dflt-1',
+             'email': 'test@foo.bar', 'dflt': True, 'artifact_ids': None,
+             'prep_ids': [1], 'visibility': None}]}
+        self.assertEqual(obs, exp)
+
+        obs = analyses_associated_with_study(
+            self.new_study.id, 'shared@foo.bar')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
 
     def test_get_sample_template_processing_status(self):
         key = SAMPLE_TEMPLATE_KEY_FORMAT % 1
@@ -264,7 +286,7 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs['message'], '')
         # [0] the fp_id is the first element, that should change
         fp_ids = [fp[0] for fp in obs['filepaths']]
-        self.assertItemsEqual(fp_ids, [17, 23])
+        self.assertCountEqual(fp_ids, [17, 23])
 
     def test_sample_template_filepaths_get_req_no_access(self):
         obs = sample_template_filepaths_get_req(1, 'demo@microbio.me')
@@ -287,12 +309,13 @@ class TestSampleAPI(TestCase):
                    'altitude', 'anonymized_name', 'assigned_from_geo',
                    'collection_timestamp', 'common_name', 'country', 'depth',
                    'description', 'description_duplicate', 'dna_extracted',
-                   'elevation', 'env_biome', 'env_feature', 'host_subject_id',
-                   'host_taxid', 'latitude', 'longitude', 'ph',
-                   'physical_specimen_location', 'physical_specimen_remaining',
-                   'samp_salinity', 'sample_type', 'scientific_name',
-                   'season_environment', 'taxon_id', 'temp', 'texture',
-                   'tot_nitro', 'tot_org_carb', 'water_content_soil']}
+                   'elevation', 'env_biome', 'env_feature', 'env_package',
+                   'host_subject_id', 'host_taxid', 'latitude', 'longitude',
+                   'ph', 'physical_specimen_location',
+                   'physical_specimen_remaining', 'samp_salinity',
+                   'sample_type', 'scientific_name', 'season_environment',
+                   'taxon_id', 'temp', 'texture', 'tot_nitro', 'tot_org_carb',
+                   'water_content_soil']}
         self.assertEqual(obs, exp)
 
     def test_sample_template_meta_cats_get_req_no_access(self):

@@ -5,12 +5,15 @@ Qiita now uses `QIIME2 <http://qiime2.org>`__ plugins for analysis.
 -------------------------------------------------------------------
 Thanks to this, we've got new layout of the analysis panel and the following new features:
 
-* `Alpha Diversity <https://docs.qiime2.org/2018.2/plugins/available/diversity/alpha/>`__ (including statistics calculations; example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2018.2%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Ffaith-pd-group-significance.qzv>`__)
-* `Beta Diversity <https://docs.qiime2.org/2018.2/plugins/available/diversity/beta/>`__ (including stats)
-* Principal Coordinate Analysis (`PCoA <https://docs.qiime2.org/2018.2/plugins/available/diversity/pcoa/>`__), including ordination results and EMPeror plots (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2018.2%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Funweighted_unifrac_emperor.qzv>`__)
-* `Rarefaction <https://docs.qiime2.org/2018.2/plugins/available/feature-table/rarefy/>`__
-* `Filter Samples <https://docs.qiime2.org/2018.2/plugins/available/feature-table/>`__
-* `Taxa Summary <https://docs.qiime2.org/2018.2/plugins/available/taxa/barplot/>`__ (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2018.2%2Fdata%2Ftutorials%2Fmoving-pictures%2Ftaxa-bar-plots.qzv>`__)
+* `Alpha Diversity <https://docs.qiime2.org/2020.2/plugins/available/diversity/alpha/>`__ (including statistics calculations; example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2020.2%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Ffaith-pd-group-significance.qzv>`__)
+* `Beta Diversity <https://docs.qiime2.org/2020.2/plugins/available/diversity/beta/>`__ (including stats)
+* Principal Coordinate Analysis (`PCoA <https://docs.qiime2.org/2020.2/plugins/available/diversity/pcoa/>`__), including ordination results and EMPeror plots (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2020.2%2Fdata%2Ftutorials%2Fmoving-pictures%2Fcore-metrics-results%2Funweighted_unifrac_emperor.qzv>`__)
+* `Rarefaction <https://docs.qiime2.org/2020.2/plugins/available/feature-table/rarefy/>`__
+* `Filter Samples <https://docs.qiime2.org/2020.2/plugins/available/feature-table/>`__
+* `Taxa Summary <https://docs.qiime2.org/2020.2/plugins/available/taxa/barplot/>`__ (example `here <https://view.qiime2.org/visualization/?type=html&src=https%3A%2F%2Fdocs.qiime2.org%2F2020.2%2Fdata%2Ftutorials%2Fmoving-pictures%2Ftaxa-bar-plots.qzv>`__)
+
+
+.. _creating_a_new_analysis:
 
 Creating A New Analysis
 -----------------------
@@ -64,7 +67,7 @@ Note that rarefaction has some advantages for beta-diversity analyses
 :ref:`[11]<reference11>`, but can have undesirable properties in tests of
 differential abundance :ref:`[12]<reference12>`. To analyze your data with
 alternative normalization strategies, you can easily download the raw biom
-tables (see :doc:`../tutorials/downloading`) and load them into an analysis
+tables (see :doc:`../downloading`) and load them into an analysis
 pipeline such as `Phyloseq <https://bioconductor.org/packages/release/bioc/html/phyloseq.html>`__.
 
 Filtering Samples by Metadata
@@ -416,7 +419,7 @@ Taxa Bar Plot
 
 * **Taxonomic Level**: How specific the taxa will be displayed
 
-  * 1- Kingdom, 2- Phylum, 3- Class, 4- Order, 5- Genus, 6- Species, 7- Subspecies
+  * 1- Kingdom, 2- Phylum, 3- Class, 4- Order, 5- Family, 6- Genus, 7- Species
 
 * **Color Palette**: Changes the coloring of your taxa bar plot
 

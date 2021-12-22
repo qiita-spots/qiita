@@ -71,9 +71,11 @@ class JobHandler(OauthBaseHandler):
             cmd = job.command.name
             params = job.parameters.values
             status = job.status
+            msg = '' if status != 'error' else job.log.msg
 
         response = {'command': cmd, 'parameters': params,
-                    'status': status}
+                    'status': status, 'msg': msg}
+
         self.write(response)
 
 
@@ -142,7 +144,8 @@ class CompleteHandler(OauthBaseHandler):
             cmd = qiita_plugin.get_command('complete_job')
             params = qdb.software.Parameters.load(
                 cmd, values_dict={'job_id': job_id,
-                                  'payload': self.request.body})
+                                  'payload': self.request.body.decode(
+                                      'ascii')})
             job = qdb.processing_job.ProcessingJob.create(job.user, params)
             job.submit()
 

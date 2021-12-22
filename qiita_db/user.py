@@ -23,11 +23,8 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from re import sub
 from datetime import datetime
-
-from future.utils import viewitems
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -521,7 +518,7 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args)
             db_res = dict(qdb.sql_connection.TRN.execute_fetchindex())
             res = {}
-            for s_id, artifact_ids in viewitems(db_res):
+            for s_id, artifact_ids in db_res.items():
                 res[qdb.study.Study(s_id)] = [
                     qdb.artifact.Artifact(a_id) for a_id in artifact_ids]
 
@@ -554,13 +551,11 @@ class User(qdb.base.QiitaObject):
 
     def generate_reset_code(self):
         """Generates a password reset code for user"""
-        with qdb.sql_connection.TRN:
-            reset_code = qdb.util.create_rand_string(20, punct=False)
-            sql = """UPDATE qiita.{0}
-                     SET pass_reset_code = %s, pass_reset_timestamp = NOW()
-                     WHERE email = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [reset_code, self._id])
-            qdb.sql_connection.TRN.execute()
+        reset_code = qdb.util.create_rand_string(20, punct=False)
+        sql = """UPDATE qiita.{0}
+                 SET pass_reset_code = %s, pass_reset_timestamp = NOW()
+                 WHERE email = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(sql, [reset_code, self._id])
 
     def change_forgot_password(self, code, newpass):
         """Changes the password if the code is valid
@@ -584,16 +579,14 @@ class User(qdb.base.QiitaObject):
             return False
 
     def _change_pass(self, newpass):
-        with qdb.sql_connection.TRN:
-            if not validate_password(newpass):
-                raise IncorrectPasswordError("Bad password given!")
+        if not validate_password(newpass):
+            raise IncorrectPasswordError("Bad password given!")
 
-            sql = """UPDATE qiita.{0}
-                     SET password=%s, pass_reset_code = NULL
-                     WHERE email = %s""".format(self._table)
-            qdb.sql_connection.TRN.add(
-                sql, [qdb.util.hash_password(newpass), self._id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.{0}
+                 SET password=%s, pass_reset_code = NULL
+                 WHERE email = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(
+            sql, [qdb.util.hash_password(newpass), self._id])
 
     def messages(self, count=None):
         """Return messages in user's queue
@@ -714,6 +707,17 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_info)
             return [qdb.processing_job.ProcessingJob(p[0])
                     for p in qdb.sql_connection.TRN.execute_fetchindex()]
+
+    def update_email(self, email):
+        if not validate_email(email):
+            raise IncorrectEmailError(f'Bad email given: {email}')
+
+        if self.exists(email):
+            raise IncorrectEmailError(f'This email already exists: {email}')
+
+        with qdb.sql_connection.TRN:
+            sql = 'UPDATE qiita.qiita_user SET email = %s where email = %s'
+            qdb.sql_connection.TRN.add(sql, [email, self.email])
 
 
 def validate_email(email):

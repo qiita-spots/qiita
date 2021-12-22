@@ -52,6 +52,7 @@
     // Modify the submit action of the form to use AJAX
     $("#create-artifact-form").submit(function(event){
       event.preventDefault();
+      $('#add-files-btn').prop('disabled', true);
       // Add the prep template as a parameter
       $('<input>').attr({
         type: 'hidden',
@@ -76,8 +77,13 @@
             populate_data_type_menu_div();
             populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
           }
+        },
+        error: function(object, status, error_msg) {
+          // Something went wrong, show the message
+          bootstrapAlert("Error: " + error_msg + "  " + status, "danger");
         }
       });
+      $('#add-files-btn').prop('disabled', false);
     });
   });
 </script>
@@ -107,7 +113,7 @@
   </div>
   <div class="row" id="submit-div" data-error-count="0" hidden>
     <div class="col-md-12" style="margin-top: 5px;">
-      <input type="submit" class="btn btn-sm btn-success" value="Add files">
+      <input type="submit" class="btn btn-sm btn-success" id="add-files-btn" value="Add files">
     </div>
   </div>
 </form>

@@ -51,7 +51,8 @@ class JobHandlerTests(OauthTestingBase):
                   "phred_quality_threshold": 3, "barcode_type": "golay_12",
                   "max_barcode_errors": 1.5, "input_data": 1,
                   'phred_offset': 'auto'}
-        exp = {'command': cmd, 'parameters': params, 'status': 'success'}
+        exp = {'command': cmd, 'parameters': params, 'status': 'success',
+               'msg': ''}
         self.assertEqual(loads(obs.body), exp)
 
     def test_get_no_header(self):
@@ -161,7 +162,7 @@ class CompleteHandlerTests(OauthTestingBase):
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/complete/',
             payload, headers=self.header)
         self.assertEqual(obs.code, 403)
-        self.assertEqual(obs.body,
+        self.assertEqual(obs.body.decode('ascii'),
                          "Can't complete job: not in a running state")
 
     def test_post_job_failure(self):
@@ -280,7 +281,7 @@ class ProcessingJobAPItestHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         self.assertIsNotNone(obs['job'])
 
     def test_post_processing_job_status(self):
@@ -302,7 +303,7 @@ class ProcessingJobAPItestHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         job_id = obs['job']
         self.assertTrue(qdb.processing_job.ProcessingJob.exists(job_id))
         self.assertEqual(qdb.processing_job.ProcessingJob(job_id).status,

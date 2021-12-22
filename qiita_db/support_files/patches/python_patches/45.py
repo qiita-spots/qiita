@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from future.utils import viewitems
-
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.sql_connection import TRN
@@ -37,10 +34,10 @@ with TRN:
 
 if overlapping is not None:
     # finding actual duplicates
-    for table_name, cols in viewitems(overlapping):
+    for table_name, cols in overlapping.items():
         # leaving print so when we patch in the main system we know that
         # nothing was renamed or deal with that
-        print table_name
+        print(table_name)
         with TRN:
             for c in cols:
                 sql = 'ALTER TABLE qiita.%s RENAME COLUMN %s TO %s_renamed' % (

@@ -36,11 +36,6 @@ except ImportError as e:
     missing_deps_errors.append((e, extra_info % 'click'))
 
 try:
-    from future import __version__ as future_lib_version
-except ImportError as e:
-    missing_deps_errors.append((e, core_dependency_missing_msg % 'future'))
-
-try:
     from numpy import __version__ as numpy_lib_version
 except ImportError as e:
     missing_deps_errors.append((e, core_dependency_missing_msg % 'NumPy'))
@@ -125,26 +120,26 @@ except ImportError as e:
 try:
     from qiita_core.configuration_manager import ConfigurationManager
     ConfigurationManager()
-except e:
+except Exception as e:
     missing_deps_errors.append((e, 'You need to add to your enviroment '
                                 'the Qiita configuration using '
                                 'QIITA_CONFIG_FP'))
 
 if missing_deps_errors:
     for e, t in missing_deps_errors:
-        print '%s\n=============' % (t)
+        print('%s\n=============' % (t))
     exit('Missing core dependencies, can not continue.')
 
 if missing_deps_warnings:
     for e, t in missing_deps_errors:
-        print '%s\n=============' % (t)
+        print('%s\n=============' % (t))
 
 
 # trick flake8 to not complain about module-level imports not being at the top
 # of the file. These imports can only really happen if none of the core
 # dependencies are missing
 if True:
-    from qiita_db.sql_connection import SQLConnectionHandler
+    from qiita_db.sql_connection import TRN
     from redis import StrictRedis
 
 
@@ -153,9 +148,9 @@ class QiitaConfig(TestCase):
     def setUp(self):
         self.config = ConfigurationManager()
         try:
-            conn_handler = SQLConnectionHandler()
-            sql = "SELECT version();"
-            self.psql_version = conn_handler.execute_fetchone(sql)[0]
+            with TRN:
+                TRN.add("SELECT version()")
+                self.psql_version = TRN.execute_fetchflatten()[0]
         except Exception:
             self.psql_version = None
         try:
@@ -167,16 +162,6 @@ class QiitaConfig(TestCase):
             self.redis_version = r.info()['redis_version']
         except Exception:
             self.redis_version = None
-
-    def test_future_library_version(self):
-        acceptable_version = (0, 14, 0)
-        string_acceptable_version = '.'.join(map(str, acceptable_version))
-        version = tuple(map(int, future_lib_version.split('.')))
-
-        self.assertTrue(acceptable_version <= version,
-                        'Unsupported future version. You have %s but the '
-                        'minimum required version is %s'
-                        % (future_lib_version, string_acceptable_version))
 
     def test_pandas_library_version(self):
         acceptable_version = (0, 15)
@@ -247,7 +232,7 @@ class QiitaConfig(TestCase):
                            string_acceptable_version))
 
     def test_redbiom_version(self):
-        acceptable_version = (0, 1, 0)
+        acceptable_version = (0, 3, 8)
         string_acceptable_version = '.'.join(map(str, acceptable_version))
         version = tuple(map(int, redbiom_lib_version.split('.')))
 
@@ -292,13 +277,13 @@ def main():
         ("Python version", python_version.replace('\n', ' ')),
         ("Python executable", executable)]
     max_len = max([len(e[0]) for e in system_info])
-    print system_info_header
+    print(system_info_header)
     for v in system_info:
-        print "%*s:\t%s" % (max_len, v[0], v[1])
+        print("%*s:\t%s" % (max_len, v[0], v[1]))
 
-    conn_handler = SQLConnectionHandler()
-    current_patch = conn_handler.execute_fetchone(
-        "SELECT current_patch FROM settings")[0]
+    with TRN:
+        TRN.add("SELECT current_patch FROM settings")
+        current_patch = TRN.execute_fetchflatten()[0]
     qiita_db_patch_number = splitext(current_patch)[0]
 
     # Getting required environment variables
@@ -309,7 +294,6 @@ def main():
 
     version_info = [
         ('click library version', click_lib_version),
-        ('future library version', future_lib_version),
         ('numpy library version', numpy_lib_version),
         ('pandas library version', pandas_lib_version),
         ('tornado library version', tornado_lib_version),
@@ -329,9 +313,9 @@ def main():
         ('Qiita ware library version', qiita_ware_lib_version)
     ]
     max_len = max([len(e[0]) for e in version_info])
-    print dependency_info_header
+    print(dependency_info_header)
     for v in version_info:
-        print "%*s:\t%s" % (max_len, v[0], v[1])
+        print("%*s:\t%s" % (max_len, v[0], v[1]))
 
     extra_info = None
     qiita_config = ConfigurationManager()
@@ -358,8 +342,8 @@ def main():
                          qiita_config.vamps_url != '' and
                          qiita_config.vamps_user != '')
     try:
-        SQLConnectionHandler()
-        psql_running = True
+        with TRN:
+            psql_running = True
     except Exception:
         psql_running = False
     try:
@@ -382,7 +366,7 @@ def main():
     except Exception:
         redbiom_redis_running = False
 
-    print qiita_config_header
+    print(qiita_config_header)
     qiita_config_info = [
         ('QIITA_CONFIG_FP filepath', qiita_conf_fp),
         ('Test environment', str(qiita_config.test_environment)),
@@ -407,11 +391,11 @@ def main():
     max_len = max([len(e[0]) for e in qiita_config_info])
     for v in qiita_config_info:
         if v != ('Extra info', None):
-            print "%*s:\t%s" % (max_len, v[0], v[1])
+            print("%*s:\t%s" % (max_len, v[0], v[1]))
 
-    print qiita_plugins_header
+    print(qiita_plugins_header)
     if not psql_running:
-        print "PostgreSQL not running, can't retrieve plugin information"
+        print("PostgreSQL not running, can't retrieve plugin information")
     else:
         try:
             import qiita_db as qdb
@@ -423,15 +407,15 @@ def main():
                 qdb.sql_connection.TRN.add(sql)
                 res = qdb.sql_connection.TRN.execute_fetchindex()
                 for name, version, client_id, client_secret in res:
-                    print "Plugin name: %s" % name
-                    print "\tVersion: %s" % version
-                    print "\tClient id: %s" % client_id
-                    print "\tClient secret: %s" % client_secret
+                    print("Plugin name: %s" % name)
+                    print("\tVersion: %s" % version)
+                    print("\tClient id: %s" % client_id)
+                    print("\tClient secret: %s" % client_secret)
         except Exception as e:
-            print ("An error occurred while retrieving plugin information: %s"
-                   % str(e))
+            print("An error occurred while retrieving plugin information: %s"
+                  % str(e))
 
-    print qiita_config_tests_header
+    print(qiita_config_tests_header)
     suite = TestLoader().loadTestsFromTestCase(QiitaConfig)
     TextTestRunner(stream=stdout, verbosity=1).run(suite)
 

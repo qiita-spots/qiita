@@ -5,9 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from json import dumps
-from future.utils import viewitems
 from collections import defaultdict
 
 from tornado.web import authenticated, HTTPError
@@ -50,7 +48,7 @@ class StudyApprovalList(BaseHandler):
         for artifact in Artifact.iter_by_visibility('awaiting_approval'):
             studies[artifact.study].append(artifact.id)
         parsed_studies = [(s.id, s.title, s.owner.email, pds)
-                          for s, pds in viewitems(studies)]
+                          for s, pds in studies.items()]
 
         self.render('admin_approval.html',
                     study_info=parsed_studies)
@@ -62,7 +60,8 @@ class AutocompleteHandler(BaseHandler):
         text = self.get_argument('text')
         vals = r_client.execute_command('zrangebylex', 'qiita-usernames',
                                         u'[%s' % text, u'[%s\xff' % text)
-        self.write({'results': [{'id': s, 'text': s} for s in vals]})
+        self.write({'results': [{'id': s.decode('utf-8'),
+                                 'text': s.decode('utf-8')} for s in vals]})
 
 
 class ShareStudyAJAX(BaseHandler):
@@ -137,13 +136,12 @@ class ListStudiesAJAX(BaseHandler):
 
             info[i]['pi'] = study_person_linkifier(info[i]['pi'])
 
-            info[i]['ebi_info'] = info[i]['ebi_submission_status']
+            info[i]['ebi_info'] = ''
             ebi_study_accession = info[i]['ebi_study_accession']
             if ebi_study_accession:
-                info[i]['ebi_info'] = '%s (%s)' % (
-                    ''.join([EBI_LINKIFIER.format(a)
-                             for a in ebi_study_accession.split(',')]),
-                    info[i]['ebi_submission_status'])
+                info[i]['ebi_info'] = ''.join([
+                    EBI_LINKIFIER.format(a)
+                    for a in ebi_study_accession.split(',')])
 
         # build the table json
         results = {

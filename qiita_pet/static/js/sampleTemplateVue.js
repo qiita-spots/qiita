@@ -60,6 +60,7 @@ Vue.component('sample-template-page', {
               '</div>' +
             '</div>',
   props: ['portal', 'study-id'],
+  maxDirectUploadSize: 10485760,
   methods: {
     /**
      *
@@ -80,7 +81,7 @@ Vue.component('sample-template-page', {
           // Hide the processing div
           $('#st-processsing-div').hide();
           // Enable interaction bits
-          $('#update-btn-div').show();
+          $('#update-st-div').show();
           $('.st-interactive').prop('disabled', false);
           if (jobStatus === 'error') {
             // The job errored - show the error
@@ -116,7 +117,7 @@ Vue.component('sample-template-page', {
       $('#st-processsing-div').show();
       // Disable interaction bits
       $('.st-interactive').prop('disabled', true);
-      $('#update-btn-div').hide();
+      $('#update-st-div').hide();
       // Force the first check to happen now
       vm.checkJob();
       // Set the interval for further checking - this jobs tend to be way faster
@@ -143,14 +144,31 @@ Vue.component('sample-template-page', {
       let vm = this;
       var fp = $('#file-select').val();
       var dtype = $('#data-type-select').val();
-      vm.refresh = true;
+      var file = $('#st-direct-upload')[0].files[0];
 
-      $.post(vm.portal + '/study/description/sample_template/', {study_id: vm.studyId, filepath: fp, data_type: dtype}, function(data) {
+      var fd = new FormData();
+      fd.append('study_id', vm.studyId);
+      fd.append('filepath', fp);
+      fd.append('data_type', dtype);
+
+      if (file !== undefined) {
+        fd.append('direct_upload', true);
+        fd.append('theFile', file);
+      }
+
+      $.ajax({
+        url: vm.portal + '/study/description/sample_template/',
+        type: 'POST',
+        processData: false,
+        contentType: false,
+        data: fd,
+        success: function(data) {
           vm.startJobCheckInterval(data['job']);
-      })
-        .fail(function(object, status, error_msg) {
-          bootstrapAlert("Error creating sample information: " + object.statusText, "danger");
-        });
+        },
+        error: function (object, status, error_msg) {
+          bootstrapAlert("Error updating sample template: " + error_msg, "danger")
+        }
+      });
     },
 
     /**
@@ -160,10 +178,25 @@ Vue.component('sample-template-page', {
      **/
     updateSampleTemplate: function() {
       let vm = this;
+      var file = $('#st-direct-upload')[0].files[0];
+
+      var fd = new FormData();
+      fd.append('op', 'replace');
+      fd.append('path', vm.studyId + '/data/');
+
+      if (file !== undefined) {
+        fd.append('direct_upload', true);
+        fd.append('value', file);
+      } else {
+        fd.append('value', $('#file-select').val());
+      }
+
       $.ajax({
         url: vm.portal + '/study/description/sample_template/',
         type: 'PATCH',
-        data: {'op': 'replace', 'path': vm.studyId + '/data/', 'value': $('#file-select').val()},
+        processData: false,
+        contentType: false,
+        data: fd,
         success: function(data) {
           vm.startJobCheckInterval(data['job']);
         },
@@ -241,14 +274,10 @@ Vue.component('sample-template-page', {
         alert('No samples selected!');
       } else {
         if (confirm('Are you sure you want to delete ' + total_samples + ' samples?')) {
-          var sample_names = [];
-          samples.each(function(){
-            sample_names.push($(this).prop('name'));
-          });
           $.ajax({
             url: vm.portal + '/study/description/sample_template/',
             type: 'PATCH',
-            data: {'op': 'remove', 'path': vm.studyId + '/samples/' + sample_names},
+            data: {'op': 'remove', 'path': vm.studyId + '/samples/' + samples},
             success: function(data) {
               vm.rowId = 0;
               vm.rowType = 'sample';
@@ -402,6 +431,13 @@ Vue.component('sample-template-page', {
         }
       }
 
+      // Adding the alert for restrictions
+      if (vm.sample_restrictions !== '') {
+        $row = $('<div>').addClass('row').appendTo('#sample-template-contents');
+        $col = $('<h5>').appendTo($row);
+        $('<div>').addClass('alert').addClass('alert-warning').append(vm.sample_restrictions).appendTo($row)
+      }
+
       // After adding the buttons we can add the two tabs - one holding the Sample Information
       // and the other one holding the Sample and preparation summary
       $row = $('<div>').addClass('row').appendTo('#sample-template-contents');
@@ -435,6 +471,26 @@ Vue.component('sample-template-page', {
         // Add the select to update the sample information
         $row = $('<div>').attr('id', 'update-st-div').addClass('row form-group').appendTo($tab);
         $('<label>').addClass('col-sm-2 col-form-label').append('Update sample information:').appendTo($row);
+
+        // Add the direct upload field
+        $('<label>')
+          .addClass('btn btn-default')
+            .append('Direct upload file <small>(< 2MB)</small>')
+            .appendTo($row)
+            .append('<input type="file" style="display: none;" id="st-direct-upload">');
+        $('#st-direct-upload').on('change', function() {
+          if (this.files.length != 1) {
+            alert('You can only upload one file.')
+            return false;
+          }
+          if (this.files[0].size > vm.maxDirectUploadSize) {
+            alert('You can only upload files smaller than 2MB. For larger files please use the "Upload Files" button on the left.');
+            return false;
+          }
+          vm.updateSampleTemplate()
+        });
+
+
         $col = $('<div>').addClass('col-sm-3').appendTo($row);
         $select = $('<select>').attr('id', 'file-select').addClass('form-control').appendTo($col);
         $('<option>').attr('value', "").append('Choose file...').appendTo($select);
@@ -525,6 +581,26 @@ Vue.component('sample-template-page', {
         for (var opt of rC.options) {
           $('<option>').attr('value', opt).append(opt).appendTo($select);
         }
+
+        if (rC['selectId'] == 'file-select') {
+          // Add the direct upload field
+          $('<label>')
+            .addClass('btn btn-default')
+              .append('Direct upload file <small>(< 2MB)</small>')
+              .appendTo($row)
+              .append('<input type="file" style="display: none;" id="st-direct-upload">');
+          $('#st-direct-upload').on('change', function() {
+            if (this.files.length != 1) {
+              alert('You can only upload one file.')
+              return false;
+            }
+            if (this.files[0].size > vm.maxDirectUploadSize) {
+              alert('You can only upload files smaller than 2MB. For larger files please use the "Upload Files" button on the left.');
+              return false;
+            }
+            vm.createSampleTemplate()
+          });
+        }
       }
 
       // Add the button - by default hidden
@@ -562,6 +638,12 @@ Vue.component('sample-template-page', {
         vm.numColumns = data['num_columns'];
         vm.columns = data['columns'];
         vm.specimenIDColumn = data['specimen_id_column'];
+        vm.sample_restrictions = data['sample_restrictions'];
+
+        // fixing message for nicer display
+        if (vm.sample_restrictions !== '') {
+          vm.sample_restrictions = "Sample Info " + vm.sample_restrictions.split(" ").slice(2).join(" ");
+        }
 
         // Populate the sample-template-contents
         $('#title-h3').empty();

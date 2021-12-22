@@ -7,8 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from tempfile import mkstemp, NamedTemporaryFile, TemporaryFile
-from os import close, remove, makedirs, mkdir
+from tempfile import mkstemp, mkdtemp, NamedTemporaryFile, TemporaryFile
+from os import close, remove, mkdir
 from os.path import join, exists, basename
 from shutil import rmtree
 from datetime import datetime
@@ -23,15 +23,14 @@ import qiita_db as qdb
 
 
 @qiita_test_checker()
-class DBUtilTests(TestCase):
+class DBUtilTestsBase(TestCase):
     def setUp(self):
         self.table = 'study'
         self.required = [
-            'number_samples_promised', 'study_title', 'mixs_compliant',
+            'study_title', 'mixs_compliant',
             'metadata_complete', 'study_description', 'first_contact',
             'reprocess', 'timeseries_type_id', 'study_alias',
-            'study_abstract', 'principal_investigator_id', 'email',
-            'number_samples_collected']
+            'study_abstract', 'principal_investigator_id', 'email']
         self.files_to_remove = []
 
     def tearDown(self):
@@ -39,10 +38,28 @@ class DBUtilTests(TestCase):
             if exists(fp):
                 remove(fp)
 
-    def test_params_dict_to_json(self):
-        params_dict = {'opt1': '1', 'opt2': [2, '3'], 3: 9}
-        exp = '{"3":9,"opt1":"1","opt2":[2,"3"]}'
-        self.assertEqual(qdb.util.params_dict_to_json(params_dict), exp)
+
+class DBUtilTests(DBUtilTestsBase):
+    def test_max_preparation_samples(self):
+        """Test that we get the correct max_preparation_samples"""
+        obs = qdb.util.max_preparation_samples()
+        self.assertEqual(obs, 800)
+
+    def test_filepath_id_to_object_id(self):
+        # filepaths 1, 2 belongs to artifact 1
+        self.assertEqual(qdb.util.filepath_id_to_object_id(1), 1)
+        self.assertEqual(qdb.util.filepath_id_to_object_id(2), 1)
+        # filepaths 3, 4 belongs to artifact 2
+        self.assertEqual(qdb.util.filepath_id_to_object_id(3), 2)
+        self.assertEqual(qdb.util.filepath_id_to_object_id(4), 2)
+        # filepaths 9 belongs to artifact 4
+        self.assertEqual(qdb.util.filepath_id_to_object_id(9), 4)
+        # filepath 16 belongs to anlaysis 1
+        self.assertEqual(qdb.util.filepath_id_to_object_id(16), 1)
+        # filepath 18 belongs to study 1
+        self.assertIsNone(qdb.util.filepath_id_to_object_id(18))
+        # filepath 22 belongs to analysis/artifact 7
+        self.assertEqual(qdb.util.filepath_id_to_object_id(22), 7)
 
     def test_check_required_columns(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
@@ -101,8 +118,8 @@ class DBUtilTests(TestCase):
         obs = qdb.util.get_artifact_types()
         exp = {'SFF': 1, 'FASTA_Sanger': 2, 'FASTQ': 3, 'FASTA': 4,
                'per_sample_FASTQ': 5, 'Demultiplexed': 6, 'BIOM': 7,
-               'beta_div_plots': 8L, 'rarefaction_curves': 9L,
-               'taxa_summary': 10L}
+               'beta_div_plots': 8, 'rarefaction_curves': 9,
+               'taxa_summary': 10}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_artifact_types(key_by_id=True)
@@ -119,8 +136,10 @@ class DBUtilTests(TestCase):
                'reference_tax': 11, 'reference_tree': 12, 'log': 13,
                'sample_template': 14, 'prep_template': 15, 'qiime_map': 16,
                }
-        exp = dict(self.conn_handler.execute_fetchall(
-            "SELECT filepath_type,filepath_type_id FROM qiita.filepath_type"))
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT filepath_type,filepath_type_id "
+                                       "FROM qiita.filepath_type")
+            exp = dict(qdb.sql_connection.TRN.execute_fetchindex())
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_filepath_types(key='filepath_type_id')
@@ -137,7 +156,8 @@ class DBUtilTests(TestCase):
         obs = qdb.util.get_data_types()
         exp = {'16S': 1, '18S': 2, 'ITS': 3, 'Proteomic': 4, 'Metabolomic': 5,
                'Metagenomic': 6, 'Multiomic': 7, 'Metatranscriptomics': 8,
-               'Viromics': 9, 'Genomics': 10, 'Transcriptomics': 11}
+               'Viromics': 9, 'Genomics': 10, 'Transcriptomics': 11,
+               'Job Output Folder': 12}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_data_types(key='data_type_id')
@@ -171,8 +191,10 @@ class DBUtilTests(TestCase):
             f.write("\n")
         self.files_to_remove.append(fp)
 
-        exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT last_value FROM qiita.filepath_filepath_id_seq")
+            exp_new_id = 1 + qdb.sql_connection.TRN.execute_fetchflatten()[0]
         obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data")
         self.assertEqual(obs, [exp_new_id])
 
@@ -184,10 +206,12 @@ class DBUtilTests(TestCase):
         self.files_to_remove.append(exp_fp)
 
         # Check that the filepaths have been added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.filepath "
+                                       "WHERE filepath_id=%d" % exp_new_id)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp_fp = "2_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5, 1]]
         self.assertEqual(obs, exp)
 
         qdb.util.purge_filepaths()
@@ -201,9 +225,12 @@ class DBUtilTests(TestCase):
 
         # The id's in the database are bigserials, i.e. they get
         # autoincremented for each element introduced.
-        exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
-        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data", copy=True)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT last_value FROM qiita.filepath_filepath_id_seq")
+            exp_new_id = 1 + qdb.sql_connection.TRN.execute_fetchflatten()[0]
+        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data",
+                                        move_files=False, copy=True)
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
@@ -214,11 +241,26 @@ class DBUtilTests(TestCase):
         self.files_to_remove.append(exp_fp)
 
         # Check that the filepaths have been added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.filepath "
+                                       "WHERE filepath_id=%d" % exp_new_id)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp_fp = "2_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5, 1]]
         self.assertEqual(obs, exp)
+
+        # let's do that again but with move_files = True
+        exp_new_id += 1
+        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data",
+                                        move_files=True, copy=True)
+        self.assertEqual(obs, [exp_new_id])
+
+        # Check that the files have been copied correctly
+        exp_fp = join(qdb.util.get_db_files_base_dir(), "raw_data",
+                      "2_%s" % basename(fp))
+        self.assertTrue(exists(exp_fp))
+        self.assertTrue(exists(fp))
+        self.files_to_remove.append(exp_fp)
 
         qdb.util.purge_filepaths()
 
@@ -229,8 +271,10 @@ class DBUtilTests(TestCase):
             f.write("\n")
         self.files_to_remove.append(fp)
 
-        exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT last_value FROM qiita.filepath_filepath_id_seq")
+            exp_new_id = 1 + qdb.sql_connection.TRN.execute_fetchflatten()[0]
         obs = qdb.util.insert_filepaths(
             [(fp, "raw_forward_seqs")], 2, "raw_data")
         self.assertEqual(obs, [exp_new_id])
@@ -242,10 +286,12 @@ class DBUtilTests(TestCase):
         self.files_to_remove.append(exp_fp)
 
         # Check that the filepaths have been added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT * FROM qiita.filepath "
+                                       "WHERE filepath_id=%d" % exp_new_id)
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp_fp = "2_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5, 1]]
         self.assertEqual(obs, exp)
 
         qdb.util.purge_filepaths()
@@ -255,10 +301,16 @@ class DBUtilTests(TestCase):
                                           'artifact_id', 1)
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
-        exp = [(1, path_builder("1_s_G1_L001_sequences.fastq.gz"),
-                "raw_forward_seqs"),
-               (2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes")]
+        exp = [{'fp_id': 1,
+                'fp': path_builder("1_s_G1_L001_sequences.fastq.gz"),
+                'fp_type': "raw_forward_seqs",
+                'checksum': '2125826711',
+                'fp_size': 58},
+               {'fp_id': 2,
+                'fp': path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                'fp_type': "raw_barcodes",
+                'checksum': '2125826711',
+                'fp_size': 58}]
         self.assertEqual(obs, exp)
 
     def test_retrieve_filepaths_sort(self):
@@ -266,10 +318,16 @@ class DBUtilTests(TestCase):
             'artifact_filepath', 'artifact_id', 1, sort='descending')
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
-        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes"),
-               (1, path_builder("1_s_G1_L001_sequences.fastq.gz"),
-                "raw_forward_seqs")]
+        exp = [{'fp_id': 2,
+                'fp': path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                'fp_type': "raw_barcodes",
+                'checksum': '2125826711',
+                'fp_size': 58},
+               {'fp_id': 1,
+                'fp': path_builder("1_s_G1_L001_sequences.fastq.gz"),
+                'fp_type': "raw_forward_seqs",
+                'checksum': '2125826711',
+                'fp_size': 58}]
         self.assertEqual(obs, exp)
 
     def test_retrieve_filepaths_type(self):
@@ -278,16 +336,22 @@ class DBUtilTests(TestCase):
             fp_type='raw_barcodes')
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
-        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes")]
+        exp = [{'fp_id': 2,
+                'fp': path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                'fp_type': "raw_barcodes",
+                'checksum': '2125826711',
+                'fp_size': 58}]
         self.assertEqual(obs, exp)
 
         obs = qdb.util.retrieve_filepaths(
             'artifact_filepath', 'artifact_id', 1, fp_type='raw_barcodes')
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
-        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes")]
+        exp = [{'fp_id': 2,
+                'fp': path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                'fp_type': "raw_barcodes",
+                'checksum': '2125826711',
+                'fp_size': 58}]
         self.assertEqual(obs, exp)
 
         obs = qdb.util.retrieve_filepaths(
@@ -300,115 +364,6 @@ class DBUtilTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.util.retrieve_filepaths('artifact_filepath', 'artifact_id', 1,
                                         sort='Unknown')
-
-    def _common_purge_filepaths_test(self):
-        # Get all the filepaths so we can test if they've been removed or not
-        sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
-        fps = [join(qdb.util.get_mountpoint_path_by_id(dd_id), fp)
-               for fp, dd_id in self.conn_handler.execute_fetchall(sql_fp)]
-
-        # Make sure that the files exist - specially for travis
-        for fp in fps:
-            if not exists(fp):
-                with open(fp, 'w') as f:
-                    f.write('\n')
-                self.files_to_remove.append(fp)
-
-        _, raw_data_mp = qdb.util.get_mountpoint('raw_data')[0]
-
-        removed_fps = [
-            join(raw_data_mp, '2_sequences_barcodes.fastq.gz'),
-            join(raw_data_mp, '2_sequences.fastq.gz'),
-            join(raw_data_mp, 'directory_test')]
-
-        for fp in removed_fps[:-1]:
-            with open(fp, 'w') as f:
-                f.write('\n')
-        makedirs(removed_fps[-1])
-
-        sql = """INSERT INTO qiita.filepath
-                    (filepath, filepath_type_id, checksum,
-                     checksum_algorithm_id, data_directory_id)
-                VALUES ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
-                       ('2_sequences.fastq.gz', 1, '852952723', 1, 5),
-                       ('directory_test', 8, '852952723', 1, 5)
-                RETURNING filepath_id"""
-        fp_ids = self.conn_handler.execute_fetchall(sql)
-
-        fps = set(fps).difference(removed_fps)
-
-        # Check that the files exist
-        for fp in fps:
-            self.assertTrue(exists(fp))
-        for fp in removed_fps:
-            self.assertTrue(exists(fp))
-
-        exp_count = qdb.util.get_count("qiita.filepath") - 3
-
-        qdb.util.purge_filepaths()
-
-        obs_count = qdb.util.get_count("qiita.filepath")
-
-        # Check that only 2 rows have been removed
-        self.assertEqual(obs_count, exp_count)
-
-        # Check that the 2 rows that have been removed are the correct ones
-        sql = """SELECT EXISTS(
-                    SELECT * FROM qiita.filepath WHERE filepath_id = %s)"""
-        obs = self.conn_handler.execute_fetchone(sql, (fp_ids[0][0],))[0]
-        self.assertFalse(obs)
-        obs = self.conn_handler.execute_fetchone(sql, (fp_ids[1][0],))[0]
-        self.assertFalse(obs)
-
-        # Check that the files have been successfully removed
-        for fp in removed_fps:
-            self.assertFalse(exists(fp))
-
-        # Check that all the other files still exist
-        for fp in fps:
-            self.assertTrue(exists(fp))
-
-    def test_purge_filepaths(self):
-        self._common_purge_filepaths_test()
-
-    def test_purge_files_from_filesystem(self):
-        info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "number_samples_collected": 25,
-                "number_samples_promised": 28, "study_alias": "TST",
-                "study_description": "Some description of the study goes here",
-                "study_abstract": "Some abstract goes here",
-                "emp_person_id": qdb.study.StudyPerson(1),
-                "principal_investigator_id": qdb.study.StudyPerson(1),
-                "lab_person_id": qdb.study.StudyPerson(1)}
-
-        new_study = qdb.study.Study.create(
-            qdb.user.User('shared@foo.bar'),
-            'test_purge_files_from_filesystem', info=info)
-
-        metadata_dict = {
-            'SKB8.640193': {'center_name': 'ANL',
-                            'amzn_primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'bartab': 'GTCCGCAAGTTA',
-                            'frd_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
-                            'instrument_model': 'Illumina MiSeq',
-                            'library_construction_protocol': 'AAAA',
-                            'experiment_design_description': 'BBBB'}}
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
-                                          dtype=str)
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(
-            metadata, new_study)
-        fps = [fp for _, fp in st.get_filepaths()]
-        qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
-        qdb.study.Study.delete(new_study.id)
-
-        for fp in fps:
-            self.assertTrue(exists(fp))
-
-        qdb.util.purge_files_from_filesystem(True)
-
-        for fp in fps:
-            self.assertFalse(exists(fp))
 
     def test_empty_trash_upload_folder(self):
         # creating file to delete so we know it actually works
@@ -424,61 +379,83 @@ class DBUtilTests(TestCase):
         qdb.util.empty_trash_upload_folder()
         self.assertFalse(exists(fp))
 
-    def test_purge_filepaths_null_cols(self):
-        # For more details about the source of the issue that motivates this
-        # test: http://www.depesz.com/2008/08/13/nulls-vs-not-in/
-        # In the current set up, the only place where we can actually have a
-        # null value in a filepath id is in the reference table. Add a new
-        # reference without tree and taxonomy:
-        fd, seqs_fp = mkstemp(suffix="_seqs.fna")
-        close(fd)
-        ref = qdb.reference.Reference.create("null_db", "13_2", seqs_fp)
-        self.files_to_remove.append(ref.sequence_fp)
-
-        self._common_purge_filepaths_test()
-
     def test_move_filepaths_to_upload_folder(self):
-        # setting up test, done here as this is the only test that uses these
-        # files
-        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
+        # we are going to test the move_filepaths_to_upload_folder indirectly
+        # by creating an artifact and deleting it. To accomplish this we need
+        # to create a new prep info file, attach a biom with html_summary and
+        # then deleting it. However, we will do this twice to assure that
+        # there are no conflicts with this
+        study_id = 1
+        # creating the 2 sets of files for the 2 artifacts
+        fd, seqs_fp1 = mkstemp(suffix='_seqs.fastq')
         close(fd)
-        fd, html_fp = mkstemp(suffix='.html')
+        html_fp1 = mkdtemp()
+        html_fp1 = join(html_fp1, 'support_files')
+        mkdir(html_fp1)
+        with open(join(html_fp1, 'index.html'), 'w') as fp:
+            fp.write(">AAA\nAAA")
+        fd, seqs_fp2 = mkstemp(suffix='_seqs.fastq')
         close(fd)
-        st = qdb.study.Study(1)
+        html_fp2 = mkdtemp()
+        html_fp2 = join(html_fp2, 'support_files')
+        mkdir(html_fp2)
+        with open(join(html_fp2, 'index.html'), 'w') as fp:
+            fp.write(">AAA\nAAA")
+
+        # creating new prep info file
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
-                                          dtype=str)
-        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
-            metadata, qdb.study.Study(1), "16S")
+        metadata = pd.DataFrame.from_dict(
+            metadata_dict, orient='index', dtype=str)
+        pt1 = qdb.metadata_template.prep_template.PrepTemplate.create(
+            metadata, qdb.study.Study(study_id), "16S")
+        pt2 = qdb.metadata_template.prep_template.PrepTemplate.create(
+            metadata, qdb.study.Study(study_id), "16S")
 
-        artifact = qdb.artifact.Artifact.create(
-            [(seqs_fp, 1), (html_fp, 'html_summary')], "FASTQ",
-            prep_template=pt)
-        filepaths = artifact.filepaths
-        # deleting reference so we can directly call
-        # move_filepaths_to_upload_folder
-        for fid, _, _ in filepaths:
-            sql = "DELETE FROM qiita.artifact_filepath WHERE filepath_id=%s"
-            self.conn_handler.execute(sql, (fid,))
+        # inserting artifact 1
+        artifact1 = qdb.artifact.Artifact.create(
+            [(seqs_fp1, 1), (html_fp1, 'html_summary')], "FASTQ",
+            prep_template=pt1)
+        # inserting artifact 2
+        artifact2 = qdb.artifact.Artifact.create(
+            [(seqs_fp2, 1), (html_fp2, 'html_summary')], "FASTQ",
+            prep_template=pt2)
 
-        # moving filepaths
-        qdb.util.move_filepaths_to_upload_folder(st.id, filepaths)
+        # retrieving filepaths
+        filepaths = artifact1.filepaths
+        filepaths.extend(artifact2.filepaths)
+
+        # delete artifacts
+        qdb.artifact.Artifact.delete(artifact1.id)
+        qdb.artifact.Artifact.delete(artifact2.id)
+
+        # now let's create another artifact with the same filenames that
+        # artifact1 so we can test successfull overlapping of names
+        with open(seqs_fp1, 'w') as fp:
+            fp.write(">AAA\nAAA")
+        mkdir(html_fp1)
+        with open(join(html_fp1, 'index.html'), 'w') as fp:
+            fp.write(">AAA\nAAA")
+        artifact3 = qdb.artifact.Artifact.create(
+            [(seqs_fp1, 1), (html_fp1, 'html_summary')], "FASTQ",
+            prep_template=pt1)
+        filepaths.extend(artifact2.filepaths)
+        qdb.artifact.Artifact.delete(artifact3.id)
 
         # check that they do not exist in the old path but do in the new one
         path_for_removal = join(qdb.util.get_mountpoint("uploads")[0][1],
-                                str(st.id))
-        for _, fp, fp_type in filepaths:
-            self.assertFalse(exists(fp))
-            new_fp = join(path_for_removal, basename(fp))
-            if fp_type == 'html_summary':
+                                str(study_id))
+        for x in filepaths:
+            self.assertFalse(exists(x['fp']))
+            new_fp = join(path_for_removal, basename(x['fp']))
+            if x['fp_type'] == 'html_summary':
                 # The html summary gets removed, not moved
                 self.assertFalse(exists(new_fp))
             else:
@@ -501,7 +478,7 @@ class DBUtilTests(TestCase):
 
         # inserting new ones so we can test that it retrieves these and
         # doesn't alter other ones
-        self.conn_handler.execute(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE qiita.data_directory SET active=false WHERE "
             "data_directory_id=1")
         count = qdb.util.get_count('qiita.data_directory')
@@ -509,7 +486,7 @@ class DBUtilTests(TestCase):
                                                    subdirectory, active)
                  VALUES ('analysis', 'analysis_tmp', true, true),
                         ('raw_data', 'raw_data_tmp', true, false)"""
-        self.conn_handler.execute(sql)
+        qdb.sql_connection.perform_as_transaction(sql)
 
         # this should have been updated
         exp = [(count + 1, join(qdb.util.get_db_files_base_dir(),
@@ -557,7 +534,7 @@ class DBUtilTests(TestCase):
 
         # inserting new ones so we can test that it retrieves these and
         # doesn't alter other ones
-        self.conn_handler.execute(
+        qdb.sql_connection.perform_as_transaction(
             "UPDATE qiita.data_directory SET active=false WHERE "
             "data_directory_id=1")
         count = qdb.util.get_count('qiita.data_directory')
@@ -565,7 +542,7 @@ class DBUtilTests(TestCase):
                                                    subdirectory, active)
                  VALUES ('analysis', 'analysis_tmp', true, true),
                         ('raw_data', 'raw_data_tmp', true, false)"""
-        self.conn_handler.execute(sql)
+        qdb.sql_connection.perform_as_transaction(sql)
 
         # this should have been updated
         exp = join(qdb.util.get_db_files_base_dir(), 'analysis_tmp')
@@ -584,7 +561,7 @@ class DBUtilTests(TestCase):
     def test_get_files_from_uploads_folders(self):
         # something has been uploaded and ignoring hidden files/folders
         # and folders
-        exp = (7, 'uploaded_file.txt', '0 Bytes')
+        exp = (7, 'uploaded_file.txt', '0B')
         obs = qdb.util.get_files_from_uploads_folders("1")
         self.assertIn(exp, obs)
 
@@ -604,7 +581,7 @@ class DBUtilTests(TestCase):
 
         self.files_to_remove.append(test_fp)
 
-        exp = (fid, 'this_is_a_test_file.txt', '4 Bytes')
+        exp = (fid, 'this_is_a_test_file.txt', '4B')
         obs = qdb.util.get_files_from_uploads_folders("1")
         self.assertIn(exp, obs)
 
@@ -668,8 +645,8 @@ class DBUtilTests(TestCase):
         obs = qdb.util.get_filepath_information(1)
         # This path is machine specific. Just checking that is not empty
         self.assertIsNotNone(obs.pop('fullpath'))
-        exp = {'filepath_id': 1L, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
-               'filepath_type': 'raw_forward_seqs', 'checksum': '852952723',
+        exp = {'filepath_id': 1, 'filepath': '1_s_G1_L001_sequences.fastq.gz',
+               'filepath_type': 'raw_forward_seqs', 'checksum': '2125826711',
                'data_type': 'raw_data', 'mountpoint': 'raw_data',
                'subdirectory': False, 'active': True}
         self.assertEqual(obs, exp)
@@ -690,12 +667,10 @@ class DBUtilTests(TestCase):
         self.files_to_remove.append(fp)
         test = qdb.util.insert_filepaths(
             [(fp, "raw_forward_seqs")], 2, "FASTQ")[0]
-        with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.artifact_filepath
-                            (artifact_id, filepath_id)
-                        VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [2, test])
-            qdb.sql_connection.TRN.execute()
+        sql = """INSERT INTO qiita.artifact_filepath
+                        (artifact_id, filepath_id)
+                    VALUES (%s, %s)"""
+        qdb.sql_connection.perform_as_transaction(sql, [2, test])
 
         obs = qdb.util.filepath_id_to_rel_path(test)
         exp = 'FASTQ/2/%s' % basename(fp)
@@ -709,12 +684,10 @@ class DBUtilTests(TestCase):
         self.files_to_remove.append(fp)
         test = qdb.util.insert_filepaths(
             [(fp, "raw_forward_seqs")], 2, "FASTQ")[0]
-        with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.artifact_filepath
-                            (artifact_id, filepath_id)
-                        VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [2, test])
-            qdb.sql_connection.TRN.execute()
+        sql = """INSERT INTO qiita.artifact_filepath
+                        (artifact_id, filepath_id)
+                    VALUES (%s, %s)"""
+        qdb.sql_connection.perform_as_transaction(sql, [2, test])
 
         obs = qdb.util.filepath_ids_to_rel_paths([1, 3, test])
         exp = {1: 'raw_data/1_s_G1_L001_sequences.fastq.gz',
@@ -747,7 +720,9 @@ class DBUtilTests(TestCase):
         self.assertEqual(obs, exp)
 
         sql = "SELECT expiration from qiita.message WHERE message_id = %s"
-        obs = self.conn_handler.execute_fetchall(sql, [count])
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql, [count])
+            obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [[datetime(2015, 8, 5, 19, 41)]]
         self.assertEqual(obs, exp)
 
@@ -762,7 +737,7 @@ class DBUtilTests(TestCase):
                                     datetime(2015, 8, 5, 19, 41))
         obs = [[x[0], x[1]] for x in user.messages()]
         exp = [[message_id, 'SYS MESSAGE']]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         qdb.util.clear_system_messages()
         obs = [[x[0], x[1]] for x in user.messages()]
@@ -776,11 +751,11 @@ class DBUtilTests(TestCase):
         obs = qdb.util.supported_filepath_types("FASTQ")
         exp = [["raw_forward_seqs", True], ["raw_reverse_seqs", False],
                ["raw_barcodes", True]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         obs = qdb.util.supported_filepath_types("BIOM")
         exp = [["biom", True], ["directory", False], ["log", False]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_generate_analysis_list(self):
         self.assertEqual(qdb.util.generate_analysis_list([]), [])
@@ -788,7 +763,7 @@ class DBUtilTests(TestCase):
         obs = qdb.util.generate_analysis_list([1, 2, 3, 5])
         exp = [{'mapping_files': [
                 (16, qdb.util.get_filepath_information(16)['fullpath'])],
-                'description': 'A test analysis', 'artifacts': [9], 'name':
+                'description': 'A test analysis', 'artifacts': [8, 9], 'name':
                 'SomeAnalysis', 'analysis_id': 1, 'visibility': 'private'},
                {'mapping_files': [], 'description': 'Another test analysis',
                 'artifacts': [], 'name': 'SomeSecondAnalysis',
@@ -882,27 +857,24 @@ class UtilTests(TestCase):
         # creating a new study to make sure that empty studies are also
         # returned
         info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "number_samples_collected": 25,
-                "number_samples_promised": 28, "study_alias": "TST",
+                "mixs_compliant": True, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
-                "emp_person_id": qdb.study.StudyPerson(1),
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
         new_study = STUDY.create(
             USER('shared@foo.bar'), 'test_study_1', info=info)
 
         snew_info = {
-            'status': 'sandbox', 'study_title': 'test_study_1',
+            'study_title': 'test_study_1',
             'metadata_complete': True, 'publication_pid': [],
-            'artifact_biom_ids': [],
-            'ebi_submission_status': 'not submitted',
+            'artifact_biom_ids': [], 'autoloaded': False,
             'study_id': new_study.id, 'ebi_study_accession': None,
             'owner': 'Shared', 'shared': [],
             'study_abstract': 'Some abstract goes here',
             'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
             'study_alias': 'TST', 'study_tags': None,
-            'number_samples_collected': 0}
+            'preparation_data_types': [], 'number_samples_collected': 0}
         exp1 = [STUDY_INFO]
         exp2 = [snew_info]
         exp_both = [STUDY_INFO, snew_info]
@@ -913,10 +885,13 @@ class UtilTests(TestCase):
 
         # owner of study
         obs = UTIL.generate_study_list(USER('test@foo.bar'), 'user')
-        self.assertEqual(obs, exp1)
+        self.assertEqual(len(obs), 1)
+        self.assertDictEqual(obs[0], exp1[0])
         # shared with
         obs = UTIL.generate_study_list(USER('shared@foo.bar'), 'user')
-        self.assertEqual(obs, exp_both)
+        self.assertEqual(len(obs), 2)
+        self.assertDictEqual(obs[0], exp_both[0])
+        self.assertDictEqual(obs[1], exp_both[1])
         # admin
         obs = UTIL.generate_study_list(USER('admin@foo.bar'), 'user')
         self.assertEqual(obs, exp_both)
@@ -967,8 +942,6 @@ class UtilTests(TestCase):
 
         # make artifacts of prep 2 public
         PREP(2).artifact.visibility = 'public'
-        exp1[0]['status'] = 'public'
-        exp_both[0]['status'] = 'public'
         _avoid_duplicated_tests()
 
         # make artifacts of prep 1 awaiting_approval
@@ -992,22 +965,21 @@ class UtilTests(TestCase):
         # creating a new study to make sure that empty studies are also
         # returned
         info = {"timeseries_type_id": 1, "metadata_complete": True,
-                "mixs_compliant": True, "number_samples_collected": 25,
-                "number_samples_promised": 28, "study_alias": "TST",
+                "mixs_compliant": True, "study_alias": "TST",
                 "study_description": "Some description of the study goes here",
                 "study_abstract": "Some abstract goes here",
-                "emp_person_id": qdb.study.StudyPerson(1),
                 "principal_investigator_id": qdb.study.StudyPerson(1),
                 "lab_person_id": qdb.study.StudyPerson(1)}
         new_study = qdb.study.Study.create(
             qdb.user.User('shared@foo.bar'), 'test_study_1', info=info)
 
         exp_info = [
-            {'status': 'private', 'study_title': (
+            {'study_title': (
                 'Identification of the Microbiomes for Cannabis Soils'),
              'metadata_complete': True, 'publication_pid': [
-                '123456', '7891011'], 'ebi_submission_status': 'submitted',
+                '123456', '7891011'],
              'study_id': 1, 'ebi_study_accession': 'EBI123456-BB',
+             'autoloaded': False,
              'study_abstract': (
                 'This is a preliminary study to examine the microbiota '
                 'associated with the Cannabis plant. Soils samples from '
@@ -1021,9 +993,9 @@ class UtilTests(TestCase):
                 'lifecycle.'), 'pi': ('PI_dude@foo.bar', 'PIDude'),
              'publication_doi': ['10.100/123456', '10.100/7891011'],
              'study_alias': 'Cannabis Soils', 'number_samples_collected': 27},
-            {'status': 'sandbox', 'study_title': 'test_study_1',
+            {'study_title': 'test_study_1',
              'metadata_complete': True, 'publication_pid': [],
-             'ebi_submission_status': 'not submitted',
+             'autoloaded': False,
              'study_id': new_study.id, 'ebi_study_accession': None,
              'study_abstract': 'Some abstract goes here',
              'pi': ('lab_dude@foo.bar', 'LabDude'), 'publication_doi': [],
@@ -1041,34 +1013,47 @@ class UtilTests(TestCase):
     def test_get_artifacts_information(self):
         # we are going to test that it ignores 1 and 2 cause they are not biom,
         # 4 has all information and 7 and 8 don't
-        obs = qdb.util.get_artifacts_information([1, 2, 4, 7, 8])
+        obs = qdb.util.get_artifacts_information([1, 2, 4, 6, 7, 8])
         # not testing timestamp
         for i in range(len(obs)):
             del obs[i]['timestamp']
 
         exp = [
-            {'files': ['1_study_1001_closed_reference_otu_table.biom'],
-             'artifact_id': 4, 'data_type': '18S', 'active': True,
-             'target_gene': '16S rRNA', 'name': 'BIOM',
-             'target_subfragment': ['V4'], 'parameters': {
-                'reference': '1', 'similarity': '0.97',
-                'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
-                'threads': '1', 'sortmerna_coverage': '0.97'},
+            {'artifact_id': 6, 'target_subfragment': ['V4'],
+             'prep_samples': 27, 'platform': 'Illumina',
+             'target_gene': '16S rRNA', 'name': 'BIOM', 'data_type': '16S',
+             'parameters': {'reference': '2', 'similarity': '0.97',
+                            'sortmerna_e_value': '1',
+                            'sortmerna_max_pos': '10000', 'threads': '1',
+                            'sortmerna_coverage': '0.97'},
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-             'deprecated': False, 'platform': 'Illumina',
              'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
-             'prep_samples': 27},
-            {'files': [], 'artifact_id': 7, 'data_type': '16S', 'active': None,
-             'target_gene': '16S rRNA', 'name': 'BIOM',
-             'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
-             'deprecated': None, 'platform': 'Illumina', 'algorithm_az': '',
-             'prep_samples': 27},
-            {'files': ['biom_table.biom'], 'artifact_id': 8,
-             'data_type': '18S', 'active': None, 'target_gene': 'not provided',
-             'name': 'noname', 'target_subfragment': [], 'parameters': {},
-             'algorithm': '', 'deprecated': None, 'platform': 'not provided',
-             'algorithm_az': '', 'prep_samples': 0}]
-        self.assertItemsEqual(obs, exp)
+             'deprecated': False, 'active': True,
+             'files': ['1_study_1001_closed_reference_otu_table_Silva.biom']},
+            {'artifact_id': 4, 'target_subfragment': ['V4'],
+             'prep_samples': 27, 'platform': 'Illumina',
+             'target_gene': '16S rRNA', 'name': 'BIOM', 'data_type': '18S',
+             'parameters': {'reference': '1', 'similarity': '0.97',
+                            'sortmerna_e_value': '1',
+                            'sortmerna_max_pos': '10000', 'threads': '1',
+                            'sortmerna_coverage': '0.97'},
+             'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
+             'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
+             'deprecated': False, 'active': True,
+             'files': ['1_study_1001_closed_reference_otu_table.biom']},
+            {'artifact_id': 7, 'target_subfragment': ['V4'],
+             'prep_samples': 27, 'platform': 'Illumina',
+             'target_gene': '16S rRNA', 'name': 'BIOM', 'data_type': '16S',
+             'parameters': {}, 'algorithm': '', 'algorithm_az': '',
+             'deprecated': False, 'active': True,
+             'files': ['biom_table.biom']},
+            {'artifact_id': 8, 'target_subfragment': [], 'prep_samples': 0,
+             'platform': 'not provided', 'target_gene': 'not provided', 'name':
+             'noname', 'data_type': '18S', 'parameters': {}, 'algorithm': '',
+             'algorithm_az': '', 'deprecated': False, 'active': True,
+             'files': ['biom_table.biom']}]
+        self.assertCountEqual(obs, exp)
+        exp = exp[1:]
 
         # now let's test that the order given by the commands actually give the
         # correct results
@@ -1087,7 +1072,7 @@ class UtilTests(TestCase):
             exp[0]['algorithm'] = ('Pick closed-reference OTUs (reference: 1) '
                                    '| Split libraries FASTQ')
             exp[0]['algorithm_az'] = '33fed1b35728417d7ba4139b8f817d44'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # setting up database changes for also command output
             qdb.sql_connection.TRN.add(
@@ -1101,7 +1086,7 @@ class UtilTests(TestCase):
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom) | Split libraries FASTQ')
             exp[0]['algorithm_az'] = 'de5b794a2cacd428f36fea86df196bfd'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # let's test that we ignore the parent_info
             qdb.sql_connection.TRN.add("""UPDATE qiita.software_command
@@ -1115,7 +1100,7 @@ class UtilTests(TestCase):
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom)')
             exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # let's test that we ignore the parent_info
             qdb.sql_connection.TRN.add("""UPDATE qiita.software_command
@@ -1129,7 +1114,7 @@ class UtilTests(TestCase):
                                    'BIOM: 1_study_1001_closed_reference_'
                                    'otu_table.biom)')
             exp[0]['algorithm_az'] = '7f59a45b2f0d30cd1ed1929391c26e07'
-            self.assertItemsEqual(obs, exp)
+            self.assertCountEqual(obs, exp)
 
             # returning database as it was
             qdb.sql_connection.TRN.add(
@@ -1195,12 +1180,12 @@ class TestFilePathOpening(TestCase):
             self.assertTrue(fh is f)
 
     def test_hdf5IO(self):
-        f = h5py.File('test', driver='core', backing_store=False)
+        """This tests that if we send a file handler it returns it"""
+        f = h5py.File('test', driver='core', backing_store=False, mode='w')
         with qdb.util.open_file(f) as fh:
             self.assertTrue(fh is f)
 
     def test_hdf5IO_open(self):
-        name = None
         with NamedTemporaryFile(delete=False) as fh:
             name = fh.name
             fh.close()
@@ -1214,11 +1199,88 @@ class TestFilePathOpening(TestCase):
         remove(name)
 
 
+class PurgeFilepathsTests(DBUtilTestsBase):
+
+    def _get_current_filepaths(self):
+        sql_fp = "SELECT filepath_id FROM qiita.filepath"
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql_fp)
+            results = qdb.sql_connection.TRN.execute_fetchflatten()
+        return [qdb.util.get_filepath_information(_id)['fullpath']
+                for _id in results]
+
+    def _create_files(self, files):
+        # format is: [mp_id, fp_type_id, file_name]
+        sql = """INSERT INTO qiita.filepath (
+                    data_directory_id, filepath_type_id, filepath, checksum,
+                    checksum_algorithm_id)
+                 VALUES (%s, %s, %s, '852952723', 1) RETURNING filepath_id"""
+        with qdb.sql_connection.TRN:
+            for f in files:
+                qdb.sql_connection.TRN.add(sql, tuple(f))
+                fid = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+                qdb.util.get_filepath_information(fid)
+
+    def test_purge_filepaths_test(self):
+        # Get all the filepaths so we can test if they've been removed or not
+        fps_expected = self._get_current_filepaths()
+        # Make sure that the files exist - specially for travis
+        for fp in fps_expected:
+            if not exists(fp):
+                with open(fp, 'w') as f:
+                    f.write('\n')
+                self.files_to_remove.append(fp)
+
+        # nothing shold be removed
+        qdb.util.purge_filepaths()
+        fps_viewed = self._get_current_filepaths()
+        self.assertCountEqual(fps_expected, fps_viewed)
+
+        # testing study filepath delete by inserting a new study sample info
+        # and make sure it gets deleted
+        mp_id, mp = qdb.util.get_mountpoint('templates')[0]
+        txt_id = qdb.util.convert_to_id('sample_template', "filepath_type")
+        self._create_files([[mp_id, txt_id, '100_filepath.txt']])
+        qdb.util.purge_filepaths()
+        fps_viewed = self._get_current_filepaths()
+        self.assertCountEqual(fps_expected, fps_viewed)
+
+        # testing artifact [A], creating a folder with an artifact that
+        # doesn't exist
+        _, mp = qdb.util.get_mountpoint('per_sample_FASTQ')[0]
+        not_an_artifact_fp = join(mp, '10000')
+        mkdir(not_an_artifact_fp)
+        # now let's add test for [B] by creating 2 filepaths without a
+        # link to the artifacts tables
+        mp_id, mp = qdb.util.get_mountpoint('BIOM')[0]
+        biom_id = qdb.util.convert_to_id('biom', "filepath_type")
+        self._create_files([
+            [mp_id, txt_id, 'artifact_filepath.txt'],
+            [mp_id, biom_id, 'my_biom.biom']
+        ])
+        # adding files to tests
+        qdb.util.purge_filepaths()
+        fps_viewed = self._get_current_filepaths()
+        self.assertCountEqual(fps_expected, fps_viewed)
+        self.assertFalse(exists(not_an_artifact_fp))
+
+        # testing analysis filepath delete by filepaths for 2 different files
+        # and making sure they get deleted
+        mp_id, mp = qdb.util.get_mountpoint('analysis')[0]
+        biom_id = qdb.util.convert_to_id('biom', "filepath_type")
+        self._create_files([
+            [mp_id, txt_id, '10000_my_analysis_map.txt'],
+            [mp_id, biom_id, '10000_my_analysis_biom.biom']
+        ])
+        qdb.util.purge_filepaths()
+        fps_viewed = self._get_current_filepaths()
+        self.assertCountEqual(fps_expected, fps_viewed)
+
+
 STUDY_INFO = {
     'study_id': 1,
     'owner': 'Dude',
     'study_alias': 'Cannabis Soils',
-    'status': 'private',
     'study_abstract':
         'This is a preliminary study to examine the microbiota '
         'associated with the Cannabis plant. Soils samples '
@@ -1232,8 +1294,8 @@ STUDY_INFO = {
         'location at different time points in the plant '
         'lifecycle.',
     'metadata_complete': True,
+    'autoloaded': False,
     'ebi_study_accession': 'EBI123456-BB',
-    'ebi_submission_status': 'submitted',
     'study_title':
         'Identification of the Microbiomes for Cannabis Soils',
     'number_samples_collected': 27,
@@ -1242,6 +1304,7 @@ STUDY_INFO = {
     'publication_pid': ['123456', '7891011'],
     'pi': ('PI_dude@foo.bar', 'PIDude'),
     'artifact_biom_ids': [4, 5, 6, 7],
+    'preparation_data_types': ['18S'],
     'study_tags': None,
 }
 

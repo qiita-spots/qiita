@@ -32,6 +32,14 @@ Files Network Within Data Type
 
 * The commands run on this page use the QIIME2 :ref:`[1]<reference1>` bioinformatics platform.
 
+Processing Recommendations
+--------------------------
+
+Looking for information about processing data? Please see the document here:
+
+.. toctree::
+
+   processing-recommendations.rst
 
 Converting Data to BIOM Tables
 ------------------------------
@@ -107,13 +115,13 @@ Deblurring
   * **Input Data** (required): Data being trimmed
   * **Parameter Set** (required): How many bases to trim off
 
-    * **90 base pairs**- Removes first 90 base pairs from the sequences
-    * **100 base pairs**- Removes first 100 base pairs from the sequences
-    * **125 base pairs**- Removes first 125 base pairs from the sequences
-    * **150 base pairs**- Removes first 150 base pairs from the sequences
-    * **200 base pairs**- Removes first 200 base pairs from the sequences
-    * **250 base pairs**- Removes first 250 base pairs from the sequences
-    * **300 base pairs**- Removes first 300 base pairs from the sequences
+    * **90 base pairs**- Keeps first 90 base pairs from the sequences
+    * **100 base pairs**- Keeps first 100 base pairs from the sequences
+    * **125 base pairs**- Keeps first 125 base pairs from the sequences
+    * **150 base pairs**- Keeps first 150 base pairs from the sequences
+    * **200 base pairs**- Keeps first 200 base pairs from the sequences
+    * **250 base pairs**- Keeps first 250 base pairs from the sequences
+    * **300 base pairs**- Keeps first 300 base pairs from the sequences
 
 **Command from Trimmed Artifact**:
 
@@ -156,14 +164,10 @@ Deblurring
 
 * **Deblur Final Table** :ref:`[5]<reference5>` : Contains all the sequences.
 
-Deblur Quality Filtering
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Looking for information about debluring? Please see the document here:
-
 .. toctree::
 
    deblur_quality.rst
+   deblur_2021.09.rst
 
 Closed-Reference OTU Picking
 ----------------------------
@@ -198,12 +202,3 @@ Closed-Reference OTU Picking
     * **Sortmerna e_value** :ref:`[10]<reference10>` (required): Maximum e-value when clustering (local sequence alignment tool for filtering, mapping, and OTU picking) can expect to see by chance when searching a database
     * **Sortmerna max-pos** :ref:`[10]<reference10>` (required): Maximum number of positions per seed to store in the indexed database
     * **Threads** (required): Number of threads to use per job
-
-Processing Recommendations
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Looking for information about processing data? Please see the document here:
-
-.. toctree::
-
-   processing-recommendations.rst

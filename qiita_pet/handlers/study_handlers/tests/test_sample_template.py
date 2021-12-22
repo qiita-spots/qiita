@@ -61,8 +61,6 @@ class TestHelpers(TestHandlerBase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "ALIAS",
             "study_description": "DESC",
             "study_abstract": "ABS",
@@ -80,35 +78,35 @@ class TestHelpers(TestHandlerBase):
         sample_template_checks(1, user, check_exists=True)
 
         # Test study doesn't exist
-        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+        with self.assertRaisesRegex(HTTPError, 'Study does not exist'):
             sample_template_checks(1000000, user)
 
         # Test user doesn't have access to the study
-        with self.assertRaisesRegexp(HTTPError,
-                                     'User does not have access to study'):
+        with self.assertRaisesRegex(HTTPError,
+                                    'User does not have access to study'):
             sample_template_checks(1, User('demo@microbio.me'))
 
         # Test sample template doesn't exist
         new_study = self._create_study('Test Sample Template Checks')
-        with self.assertRaisesRegexp(HTTPError,
-                                     "Study %s doesn't have sample information"
-                                     % new_study.id):
+        with self.assertRaisesRegex(HTTPError,
+                                    "Study %s doesn't have sample information"
+                                    % new_study.id):
             sample_template_checks(new_study.id, user, check_exists=True)
 
     def test_sample_template_handler_post_request(self):
         # Test user doesn't have access
-        with self.assertRaisesRegexp(HTTPError,
-                                     'User does not have access to study'):
+        with self.assertRaisesRegex(HTTPError,
+                                    'User does not have access to study'):
             sample_template_handler_post_request(
                 1, User('demo@microbio.me'), 'ignored')
 
         # Test study doesn't exist
         user = User('test@foo.bar')
-        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+        with self.assertRaisesRegex(HTTPError, 'Study does not exist'):
             sample_template_handler_post_request(1000000, user, 'ignored')
 
         # Test file doesn't exist
-        with self.assertRaisesRegexp(HTTPError, 'Filepath not found'):
+        with self.assertRaisesRegex(HTTPError, 'Filepath not found'):
             sample_template_handler_post_request(1, user, 'DoesNotExist.txt')
 
         # Test looks like mapping file and no data_type provided
@@ -120,7 +118,7 @@ class TestHelpers(TestHandlerBase):
         with open(fp, 'w') as f:
             f.write('#SampleID\tCol1\nSample1\tVal1')
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 HTTPError, 'Please, choose a data type if uploading a QIIME '
                            'mapping file'):
             sample_template_handler_post_request(1, user, fp)
@@ -128,7 +126,17 @@ class TestHelpers(TestHandlerBase):
         # Test success
         obs = sample_template_handler_post_request(
             1, user, 'uploaded_file.txt')
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
+        job_info = r_client.get('sample_template_1')
+        self.assertIsNotNone(job_info)
+
+        # Wait until the job is done
+        wait_for_processing_job(loads(job_info)['job_id'])
+
+        # Test direct upload
+        obs = sample_template_handler_post_request(
+            1, user, fp, data_type='16S', direct_upload=True)
+        self.assertCountEqual(obs.keys(), ['job'])
         job_info = r_client.get('sample_template_1')
         self.assertIsNotNone(job_info)
 
@@ -139,40 +147,40 @@ class TestHelpers(TestHandlerBase):
         user = User('test@foo.bar')
 
         # Test user doesn't have access
-        with self.assertRaisesRegexp(HTTPError,
-                                     'User does not have access to study'):
+        with self.assertRaisesRegex(HTTPError,
+                                    'User does not have access to study'):
             sample_template_handler_patch_request(
                 User('demo@microbio.me'), "remove",
                 "/1/columns/season_environment/")
 
         # Test study doesn't exist
-        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+        with self.assertRaisesRegex(HTTPError, 'Study does not exist'):
             sample_template_handler_patch_request(
                 user, "remove", "/10000/columns/season_environment/")
 
         # Test sample template doesn't exist
         new_study = self._create_study('Patching test')
-        with self.assertRaisesRegexp(HTTPError,
-                                     "Study %s doesn't have sample information"
-                                     % new_study.id):
+        with self.assertRaisesRegex(HTTPError,
+                                    "Study %s doesn't have sample information"
+                                    % new_study.id):
             sample_template_handler_patch_request(
                 user, "remove", "/%s/columns/season_environment/"
                                 % new_study.id)
 
         # Test wrong operation value
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 HTTPError, 'Operation add not supported. Current supported '
                            'operations: remove.'):
             sample_template_handler_patch_request(
                 user, 'add', '/1/columns/season_environment')
 
         # Test wrong path parameter < 2
-        with self.assertRaisesRegexp(HTTPError, 'Incorrect path parameter'):
+        with self.assertRaisesRegex(HTTPError, 'Incorrect path parameter'):
             sample_template_handler_patch_request(user, 'ignored', '1')
 
         # TESTS FOR OPERATION: remove
         # Test wrong path parameter
-        with self.assertRaisesRegexp(HTTPError, 'Incorrect path parameter'):
+        with self.assertRaisesRegex(HTTPError, 'Incorrect path parameter'):
             sample_template_handler_patch_request(
                 user, 'remove', '/1/season_environment/')
 
@@ -187,38 +195,38 @@ class TestHelpers(TestHandlerBase):
         obs = sample_template_handler_patch_request(
             user, "remove", "/%s/columns/col2/"
                             % new_study.id)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         job_info = r_client.get('sample_template_%s' % new_study.id)
         self.assertIsNotNone(job_info)
 
         # Wait until the job is done
         wait_for_processing_job(loads(job_info)['job_id'])
-        self.assertNotIn('col2', st.categories())
+        self.assertNotIn('col2', st.categories)
 
         # TESTS FOR OPERATION: replace
         # Test incorrect path parameter with replace
-        with self.assertRaisesRegexp(HTTPError, 'Incorrect path parameter'):
+        with self.assertRaisesRegex(HTTPError, 'Incorrect path parameter'):
             sample_template_handler_patch_request(user, "replace", "/1/")
 
         # Test attribute not found
-        with self.assertRaisesRegexp(HTTPError, 'Attribute name not found'):
+        with self.assertRaisesRegex(HTTPError, 'Attribute name not found'):
             sample_template_handler_patch_request(user, "replace", "/1/name")
 
         # Test missing value
-        with self.assertRaisesRegexp(HTTPError,
-                                     'Value is required when updating sample '
-                                     'information'):
+        with self.assertRaisesRegex(HTTPError,
+                                    'Value is required when updating sample '
+                                    'information'):
             sample_template_handler_patch_request(user, "replace", "/1/data")
 
         # Test file doesn't exist
-        with self.assertRaisesRegexp(HTTPError, 'Filepath not found'):
+        with self.assertRaisesRegex(HTTPError, 'Filepath not found'):
             sample_template_handler_patch_request(user, "replace", "/1/data",
                                                   req_value='DoesNotExist')
 
         # Test success
         obs = sample_template_handler_patch_request(
             user, "replace", "/1/data", req_value='uploaded_file.txt')
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         job_info = r_client.get('sample_template_1')
         self.assertIsNotNone(job_info)
 
@@ -227,26 +235,26 @@ class TestHelpers(TestHandlerBase):
 
     def test_sample_template_handler_delete_request(self):
         # Test user doesn't have access
-        with self.assertRaisesRegexp(HTTPError,
-                                     'User does not have access to study'):
+        with self.assertRaisesRegex(HTTPError,
+                                    'User does not have access to study'):
             sample_template_handler_delete_request(
                 1, User('demo@microbio.me'))
 
         # Test study doesn't exist
         user = User('test@foo.bar')
-        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+        with self.assertRaisesRegex(HTTPError, 'Study does not exist'):
             sample_template_handler_delete_request(1000000, user)
 
         # Test sample information doesn't exist
         new_study = self._create_study('Study for deleting test')
-        with self.assertRaisesRegexp(HTTPError, "Study %s doesn't have sample "
-                                                "information" % new_study.id):
+        with self.assertRaisesRegex(HTTPError, "Study %s doesn't have sample "
+                                    "information" % new_study.id):
             sample_template_handler_delete_request(new_study.id, user)
 
         # Test success
         user = User('test@foo.bar')
         obs = sample_template_handler_delete_request(1, user)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         job_info = r_client.get('sample_template_1')
         self.assertIsNotNone(job_info)
 
@@ -255,14 +263,14 @@ class TestHelpers(TestHandlerBase):
 
     def test_sample_template_overview_handler_get_request(self):
         # Test user doesn't have access
-        with self.assertRaisesRegexp(HTTPError,
-                                     'User does not have access to study'):
+        with self.assertRaisesRegex(HTTPError,
+                                    'User does not have access to study'):
             sample_template_overview_handler_get_request(
                 1, User('demo@microbio.me'))
 
         # Test study doesn't exist
         user = User('test@foo.bar')
-        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+        with self.assertRaisesRegex(HTTPError, 'Study does not exist'):
             sample_template_overview_handler_get_request(1000000, user)
 
         # Test sample template exist
@@ -275,7 +283,7 @@ class TestHelpers(TestHandlerBase):
                'download_id': 23,
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
-               'num_columns': 30,
+               'num_columns': 31,
                'columns': sorted(
                           ['season_environment', 'assigned_from_geo',
                            'texture', 'taxon_id', 'depth', 'host_taxid',
@@ -287,7 +295,8 @@ class TestHelpers(TestHandlerBase):
                            'physical_specimen_remaining', 'dna_extracted',
                            'sample_type', 'collection_timestamp',
                            'host_subject_id', 'description', 'latitude',
-                           'longitude', 'scientific_name']),
+                           'longitude', 'scientific_name', 'env_package']),
+               'sample_restrictions': '',
                'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
@@ -296,10 +305,11 @@ class TestHelpers(TestHandlerBase):
         obs = sample_template_overview_handler_get_request(new_study.id, user)
         exp = {'exists': False,
                'uploaded_files': [],
-               'data_types': ['16S', '18S', 'Genomics', 'ITS', 'Metabolomic',
-                              'Metagenomic', 'Metatranscriptomics',
-                              'Multiomic', 'Proteomic', 'Transcriptomics',
-                              'Viromics'],
+               'data_types':  ['16S', '18S', 'Genomics', 'ITS',
+                               'Job Output Folder', 'Metabolomic',
+                               'Metagenomic', 'Metatranscriptomics',
+                               'Multiomic', 'Proteomic', 'Transcriptomics',
+                               'Viromics'],
                'user_can_edit': True,
                'job': None,
                'download_id': None,
@@ -307,28 +317,29 @@ class TestHelpers(TestHandlerBase):
                'num_samples': 0,
                'num_columns': 0,
                'columns': [],
+               'sample_restrictions': '',
                'specimen_id_column': None}
         self.assertEqual(obs, exp)
 
     def test_sample_template_columns_get_req(self):
         # Test user doesn't have access
-        with self.assertRaisesRegexp(HTTPError,
-                                     'User does not have access to study'):
+        with self.assertRaisesRegex(HTTPError,
+                                    'User does not have access to study'):
             sample_template_columns_get_req(1, None, User('demo@microbio.me'))
 
         # Test study doesn't exist
         user = User('test@foo.bar')
-        with self.assertRaisesRegexp(HTTPError, 'Study does not exist'):
+        with self.assertRaisesRegex(HTTPError, 'Study does not exist'):
             sample_template_columns_get_req(1000000, None, user)
 
         # Test sample template doesn't exist
         new_study = self._create_study('New Study - Summary')
-        with self.assertRaisesRegexp(HTTPError, "Study %s doesn't have sample "
-                                                "information" % new_study.id):
+        with self.assertRaisesRegex(HTTPError, "Study %s doesn't have sample "
+                                    "information" % new_study.id):
             sample_template_columns_get_req(new_study.id, None, user)
 
         # Test that if the column doesn't exist it raises an error
-        with self.assertRaisesRegexp(QiitaDBColumnError, 'should-fail'):
+        with self.assertRaisesRegex(QiitaDBColumnError, 'should-fail'):
             sample_template_columns_get_req(1, 'should-fail', user)
 
         # Test success
@@ -339,7 +350,7 @@ class TestHelpers(TestHandlerBase):
             'depth', 'host_taxid', 'common_name', 'water_content_soil',
             'elevation', 'temp', 'tot_nitro', 'samp_salinity', 'altitude',
             'env_biome', 'country', 'ph', 'anonymized_name', 'tot_org_carb',
-            'description_duplicate', 'env_feature',
+            'description_duplicate', 'env_feature', 'env_package',
             'physical_specimen_location', 'physical_specimen_remaining',
             'dna_extracted', 'sample_type', 'collection_timestamp',
             'host_subject_id', 'description', 'latitude', 'longitude',
@@ -352,7 +363,7 @@ class TestHelpers(TestHandlerBase):
                'winter', 'winter', 'winter', 'winter', 'winter', 'winter',
                'winter', 'winter', 'winter', 'winter', 'winter', 'winter',
                'winter', 'winter', 'winter']
-        self.assertEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_build_sample_summary(self):
         cols, rows = _build_sample_summary(1, 'test@foo.bar')
@@ -445,7 +456,7 @@ class TestSampleTemplateHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertIsNotNone(response.body)
         obs = loads(response.body)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         # Wait until the job is done
         wait_for_processing_job(obs['job'])
 
@@ -457,7 +468,7 @@ class TestSampleTemplateHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertIsNotNone(response.body)
         obs = loads(response.body)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         # Wait until the job is done
         wait_for_processing_job(obs['job'])
 
@@ -467,7 +478,7 @@ class TestSampleTemplateHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertIsNotNone(response.body)
         obs = loads(response.body)
-        self.assertEqual(obs.keys(), ['job'])
+        self.assertCountEqual(obs.keys(), ['job'])
         # Wait until the job is done
         wait_for_processing_job(obs['job'])
 
@@ -487,7 +498,7 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                'download_id': 23,
                'old_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
-               'num_columns': 30,
+               'num_columns': 31,
                'columns': sorted(
                           ['season_environment', 'assigned_from_geo',
                            'texture', 'taxon_id', 'depth', 'host_taxid',
@@ -499,7 +510,8 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                            'physical_specimen_remaining', 'dna_extracted',
                            'sample_type', 'collection_timestamp',
                            'host_subject_id', 'description', 'latitude',
-                           'longitude', 'scientific_name']),
+                           'longitude', 'scientific_name', 'env_package']),
+               'sample_restrictions': '',
                'specimen_id_column': None}
         self.assertDictEqual(obs, exp)
 
@@ -516,7 +528,7 @@ class TestSampleTemplateColumnsHandler(TestHandlerBase):
             'depth', 'host_taxid', 'common_name', 'water_content_soil',
             'elevation', 'temp', 'tot_nitro', 'samp_salinity', 'altitude',
             'env_biome', 'country', 'ph', 'anonymized_name', 'tot_org_carb',
-            'description_duplicate', 'env_feature',
+            'description_duplicate', 'env_feature', 'env_package',
             'physical_specimen_location', 'physical_specimen_remaining',
             'dna_extracted', 'sample_type', 'collection_timestamp',
             'host_subject_id', 'description', 'latitude', 'longitude',
@@ -530,7 +542,16 @@ class TestSampleAJAXReadOnly(TestHandlerBase):
         self.assertEqual(res.code, 200)
         # Make sure metadata read properly
         line = '<option value="altitude">altitude</option>'
-        self.assertIn(line, res.body)
+        self.assertIn(line, res.body.decode('ascii'))
+
+
+class TestAnalysesAjax(TestHandlerBase):
+    def test_get(self):
+        res = self.get("/study/analyses/", {'study_id': 1})
+        self.assertEqual(res.code, 200)
+        # making sure at least one analysis is in the page
+        line = '/analysis/description/1/'
+        self.assertIn(line, res.body.decode('ascii'))
 
 
 class TestSampleAJAX(TestHandlerBase):

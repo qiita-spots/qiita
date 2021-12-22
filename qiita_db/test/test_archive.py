@@ -27,9 +27,13 @@ class ArchiveTest(TestCase):
             str(err.exception), 'To archive artifact must be BIOM but FASTQ')
 
         # 7 - to test error due to not filepath biom
+        aid = 7
+        qdb.sql_connection.perform_as_transaction(
+            "DELETE FROM qiita.artifact_filepath "
+            "WHERE artifact_id = %d" % aid)
         with self.assertRaises(ValueError) as err:
             qdb.archive.Archive.insert_from_artifact(
-                qdb.artifact.Artifact(7), {})
+                qdb.artifact.Artifact(aid), {})
         self.assertEqual(
             str(err.exception), 'The artifact has no biom files')
 
@@ -55,8 +59,9 @@ class ArchiveTest(TestCase):
 
         # that we retrieve only one kind
         exp = dumps({
+            'featureA9': dumps({'valuesA': 'vA', 'int': 1}),
             'featureB9': dumps({'valuesB': 'vB', 'float': 1.1}),
-            'featureA9': dumps({'valuesA': 'vA', 'int': 1})})
+        })
         obs = qdb.archive.Archive.retrieve_feature_values(
             'Single Rarefaction | N/A')
         self.assertEqual(dumps(obs), exp)

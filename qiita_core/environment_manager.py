@@ -74,9 +74,10 @@ def test(runner):
 
     def postgres_test(**kwargs):
         """Open a connection and query postgres"""
-        from qiita_db.sql_connection import SQLConnectionHandler
-        c = SQLConnectionHandler()
-        return c.execute_fetchone("SELECT 42")[0]
+        from qiita_db.sql_connection import TRN
+        with TRN:
+            TRN.add("SELECT 42")
+            return TRN.execute_fetchflatten()[0]
 
     if runner == 'all':
         runner = ('local', )

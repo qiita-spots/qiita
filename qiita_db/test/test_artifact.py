@@ -21,6 +21,7 @@ from biom import example_table as et
 from biom.util import biom_open
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.testing import wait_for_processing_job
 import qiita_db as qdb
 
 
@@ -59,7 +60,7 @@ class ArtifactTestsReadOnly(TestCase):
                ['rarefaction_curves', 'Rarefaction curves', False, False,
                 False],
                ['taxa_summary', 'Taxa summary plots', False, False, False]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
         qdb.artifact.Artifact.create_type(
             "NewType", "NewTypeDesc", False, False, False,
@@ -80,7 +81,7 @@ class ArtifactTestsReadOnly(TestCase):
                 False],
                ['taxa_summary', 'Taxa summary plots', False, False, False],
                ['NewType', 'NewTypeDesc', False, False, False]]
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
         self.assertTrue(exists(qdb.util.get_mountpoint('NewType')[0][1]))
 
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
@@ -223,11 +224,17 @@ class ArtifactTestsReadOnly(TestCase):
     def test_filepaths(self):
         db_test_raw_dir = qdb.util.get_mountpoint('raw_data')[0][1]
         path_builder = partial(join, db_test_raw_dir)
-        exp_fps = [
-            (1, path_builder('1_s_G1_L001_sequences.fastq.gz'),
-             "raw_forward_seqs"),
-            (2, path_builder('1_s_G1_L001_sequences_barcodes.fastq.gz'),
-             "raw_barcodes")]
+        exp_fps = [{'fp_id': 1,
+                    'fp': path_builder("1_s_G1_L001_sequences.fastq.gz"),
+                    'fp_type': "raw_forward_seqs",
+                    'checksum': '2125826711',
+                    'fp_size': 58},
+                   {'fp_id': 2,
+                    'fp': path_builder(
+                        "1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                    'fp_type': "raw_barcodes",
+                    'checksum': '2125826711',
+                    'fp_size': 58}]
         self.assertEqual(qdb.artifact.Artifact(1).filepaths, exp_fps)
 
     def test_parents(self):
@@ -244,8 +251,8 @@ class ArtifactTestsReadOnly(TestCase):
         tester = qdb.artifact.Artifact(1)
         obs = tester._create_lineage_graph_from_edge_list([])
         self.assertTrue(isinstance(obs, nx.DiGraph))
-        self.assertEqual(obs.nodes(), [tester])
-        self.assertEqual(obs.edges(), [])
+        self.assertCountEqual(obs.nodes(), [tester])
+        self.assertCountEqual(obs.edges(), [])
 
     def test_create_lineage_graph_from_edge_list(self):
         tester = qdb.artifact.Artifact(1)
@@ -254,49 +261,49 @@ class ArtifactTestsReadOnly(TestCase):
         self.assertTrue(isinstance(obs, nx.DiGraph))
         exp = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
                qdb.artifact.Artifact(3), qdb.artifact.Artifact(4)]
-        self.assertItemsEqual(obs.nodes(), exp)
+        self.assertCountEqual(obs.nodes(), exp)
         exp = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
                (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
                (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
                (qdb.artifact.Artifact(3), qdb.artifact.Artifact(4))]
-        self.assertItemsEqual(obs.edges(), exp)
+        self.assertCountEqual(obs.edges(), exp)
 
     def test_ancestors(self):
         obs = qdb.artifact.Artifact(1).ancestors
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
-        self.assertEqual(obs_nodes, [qdb.artifact.Artifact(1)])
+        self.assertCountEqual(obs_nodes, [qdb.artifact.Artifact(1)])
         obs_edges = obs.edges()
-        self.assertEqual(obs_edges, [])
+        self.assertCountEqual(obs_edges, [])
 
         obs = qdb.artifact.Artifact(2).ancestors
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
         exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
+        self.assertCountEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2))]
-        self.assertItemsEqual(obs_edges, exp_edges)
+        self.assertCountEqual(obs_edges, exp_edges)
 
         obs = qdb.artifact.Artifact(3).ancestors
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
         exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
+        self.assertCountEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(3))]
-        self.assertItemsEqual(obs_edges, exp_edges)
+        self.assertCountEqual(obs_edges, exp_edges)
 
         obs = qdb.artifact.Artifact(4).ancestors
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
         exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
                      qdb.artifact.Artifact(4)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
+        self.assertCountEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4))]
-        self.assertItemsEqual(obs_edges, exp_edges)
+        self.assertCountEqual(obs_edges, exp_edges)
 
     def test_descendants(self):
         obs = qdb.artifact.Artifact(1).descendants
@@ -305,40 +312,40 @@ class ArtifactTestsReadOnly(TestCase):
         exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
                      qdb.artifact.Artifact(3), qdb.artifact.Artifact(4),
                      qdb.artifact.Artifact(5), qdb.artifact.Artifact(6)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
+        self.assertCountEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
                      (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(6))]
-        self.assertItemsEqual(obs_edges, exp_edges)
+        self.assertCountEqual(obs_edges, exp_edges)
 
         obs = qdb.artifact.Artifact(2).descendants
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
         exp_nodes = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(4),
                      qdb.artifact.Artifact(5), qdb.artifact.Artifact(6)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
+        self.assertCountEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(6))]
-        self.assertItemsEqual(obs_edges, exp_edges)
+        self.assertCountEqual(obs_edges, exp_edges)
 
         obs = qdb.artifact.Artifact(3).descendants
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
-        self.assertItemsEqual(obs_nodes, [qdb.artifact.Artifact(3)])
+        self.assertCountEqual(obs_nodes, [qdb.artifact.Artifact(3)])
         obs_edges = obs.edges()
-        self.assertItemsEqual(obs_edges, [])
+        self.assertCountEqual(obs_edges, [])
 
         obs = qdb.artifact.Artifact(4).descendants
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
-        self.assertItemsEqual(obs_nodes, [qdb.artifact.Artifact(4)])
+        self.assertCountEqual(obs_nodes, [qdb.artifact.Artifact(4)])
         obs_edges = obs.edges()
-        self.assertItemsEqual(obs_edges, [])
+        self.assertCountEqual(obs_edges, [])
 
     def test_descendants_with_jobs(self):
         A = qdb.artifact.Artifact
@@ -384,9 +391,9 @@ class ArtifactTestsReadOnly(TestCase):
         obs = A(3).descendants
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
-        self.assertItemsEqual(obs_nodes, [A(3)])
+        self.assertCountEqual(obs_nodes, [A(3)])
         obs_edges = obs.edges()
-        self.assertItemsEqual(obs_edges, [])
+        self.assertCountEqual(obs_edges, [])
 
         # Create a workflow starting in the artifact 1, so we can test that
         # "in construction" jobs also show up correctly
@@ -402,7 +409,7 @@ class ArtifactTestsReadOnly(TestCase):
         user = qdb.user.User('test@foo.bar')
         wf = qdb.processing_job.ProcessingWorkflow.from_scratch(
             user, params, name='Test WF')
-        parent = wf.graph.nodes()[0]
+        parent = list(wf.graph.nodes())[0]
         wf.add(qdb.software.DefaultParameters(10),
                connections={parent: {'demultiplexed': 'input_data'}})
         obs = A(1).descendants_with_jobs
@@ -455,6 +462,19 @@ class ArtifactTestsReadOnly(TestCase):
         self.assertEqual(qdb.artifact.Artifact(9).analysis,
                          qdb.analysis.Analysis(1))
         self.assertIsNone(qdb.artifact.Artifact(1).analysis)
+
+    def test_merging_scheme(self):
+        self.assertEqual(qdb.artifact.Artifact(1).merging_scheme, ('', ''))
+        self.assertEqual(qdb.artifact.Artifact(2).merging_scheme,
+                         ('Split libraries FASTQ | N/A', 'N/A'))
+        self.assertEqual(qdb.artifact.Artifact(3).merging_scheme,
+                         ('Split libraries FASTQ | N/A', 'N/A'))
+        self.assertEqual(qdb.artifact.Artifact(4).merging_scheme,
+                         ('Pick closed-reference OTUs | Split libraries FASTQ',
+                          'QIIME v1.9.1'))
+        self.assertEqual(qdb.artifact.Artifact(5).merging_scheme,
+                         ('Pick closed-reference OTUs | Split libraries FASTQ',
+                          'QIIME v1.9.1'))
 
     def test_jobs(self):
         # Returning all jobs
@@ -583,6 +603,22 @@ class ArtifactTestsReadOnly(TestCase):
         exp = []
         self.assertEqual(obs, exp)
 
+    def test_get_commands(self):
+        # we will check only ids for simplicity
+        # checking processing artifacts
+        obs = [c.id for c in qdb.artifact.Artifact(1).get_commands]
+        self.assertEqual(obs, [1])
+        obs = [c.id for c in qdb.artifact.Artifact(2).get_commands]
+        self.assertEqual(obs, [3])
+        # this is a biom in processing, so no commands should be available
+        obs = [c.id for c in qdb.artifact.Artifact(6).get_commands]
+        self.assertEqual(obs, [])
+
+        # checking analysis object - this is a biom in analysis, several
+        # commands should be available
+        obs = [c.id for c in qdb.artifact.Artifact(8).get_commands]
+        self.assertEqual(obs, [9, 10, 11, 12])
+
 
 @qiita_test_checker()
 class ArtifactTests(TestCase):
@@ -626,13 +662,18 @@ class ArtifactTests(TestCase):
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
+                            'target_subfragment': 'V4',
+                            'target_gene': '16S rRNA',
                             'experiment_design_description': 'BBBB'}}
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
         self.prep_template = \
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                metadata, qdb.study.Study(1), "16S")
+        self.prep_template_2 = \
             qdb.metadata_template.prep_template.PrepTemplate.create(
                 metadata, qdb.study.Study(1), "16S")
 
@@ -644,14 +685,10 @@ class ArtifactTests(TestCase):
                 remove(f)
 
     def test_copy(self):
-        src = qdb.artifact.Artifact(1)
-        # Create the files to the first artifact
-        for _, fp, _ in src.filepaths:
-            with open(fp, 'w') as f:
-                f.write("\n")
-            self._clean_up_files.append(fp)
+        src = qdb.artifact.Artifact.create(
+            self.filepaths_root, "FASTQ", prep_template=self.prep_template)
         before = datetime.now()
-        obs = qdb.artifact.Artifact.copy(src, self.prep_template)
+        obs = qdb.artifact.Artifact.copy(src, self.prep_template_2)
 
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertIsNone(obs.processing_parameters)
@@ -666,14 +703,15 @@ class ArtifactTests(TestCase):
         db_dir = qdb.util.get_mountpoint(src.artifact_type)[0][1]
         path_builder = partial(join, db_dir, str(obs.id))
         exp_fps = []
-        for fp_id, fp, fp_type in src.filepaths:
-            new_fp = path_builder(basename(fp))
-            exp_fps.append((new_fp, fp_type))
+        for x in src.filepaths:
+            new_fp = path_builder(basename(x['fp']))
+            exp_fps.append((new_fp, x['fp_type']))
             self._clean_up_files.append(new_fp)
 
-        self.assertEqual([(a, b) for _, a, b in obs.filepaths], exp_fps)
+        self.assertEqual([(x['fp'], x['fp_type'])
+                          for x in obs.filepaths], exp_fps)
         self.assertEqual(obs.parents, [])
-        self.assertEqual(obs.prep_templates, [self.prep_template])
+        self.assertEqual(obs.prep_templates, [self.prep_template_2])
 
         self.assertEqual(obs.study, qdb.study.Study(1))
 
@@ -761,7 +799,8 @@ class ArtifactTests(TestCase):
         exp_fps = [
             (path_builder(basename(self.fp1)), "raw_forward_seqs"),
             (path_builder(basename(self.fp2)), "raw_barcodes")]
-        self.assertEqual([(a, b) for _, a, b in obs.filepaths], exp_fps)
+        self.assertEqual([(x['fp'], x['fp_type'])
+                          for x in obs.filepaths], exp_fps)
         self.assertEqual(obs.parents, [])
         self.assertEqual(obs.prep_templates, [self.prep_template])
 
@@ -793,7 +832,8 @@ class ArtifactTests(TestCase):
         db_fastq_dir = qdb.util.get_mountpoint('BIOM')[0][1]
         path_builder = partial(join, db_fastq_dir, str(obs.id))
         exp_fps = [(path_builder(basename(self.fp4)), "biom")]
-        self.assertEqual([(a, b) for _, a, b in obs.filepaths], exp_fps)
+        self.assertEqual([(x['fp'], x['fp_type'])
+                          for x in obs.filepaths], exp_fps)
         self.assertEqual(obs.parents, [])
         self.assertEqual(obs.prep_templates, [])
 
@@ -838,7 +878,8 @@ class ArtifactTests(TestCase):
         path_builder = partial(join, db_demultiplexed_dir, str(obs.id))
         exp_fps = [(path_builder(basename(self.fp3)),
                     "preprocessed_fasta")]
-        self.assertEqual([(a, b) for _, a, b in obs.filepaths], exp_fps)
+        self.assertEqual([(x['fp'], x['fp_type'])
+                          for x in obs.filepaths], exp_fps)
         self.assertEqual(obs.parents, [qdb.artifact.Artifact(1)])
         self.assertEqual(
             obs.prep_templates,
@@ -879,7 +920,8 @@ class ArtifactTests(TestCase):
         path_builder = partial(join, db_demultiplexed_dir, str(obs.id))
         exp_fps = [(path_builder(basename(self.fp3)),
                     "preprocessed_fasta")]
-        self.assertEqual([(a, b) for _, a, b in obs.filepaths], exp_fps)
+        self.assertEqual([(x['fp'], x['fp_type'])
+                          for x in obs.filepaths], exp_fps)
         self.assertEqual(obs.parents, [qdb.artifact.Artifact(1)])
         self.assertEqual(
             obs.prep_templates,
@@ -893,7 +935,7 @@ class ArtifactTests(TestCase):
         before = datetime.now()
         cmd = qdb.software.Command(3)
         exp_params = qdb.software.Parameters.from_default_params(
-            cmd.default_parameter_sets.next(), {'input_data': 1})
+            next(cmd.default_parameter_sets), {'input_data': 1})
         obs = qdb.artifact.Artifact.create(
             self.filepaths_biom, "BIOM", parents=[qdb.artifact.Artifact(2)],
             processing_parameters=exp_params)
@@ -916,7 +958,8 @@ class ArtifactTests(TestCase):
         db_biom_dir = qdb.util.get_mountpoint('BIOM')[0][1]
         path_builder = partial(join, db_biom_dir, str(obs.id))
         exp_fps = [(path_builder(basename(self.fp4)), 'biom')]
-        self.assertEqual([(a, b) for _, a, b in obs.filepaths], exp_fps)
+        self.assertEqual([(x['fp'], x['fp_type'])
+                          for x in obs.filepaths], exp_fps)
         self.assertEqual(obs.parents, [qdb.artifact.Artifact(2)])
         self.assertEqual(obs.prep_templates,
                          [qdb.metadata_template.prep_template.PrepTemplate(1)])
@@ -927,7 +970,7 @@ class ArtifactTests(TestCase):
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
         test.visibility = "public"
-        self._clean_up_files.extend([fp for _, fp, _ in test.filepaths])
+        self._clean_up_files.extend([x['fp'] for x in test.filepaths])
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactDeletionError):
             qdb.artifact.Artifact.delete(test.id)
 
@@ -948,7 +991,7 @@ class ArtifactTests(TestCase):
             processing_parameters=parameters)
         obs.ebi_run_accessions = {'1.SKB1.640202': 'ERR1000001',
                                   '1.SKB2.640194': 'ERR1000002'}
-        self._clean_up_files.extend([fp for _, fp, _ in obs.filepaths])
+        self._clean_up_files.extend([x['fp'] for x in obs.filepaths])
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactDeletionError):
             qdb.artifact.Artifact.delete(obs.id)
 
@@ -960,14 +1003,14 @@ class ArtifactTests(TestCase):
             parents=[qdb.artifact.Artifact(1)],
             processing_parameters=parameters)
         obs.is_submitted_to_vamps = True
-        self._clean_up_files.extend([fp for _, fp, _ in obs.filepaths])
+        self._clean_up_files.extend([x['fp'] for x in obs.filepaths])
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactDeletionError):
             qdb.artifact.Artifact.delete(obs.id)
 
     def test_delete_in_construction_job(self):
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, 'FASTQ', prep_template=self.prep_template)
-        self._clean_up_files.extend([fp for _, fp, _ in test.filepaths])
+        self._clean_up_files.extend([x['fp'] for x in test.filepaths])
         json_str = (
             '{"input_data": %d, "max_barcode_errors": 1.5, '
             '"barcode_type": "golay_12", "max_bad_run_length": 3, '
@@ -982,7 +1025,7 @@ class ArtifactTests(TestCase):
         uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
                           str(test.study.id))
         self._clean_up_files.extend(
-            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
+            [join(uploads_fp, basename(x['fp'])) for x in test.filepaths])
 
         qdb.artifact.Artifact.delete(test.id)
 
@@ -992,7 +1035,7 @@ class ArtifactTests(TestCase):
     def test_delete_error_running_job(self):
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, 'FASTQ', prep_template=self.prep_template)
-        self._clean_up_files.extend([fp for _, fp, _ in test.filepaths])
+        self._clean_up_files.extend([x['fp'] for x in test.filepaths])
         json_str = (
             '{"input_data": %d, "max_barcode_errors": 1.5, '
             '"barcode_type": "golay_12", "max_bad_run_length": 3, '
@@ -1015,7 +1058,7 @@ class ArtifactTests(TestCase):
         uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
                           str(test.study.id))
         self._clean_up_files.extend(
-            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
+            [join(uploads_fp, basename(x['fp'])) for x in test.filepaths])
 
         qdb.artifact.Artifact.delete(test.id)
 
@@ -1031,17 +1074,25 @@ class ArtifactTests(TestCase):
             processing_parameters=parameters)
 
         self._clean_up_files.extend(
-            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
+            [join(uploads_fp, basename(x['fp'])) for x in test.filepaths])
         qdb.artifact.Artifact.delete(test.id)
 
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.artifact.Artifact(test.id)
 
     def test_delete_with_html(self):
+
+        # creating a single file html_summary
         fd, html_fp = mkstemp(suffix=".html")
         close(fd)
         self.filepaths_root.append((html_fp, 'html_summary'))
         self._clean_up_files.append(html_fp)
+
+        # creating a folder with a file for html_summary_dir
+        summary_dir = mkdtemp()
+        open(join(summary_dir, 'index.html'), 'w').write('this is a test')
+        self.filepaths_root.append((summary_dir, 'html_summary_dir'))
+        self._clean_up_files.append(summary_dir)
 
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
@@ -1050,7 +1101,7 @@ class ArtifactTests(TestCase):
                           str(test.study.id))
 
         self._clean_up_files.extend(
-            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
+            [join(uploads_fp, basename(x['fp'])) for x in test.filepaths])
 
         qdb.artifact.Artifact.delete(test.id)
 
@@ -1058,6 +1109,7 @@ class ArtifactTests(TestCase):
             qdb.artifact.Artifact(test.id)
 
         self.assertFalse(exists(join(uploads_fp, basename(html_fp))))
+        self.assertFalse(exists(join(uploads_fp, basename(summary_dir))))
 
     def test_delete_with_jobs(self):
         test = qdb.artifact.Artifact.create(
@@ -1065,7 +1117,7 @@ class ArtifactTests(TestCase):
         uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
                           str(test.study.id))
         self._clean_up_files.extend(
-            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
+            [join(uploads_fp, basename(x['fp'])) for x in test.filepaths])
 
         json_str = (
             '{"input_data": %d, "max_barcode_errors": 1.5, '
@@ -1087,6 +1139,44 @@ class ArtifactTests(TestCase):
 
         # Check that the job still exists, so we cap keep track of system usage
         qdb.processing_job.ProcessingJob(job.id)
+
+    def test_being_deleted_by(self):
+        test = qdb.artifact.Artifact.create(
+            self.filepaths_root, "FASTQ", prep_template=self.prep_template)
+        uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
+                          str(test.study.id))
+        self._clean_up_files.extend(
+            [join(uploads_fp, basename(x['fp'])) for x in test.filepaths])
+
+        # verifying that there are no jobs in the list
+        self.assertIsNone(test.being_deleted_by)
+
+        # creating new deleting job
+        qiita_plugin = qdb.software.Software.from_name_and_version(
+            'Qiita', 'alpha')
+        cmd = qiita_plugin.get_command('delete_artifact')
+        params = qdb.software.Parameters.load(
+            cmd, values_dict={'artifact': test.id})
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params, True)
+        job._set_status('running')
+
+        # verifying that there is a job and is the same than above
+        self.assertEqual(job, test.being_deleted_by)
+
+        # let's set it as error and now we should not have it anymore
+        job._set_error('Killed by admin')
+        self.assertIsNone(test.being_deleted_by)
+
+        # now, let's actually remove
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params, True)
+        job.submit()
+        # let's wait for job
+        wait_for_processing_job(job.id)
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.artifact.Artifact(test.id)
 
     def test_delete_as_output_job(self):
         fd, fp = mkstemp(suffix='_table.biom')
@@ -1117,7 +1207,7 @@ class ArtifactTests(TestCase):
             "bcc7ebcd-39c1-43e4-af2d-822e3589f14d")
         job.release_validators()
         artifact = job.outputs['OTU table']
-        self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
+        self._clean_up_files.extend([x['fp'] for x in artifact.filepaths])
 
         qdb.artifact.Artifact.delete(artifact.id)
 
@@ -1250,8 +1340,8 @@ class ArtifactTests(TestCase):
         # Check that the setter correctly removes the directory if a new
         # summary is added. Magic number 0. There is only one html_summary_dir
         # added on the previous test
-        old_dir_fp = [old_fp for _, old_fp, fptype in a.filepaths
-                      if fptype == 'html_summary_dir'][0]
+        old_dir_fp = [x['fp'] for x in a.filepaths
+                      if x['fp_type'] == 'html_summary_dir'][0]
         fd, fp = mkstemp(suffix='.html')
         close(fd)
         self._clean_up_files.append(fp)
@@ -1260,8 +1350,8 @@ class ArtifactTests(TestCase):
         self.assertEqual(a.html_summary_fp[1], exp3)
         self.assertFalse(exists(exp2))
         self.assertFalse(exists(old_dir_fp))
-        summary_dir = [old_fp for _, old_fp, fptype in a.filepaths
-                       if fptype == 'html_summary_dir']
+        summary_dir = [x['fp'] for x in a.filepaths
+                       if x['fp_type'] == 'html_summary_dir']
         self.assertEqual(summary_dir, [])
 
     def test_descendants_with_jobs_one_element(self):
@@ -1270,7 +1360,7 @@ class ArtifactTests(TestCase):
 
         obs = self.prep_template.artifact.descendants_with_jobs.nodes()
         exp = [('artifact', artifact)]
-        self.assertEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
 
 if __name__ == '__main__':

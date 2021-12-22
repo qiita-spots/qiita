@@ -23,9 +23,6 @@ Classes
 
    Ontology
 """
-
-from __future__ import division
-
 import qiita_db as qdb
 
 
@@ -80,16 +77,14 @@ class Ontology(qdb.base.QiitaObject):
         term : str
             New user defined term to add into a given ontology
         """
-        with qdb.sql_connection.TRN:
-            # we don't need to add an existing term
-            terms = self.user_defined_terms + self.terms
+        # we don't need to add an existing term
+        terms = self.user_defined_terms + self.terms
 
-            if term not in terms:
-                sql = """INSERT INTO qiita.term
-                            (ontology_id, term, user_defined)
-                         VALUES (%s, %s, true);"""
-                qdb.sql_connection.TRN.add(sql, [self.id, term])
-                qdb.sql_connection.TRN.execute()
+        if term not in terms:
+            sql = """INSERT INTO qiita.term
+                        (ontology_id, term, user_defined)
+                     VALUES (%s, %s, true);"""
+            qdb.sql_connection.perform_as_transaction(sql, [self.id, term])
 
     def term_type(self, term):
         """Get the type of a given ontology term

@@ -1,5 +1,3 @@
-from __future__ import division
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -18,23 +16,23 @@ from functools import partial
 import pandas as pd
 import warnings
 from datetime import date
-from skbio.util import safe_md5
-from future.utils import viewitems
+import hashlib
 
 from h5py import File
 from qiita_files.demux import to_hdf5
 
-from qiita_ware.ebi import EBISubmission
-from qiita_ware.exceptions import EBISubmissionError
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.util import get_mountpoint
+from qiita_core.util import qiita_test_checker
+from qiita_db.util import get_mountpoint, convert_to_id
 from qiita_db.study import Study, StudyPerson
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
 from qiita_db.software import Parameters, DefaultParameters
-from qiita_core.util import qiita_test_checker
+from qiita_db.ontology import Ontology
+from qiita_ware.ebi import EBISubmission
+from qiita_ware.exceptions import EBISubmissionError
 
 
 @qiita_test_checker()
@@ -86,8 +84,8 @@ class TestEBISubmission(TestCase):
                           'different time points in the plant lifecycle.'))
         self.assertEqual(e.investigation_type, 'Metagenomics')
         self.assertIsNone(e.new_investigation_type)
-        self.assertItemsEqual(e.sample_template, e.samples)
-        self.assertItemsEqual(e.publications, [
+        self.assertCountEqual(e.sample_template, e.samples)
+        self.assertCountEqual(e.publications, [
             ['10.100/123456', True], ['123456', False],
             ['10.100/7891011', True], ['7891011', False]])
         self.assertEqual(e.action, action)
@@ -162,14 +160,14 @@ class TestEBISubmission(TestCase):
                                                     'none': None})
         obs = ET.tostring(elm)
         exp = ''.join([v.strip() for v in ADDDICTTEST.splitlines()])
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs.decode('ascii'), exp)
 
     def test_generate_study_xml(self):
         submission = EBISubmission(3, 'ADD')
         self.files_to_remove.append(submission.full_ebi_dir)
         obs = ET.tostring(submission.generate_study_xml())
-        exp = ''.join([l.strip() for l in STUDYXML.splitlines()])
-        self.assertEqual(obs, exp)
+        exp = ''.join([line.strip() for line in STUDYXML.splitlines()])
+        self.assertEqual(obs.decode('ascii'), exp)
 
     def test_generate_sample_xml(self):
         submission = EBISubmission(3, 'ADD')
@@ -177,8 +175,10 @@ class TestEBISubmission(TestCase):
 
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_sample_xml(samples=samples))
-        exp = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
-        self.assertEqual(obs, exp)
+        exp = ('<SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-'
+               'instance" xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.'
+               'uk/meta/xsd/sra_1_3/SRA.sample.xsd" />')
+        self.assertEqual(obs.decode('ascii'), exp)
 
         # removing samples so test text is easier to read
         keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
@@ -194,11 +194,10 @@ class TestEBISubmission(TestCase):
             del(submission.samples[k])
             del(submission.samples_prep[k])
         obs = ET.tostring(submission.generate_sample_xml())
-        exp = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs.decode('ascii'), exp)
 
         obs = ET.tostring(submission.generate_sample_xml(samples=[]))
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs.decode('ascii'), exp)
 
     def test_generate_spot_descriptor(self):
         e = EBISubmission(3, 'ADD')
@@ -206,9 +205,9 @@ class TestEBISubmission(TestCase):
         elm = ET.Element('design', {'foo': 'bar'})
 
         e._generate_spot_descriptor(elm, 'LS454')
-        exp = ''.join([l.strip() for l in GENSPOTDESC.splitlines()])
+        exp = ''.join([line.strip() for line in GENSPOTDESC.splitlines()])
         obs = ET.tostring(elm)
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs.decode('ascii'), exp)
 
     def test_generate_submission_xml(self):
         submission = EBISubmission(3, 'ADD')
@@ -221,8 +220,8 @@ class TestEBISubmission(TestCase):
         exp = SUBMISSIONXML % {
             'submission_alias': submission._get_submission_alias(),
             'center_name': qiita_config.ebi_center_name}
-        exp = ''.join([l.strip() for l in exp.splitlines()])
-        self.assertEqual(obs, exp)
+        exp = ''.join([line.strip() for line in exp.splitlines()])
+        self.assertEqual(obs.decode('ascii'), exp)
 
         submission.study_xml_fp = "/some/path/study.xml"
         submission.sample_xml_fp = "/some/path/sample.xml"
@@ -234,8 +233,8 @@ class TestEBISubmission(TestCase):
         exp = SUBMISSIONXML_FULL % {
             'submission_alias': submission._get_submission_alias(),
             'center_name': qiita_config.ebi_center_name}
-        exp = ''.join([l.strip() for l in exp.splitlines()])
-        self.assertEqual(obs, exp)
+        exp = ''.join([line.strip() for line in exp.splitlines()])
+        self.assertEqual(obs.decode('ascii'), exp)
 
     def test_write_xml_file(self):
         element = ET.Element('TESTING', {'foo': 'bar'})
@@ -320,11 +319,11 @@ class TestEBISubmission(TestCase):
                                 'center_project_name': 'Test Project'},
                 'SKM6.640187': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
-                                'platform': 'ILLUMINA',
+                                'platform': 'Illumina',
                                 'instrument_model': 'Not valid'},
                 'SKD9.640182': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
-                                'platform': 'ILLUMINA',
+                                'platform': 'Illumina',
                                 'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
@@ -337,7 +336,7 @@ class TestEBISubmission(TestCase):
             metadata_dict = {
                 'SKD6.640190': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
-                                'platform': 'ILLUMINA',
+                                'platform': 'Illumina',
                                 'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
@@ -346,7 +345,7 @@ class TestEBISubmission(TestCase):
                                     'PMID: 22402401'},
                 'SKM6.640187': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
-                                'platform': 'ILLUMINA',
+                                'platform': 'Illumina',
                                 'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
@@ -356,7 +355,7 @@ class TestEBISubmission(TestCase):
                                 'extra_value': 1.2},
                 'SKD9.640182': {'center_name': 'ANL', 'barcode': 'AAA',
                                 'center_project_name': 'Test Project',
-                                'platform': 'ILLUMINA',
+                                'platform': 'Illumina',
                                 'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
@@ -382,12 +381,9 @@ class TestEBISubmission(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 3,
-            "number_samples_promised": 3,
             "study_alias": "Test EBI",
             "study_description": "Study for testing EBI",
             "study_abstract": "Study for testing EBI",
-            "emp_person_id": StudyPerson(2),
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)
         }
@@ -418,21 +414,21 @@ class TestEBISubmission(TestCase):
             'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTC',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 1"},
             'Sample2': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTA',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 2"},
             'Sample3': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTT',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 3"},
@@ -491,7 +487,7 @@ class TestEBISubmission(TestCase):
         e = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(e.full_ebi_dir)
         exp = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182']
-        self.assertItemsEqual(exp, e.samples)
+        self.assertCountEqual(exp, e.samples)
 
     def test_generate_experiment_xml(self):
         artifact = self.generate_new_study_with_preprocessed_data()
@@ -504,16 +500,18 @@ class TestEBISubmission(TestCase):
             'study_id': artifact.study.id,
             'pt_id': artifact.prep_templates[0].id
         }
-        exp = ''.join([l.strip() for l in exp.splitlines()])
-        self.assertEqual(obs, exp)
+        exp = ''.join([line.strip() for line in exp.splitlines()])
+        self.assertEqual(obs.decode('ascii'), exp)
 
-        submission = EBISubmission(3, 'ADD')
+        artifact_id = 3
+
+        submission = EBISubmission(artifact_id, 'ADD')
         self.files_to_remove.append(submission.full_ebi_dir)
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_experiment_xml(samples=samples))
         exp = EXPERIMENTXML
-        exp = ''.join([l.strip() for l in exp.splitlines()])
-        self.assertEqual(obs, exp)
+        exp = ''.join([line.strip() for line in exp.splitlines()])
+        self.assertEqual(obs.decode('ascii'), exp)
 
         # removing samples so test text is easier to read
         keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
@@ -530,7 +528,26 @@ class TestEBISubmission(TestCase):
             del(submission.samples_prep[k])
 
         obs = ET.tostring(submission.generate_experiment_xml())
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs.decode('ascii'), exp)
+
+        # changing investigation_type to test user defined terms, first let's
+        # create a new term
+        new_term = 'ULTIMATE TERM'
+        ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        ena_ontology.add_user_defined_term(new_term)
+        # set the preparation with the new term
+        submission.prep_template.investigation_type = new_term
+        # regenerate submission to make sure everything is just fine ...
+        submission = EBISubmission(artifact_id, 'ADD')
+        self.assertEqual(submission.investigation_type, 'Other')
+        self.assertEqual(submission.new_investigation_type, new_term)
+
+        obs = ET.tostring(submission.generate_experiment_xml())
+        exp = '<LIBRARY_STRATEGY>%s</LIBRARY_STRATEGY>' % new_term
+        self.assertIn(exp, obs.decode('ascii'))
+
+        # returnging investigation_type to it's value
+        submission.prep_template.investigation_type = 'Metagenomics'
 
     def test_generate_run_xml(self):
         artifact = self.generate_new_study_with_preprocessed_data()
@@ -540,9 +557,9 @@ class TestEBISubmission(TestCase):
         obs = ET.tostring(submission.generate_run_xml())
 
         md5_sums = {}
-        for s, fp in viewitems(submission.sample_demux_fps):
-            md5_sums[s] = safe_md5(
-                open(fp + submission.FWD_READ_SUFFIX)).hexdigest()
+        for s, fp in submission.sample_demux_fps.items():
+            md5_sums[s] = hashlib.md5(
+                open(fp + submission.FWD_READ_SUFFIX, 'rb').read()).hexdigest()
 
         exp = RUNXML_NEWSTUDY % {
             'study_alias': submission._get_study_alias(),
@@ -556,8 +573,8 @@ class TestEBISubmission(TestCase):
             'sample_2': md5_sums['%d.Sample2' % self.study_id],
             'sample_3': md5_sums['%d.Sample3' % self.study_id]
         }
-        exp = ''.join([l.strip() for l in exp.splitlines()])
-        self.assertEqual(obs, exp)
+        exp = ''.join([line.strip() for line in exp.splitlines()])
+        self.assertEqual(obs.decode('ascii'), exp)
 
         artifact = self.write_demux_files(PrepTemplate(1))
         submission = EBISubmission(artifact.id, 'ADD')
@@ -579,8 +596,8 @@ class TestEBISubmission(TestCase):
             'organization_prefix': qiita_config.ebi_organization_prefix,
             'center_name': qiita_config.ebi_center_name,
             'artifact_id': artifact.id}
-        exp = ''.join([l.strip() for l in exp.splitlines()])
-        self.assertEqual(obs, exp)
+        exp = ''.join([line.strip() for line in exp.splitlines()])
+        self.assertEqual(obs.decode('ascii'), exp)
 
     def test_generate_xml_files(self):
         artifact = self.generate_new_study_with_preprocessed_data()
@@ -663,10 +680,10 @@ class TestEBISubmission(TestCase):
             rewrite_fastq=True)
 
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
-        self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
+        self.assertCountEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
-        self.assertItemsEqual(obs_demux_samples, ebi_submission.samples.keys())
-        self.assertItemsEqual(obs_demux_samples,
+        self.assertCountEqual(obs_demux_samples, ebi_submission.samples.keys())
+        self.assertCountEqual(obs_demux_samples,
                               ebi_submission.samples_prep.keys())
 
         # If the last test passed then we can test that the folder already
@@ -674,10 +691,10 @@ class TestEBISubmission(TestCase):
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
-        self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
+        self.assertCountEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
-        self.assertItemsEqual(obs_demux_samples, ebi_submission.samples.keys())
-        self.assertItemsEqual(obs_demux_samples,
+        self.assertCountEqual(obs_demux_samples, ebi_submission.samples.keys())
+        self.assertCountEqual(obs_demux_samples,
                               ebi_submission.samples_prep.keys())
 
     def _generate_per_sample_FASTQs(self, prep_template, sequences):
@@ -685,7 +702,7 @@ class TestEBISubmission(TestCase):
         # we can test that the script uses the correct names during
         # copy/gz-generation
         files = []
-        for sn, seqs in viewitems(sequences):
+        for sn, seqs in sequences.items():
             fn = join(self.temp_dir, sn + 'should_rename.fastq')
             with open(fn, 'w') as fh:
                 fh.write(seqs)
@@ -723,7 +740,7 @@ class TestEBISubmission(TestCase):
         metadata_dict = {
             'SKB2.640194': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'experiment_design_description':
                                 'microbiome of soil and rhizosphere',
@@ -732,7 +749,7 @@ class TestEBISubmission(TestCase):
                             'run_prefix': '1.SKB2.640194'},
             'SKM4.640180': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'experiment_design_description':
                                 'microbiome of soil and rhizosphere',
@@ -763,9 +780,9 @@ class TestEBISubmission(TestCase):
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
 
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
-        self.assertItemsEqual(obs_demux_samples, exp_samples)
-        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
-        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+        self.assertCountEqual(obs_demux_samples, exp_samples)
+        self.assertCountEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertCountEqual(ebi_submission.samples_prep.keys(), exp_samples)
 
         ebi_submission.generate_xml_files()
         obs_run_xml = open(ebi_submission.run_xml_fp).read()
@@ -788,9 +805,9 @@ class TestEBISubmission(TestCase):
         # the ADD actually works without rewriting the files
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
-        self.assertItemsEqual(obs_demux_samples, exp_samples)
-        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
-        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+        self.assertCountEqual(obs_demux_samples, exp_samples)
+        self.assertCountEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertCountEqual(ebi_submission.samples_prep.keys(), exp_samples)
 
         ebi_submission.generate_xml_files()
         obs_run_xml = open(ebi_submission.run_xml_fp).read()
@@ -818,7 +835,7 @@ class TestEBISubmission(TestCase):
                             'primer': 'CCCC',
                             'center_name': 'ANL',
                             'center_project_name': 'Test Project',
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'experiment_design_description':
                                 'microbiome of soil and rhizosphere',
@@ -829,7 +846,7 @@ class TestEBISubmission(TestCase):
                             'primer': 'AAAA',
                             'center_name': 'ANL',
                             'center_project_name': 'Test Project',
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'experiment_design_description':
                                 'microbiome of soil and rhizosphere',
@@ -858,9 +875,9 @@ class TestEBISubmission(TestCase):
 
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
         exp_samples = ['1.SKM4.640180', '1.SKB2.640194']
-        self.assertItemsEqual(obs_demux_samples, exp_samples)
-        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
-        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+        self.assertCountEqual(obs_demux_samples, exp_samples)
+        self.assertCountEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertCountEqual(ebi_submission.samples_prep.keys(), exp_samples)
 
         ebi_submission.generate_xml_files()
         obs_run_xml = open(ebi_submission.run_xml_fp).read()
@@ -884,9 +901,9 @@ class TestEBISubmission(TestCase):
         ebi_submission = EBISubmission(artifact.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
         exp_samples = ['1.SKM4.640180', '1.SKB2.640194']
-        self.assertItemsEqual(obs_demux_samples, exp_samples)
-        self.assertItemsEqual(ebi_submission.samples.keys(), exp_samples)
-        self.assertItemsEqual(ebi_submission.samples_prep.keys(), exp_samples)
+        self.assertCountEqual(obs_demux_samples, exp_samples)
+        self.assertCountEqual(ebi_submission.samples.keys(), exp_samples)
+        self.assertCountEqual(ebi_submission.samples_prep.keys(), exp_samples)
 
         ebi_submission.generate_xml_files()
         obs_run_xml = open(ebi_submission.run_xml_fp).read()
@@ -944,7 +961,7 @@ class TestEBISubmission(TestCase):
                '%(ebi_dir)s/1.SKM2.640199.R1.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/' % {
                    'ebi_dir': e.full_ebi_dir, 'aid': artifact.id}).split('\n')
-        self.assertEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_parse_EBI_reply(self):
         artifact = self.generate_new_study_with_preprocessed_data()
@@ -1143,6 +1160,9 @@ shrubland biome</VALUE>
         <TAG>env_feature</TAG><VALUE>ENVO:plant-associated habitat</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
+        <TAG>env_package</TAG><VALUE>soil</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
         <TAG>host_subject_id</TAG><VALUE>1001:B4</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
@@ -1234,6 +1254,9 @@ shrubland biome</VALUE>
         <TAG>env_feature</TAG><VALUE>ENVO:plant-associated habitat</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
+        <TAG>env_package</TAG><VALUE>soil</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
         <TAG>host_subject_id</TAG><VALUE>1001:M6</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
@@ -1281,8 +1304,7 @@ shrubland biome</VALUE>
     </SAMPLE_ATTRIBUTES>
   </SAMPLE>
  </SAMPLE_SET>
- """ % {'organization_prefix': qiita_config.ebi_organization_prefix,
-        'center_name': qiita_config.ebi_center_name}
+ """ % {'center_name': qiita_config.ebi_center_name}
 
 STUDYXML = """
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
@@ -1292,7 +1314,7 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
       <STUDY_TITLE>
         Identification of the Microbiomes for Cannabis Soils
       </STUDY_TITLE>
-      <STUDY_TYPE existing_study_type="Metagenomics" />
+      <STUDY_TYPE existing_study_type="Other" />
       <STUDY_ABSTRACT>
         This is a preliminary study to examine the microbiota associated with \
 the Cannabis plant. Soils samples from the bulk soil, soil associated with \
@@ -1338,6 +1360,7 @@ experiment.xsd">
 %(study_id)s.Sample1" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>%(study_id)s.Sample1</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1372,6 +1395,7 @@ experiment.xsd">
 %(study_id)s.Sample2" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>%(study_id)s.Sample2</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1406,6 +1430,7 @@ experiment.xsd">
 %(study_id)s.Sample3" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>%(study_id)s.Sample3</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1446,6 +1471,7 @@ center_name="%(center_name)s">
       <SAMPLE_DESCRIPTOR accession="ERS000008" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB2.640194</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1534,6 +1560,7 @@ center_name="%(center_name)s">
       <SAMPLE_DESCRIPTOR accession="ERS000024" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB3.640195</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>METAGENOMICS</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
@@ -1623,9 +1650,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000008" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="a32357beb845f5b598f1a712fb3b4c70" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB2.640194.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="a32357beb845f5b598f1a712fb3b4c70" \
+filename="%(ebi_dir)s/1.SKB2.640194.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1634,9 +1661,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000024" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="deb905ced92812a65a2158fdcfd0f84d" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB3.640195.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="deb905ced92812a65a2158fdcfd0f84d" \
+filename="%(ebi_dir)s/1.SKB3.640195.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1645,9 +1672,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000025" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="847ba142770397a2fae3a8acfbc70640" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKB6.640176.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="847ba142770397a2fae3a8acfbc70640" \
+filename="%(ebi_dir)s/1.SKB6.640176.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1656,9 +1683,9 @@ center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000004" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="0dc19bc7ad4ab613c3f738cc9eb57e2c" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKM4.640180.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="0dc19bc7ad4ab613c3f738cc9eb57e2c" \
+filename="%(ebi_dir)s/1.SKM4.640180.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1674,9 +1701,9 @@ Sample1" center_name="%(center_name)s">
 %(study_id)s.Sample1" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="%(sample_1)s" \
-checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample1.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="%(sample_1)s" \
+filename="%(ebi_dir)s/%(study_id)s.Sample1.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1686,9 +1713,9 @@ Sample2" center_name="%(center_name)s">
 %(study_id)s.Sample2" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="%(sample_2)s" \
-checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample2.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="%(sample_2)s" \
+filename="%(ebi_dir)s/%(study_id)s.Sample2.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
@@ -1698,9 +1725,9 @@ Sample3" center_name="%(center_name)s">
 %(study_id)s.Sample3" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="%(sample_3)s" \
-checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample3.R1.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
+        <FILE filetype="fastq" quality_scoring_system="phred" \
+checksum_method="MD5" checksum="%(sample_3)s" \
+filename="%(ebi_dir)s/%(study_id)s.Sample3.R1.fastq.gz" />
       </FILES>
     </DATA_BLOCK>
   </RUN>

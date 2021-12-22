@@ -22,12 +22,12 @@ class TestUtil(TestCase):
     def test_generate_param_str(self):
         params = DefaultParameters(10)
         obs = generate_param_str(params)
-        exp = ("<b>Reference:</b> Greengenes 13_8<br/>"
-               "<b>similarity:</b> 0.97<br/>"
-               "<b>sortmerna_e_value:</b> 1<br/>"
-               "<b>sortmerna_max_pos:</b> 10000<br/>"
-               "<b>threads:</b> 1<br/>"
-               "<b>sortmerna_coverage:</b> 0.97")
+        exp = ('<b>Reference:</b> Greengenes 13_8<br/>'
+               '<b>sortmerna_e_value:</b> 1<br/>'
+               '<b>sortmerna_max_pos:</b> 10000<br/>'
+               '<b>similarity:</b> 0.97<br/>'
+               '<b>sortmerna_coverage:</b> 0.97<br/>'
+               '<b>threads:</b> 1')
         self.assertEqual(obs, exp)
 
     def test_is_localhost(self):

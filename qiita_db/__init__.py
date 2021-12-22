@@ -6,28 +6,28 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-import base
-import util
-import sql_connection
-import metadata_template
-import analysis
-import artifact
-import archive
-import commands
-import environment_manager
-import exceptions
-import investigation
-import logger
-import meta_util
-import ontology
-import portal
-import reference
-import software
-import study
-import user
-import processing_job
+from . import base
+from . import util
+from . import sql_connection
+from . import metadata_template
+from . import analysis
+from . import artifact
+from . import archive
+from . import commands
+from . import environment_manager
+from . import exceptions
+from . import investigation
+from . import logger
+from . import meta_util
+from . import ontology
+from . import portal
+from . import reference
+from . import software
+from . import study
+from . import user
+from . import processing_job
 
-__version__ = "0.2.0-dev"
+__version__ = "2021.11"
 
 __all__ = ["analysis", "artifact",  "archive", "base", "commands",
            "environment_manager", "exceptions", "investigation", "logger",

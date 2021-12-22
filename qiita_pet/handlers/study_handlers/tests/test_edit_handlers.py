@@ -65,6 +65,7 @@ class TestStudyEditHandler(TestHandlerBase):
                      'study_abstract': "dummy abstract",
                      'study_description': 'dummy description',
                      'principal_investigator': '-2',
+                     'notes': '',
                      'lab_person': '1'}
 
         self.post('/study/create/', post_data)
@@ -101,6 +102,7 @@ class TestStudyEditHandler(TestHandlerBase):
                 [doi for doi, _ in study.publications]),
             'study_abstract': study_info['study_abstract'],
             'study_description': study_info['study_description'],
+            'notes': '',
             'principal_investigator': study_info['principal_investigator'].id,
             'lab_person': study_info['lab_person'].id}
 
@@ -126,6 +128,7 @@ class TestStudyEditHandler(TestHandlerBase):
             'publications_doi': '',
             'study_abstract': study_info['study_abstract'],
             'study_description': study_info['study_description'],
+            'notes': '',
             'principal_investigator': study_info['principal_investigator'].id,
             'lab_person': study_info['lab_person'].id}
 
@@ -156,12 +159,12 @@ class TestCreateStudyAJAX(TestHandlerBase):
         response = self.get('/check_study/', {'study_title': 'notreal'})
         self.assertEqual(response.code, 200)
         # make sure responds properly
-        self.assertEqual(response.body, 'True')
+        self.assertEqual(response.body.decode('ascii'), 'True')
 
         response = self.get('/check_study/')
         self.assertEqual(response.code, 200)
         # make sure responds properly
-        self.assertEqual(response.body, 'False')
+        self.assertEqual(response.body.decode('ascii'), 'False')
 
         response = self.get(
             '/check_study/',
@@ -169,7 +172,7 @@ class TestCreateStudyAJAX(TestHandlerBase):
              'Identification of the Microbiomes for Cannabis Soils'})
         self.assertEqual(response.code, 200)
         # make sure responds properly
-        self.assertEqual(response.body, 'False')
+        self.assertEqual(response.body.decode('ascii'), 'False')
 
 
 if __name__ == "__main__":

@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from os.path import join
 
 from tornado.web import authenticated
@@ -16,6 +15,7 @@ from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import (get_files_from_uploads_folders, get_mountpoint,
                            supported_filepath_types)
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_pet.handlers.api_proxy import (
     prep_template_ajax_get_req, new_prep_template_get_req,
     prep_template_summary_get_req)
@@ -31,6 +31,22 @@ class NewPrepTemplateAjax(BaseHandler):
                     data_types=result['data_types'],
                     ontology=result['ontology'],
                     study_id=study_id)
+
+
+class AddDefaultWorkflowHandler(BaseHandler):
+    @authenticated
+    def post(self):
+        prep_id = self.get_argument('prep_id')
+        msg_error = None
+        data = None
+        try:
+            workflow = PrepTemplate(prep_id).add_default_workflow(
+                self.current_user)
+            data = workflow.id
+        except Exception as error:
+            msg_error = str(error)
+
+        self.write({'data': data, 'msg_error': msg_error})
 
 
 class PrepTemplateSummaryAJAX(BaseHandler):

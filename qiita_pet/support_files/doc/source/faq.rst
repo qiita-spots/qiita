@@ -30,8 +30,9 @@ What kind of data can I upload to Qiita for processing?
 Processing in Qiita requires 3 things: raw data, sample and prep information
 files. `Here <https://github.com/biocore/qiita/blob/master/README.rst#accepted-raw-files>`__
 you can find a list of currently supported raw files files. Note that we are
-accepting any kind of target gene (16S, 18S, ITS, whatever). You can also upload
-WGS however, WGS processing is not ready.
+accepting any kind of target gene (16S, 18S, ITS, whatever), Whole Genome and
+Metatranscriptomic. Check our :doc:`processingdata/processing-recommendations`.
+
 
 What's the difference between a sample and a prep information file?
 -------------------------------------------------------------------
@@ -43,13 +44,40 @@ collected 100 samples for your study, you will need 100 rows in your sample
 information file describing each of them, and additional rows for blanks and other
 control samples. If you prepared 95 of them for 16S and 50 of them for 18S,
 you will need 2 prep information files: one with 95 rows describing the preparation
-for 16S, and another one with 50 describing the 18S. For a more complex
-example go
-`here <#h.eddzjlm5e6l6>`__ and for examples of these files you can go to
-the "Upload instructions"
-`here <https://www.google.com/url?q=https%3A%2F%2Fvamps.mbl.edu%2Fmobe_workshop%2Fwiki%2Findex.php%2FMain_Page&sa=D&sntz=1&usg=AFQjCNE4PTOKIvFNlWtHmJyLLy11mfzF8A>`__.
+for 16S, and another one with 50 describing the 18S. For more information
+visit :ref:`complex_example`.
 
 .. _example_study_processing_workflow:
+
+
+How should I split my samples within preparations?
+--------------------------------------------------
+
+This question normally comes up when you are working with per sample FASTQs as at this
+stage there is no lane and run grouping within the samples.
+
+Generally, we recommend to set a single preparation for each lane in each sequencing
+run. This separation allows users to first test there are no biases within their
+lanes and runs, and optionally merge them in a single analysis. For your convenience, when you
+create a new analysis you can keep samples separate (default) or merge samples with matching
+names in different preparations.
+
+Another thing to consider is that once you are ready, you might want to submit to EBI-ENA
+and they have a limit of 10M on the metadata that you want to submit. This limitation is a
+combination of the metadata of each preparation and the sample information. For example, if
+we imagine the worst case scenario, that we have in all our columns the default
+'not applicable' NULL value, and that XML adds 4 times the size due to its formatting (how
+EBI-ENA expects the submission); then we will have `len('not applicable') * 50 * 4 = 2800 (2.8K)`
+per sample. Thus, we cannot have more than 3.5K samples. Note that this number depends on
+the number of metadata columns in your sample information file and the number of characters
+in the values of each sample and metadata column.
+
+To enforce these ideas, Qiita has a limit of 800 samples per preparation (remember, you can add as
+many samples as you want to your sample information). This number was selected because is the maximum
+number of unique target gene barcodes for the EMP.
+
+Please do not hesitate to send us an email if you have questions about this.
+
 
 Example study processing workflow
 ---------------------------------
@@ -88,12 +116,29 @@ A few more instructions: for the example above the workflow should be:
    be quite time consuming depending on the number of samples and the depth
    of sequencing.
 
+
 .. _issues_unzip:
 
-How to solve unzip errors?
---------------------------
+How to solve download or unzip errors?
+--------------------------------------
 
-When downloading large zip files within Qiita there is a change that you will get
+Dealing with large files might be daunting but, in general, following these
+instructions should make things easier. First, make sure that you have enough space
+for the zip download file; if you are unsure of the size required click on the button
+and your browser will show an estimate size of the download.
+Second, make sure that your computer has all the sleep settings turned off;
+for example, in a Mac, got to System Preferences, Energy Saver, Power Adapter and unselect
+the option of "Put hard disks to sleep when possible"; don't forget to save the settings.
+Third, download the file but point to the storage that you want to save your file in; using
+Chrome, right click on the download button and select "Save Link As ..."; and select the
+location where you have enough space (see point 1). Fourth, wait for the download to finish,
+this will depend on your Internet service. Finally, unzip the file with a newer version
+of zip (see below).
+
+By the way, if you are a developer and would like to add to Qiita the possibility of resumable
+downloads, we would happily welcome this contribution.
+
+Now, when trying to open the large downloaded zip file there is a change that you will get
 an error like: **"start of central directory not found; zipfile corrupt"**. This issue
 arises from using old versions of zip and you need to have unzip >= 6.0.0. To check
 you unzip version you can run: `unzip -v`.
@@ -102,6 +147,24 @@ To update your unzip for most operating systems you can simply use your regular 
 admin program. However, for Mac we suggest using
 `this version of unzip <ftp://ftp.microbio.me/pub/qiita/unzip>`__.
 
+Additionally, there is a chance that you will see an error/warning message like this:
+``extracting: BIOM/57457/all.biom bad CRC f6b2a86b (should be 38903659)``. These
+messages are consequence of the zip library we are using internally and are fine to
+ignore. If you want to check them, we suggest taking any of the files and generating their
+CRC32 checksum; in MAC's you can run ``crc32 [filename]`` and should get the first number
+in that message; for example:
+
+.. code-block:: bash
+
+   $ crc32 57457_all.biom
+   f6b2a86b
+
+Do you have specific Qiita questions?
+-------------------------------------
+
+Please send them to qiita.help@gmail.com; this will assure prompt responses while keeping your
+information private.
+
 Do you have general analytical questions?
 -----------------------------------------
 
@@ -109,7 +172,8 @@ Normally these are: How can I test X factor in my samples? Why do I see this pat
 Which statistical method better fits my question?
 
 As you can imagine, you are not alone as this is a common problem while doing analysis.
-Thus, we suggest posting your question to the `QIIME2 Forum <https://forum.qiime2.org/>`__.
+Thus, we suggest posting your data processing questions (raw-data to feature-table) to
+qiita.help@gmail.com and general-interest analytical questions (feature-table analyses) to the `QIIME2 Forum <https://forum.qiime2.org/>`__, please be sure to **add your question in the "General Discussion" category of the forum**.
 This will generally ensure that your question is answered in a timely manner. There
 are many users and developers monitoring the QIIME2 Forum. Posting questions in the forum
 allows you to share answers with others, who may have similar questions in the future.
@@ -149,16 +213,168 @@ To correct this issue, simply add a column to your preparation information file 
 "run_prefix". In this column, add the sample names from your BIOM table that matches the sample
 names listed in the sample_name column in your preparation information file.
 
+As a reminder, direct BIOM uploads cannot become public in the system.
+
+
+What's a Qiita Artifact?
+------------------------
+
+A Qiita artifact is a collection of files and their summaries that represent the output
+or input of a processing or analytical command.
+
+For example a per_sample_FASTQ artifact will contain the per sample FASTQ files and their
+summary (if a user generated); while a BIOM artifact has the feature table as a biom file, a
+QIIME2 QZA, any other supporting files (like a phylogenetic tree for deblur or sortmerna_picked_otus.tgz
+for close reference picking), and summaries.
+
+
 How to convert Qiita files to QIIME2 artifacts?
 -----------------------------------------------
 
-Please visit the `Transferring Qiita Artifacts to Qiime2 Tutorial <https://forum.qiime2.org/t/transferring-qiita-artifacts-to-qiime2/4790>`__
-in the `QIIME2 forum <https://forum.qiime2.org>`__.
+As a reminder, Qiita and QIIME 2 artifacts are similar as they encapsulate multiple files. However, a big
+difference is that QIIME 2 only has 2 main artifact types: QZA (all kinds of files) and QZV (visualization).
+
+Here is quick reference conversion table, but please visit the `Transferring Qiita Artifacts to Qiime2 Tutorial <https://forum.qiime2.org/t/transferring-qiita-artifacts-to-qiime2/4790>`__
+in the `QIIME2 forum <https://forum.qiime2.org>`__. for more details:
+
++----------------------------+----------------------------------------------------------------------+
+| Qiita                      | QIIME 2                                                              |
++============================+======================================================================+
+| beta diversity .tsv        |  DistanceMatrix (QZA)                                                |
++----------------------------+----------------------------------------------------------------------+
+| FASTA sequence files       | FeatureData[Taxonomy | Sequence] (QZA)                               |
++----------------------------+----------------------------------------------------------------------+
+| .biom tables               | FeatureTable[Frequency | RelativeFrequency | PresenceAbsence] (QZA)  |
++----------------------------+----------------------------------------------------------------------+
+| ordination .txt            | PCoAResults (QZA)                                                    |
++----------------------------+----------------------------------------------------------------------+
+| phylogentic tree .txt      | Phylogeny[Rooted] (QZA)                                              |
++----------------------------+----------------------------------------------------------------------+
+| alpha diversity .tsv       | SampleData[AlphaDiversity] (QZA)                                     |
++----------------------------+----------------------------------------------------------------------+
+| taxonomic classifier       | Taxonomic Classifier (QZA)                                           |
++----------------------------+----------------------------------------------------------------------+
+| all QIIME 2 visualizations | Visualization (QZV)                                                  |
++----------------------------+----------------------------------------------------------------------+
+
+Note that all feature table (bioms) and analytical steps will generate QZA and QZV, which are native QIIME2 artifacts.
+
+
+How to add extra files to a Qiita study?
+----------------------------------------
+
+Many publications rely on extra files that are not part or
+generated within Qiita. However, to facilitate analytical reproducibility a user
+might like to link these files to Qiita. In this case, we recommend to upload
+your external file to a long term repository, like
+`figshare.com <https://figshare.com/>`__, and then link to your study via the
+"Analytical Notes" within a study. The "Analytical Notes" section can be accessed
+within the study "Edit" button. Note that this text box renders Markdown when
+displayed in the study section. Markdown allows to format text, add images,
+etc; for more information check
+`this 3 minute read about Markdown <https://guides.github.com/features/mastering-markdown/>`__.
+
+
+Where's my QIIME1 mapping file?
+-------------------------------
+
+During the 2020.11 deployment we removed the functionality that automatically created
+the merged preparation and sample information file per preparation. This change will allow us
+to make faster information file updates allow for future multi-site operations.
+
+If you want to create a merged and validated mapping file (merged sample and preparation
+information file) please create an analysis by following these instructions:
+:ref:`creating_a_new_analysis`.
+
+
+I want to transfer a lot of files to Qiita, is there an easy way?
+-----------------------------------------------------------------
+
+Yes! This is available in the "Upload Files" section of each study by accessing the tab
+"Upload via Remote Server (ADVANCED)".
+
+We currently suggest using scp, note that your server where you store your files should allow
+connecting to it via scp - in other words, this only works when moving files from a server to Qiita.
+
+Now, the way it works is that you need to create a new secure key to that server, imagine
+that you are making a copy of your storage-shed key, then you share that key to Qiita (you will give
+access to Qiita to run a single copy command in your server), Qiita uses that key and securely
+destroy it.
+
+To take advantage of this feature you need to:
+
+#. Prepare all the files you want to transfer in a single folder (or you can transfer
+   multiple times from multiple folders into one study). Note that Qiita will only collect
+   files with valid extensions from the top level directory (no sub-directories); see the
+   top of the "Upload Files" page within your study for the latests list of valid extensions.
+#. In your server (this needs to be run within your home directory in the server where you
+   store the files!), generate a new key by running:
+   `ssh-keygen -t rsa -C "ssh test key" -f ~/.ssh/qiita-key -P ""`. Here is where you are
+   creating that key to your storage-shed.
+#. Allow access using the new key to new connections (this also needs to be run in the
+   remote server): `cat ~/.ssh/qiita-key.pub >> ~/.ssh/authorized_keys`. This tells the
+   server that is OK to give access to the key created to your storage-shed; note that if
+   you want to completely stop that key to work you can open that file and remove the line
+   with the name of this key.
+#. Dowload your new generated key `qiita-key` (the file) to your local computer and use it
+   in the `Key` option of "Upload via Remote Server (ADVANCED)".
+
+Using this key you can `List Files` to test the connection and verify the list of study files. Then,
+if the connection is made and files are correct, press 'Transfer Files' to initiate the transfer.
+
+Note that if you click multiple times, too quickly there is a chance that your server will block
+Qiita, if this happens, just wait a few minutes and retry again.
+
+
+How do I update the sample or preparation file?
+-----------------------------------------------
+
+Remember, these are separate files so they need to be updated separately. In both cases,
+the easiest is to upload the new file from your computer to Qiita using the `Upload Files`
+button in your study. Once the file you want to use is there you can use them within Qiita.
+
+To update a sample information file: Click on `Sample Information` button in the your study
+page, then use the `Update sample information` section on that page to select your file and
+update it. Note that for this you can also directly upload your file via the
+`Direct upload file (< 2MB)`.
+
+To update a preparation information file: Click on the preparation you want to update within
+your study page, then click on `Summary`, and use the `Update prep information` section on
+that page to select your file and update it.
+
+Note that these information is generally independent of the sequence processing so you
+don't need to reprocess your sequences; however, if you use your study in an analysis, you will
+need to recreate that analysis to use the updated sample or preparation metadata
+
+
+When do I need the run_prefix in my preparation information file?
+-----------------------------------------------------------------
+
+It depends on your sequence processing but in general it will facilitate loading your
+files to your preparation in Qiita.
+
+First of all, this is a prefix value so you only need the beginning of the file
+name to load the files in Qiita; for example if your file names for a given sample are:
+AWERWADFA_I1.fastq.gz, AWERWADFA_R1.fastq.gz, AWERWADFA_R2.fastq.gz, the run_prefix for
+the sample should be AWERWADFA. Qiita will use that to group those files under the same
+sample with that run_prefix.
+
+Now the run_prefix is used constantly within file selection and processing in all file types but
+specially on:
+
+- BIOM: the run_prefix is used to rename the samples in your BIOM to match the sample names
+  in Qiita. Basically, if you add the sample names in your BIOM file as the run_prefix and the
+  sample name in Qiita in the sample_name column of your preparation, Qiita will automatically
+  rename them to match.
+- per sample FASTQ: run_prefix is the way to link which sample goes with which files so using here
+  will facilitate loading your files to the preparation and then used for processing, without it
+  Qiita will not be able to process your samples.
+
 
 How to cite Qiita?
 ------------------
 
-If you use Qiita for processing, submition to EBI-ENA and/or its data for any published research, please include the following citation:
+If you use Qiita for processing, submission to EBI-ENA and/or its data for any published research, please include the following citation:
 
 **Qiita: rapid, web-enabled microbiome meta-analysis.**
 Antonio Gonzalez, Jose A. Navas-Molina, Tomasz Kosciolek, Daniel McDonald, Yoshiki Vázquez-Baeza, Gail Ackermann, Jeff DeReus, Stefan Janssen, Austin D. Swafford, Stephanie B. Orchanian, Jon G. Sanders, Joshua Shorenstein, Hannes Holste, Semar Petrus, Adam Robbins-Pianka, Colin J. Brislawn, Mingxun Wang, Jai Ram Rideout, Evan Bolyen, Matthew Dillon, J. Gregory Caporaso, Pieter C. Dorrestein & Rob Knight. Nature Methods, volume 15, pages 796–798 (2018);

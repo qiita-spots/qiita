@@ -208,3 +208,13 @@
   </div>
 </div>
 {% end %}
+
+
+{% comment we need to <p></p> as now we are rendering markdown %}
+{% if study_info['notes'].strip() != '<p></p>' %}
+  <br/><br/>
+  <div style="background-color: #EFEFEF; padding: 5px 20px 20px 20px">
+    <h4>Analytical Notes</h4>
+    {% raw study_info['notes'].replace('\n', '<br/>') %}
+  </div>
+{% end %}

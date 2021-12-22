@@ -10,6 +10,7 @@ from os.path import join, exists
 from os import remove, close
 from datetime import datetime
 from tempfile import mkstemp
+from functools import partial
 
 import pandas as pd
 import numpy.testing as npt
@@ -25,8 +26,9 @@ from qiita_db.software import Parameters, DefaultParameters
 from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
-    artifact_types_get_req, artifact_post_req, artifact_patch_request,
-    artifact_get_prep_req, artifact_get_info)
+    artifact_types_get_req, artifact_post_req, artifact_get_prep_req,
+    artifact_get_info)
+from qiita_db.logger import LogEntry
 
 
 class TestArtifactAPIReadOnly(TestCase):
@@ -38,6 +40,7 @@ class TestArtifactAPIReadOnly(TestCase):
 
     def test_artifact_get_req(self):
         obs = artifact_get_req('test@foo.bar', 1)
+        path_builder = partial(join, get_mountpoint('raw_data')[0][1])
         exp = {'id': 1,
                'type': 'FASTQ',
                'study': 1,
@@ -51,11 +54,17 @@ class TestArtifactAPIReadOnly(TestCase):
                'is_submitted_vamps': False,
                'parents': [],
                'filepaths': [
-                   (1, join(get_mountpoint('raw_data')[0][1],
-                    '1_s_G1_L001_sequences.fastq.gz'), 'raw_forward_seqs'),
-                   (2,  join(get_mountpoint('raw_data')[0][1],
-                    '1_s_G1_L001_sequences_barcodes.fastq.gz'),
-                    'raw_barcodes')]
+                   {'fp_id': 1,
+                    'fp': path_builder("1_s_G1_L001_sequences.fastq.gz"),
+                    'fp_type': "raw_forward_seqs",
+                    'checksum': '2125826711',
+                    'fp_size': 58},
+                   {'fp_id': 2,
+                    'fp': path_builder(
+                        "1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                    'fp_type': "raw_barcodes",
+                    'checksum': '2125826711',
+                    'fp_size': 58}]
                }
         self.assertEqual(obs, exp)
 
@@ -80,8 +89,8 @@ class TestArtifactAPIReadOnly(TestCase):
                'edge_list': [(1, 3), (1, 2), (2, 5), (2, 4), (2, 6)]}
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['status'], exp['status'])
-        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
-        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
+        self.assertCountEqual(obs['node_labels'], exp['node_labels'])
+        self.assertCountEqual(obs['edge_list'], exp['edge_list'])
 
     def test_artifact_graph_get_req_no_access(self):
         obs = artifact_graph_get_req(1, 'ancestors', 'demo@microbio.me')
@@ -115,7 +124,7 @@ class TestArtifactAPIReadOnly(TestCase):
 
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['status'], exp['status'])
-        self.assertItemsEqual(obs['types'], exp['types'])
+        self.assertCountEqual(obs['types'], exp['types'])
 
 
 @qiita_test_checker()
@@ -162,60 +171,18 @@ class TestArtifactAPI(TestCase):
 
         r_client.flushdb()
 
-    def test_artifact_patch_request(self):
-        obs = artifact_patch_request('test@foo.bar', 'replace',
-                                     '/%d/name/' % self.artifact.id,
-                                     req_value='NEW_NAME')
-        exp = {'status': 'success', 'message': ''}
-        self.assertEqual(obs, exp)
-
-        self.assertEqual(Artifact(self.artifact.id).name, 'NEW_NAME')
-
-    def test_artifact_patch_request_errors(self):
-        # No access to the study
-        obs = artifact_patch_request('demo@microbio.me', 'replace',
-                                     '/1/name/', req_value='NEW_NAME')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-        # Incorrect path parameter
-        obs = artifact_patch_request('test@foo.bar', 'replace',
-                                     '/1/name/oops/', req_value='NEW_NAME')
-        exp = {'status': 'error',
-               'message': 'Incorrect path parameter'}
-        self.assertEqual(obs, exp)
-        # Missing value
-        obs = artifact_patch_request('test@foo.bar', 'replace', '/1/name/')
-        exp = {'status': 'error',
-               'message': 'A value is required'}
-        self.assertEqual(obs, exp)
-        # Wrong attribute
-        obs = artifact_patch_request('test@foo.bar', 'replace', '/1/oops/',
-                                     req_value='NEW_NAME')
-        exp = {'status': 'error',
-               'message': 'Attribute "oops" not found. Please, check the '
-                          'path parameter'}
-        self.assertEqual(obs, exp)
-        # Wrong operation
-        obs = artifact_patch_request('test@foo.bar', 'add', '/1/name/',
-                                     req_value='NEW_NAME')
-        exp = {'status': 'error',
-               'message': 'Operation "add" not supported. Current supported '
-                          'operations: replace'}
-        self.assertEqual(obs, exp)
-
     def test_artifact_get_prep_req(self):
         obs = artifact_get_prep_req('test@foo.bar', [4])
         exp = {'status': 'success', 'msg': '', 'data': {
-            4: ['1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195',
-                '1.SKB6.640176', '1.SKD6.640190', '1.SKM6.640187',
-                '1.SKD9.640182', '1.SKM8.640201', '1.SKM2.640199',
-                '1.SKD2.640178', '1.SKB7.640196', '1.SKD4.640185',
-                '1.SKB8.640193', '1.SKM3.640197', '1.SKD5.640186',
-                '1.SKB1.640202', '1.SKM1.640183', '1.SKD1.640179',
-                '1.SKD3.640198', '1.SKB5.640181', '1.SKB4.640189',
-                '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
-                '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191']}}
+            4: ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+                '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+                '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+                '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+                '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+                '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+                '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+                '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+                '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}}
         self.assertEqual(obs, exp)
 
         obs = artifact_get_prep_req('demo@microbio.me', [4])
@@ -247,20 +214,21 @@ class TestArtifactAPI(TestCase):
                 'sortmerna_e_value': '1', 'sortmerna_max_pos': '10000',
                 'threads': '1', 'sortmerna_coverage': '0.97'},
              'algorithm': 'Pick closed-reference OTUs | Split libraries FASTQ',
-             'deprecated': False, 'platform': 'not provided',
+             'deprecated': False, 'platform': 'Illumina',
              'algorithm_az': 'd480799a0a7a2fbe0e9022bc9c602018',
              'prep_samples': 27},
-            {'files': [], 'artifact_id': 7, 'data_type': '16S',
-             'timestamp': '2012-10-02 17:30:00', 'active': None,
+            {'files': ['biom_table.biom'], 'artifact_id': 7,
+             'data_type': '16S',
+             'timestamp': '2012-10-02 17:30:00', 'active': True,
              'target_gene': '16S rRNA', 'name': 'BIOM',
              'target_subfragment': ['V4'], 'parameters': {}, 'algorithm': '',
-             'deprecated': None, 'platform': 'Illumina', 'algorithm_az': '',
+             'deprecated': False, 'platform': 'Illumina', 'algorithm_az': '',
              'prep_samples': 27}]
         exp = {'status': 'success', 'msg': '', 'data': data}
-        self.assertItemsEqual(obs.keys(), exp.keys())
+        self.assertCountEqual(list(obs.keys()), exp.keys())
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['msg'], exp['msg'])
-        self.assertItemsEqual(obs['data'], exp['data'])
+        self.assertCountEqual(obs['data'], exp['data'])
 
     def test_artifact_post_req(self):
         # Create new prep template to attach artifact to
@@ -296,7 +264,7 @@ class TestArtifactAPI(TestCase):
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
         a = Artifact(pt.artifact.id)
-        self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
+        self._files_to_remove.extend([x['fp'] for x in a.filepaths])
 
     def test_artifact_post_req_error(self):
         # Create a new prep template to attach the artifact to
@@ -344,6 +312,10 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success',
                'message': 'Artifact visibility changed to private'}
         self.assertEqual(obs, exp)
+        # testing that the log message is generated
+        self.assertEqual(
+            LogEntry.newest_records(1)[0].msg,
+            'admin@foo.bar changed artifact 1 (study 1) to private')
 
     def test_artifact_status_put_req_private_bad_permissions(self):
         obs = artifact_status_put_req(1, 'test@foo.bar', 'private')
@@ -360,7 +332,7 @@ class TestArtifactAPI(TestCase):
     def test_artifact_status_put_req_unknown_status(self):
         obs = artifact_status_put_req(1, 'test@foo.bar', 'BADSTAT')
         exp = {'status': 'error',
-               'message': 'Unknown visiblity value: BADSTAT'}
+               'message': 'Unknown visibility value: BADSTAT'}
         self.assertEqual(obs, exp)
 
 

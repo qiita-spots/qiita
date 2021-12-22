@@ -5,11 +5,8 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division
 from collections import defaultdict
 from json import dumps, loads
-
-from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
@@ -91,6 +88,8 @@ def study_get_req(study_id, user_id):
     study_info['ebi_study_accession'] = study.ebi_study_accession
     study_info['ebi_submission_status'] = study.ebi_submission_status
     study_info['public_raw_download'] = study.public_raw_download
+    study_info['notes'] = study.notes
+    study_info['autoloaded'] = study.autoloaded
 
     # Clean up StudyPerson objects to string for display
     pi = study_info['principal_investigator']
@@ -207,6 +206,7 @@ def study_prep_get_req(study_id, user_id):
     prep_info = defaultdict(list)
     editable = study.can_edit(User(user_id))
     for dtype in study.data_types:
+        dtype_infos = list()
         for prep in study.prep_templates(dtype):
             if prep.status != 'public' and not editable:
                 continue
@@ -215,23 +215,39 @@ def study_prep_get_req(study_id, user_id):
                 'name': prep.name,
                 'id': prep.id,
                 'status': prep.status,
+                'total_samples': len(prep),
+                'creation_timestamp': prep.creation_timestamp,
+                'modification_timestamp': prep.modification_timestamp
             }
             if start_artifact is not None:
                 youngest_artifact = prep.artifact.youngest_artifact
                 info['start_artifact'] = start_artifact.artifact_type
                 info['start_artifact_id'] = start_artifact.id
+                info['num_artifact_children'] = len(start_artifact.children)
+                info['youngest_artifact_name'] = youngest_artifact.name
+                info['youngest_artifact_type'] = \
+                    youngest_artifact.artifact_type
                 info['youngest_artifact'] = '%s - %s' % (
                     youngest_artifact.name, youngest_artifact.artifact_type)
                 info['ebi_experiment'] = len(
-                    [v for _, v in viewitems(prep.ebi_experiment_accessions)
+                    [v for _, v in prep.ebi_experiment_accessions.items()
                      if v is not None])
             else:
                 info['start_artifact'] = None
                 info['start_artifact_id'] = None
                 info['youngest_artifact'] = None
-                info['ebi_experiment'] = False
+                info['num_artifact_children'] = 0
+                info['youngest_artifact_name'] = None
+                info['youngest_artifact_type'] = None
+                info['ebi_experiment'] = 0
 
-            prep_info[dtype].append(info)
+            dtype_infos.append(info)
+
+        # default sort is in ascending order of creation timestamp
+        sorted_info = sorted(dtype_infos,
+                             key=lambda k: k['creation_timestamp'],
+                             reverse=False)
+        prep_info[dtype] = sorted_info
 
     return {'status': 'success',
             'message': '',
@@ -306,7 +322,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
         remaining.extend([f for _, f, _ in uploaded if f not in inuse])
         supp_file_types_len = len(supp_file_types)
 
-        for k, v in viewitems(sfiles):
+        for k, v in sfiles.items():
             len_files = len(v)
             # if the number of files in the k group is larger than the
             # available columns add to the remaining group, if not put them in
@@ -333,7 +349,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     study = Study(study_id)
     if study not in user_artifacts:
         user_artifacts[study] = study.artifacts(artifact_type=artifact_type)
-    for study, artifacts in viewitems(user_artifacts):
+    for study, artifacts in user_artifacts.items():
         study_label = "%s (%d)" % (study.title, study.id)
         for a in artifacts:
             artifact_options.append(

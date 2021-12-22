@@ -157,6 +157,9 @@ function cancel_edition(){
 
 {% block content %}
 <h1>{% if study %}Edit study (ID: {{study.id}}) {% else %}Create a new Study{%end%}</h1>
+<hr/>
+<h3>If you are planning to load a study with data already present in NCBI SRA or EBI ENA, please complete <a target="_blank" href="https://docs.google.com/forms/d/1SIq_JNWai7cZ2wwjD8xZpTab7qBifLKu3TZm2B363CE/edit?ts=5fbe8c0b&gxids=7628">this form</a> as we may be able to assist.
+<hr/>
 <h3>
     <font color="red">*</font> = Required Field
 </h3>
@@ -174,6 +177,50 @@ function cancel_edition(){
         {% set additional_info = 'You can select multiple entries by control-clicking (mac: command-clicking)' %}
     {% elif form_item.label.text == 'Principal Investigator'%}
         {% set kwargs['class_'] = kwargs['class_'] + ' chzn-select' %}
+			  <tr>
+			    <td></td>
+			    <td><b>Can't find the person you're looking for? <a href="#bot" onclick='$("#new_person_div").show(400); return false;'>Add a person</a></b></td>
+			  </tr>
+			  <tr>
+			    <td></td>
+			    <td>
+			      <div name="new_person_div" id="new_person_div">
+			        <table>
+			          <tr>
+			              <td><b>Name:</b><br><font size=1>Names may only contain ASCII characters </font></td>
+			            <td><input type="text" id="new_person_name" name="new_person_name" class="form-control"></td>
+			            <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
+			          </tr>
+			            <td><b>Affiliation:</b></td>
+			            <td><input type="text" id="new_person_affiliation" name="new_person_affiliation" class="form-control"></td>
+			            <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
+			          </tr>
+			          <tr>
+			            <td><b>E-mail Address:</b></td>
+			            <td><input type="text" id="new_person_email" name="new_person_email" class="form-control"></td>
+			            <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
+			          </tr>
+			          <tr>
+			            <td><b>Phone:</b></td>
+			            <td><input type="text" id="new_person_phone" name="new_person_phone" class="form-control"></td>
+			          </tr>
+			          <tr>
+			            <td><b>Address:</b></td>
+			            <td><input type="text" id="new_person_address" name="new_person_address" class="form-control"></td>
+			          </tr>
+			          <tr>
+			            <td>
+			              <table>
+			                <tr>
+			                  <td><input value="Add Person" type="button" class="btn btn-link" onclick='add_new_person(create_study.new_person_name, create_study.new_person_affiliation, create_study.new_person_email, create_study.new_person_phone, create_study.new_person_address);'></td>
+			                  <td><input value="Cancel" type="button" class="btn btn-link" onclick='$("#new_person_div").hide(400); return true;'></td>
+			                </tr>
+			              </table>
+			            </td>
+			          </tr>
+			        </table>
+			      </div>
+			    </td>
     {% elif form_item.label.text == 'Study Title'%}
         {% set additional_info = 'Study titles may only contain ASCII characters' %}
     {% end %}
@@ -182,52 +229,6 @@ function cancel_edition(){
     <td width="30%">{% raw form_item(**kwargs) %}</td>
     <td width="50%">{% if form_item.flags.required %}<font color="red"><h4>&nbsp;&nbsp;*</h4></font>{% end %}</td>
   </tr>
-  {% if form_item.label.text == 'Lab Person' %}
-  <tr>
-    <td></td>
-    <td>Can't find the person you're looking for? <a href="#bot" onclick='$("#new_person_div").show(400); return false;'>Add a person</a></td>
-  </tr>
-  <tr>
-    <td></td>
-    <td>
-      <div name="new_person_div" id="new_person_div">
-        <table>
-          <tr>
-              <td><b>Name:</b><br><font size=1>Names may only contain ASCII characters </font></td>
-            <td><input type="text" id="new_person_name" name="new_person_name" class="form-control"></td>
-            <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
-          </tr>
-            <td><b>Affiliation:</b></td>
-            <td><input type="text" id="new_person_affiliation" name="new_person_affiliation" class="form-control"></td>
-            <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
-          </tr>
-          <tr>
-            <td><b>E-mail Address:</b></td>
-            <td><input type="text" id="new_person_email" name="new_person_email" class="form-control"></td>
-            <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
-          </tr>
-          <tr>
-            <td><b>Phone:</b></td>
-            <td><input type="text" id="new_person_phone" name="new_person_phone" class="form-control"></td>
-          </tr>
-          <tr>
-            <td><b>Address:</b></td>
-            <td><input type="text" id="new_person_address" name="new_person_address" class="form-control"></td>
-          </tr>
-          <tr>
-            <td>
-              <table>
-                <tr>
-                  <td><input value="Add Person" type="button" class="btn btn-link" onclick='add_new_person(create_study.new_person_name, create_study.new_person_affiliation, create_study.new_person_email, create_study.new_person_phone, create_study.new_person_address);'></td>
-                  <td><input value="Cancel" type="button" class="btn btn-link" onclick='$("#new_person_div").hide(400); return true;'></td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </div>
-    </td>
-  {% end %}
 {% end %}
   </tr>
   <tr>

@@ -5,15 +5,11 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
 from os import remove
 from os.path import isfile, relpath
 from shutil import rmtree
-from functools import partial
 from collections import namedtuple
 from qiita_db.util import create_nested_path
 
@@ -51,6 +47,7 @@ class Artifact(qdb.base.QiitaObject):
     -------
     create
     delete
+    being_deleted_by
 
     See Also
     --------
@@ -226,8 +223,15 @@ class Artifact(qdb.base.QiitaObject):
             sql_args = [prep_template.study_id, a_id]
             qdb.sql_connection.TRN.add(sql, sql_args)
 
+            # Associate the artifact with the preparation information
+            sql = """INSERT INTO qiita.preparation_artifact (
+                        prep_template_id, artifact_id)
+                     VALUES (%s, %s)"""
+            sql_args = [prep_template.id, a_id]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+
             # Associate the artifact with its filepaths
-            filepaths = [(fp, f_type) for _, fp, f_type in artifact.filepaths]
+            filepaths = [(x['fp'], x['fp_type']) for x in artifact.filepaths]
             fp_ids = qdb.util.insert_filepaths(
                 filepaths, a_id, atype, copy=True)
             sql = """INSERT INTO qiita.artifact_filepath
@@ -333,7 +337,7 @@ class Artifact(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBArtifactCreationError(
                 "When provided, both parents and processing parameters should "
                 "be provided")
-        elif bool(analysis) != bool(data_type):
+        elif bool(analysis) and not bool(data_type):
             # When provided, analysis and data_type both should be
             # provided (this is effectively doing an XOR)
             raise qdb.exceptions.QiitaDBArtifactCreationError(
@@ -364,12 +368,17 @@ class Artifact(qdb.base.QiitaObject):
 
             return cls(a_id)
 
-        def _associate_with_study(instance, study_id):
+        def _associate_with_study(instance, study_id, prep_template_id):
             # Associate the artifact with the study
             sql = """INSERT INTO qiita.study_artifact
                         (study_id, artifact_id)
                      VALUES (%s, %s)"""
             sql_args = [study_id, instance.id]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            sql = """INSERT INTO qiita.preparation_artifact
+                        (prep_template_id, artifact_id)
+                     VALUES (%s, %s)"""
+            sql_args = [prep_template_id, instance.id]
             qdb.sql_connection.TRN.add(sql, sql_args)
             qdb.sql_connection.TRN.execute()
 
@@ -379,8 +388,7 @@ class Artifact(qdb.base.QiitaObject):
                         (analysis_id, artifact_id)
                      VALUES (%s, %s)"""
             sql_args = [analysis_id, instance.id]
-            qdb.sql_connection.TRN.add(sql, sql_args)
-            qdb.sql_connection.TRN.execute()
+            qdb.sql_connection.perform_as_transaction(sql, sql_args)
 
         with qdb.sql_connection.TRN:
             if parents:
@@ -422,8 +430,8 @@ class Artifact(qdb.base.QiitaObject):
                     instance = _common_creation_steps(
                         artifact_type, processing_parameters.command.id,
                         dtypes.pop(), processing_parameters.dump())
-
-                    _associate_with_study(instance, study_id)
+                    _associate_with_study(
+                        instance, study_id, parents[0].prep_templates[0].id)
                 else:
                     # This artifact is part of the analysis pipeline
                     analysis_id = analyses.pop()
@@ -451,7 +459,7 @@ class Artifact(qdb.base.QiitaObject):
                 elif 'private' in visibilities:
                     instance.visibility = 'private'
                 else:
-                    instance.visibility = 'public'
+                    instance._set_visibility('public')
 
             elif prep_template:
                 # This artifact is uploaded by the user in the
@@ -461,13 +469,15 @@ class Artifact(qdb.base.QiitaObject):
                 # Associate the artifact with the prep template
                 prep_template.artifact = instance
                 # Associate the artifact with the study
-                _associate_with_study(instance, prep_template.study_id)
+                _associate_with_study(
+                    instance, prep_template.study_id, prep_template.id)
             else:
                 # This artifact is an initial artifact of an analysis
                 instance = _common_creation_steps(
                     artifact_type, None, data_type, None)
                 # Associate the artifact with the analysis
-                analysis.add_artifact(instance)
+                if bool(analysis):
+                    analysis.add_artifact(instance)
 
             # Associate the artifact with its filepaths
             fp_ids = qdb.util.insert_filepaths(
@@ -510,10 +520,9 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it is public")
 
-            children = instance.children
-            children_ids = [c.id for c in children]
-            all_ids = tuple(children_ids + [artifact_id])
-            all_artifacts = children + [instance]
+            all_artifacts = list(set(instance.descendants.nodes()))
+            all_artifacts.reverse()
+            all_ids = tuple([a.id for a in all_artifacts])
 
             # Check if this or any of the children have been analyzed
             sql = """SELECT email, analysis_id
@@ -598,8 +607,9 @@ class Artifact(qdb.base.QiitaObject):
                      WHERE artifact_id IN %s"""
             qdb.sql_connection.TRN.add(sql, [all_ids])
 
-            # If the artifacts don't have parents and study is not None (is an
-            # analysis), we move the files to the uploads folder. We also need
+            # If the first artifact to be deleted, instance, doesn't have
+            # parents and study is not None (None means is an analysis), we
+            # move the files to the uploads folder. We also need
             # to nullify the column in the prep template table
             if not instance.parents and study is not None:
                 qdb.util.move_filepaths_to_upload_folder(
@@ -622,6 +632,11 @@ class Artifact(qdb.base.QiitaObject):
 
             # Detach the artifacts from the analysis_artifact table
             sql = "DELETE FROM qiita.analysis_artifact WHERE artifact_id IN %s"
+            qdb.sql_connection.TRN.add(sql, [all_ids])
+
+            # Detach artifact from preparation_artifact
+            sql = """DELETE FROM qiita.preparation_artifact
+                     WHERE artifact_id IN %s"""
             qdb.sql_connection.TRN.add(sql, [all_ids])
 
             # Delete the rows in the artifact table
@@ -658,12 +673,10 @@ class Artifact(qdb.base.QiitaObject):
         ValueError
             If `value` contains more than 35 chars
         """
-        with qdb.sql_connection.TRN:
-            sql = """UPDATE qiita.artifact
-                     SET name = %s
-                     WHERE artifact_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        sql = """UPDATE qiita.artifact
+                 SET name = %s
+                 WHERE artifact_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
     @property
     def timestamp(self):
@@ -720,6 +733,24 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
+    def _set_visibility(self, value):
+        "helper method to split validation and actual set of the visibility"
+        # In order to correctly propagate the visibility we need to find
+        # the root of this artifact and then propagate to all the artifacts
+        vis_id = qdb.util.convert_to_id(value, "visibility")
+
+        sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
+        qdb.sql_connection.TRN.add(sql, [self.id])
+        root_id = qdb.sql_connection.TRN.execute_fetchlast()
+        root = qdb.artifact.Artifact(root_id)
+        # these are the ids of all the children from the root
+        ids = [a.id for a in root.descendants.nodes()]
+
+        sql = """UPDATE qiita.artifact
+                 SET visibility_id = %s
+                 WHERE artifact_id IN %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [vis_id, tuple(ids)])
+
     @visibility.setter
     def visibility(self, value):
         """Sets the visibility of the artifact
@@ -735,21 +766,24 @@ class Artifact(qdb.base.QiitaObject):
         only applies when the new visibility is more open than before.
         """
         with qdb.sql_connection.TRN:
-            # In order to correctly propagate the visibility we need to find
-            # the root of this artifact and then propagate to all the artifacts
-            sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
-            qdb.sql_connection.TRN.add(sql, [self.id])
-            root_id = qdb.sql_connection.TRN.execute_fetchlast()
-            root = qdb.artifact.Artifact(root_id)
-            # these are the ids of all the children from the root
-            ids = [a.id for a in root.descendants.nodes()]
+            # first let's check that this is a valid visibility
+            study = self.study
 
-            sql = """UPDATE qiita.artifact
-                     SET visibility_id = %s
-                     WHERE artifact_id IN %s"""
-            vis_id = qdb.util.convert_to_id(value, "visibility")
-            qdb.sql_connection.TRN.add(sql, [vis_id, tuple(ids)])
-            qdb.sql_connection.TRN.execute()
+            # then let's check that the sample/prep info files have the correct
+            # restrictions
+            if value != 'sandbox' and study is not None:
+                reply = study.sample_template.validate_restrictions()
+                success = [not reply[0]]
+                message = [reply[1]]
+                for pt in self.prep_templates:
+                    reply = pt.validate_restrictions()
+                    success.append(not reply[0])
+                    message.append(reply[1])
+                if any(success):
+                    raise ValueError(
+                        "Errors in your info files:%s" % '\n'.join(message))
+
+            self._set_visibility(value)
 
     @property
     def artifact_type(self):
@@ -893,7 +927,7 @@ class Artifact(qdb.base.QiitaObject):
                         (sample_id, artifact_id, ebi_run_accession)
                      VALUES (%s, %s, %s)"""
             sql_args = [[sample, self.id, accession]
-                        for sample, accession in viewitems(values)]
+                        for sample, accession in values.items()]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 
@@ -952,15 +986,13 @@ class Artifact(qdb.base.QiitaObject):
         QiitaDBOperationNotPermittedError
             If the artifact cannot be submitted to VAMPS
         """
-        with qdb.sql_connection.TRN:
-            if not self.can_be_submitted_to_vamps:
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Artifact %s cannot be submitted to VAMPS" % self.id)
-            sql = """UPDATE qiita.artifact
-                     SET submitted_to_vamps = %s
-                     WHERE artifact_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
-            qdb.sql_connection.TRN.execute()
+        if not self.can_be_submitted_to_vamps:
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "Artifact %s cannot be submitted to VAMPS" % self.id)
+        sql = """UPDATE qiita.artifact
+                 SET submitted_to_vamps = %s
+                 WHERE artifact_id = %s"""
+        qdb.sql_connection.perform_as_transaction(sql, [value, self.id])
 
     @property
     def filepaths(self):
@@ -968,9 +1000,8 @@ class Artifact(qdb.base.QiitaObject):
 
         Returns
         -------
-        list of (int, str, str)
-            A list of (filepath_id, path, filetype) of all the files associated
-            with the artifact
+        list of dict
+            A list of dict as defined by qiita_db.util.retrieve_filepaths
         """
         return qdb.util.retrieve_filepaths(
             "artifact_filepath", "artifact_id", self.id, sort='ascending')
@@ -992,7 +1023,7 @@ class Artifact(qdb.base.QiitaObject):
             # filepath id, the filepath and the filepath type. We don't want
             # to return the filepath type here, so just grabbing the first and
             # second element of the list
-            res = (fps[0][0], fps[0][1])
+            res = (fps[0]['fp_id'], fps[0]['fp'])
         else:
             res = None
 
@@ -1014,10 +1045,10 @@ class Artifact(qdb.base.QiitaObject):
                 # Delete the current HTML summary
                 to_delete_ids = []
                 to_delete_fps = []
-                for fp_id, fp, fp_type in self.filepaths:
-                    if fp_type in ('html_summary', 'html_summary_dir'):
-                        to_delete_ids.append([fp_id])
-                        to_delete_fps.append(fp)
+                for x in self.filepaths:
+                    if x['fp_type'] in ('html_summary', 'html_summary_dir'):
+                        to_delete_ids.append([x['fp_id']])
+                        to_delete_fps.append(x['fp'])
                 # From the artifact_filepath table
                 sql = """DELETE FROM qiita.artifact_filepath
                          WHERE filepath_id = %s"""
@@ -1028,13 +1059,14 @@ class Artifact(qdb.base.QiitaObject):
                 # And from the filesystem only after the transaction is
                 # successfully completed (after commit)
 
-                def path_cleaner(fp):
-                    if isfile(fp):
-                        remove(fp)
-                    else:
-                        rmtree(fp)
+                def path_cleaner(fps):
+                    for fp in fps:
+                        if isfile(fp):
+                            remove(fp)
+                        else:
+                            rmtree(fp)
                 qdb.sql_connection.TRN.add_post_commit_func(
-                    partial(map, path_cleaner, to_delete_fps))
+                    path_cleaner, to_delete_fps)
 
             # Add the new HTML summary
             filepaths = [(html_fp, 'html_summary')]
@@ -1169,7 +1201,7 @@ class Artifact(qdb.base.QiitaObject):
             # status. Approach: Loop over all the artifacts and add all the
             # jobs that have been attached to them.
             visited = set()
-            queue = nodes.keys()
+            queue = list(nodes.keys())
             while queue:
                 current = queue.pop(0)
                 if current not in visited:
@@ -1183,8 +1215,11 @@ class Artifact(qdb.base.QiitaObject):
                                 nodes[job.id] = ('job', job)
 
                     elif n_type == 'job':
-                        # Ignore the generate summary jobs
-                        if n_obj.command.name == 'Generate HTML summary':
+                        # skip private and artifact definition jobs as they
+                        # don't create new artifacts and they would create
+                        # edges without artifacts + they can be safely ignored
+                        if n_obj.command.software.type in {
+                                'private', 'artifact definition'}:
                             continue
                         jstatus = n_obj.status
                         # If the job is in success we don't need to do anything
@@ -1292,10 +1327,8 @@ class Artifact(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT prep_template_id
-                     FROM qiita.prep_template
-                     WHERE artifact_id IN (
-                        SELECT *
-                        FROM qiita.find_artifact_roots(%s))"""
+                     FROM qiita.preparation_artifact
+                     WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return [qdb.metadata_template.prep_template.PrepTemplate(pt_id)
                     for pt_id in qdb.sql_connection.TRN.execute_fetchflatten()]
@@ -1333,6 +1366,77 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()
             return qdb.analysis.Analysis(res[0][0]) if res else None
+
+    @property
+    def merging_scheme(self):
+        """The merging scheme of this artifact_type
+
+        Returns
+        -------
+        str, str
+            The human readable merging scheme and the parent software
+            information for this artifact
+        """
+        processing_params = self.processing_parameters
+        if processing_params is None:
+            return '', ''
+
+        cmd_name = processing_params.command.name
+        ms = processing_params.command.merging_scheme
+        afps = [x['fp'] for x in self.filepaths if x['fp'].endswith('biom')]
+
+        merging_schemes = []
+        parent_softwares = []
+        # this loop is necessary as in theory an artifact can be
+        # generated from multiple prep info files
+        for p in self.parents:
+            pparent = p.processing_parameters
+            # if parent is None, then is a direct upload; for example
+            # per_sample_FASTQ in shotgun data
+            if pparent is None:
+                parent_cmd_name = None
+                parent_merging_scheme = None
+                parent_pp = None
+                parent_software = 'N/A'
+            else:
+                parent_cmd_name = pparent.command.name
+                parent_merging_scheme = pparent.command.merging_scheme
+                parent_pp = pparent.values
+                psoftware = pparent.command.software
+                parent_software = '%s v%s' % (
+                    psoftware.name, psoftware.version)
+
+            merging_schemes.append(qdb.util.human_merging_scheme(
+                cmd_name, ms, parent_cmd_name, parent_merging_scheme,
+                processing_params.values, afps, parent_pp))
+            parent_softwares.append(parent_software)
+
+        return ', '.join(merging_schemes), ', '.join(parent_softwares)
+
+    @property
+    def being_deleted_by(self):
+        """The running job that is deleting this artifact
+
+        Returns
+        -------
+        qiita_db.processing_job.ProcessingJob
+            The running job that is deleting this artifact, None if it
+            doesn't exist
+        """
+
+        with qdb.sql_connection.TRN:
+            sql = """
+                SELECT processing_job_id FROM qiita.artifact_processing_job
+                  LEFT JOIN qiita.processing_job using (processing_job_id)
+                  LEFT JOIN qiita.processing_job_status using (
+                    processing_job_status_id)
+                  LEFT JOIN qiita.software_command using (command_id)
+                  WHERE artifact_id = %s AND name = 'delete_artifact' AND
+                    processing_job_status in (
+                        'running', 'queued', 'in_construction')"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+        return qdb.processing_job.ProcessingJob(res[0][0]) if res else None
 
     def jobs(self, cmd=None, status=None, show_hidden=False):
         """Jobs that used this artifact as input
@@ -1375,3 +1479,44 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args)
             return [qdb.processing_job.ProcessingJob(jid)
                     for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
+
+    @property
+    def get_commands(self):
+        """Returns the active commands that can process this kind of artifact
+
+        Returns
+        -------
+        list of qiita_db.software.Command
+            The commands that can process the given artifact tyoes
+        """
+        dws = []
+        with qdb.sql_connection.TRN:
+            # get all the possible commands
+            sql = """SELECT DISTINCT qiita.command_parameter.command_id
+                     FROM qiita.artifact
+                     JOIN qiita.parameter_artifact_type
+                        USING (artifact_type_id)
+                     JOIN qiita.command_parameter USING (command_parameter_id)
+                     JOIN qiita.software_command ON (
+                        qiita.command_parameter.command_id =
+                        qiita.software_command.command_id)
+                     WHERE artifact_id = %s AND active = True"""
+            if self.analysis is None:
+                sql += " AND is_analysis = False"
+                # get the workflows that match this artifact so we can filter
+                # the available commands based on the commands in the worflows
+                # for that artifact
+                dws = [w for w in qdb.software.DefaultWorkflow.iter()
+                       if self.data_type in w.data_type]
+            else:
+                sql += " AND is_analysis = True"
+
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            cids = set(qdb.sql_connection.TRN.execute_fetchflatten())
+
+            if dws:
+                cmds = {n.default_parameter.command.id
+                        for w in dws for n in w.graph.nodes}
+                cids = cmds & cids
+
+            return [qdb.software.Command(cid) for cid in cids]

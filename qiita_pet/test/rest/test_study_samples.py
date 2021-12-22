@@ -17,7 +17,7 @@ from qiita_pet.test.rest.test_base import RESTHandlerTestCase
 
 
 def _sample_creator(ids):
-    categories = ['season_environment',
+    categories = ['season_environment', 'env_package',
                   'assigned_from_geo', 'texture', 'taxon_id',
                   'depth', 'host_taxid', 'common_name',
                   'water_content_soil', 'elevation', 'temp',
@@ -58,8 +58,6 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",
@@ -167,8 +165,6 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",
@@ -201,7 +197,7 @@ class StudySamplesInfoHandlerTests(RESTHandlerTestCase):
                               'env_feature', 'physical_specimen_location',
                               'physical_specimen_remaining', 'dna_extracted',
                               'sample_type', 'collection_timestamp',
-                              'host_subject_id', 'description',
+                              'host_subject_id', 'description', 'env_package',
                               'latitude', 'longitude', 'scientific_name']}
         response = self.get('/api/v1/study/1/samples/info',
                             headers=self.headers)
@@ -209,7 +205,7 @@ class StudySamplesInfoHandlerTests(RESTHandlerTestCase):
         obs = json_decode(response.body)
         self.assertEqual(obs.keys(), exp.keys())
         self.assertEqual(obs['number-of-samples'], exp['number-of-samples'])
-        self.assertItemsEqual(obs['categories'], exp['categories'])
+        self.assertCountEqual(obs['categories'], exp['categories'])
 
     def test_get_study_does_not_exist(self):
         exp = {'message': 'Study not found'}
@@ -221,13 +217,11 @@ class StudySamplesInfoHandlerTests(RESTHandlerTestCase):
 
     def test_get_no_samples(self):
         # /api/v1/study/%d/samples/info -> {'number-of-samples':<int>,
-                                        #   'categories': [<str>]}
+        #                                   'categories': [<str>]}
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",
@@ -308,13 +302,11 @@ class StudySamplesCategoriesHandlerTests(RESTHandlerTestCase):
 
     def test_get_no_samples(self):
         # /api/v1/study/%d/samples/info -> {'number-of-samples':<int>,
-                                        #   'categories': [<str>]}
+        #                                   'categories': [<str>]}
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",

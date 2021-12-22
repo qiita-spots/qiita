@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from __future__ import division
-
 import qiita_db as qdb
 
 
@@ -88,7 +85,8 @@ class Archive(qdb.base.QiitaObject):
                 raise ValueError(
                     "To archive artifact must be BIOM but %s" % atype)
 
-            bfps = [fp for _, fp, fpt in artifact.filepaths if fpt == 'biom']
+            bfps = [x['fp'] for x in artifact.filepaths
+                    if x['fp_type'] == 'biom']
             if not bfps:
                 raise ValueError("The artifact has no biom files")
 
@@ -158,7 +156,12 @@ class Archive(qdb.base.QiitaObject):
                 vals.append(archive_merging_scheme)
             if features is not None:
                 extras.append("""archive_feature IN %s""")
-                vals.append(tuple(features))
+                # depending on the method calling test retrieve_feature_values
+                # the features elements can be string or bytes; making sure
+                # everything is string for SQL
+                vals.append(
+                    tuple([f.decode('ascii') if isinstance(f, bytes) else f
+                           for f in features]))
 
             sql = """SELECT archive_feature, archive_feature_value
                      FROM qiita.archive_feature_value

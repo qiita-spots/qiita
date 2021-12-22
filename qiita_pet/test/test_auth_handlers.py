@@ -44,7 +44,7 @@ class TestAuthLoginHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         # make sure redirect happened properly
         port = self.get_http_port()
-        self.assertEqual(response.effective_url, 'http://localhost:%d/' % port)
+        self.assertEqual(response.effective_url, 'http://127.0.0.1:%d/' % port)
 
     def test_post_correct_pass(self):
         post_args = {
@@ -75,7 +75,7 @@ class TestAuthLogoutHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         # make sure redirect happened properly
         port = self.get_http_port()
-        self.assertEqual(response.effective_url, 'http://localhost:%d/' % port)
+        self.assertEqual(response.effective_url, 'http://127.0.0.1:%d/' % port)
 
 
 if __name__ == "__main__":

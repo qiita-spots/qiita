@@ -11,6 +11,7 @@ from os.path import exists, join, isdir
 from os import remove
 from shutil import rmtree
 from tempfile import mkdtemp
+from collections import defaultdict
 
 import pandas as pd
 import numpy.testing as npt
@@ -37,6 +38,8 @@ class TestStudyAPI(TestCase):
                 else:
                     remove(fp)
 
+
+class TestStudyAPI1(TestStudyAPI):
     def test_data_types_get_req(self):
         obs = data_types_get_req()
         exp = {
@@ -44,7 +47,7 @@ class TestStudyAPI(TestCase):
             'message': '',
             'data_types': ['16S', '18S', 'ITS', 'Proteomic', 'Metagenomic',
                            'Metabolomic']}
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
 
     def test_study_get_req(self):
         obs = study_get_req(1, 'test@foo.bar')
@@ -53,7 +56,6 @@ class TestStudyAPI(TestCase):
             'study_info': {
                 'mixs_compliant': True, 'metadata_complete': True, 'level': '',
                 'reprocess': False, 'owner': 'test@foo.bar', 'message': '',
-                'emp_person_id': 2, 'number_samples_promised': 27,
                 'funding': None, 'show_biom_download_button': True,
                 'publication_pid': ['123456', '7891011'], 'vamps_id': None,
                 'first_contact': datetime(2014, 5, 19, 16, 10),
@@ -85,10 +87,9 @@ class TestStudyAPI(TestCase):
                 'study_alias': 'Cannabis Soils', 'study_id': 1,
                 'most_recent_contact': datetime(2014, 5, 19, 16, 11),
                 'ebi_study_accession': 'EBI123456-BB', 'num_samples': 27,
-                'public_raw_download': False,
+                'public_raw_download': False, 'notes': '', 'autoloaded': False,
                 'study_title': (
-                    'Identification of the Microbiomes for Cannabis Soils'),
-                'number_samples_collected': 27},
+                    'Identification of the Microbiomes for Cannabis Soils')},
             'message': '',
             'editable': True}
         self.assertEqual(obs, exp)
@@ -98,8 +99,6 @@ class TestStudyAPI(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",
@@ -114,11 +113,10 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success', 'study_info': {
             'mixs_compliant': True, 'metadata_complete': True,
             'reprocess': False, 'public_raw_download': False,
-            'owner': 'test@foo.bar', 'message': '', 'emp_person_id': None,
-            'number_samples_promised': 28, 'funding': None,
+            'owner': 'test@foo.bar', 'message': '', 'funding': None,
             'show_biom_download_button': False, 'publication_pid': [],
             'vamps_id': None, 'first_contact': datetime(2015, 5, 19, 16, 10),
-            'ebi_submission_status': 'not submitted',
+            'ebi_submission_status': 'not submitted', 'autoloaded': False,
             'show_raw_download_button': False, 'timeseries_type_id': 1,
             'study_abstract': 'ABS', 'status': 'sandbox',
             'spatial_series': None, 'study_description': 'DESC',
@@ -127,13 +125,13 @@ class TestStudyAPI(TestCase):
             'principal_investigator': {
                 'affiliation': 'Wash U', 'name': 'PIDude',
                 'email': 'PI_dude@foo.bar'}, 'study_alias': 'FCM',
-            'study_id': new_study.id,
+            'study_id': new_study.id, 'notes': '',
             'most_recent_contact': datetime(2015, 5, 19, 16, 11),
             'ebi_study_accession': None, 'specimen_id_column': None,
-            'study_title': 'Some New Study for test',
-            'number_samples_collected': 25}, 'message': '', 'editable': True}
-        self.assertItemsEqual(obs, exp)
-        self.assertItemsEqual(obs['study_info'], exp['study_info'])
+            'study_title': 'Some New Study for test'}, 'message': '',
+            'editable': True}
+        self.assertCountEqual(obs, exp)
+        self.assertCountEqual(obs['study_info'], exp['study_info'])
 
     def test_study_get_req_no_access(self):
         obs = study_get_req(1, 'demo@microbio.me')
@@ -146,83 +144,6 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'error',
                'message': 'Study does not exist'}
         self.assertEqual(obs, exp)
-
-    def test_study_prep_get_req(self):
-        obs = study_prep_get_req(1, 'test@foo.bar')
-        exp = {'status': 'success',
-               'message': '',
-               'info': {
-                   '18S': [{
-                       'id': 1,
-                       'status': 'private',
-                       'name': 'Prep information 1',
-                       'start_artifact_id': 1,
-                       'start_artifact': 'FASTQ',
-                       'youngest_artifact': 'BIOM - BIOM',
-                       'ebi_experiment': 27}, {
-                       'id': 2,
-                       'status': 'private',
-                       'name': 'Prep information 2',
-                       'start_artifact': 'BIOM',
-                       'youngest_artifact': 'BIOM - BIOM',
-                       'ebi_experiment': 27,
-                       'start_artifact_id': 7}]}}
-        self.assertEqual(obs, exp)
-
-        # Add a new prep template
-        pt = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.prep_template.PrepTemplate.create,
-            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
-            qdb.study.Study(1), '16S')
-        obs = study_prep_get_req(1, 'test@foo.bar')
-        exp = {'status': 'success',
-               'message': '',
-               'info': {
-                   '18S': [{'id': 1,
-                            'status': 'private',
-                            'name': 'Prep information 1',
-                            'start_artifact_id': 1,
-                            'start_artifact': 'FASTQ',
-                            'youngest_artifact': 'BIOM - BIOM',
-                            'ebi_experiment': 27},
-                           {'id': 2,
-                            'status': 'private',
-                            'name': 'Prep information 2',
-                            'start_artifact_id': 7,
-                            'start_artifact': 'BIOM',
-                            'youngest_artifact': 'BIOM - BIOM',
-                            'ebi_experiment': 27}],
-                   '16S': [{'id': pt.id,
-                            'status': 'sandbox',
-                            'name': 'Prep information %d' % pt.id,
-                            'start_artifact_id': None,
-                            'start_artifact': None,
-                            'youngest_artifact': None,
-                            'ebi_experiment': 0}]}}
-        self.assertEqual(obs, exp)
-
-        obs = study_prep_get_req(1, 'admin@foo.bar')
-        self.assertEqual(obs, exp)
-
-        qdb.artifact.Artifact(1).visibility = 'public'
-        obs = study_prep_get_req(1, 'demo@microbio.me')
-        exp = {'status': 'success',
-               'message': '',
-               'info': {
-                   '18S': [{'id': 1,
-                            'status': 'public',
-                            'name': 'Prep information 1',
-                            'start_artifact_id': 1,
-                            'start_artifact': 'FASTQ',
-                            'youngest_artifact': 'BIOM - BIOM',
-                            'ebi_experiment': 27}]}}
-        self.assertEqual(obs, exp)
-        # Reset visibility of the artifacts
-        for i in range(4, 0, -1):
-            qdb.artifact.Artifact(i).visibility = "private"
-
-        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_study_prep_get_req_failed_EBI(self):
         temp_dir = mkdtemp()
@@ -237,12 +158,9 @@ class TestStudyAPI(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 3,
-            "number_samples_promised": 3,
             "study_alias": "Test EBI",
             "study_description": "Study for testing EBI",
             "study_abstract": "Study for testing EBI",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }
@@ -279,21 +197,21 @@ class TestStudyAPI(TestCase):
             'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTC',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 1"},
             'Sample2': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTA',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 2"},
             'Sample3': {'primer': 'GTGCCAGCMGCCGCGGTAA',
                         'barcode': 'CGTAGAGCTCTT',
                         'center_name': 'KnightLab',
-                        'platform': 'ILLUMINA',
+                        'platform': 'Illumina',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 3"},
@@ -311,15 +229,22 @@ class TestStudyAPI(TestCase):
 
         # actual test
         obs = study_prep_get_req(study.id, user_email)
+        temp_info = defaultdict(list)
+        temp_info['16S'] = [
+            {"status": 'sandbox',
+             'name': 'Prep information %d' % pt.id,
+             'start_artifact': None, 'youngest_artifact': None,
+             'ebi_experiment': False, 'id': pt.id,
+             'start_artifact_id': None,
+             'creation_timestamp': pt.creation_timestamp,
+             'modification_timestamp': pt.modification_timestamp,
+             'num_artifact_children': 0,
+             'youngest_artifact_name': None,
+             'youngest_artifact_type': None,
+             'total_samples': 3}]
+
         exp = {
-            'info': {
-                '16S': [
-                    {'status': 'sandbox',
-                     'name': 'Prep information %d' % pt.id,
-                     'start_artifact': None, 'youngest_artifact': None,
-                     'ebi_experiment': False, 'id': pt.id,
-                     'start_artifact_id': None}]
-            },
+            'info': temp_info,
             'message': '',
             'status': 'success'}
         self.assertEqual(obs, exp)
@@ -374,12 +299,9 @@ class TestStudyAPI(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "DESC",
             "study_abstract": "ABS",
-            "emp_person_id": qdb.study.StudyPerson(2),
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }
@@ -413,7 +335,7 @@ class TestStudyAPI(TestCase):
         filenames = ['test_1.R1.fastq.gz', 'test_2.R1.fastq.gz']
         for f in filenames:
             fpt = join(study_upload_dir, f)
-            open(fpt, 'w', 0).close()
+            open(fpt, 'wb', 0).close()
             self._clean_up_files.append(fpt)
         obs = study_files_get_req(
             'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
@@ -422,31 +344,39 @@ class TestStudyAPI(TestCase):
             'remaining': ['uploaded_file.txt'], 'message': '',
             'file_types': [
                 ('raw_forward_seqs', True,
-                 ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
+                 sorted(['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz'])),
                 ('raw_reverse_seqs', False, [])]}
+        # making sure they are always in the same order
+        oft = obs['file_types'][0]
+        obs['file_types'][0] = (oft[0], oft[1], sorted(oft[2]))
         self.assertEqual(obs, exp)
 
         # let's add reverse
         filenames = ['test_1.R2.fastq.gz', 'test_2.R2.fastq.gz']
         for f in filenames:
             fpt = join(study_upload_dir, f)
-            open(fpt, 'w', 0).close()
+            open(fpt, 'wb', 0).close()
             self._clean_up_files.append(fpt)
         obs = study_files_get_req(
             'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
         exp = {'status': 'success', 'num_prefixes': 2, 'artifacts': [],
                'remaining': ['uploaded_file.txt'], 'message': '',
-               'file_types': [('raw_forward_seqs', True,
-                               ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
-                              ('raw_reverse_seqs', False,
-                              ['test_2.R2.fastq.gz', 'test_1.R2.fastq.gz'])]}
+               'file_types': [
+                   ('raw_forward_seqs', True, sorted(
+                       ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz'])),
+                   ('raw_reverse_seqs', False, sorted(
+                       ['test_2.R2.fastq.gz', 'test_1.R2.fastq.gz']))]}
+        # making sure they are always in the same order
+        oft = obs['file_types']
+        obs['file_types'][0] = (oft[0][0], oft[0][1], sorted(oft[0][2]))
+        obs['file_types'][1] = (oft[1][0], oft[1][1], sorted(oft[1][2]))
         self.assertEqual(obs, exp)
 
         # let's an extra file that matches
         filenames = ['test_1.R3.fastq.gz']
         for f in filenames:
             fpt = join(study_upload_dir, f)
-            open(fpt, 'w', 0).close()
+            open(fpt, 'wb', 0).close()
             self._clean_up_files.append(fpt)
         obs = study_files_get_req(
             'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
@@ -470,11 +400,15 @@ class TestStudyAPI(TestCase):
                'artifacts': [(1, 'Identification of the Microbiomes for '
                                  'Cannabis Soils (1) - Raw data 1 (1)')],
                'file_types': [
-                ('raw_barcodes', True,
-                 ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
-                ('raw_forward_seqs', True,
-                 ['test_2.R2.fastq.gz', 'test_1.R2.fastq.gz']),
+                ('raw_barcodes', True, sorted(
+                    ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz'])),
+                ('raw_forward_seqs', True, sorted(
+                    ['test_2.R2.fastq.gz', 'test_1.R2.fastq.gz'])),
                 ('raw_reverse_seqs', False, ['test_1.R3.fastq.gz'])]}
+        # making sure they are always in the same order
+        oft = obs['file_types']
+        obs['file_types'][0] = (oft[0][0], oft[0][1], sorted(oft[0][2]))
+        obs['file_types'][1] = (oft[1][0], oft[1][1], sorted(oft[1][2]))
         self.assertEqual(obs, exp)
 
         PREP.delete(pt.id)
@@ -584,6 +518,109 @@ class TestStudyAPI(TestCase):
 
         # returning to default status
         study.public_raw_download = False
+
+
+class TestStudyAPI2(TestStudyAPI):
+    # This test expects a clean DB so creating it's own class
+    def test_study_prep_get_req(self):
+        obs = study_prep_get_req(1, 'test@foo.bar')
+        obs_info = obs['info']['18S']
+        temp_info = defaultdict(list)
+        temp_info['18S'] = [{
+            'id': 1,
+            'status': 'private',
+            'name': 'Prep information 1',
+            'start_artifact_id': 1,
+            'start_artifact': 'FASTQ',
+            'youngest_artifact': 'BIOM - BIOM',
+            'youngest_artifact_name': 'BIOM',
+            'youngest_artifact_type': 'BIOM',
+            'num_artifact_children': 2,
+            'total_samples': 27,
+            'ebi_experiment': 27,
+            'modification_timestamp':
+                obs_info[0]['modification_timestamp'],
+            'creation_timestamp':
+                obs_info[0]['creation_timestamp']}, {
+            'id': 2,
+            'status': 'private',
+            'name': 'Prep information 2',
+            'start_artifact': 'BIOM',
+            'youngest_artifact': 'BIOM - BIOM',
+            'youngest_artifact_name': 'BIOM',
+            'youngest_artifact_type': 'BIOM',
+            'total_samples': 27,
+            'num_artifact_children': 0,
+            'ebi_experiment': 27,
+            'start_artifact_id': 7,
+            'modification_timestamp':
+                obs_info[1]['modification_timestamp'],
+            'creation_timestamp':
+                obs_info[1]['creation_timestamp']
+        }]
+        exp = {'status': 'success',
+               'message': '',
+               'info': temp_info}
+        self.assertEqual(obs, exp)
+
+        # Add a new prep template
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
+            qdb.study.Study(1), '16S')
+        obs = study_prep_get_req(1, 'test@foo.bar')
+        temp_info['16S'] = [{'id': pt.id,
+                             'status': 'sandbox',
+                             'name': 'Prep information %d' % pt.id,
+                             'creation_timestamp': pt.creation_timestamp,
+                             'modification_timestamp':
+                                 pt.modification_timestamp,
+                             'total_samples': 1,
+                             'start_artifact_id': None,
+                             'start_artifact': None,
+                             'youngest_artifact': None,
+                             'num_artifact_children': 0,
+                             'youngest_artifact_name': None,
+                             'youngest_artifact_type': None,
+                             'ebi_experiment': 0}]
+        exp = {'status': 'success',
+               'message': '',
+               'info': temp_info}
+        self.assertEqual(obs, exp)
+
+        obs = study_prep_get_req(1, 'admin@foo.bar')
+        self.assertEqual(obs, exp)
+
+        qdb.artifact.Artifact(1).visibility = 'public'
+        obs = study_prep_get_req(1, 'demo@microbio.me')
+        temp_info = defaultdict(list)
+        temp_info['18S'] = [{
+            'id': 1,
+            'status': 'public',
+            'name': 'Prep information 1',
+            'start_artifact_id': 1,
+            'start_artifact': 'FASTQ',
+            'youngest_artifact': 'BIOM - BIOM',
+            'youngest_artifact_name': 'BIOM',
+            'youngest_artifact_type': 'BIOM',
+            'num_artifact_children': 2,
+            'total_samples': 27,
+            'ebi_experiment': 27,
+            'modification_timestamp':
+                obs_info[0]['modification_timestamp'],
+            'creation_timestamp':
+                obs_info[0]['creation_timestamp']}]
+        temp_info['16S'] = []
+        exp = {'status': 'success',
+               'message': '',
+               'info': temp_info}
+        self.assertEqual(obs, exp)
+        # Reset visibility of the artifacts
+        for i in range(4, 0, -1):
+            qdb.artifact.Artifact(i).visibility = "private"
+
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
 
 if __name__ == '__main__':

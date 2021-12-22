@@ -6,21 +6,22 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from json import loads
+from json import loads, dumps
 
 from qiita_db.user import User
+from qiita_db.artifact import Artifact
 from qiita_db.software import Command, Parameters, DefaultParameters
 from qiita_db.processing_job import ProcessingWorkflow, ProcessingJob
 from qiita_db.exceptions import QiitaDBUnknownIDError
 
 
-def list_commands_handler_get_req(artifact_types, exclude_analysis):
+def list_commands_handler_get_req(id, exclude_analysis):
     """Retrieves the commands that can process the given artifact types
 
     Parameters
     ----------
-    artifact_types : str
-        Comma-separated list of artifact types
+    id : string
+        id, it can be the integer or the name of the artifact:network-root
     exclude_analysis : bool
         If True, return commands that are not part of the analysis pipeline
 
@@ -34,24 +35,44 @@ def list_commands_handler_get_req(artifact_types, exclude_analysis):
                                        'command': str,
                                        'output': list of [str, str]}}
     """
-    artifact_types = artifact_types.split(',')
-    cmd_info = [
-        {'id': cmd.id, 'command': cmd.name, 'output': cmd.outputs}
-        for cmd in Command.get_commands_by_input_type(
-            artifact_types, exclude_analysis=exclude_analysis)]
+    if id.isdigit():
+        commands = Artifact(id).get_commands
+    else:
+        pieces = id.split(':')
+        if len(pieces) == 1:
+            aid = pieces[0]
+            root = ''
+        else:
+            aid = pieces[0]
+            root = pieces[1]
+        prep_type = None
+        if root.isdigit():
+            artifact = Artifact(root)
+            if artifact.analysis is None:
+                prep_type = artifact.prep_templates[0].data_type
+
+        commands = Command.get_commands_by_input_type(
+            [aid], exclude_analysis=exclude_analysis,
+            prep_type=prep_type)
+
+    cmd_info = [{'id': cmd.id, 'command': cmd.name, 'output': cmd.outputs}
+                for cmd in commands]
 
     return {'status': 'success',
             'message': '',
             'commands': cmd_info}
 
 
-def list_options_handler_get_req(command_id):
+def list_options_handler_get_req(command_id, artifact_id=None):
     """Returns the available default parameters set for the given command
 
     Parameters
     ----------
     command_id : int
         The command id
+    artifact_id : int, optional
+        The artifact id so to limit options based on how it has already been
+        processed
 
     Returns
     -------
@@ -62,9 +83,30 @@ def list_options_handler_get_req(command_id):
          'options': list of dicts of {'id: str', 'name': str,
                                       'values': dict of {str: str}}}
     """
+    def _helper_process_params(params):
+        return dumps(
+            {k: str(v).lower() for k, v in params.items()}, sort_keys=True)
+
     command = Command(command_id)
+    rparamers = command.required_parameters.keys()
+    eparams = []
+    if artifact_id is not None:
+        artifact = Artifact(artifact_id)
+        for job in artifact.jobs(cmd=command):
+            jstatus = job.status
+            outputs = job.outputs if job.status == 'success' else None
+            # this ignore any jobs that weren't successful or are in
+            # construction, or the results have been deleted [outputs == {}]
+            if jstatus not in {'success', 'in_construction'} or outputs == {}:
+                continue
+            params = job.parameters.values.copy()
+            for k in rparamers:
+                del params[k]
+            eparams.append(_helper_process_params(params))
+
     options = [{'id': p.id, 'name': p.name, 'values': p.values}
-               for p in command.default_parameter_sets]
+               for p in command.default_parameter_sets
+               if _helper_process_params(p.values) not in eparams]
     return {'status': 'success',
             'message': '',
             'options': options,
@@ -93,24 +135,32 @@ def workflow_handler_post_req(user_id, command_id, params):
          'message': str,
          'workflow_id': int}
     """
-    parameters = Parameters.load(Command(command_id), json_str=params)
-
     status = 'success'
     message = ''
     try:
-        wf = ProcessingWorkflow.from_scratch(User(user_id), parameters)
+        parameters = Parameters.load(Command(command_id), json_str=params)
     except Exception as exc:
         wf = None
         wf_id = None
         job_info = None
         status = 'error'
-        message = str(exc.message)
+        message = str(exc)
+
+    if status == 'success':
+        try:
+            wf = ProcessingWorkflow.from_scratch(User(user_id), parameters)
+        except Exception as exc:
+            wf = None
+            wf_id = None
+            job_info = None
+            status = 'error'
+            message = str(exc)
 
     if wf is not None:
         # this is safe as we are creating the workflow for the first time
         # and there is only one node. Remember networkx doesn't assure order
         # of nodes
-        job = wf.graph.nodes()[0]
+        job = list(wf.graph.nodes())[0]
         inputs = [a.id for a in job.input_artifacts]
         job_cmd = job.command
         wf_id = wf.id
@@ -168,7 +218,7 @@ def workflow_handler_patch_req(req_op, req_path, req_value=None,
         return {'status': 'success',
                 'message': '',
                 'job': {'id': job.id,
-                        'inputs': req_value['connections'].keys(),
+                        'inputs': list(req_value['connections'].keys()),
                         'label': job_cmd.name,
                         'outputs': job_cmd.outputs}}
     elif req_op == 'remove':
@@ -241,6 +291,7 @@ def job_ajax_get_req(job_id):
     return {'status': 'success',
             'message': '',
             'job_id': job.id,
+            'job_external_id': job.external_id,
             'job_status': job_status,
             'job_step': job.step,
             'job_parameters': job.parameters.values,
@@ -283,7 +334,7 @@ def job_ajax_patch_req(req_op, req_path, req_value=None, req_from=None):
         job_id = req_path[0]
         try:
             job = ProcessingJob(job_id)
-        except QiitaDBUnknownIDError as e:
+        except QiitaDBUnknownIDError:
             return {'status': 'error',
                     'message': 'Incorrect path parameter: '
                                '%s is not a recognized job id' % job_id}

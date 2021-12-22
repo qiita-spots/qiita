@@ -63,3 +63,6 @@ webdis.log
 
 # test keys should be generated in travis
 qiita_ware/test/test_data/test_key
+
+# configuration files as they will change based on local machines
+qiita_pet/*.conf

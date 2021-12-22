@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-from __future__ import division
-
-from future import standard_library
-with standard_library.hooks():
-    from configparser import Error as ConfigParser_Error
+from configparser import Error as ConfigParser_Error
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #

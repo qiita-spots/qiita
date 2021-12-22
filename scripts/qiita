@@ -7,14 +7,10 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from __future__ import division, print_function
-
 import errno
 import socket
 from datetime import datetime, timedelta
-from os.path import join, abspath, dirname, basename
-from future.utils import viewitems
-from glob import glob
+from os.path import join, abspath, dirname
 from time import sleep, ctime
 from multiprocessing import active_children
 
@@ -28,7 +24,6 @@ from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
 
-from re import search
 from threading import Thread
 
 import signal
@@ -48,7 +43,7 @@ def watcher_sigint_handler(sig, frame):
 
 
 try:
-    conn = qdb.sql_connection.SQLConnectionHandler()
+    conn = qdb.sql_connection.TRN
 except OperationalError:
     raise qdb.exceptions.QiitaDBConnectionError(
         "Database does not exist. See qiita-env make --help for more "
@@ -230,7 +225,7 @@ def submit(artifact_id, action, send):
               help="If set, show as site banner instead of a standard message")
 def sysmessage(message, time, banner):
     if banner:
-        r_client.setex('sysmessage', message, time * 60 * 60)
+        r_client.setex('sysmessage', time * 60 * 60, message)
     else:
         expires = datetime.now() + timedelta(seconds=(time * 60 * 60))
         qdb.util.add_system_message(message, expires)
@@ -269,7 +264,7 @@ def log(n):
 
         info = []
         for i in e.info:
-            for field, value in viewitems(i):
+            for field, value in i.items():
                 info.append('{}:{}'.format(field, value))
 
         lines.append(template.format(e.time, e.msg, '\n'.join(info)))
@@ -324,18 +319,18 @@ def start(port, master):
             if 'error_msg' in msg:
                 job_error = msg['error_msg']
 
-            qid = qdb.processing_job.ProcessingJob.by_ext_id(msg['Job_Id'])
-
-            if qid:
-                # Qiita recognizes the external ID from Watcher, and has
-                # mapped it to a Qiita ID. Now, create a Job object to
-                # register the job's changed status in Qiita.
-                job_obj = qdb.processing_job.ProcessingJob(qid)
-                job_obj.complete(job_state, error=job_error)
-            else:
+            try:
+                qjob = qdb.processing_job.ProcessingJob.by_external_id(
+                    msg['Job_Id'])
+            except qdb.exceptions.QiitaDBUnknownIDError:
                 # ignore any job owned by Qiita, but can't be
                 # mapped to a ProcessJob.
                 pass
+            else:
+                # Qiita recognizes the external ID from Watcher, and has
+                # mapped it to a Qiita ID. Now, create a Job object to
+                # register the job's changed status in Qiita.
+                qjob.complete(job_state, error=job_error)
 
     if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
         if master:
@@ -361,16 +356,21 @@ def start(port, master):
             p.start()
 
     if master:
+        # Create/repopulate the usernames key so we can do autocomplete for
+        # sharing. Note that we only do it in master so this is not created in
+        # all workers and possibly hit this error:
+        # redis.exceptions.ResponseError: OOM command not allowed when
+        # used memory > 'maxmemory'.
+        r_client.delete('qiita-usernames')
+        users = [email for email, name in qdb.user.User.iter()]
+
+        if users:
+            r_client.zadd('qiita-usernames', {u: 0 for u in users})
+
         # Deactivate all the plugins and only activate those that are currently
         # available in the config file folder
         qdb.software.Software.deactivate_all()
-        _activate_or_update_plugins()
-
-    # Create/repopulate the usernames key so we can do autocomplete for sharing
-    r_client.delete('qiita-usernames')
-    users = [email for email, name in qdb.user.User.iter()]
-    if users:
-        r_client.zadd('qiita-usernames', **{u: 0 for u in users})
+        qdb.util.activate_or_update_plugins()
 
     if qiita_config.log_dir:
         options.log_file_prefix = join(qiita_config.log_dir,
@@ -393,12 +393,8 @@ def start(port, master):
             raise
     base_url = qiita_config.base_url
 
-    if search(r":\d+$", base_url):
-        tmp = "Qiita started on %s @ %s" % (base_url, ctime())
-    else:
-        tmp = "Qiita started on %s:%d @ %s" % (base_url, port, ctime())
-
-    click.echo(tmp)
+    click.echo("Qiita started on base_url: %s, port: %d @ %s" % (
+        base_url, port, ctime()))
 
     ioloop = tornado.ioloop.IOLoop.instance()
 
@@ -407,17 +403,16 @@ def start(port, master):
             active_software = list(qdb.software.Software.iter())
             sdefinition = [s for s in active_software
                            if s.type == 'artifact definition']
+            # this will load the artifact transformation and private plugins
             stransformation = [s for s in active_software
-                               if s.type == 'artifact transformation']
-
-            # registering definition artifacts
+                               if s.type != 'artifact definition']
 
             for s in sdefinition:
                 print('Registering: %s...' % (s.name))
                 try:
                     s.register_commands()
                 except ValueError as e:
-                    print(e.message)
+                    print(e)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
                 sleep(1)
@@ -431,7 +426,7 @@ def start(port, master):
                 try:
                     s.register_commands()
                 except ValueError as e:
-                    print(e.message)
+                    print(e)
                 # sleep is required as we don't want to saturate workers with
                 # lots of requests
                 sleep(1)
@@ -456,30 +451,10 @@ def start(port, master):
 # #############################################################################
 
 
-def _activate_or_update_plugins(update=False):
-    """Activates/updates the plugins
-
-    Parameters
-    ----------
-    update : bool, optional
-        If True will update the plugins. Otherwise will activate them.
-        Default: False.
-    """
-    conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
-    label = "{} plugin (%s/{}): %s... ".format(
-        "Updating" if update else "\tLoading", len(conf_files))
-    for i, fp in enumerate(conf_files):
-        click.echo(label % (i + 1, basename(fp)), nl=False)
-        s = qdb.software.Software.from_file(fp, update=update)
-        if not update:
-            s.activate()
-        click.echo("Ok")
-
-
 @plugins.command()
 def update():
     """Updates the plugins in the database"""
-    _activate_or_update_plugins(update=True)
+    qdb.util.activate_or_update_plugins(update=True)
 
 
 if __name__ == '__main__':

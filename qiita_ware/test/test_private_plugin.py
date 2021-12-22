@@ -19,6 +19,8 @@ from h5py import File
 import pandas as pd
 import numpy.testing as npt
 from time import time, sleep
+from biom import example_table as et
+from biom.util import biom_open
 
 from qiita_files.demux import to_hdf5
 from qiita_core.util import qiita_test_checker
@@ -50,6 +52,19 @@ class BaseTestPrivatePlugin(TestCase):
         job._set_status('queued')
         return job
 
+    def setUp(self):
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for f in self._clean_up_files:
+            if exists(f):
+                if isdir(f):
+                    rmtree(f)
+                else:
+                    remove(f)
+
+        r_client.flushdb()
+
 
 @qiita_test_checker()
 class TestPrivatePlugin(BaseTestPrivatePlugin):
@@ -62,16 +77,6 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
 
         self.temp_dir = mkdtemp()
         self._clean_up_files = [self.fp, self.temp_dir]
-
-    def tearDown(self):
-        for f in self._clean_up_files:
-            if exists(f):
-                if isdir(f):
-                    rmtree(f)
-                else:
-                    remove(f)
-
-        r_client.flushdb()
 
     def test_copy_artifact(self):
         # Failure test
@@ -89,7 +94,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
                             'primer': 'GTGCCAGCMGCCGCGGTAA',
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
+                            'platform': 'Illumina',
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
@@ -106,7 +111,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         private_task(job.id)
         self.assertEqual(job.status, 'error')
         obs = job.log.msg
-        exp = 'Cannot delete artifact 1: Artifact 2 has been submitted to EBI'
+        exp = ('Cannot delete artifact 1: it or one of its children has '
+               'been analyzed by')
         self.assertIn(exp, obs)
 
         job = self._create_job('delete_artifact', {'artifact': 3})
@@ -129,8 +135,6 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         info = {"timeseries_type_id": '1',
                 "metadata_complete": 'true',
                 "mixs_compliant": 'true',
-                "number_samples_collected": 25,
-                "number_samples_promised": 28,
                 "study_alias": "TDST",
                 "study_description": "Test create sample template",
                 "study_abstract": "Test create sample template",
@@ -145,12 +149,14 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         obs = r_client.get("sample_template_%d" % study.id)
         self.assertIsNotNone(obs)
         obs = loads(obs)
-        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertCountEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
         self.assertEqual(obs['job_id'], job.id)
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn(
             'Some functionality will be disabled due to missing columns:',
             obs['alert_msg'])
+        # making sure that the error name is not in the messages
+        self.assertNotIn('QiitaDBWarning', obs['alert_msg'])
 
     def test_create_sample_template_nonutf8(self):
         fp = join(dirname(abspath(__file__)), 'test_data',
@@ -160,12 +166,8 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
             'data_type': None})
         private_task(job.id)
         self.assertEqual(job.status, 'error')
-        self.assertIn(
-            'There are invalid (non UTF-8) characters in your information '
-            'file. The offending fields and their location (row, column) are '
-            'listed below, invalid characters are represented using '
-            '&#128062;: "&#128062;collection_timestamp" = (0, 13)',
-            job.log.msg)
+        self.assertIn("The 'SampleTemplate' object with attributes (id: 1) "
+                      "already exists.", job.log.msg)
 
     def test_update_sample_template(self):
         fd, fp = mkstemp(suffix=".txt")
@@ -183,11 +185,13 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         obs = r_client.get("sample_template_1")
         self.assertIsNotNone(obs)
         obs = loads(obs)
-        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertCountEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
         self.assertEqual(obs['job_id'], job.id)
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn('The following columns have been added to the existing '
                       'template: new_col', obs['alert_msg'])
+        # making sure that the error name is not in the messages
+        self.assertNotIn('QiitaDBWarning', obs['alert_msg'])
 
     def test_delete_sample_template(self):
         # Error case
@@ -201,8 +205,6 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         info = {"timeseries_type_id": '1',
                 "metadata_complete": 'true',
                 "mixs_compliant": 'true',
-                "number_samples_collected": 25,
-                "number_samples_promised": 28,
                 "study_alias": "TDST",
                 "study_description": "Test delete sample template",
                 "study_abstract": "Test delete sample template",
@@ -243,81 +245,13 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         obs = r_client.get("prep_template_1")
         self.assertIsNotNone(obs)
         obs = loads(obs)
-        self.assertItemsEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
+        self.assertCountEqual(obs, ['job_id', 'alert_type', 'alert_msg'])
         self.assertEqual(obs['job_id'], job.id)
         self.assertEqual(obs['alert_type'], 'warning')
         self.assertIn('The following columns have been added to the existing '
                       'template: new_col', obs['alert_msg'])
-
-    def test_delete_sample_or_column(self):
-        st = SampleTemplate(1)
-
-        # Delete a sample template column
-        job = self._create_job('delete_sample_or_column',
-                               {'obj_class': 'SampleTemplate', 'obj_id': 1,
-                                'sample_or_col': 'columns',
-                                'name': 'season_environment'})
-        private_task(job.id)
-        self.assertEqual(job.status, 'success')
-        self.assertNotIn('season_environment', st.categories())
-
-        # Delete a sample template sample - need to add one
-        # sample that we will remove
-        npt.assert_warns(
-            QiitaDBWarning, st.extend,
-            pd.DataFrame.from_dict({'Sample1': {'taxon_id': '9606'}},
-                                   orient='index', dtype=str))
-        self.assertIn('1.Sample1', st.keys())
-        job = self._create_job('delete_sample_or_column',
-                               {'obj_class': 'SampleTemplate', 'obj_id': 1,
-                                'sample_or_col': 'samples',
-                                'name': '1.Sample1'})
-        private_task(job.id)
-        self.assertEqual(job.status, 'success')
-        self.assertNotIn('1.Sample1', st.keys())
-
-        # Delete a prep template column
-        pt = PrepTemplate(1)
-        job = self._create_job('delete_sample_or_column',
-                               {'obj_class': 'PrepTemplate', 'obj_id': 1,
-                                'sample_or_col': 'columns',
-                                'name': 'target_subfragment'})
-        private_task(job.id)
-        self.assertEqual(job.status, 'success')
-        self.assertNotIn('target_subfragment', pt.categories())
-
-        # Delete a prep template sample
-        metadata = pd.DataFrame.from_dict(
-            {'1.SKB8.640193': {'barcode': 'GTCCGCAAGTTA',
-                               'primer': 'GTGCCAGCMGCCGCGGTAA'},
-             '1.SKD8.640184': {'barcode': 'CGTAGAGCTCTC',
-                               'primer': 'GTGCCAGCMGCCGCGGTAA'}},
-            orient='index', dtype=str)
-        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create, metadata,
-                              Study(1), "16S")
-        job = self._create_job('delete_sample_or_column',
-                               {'obj_class': 'PrepTemplate', 'obj_id': pt.id,
-                                'sample_or_col': 'samples',
-                                'name': '1.SKD8.640184'})
-        private_task(job.id)
-        self.assertNotIn('1.SKD8.640184', pt.keys())
-
-        # Test exceptions
-        job = self._create_job('delete_sample_or_column',
-                               {'obj_class': 'UnknownClass', 'obj_id': 1,
-                                'sample_or_col': 'columns', 'name': 'column'})
-        private_task(job.id)
-        self.assertEqual(job.status, 'error')
-        self.assertIn('Unknown value "UnknownClass". Choose between '
-                      '"SampleTemplate" and "PrepTemplate"', job.log.msg)
-
-        job = self._create_job('delete_sample_or_column',
-                               {'obj_class': 'SampleTemplate', 'obj_id': 1,
-                                'sample_or_col': 'unknown', 'name': 'column'})
-        private_task(job.id)
-        self.assertEqual(job.status, 'error')
-        self.assertIn('Unknown value "unknown". Choose between "samples" '
-                      'and "columns"', job.log.msg)
+        # making sure that the error name is not in the messages
+        self.assertNotIn('QiitaDBWarning', obs['alert_msg'])
 
     # This is a long test but it includes the 3 important cases that need
     # to be tested on this function (job success, job error, and internal error
@@ -342,6 +276,11 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
             f.write('\n')
         self._clean_up_files.append(fp)
         exp_artifact_count = get_count('qiita.artifact') + 1
+
+        # the main job (c_job) is still not completing so the step hasn't been
+        # updated since creation === None
+        self.assertIsNone(c_job.step)
+
         payload = dumps(
             {'success': True, 'error': '',
              'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
@@ -349,6 +288,12 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         job = self._create_job('complete_job', {'job_id': c_job.id,
                                                 'payload': payload})
         private_task(job.id)
+
+        # the complete job has started so now the step of c_job should report
+        # the complete information
+        self.assertEqual(c_job.step,
+                         f"Completing via {job.id} [Not Available]")
+
         self.assertEqual(job.status, 'success')
         self.assertEqual(c_job.status, 'success')
         self.assertEqual(get_count('qiita.artifact'), exp_artifact_count)
@@ -432,6 +377,64 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         # wait for everything to finish to avoid DB deadlocks
         sleep(5)
 
+    def test_build_analysis_files(self):
+        job = self._create_job('build_analysis_files', {
+            'analysis': 3, 'merge_dup_sample_ids': True})
+
+        # testing shape and get_resource_allocation_info as
+        # build_analysis_files is a special case
+        def _set_allocation(memory):
+            with TRN:
+                sql = """UPDATE qiita.processing_job_resource_allocation
+                         SET allocation = '{0}'
+                         WHERE name = 'build_analysis_files'""".format(
+                            '-q qiita -l mem=%s' % memory)
+                TRN.add(sql)
+                TRN.execute()
+
+        self.assertEqual(job.shape, (4, None, 1256812))
+        self.assertEqual(
+            job.get_resource_allocation_info(),
+            '-q qiita -l nodes=1:ppn=1 -l mem=16gb -l walltime=10:00:00')
+        _set_allocation('{samples}*1000')
+        self.assertEqual(job.get_resource_allocation_info(),
+                         '-q qiita -l mem=4K')
+        _set_allocation('{columns}*1000')
+        self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
+        self.assertEqual(job.status, 'error')
+        self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
+                         'contact qiita.help@gmail.com')
+
+        # now let's test something that will cause not a number input_size*N
+        job = self._create_job('build_analysis_files', {
+            'analysis': 3, 'merge_dup_sample_ids': True})
+        _set_allocation('{input_size}*N')
+        self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
+        self.assertEqual(job.status, 'error')
+        self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
+                         'contact qiita.help@gmail.com')
+
+        # now let's test something that will return a negative number -samples
+        job = self._create_job('build_analysis_files', {
+            'analysis': 3, 'merge_dup_sample_ids': True})
+        _set_allocation('-{samples}')
+        self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
+        self.assertEqual(job.status, 'error')
+        self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
+                         'contact qiita.help@gmail.com')
+
+        # now let's test a full build_analysis_files job
+        job = self._create_job('build_analysis_files', {
+            'analysis': 3, 'merge_dup_sample_ids': True})
+        job._set_status('in_construction')
+        job.submit()
+
+        while job.status not in ('error', 'success'):
+            sleep(0.5)
+
+        self.assertEqual(job.status, 'error')
+        self.assertIn('1 validator jobs failed', job.log.msg)
+
 
 @qiita_test_checker()
 class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
@@ -440,45 +443,47 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
         job = self._create_job('delete_study', {'study': 1})
         private_task(job.id)
         self.assertEqual(job.status, 'error')
-        self.assertIn("Cannot delete artifact 2: Artifact 2 has been "
-                      "submitted to EBI", job.log.msg)
+        self.assertIn("Artifact 2 has been submitted to EBI", job.log.msg)
+        # making sure the analysis, first thing to delete, still exists
+        self.assertTrue(Analysis.exists(1))
 
-        # delete everything from the EBI submissions and the processing job so
-        # we can try again: test success (with tags)
-        with TRN:
-            sql = """DELETE FROM qiita.ebi_run_accession"""
-            TRN.add(sql)
-            sql = """DELETE FROM qiita.artifact_processing_job"""
-            TRN.add(sql)
-            TRN.execute()
-
-            # adding tags
-            Study(1).update_tags(self.user, ['my new tag!'])
-
-            job = self._create_job('delete_study', {'study': 1})
-            private_task(job.id)
-
-            self.assertEqual(job.status, 'success')
-            with self.assertRaises(QiitaDBUnknownIDError):
-                Study(1)
-
-    def test_delete_study_empty_study(self):
         info = {
             "timeseries_type_id": '1',
             "metadata_complete": 'true',
             "mixs_compliant": 'true',
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
-            "emp_person_id": StudyPerson(2),
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)}
         new_study = Study.create(User('test@foo.bar'),
                                  "Fried Chicken Microbiome %s" % time(), info)
+
+        # adding tags
+        new_study.update_tags(User('test@foo.bar'), ['my new tag!'])
+
+        # creating a sample information file
+        metadata = pd.DataFrame.from_dict({
+            'Sample1': {'physical_specimen_location': 'location1',
+                        'taxon_id': '9606',
+                        'scientific_name': 'homo sapiens'},
+            'Sample2': {'physical_specimen_location': 'location1',
+                        'taxon_id': '9606',
+                        'scientific_name': 'homo sapiens'},
+            'Sample3': {'physical_specimen_location': 'location1',
+                        'taxon_id': '9606',
+                        'scientific_name': 'homo sapiens'}}, orient='index')
+        SampleTemplate.create(metadata, new_study)
+        # creating a preparation information file
+        metadata = pd.DataFrame.from_dict(
+            {'Sample1': {'center_name': 'ANL',
+                         'target_subfragment': 'V4',
+                         'center_project_name': 'Test Project'}},
+            orient='index', dtype=str)
+        PrepTemplate.create(metadata, new_study, '16S')
+
         job = self._create_job('delete_study', {'study': new_study.id})
         private_task(job.id)
         self.assertEqual(job.status, 'success')
@@ -491,12 +496,125 @@ class TestPrivatePluginDeleteStudy(BaseTestPrivatePlugin):
 @qiita_test_checker()
 class TestPrivatePluginDeleteAnalysis(BaseTestPrivatePlugin):
     def test_delete_analysis(self):
-        # as samples have been submitted to EBI, this will fail
+        # adding extra filepaths to make sure the delete works as expected, we
+        # basically want 8 -> 9 -> 10 -> 12 -> 14
+        #                       -> 11 -> 13
+        fd, fp10 = mkstemp(suffix='_table.biom')
+        close(fd)
+        fd, fp11 = mkstemp(suffix='_table.biom')
+        close(fd)
+        fd, fp12 = mkstemp(suffix='_table.biom')
+        close(fd)
+        fd, fp13 = mkstemp(suffix='_table.biom')
+        close(fd)
+        fd, fp14 = mkstemp(suffix='_table.biom')
+        close(fd)
+        with biom_open(fp10, 'w') as f:
+            et.to_hdf5(f, "test")
+        with biom_open(fp11, 'w') as f:
+            et.to_hdf5(f, "test")
+        with biom_open(fp12, 'w') as f:
+            et.to_hdf5(f, "test")
+        with biom_open(fp13, 'w') as f:
+            et.to_hdf5(f, "test")
+        with biom_open(fp14, 'w') as f:
+            et.to_hdf5(f, "test")
+        self._clean_up_files.extend([fp10, fp11, fp12, fp13, fp14])
+
+        # copying some processing parameters
+        a9 = Artifact(9)
+        pp = a9.processing_parameters
+
+        # 7: BIOM
+        a10 = Artifact.create([(fp10, 7)], "BIOM", parents=[a9],
+                              processing_parameters=pp)
+        a11 = Artifact.create([(fp11, 7)], "BIOM", parents=[a9],
+                              processing_parameters=pp)
+        a12 = Artifact.create([(fp12, 7)], "BIOM", parents=[a10],
+                              processing_parameters=pp)
+        Artifact.create([(fp13, 7)], "BIOM", parents=[a11],
+                        processing_parameters=pp)
+        Artifact.create([(fp14, 7)], "BIOM", parents=[a12],
+                        processing_parameters=pp)
+
         job = self._create_job('delete_analysis', {'analysis_id': 1})
         private_task(job.id)
         self.assertEqual(job.status, 'success')
         with self.assertRaises(QiitaDBUnknownIDError):
             Analysis(1)
+
+
+@qiita_test_checker()
+class TestPrivatePluginDeleteTests(BaseTestPrivatePlugin):
+    def test_delete_sample_or_column(self):
+        st = SampleTemplate(1)
+
+        # Delete a sample template column
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'SampleTemplate', 'obj_id': 1,
+                                'sample_or_col': 'columns',
+                                'name': 'season_environment'})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        self.assertNotIn('season_environment', st.categories)
+
+        # Delete a sample template sample - need to add one
+        # sample that we will remove
+        npt.assert_warns(
+            QiitaDBWarning, st.extend,
+            pd.DataFrame.from_dict({'Sample1': {'taxon_id': '9606'}},
+                                   orient='index', dtype=str))
+        self.assertIn('1.Sample1', st.keys())
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'SampleTemplate', 'obj_id': 1,
+                                'sample_or_col': 'samples',
+                                'name': '1.Sample1'})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        self.assertNotIn('1.Sample1', st.keys())
+
+        # Delete a prep template column
+        pt = PrepTemplate(1)
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'PrepTemplate', 'obj_id': 1,
+                                'sample_or_col': 'columns',
+                                'name': 'target_subfragment'})
+        private_task(job.id)
+        self.assertEqual(job.status, 'success')
+        self.assertNotIn('target_subfragment', pt.categories)
+
+        # Delete a prep template sample
+        metadata = pd.DataFrame.from_dict(
+            {'1.SKB8.640193': {'barcode': 'GTCCGCAAGTTA',
+                               'primer': 'GTGCCAGCMGCCGCGGTAA'},
+             '1.SKD8.640184': {'barcode': 'CGTAGAGCTCTC',
+                               'primer': 'GTGCCAGCMGCCGCGGTAA'}},
+            orient='index', dtype=str)
+        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create, metadata,
+                              Study(1), "16S")
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'PrepTemplate', 'obj_id': pt.id,
+                                'sample_or_col': 'samples',
+                                'name': '1.SKD8.640184'})
+        private_task(job.id)
+        self.assertNotIn('1.SKD8.640184', pt.keys())
+
+        # Test exceptions
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'UnknownClass', 'obj_id': 1,
+                                'sample_or_col': 'columns', 'name': 'column'})
+        private_task(job.id)
+        self.assertEqual(job.status, 'error')
+        self.assertIn('Unknown value "UnknownClass". Choose between '
+                      '"SampleTemplate" and "PrepTemplate"', job.log.msg)
+
+        job = self._create_job('delete_sample_or_column',
+                               {'obj_class': 'SampleTemplate', 'obj_id': 1,
+                                'sample_or_col': 'unknown', 'name': 'column'})
+        private_task(job.id)
+        self.assertEqual(job.status, 'error')
+        self.assertIn('Unknown value "unknown". Choose between "samples" '
+                      'and "columns"', job.log.msg)
 
 
 if __name__ == '__main__':

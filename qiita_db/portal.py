@@ -72,38 +72,36 @@ class Portal(qdb.base.QiitaObject):
         QiitaDBDuplicateError
             Portal name already exists
         """
-        with qdb.sql_connection.TRN:
-            if cls.exists(portal):
-                raise qdb.exceptions.QiitaDBDuplicateError("Portal", portal)
+        if cls.exists(portal):
+            raise qdb.exceptions.QiitaDBDuplicateError("Portal", portal)
 
-            # Add portal and default analyses for all users
-            sql = """DO $do$
-                DECLARE
-                    pid bigint;
-                    eml varchar;
-                    aid bigint;
-                BEGIN
-                    INSERT INTO qiita.portal_type (portal, portal_description)
-                    VALUES (%s, %s)
-                    RETURNING portal_type_id INTO pid;
+        # Add portal and default analyses for all users
+        sql = """DO $do$
+            DECLARE
+                pid bigint;
+                eml varchar;
+                aid bigint;
+            BEGIN
+                INSERT INTO qiita.portal_type (portal, portal_description)
+                VALUES (%s, %s)
+                RETURNING portal_type_id INTO pid;
 
-                    FOR eml IN
-                        SELECT email FROM qiita.qiita_user
-                    LOOP
-                        INSERT INTO qiita.analysis
-                            (email, name, description, dflt)
-                        VALUES (eml, eml || '-dflt', 'dflt', true)
-                        RETURNING analysis_id INTO aid;
+                FOR eml IN
+                    SELECT email FROM qiita.qiita_user
+                LOOP
+                    INSERT INTO qiita.analysis
+                        (email, name, description, dflt)
+                    VALUES (eml, eml || '-dflt', 'dflt', true)
+                    RETURNING analysis_id INTO aid;
 
-                        INSERT INTO qiita.analysis_portal
-                            (analysis_id, portal_type_id)
-                        VALUES (aid, pid);
-                    END LOOP;
-                END $do$;"""
-            qdb.sql_connection.TRN.add(sql, [portal, desc])
-            qdb.sql_connection.TRN.execute()
+                    INSERT INTO qiita.analysis_portal
+                        (analysis_id, portal_type_id)
+                    VALUES (aid, pid);
+                END LOOP;
+            END $do$;"""
+        qdb.sql_connection.perform_as_transaction(sql, [portal, desc])
 
-            return cls(portal)
+        return cls(portal)
 
     @staticmethod
     def delete(portal):
@@ -213,7 +211,7 @@ class Portal(qdb.base.QiitaObject):
             sql = "SELECT study_id FROM qiita.study WHERE study_id IN %s"
             qdb.sql_connection.TRN.add(sql, [tuple(studies)])
             existing = qdb.sql_connection.TRN.execute_fetchflatten()
-            if len(existing) != len(studies):
+            if len(existing) != len(list(studies)):
                 bad = map(str, set(studies).difference(existing))
                 raise qdb.exceptions.QiitaDBError(
                     "The following studies do not exist: %s" % ", ".join(bad))

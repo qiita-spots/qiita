@@ -63,6 +63,7 @@ class StudyCreatorHandler(RESTHandler):
         study_abstract = payload['study_abstract']
         study_desc = payload['study_description']
         study_alias = payload['study_alias']
+        notes = payload['notes']
 
         owner = payload['owner']
         if not User.exists(owner):
@@ -98,7 +99,7 @@ class StudyCreatorHandler(RESTHandler):
                 'study_abstract': study_abstract,
                 'study_description': study_desc,
                 'study_alias': study_alias,
-
+                'notes': notes,
                 # TODO: we believe it is accurate that mixs is false and
                 # metadata completion is false as these cannot be known
                 # at study creation here no matter what.

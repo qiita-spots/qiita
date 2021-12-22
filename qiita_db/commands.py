@@ -7,13 +7,11 @@
 # -----------------------------------------------------------------------------
 
 from functools import partial
-from future import standard_library
 from json import loads
 
 import qiita_db as qdb
 
-with standard_library.hooks():
-    from configparser import ConfigParser
+from configparser import ConfigParser
 
 
 SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',
@@ -49,7 +47,6 @@ def load_study_from_cmd(owner, title, info):
                        'study_description', 'study_abstract',
                        'metadata_complete', 'principal_investigator']
     optional_fields = ['funding', 'most_recent_contact', 'spatial_series',
-                       'number_samples_collected', 'number_samples_promised',
                        'vamps_id', 'study_id']
     infodict = {}
     for value in required_fields:
@@ -61,12 +58,6 @@ def load_study_from_cmd(owner, title, info):
             infodict[value] = optvalue
 
     with qdb.sql_connection.TRN:
-        emp_person_name_email = get_optional('emp_person_name')
-        if emp_person_name_email is not None:
-            emp_name, emp_email, emp_affiliation = \
-                emp_person_name_email.split(',')
-            infodict['emp_person_id'] = qdb.study.StudyPerson.create(
-                emp_name.strip(), emp_email.strip(), emp_affiliation.strip())
         lab_name_email = get_optional('lab_person')
         if lab_name_email is not None:
             lab_name, lab_email, lab_affiliation = lab_name_email.split(',')

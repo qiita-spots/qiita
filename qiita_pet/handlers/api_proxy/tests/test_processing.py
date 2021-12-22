@@ -47,7 +47,7 @@ class TestProcessingAPIReadOnly(TestCase):
                     {'command': 'Single Rarefaction', 'id': 12,
                      'output': [['rarefied_table', 'BIOM']]}]}
         # since the order of the commands can change, test them separately
-        self.assertItemsEqual(obs.pop('commands'), exp.pop('commands'))
+        self.assertCountEqual(obs.pop('commands'), exp.pop('commands'))
         self.assertEqual(obs, exp)
 
     def test_list_options_handler_get_req(self):
@@ -70,7 +70,7 @@ class TestProcessingAPIReadOnly(TestCase):
                                'sortmerna_max_pos': ['integer', '10000'],
                                'threads': ['integer', '1']}}
         # First check that the keys are the same
-        self.assertItemsEqual(obs, exp)
+        self.assertCountEqual(obs, exp)
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['options'], exp['options'])
@@ -79,28 +79,30 @@ class TestProcessingAPIReadOnly(TestCase):
 
     def test_job_ajax_get_req(self):
         obs = job_ajax_get_req("063e553b-327c-4818-ab4a-adfe58e49860")
-        exp = {'status': 'success',
-               'message': '',
-               'job_id': "063e553b-327c-4818-ab4a-adfe58e49860",
-               'job_status': "queued",
-               'job_step': None,
-               'job_error': None,
-               'job_parameters': {'barcode_type': u'golay_12',
-                                  'input_data': 1,
-                                  'max_bad_run_length': 3,
-                                  'max_barcode_errors': 1.5,
-                                  'min_per_read_length_fraction': 0.75,
-                                  'phred_quality_threshold': 3,
-                                  'rev_comp': False,
-                                  'rev_comp_barcode': False,
-                                  'rev_comp_mapping_barcodes': False,
-                                  'sequence_max_n': 0,
-                                  'phred_offset': 'auto'},
-               'command': 'Split libraries FASTQ',
-               'command_description': 'Demultiplexes and applies quality '
-                                      'control to FASTQ data',
-               'software': 'QIIME',
-               'software_version': '1.9.1'}
+        exp = {
+            'status': 'success',
+            'message': '',
+            'job_id': "063e553b-327c-4818-ab4a-adfe58e49860",
+            'job_external_id': "Not Available",
+            'job_status': "queued",
+            'job_step': None,
+            'job_error': None,
+            'job_parameters': {'barcode_type': u'golay_12',
+                               'input_data': 1,
+                               'max_bad_run_length': 3,
+                               'max_barcode_errors': 1.5,
+                               'min_per_read_length_fraction': 0.75,
+                               'phred_quality_threshold': 3,
+                               'rev_comp': False,
+                               'rev_comp_barcode': False,
+                               'rev_comp_mapping_barcodes': False,
+                               'sequence_max_n': 0,
+                               'phred_offset': 'auto'},
+            'command': 'Split libraries FASTQ',
+            'command_description': 'Demultiplexes and applies quality '
+                                   'control to FASTQ data',
+            'software': 'QIIME',
+            'software_version': '1.9.1'}
         self.assertEqual(obs, exp)
 
 
@@ -114,7 +116,7 @@ class TestProcessingAPI(TestCase):
                   '"rev_comp_mapping_barcodes": false, '
                   '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
         obs = workflow_handler_post_req("test@foo.bar", 1, params)
-        self.assertRegexpMatches(
+        self.assertRegex(
             obs.pop('message'), 'Cannot create job because the parameters are '
             'the same as jobs that are queued, running or already have '
             'succeeded:\n')
@@ -139,7 +141,7 @@ class TestProcessingAPI(TestCase):
             exp_user, exp_params, name=name, force=True)
 
         graph = wf.graph
-        nodes = graph.nodes()
+        nodes = list(graph.nodes())
         job_id = nodes[0].id
         value = {'dflt_params': 10,
                  'connections': {job_id: {'demultiplexed': 'input_data'}}}
@@ -207,7 +209,7 @@ class TestProcessingAPI(TestCase):
             exp_user, exp_params, name=name, force=True)
 
         graph = wf.graph
-        nodes = graph.nodes()
+        nodes = list(graph.nodes())
         job_id = nodes[0].id
 
         # Incorrect path parameter

@@ -6,17 +6,16 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import basename, isdir, join
+from os.path import basename, isdir, join, exists
 from shutil import rmtree
 from tarfile import open as taropen
 from tempfile import mkdtemp
-from os import environ, stat
+from os import environ, stat, remove
 from traceback import format_exc
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from scp import SCPClient
-from urlparse import urlparse
+from urllib.parse import urlparse
 from functools import partial
-from future.utils import viewitems
 import pandas as pd
 
 from qiita_db.artifact import Artifact
@@ -51,8 +50,7 @@ def _ssh_session(p_url, private_key):
         port = 22
     username = p_url.username
 
-    if scheme == 'scp' or scheme == 'sftp':
-
+    if scheme == 'scp':
         # if port not specified, use default 22 as port
         if port is None:
             port = 22
@@ -68,7 +66,7 @@ def _ssh_session(p_url, private_key):
         return ssh
     else:
         raise ValueError(
-            'Not valid scheme. Valid options are ssh and scp.')
+            'Not valid scheme. Valid options is scp.')
 
 
 def _list_valid_files(ssh, directory):
@@ -86,13 +84,16 @@ def _list_valid_files(ssh, directory):
     list of str
         list of valid study files (basenames)
     """
-
     valid_file_extensions = tuple(qiita_config.valid_upload_extension)
-    sftp = ssh.open_sftp()
-    files = sftp.listdir(directory)
+
+    stdin, stdout, stderr = ssh.exec_command('ls %s' % directory)
+    stderr = stderr.read().decode("utf-8")
+    if stderr:
+        raise ValueError(stderr)
+    files = stdout.read().decode("utf-8").split('\n')
 
     valid_files = [f for f in files if f.endswith(valid_file_extensions)]
-    sftp.close()
+
     return valid_files
 
 
@@ -118,9 +119,17 @@ def list_remote(URL, private_key):
     """
     p_url = urlparse(URL)
     directory = p_url.path
-    ssh = _ssh_session(p_url, private_key)
-    valid_files = _list_valid_files(ssh, directory)
-    ssh.close()
+    try:
+        ssh = _ssh_session(p_url, private_key)
+        valid_files = _list_valid_files(ssh, directory)
+        ssh.close()
+    except Exception as ex:
+        raise ex
+    finally:
+        # for security, remove key
+        if exists(private_key):
+            remove(private_key)
+
     return valid_files
 
 
@@ -147,23 +156,19 @@ def download_remote(URL, private_key, destination):
 
     # step 2: download files
     scheme = p_url.scheme
-    # note that scp/sftp's code seems similar but the local_path/localpath
-    # variable is different within the for loop
     if scheme == 'scp':
         scp = SCPClient(ssh.get_transport())
         for f in file_paths:
             download = partial(
                 scp.get, local_path=join(destination, basename(f)))
             download(f)
-    elif scheme == 'sftp':
-        sftp = ssh.open_sftp()
-        for f in file_paths:
-            download = partial(
-                sftp.get, localpath=join(destination, basename(f)))
-            download(f)
 
     # step 3: close the connection
     ssh.close()
+
+    # for security, remove key
+    if exists(private_key):
+        remove(private_key)
 
 
 def submit_EBI(artifact_id, action, send, test=False, test_size=False):
@@ -207,40 +212,32 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                  ebi_submission.submission_xml_fp]
     total_size = sum([stat(tr).st_size for tr in to_review if tr is not None])
     # note that the max for EBI is 10M but let's play it safe
-    max_size = 8.5e+6 if not test_size else 6000
+    max_size = 10e+6 if not test_size else 5000
     if total_size > max_size:
         LogEntry.create(
             'Runtime', 'The submission: %d is larger than allowed (%d), will '
             'try to fix: %d' % (artifact_id, max_size, total_size))
-        # let's confirm that we are only dealing with the latest samples and
-        # then convert them to a DataFrame for easier cleanup
-        new_samples = {
-            sample for sample, accession in viewitems(
-                ebi_submission.prep_template.ebi_experiment_accessions)
-            if accession is None}
-        new_samples = new_samples.intersection(ebi_submission.samples)
-        rows = {k: dict(v) for k, v in viewitems(ebi_submission.samples)}
+        # transform current metadata to dataframe for easier curation
+        rows = {k: dict(v) for k, v in ebi_submission.samples.items()}
         df = pd.DataFrame.from_dict(rows, orient='index')
         # remove unique columns and same value in all columns
         nunique = df.apply(pd.Series.nunique)
         nsamples = len(df.index)
         cols_to_drop = set(
             nunique[(nunique == 1) | (nunique == nsamples)].index)
+        # maximize deletion by removing also columns that are almost all the
+        # same or almost all unique
         cols_to_drop = set(
             nunique[(nunique <= int(nsamples * .01)) |
                     (nunique >= int(nsamples * .5))].index)
         cols_to_drop = cols_to_drop - {'taxon_id', 'scientific_name',
                                        'description'}
-        df.drop(columns=cols_to_drop, inplace=True)
-        # let's overwrite samples
-        ebi_submission.samples = {k: r.to_dict() for k, r in df.iterrows()}
-        ebi_submission.write_xml_file(
-            ebi_submission.generate_sample_xml(new_samples),
-            ebi_submission.sample_xml_fp)
-        # let's do the same with the prep
-        ebi_submission.write_xml_file(
-            ebi_submission.generate_experiment_xml(new_samples),
-            ebi_submission.experiment_xml_fp)
+        all_samples = ebi_submission.sample_template.ebi_sample_accessions
+        samples = [k for k in ebi_submission.samples if all_samples[k] is None]
+        if samples:
+            ebi_submission.write_xml_file(
+                ebi_submission.generate_sample_xml(samples, cols_to_drop),
+                ebi_submission.sample_xml_fp)
 
         # now let's recalculate the size to make sure it's fine
         new_total_size = sum([stat(tr).st_size
@@ -254,6 +251,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                 'cleaning: %d, after: %d' % (
                     artifact_id, total_size, new_total_size))
 
+    st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
     if send:
         # getting aspera's password
         old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
@@ -280,7 +278,7 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
                     'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
         environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
-        # step 5: sending xml and parsing answer
+        # step 5: sending xml
         xmls_cmds = ebi_submission.generate_curl_command(
             ebi_seq_xfer_pass=ascp_passwd)
         LogEntry.create('Runtime',
@@ -298,18 +296,19 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
         open(ebi_submission.curl_reply, 'w').write(
             'stdout:\n%s\n\nstderr: %s' % (xml_content, stderr))
 
-        try:
-            st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
-                ebi_submission.parse_EBI_reply(xml_content, test=test)
-        except EBISubmissionError as e:
-            error = str(e)
-            le = LogEntry.create(
-                'Fatal', "Command: %s\nError: %s\n" % (xml_content, error),
-                info={'ebi_submission': artifact_id})
-            raise ComputeError(
-                "EBI Submission failed! Log id: %d\n%s" % (le.id, error))
-
+        # parsing answer / only if adding
         if action == 'ADD' or test:
+            try:
+                st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
+                    ebi_submission.parse_EBI_reply(xml_content, test=test)
+            except EBISubmissionError as e:
+                error = str(e)
+                le = LogEntry.create(
+                    'Fatal', "Command: %s\nError: %s\n" % (xml_content, error),
+                    info={'ebi_submission': artifact_id})
+                raise ComputeError(
+                    "EBI Submission failed! Log id: %d\n%s" % (le.id, error))
+
             if st_acc:
                 ebi_submission.study.ebi_study_accession = st_acc
             if sa_acc:
@@ -319,8 +318,6 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
             if ex_acc:
                 ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
             ebi_submission.artifact.ebi_run_accessions = run_acc
-    else:
-        st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
 
     return st_acc, sa_acc, bio_acc, ex_acc, run_acc
 
@@ -372,9 +369,9 @@ def submit_VAMPS(artifact_id):
     targz.add(prep_fp, arcname='prep_metadata.txt')
 
     # adding preprocessed data
-    for _, fp, fp_type in artifact.filepaths:
-        if fp_type == 'preprocessed_fasta':
-            targz.add(fp, arcname='preprocessed_fasta.fna')
+    for x in artifact.filepaths:
+        if x['fp_type'] == 'preprocessed_fasta':
+            targz.add(x['fp'], arcname='preprocessed_fasta.fna')
 
     targz.close()
 

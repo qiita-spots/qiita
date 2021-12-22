@@ -56,20 +56,21 @@ $(document).ready(function() {
   qiita_websocket.add_callback('sel', show_alert);
 
   $('#user-studies-table').dataTable({
+      "processing": true,
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
       "sDom": 'l<"top">rti<"bottom"p>',
-      "order": [[ 3, "asc" ]],
+      "order": [[ 3, "desc" ], [ 1, "asc" ]],
       "columns": [
         { "orderable": false, "data": "artifact_biom_ids" },
         { "data": "study_title" },
         { "data": "study_abstract" },
         { "data": "study_id" },
         { "data": "number_samples_collected" },
+        { "data": "preparation_data_types" },
         { "data": "shared" },
         { "data": "pi" },
         { "data": "pubs" },
-        { "data": "status" },
         { "data": "ebi_info" },
         { "data": "study_alias" }],
       columnDefs: [
@@ -111,11 +112,12 @@ $(document).ready(function() {
             result += "<b>Owner:</b> " + row.owner + "</br>";
             result += "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span>";
             return result;
-        }, targets: [5]},
+        }, targets: [6]},
         ],
       "language": {
-          "loadingRecords": "Please wait - loading information ...",
-          "zeroRecords": "No studies found"
+          "loadingRecords": 'Please wait ...',
+          "processing": "~~ Loading information ~~",
+          "zeroRecords": "No studies found",
       },
       "ajax": {
           "url": user_studies_ajaxURL + "&query=",
@@ -129,10 +131,11 @@ $(document).ready(function() {
   });
 
   $('#studies-table').dataTable({
+      "processing": true,
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
       "sDom": '<"top">rti<"bottom"p><"clear">',
-      "order": [[ 3, "asc" ]],
+      "order": [[ 3, "desc" ], [ 1, "asc" ]],
       "bLengthChange": false,
       "columns": [
         { "orderable": false, "data": "artifact_biom_ids" },
@@ -140,6 +143,7 @@ $(document).ready(function() {
         { "data": "study_abstract" },
         { "data": "study_id" },
         { "data": "number_samples_collected" },
+        { "data": "preparation_data_types" },
         { "data": "pi" },
         { "data": "pubs" },
         { "data": "ebi_info" }
@@ -178,8 +182,9 @@ $(document).ready(function() {
         }, targets: [1]},
         ],
       "language": {
-          "loadingRecords": "Please wait - loading information ...",
-          "zeroRecords": "No studies found"
+          "loadingRecords": 'Please wait ...',
+          "processing": "~~ Loading information ~~",
+          "zeroRecords": "No studies found",
       },
       "ajax": {
           "url": studies_ajaxURL + "&query=",
@@ -369,10 +374,10 @@ function add_metacat(metacat) {
           <th>Abstract</th>
           <th>Study ID</th>
           <th>Samples</th>
+          <th>Preparation Data Types</th>
           <th>Shared With These Users</th>
           <th>Principal Investigator</th>
           <th>Publications</th>
-          <th>Status</th>
           <th>Qiita EBI submission</th>
           <th>Study Alias</th>
         </tr>
@@ -387,6 +392,7 @@ function add_metacat(metacat) {
           <th>Abstract</th>
           <th>Study ID</th>
           <th>Samples</th>
+          <th>Preparation Data Types</th>
           <th>Principal Investigator</th>
           <th>Publications</th>
           <th>Qiita EBI submission</th>

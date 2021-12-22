@@ -61,9 +61,6 @@ class PluginHandlerTests(OauthTestingBase):
                          'Single Rarefaction'],
             'publications': [{'DOI': '10.1038/nmeth.f.303',
                               'PubMed': '20383131'}],
-            'default_workflows': ['FASTQ upstream workflow',
-                                  'FASTA upstream workflow',
-                                  'Per sample FASTQ upstream workflow'],
             'type': 'artifact transformation',
             'active': False}
         self.assertEqual(loads(obs.body), exp)
@@ -191,7 +188,8 @@ class CommandHandlerTests(OauthTestingBase):
                         'max_primer_mismatch': 0,
                         'max_homopolymer': 6,
                         'qual_score_window': 0,
-                        'barcode_type': 'hamming_8'}}}
+                        'barcode_type': 'hamming_8'}},
+               'outputs': [['demultiplexed', 'Demultiplexed']]}
         self.assertEqual(loads(obs.body), exp)
 
 
