@@ -805,7 +805,7 @@ class PrepTemplate(MetadataTemplate):
             # hidden and a successs but that do not have outputs are jobs which
             # resulting artifacts (outputs) were deleted
             for j in prep_jobs if j.status == 'success' and not j.hidden
-                and j.outputs}
+            and j.outputs}
 
         # 2.
         pt_dt = self.data_type()
