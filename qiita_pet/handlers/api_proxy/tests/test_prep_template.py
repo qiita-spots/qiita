@@ -269,7 +269,7 @@ class TestPrepAPIReadOnly(TestCase):
             ('target_gene', [('16S rRNA', 27)]),
             ('target_subfragment', [('V4', 27)])], 'status': 'success',
             'message': '', 'editable': True}
-        self.assertEqual(obs, exp)
+        self.assertDictEqual(obs, exp)
 
     def test_prep_template_summary_get_req_no_access(self):
         obs = prep_template_summary_get_req(1, 'demo@microbio.me')
@@ -463,6 +463,8 @@ class TestPrepAPI(TestCase):
                'file': 'update.txt',
                'id': 'ignored in test'}
 
+        print (obs['message'].split('\n'))
+        print (exp['message'])
         self.assertCountEqual(obs['message'].split('\n'), exp['message'])
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['file'], exp['file'])
