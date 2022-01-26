@@ -330,6 +330,88 @@ class User(qdb.base.QiitaObject):
 
             return correct_code
 
+    @classmethod
+    def delete(cls, email, force=False):
+        if not cls.exists(email):
+            raise IncorrectEmailError(f'This email does not exists: {email}')
+
+        tables = ['qiita.study_users', 'qiita.study_tags',
+                  'qiita.processing_job_workflow', 'qiita.processing_job',
+                  'qiita.message_user', 'qiita.analysis_users',
+                  'qiita.analysis']
+
+        not_empty = []
+        for t in tables:
+            with qdb.sql_connection.TRN:
+                sql = f"SELECT COUNT(email) FROM {t} WHERE email = %s"
+                qdb.sql_connection.TRN.add(sql, [email])
+                count = qdb.sql_connection.TRN.execute_fetchflatten()
+                if count:
+                    not_empty.append(t)
+
+        if not_empty and not force:
+            raise ValueError(f'These tables are not empty: "{not_empty}", '
+                             'delete them first or use `force=True`')
+
+        sql = """
+            DELETE FROM qiita.study_users WHERE email = %(email)s;
+            DELETE FROM qiita.study_tags WHERE email = %(email)s;
+            DELETE FROM qiita.processing_job_workflow_root
+                WHERE processing_job_workflow_id IN (
+                    SELECT processing_job_workflow_id
+                    FROM qiita.processing_job_workflow
+                    WHERE email = %(email)s);
+            DELETE FROM qiita.processing_job_workflow WHERE email = %(email)s;
+            DELETE FROM qiita.processing_job_validator
+                WHERE processing_job_id IN (
+                    SELECT processing_job_id
+                    FROM qiita.processing_job
+                    WHERE email = %(email)s);
+            DELETE FROM qiita.analysis_processing_job
+                WHERE processing_job_id IN (
+                    SELECT processing_job_id
+                    FROM qiita.processing_job
+                    WHERE email = %(email)s);
+            DELETE FROM qiita.artifact_output_processing_job
+                WHERE processing_job_id IN (
+                    SELECT processing_job_id
+                    FROM qiita.processing_job
+                    WHERE email = %(email)s);
+            DELETE FROM qiita.artifact_processing_job
+                WHERE processing_job_id IN (
+                    SELECT processing_job_id
+                    FROM qiita.processing_job
+                    WHERE email = %(email)s);
+            DELETE FROM qiita.parent_processing_job WHERE parent_id IN (
+                SELECT processing_job_id
+                FROM qiita.processing_job
+                WHERE email = %(email)s);
+            DELETE FROM qiita.processing_job WHERE email = %(email)s;
+            DELETE FROM qiita.message_user WHERE email = %(email)s;
+            DELETE FROM qiita.analysis_users WHERE email = %(email)s;
+            DELETE FROM qiita.analysis_portal WHERE analysis_id IN (
+                SELECT analysis_id
+                FROM qiita.analysis
+                WHERE email = %(email)s);
+            DELETE FROM qiita.analysis_artifact WHERE analysis_id IN (
+                SELECT analysis_id
+                FROM qiita.analysis
+                WHERE email = %(email)s);
+            DELETE FROM qiita.analysis_filepath WHERE analysis_id IN (
+                SELECT analysis_id
+                FROM qiita.analysis
+                WHERE email = %(email)s);
+            DELETE FROM qiita.analysis_sample WHERE analysis_id IN (
+                SELECT analysis_id
+                FROM qiita.analysis
+                WHERE email = %(email)s);
+            DELETE FROM qiita.analysis WHERE email = %(email)s;
+            DELETE FROM qiita.qiita_user WHERE email = %(email)s;"""
+
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql, {'email': email})
+            qdb.sql_connection.TRN.execute()
+
     # ---properties---
     @property
     def email(self):
