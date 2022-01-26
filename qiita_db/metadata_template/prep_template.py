@@ -800,7 +800,12 @@ class PrepTemplate(MetadataTemplate):
         merging_schemes = {
             qdb.archive.Archive.get_merging_scheme_from_job(j): {
                 x: y.id for x, y in j.outputs.items()}
-            for j in prep_jobs if j.status == 'success' and not j.hidden}
+            # we are going to select only the jobs that were a 'success', that
+            # are not 'hidden' and that have an output - jobs that are not
+            # hidden and a successs but that do not have outputs are jobs which
+            # resulting artifacts (outputs) were deleted
+            for j in prep_jobs if j.status == 'success' and not j.hidden
+                and j.outputs}
 
         # 2.
         pt_dt = self.data_type()
