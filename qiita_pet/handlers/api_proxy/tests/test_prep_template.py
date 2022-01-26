@@ -269,6 +269,8 @@ class TestPrepAPIReadOnly(TestCase):
             ('target_gene', [('16S rRNA', 27)]),
             ('target_subfragment', [('V4', 27)])], 'status': 'success',
             'message': '', 'editable': True}
+        print(obs)
+        print(exp)
         self.assertDictEqual(obs, exp)
 
     def test_prep_template_summary_get_req_no_access(self):
@@ -451,7 +453,7 @@ class TestPrepAPI(TestCase):
         exp = {'status': 'warning',
                'message': [
                    'Both a converter and dtype were specified for column '
-                   'sample_name - only the converter will be used', 'Some '
+                   'sample_name - only the converter will be used.', 'Some '
                    'functionality will be disabled due to missing columns:',
                    '\tEBI submission disabled: center_name, '
                    'experiment_design_description, instrument_model, '
@@ -463,8 +465,8 @@ class TestPrepAPI(TestCase):
                'file': 'update.txt',
                'id': 'ignored in test'}
 
-        print (obs['message'].split('\n'))
-        print (exp['message'])
+        print(obs['message'].split('\n'))
+        print(exp['message'])
         self.assertCountEqual(obs['message'].split('\n'), exp['message'])
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['file'], exp['file'])
