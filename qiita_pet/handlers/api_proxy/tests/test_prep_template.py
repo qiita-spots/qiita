@@ -235,7 +235,7 @@ class TestPrepAPIReadOnly(TestCase):
                          ('TCGACCAAACAC', 1), ('TGAGTGGTCTGT', 1),
                          ('TGCTACAGACGT', 1), ('TGGTTATGGCAC', 1),
                          ('TTGCACCGTCGA', 1)]), ('center_name', [('ANL', 27)]),
-            ('center_project_name', [('nan', 27)]),
+            ('center_project_name', [('None', 27)]),
             ('emp_status', [('EMP', 27)]),
             ('experiment_center', [('ANL', 27)]),
             ('experiment_design_description', [('micro biome of soil and '
@@ -269,7 +269,7 @@ class TestPrepAPIReadOnly(TestCase):
             ('target_gene', [('16S rRNA', 27)]),
             ('target_subfragment', [('V4', 27)])], 'status': 'success',
             'message': '', 'editable': True}
-        self.assertEqual(obs, exp)
+        self.assertDictEqual(obs, exp)
 
     def test_prep_template_summary_get_req_no_access(self):
         obs = prep_template_summary_get_req(1, 'demo@microbio.me')
@@ -451,7 +451,7 @@ class TestPrepAPI(TestCase):
         exp = {'status': 'warning',
                'message': [
                    'Both a converter and dtype were specified for column '
-                   'sample_name - only the converter will be used', 'Some '
+                   'sample_name - only the converter will be used.', 'Some '
                    'functionality will be disabled due to missing columns:',
                    '\tEBI submission disabled: center_name, '
                    'experiment_design_description, instrument_model, '
@@ -462,7 +462,6 @@ class TestPrepAPI(TestCase):
                    'description of these fields.'],
                'file': 'update.txt',
                'id': 'ignored in test'}
-
         self.assertCountEqual(obs['message'].split('\n'), exp['message'])
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['file'], exp['file'])
