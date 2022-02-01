@@ -836,7 +836,7 @@ class Analysis(qdb.base.QiitaObject):
             If the duplicated sample ids in the selected studies should be
             merged or prepended with the artifact ids. If false prepends
             the artifact id
-        categories : set of str
+        categories : set of str, optional
             If not None, use _only_ these categories for the metaanalysis
 
         Notes
