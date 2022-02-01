@@ -453,13 +453,10 @@ class MetadataTemplate(qdb.base.QiitaObject):
     # sub-classes.
     _forbidden_words = {}
 
-    def _check_id(self, id_):
+    @classmethod
+    def _check_id(cls, id_):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
-        with qdb.sql_connection.TRN:
-            sql = "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1}=%s)".format(
-                self._table, self._id_column)
-            qdb.sql_connection.TRN.add(sql, [id_])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+        return qdb.util.exists_table(f'{cls._table_prefix}{id_}')
 
     @classmethod
     def _table_name(cls, obj_id):
