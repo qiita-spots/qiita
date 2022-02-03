@@ -345,8 +345,8 @@ class User(qdb.base.QiitaObject):
             with qdb.sql_connection.TRN:
                 sql = f"SELECT COUNT(email) FROM {t} WHERE email = %s"
                 qdb.sql_connection.TRN.add(sql, [email])
-                count = qdb.sql_connection.TRN.execute_fetchflatten()
-                if count:
+                count = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+                if count != 0:
                     not_empty.append(t)
 
         if not_empty and not force:
