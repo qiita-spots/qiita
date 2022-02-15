@@ -265,7 +265,12 @@ var qiita_websocket = new function () {
         ws.onerror = on_error;
 
         ws.onmessage = function(evt) {
-            message = decode(evt.data);
+            var data = evt.data;
+            if (data === 'hello'){
+              message = '';
+            } else {
+              message = decode(evt.data);
+            }
             for(var action in message) {
                 if(action in callbacks) {
                     callbacks[action](message[action]);

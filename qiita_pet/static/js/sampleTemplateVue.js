@@ -329,7 +329,8 @@ Vue.component('sample-template-page', {
         var catValues, $tr, $td, rowIdx, collapsedId, $trVal, $div, $btn;
         $div = $('<div>').addClass('panel panel-default').appendTo('#sample-info-tab');
         $('<div>').addClass('panel-heading').appendTo($div).append('Information summary');
-        var $table = $('<table>').addClass('table').appendTo($div);
+        var $mtable = $('<table>').addClass('table').appendTo($div);
+        var $table = $('<tbody>').appendTo($mtable);
         var categories = data['values'];
         categories.sort(function(a, b){return a[0].localeCompare(b[0], 'en', {'sensitivity': 'base'});});
 
