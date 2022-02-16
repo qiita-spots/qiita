@@ -38,7 +38,7 @@
       {% raw portal_styling.custom_css %}
     </style>
     {% end %}
-    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery-2.1.0.min.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery-3.6.0.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery-ui.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/bootstrap.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/bootstrap-toggle.min.js"></script>
@@ -68,11 +68,11 @@
         'Chrome Mobile': {'version': 69, 'download': 'https://www.google.com/chrome/browser/'},
       }
 
-      $(window).resize(function () {
+      $(window).on('resize', function () {
         $('body').css('padding-top', $('#navigation-bar').height()+10);
       });
 
-      $(window).load(function () {
+      $(window).on('load', function () {
         $('body').css('padding-top', $('#navigation-bar').height()+10);
       });
 

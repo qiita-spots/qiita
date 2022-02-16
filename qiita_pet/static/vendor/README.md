@@ -9,8 +9,7 @@ Qiita relies on the following JavaScript libraries:
 - [Select2](https://select2.org/).
 - [SlickGrid](https://github.com/mleibman/SlickGrid).
 - [String.js](https://github.com/jprichardson/string.js).
-- [tag-it.js](http://aehlke.github.io/tag-it/).
-- [underscore.js](http://underscorejs.org/).
+- [tagify](https://github.com/yairEO/tagify).
 - [vue.js](https://vuejs.org).
 - [ol.js](https://openlayers.org/).
 - [cytoscape.js](https://github.com/cytoscape/cytoscape.js).
