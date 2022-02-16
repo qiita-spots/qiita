@@ -19,6 +19,7 @@ Classes
 from itertools import product
 from os.path import join, exists
 from os import mkdir
+from collections import defaultdict
 
 from biom import load_table
 from biom.util import biom_open
@@ -443,6 +444,37 @@ class Analysis(qdb.base.QiitaObject):
             return None
 
     @property
+    def metadata_categories(self):
+        """Returns all metadata categories in the current analyses based
+           on the available studies
+
+        Returns
+        -------
+        dict of dict
+            a dict with study_id as the key & the values are another dict with
+            'sample' & 'prep' as keys and the metadata categories as values
+        """
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        with qdb.sql_connection.TRN:
+            sql = """SELECT DISTINCT study_id, artifact_id
+                     FROM qiita.analysis_sample
+                     LEFT JOIN qiita.study_artifact USING (artifact_id)
+                     WHERE analysis_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self._id])
+
+            metadata = defaultdict(dict)
+            for sid, aid in qdb.sql_connection.TRN.execute_fetchindex():
+                if sid not in metadata:
+                    metadata[sid]['sample'] = set(ST(sid).categories)
+                    metadata[sid]['prep'] = set()
+                for pt in qdb.artifact.Artifact(aid).prep_templates:
+                    metadata[sid]['prep'] = metadata[sid]['prep'] | set(
+                        PT(pt.id).categories)
+
+        return metadata
+
+    @property
     def tgz(self):
         """Returns the tgz file of the analysis
 
@@ -795,7 +827,7 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, args, many=True)
             qdb.sql_connection.TRN.execute()
 
-    def build_files(self, merge_duplicated_sample_ids):
+    def build_files(self, merge_duplicated_sample_ids, categories=None):
         """Builds biom and mapping files needed for analysis
 
         Parameters
@@ -804,6 +836,8 @@ class Analysis(qdb.base.QiitaObject):
             If the duplicated sample ids in the selected studies should be
             merged or prepended with the artifact ids. If false prepends
             the artifact id
+        categories : set of str, optional
+            If not None, use _only_ these categories for the metaanalysis
 
         Notes
         -----
@@ -858,7 +892,8 @@ class Analysis(qdb.base.QiitaObject):
             # We need to negate merge_duplicated_sample_ids because in
             # _build_mapping_file is acually rename: merge yes == rename no
             rename_dup_samples = not merge_duplicated_sample_ids
-            self._build_mapping_file(samples, rename_dup_samples)
+            self._build_mapping_file(
+                samples, rename_dup_samples, categories=categories)
 
             if post_processing_cmds:
                 biom_files = self._build_biom_tables(
@@ -1034,7 +1069,8 @@ class Analysis(qdb.base.QiitaObject):
         # the user.
         return biom_files
 
-    def _build_mapping_file(self, samples, rename_dup_samples=False):
+    def _build_mapping_file(self, samples, rename_dup_samples=False,
+                            categories=None):
         """Builds the combined mapping file for all samples
            Code modified slightly from qiime.util.MetadataMap.__add__"""
         with qdb.sql_connection.TRN:
@@ -1045,9 +1081,14 @@ class Analysis(qdb.base.QiitaObject):
                 artifact = qdb.artifact.Artifact(aid)
                 si = artifact.study.sample_template
                 if si not in sample_infos:
-                    sample_infos[si] = si.to_dataframe()
+                    si_df = si.to_dataframe()
+                    if categories is not None:
+                        si_df = si_df[categories & set(si_df.columns)]
+                    sample_infos[si] = si_df
                 pt = artifact.prep_templates[0]
                 pt_df = pt.to_dataframe()
+                if categories is not None:
+                    pt_df = pt_df[categories & set(pt_df.columns)]
 
                 qm = pt_df.join(sample_infos[si], lsuffix="_prep")
 
