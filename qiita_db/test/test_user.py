@@ -514,7 +514,7 @@ class UserTest(TestCase):
 class DeleteUser(TestCase):
     def test_delete_users(self):
         # let's start with the errors
-        error = 'This email does not exists: x@y.z'
+        error = 'This email does not exist: x@y.z'
         with self.assertRaisesRegex(IncorrectEmailError, error):
             qdb.user.User.delete('x@y.z')
 
