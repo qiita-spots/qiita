@@ -333,7 +333,7 @@ class User(qdb.base.QiitaObject):
     @classmethod
     def delete(cls, email, force=False):
         if not cls.exists(email):
-            raise IncorrectEmailError(f'This email does not exists: {email}')
+            raise IncorrectEmailError(f'This email does not exist: {email}')
 
         tables = ['qiita.study_users', 'qiita.study_tags',
                   'qiita.processing_job_workflow', 'qiita.processing_job',
