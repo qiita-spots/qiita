@@ -180,7 +180,8 @@ class Analysis(qdb.base.QiitaObject):
             params = qdb.software.Parameters.load(
                 cmd, values_dict={
                     'analysis': a_id,
-                    'merge_dup_sample_ids': merge_duplicated_sample_ids})
+                    'merge_dup_sample_ids': merge_duplicated_sample_ids,
+                    'categories': categories})
             job = qdb.processing_job.ProcessingJob.create(
                 owner, params, True)
             sql = """INSERT INTO qiita.analysis_processing_job
