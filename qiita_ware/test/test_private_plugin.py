@@ -379,7 +379,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
 
     def test_build_analysis_files(self):
         job = self._create_job('build_analysis_files', {
-            'analysis': 3, 'merge_dup_sample_ids': True})
+            'analysis': 3, 'merge_dup_sample_ids': True, 'categories': None})
 
         # testing shape and get_resource_allocation_info as
         # build_analysis_files is a special case
