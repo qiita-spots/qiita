@@ -62,9 +62,83 @@ $(document).ready(function() {
       qiita_websocket.add_callback('clear', clear_from_html);
       $('#clear-button').on('click', clear);
       {% if sel_data %}$('#no-selected').hide(){% end %}
+
+      var common_sample_fields = {% raw list(common['sample']) %};
+      var common_prep_fields = {% raw list(common['prep']) %};
+
+      $.each($(".chosen-select"), function (_, element){
+        var is_sample = element.id.startsWith('sample-metadata');
+        $.each(element.options, function (_, option){
+          if (is_sample) {
+            if (jQuery.inArray(option.text, common_sample_fields) >= 0) {
+              option.selected=true;
+              $('#analysis-metadata').append(
+                $('<option>', { value: option.value, text: option.text,
+                                selected: true}));
+            }
+          } else {
+            if (jQuery.inArray(option.text, common_prep_fields) >= 0) {
+              option.selected=true;
+              $('#analysis-metadata').append(
+                $('<option>', { value: option.value, text: option.text,
+                                selected: true}));
+            }
+          }
+        });
+      });
+
+      $('#analysis-metadata').chosen({
+        width: "95%"
+      });
+
+      $(".chosen-select").chosen({
+        width: "95%",
+        no_results_text: "Oops, nothing found!",
+        display_disabled_options: false,
+        display_selected_options: false,
+      }).change(function(event, object) {
+        var item = $(this).attr('id');
+        var key = Object.keys(object)[0];
+        var toggle = key == 'selected';
+        var selection = object[key];
+
+        if (toggle) {
+          $('#analysis-metadata').append(
+            $('<option>', { value: selection, text: selection,
+                            selected: true}));
+        } else {
+          $(".analysis-metadata option[value='" + selection + "']").remove();
+        }
+        // we need to update the chosen element AKA this line is needed for
+        // things to work fine
+        $("#analysis-metadata").trigger("chosen:updated");
+
+        if (jQuery.inArray(object[key], common_sample_fields) >= 0) {
+          $.each($(".chosen-select"), function (_, element){
+            if (item != element.id) {
+              $.each(element.options, function (_, option){
+                if (option.text == selection) {
+                  option.selected=toggle;
+                }
+              });
+            }
+          });
+        } else if (jQuery.inArray(object[key], common_sample_fields) >= 0) {
+          $.each($(".chosen-select"), function (_, element){
+            if (item != element.id) {
+              $.each(element.options, function (_, option){
+                if (option.text == selection) {
+                  option.selected=toggle;
+                }
+              });
+            }
+          });
+        }
+      });
     });
 </script>
 {% end %}
+
 
 {% block content %}
 <h1>Selected Samples</h1>
@@ -139,6 +213,25 @@ $(document).ready(function() {
   {% end %}
   {% end %}
   </table>
+  <hr>
+  <h4>Metadata Selection <small>Common fields for all studies are preselected</small></h4>
+  <table border="0" style="width: 100%;">
+    <tr>
+      <td style="width: 50%;">
+        <select data-placeholder="Choose Sample Metadata..." multiple class="chosen-select" id="sample-metadata-{{study.id}}">
+          {% for field in metadata[study.id]['sample'] %}
+             <option value="{{field}}">{{field}}</option>
+          {% end %}
+        </select>
+      </td>
+      <td style="width: 50%;">
+        <select data-placeholder="Choose Preparation Metadata..." multiple class="chosen-select" id="prep-metadata-{{study.id}}">
+          {% for field in metadata[study.id]['prep'] %}
+            <option value="{{field}}">{{field}}</option>
+          {% end %}
+      </td>
+    </tr>
+  </table>
   </div>
 </div>
 {% end %}
@@ -167,10 +260,14 @@ $(document).ready(function() {
                   <label for="description">Merge samples with the same name <br/><small>useful when merging multiple preparation artifacts</small></label>
                   <input type="checkbox" class="form-control" id="merge_duplicated_sample_ids" name="merge_duplicated_sample_ids">
                 </div>
+                <div class="form-group">
+                  <label for="description">Metadata selected <small>(to update use the main page)</small></label>
+                  <select name="analysis-metadata" id="analysis-metadata" class="analysis-metadata" multiple disabled></select>
+                </div>
               </div>
             </div>
             <div class="modal-footer">
-              <button type="submit" class="btn btn-primary">Create analysis</button>
+              <button type="submit" onclick="$('#analysis-metadata').removeAttr('disabled');" "class="btn btn-primary">Create analysis</button>
             </div>
           </form>
         </div>

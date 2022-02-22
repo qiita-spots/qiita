@@ -26,11 +26,13 @@ class CreateAnalysisHandler(BaseHandler):
         name = self.get_argument('name')
         desc = self.get_argument('description')
         mdsi = self.get_argument('merge_duplicated_sample_ids', False)
+        metadata = self.request.arguments.get('analysis-metadata', None)
+
         if mdsi in (b'on', 'on'):
             mdsi = True
         analysis = Analysis.create(
             self.current_user, name, desc, merge_duplicated_sample_ids=mdsi,
-            from_default=True)
+            from_default=True, categories=metadata)
 
         self.redirect(u"%s/analysis/description/%s/"
                       % (qiita_config.portal_dir, analysis.id))

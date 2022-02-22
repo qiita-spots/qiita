@@ -111,7 +111,7 @@ class Analysis(qdb.base.QiitaObject):
 
     @classmethod
     def create(cls, owner, name, description, from_default=False,
-               merge_duplicated_sample_ids=False):
+               merge_duplicated_sample_ids=False, categories=None):
         """Creates a new analysis on the database
 
         Parameters
@@ -129,6 +129,8 @@ class Analysis(qdb.base.QiitaObject):
             If the duplicated sample ids in the selected studies should be
             merged or prepended with the artifact ids. False (default) prepends
             the artifact id
+        categories : set of str, optional
+            If not None, use _only_ these categories for the metaanalysis
 
         Returns
         -------
