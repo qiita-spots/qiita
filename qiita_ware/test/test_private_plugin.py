@@ -407,7 +407,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
 
         # now let's test something that will cause not a number input_size*N
         job = self._create_job('build_analysis_files', {
-            'analysis': 3, 'merge_dup_sample_ids': True})
+            'analysis': 3, 'merge_dup_sample_ids': True, 'categories': None})
         _set_allocation('{input_size}*N')
         self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
         self.assertEqual(job.status, 'error')
@@ -416,7 +416,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
 
         # now let's test something that will return a negative number -samples
         job = self._create_job('build_analysis_files', {
-            'analysis': 3, 'merge_dup_sample_ids': True})
+            'analysis': 3, 'merge_dup_sample_ids': True, 'categories': None})
         _set_allocation('-{samples}')
         self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
         self.assertEqual(job.status, 'error')
@@ -425,7 +425,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
 
         # now let's test a full build_analysis_files job
         job = self._create_job('build_analysis_files', {
-            'analysis': 3, 'merge_dup_sample_ids': True})
+            'analysis': 3, 'merge_dup_sample_ids': True, 'categories': None})
         job._set_status('in_construction')
         job.submit()
 
