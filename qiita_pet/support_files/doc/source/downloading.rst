@@ -14,8 +14,17 @@ artifacts public and select "Allow Qiita users to download raw data files" from
 the main study page.
 
 .. note::
-   Note that all Qiita downloads are zip files but the name of the file will change based on the tool you use to download them. For example if you are using wget, we recommend adding the URL in quotes and using the -O flag to save the file with a correct name; like this: wget "your-qiita-URL" -O your_filename.zip
-
+   - All Qiita downloads are zip files but the name of the file will change based
+     on the tool you use to download them. For example if you are using wget,
+     we recommend adding the URL in quotes and using the -O flag to save the
+     file with a correct name; like this:
+     `wget "your-qiita-URL" -O your_filename.zip`.
+   - The downloaded zip file is a dump of our storage with the data you requested
+     organized by the data type. This is, when unzipped the contents will be
+     in folders by the type (`mapping_file, BIOM, per_sample_FASTQ, processed_data,
+     etc`) and within each you will have (a) folder(s) with the artifact id(s) download;
+     each of these folders will have the files of that artifact: `biom, txt, fastq.gz,
+     index.html, etc.`
 
 Downloading All Public Data in BIOM format
 ------------------------------------------
