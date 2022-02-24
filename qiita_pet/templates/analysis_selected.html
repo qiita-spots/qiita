@@ -218,15 +218,17 @@ $(document).ready(function() {
   <table border="0" style="width: 100%;">
     <tr>
       <td style="width: 50%;">
+        Sample Information
         <select data-placeholder="Choose Sample Metadata..." multiple class="chosen-select" id="sample-metadata-{{study.id}}">
-          {% for field in metadata[study.id]['sample'] %}
+          {% for field in sorted(metadata[study.id]['sample']) %}
              <option value="{{field}}">{{field}}</option>
           {% end %}
         </select>
       </td>
       <td style="width: 50%;">
+        Preparation Information
         <select data-placeholder="Choose Preparation Metadata..." multiple class="chosen-select" id="prep-metadata-{{study.id}}">
-          {% for field in metadata[study.id]['prep'] %}
+          {% for field in sorted(metadata[study.id]['prep']) %}
             <option value="{{field}}">{{field}}</option>
           {% end %}
       </td>
