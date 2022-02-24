@@ -111,7 +111,7 @@ class Analysis(qdb.base.QiitaObject):
 
     @classmethod
     def create(cls, owner, name, description, from_default=False,
-               merge_duplicated_sample_ids=False):
+               merge_duplicated_sample_ids=False, categories=None):
         """Creates a new analysis on the database
 
         Parameters
@@ -129,6 +129,8 @@ class Analysis(qdb.base.QiitaObject):
             If the duplicated sample ids in the selected studies should be
             merged or prepended with the artifact ids. False (default) prepends
             the artifact id
+        categories : set of str, optional
+            If not None, use _only_ these categories for the metaanalysis
 
         Returns
         -------
@@ -178,7 +180,8 @@ class Analysis(qdb.base.QiitaObject):
             params = qdb.software.Parameters.load(
                 cmd, values_dict={
                     'analysis': a_id,
-                    'merge_dup_sample_ids': merge_duplicated_sample_ids})
+                    'merge_dup_sample_ids': merge_duplicated_sample_ids,
+                    'categories': categories})
             job = qdb.processing_job.ProcessingJob.create(
                 owner, params, True)
             sql = """INSERT INTO qiita.analysis_processing_job

@@ -34,9 +34,11 @@ def build_analysis_files(job):
     with qdb.sql_connection.TRN:
         params = job.parameters.values
         analysis_id = params['analysis']
+        categories = params['categories']
         merge_duplicated_sample_ids = params['merge_dup_sample_ids']
         analysis = qdb.analysis.Analysis(analysis_id)
-        biom_files = analysis.build_files(merge_duplicated_sample_ids)
+        biom_files = analysis.build_files(
+            merge_duplicated_sample_ids, categories=categories)
 
         cmd = qdb.software.Command.get_validator('BIOM')
         val_jobs = []
