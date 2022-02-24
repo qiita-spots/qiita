@@ -17,7 +17,7 @@ applies for studies in sandbox state that will become private or public.
 
 .. note::
     The EBI-ENA submission returns two accessions - the primary starts with PRJ
-    and the secondary with ERP; they can be used irrespectively. We suggest that
+    and the secondary with ERP; they can be used interchangeably. We suggest that
     you add at least one of them to your manuscript, together with the Qiita Study id.
     Please do not forget to cite Qiita (https://doi.org/10.1038/s41592-018-0141-9).
     This information should be sufficient for your manuscript but if you would like
