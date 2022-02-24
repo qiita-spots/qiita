@@ -15,6 +15,16 @@ applies for studies in sandbox state that will become private or public.
 .. warning::
    direct BIOM uploads cannot become private or public
 
+.. note::
+    The EBI-ENA submission returns two accessions - the primary starts with PRJ
+    and the secondary with ERP; they can be used interchangeably. We suggest that
+    you add at least one of them to your manuscript, together with the Qiita Study id.
+    Please do not forget to cite Qiita (https://doi.org/10.1038/s41592-018-0141-9).
+    This information should be sufficient for your manuscript but if you would like
+    to add direct links to your data, once they are public, you can use the EBI-ENA:
+    `https://www.ebi.ac.uk/ena/browser/view/[accession]` or the Qiita Study
+    id: `https://qiita.ucsd.edu/public/?study_id=[study-id]`
+
 `Here <https://knightlab.ucsd.edu/wordpress/wp-content/uploads/2016/04/QiitaTemplate_20181218.xlsx>`__ you will find a document outlining these requirements, with examples, when possible.
 
 Note that submissions are time consuming and need full collaboration from the user.
@@ -140,6 +150,7 @@ Remember, metadata is the most important part for an analysis, without it we onl
 
       .. note::
         The current valid values for instrument_model per platform are - please contact us if you would like to add yours to this list:
+
         +---------------------+----------------------------------------------------------------------------------------------------------+
         | Platform            | Valid instrument_model options                                                                           |
         +=====================+==========================================================================================================+
@@ -150,7 +161,7 @@ Remember, metadata is the most important part for an analysis, without it we onl
         |                     |  ``Illumina Genome Analyzer IIx``, ``Illumina HiScanSQ``, ``Illumina HiSeq 1000``,                       |
         |                     |  ``Illumina HiSeq 1500``,, ``Illumina HiSeq 2000``, ``Illumina HiSeq 2500``, ``Illumina HiSeq 3000``,    |
         |                     |  ``Illumina HiSeq 4000``, ``Illumina MiSeq``, ``Illumina MiniSeq``, ``Illumina NovaSeq 6000``,           |
-        |                     |  ``NextSeq 500``, ``NextSeq 550``, ``Illumina NovaSeq 6000`` or ``unspecified``                          |
+        |                     |  ``NextSeq 500``, ``NextSeq 550``, or ``unspecified``                                                    |
         +---------------------+----------------------------------------------------------------------------------------------------------+
         | ``Ion_Torrent``     |  ``Ion Torrent PGM``, ``Ion Torrent Proton``, ``Ion Torrent S5``, ``Ion Torrent S5 XL``                  |
         +---------------------+----------------------------------------------------------------------------------------------------------+
