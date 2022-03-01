@@ -95,7 +95,11 @@ Access non-public artifacts without a login
 This feature is currently only available for non-public artifacts. To create a link you
 must be the owner of the study that contains the artifact. To generate the link
 visit the artifact you want to download and click on "Generate Download Link"; this will
-generate a unique link for that artifact.
+generate a unique link for that artifact. Note that for an artifact that belongs to a study,
+you first need to got to that study, then click on the data type (16S, Metagenomic, etc) you
+want to download, click on the specific preparation and then click on the triangle (artifact)
+you want to download. For analyses, go to your analysis of interest and click on the artifact
+you want to download.
 
 Download metadata, raw or all BIOM files from a study
 -----------------------------------------------------
