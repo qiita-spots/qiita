@@ -11,7 +11,7 @@ import errno
 import socket
 from datetime import datetime, timedelta
 from os.path import join, abspath, dirname
-from time import sleep, ctime
+from time import ctime
 from multiprocessing import active_children
 
 import click
@@ -413,11 +413,6 @@ def start(port, master):
                     s.register_commands()
                 except ValueError as e:
                     print(e)
-                # sleep is required as we don't want to saturate workers with
-                # lots of requests
-                sleep(1)
-            # sleep to make sure that all definitions are done
-            sleep(4)
 
             print('Definition artifacts registration complete')
 
@@ -427,9 +422,6 @@ def start(port, master):
                     s.register_commands()
                 except ValueError as e:
                     print(e)
-                # sleep is required as we don't want to saturate workers with
-                # lots of requests
-                sleep(1)
 
             print('Command artifacts registration complete')
 
