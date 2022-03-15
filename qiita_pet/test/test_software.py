@@ -144,6 +144,8 @@ class TestWorkflowsHandler(TestHandlerBase):
                 'rev_comp_mapping_barcodes': 'True', 'rev_comp': 'False',
                 'phred_quality_threshold': '3', 'barcode_type': 'golay_12',
                 'max_barcode_errors': '1.5', 'phred_offset': 'auto'}],
+            ['input_params_7_FASTQ | per_sample_FASTQ', 1,
+             'FASTQ | per_sample_FASTQ'],
             ['output_params_7_demultiplexed | Demultiplexed', 1,
              'demultiplexed | Demultiplexed'],
             ['params_8', 3, 'Pick closed-reference OTUs', 'Defaults', {
@@ -152,7 +154,7 @@ class TestWorkflowsHandler(TestHandlerBase):
                 'sortmerna_coverage': '0.97', 'threads': '1'}],
             ['output_params_8_OTU table | BIOM', 3, 'OTU table | BIOM']])
         exp[0]['edges'].extend([
-            ['input_params_1_FASTQ', 'params_7'],
+            ['input_params_7_FASTQ | per_sample_FASTQ', 'params_7'],
             ['params_7', 'output_params_7_demultiplexed | Demultiplexed'],
             ['output_params_7_demultiplexed | Demultiplexed', 'params_8'],
             ['params_8', 'output_params_8_OTU table | BIOM']])
