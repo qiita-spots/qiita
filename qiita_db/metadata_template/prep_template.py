@@ -858,12 +858,20 @@ class PrepTemplate(MetadataTemplate):
                     pdp = pnode.default_parameter
                     pdp_cmd = pdp.command
                     params = pdp.values.copy()
-                    reqp = {x: y[1][0]
-                            for x, y in pdp_cmd.required_parameters.items()}
+                    # verifying that the workflow.artifact_type is included
+                    # in the command input types or raise an error
+                    wkartifact_type = wk.artifact_type
+                    reqp = dict()
+                    for x, y in pdp_cmd.required_parameters.items():
+                        if wkartifact_type not in y[1]:
+                            raise ValueError(f'{wkartifact_type} is not part '
+                                             'of this preparation and cannot '
+                                             'be applied')
+                        reqp[x] = wkartifact_type
+
                     cmds_to_create.append([pdp_cmd, params, reqp])
 
-                    init_artifacts = {
-                        self.artifact.artifact_type: self.artifact.id}
+                    init_artifacts = {wkartifact_type: self.artifact.id}
 
                 cmds_to_create.reverse()
                 current_job = None
@@ -874,8 +882,9 @@ class PrepTemplate(MetadataTemplate):
                         for iname, dname in rp.items():
                             if dname not in init_artifacts:
                                 msg = (f'Missing Artifact type: "{dname}" in '
-                                       'this preparation; are you missing a '
-                                       'step to start?')
+                                       'this preparation; this might be due '
+                                       'to missing steps or not having the '
+                                       'correct raw data.')
                                 # raises option c.
                                 raise ValueError(msg)
                             req_params[iname] = init_artifacts[dname]

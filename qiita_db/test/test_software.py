@@ -632,6 +632,9 @@ class SoftwareTests(TestCase):
         obs = list(qdb.software.DefaultWorkflow.iter(False))
         self.assertEqual(obs, exp)
 
+        self.assertEqual(
+            qdb.software.DefaultWorkflow(1).artifact_type, 'FASTQ')
+
         qdb.software.DefaultWorkflow(1).active = False
         obs = list(qdb.software.DefaultWorkflow.iter(False))
         self.assertEqual(obs, exp)
