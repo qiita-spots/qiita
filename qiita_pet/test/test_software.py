@@ -152,7 +152,7 @@ class TestWorkflowsHandler(TestHandlerBase):
                 'sortmerna_coverage': '0.97', 'threads': '1'}],
             ['output_params_8_OTU table | BIOM', 3, 'OTU table | BIOM']])
         exp[0]['edges'].extend([
-            ['input_params_1_FASTQ | per_sample_FASTQ', 'params_7'],
+            ['input_params_1_FASTQ', 'params_7'],
             ['params_7', 'output_params_7_demultiplexed | Demultiplexed'],
             ['output_params_7_demultiplexed | Demultiplexed', 'params_8'],
             ['params_8', 'output_params_8_OTU table | BIOM']])
@@ -180,8 +180,8 @@ WORKFLOWS = [
             'rev_comp_mapping_barcodes': 'False', 'rev_comp': 'False',
             'phred_quality_threshold': '3', 'barcode_type': 'golay_12',
             'max_barcode_errors': '1.5', 'phred_offset': 'auto'}],
-        ['input_params_1_FASTQ | per_sample_FASTQ', 1,
-         'FASTQ | per_sample_FASTQ'],
+        ['input_params_1_FASTQ', 1,
+         'FASTQ'],
         ['output_params_1_demultiplexed | Demultiplexed', 1,
          'demultiplexed | Demultiplexed'],
         ['params_2', 3, 'Pick closed-reference OTUs', 'Defaults', {
@@ -190,7 +190,7 @@ WORKFLOWS = [
             'sortmerna_coverage': '0.97', 'threads': '1'}],
         ['output_params_2_OTU table | BIOM', 3, 'OTU table | BIOM']],
      'edges': [
-        ['input_params_1_FASTQ | per_sample_FASTQ', 'params_1'],
+        ['input_params_1_FASTQ', 'params_1'],
         ['params_1', 'output_params_1_demultiplexed | Demultiplexed'],
         ['output_params_1_demultiplexed | Demultiplexed', 'params_2'],
         ['params_2', 'output_params_2_OTU table | BIOM']]},
@@ -206,8 +206,8 @@ WORKFLOWS = [
             'qual_score_window': '0', 'disable_primers': 'False',
             'reverse_primers': 'disable', 'reverse_primer_mismatches': '0',
             'truncate_ambi_bases': 'False'}],
-        ['input_params_3_FASTA | FASTA_Sanger | SFF', 2,
-         'FASTA | FASTA_Sanger | SFF'],
+        ['input_params_3_** WARNING, NOT DEFINED **', 2,
+         '** WARNING, NOT DEFINED **'],
         ['output_params_3_demultiplexed | Demultiplexed', 2,
          'demultiplexed | Demultiplexed'],
         ['params_4', 3, 'Pick closed-reference OTUs', 'Defaults', {
@@ -216,7 +216,7 @@ WORKFLOWS = [
             'sortmerna_coverage': '0.97', 'threads': '1'}],
         ['output_params_4_OTU table | BIOM', 3, 'OTU table | BIOM']],
      'edges': [
-        ['input_params_3_FASTA | FASTA_Sanger | SFF', 'params_3'],
+        ['input_params_3_** WARNING, NOT DEFINED **', 'params_3'],
         ['params_3', 'output_params_3_demultiplexed | Demultiplexed'],
         ['output_params_3_demultiplexed | Demultiplexed', 'params_4'],
         ['params_4', 'output_params_4_OTU table | BIOM']]},
@@ -229,8 +229,8 @@ WORKFLOWS = [
             'rev_comp_mapping_barcodes': 'False', 'rev_comp': 'False',
             'phred_quality_threshold': '3', 'barcode_type': 'not-barcoded',
             'max_barcode_errors': '1.5', 'phred_offset': 'auto'}],
-        ['input_params_5_FASTQ | per_sample_FASTQ', 1,
-         'FASTQ | per_sample_FASTQ'],
+        ['input_params_5_FASTQ', 1,
+         'FASTQ'],
         ['output_params_5_demultiplexed | Demultiplexed', 1,
          'demultiplexed | Demultiplexed'],
         ['params_6', 3, 'Pick closed-reference OTUs', 'Defaults', {
@@ -239,7 +239,7 @@ WORKFLOWS = [
             'sortmerna_coverage': '0.97', 'threads': '1'}],
         ['output_params_6_OTU table | BIOM', 3, 'OTU table | BIOM']],
      'edges': [
-        ['input_params_5_FASTQ | per_sample_FASTQ', 'params_5'],
+        ['input_params_5_FASTQ', 'params_5'],
         ['params_5', 'output_params_5_demultiplexed | Demultiplexed'],
         ['output_params_5_demultiplexed | Demultiplexed', 'params_6'],
         ['params_6', 'output_params_6_OTU table | BIOM']]}]

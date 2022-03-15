@@ -72,13 +72,23 @@ def _retrive_workflows(active):
         #                   output_type: output_node_name}, ...}
         # for easy look up and merge of output_names
         main_nodes = dict()
-        for x, y in graph.edges:
+        for i, (x, y) in enumerate(graph.edges):
             connections = []
             for a, _, c in graph[x][y]['connections'].connections:
                 connections.append("%s | %s" % (a, c))
 
             vals_x, input_x, output_x = _default_parameters_parsing(x)
             vals_y, input_y, output_y = _default_parameters_parsing(y)
+
+            if i == 0:
+                # we are in the first element so we can specifically select
+                # the type we are looking for
+                at = w.artifact_type
+                if at in input_x[0][1]:
+                    input_x[0][1] = at
+                else:
+                    input_x[0][1] = '** WARNING, NOT DEFINED **'
+
             name_x = vals_x[0]
             name_y = vals_y[0]
             if vals_x not in (nodes):
