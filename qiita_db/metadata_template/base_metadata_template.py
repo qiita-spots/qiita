@@ -726,8 +726,6 @@ class MetadataTemplate(qdb.base.QiitaObject):
             If the `column_name` doesn't exist
         QiitaDBOperationNotPermittedError
             If a the info file can't be updated
-            If the column_name is selected as a specimen_id_column in the
-            study.
         """
         if column_name not in self.categories:
             raise qdb.exceptions.QiitaDBColumnError(
@@ -735,14 +733,6 @@ class MetadataTemplate(qdb.base.QiitaObject):
         if not self.can_be_updated(columns={column_name}):
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 '%s cannot be deleted' % column_name)
-
-        # if a tube identifier column is selected disallow its deletion
-        specimen_id_column = qdb.study.Study(self.study_id).specimen_id_column
-        if specimen_id_column == column_name:
-            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    '"%s" cannot be deleted, this column is currently selected'
-                    ' as the tube identifier (specimen_id_column)' %
-                    column_name)
 
         with qdb.sql_connection.TRN:
             table_name = 'qiita.{0}{1}'.format(self._table_prefix, self._id)
