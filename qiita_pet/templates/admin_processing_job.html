@@ -70,11 +70,14 @@
         'running': 'text-info'
       };
 
-      out.push('<b class="' + statusToClass[status] + '">' + status + ' (' + row[8] + ')' +
-               '</b>: ');
+      //row[8] is PBS/Torque/Slurm id
+      out.push('<b class="' + statusToClass[status] + '">' + status + ' ' +
+                row[0] + ' ' + '</b> ');
 
       if (status === 'running' || status === 'queued') {
-        out.push(row[0] + '</br> <i>' + row[3] + '</i>')
+        // row[0] is qiita job-id
+        // row[3] is status 'Step n of 6' and other messages
+        out.push('[' + row[8] + ']</br> <i>' + row[3] + '</i>')
       }
       else {
         // We write a callback attribute on the link to be able to display a
@@ -90,12 +93,12 @@
           // job output is in the fourth element
           // We only expect one output with the artifact id in the 2 element
           out.push('undefined, ' + row[4][0][1] +')\'');
-          out.push('>View results</a>')
+        out.push('><br>View results</a>')
 
         }
         else if (status === 'error') {
           out.push('"' + escape(encodeURIComponent(row[3])) + '")\'');
-          out.push('>View error log summary</a>')
+          out.push('><br>View error log summary</a>')
         }
       }
         return out.join('');
