@@ -80,7 +80,7 @@ class AJAXAdminProcessingJobListing(AdminProcessingJobBaseClass):
 
                     jobs.append([job.id, job.command.name, job.status, msg,
                                  outputs, validator_jobs, heartbeat,
-                                 job.parameters.values])
+                                 job.parameters.values, job.external_id])
         results = {
             "sEcho": echo,
             "recordsTotal": len(jobs),

@@ -123,8 +123,8 @@
 
        // validating extensions
        is_valid = false;
-       _.each(this.valid_extensions, function(extension) {
-           if (extension != "" && S(fileName).endsWith(extension)) {
+       $.each(this.valid_extensions, function(i, extension) {
+           if (extension != "" && fileName.endsWith(extension)) {
              is_valid = true;
              return;
            }
@@ -152,7 +152,7 @@
        html = html + '</div>';
        listNode.html(html);
        if (checkDuplicates) {
-         _.each(this.uploaderList.children(), function(div) {
+         $.each(this.uploaderList.children(), function(i, div) {
            var div = $(div);
            var label = $(div.find('label')[0]).text();
            if (label.startsWith(fileName)) {

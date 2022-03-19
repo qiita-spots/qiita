@@ -106,8 +106,8 @@ class SelectedSamplesHandler(BaseHandler):
         # Format sel_data to get study IDs for the processed data
         sel_data = defaultdict(dict)
         proc_data_info = {}
-        sel_samps = self.current_user.default_analysis.samples
-        for aid, samples in sel_samps.items():
+        analysis = self.current_user.default_analysis
+        for aid, samples in analysis.samples.items():
             artifact = Artifact(aid)
             sel_data[artifact.study][aid] = samples
             proc_data_info[aid] = {
@@ -116,5 +116,15 @@ class SelectedSamplesHandler(BaseHandler):
                 'data_type': artifact.data_type
             }
 
+        # finding common metadata fields
+        metadata = analysis.metadata_categories
+        common = []
+        for i, (_, m) in enumerate(metadata.items()):
+            if i == 0:
+                common = {'sample': set(m['sample']), 'prep': set(m['prep'])}
+            else:
+                common['sample'] = common['sample'] & set(m['sample'])
+                common['prep'] = common['prep'] & set(m['prep'])
+
         self.render("analysis_selected.html", sel_data=sel_data,
-                    proc_info=proc_data_info)
+                    proc_info=proc_data_info, metadata=metadata, common=common)

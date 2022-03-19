@@ -298,6 +298,30 @@ class TestAnalysis(TestCase):
             qdb.util.get_filepath_information(obs)['fullpath'], exp)
         self.assertTrue(exists(exp))
 
+    def test_metadata_categories(self):
+        exp = {1: {
+            'sample': {
+                'env_package', 'water_content_soil', 'collection_timestamp',
+                'anonymized_name', 'sample_type', 'env_biome', 'host_taxid',
+                'ph', 'env_feature', 'temp', 'country', 'scientific_name',
+                'assigned_from_geo', 'physical_specimen_location',
+                'common_name', 'longitude', 'depth', 'season_environment',
+                'description', 'tot_org_carb', 'tot_nitro', 'dna_extracted',
+                'texture', 'samp_salinity', 'taxon_id', 'host_subject_id',
+                'description_duplicate', 'latitude',
+                'physical_specimen_remaining', 'altitude', 'elevation'},
+            'prep': {
+                'run_prefix', 'platform', 'study_center',
+                'library_construction_protocol', 'emp_status',
+                'target_subfragment', 'target_gene', 'center_project_name',
+                'illumina_technology', 'experiment_title', 'instrument_model',
+                'run_date', 'run_center', 'pcr_primers', 'sequencing_meth',
+                'experiment_center', 'experiment_design_description',
+                'barcode', 'samp_size', 'sample_center', 'primer',
+                'center_name'}}}
+        obs = self.analysis.metadata_categories
+        self.assertDictEqual(obs, exp)
+
     def test_retrieve_tgz(self):
         # generating here as the tgz is only generated once the analysis runs
         # to completion (un)successfully
@@ -394,6 +418,20 @@ class TestAnalysis(TestCase):
         exp = exp.reindex(sorted(exp.columns), axis=1)
 
         assert_frame_equal(obs, exp, check_like=True)
+
+        # testing categories
+        analysis._build_mapping_file(
+            samples, categories=set(
+                ['env_package', 'experiment_design_description']))
+        obs = qdb.util.get_filepath_information(
+            analysis.mapping_file)['fullpath']
+        obs = qdb.metadata_template.util.load_template_to_dataframe(
+            obs, index='#SampleID').columns
+        exp = ['experiment_design_description', 'env_package',
+               'qiita_artifact_id', 'qiita_prep_deprecated',
+               'qiita_study_title', 'qiita_study_alias', 'qiita_owner',
+               'qiita_principal_investigator']
+        self.assertCountEqual(obs, exp)
 
     def test_build_mapping_file_duplicated_samples_no_merge(self):
         analysis = self._create_analyses_with_samples()

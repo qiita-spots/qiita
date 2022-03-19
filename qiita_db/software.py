@@ -1947,6 +1947,23 @@ class DefaultWorkflow(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchflatten()
 
     @property
+    def artifact_type(self):
+        """Retrieves artifact_type that the workflow can be applied to
+
+        Returns
+        ----------
+        str
+            The name of the artifact type this workflow can be applied to
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_type
+                     FROM qiita.artifact_type
+                     LEFT JOIN qiita.default_workflow USING (artifact_type_id)
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchflatten()[0]
+
+    @property
     def graph(self):
         """Returns the graph that represents the workflow
 

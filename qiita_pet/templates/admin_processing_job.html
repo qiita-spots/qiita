@@ -70,7 +70,7 @@
         'running': 'text-info'
       };
 
-      out.push('<b class="' + statusToClass[status] + '">' + status +
+      out.push('<b class="' + statusToClass[status] + '">' + status + ' (' + row[8] + ')' +
                '</b>: ');
 
       if (status === 'running' || status === 'queued') {

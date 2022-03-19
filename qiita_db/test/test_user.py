@@ -510,5 +510,22 @@ class UserTest(TestCase):
         user.update_email('bla@ble.bli')
 
 
+@qiita_test_checker()
+class DeleteUser(TestCase):
+    def test_delete_users(self):
+        # let's start with the errors
+        error = 'This email does not exist: x@y.z'
+        with self.assertRaisesRegex(IncorrectEmailError, error):
+            qdb.user.User.delete('x@y.z')
+
+        with self.assertRaises(ValueError):
+            qdb.user.User.delete('shared@foo.bar')
+
+        qdb.user.User.delete('shared@foo.bar', True)
+        # verify that the user doesn't exist any more
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.user.User('shared@foo.bar')
+
+
 if __name__ == "__main__":
     main()

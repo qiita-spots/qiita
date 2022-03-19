@@ -1,14 +1,15 @@
 {% from qiita_core.qiita_settings import qiita_config %}
 
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
-<link href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.tagit.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/tagify.css" type="text/css">
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
-<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/tagify.min.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/tagify.polyfills.min.js"></script>
 <script type="text/javascript">
   var admin_tags = [];
   var user_tags = [];
-  var available_tags = []
+  var available_tags = [];
   var assigned_tags = [];
 
   function toggle_public_raw_download() {
@@ -56,12 +57,6 @@
     });
   }
 
-  function update_gui_tags(){
-    jQuery.each(assigned_tags, function( index, value ) {
-      $("#studyTags").tagit("createTag", value);
-    });
-  }
-
   $(document).ready(function () {
     {% if editable %}
       init_sharing("{% raw qiita_config.portal_dir %}");
@@ -69,29 +64,30 @@
     {% end %}
     update_tags();
 
-    var color_previously = '#32CD32';
+    var color_new = '#32CD32';
+    var color_user =  '#1E90FF';
     var color_admin = '#FFA500';
-    var color_new =  '#1E90FF';
-    $("#studyTags").tagit({
-        width: 'auto',
-        autocomplete: {delay: 0, minLength: 1},
-        availableTags: available_tags,
-        removeConfirmation: false,
-        caseSensitive: false,
-        placeholderText: "Add more tags",
-        fieldName: "studyTags",
-        afterTagAdded: function(evt, ui) {
-          var tag = $('.tagit').tagit('tagLabel', ui.tag);
-          var color = color_new;
-          if (jQuery.inArray(tag, admin_tags) != -1) {
-            color = color_admin;
-          } else if (jQuery.inArray(tag, assigned_tags) == -1) {
-            color = color_previously;
-          }
-          ui.tag.css('color', color);
-        }
-    });
-    update_gui_tags();
+
+    var studyTags = document.querySelector('#studyTags'),
+        tagify = new Tagify (studyTags, {
+          dropdown: {
+            enabled: 1,            // show suggestion after 1 typed character
+            fuzzySearch: false,    // match only suggestions that starts with the typed characters
+          },
+          whitelist: available_tags,
+          transformTag: function (tagData) {
+            var color = color_new;
+            var tag = tagData.value;
+            if (jQuery.inArray(tag, admin_tags) != -1){
+              color = color_admin;
+            } else if (jQuery.inArray(tag, user_tags) != -1) {
+              color = color_user;
+            }
+            tagData.style = "--tag-text-color:" + color;
+          },
+        });
+
+    tagify.addTags(assigned_tags)
 
     $('#toggle_public_raw_download').on('click', function() {
       $(this).prop("disabled", true);
@@ -102,7 +98,10 @@
   });
 
   function tags_patch() {
-    var study_tags = $("#studyTags").tagit("assignedTags");
+    var study_tags = [];
+    $.each(jQuery.parseJSON(document.querySelector('#studyTags').value), function(_, element){
+      study_tags.push(element.value);
+    });
     $.ajax({
       url: "{% raw qiita_config.portal_dir %}/study/{{study_info['study_id']}}",
       method: 'PATCH',
@@ -121,10 +120,7 @@
           } else {
             bootstrapAlert("Tags updated. " + data.message, "warning", 10000);
           }
-          // updating display
           update_tags();
-          $("#studyTags").tagit("removeAll");
-          update_gui_tags();
         }
       }
     });
@@ -160,7 +156,7 @@
           <span style="color: #32CD32">New</span>
         </small>
 
-        <ul id="studyTags"></ul>
+        <input id="studyTags">
         <small>
           New tags are linked to the user that created them.
           Report <a href="mailto:qiita.help@gmail.com">abuse</a>.

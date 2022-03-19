@@ -6,7 +6,6 @@
 
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
-<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
 
 <script type="text/javascript">
 
@@ -281,7 +280,7 @@ $(document).ready(function() {
       var query = $("#searchbox").val();
 
       var studies_table = $('#studies-table').DataTable();
-      studies_table.ajax.url(ajaxURL + "&query=" + query).load(function() {
+      studies_table.ajax.url(ajaxURL + "&query=" + query).on('load', function() {
         $("#submit-button").prop("disabled",false);
         $("#search-waiting").hide();
         $("#search-msg").html('Search Completed: <b>' + query + "</b>");
@@ -291,7 +290,7 @@ $(document).ready(function() {
       studies_table.search( '' ).columns().search( '' ).draw();
 
       var user_studies_table = $('#user_studies-table').DataTable();
-      user_studies_table.ajax.url(ajaxURL + "&query=" + query).load(function() {
+      user_studies_table.ajax.url(ajaxURL + "&query=" + query).on('load', function() {
         $("#submit-button").prop("disabled",false);
         $("#search-waiting").hide();
         $("#search-msg").html('Search Completed: <b>' + query + "</b>");
