@@ -77,41 +77,57 @@ Remember, metadata is the most important part for an analysis, without it we onl
       7. *elevation*, *latitude*, *longitude*
       8. *physical_specimen_location*
       9. *collection_timestamp*
-      10. *empo_1*, *empo_2*, *empo_3*
+      10. *empo_1*, *empo_2*, *empo_3*, *empo_4*, more info: :ref:`empo`
 
          .. table::
             :widths: auto
 
-            =============== ================= ======================= ================================================================================
-            empo_1          empo_2            empo_3	                Examples
-            Free-living	    Non-saline        Water (non-saline)      fresh water from lake, pond, or river (<5 psu)
-            Free-living	    Non-saline        Sediment (non-saline)	  sediment from lake, pond, or river (<5 psu)
-            Free-living	    Non-saline        Soil (non-saline)       soil from forest, grassland, tundra, desert, etc.
-            Free-living	    Non-saline        Surface (non-saline)    biofilm from wet (<5 psu) or dry surface, wood, dust, or microbial mat
-            Free-living	    Non-saline        Subsurface (non-saline) deep or subsurface environment
-            Free-living	    Non-saline        Aerosol (non-saline)    aerosolized dust or liquid
-            Free-living	    Saline            Water (saline)          salt water from ocean, sea, estuary, mangrove, or coral reef (>5 psu)
-            Free-living	    Saline            Sediment (saline)       sediment from ocean, sea, estuary, mangrove, or beach (>5 psu)
-            Free-living	    Saline            Hypersaline (saline)    water from hypersaline sample or brine (>50 psu)
-            Free-living	    Saline            Surface (saline)        biofilm from wet or underwater surface or microbial mat (>5 psu)
-            Free-living	    Saline            Aerosol (saline)        seaspray or other aerosolized saline material (>5 psu)
-            Host-associated Animal-associated Animal distal gut       feces, stool
-            Host-associated Animal-associated Animal proximal gut     digesta
-            Host-associated Animal-associated Animal secretion        gut intestine, gizzard, crop, lumen, or mucosa
-            Host-associated Animal-associated Animal surface          skin, sebum, mucus, slime
-            Host-associated Animal-associated Animal corpus           tissue of sponge, coral, gill, siphon, carcass, etc. or whole small animal
-            Host-associated Fungus-associated Fungus corpus           tissue of mushroom or other fungi
-            Host-associated Fungus-associated Fungus surface          biofilm of mushroom
-            Host-associated Plant-associated  Plant secretion         pollen or sap
-            Host-associated Plant-associated  Plant surface          	leaf or kelp surface biofilm
-            Host-associated Plant-associated  Plant rhizosphere       plant root system, may include some soil
-            Host-associated Plant-associated  Plant corpus            tissue of leaf, stem, fruit, or algae
-            Control         Negative          Sterile water blank     sterile water blank used as negative control for extraction, PCR, and sequencing
-            Control         Positive          Mock community          known mixed community used as positive control
-            Control         Positive          Single strain           known single strain control culture
-            Unknown         Contradictory     Unknown (contradictory) unknown sample type because other metadata is contradictory
-            Unknown         Missing           Unknown (missing)       unknown sample type because metadata is unavailable
-            =============== ================= ======================= ================================================================================
+            ================  ============================  ====================  ================================  =======================================================================================================================================
+            empo_1            empo_2                        empo_3                empo_4                            Examples
+            Control           Negative                      Sterile water blank   Sterile water blank               sterile water blank used as negative control for extraction, PCR, and sequencing
+            Control           Positive                      Mock community        Mock community                    known mixed community used as positive control
+            Control           Positive                      Single strain         Single strain                     known single strain used as positive control
+            Free-living       Free-living (non-saline)      Aqueous (non-saline)  Aerosol (non-saline)              aerosolized dust or liquid
+            Free-living       Free-living (non-saline)      Aqueous (non-saline)  Surface (non-saline)              biofilm from wet (<5 psu) or dry surface, wood, dust, microbial mat
+            Free-living       Free-living (non-saline)      Aqueous (non-saline)  Water (non-saline)                fresh water from lake, pond, river (<5 psu)
+            Free-living       Free-living (non-saline)      Solid (non-saline)    Sediment (non-saline)             sediment from lake, pond, river (<5 psu)
+            Free-living       Free-living (non-saline)      Solid (non-saline)    Soil (non-saline)                 soil from forest, grassland, tundra, desert, etc.
+            Free-living       Free-living (non-saline)      Solid (non-saline)    Subsurface (non-saline)           deep or subsurface environment
+            Free-living       Free-living (non-saline)      Solid (non-saline)    Surface (non-saline)              dust or biofilm from dry surface such as floors, keyboards, door handles, and filters
+            Free-living       Free-living (saline)          Aqueous (saline)      Aerosol (saline)                  seaspray or other aerosolized saline material (>5 psu)
+            Free-living       Free-living (saline)          Aqueous (saline)      Hypersaline (saline)              water from hypersaline sample or brine (>50 psu)-
+            Free-living       Free-living (saline)          Aqueous (saline)      Surface (saline)                  biofilm from wet or underwater surface or microbial mat (>5 psu)
+            Free-living       Free-living (saline)          Aqueous (saline)      Water (saline)                    salt water from ocean, sea, estuary, mangrove, coral reef (>5 psu)
+            Free-living       Free-living (saline)          Solid (saline)        Sediment (saline)                 sediment from ocean, sea, estuary, mangrove, beach (>5 psu)
+            Free-living       Free-living (saline)          Solid (saline)        Soil (saline)                     saline or hypersaline soil from forest, grassland, tundra, desert, etc.
+            Free-living       Free-living (saline)          Solid (saline)        Subsurface (saline)               deep or subsurface saline environment
+            Host-associated   Host-associated (non-saline)  Animal (non-saline)   Animal corpus (non-saline)        tissue, carcass, etc., or whole small terrestrial or freshwater animal
+            Host-associated   Host-associated (non-saline)  Animal (non-saline)   Animal distal gut (non-saline)    feces, stool from terrestrial or freshwater animal
+            Host-associated   Host-associated (non-saline)  Animal (non-saline)   Animal proximal gut (non-saline)  gut intestine, gizzard, crop, lumen, mucosa from terrestrial or freshwater animal
+            Host-associated   Host-associated (non-saline)  Animal (non-saline)   Animal secretion (non-saline)     saliva, breast milk, vaginal secretion from terrestrial or freshwater animal
+            Host-associated   Host-associated (non-saline)  Animal (non-saline)   Animal surface (non-saline)       skin, sebum, mucus, slime from terrestrial or freshwater animal
+            Host-associated   Host-associated (non-saline)  Fungus (non-saline)   Fungus corpus (non-saline)        tissue of fruiting body or thallus or other fungal structure; terrestrial or freshwater
+            Host-associated   Host-associated (non-saline)  Fungus (non-saline)   Fungus surface (non-saline)       biofilm of fruiting body or thallus or other fungal structure; terrestrial or freshwater
+            Host-associated   Host-associated (non-saline)  Plant (non-saline)    Plant detritus (non-saline)       root/holdfast, stem, leaf/blade/bulb, flower, fruit, seed, algal interior/tissue; terrestrial or freshwater
+            Host-associated   Host-associated (non-saline)  Plant (non-saline)    Plant rhizosphere (non-saline)    plant root system, may include some soil; terrestrial or freshwater
+            Host-associated   Host-associated (non-saline)  Plant (non-saline)    Plant secretion (non-saline)      pollen, sap; terrestrial or freshwater
+            Host-associated   Host-associated (non-saline)  Plant (non-saline)    Plant surface (non-saline)        root/holdfast, stem, leaf/blade/bulb, flower, fruit, seed, algal surface biofilm; terrestrial or freshwater
+            Host-associated   Host-associated (saline)      Animal (saline)       Animal corpus (saline)            tissue of sponge, coral, gill, siphon, carcass, etc. or whole small marine animal
+            Host-associated   Host-associated (saline)      Animal (saline)       Animal distal gut (saline)        feces, stool from marine animal
+            Host-associated   Host-associated (saline)      Animal (saline)       Animal proximal gut (saline)      gut intestine, gizzard, crop, lumen, mucosa from marine animal
+            Host-associated   Host-associated (saline)      Animal (saline)       Animal secretion (saline)         saliva, breast milk, vaginal secretion from marine animal
+            Host-associated   Host-associated (saline)      Animal (saline)       Animal surface (saline)           skin, sebum, mucus, slime from marine animal
+            Host-associated   Host-associated (saline)      Fungus (saline)       Fungus corpus (saline)            tissue of fruiting body or thallus or other fungal structure; marine
+            Host-associated   Host-associated (saline)      Fungus (saline)       Fungus surface (saline)           biofilm of fruiting body or thallus or other fungal structure; marine
+            Host-associated   Host-associated (saline)      Plant (saline)        Plant detritus (saline)           root/holdfast, stem, leaf/blade/bulb, flower, fruit, seed, algal interior/tissue; marine
+            Host-associated   Host-associated (saline)      Plant (saline)        Plant rhizosphere (saline)        plant root system, may include some soil; marine
+            Host-associated   Host-associated (saline)      Plant (saline)        Plant secretion (saline)          pollen, sap; marine
+            Host-associated   Host-associated (saline)      Plant (saline)        Plant surface (saline)            root/holdfast, stem, leaf/blade/bulb, flower, fruit, seed, algal surface biofilm; marine
+            not applicable    not applicable                not applicable        not applicable                    information is inappropriate to report, can indicate that the standard itself fails to model or represent the information appropriately
+            missing           not collected                 not collected         not collected                     information of an expected format was not given because it has not been collected
+            missing           not provided                  not provided          not provided                      information of an expected format was not given, a value may be given at a later stage
+            missing           restricted access             restricted access     restricted access                 information exists but can not be released openly because of privacy concerns
+            ================  ============================  ====================  ================================  =======================================================================================================================================
 
     c. Extra minimal information for host associated studies:
 
