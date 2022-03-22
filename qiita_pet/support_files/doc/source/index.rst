@@ -40,6 +40,7 @@ Looking for information about submitting your files to EBI? Please see the docum
 .. toctree::
 
    checklist-for-ebi-ena-submission
+   empo
 
 Looking for comparable studies? Please see the document here:
 
