@@ -150,8 +150,7 @@ class TestStudy(TestCase):
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
             "principal_investigator_id": qdb.study.StudyPerson(3),
-            "lab_person_id": qdb.study.StudyPerson(1),
-            'specimen_id_column': None
+            "lab_person_id": qdb.study.StudyPerson(1)
         }
 
         self.infoexp = {
@@ -165,7 +164,6 @@ class TestStudy(TestCase):
                               "gut microbiome",
             "principal_investigator": qdb.study.StudyPerson(3),
             "lab_person": qdb.study.StudyPerson(1),
-            'specimen_id_column': None,
             'public_raw_download': False
         }
 
@@ -193,8 +191,7 @@ class TestStudy(TestCase):
             'study_description': 'Analysis of the Cannabis Plant Microbiome',
             'study_alias': 'Cannabis Soils',
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
-            'lab_person': qdb.study.StudyPerson(1),
-            'specimen_id_column': None}
+            'lab_person': qdb.study.StudyPerson(1)}
 
     def tearDown(self):
         qiita_config.portal = self.portal
@@ -251,8 +248,7 @@ class TestStudy(TestCase):
             'Soils',
             'ebi_submission_status': 'submitted',
             'ebi_study_accession': 'EBI123456-BB',
-            'autoloaded': False,
-            'specimen_id_column': None}
+            'autoloaded': False}
         self.assertDictEqual(obs, exp)
 
         # Test get specific keys for single study
@@ -446,8 +442,7 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
-               'notes': '',
-               'specimen_id_column': None}
+               'notes': ''}
         self.assertEqual(obs_info, exp)
         # Check the timestamp separately, since it is set by the database
         # to the microsecond, and we can't predict it a priori
@@ -529,8 +524,7 @@ class TestStudy(TestCase):
                'study_alias': 'FCM',
                'most_recent_contact': None,
                'lab_person': qdb.study.StudyPerson(1),
-               'notes': 'an analysis was performed \n here and \n here',
-               'specimen_id_column': None}
+               'notes': 'an analysis was performed \n here and \n here'}
         self.assertEqual(obs.info, exp)
         self.assertEqual(obs.shared_with, [])
         self.assertEqual(obs.publications, [])
@@ -911,31 +905,6 @@ class TestStudy(TestCase):
         message = study.update_tags(admin, [])
         self.assertEqual(study.tags, [])
         self.assertEqual(message, '')
-
-    def test_specimen_id_column_get_set(self):
-        self.assertEqual(self.study.specimen_id_column, None)
-        self.study.specimen_id_column = 'anonymized_name'
-        self.assertEqual(self.study.specimen_id_column, 'anonymized_name')
-        self.study.specimen_id_column = None
-        self.assertEqual(self.study.specimen_id_column, None)
-
-    def test_specimen_id_column_not_unique(self):
-        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            self.study.specimen_id_column = 'dna_extracted'
-
-    def test_specimen_id_column_doesnt_exist(self):
-        with self.assertRaises(qdb.exceptions.QiitaDBLookupError):
-            self.study.specimen_id_column = 'foo'
-
-    def test_specimen_id_column_no_sample_information(self):
-        empty = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Fried duck microbiome",
-            self.info)
-        with self.assertRaises(qdb.exceptions.QiitaDBLookupError):
-            empty.specimen_id_column = 'foo'
-
-        # cleaning up the created study
-        qdb.study.Study.delete(empty._id)
 
 
 if __name__ == "__main__":

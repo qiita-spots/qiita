@@ -73,7 +73,7 @@ class TestStudyAPI1(TestStudyAPI):
                     'rhizospheres from the same location at different time '
                     'points in the plant lifecycle.'),
                 'status': 'private', 'spatial_series': False,
-                'specimen_id_column': None, 'public_raw_download': False,
+                'public_raw_download': False,
                 'study_description': (
                     'Analysis of the Cannabis Plant Microbiome'),
                 'shared_with': ['shared@foo.bar'], 'publication_doi': [
@@ -127,7 +127,7 @@ class TestStudyAPI1(TestStudyAPI):
                 'email': 'PI_dude@foo.bar'}, 'study_alias': 'FCM',
             'study_id': new_study.id, 'notes': '',
             'most_recent_contact': datetime(2015, 5, 19, 16, 11),
-            'ebi_study_accession': None, 'specimen_id_column': None,
+            'ebi_study_accession': None,
             'study_title': 'Some New Study for test'}, 'message': '',
             'editable': True}
         self.assertCountEqual(obs, exp)
@@ -465,38 +465,6 @@ class TestStudyAPI1(TestStudyAPI):
                            'path parameter'), 'status': 'error'}
         self.assertEqual(obs, exp)
 
-    def test_study_patch_request_specimen_id(self):
-        obs = study_patch_request('shared@foo.bar', 1,
-                                  'replace', '/specimen_id_column',
-                                  'anonymized_name')
-        exp = {'status': 'success', 'message': 'Successfully updated '
-                                               'specimen id column'}
-        self.assertEqual(obs, exp)
-
-        obs = study_patch_request('shared@foo.bar', 1,
-                                  'replace', '/specimen_id_column',
-                                  'host_subject_id')
-        exp = {'status': 'success', 'message': 'Successfully updated '
-                                               'specimen id column'}
-        self.assertEqual(obs, exp)
-
-        qdb.study.Study(1).specimen_id_column = None
-
-    def test_study_patch_request_specimen_id_errors(self):
-        obs = study_patch_request('shared@foo.bar', 1,
-                                  'replace', '/specimen_id_column',
-                                  'taxon_id')
-        exp = {'status': 'error', 'message': 'The category does not contain'
-               ' unique values.'}
-        self.assertEqual(obs, exp)
-
-        obs = study_patch_request('shared@foo.bar', 1,
-                                  'replace', '/specimen_id_column',
-                                  'bleep_bloop')
-        exp = {'status': 'error', 'message': "Category 'bleep_bloop' is not"
-               " present in the sample information."}
-        self.assertEqual(obs, exp)
-
     def test_study_patch_request_toggle_public_raw_download(self):
         study_id = 1
         study = qdb.study.Study(study_id)
@@ -505,14 +473,6 @@ class TestStudyAPI1(TestStudyAPI):
                                   None)
         exp = {'status': 'success', 'message': 'Successfully updated '
                                                'public_raw_download'}
-        self.assertEqual(obs, exp)
-        self.assertTrue(study.public_raw_download)
-
-        obs = study_patch_request('demo@microbio.me', study_id,
-                                  'replace', '/specimen_id_column',
-                                  'host_subject_id')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
         self.assertTrue(study.public_raw_download)
 
