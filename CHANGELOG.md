@@ -1,5 +1,17 @@
 # Qiita changelog
 
+Version 2022.04
+---------------
+
+* Moved from Python 3.6 to 3.9.
+* Added support for Pandas 1.4.0, [details here](https://github.com/qiita-spots/qiita/pull/3174).
+* Updated all available JavaScript libraries, [details here](https://github.com/qiita-spots/qiita/pull/3177).
+* User can select which metadata to use when creating a new analysis, by default only overlapping metadata in all studies is selected.
+* Now we can fully delete users in the backend.
+* Fixed outstanding issues to add default workflow to a preparation, [details here](https://github.com/qiita-spots/qiita/issues/3158).
+* Fixed the following issues: [3183](https://github.com/qiita-spots/qiita/issues/3183), [3182](https://github.com/qiita-spots/qiita/issues/3182), [3170](https://github.com/qiita-spots/qiita/issues/3170)
+
+
 Version 2021.11
 ---------------
 
