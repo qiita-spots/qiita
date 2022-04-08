@@ -6,12 +6,13 @@ Version 2022.04
 * Moved from Python 3.6 to 3.9.
 * Added support for Pandas 1.4.0, [details here](https://github.com/qiita-spots/qiita/pull/3174).
 * Updated all available JavaScript libraries, [details here](https://github.com/qiita-spots/qiita/pull/3177).
-* User can select which metadata to use when creating a new analysis, by default only overlapping metadata in all studies is selected.
+* Users can select which metadata to use when creating a new analysis, by default only overlapping metadata in all studies is selected.
 * Now we can fully delete users in the backend.
 * Updated documentation to reflect the new EMPO version 2.
 * Fixed outstanding issues to add default workflow to a preparation, [details here](https://github.com/qiita-spots/qiita/issues/3158).
 * Fixed the following issues: [3183](https://github.com/qiita-spots/qiita/issues/3183), [3182](https://github.com/qiita-spots/qiita/issues/3182), [3170](https://github.com/qiita-spots/qiita/issues/3170), [3193](https://github.com/qiita-spots/qiita/pull/3193).
 * We deprecated the use of specimen_id from Qiita; this is no longer required in the backend or the GUI.
+* Moved [qp-fastp-minimap2](https://github.com/qiita-spots/qp-fastp-minimap2/) to per sample parallelization. Now an iSeq processing takes ~20min, while before it took close to 2hrs.
 * Fixed the following issues [qp-knight-lab-processing #15](https://github.com/qiita-spots/qp-knight-lab-processing/issues/15), [qp-knight-lab-processing #16](https://github.com/qiita-spots/qp-knight-lab-processing/issues/16), [qp-knight-lab-processing #17](https://github.com/qiita-spots/qp-knight-lab-processing/issues/17), [qp-knight-lab-processing #19](https://github.com/qiita-spots/qp-knight-lab-processing/issues/19), [mg-scripts #60](https://github.com/biocore/mg-scripts/issues/60), [mg-scripts #62](https://github.com/biocore/mg-scripts/issues/62) from the [Knight Lab Sequence Processing Pipeline](https://github.com/qiita-spots/qp-knight-lab-processing).
 
 
