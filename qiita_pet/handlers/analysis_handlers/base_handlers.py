@@ -27,6 +27,9 @@ class CreateAnalysisHandler(BaseHandler):
         desc = self.get_argument('description')
         mdsi = self.get_argument('merge_duplicated_sample_ids', False)
         metadata = self.request.arguments.get('analysis-metadata', None)
+        # we need to change from bytes to strings
+        if metadata is not None:
+            metadata = [m.decode('utf-8') for m in metadata]
 
         if mdsi in (b'on', 'on'):
             mdsi = True

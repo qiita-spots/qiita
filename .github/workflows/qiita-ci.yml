@@ -96,6 +96,7 @@ jobs:
           export REDBIOM_HOST="http://localhost:7379"
 
           pip install . --no-binary redbiom
+          conda install -c conda-forge --yes biom-format
           pwd
           mkdir ~/.qiita_plugins
 

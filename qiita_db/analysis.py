@@ -1086,12 +1086,12 @@ class Analysis(qdb.base.QiitaObject):
                 if si not in sample_infos:
                     si_df = si.to_dataframe()
                     if categories is not None:
-                        si_df = si_df[categories & set(si_df.columns)]
+                        si_df = si_df[set(categories) & set(si_df.columns)]
                     sample_infos[si] = si_df
                 pt = artifact.prep_templates[0]
                 pt_df = pt.to_dataframe()
                 if categories is not None:
-                    pt_df = pt_df[categories & set(pt_df.columns)]
+                    pt_df = pt_df[set(categories) & set(pt_df.columns)]
 
                 qm = pt_df.join(sample_infos[si], lsuffix="_prep")
 

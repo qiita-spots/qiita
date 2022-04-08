@@ -72,16 +72,20 @@ $(document).ready(function() {
           if (is_sample) {
             if (jQuery.inArray(option.text, common_sample_fields) >= 0) {
               option.selected=true;
-              $('#analysis-metadata').append(
-                $('<option>', { value: option.value, text: option.text,
-                                selected: true}));
+              if (!$('#analysis-metadata').val().includes(option.text)) {
+                $('#analysis-metadata').append(
+                  $('<option>', { value: option.value, text: option.text,
+                                  selected: true}));
+              }
             }
           } else {
             if (jQuery.inArray(option.text, common_prep_fields) >= 0) {
               option.selected=true;
-              $('#analysis-metadata').append(
-                $('<option>', { value: option.value, text: option.text,
-                                selected: true}));
+              if (!$('#analysis-metadata').val().includes(option.text)) {
+                $('#analysis-metadata').append(
+                  $('<option>', { value: option.value, text: option.text,
+                                  selected: true}));
+              }
             }
           }
         });
@@ -102,7 +106,7 @@ $(document).ready(function() {
         var toggle = key == 'selected';
         var selection = object[key];
 
-        if (toggle) {
+        if (toggle && !$('#analysis-metadata').val().includes(selection)) {
           $('#analysis-metadata').append(
             $('<option>', { value: selection, text: selection,
                             selected: true}));
