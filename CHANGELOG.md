@@ -6,7 +6,7 @@ Version 2022.04
 * Moved from Python 3.6 to 3.9.
 * Added support for Pandas 1.4.0, [details here](https://github.com/qiita-spots/qiita/pull/3174).
 * Updated all available JavaScript libraries, [details here](https://github.com/qiita-spots/qiita/pull/3177).
-* Users can select which metadata to use when creating a new analysis, by default only overlapping metadata in all studies is selected.
+* Users can select which metadata to use when creating a new analysis. By default only overlapping metadata in all studies is selected.
 * Now we can fully delete users in the backend.
 * Updated documentation to reflect the new EMPO version 2.
 * Fixed outstanding issues to add default workflow to a preparation, [details here](https://github.com/qiita-spots/qiita/issues/3158).
