@@ -809,12 +809,15 @@ class PrepTemplate(MetadataTemplate):
 
         # 2.
         pt_dt = self.data_type()
+        pt_artifact = self.artifact.artifact_type
         workflows = [wk for wk in qdb.software.DefaultWorkflow.iter()
-                     if pt_dt in wk.data_type]
+                     if wk.artifact_type == pt_artifact and
+                     pt_dt in wk.data_type]
         if not workflows:
             # raises option a.
-            raise ValueError(f'This preparation data type: "{pt_dt}" does not '
-                             'have valid workflows')
+            msg = (f'This preparation data type: "{pt_dt}" and/or artifact '
+                   f'type "{pt_artifact}" does not have valid workflows')
+            raise ValueError(msg)
         missing_artifacts = dict()
         for wk in workflows:
             missing_artifacts[wk] = dict()
