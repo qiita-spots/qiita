@@ -626,13 +626,13 @@ class Artifact(qdb.base.QiitaObject):
 
                 # there are cases that an artifact would not be linked to a
                 # study
-                pt_ids = [pt.id for a in all_artifacts
+                pt_ids = [tuple([pt.id]) for a in all_artifacts
                           for pt in a.prep_templates]
                 if pt_ids:
                     sql = """UPDATE qiita.prep_template
                              SET artifact_id = NULL
                              WHERE prep_template_id IN %s"""
-                    qdb.sql_connection.TRN.add(sql, [tuple(x) for x in pt_ids])
+                    qdb.sql_connection.TRN.add(sql, pt_ids)
             else:
                 sql = """DELETE FROM qiita.parent_artifact
                          WHERE artifact_id IN %s"""
