@@ -3,9 +3,9 @@
 Version 2022.05
 -----------------
 
-* Added Artifact.iter() for easier Artifact interactions.
-* Fixed the SCP Qiita transfer [due to this](https://github.com/paramiko/paramiko/issues/1961).
-* Added User.email to the Admin Processing listing.
+* Added `Artifact.iter()` for easier Artifact interactions.
+* Fixed the SCP Qiita transfer; [this was the problem and solution](https://github.com/paramiko/paramiko/issues/1961).
+* Added `User.email` to the Admin Job Processing listing.
 
 Version 2022.04
 ---------------
