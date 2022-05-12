@@ -56,6 +56,26 @@ class Artifact(qdb.base.QiitaObject):
     _table = "artifact"
 
     @classmethod
+    def iter(cls):
+        """Iterate over all artifacts in the database
+
+        Returns
+        -------
+        generator
+            Yields a `Artifact` object for each artifact in the database,
+            in order of ascending artifact_id
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_id FROM qiita.{}
+                     ORDER BY artifact_id""".format(cls._table)
+            qdb.sql_connection.TRN.add(sql)
+
+            ids = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        for id_ in ids:
+            yield Artifact(id_)
+
+    @classmethod
     def iter_by_visibility(cls, visibility):
         r"""Iterator over the artifacts with the given visibility
 
@@ -78,17 +98,6 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [visibility])
             for a_id in qdb.sql_connection.TRN.execute_fetchflatten():
                 yield cls(a_id)
-
-    @classmethod
-    def iter_public(cls):
-        r"""Iterator over the public artifacts available in the system
-
-        Returns
-        -------
-        generator of qiita_db.artifact.Artifact
-            The public artifacts available in the system
-        """
-        return cls.iter_by_visibility('public')
 
     @staticmethod
     def types():
@@ -615,12 +624,15 @@ class Artifact(qdb.base.QiitaObject):
                 qdb.util.move_filepaths_to_upload_folder(
                     study.id, filepaths)
 
-                sql = """UPDATE qiita.prep_template
-                         SET artifact_id = NULL
-                         WHERE prep_template_id IN %s"""
-                qdb.sql_connection.TRN.add(
-                    sql, [tuple(pt.id for a in all_artifacts
-                                for pt in a.prep_templates)])
+                # there are cases that an artifact would not be linked to a
+                # study
+                pt_ids = [tuple([pt.id]) for a in all_artifacts
+                          for pt in a.prep_templates]
+                if pt_ids:
+                    sql = """UPDATE qiita.prep_template
+                             SET artifact_id = NULL
+                             WHERE prep_template_id IN %s"""
+                    qdb.sql_connection.TRN.add(sql, pt_ids)
             else:
                 sql = """DELETE FROM qiita.parent_artifact
                          WHERE artifact_id IN %s"""

@@ -43,11 +43,8 @@ def _ssh_session(p_url, private_key):
     """
     scheme = p_url.scheme
     hostname = p_url.hostname
-    # if port is '' Python 2.7.6 will raise an error
-    try:
-        port = p_url.port
-    except Exception:
-        port = 22
+
+    port = p_url.port
     username = p_url.username
 
     if scheme == 'scp':
@@ -61,8 +58,11 @@ def _ssh_session(p_url, private_key):
 
         # step 2: connect to fileserver
         key = RSAKey.from_private_key_file(private_key)
+        # we need pkeys now based on
+        # https://github.com/paramiko/paramiko/issues/1961
+        pkeys = dict(pubkeys=['rsa-sha2-256', 'rsa-sha2-512'])
         ssh.connect(hostname, port=port, username=username,
-                    pkey=key, look_for_keys=False)
+                    pkey=key, look_for_keys=False, disabled_algorithms=pkeys)
         return ssh
     else:
         raise ValueError(

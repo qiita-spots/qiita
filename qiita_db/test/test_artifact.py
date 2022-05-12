@@ -40,10 +40,8 @@ class ArtifactTestsReadOnly(TestCase):
                qdb.artifact.Artifact(7)]
         self.assertEqual(obs, exp)
 
-    def test_iter_public(self):
-        obs = list(qdb.artifact.Artifact.iter_public())
-        exp = []
-        self.assertEqual(obs, exp)
+        exp.extend([qdb.artifact.Artifact(8), qdb.artifact.Artifact(9)])
+        self.assertEqual(list(qdb.artifact.Artifact.iter()), exp)
 
     def test_create_type(self):
         obs = qdb.artifact.Artifact.types()

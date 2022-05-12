@@ -48,6 +48,14 @@ Qiita currently has one active shotgun metagenomics data analysis pipeline: a pe
 bowtie2 alignment step with Woltka classification using either the WoLr1 or Rep200 databases.
 Below you will find more information about each of these options.
 
+.. note::
+   The bowtie2 settings are maximum and minimum mismatch penalties (mp=[1,1]), a
+   penalty for ambiguities (np=1; default), read and reference gap open- and
+   extend penalties (rdg=[0,1], rfg=[0,1]), a minimum alignment score for an
+   alignment to be considered valid (score-min=[L,0,-0.05]), a defined number of
+   distinct, valid alignments (k=16), and the suppression of SAM records for
+   unaligned reads, as well as SAM headers (no-unal, no-hd).
+
 The current workflow is as follows:
 
 #. A single step per sample adapter removal (via `fastp <https://academic.oup.com/bioinformatics/article/34/17/i884/5093234>`_) and host filtering (via `minimap2 <https://academic.oup.com/bioinformatics/article/34/18/3094/4994778>`_); more information below.
