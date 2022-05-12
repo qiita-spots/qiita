@@ -72,7 +72,7 @@
 
       //row[8] is PBS/Torque/Slurm id
       out.push('<b class="' + statusToClass[status] + '">' + status + ' ' +
-                row[0] + ' ' + '</b> ');
+                row[0] + ' ' + '</b> <br/>' + row[10] + '</br>');
 
       if (status === 'running' || status === 'queued') {
         // row[0] is qiita job-id
