@@ -532,11 +532,7 @@
                   </li>
                   <li role="separator" class="divider"></li>
                   <li>
-                    {% if qiita_sha=="" %}
-                      <a href="#">
-                    {% else %}
-                      <a href="https://github.com/biocore/qiita/commit/{{qiita_sha}}">
-                    {% end %}
+                    <a href="https://github.com/qiita-spots/qiita/releases">
                       <h6>
                         <b>Current version:</b></br>
                         {{qiita_version}} {{qiita_sha[0:7]}}
