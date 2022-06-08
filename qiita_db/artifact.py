@@ -23,6 +23,9 @@ from qiita_core.qiita_settings import qiita_config
 TypeNode = namedtuple('TypeNode', ['id', 'job_id', 'name', 'type'])
 
 
+IgnoreVisibilities = tuple([qdb.util.convert_to_id('archived', "visibility")])
+
+
 class Artifact(qdb.base.QiitaObject):
     r"""Any kind of file (or group of files) stored in the system and its
     attributes
@@ -655,6 +658,73 @@ class Artifact(qdb.base.QiitaObject):
             sql = "DELETE FROM qiita.artifact WHERE artifact_id IN %s"
             qdb.sql_connection.TRN.add(sql, [all_ids])
 
+    @classmethod
+    def archive(cls, artifact_id):
+        """Archive artifact with artifact_id
+
+        Parameters
+        ----------
+        artifact_id : int
+            The artifact to be archived
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the artifact is not public
+            If the artifact_type is not BIOM
+            If the artifact belowns to an analysis
+            If the artifact has no parents (raw file)
+        """
+        artifact = cls(artifact_id)
+
+        if artifact.visibility != 'public':
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                'Only public artifacts can be archived')
+        if artifact.artifact_type != 'BIOM':
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                'Only BIOM artifacts can be archived')
+        if artifact.analysis is not None:
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                'Only non analysis artifacts can be archived')
+        if not artifact.parents:
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                'Only non raw artifacts can be archived')
+
+        # let's find all ancestors that can be deleted (it has parents and no
+        # ancestors, and delete them
+        to_delete = [x for x in artifact.ancestors.nodes()
+                     if x.id != artifact_id and x.parents and
+                     not [y for y in x.descendants.nodes()
+                     if y.id not in (artifact_id, x.id)]]
+        # ignore artifacts that can and has been submitted to EBI
+        to_delete = [x for x in to_delete if not x.can_be_submitted_to_ebi or
+                     x.is_submitted_to_vamps]
+
+        # get the log file so we can delete
+        fids = [x['fp_id'] for x in artifact.filepaths
+                if x['fp_type'] == 'biom']
+
+        with qdb.sql_connection.TRN:
+            artifact._set_visibility('archived', propagate=False)
+            sql = 'DELETE FROM qiita.parent_artifact WHERE artifact_id = %s'
+            qdb.sql_connection.TRN.add(sql, [artifact_id])
+
+            sql = '''DELETE FROM qiita.artifact_output_processing_job
+                     WHERE artifact_id = %s'''
+            qdb.sql_connection.TRN.add(sql, [artifact_id])
+
+            if fids:
+                sql = '''DELETE FROM qiita.artifact_filepath
+                         WHERE filepath_id IN %s'''
+                qdb.sql_connection.TRN.add(sql, [tuple(fids)])
+
+            qdb.sql_connection.TRN.execute()
+
+        # cleaning the extra artifacts
+        for x in to_delete:
+            x._set_visibility('sandbox', propagate=False)
+            cls.delete(x.id)
+
     @property
     def name(self):
         """The name of the artifact
@@ -745,18 +815,21 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    def _set_visibility(self, value):
+    def _set_visibility(self, value, propagate=True):
         "helper method to split validation and actual set of the visibility"
         # In order to correctly propagate the visibility we need to find
         # the root of this artifact and then propagate to all the artifacts
         vis_id = qdb.util.convert_to_id(value, "visibility")
 
-        sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
-        qdb.sql_connection.TRN.add(sql, [self.id])
-        root_id = qdb.sql_connection.TRN.execute_fetchlast()
-        root = qdb.artifact.Artifact(root_id)
-        # these are the ids of all the children from the root
-        ids = [a.id for a in root.descendants.nodes()]
+        if propagate:
+            sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            root_id = qdb.sql_connection.TRN.execute_fetchlast()
+            root = qdb.artifact.Artifact(root_id)
+            # these are the ids of all the children from the root
+            ids = [a.id for a in root.descendants.nodes()]
+        else:
+            ids = [self.id]
 
         sql = """UPDATE qiita.artifact
                  SET visibility_id = %s
@@ -1317,9 +1390,10 @@ class Artifact(qdb.base.QiitaObject):
             sql = """SELECT artifact_id
                      FROM qiita.artifact_descendants(%s)
                         JOIN qiita.artifact USING (artifact_id)
+                     WHERE visibility_id NOT IN %s
                      ORDER BY generated_timestamp DESC
                      LIMIT 1"""
-            qdb.sql_connection.TRN.add(sql, [self.id])
+            qdb.sql_connection.TRN.add(sql, [self.id, IgnoreVisibilities])
             a_id = qdb.sql_connection.TRN.execute_fetchindex()
             # If the current artifact has no children, the previous call will
             # return an empty list, so the youngest artifact in the lineage is

@@ -1361,5 +1361,40 @@ class ArtifactTests(TestCase):
         self.assertCountEqual(obs, exp)
 
 
+@qiita_test_checker()
+class ArtifactArchiveTests(TestCase):
+    def test_archive(self):
+        A = qdb.artifact.Artifact
+        QE = qdb.exceptions.QiitaDBOperationNotPermittedError
+
+        # check nodes, without any change
+        exp_nodes = [A(1), A(2), A(3), A(4), A(5), A(6)]
+        self.assertCountEqual(A(1).descendants.nodes(), exp_nodes)
+        obs_artifacts = len(qdb.util.get_artifacts_information([4, 5, 6, 8]))
+        self.assertEqual(4, obs_artifacts)
+
+        # check errors
+        with self.assertRaisesRegex(QE, 'Only public artifacts can be '
+                                    'archived'):
+            A.archive(1)
+        A(1).visibility = 'public'
+
+        with self.assertRaisesRegex(QE, 'Only BIOM artifacts can be archived'):
+            A.archive(1)
+
+        A(8).visibility = 'public'
+        with self.assertRaisesRegex(QE, 'Only non analysis artifacts can '
+                                    'be archived'):
+            A.archive(8)
+
+        for aid in range(4, 7):
+            A.archive(aid)
+            exp_nodes.remove(A(aid))
+            self.assertCountEqual(A(1).descendants.nodes(), exp_nodes)
+
+        obs_artifacts = len(qdb.util.get_artifacts_information([4, 5, 6, 8]))
+        self.assertEqual(1, obs_artifacts)
+
+
 if __name__ == '__main__':
     main()
