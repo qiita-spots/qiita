@@ -702,7 +702,7 @@ class Artifact(qdb.base.QiitaObject):
 
         # get the log file so we can delete
         fids = [x['fp_id'] for x in artifact.filepaths
-                if x['fp_type'] == 'biom']
+                if x['fp_type'] == 'log']
 
         with qdb.sql_connection.TRN:
             artifact._set_visibility('archived', propagate=False)
