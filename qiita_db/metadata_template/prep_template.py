@@ -550,7 +550,7 @@ class PrepTemplate(MetadataTemplate):
                         JOIN qiita.visibility USING (visibility_id)
                      WHERE prep_template_id = %s and visibility_id NOT IN %s"""
             qdb.sql_connection.TRN.add(
-                sql, [self._id, qdb.artifact.IgnoreVisibilities])
+                sql, [self._id, qdb.util.artifact_visibilities_to_skip()])
 
             return qdb.util.infer_status(
                 qdb.sql_connection.TRN.execute_fetchindex())

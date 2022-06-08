@@ -23,9 +23,6 @@ from qiita_core.qiita_settings import qiita_config
 TypeNode = namedtuple('TypeNode', ['id', 'job_id', 'name', 'type'])
 
 
-IgnoreVisibilities = tuple([qdb.util.convert_to_id('archived', "visibility")])
-
-
 class Artifact(qdb.base.QiitaObject):
     r"""Any kind of file (or group of files) stored in the system and its
     attributes
@@ -1393,7 +1390,8 @@ class Artifact(qdb.base.QiitaObject):
                      WHERE visibility_id NOT IN %s
                      ORDER BY generated_timestamp DESC
                      LIMIT 1"""
-            qdb.sql_connection.TRN.add(sql, [self.id, IgnoreVisibilities])
+            qdb.sql_connection.TRN.add(
+                sql, [self.id, qdb.util.artifact_visibilities_to_skip()])
             a_id = qdb.sql_connection.TRN.execute_fetchindex()
             # If the current artifact has no children, the previous call will
             # return an empty list, so the youngest artifact in the lineage is
