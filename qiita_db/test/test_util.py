@@ -808,7 +808,7 @@ class UtilTests(TestCase):
 
     def test_get_visibilities(self):
         obs = qdb.util.get_visibilities()
-        exp = ['awaiting_approval', 'sandbox', 'private', 'public']
+        exp = ['awaiting_approval', 'sandbox', 'private', 'public', 'archived']
         self.assertEqual(obs, exp)
 
     def test_infer_status(self):
