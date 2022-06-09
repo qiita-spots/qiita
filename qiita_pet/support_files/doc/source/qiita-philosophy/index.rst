@@ -20,21 +20,24 @@ A Study
 
 Qiita’s main entity is the idea of a study. A study can have many samples, with
 many preparations, that have been sequenced several times, Figure 1.
-Additionally, study artifacts have 3 different states: sandboxed, private and
-public. A sandboxed artifact has all operational capabilities in the system
-but is not publicly available, allowing for quick integration with other
-studies but at the same time keeping it private so the user can improve the
-analysis. Once a user decides that is time to make their artifact public they
-can request an administrator to validate their study information and make it
-private and possibly submit to a permanent repository, where it can also be
-kept private until the user wants to make it public. At this stage in Qiita
+Additionally, study artifacts have 5 different states: sandboxed, awaiting_approval,
+private, public and archived. A sandboxed artifact has all operational
+capabilities in the system but is not publicly available, allowing for quick
+integration with other studies but at the same time keeping it private so the
+user can improve the analysis. Once a user decides that is time to make their
+artifact public they can request an administrator to validate their study information
+and make it private ('awaiting_approval' is this intermediary state between
+sandbox and private) and possibly submit to a permanent repository, where it can
+also be kept private until the user wants to make it public. At this stage in Qiita
 the whole study (including all processed data) is private. This process is
 completely automatic via the Graphical User Interface (GUI). Currently sequence
 data is being deposited for permanent storage to the European Nucleotide
 Archive (ENA), part of the European Bioinformatics Institute (EBI). Finally,
 when the user is ready, usually when the main manuscript of the study is ready
 for publication, the user can request for the artifact to be made public
-public, both in Qiita and the permanent repository, Figure 2.
+public, both in Qiita and the permanent repository, Figure 2. Finally, when new
+processing algorithms are available, the older BIOM artifacts are archived, for
+long term storage.
 
 
 .. figure::  images/figure1.png
