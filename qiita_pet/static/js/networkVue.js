@@ -555,6 +555,14 @@ Vue.component('processing-graph', {
             // Put first the required parameters
             $("#cmd-opts-div").append($('<h4>').text('Required parameters:'));
             var keys = Object.keys(data.req_options).sort(function(a, b){return a.localeCompare(b, 'en', {'sensitivity': 'base'});});
+
+            // adding extra artifacts to sel_artifacts_info so they are added to the GUI
+            $.each(data.extra_artifacts, function(artifact_type, artifacts) {
+              $.each(artifacts, function(index, adata) {
+                sel_artifacts_info[adata[0]] = {'type': artifact_type, 'name': adata[1] + ' [' + adata[0] + ']'}
+              });
+            });
+
             for (var i = 0; i < keys.length; i++) {
               var key = keys[i];
               vm.loadParameterGUI(key, data.req_options[key], sel_artifacts_info, $("#cmd-opts-div"));
@@ -748,7 +756,16 @@ Vue.component('processing-graph', {
         style: {
           'curve-style': 'bezier',
           'target-arrow-shape': 'triangle'
-        }},
+        }}, {
+        selector: 'node.highlight',
+        style: {
+         'border-width': '5px'
+        }}, {
+        selector: 'edge.highlight',
+        style: {
+          'line-color': '#333',
+          'target-arrow-color': '#333'
+        }}
       ];
       var panzoom_options =	{
         zoomOnly: true,
@@ -787,8 +804,16 @@ Vue.component('processing-graph', {
       });
 
       vm.network.on('tap', 'node', function (evt) {
-        var data = evt.target.data();
+        var target = evt.target;
+        var data = target.data();
         var element_id = data.id;
+
+        // removing all highlight classes from network and highlighting the
+        // element that was just selected
+        vm.network.nodes().removeClass('highlight');
+        vm.network.edges().removeClass('highlight');
+        target.addClass('highlight');
+        target.connectedEdges().addClass('highlight');
 
         if (data.group === 'artifact') {
           vm.populateContentArtifact(element_id);
