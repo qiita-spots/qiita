@@ -132,8 +132,9 @@ function send_samples_to_analysis(button, aids, samples = null) {
   if (samples === null) {
     $.get('/artifact/samples/', {ids:aids})
       .done(function ( data ) {
+        console.log(qiita_websocket, data['data'])
         if (data['status']=='success') {
-          qiita_websocket.send('sel', data['data']);
+          // qiita_websocket.send('sel', data['data']);
           button.value = 'Added';
           $(button).removeClass("btn-info");
         } else {
@@ -142,7 +143,10 @@ function send_samples_to_analysis(button, aids, samples = null) {
           button.disabled = false;
           $(button).addClass("btn-danger");
         }
-    });
+      })
+      .fail(function(x, y ,z) {
+        alert( "error" , x, y ,z);
+      });
   } else {
     $.each(aids, function(i, aid) {
       var to_send = {};

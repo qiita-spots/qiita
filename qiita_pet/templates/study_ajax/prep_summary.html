@@ -459,6 +459,8 @@
       <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#sample-listing-tab-div">Sample Listing</a></li>
       <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>
       <li style="border: 1px solid #428bca; border-radius: 5px" class="active"><a data-toggle="tab" href="#processing-graph-vue" id="processing-tab-btn" number-samples={{num_samples}}>Processing</a></li>
+      <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#archived-artifacts-tab-div">Archived Artifacts</a></li>
+
     </ul>
 
     <div class="tab-content">
@@ -554,6 +556,34 @@
           </small>
         </div>
         <div id="prep-artifact-summary-div" class="tab-pane fade in active">
+        </div>
+      </div>
+      <div id="archived-artifacts-tab-div" class="tab-pane fade">
+        <div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Add to Analysis</th>
+                <th>Artifact</th>
+                <th>Creation time</th>
+                <th>Merging scheme</th>
+              </tr>
+            </thead>
+            {% for artifact in archived_artifacts %}
+              <tr>
+                <td>
+                  <input type="button" id="send-button-{{artifact.id}}" class="btn btn-sm" value="Add" onclick="send_samples_to_analysis(this, [{{artifact.id}}])">
+                </td>
+                <td>
+                  {{artifact.name}} ({{artifact.id}})
+                </td>
+                <td>{{artifact.timestamp}}</td>
+                <td>
+                  {{artifact.merging_scheme[0]}}
+                </td>
+              </tr>
+            {% end %}
+          </table>
         </div>
       </div>
       <div id="processing-graph-vue" class="tab-pane fade in active">

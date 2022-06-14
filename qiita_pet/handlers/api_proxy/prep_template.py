@@ -166,6 +166,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'investigation_type': investigation_type,
             'ontology': ontology,
             'artifact_attached': artifact_attached,
+            'archived_artifacts': pt.archived_artifacts,
             'study_id': study_id,
             'editable': editable,
             'data_type': pt.data_type(),

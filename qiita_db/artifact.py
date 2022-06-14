@@ -11,6 +11,7 @@ from os import remove
 from os.path import isfile, relpath
 from shutil import rmtree
 from collections import namedtuple
+from json import dumps
 from qiita_db.util import create_nested_path
 
 import networkx as nx
@@ -48,6 +49,7 @@ class Artifact(qdb.base.QiitaObject):
     create
     delete
     being_deleted_by
+    archive
 
     See Also
     --------
@@ -701,6 +703,7 @@ class Artifact(qdb.base.QiitaObject):
         fids = [x['fp_id'] for x in artifact.filepaths
                 if x['fp_type'] == 'log']
 
+        archive_data = dumps({"merging_scheme": artifact.merging_scheme})
         with qdb.sql_connection.TRN:
             artifact._set_visibility('archived', propagate=False)
             sql = 'DELETE FROM qiita.parent_artifact WHERE artifact_id = %s'
@@ -714,6 +717,11 @@ class Artifact(qdb.base.QiitaObject):
                 sql = '''DELETE FROM qiita.artifact_filepath
                          WHERE filepath_id IN %s'''
                 qdb.sql_connection.TRN.add(sql, [tuple(fids)])
+
+            sql = """UPDATE qiita.{0}
+                     SET archive_data = %s
+                     WHERE artifact_id = %s""".format(cls._table)
+            qdb.sql_connection.TRN.add(sql, [archive_data, artifact_id])
 
             qdb.sql_connection.TRN.execute()
 
@@ -1461,39 +1469,52 @@ class Artifact(qdb.base.QiitaObject):
             The human readable merging scheme and the parent software
             information for this artifact
         """
-        processing_params = self.processing_parameters
-        if processing_params is None:
-            return '', ''
+        vid = qdb.util.convert_to_id(self.visibility, "visibility")
+        if vid in qdb.util.artifact_visibilities_to_skip():
+            merging_schemes = 'xxx'
+            parent_softwares = 'xx'
+            with qdb.sql_connection.TRN:
+                sql = f"""SELECT archive_data
+                          FROM qiita.{self._table}
+                          WHERE artifact_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [self.id])
+                archive_data = qdb.sql_connection.TRN.execute_fetchlast()
+            merging_schemes = [archive_data['merging_scheme'][0]]
+            parent_softwares = [archive_data['merging_scheme'][1]]
+        else:
+            processing_params = self.processing_parameters
+            if processing_params is None:
+                return '', ''
 
-        cmd_name = processing_params.command.name
-        ms = processing_params.command.merging_scheme
-        afps = [x['fp'] for x in self.filepaths if x['fp'].endswith('biom')]
+            cmd_name = processing_params.command.name
+            ms = processing_params.command.merging_scheme
+            afps = [x['fp'] for x in self.filepaths if x['fp'].endswith('biom')]
 
-        merging_schemes = []
-        parent_softwares = []
-        # this loop is necessary as in theory an artifact can be
-        # generated from multiple prep info files
-        for p in self.parents:
-            pparent = p.processing_parameters
-            # if parent is None, then is a direct upload; for example
-            # per_sample_FASTQ in shotgun data
-            if pparent is None:
-                parent_cmd_name = None
-                parent_merging_scheme = None
-                parent_pp = None
-                parent_software = 'N/A'
-            else:
-                parent_cmd_name = pparent.command.name
-                parent_merging_scheme = pparent.command.merging_scheme
-                parent_pp = pparent.values
-                psoftware = pparent.command.software
-                parent_software = '%s v%s' % (
-                    psoftware.name, psoftware.version)
+            merging_schemes = []
+            parent_softwares = []
+            # this loop is necessary as in theory an artifact can be
+            # generated from multiple prep info files
+            for p in self.parents:
+                pparent = p.processing_parameters
+                # if parent is None, then is a direct upload; for example
+                # per_sample_FASTQ in shotgun data
+                if pparent is None:
+                    parent_cmd_name = None
+                    parent_merging_scheme = None
+                    parent_pp = None
+                    parent_software = 'N/A'
+                else:
+                    parent_cmd_name = pparent.command.name
+                    parent_merging_scheme = pparent.command.merging_scheme
+                    parent_pp = pparent.values
+                    psoftware = pparent.command.software
+                    parent_software = '%s v%s' % (
+                        psoftware.name, psoftware.version)
 
-            merging_schemes.append(qdb.util.human_merging_scheme(
-                cmd_name, ms, parent_cmd_name, parent_merging_scheme,
-                processing_params.values, afps, parent_pp))
-            parent_softwares.append(parent_software)
+                merging_schemes.append(qdb.util.human_merging_scheme(
+                    cmd_name, ms, parent_cmd_name, parent_merging_scheme,
+                    processing_params.values, afps, parent_pp))
+                parent_softwares.append(parent_software)
 
         return ', '.join(merging_schemes), ', '.join(parent_softwares)
 
