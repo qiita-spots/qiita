@@ -148,8 +148,9 @@ class Study(qdb.base.QiitaObject):
                      FROM qiita.visibility
                         JOIN qiita.artifact USING (visibility_id)
                         JOIN qiita.study_artifact USING (artifact_id)
-                     WHERE study_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id])
+                     WHERE study_id = %s and visibility_id NOT IN %s"""
+            qdb.sql_connection.TRN.add(
+                sql, [self._id, qdb.util.artifact_visibilities_to_skip()])
             return qdb.util.infer_status(
                 qdb.sql_connection.TRN.execute_fetchindex())
 
@@ -1098,8 +1099,9 @@ class Study(qdb.base.QiitaObject):
                         JOIN qiita.data_type USING (data_type_id)
                         JOIN qiita.study_artifact USING (artifact_id)
                         JOIN qiita.artifact_type USING (artifact_type_id)
-                     WHERE study_id = %s{0}
+                     WHERE study_id = %s{0} AND visibility_id NOT IN %s
                      ORDER BY artifact_id""".format(sql_where)
+            sql_args.append(qdb.util.artifact_visibilities_to_skip())
 
             qdb.sql_connection.TRN.add(sql, sql_args)
             return [qdb.artifact.Artifact(aid)
