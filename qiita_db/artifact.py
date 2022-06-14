@@ -1471,8 +1471,6 @@ class Artifact(qdb.base.QiitaObject):
         """
         vid = qdb.util.convert_to_id(self.visibility, "visibility")
         if vid in qdb.util.artifact_visibilities_to_skip():
-            merging_schemes = 'xxx'
-            parent_softwares = 'xx'
             with qdb.sql_connection.TRN:
                 sql = f"""SELECT archive_data
                           FROM qiita.{self._table}
@@ -1488,7 +1486,8 @@ class Artifact(qdb.base.QiitaObject):
 
             cmd_name = processing_params.command.name
             ms = processing_params.command.merging_scheme
-            afps = [x['fp'] for x in self.filepaths if x['fp'].endswith('biom')]
+            afps = [x['fp'] for x in self.filepaths
+                    if x['fp'].endswith('biom')]
 
             merging_schemes = []
             parent_softwares = []

@@ -92,6 +92,7 @@ class TestPrepAPIReadOnly(TestCase):
                            'Other'],
                    'User': []},
                'artifact_attached': True,
+               'archived_artifacts': [],
                'study_id': 1,
                'editable': True,
                'data_type': '18S',
@@ -109,6 +110,7 @@ class TestPrepAPIReadOnly(TestCase):
                            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'],
                'deprecated': False,
                'alert_message': ''}
+
 
         self.assertDictEqual(obs, exp)
 

@@ -1388,7 +1388,9 @@ class ArtifactArchiveTests(TestCase):
             A.archive(8)
 
         for aid in range(4, 7):
+            ms = A(aid).merging_scheme
             A.archive(aid)
+            self.assertEqual(ms, A(aid).merging_scheme)
             exp_nodes.remove(A(aid))
             self.assertCountEqual(A(1).descendants.nodes(), exp_nodes)
 
