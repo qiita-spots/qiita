@@ -111,7 +111,6 @@ class TestPrepAPIReadOnly(TestCase):
                'deprecated': False,
                'alert_message': ''}
 
-
         self.assertDictEqual(obs, exp)
 
         obs = prep_template_ajax_get_req('admin@foo.bar', 1)

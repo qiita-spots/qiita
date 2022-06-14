@@ -132,7 +132,6 @@ function send_samples_to_analysis(button, aids, samples = null) {
   if (samples === null) {
     $.get('/artifact/samples/', {ids:aids})
       .done(function ( data ) {
-        console.log(qiita_websocket, data['data'])
         if (data['status']=='success') {
           qiita_websocket.send('sel', data['data']);
           button.value = 'Added';
