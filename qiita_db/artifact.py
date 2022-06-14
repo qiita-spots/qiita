@@ -669,7 +669,7 @@ class Artifact(qdb.base.QiitaObject):
         QiitaDBOperationNotPermittedError
             If the artifact is not public
             If the artifact_type is not BIOM
-            If the artifact belowns to an analysis
+            If the artifact belongs to an analysis
             If the artifact has no parents (raw file)
         """
         artifact = cls(artifact_id)
@@ -688,7 +688,7 @@ class Artifact(qdb.base.QiitaObject):
                 'Only non raw artifacts can be archived')
 
         # let's find all ancestors that can be deleted (it has parents and no
-        # ancestors, and delete them
+        # ancestors (that have no descendants), and delete them
         to_delete = [x for x in artifact.ancestors.nodes()
                      if x.id != artifact_id and x.parents and
                      not [y for y in x.descendants.nodes()
