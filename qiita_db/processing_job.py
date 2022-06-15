@@ -781,7 +781,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             new_status = qdb.util.convert_to_id(
                 value, "processing_job_status")
 
-            if self.user.receive_processing_job_emails:
+            if self.user.info['receive_processing_job_emails']:
                 # skip if software is internal
                 ignore_software = ('Qiita')
                 if self.command.software.name not in ignore_software:
