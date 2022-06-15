@@ -23,3 +23,7 @@ BEGIN
   RETURN artifacts;
 END
 $$ LANGUAGE plpgsql;
+
+-- Jun 13, 2022
+-- adding an archive_data column to the artifact
+ALTER TABLE qiita.artifact ADD archive_data JSONB DEFAULT NULL;

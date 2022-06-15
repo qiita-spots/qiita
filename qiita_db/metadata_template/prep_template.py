@@ -923,3 +923,23 @@ class PrepTemplate(MetadataTemplate):
                         previous_jobs[current_job] = params
 
         return workflow
+
+    @property
+    def archived_artifacts(self):
+        """List of archived Artifacts
+
+        Returns
+        -------
+        list of qiita_db.artifact.Artifact
+            The list of archivde Artifacts
+        """
+        with qdb.sql_connection.TRN:
+
+            sql = """SELECT artifact_id
+                     FROM qiita.preparation_artifact
+                        LEFT JOIN qiita.artifact USING (artifact_id)
+                     WHERE prep_template_id = %s AND visibility_id IN %s"""
+            qdb.sql_connection.TRN.add(
+                sql, [self.id, qdb.util.artifact_visibilities_to_skip()])
+            return [qdb.artifact.Artifact(ai)
+                    for ai in qdb.sql_connection.TRN.execute_fetchflatten()]
