@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import authenticated, HTTPError
-from wtforms import Form, StringField, validators
+from wtforms import Form, StringField, BooleanField, validators
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import user_jobs_get_req
@@ -25,6 +25,8 @@ class UserProfile(Form):
     affiliation = StringField("Affiliation")
     address = StringField("Address")
     phone = StringField("Phone")
+    receive_processing_job_emails = BooleanField(
+        "Receive Processing Job Emails?")
 
 
 class UserProfileHandler(BaseHandler):
@@ -45,14 +47,18 @@ class UserProfileHandler(BaseHandler):
         if action == "profile":
             # tuple of colmns available for profile
             # FORM INPUT NAMES MUST MATCH DB COLUMN NAMES
+            not_str_fields = ('receive_processing_job_emails')
             form_data = UserProfile()
             form_data.process(data=self.request.arguments)
-            profile = {name: data[0].decode('ascii') for name, data in
-                       form_data.data.items()}
+            profile = {name: data[0].decode('ascii')
+                       if name not in not_str_fields else
+                       data
+                       for name, data in form_data.data.items()}
 
             # Turn default value as list into default strings
             for field in form_data:
-                field.data = field.data[0].decode('ascii')
+                if field.name not in not_str_fields:
+                    field.data = field.data[0].decode('ascii')
             try:
                 user.info = profile
                 msg = "Profile updated successfully"

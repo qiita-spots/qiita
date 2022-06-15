@@ -1247,6 +1247,9 @@
 			<column name="pass_reset_timestamp" type="timestamp" length="0" decimal="6" jt="93" >
 				<comment><![CDATA[Time the reset code was generated]]></comment>
 			</column>
+			<column name="receive_processing_job_emails" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[false]]></defo>
+			</column>
 			<index name="pk_user" unique="PRIMARY_KEY" >
 				<column name="email" />
 			</index>

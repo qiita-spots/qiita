@@ -27,3 +27,7 @@ $$ LANGUAGE plpgsql;
 -- Jun 13, 2022
 -- adding an archive_data column to the artifact
 ALTER TABLE qiita.artifact ADD archive_data JSONB DEFAULT NULL;
+
+-- Jun 15, 2022
+-- adding
+ALTER TABLE qiita.qiita_user ADD receive_processing_job_emails BOOL DEFAULT FALSE;
