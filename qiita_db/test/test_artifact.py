@@ -1352,6 +1352,10 @@ class ArtifactTests(TestCase):
                        if x['fp_type'] == 'html_summary_dir']
         self.assertEqual(summary_dir, [])
 
+        # let's check if we update, we do _not_ remove the files
+        a.set_html_summary(exp3)
+        self.assertTrue(exists(a.html_summary_fp[1]))
+
     def test_descendants_with_jobs_one_element(self):
         artifact = qdb.artifact.Artifact.create(
             self.filepaths_root, 'FASTQ', prep_template=self.prep_template)

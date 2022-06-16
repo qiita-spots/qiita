@@ -1131,10 +1131,12 @@ class Artifact(qdb.base.QiitaObject):
             the HTML file
         """
         with qdb.sql_connection.TRN:
-            if self.html_summary_fp:
-                # Delete the current HTML summary
+            old_summs = self.html_summary_fp
+            to_delete_fps = []
+            if old_summs:
+                # Delete from the DB current HTML summary; below we will remove
+                # files, if necessary
                 to_delete_ids = []
-                to_delete_fps = []
                 for x in self.filepaths:
                     if x['fp_type'] in ('html_summary', 'html_summary_dir'):
                         to_delete_ids.append([x['fp_id']])
@@ -1146,17 +1148,6 @@ class Artifact(qdb.base.QiitaObject):
                 # From the filepath table
                 sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
                 qdb.sql_connection.TRN.add(sql, to_delete_ids, many=True)
-                # And from the filesystem only after the transaction is
-                # successfully completed (after commit)
-
-                def path_cleaner(fps):
-                    for fp in fps:
-                        if isfile(fp):
-                            remove(fp)
-                        else:
-                            rmtree(fp)
-                qdb.sql_connection.TRN.add_post_commit_func(
-                    path_cleaner, to_delete_fps)
 
             # Add the new HTML summary
             filepaths = [(html_fp, 'html_summary')]
@@ -1170,6 +1161,19 @@ class Artifact(qdb.base.QiitaObject):
             sql_args = [[self.id, id_] for id_ in fp_ids]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
+
+        # to avoid deleting potentially necessary files, we are going to add
+        # that check after the previous transaction is commited
+        if to_delete_fps:
+            for x in self.filepaths:
+                if x['fp'] in to_delete_fps:
+                    to_delete_fps.remove(x['fp'])
+
+            for fp in to_delete_fps:
+                if isfile(fp):
+                    remove(fp)
+                else:
+                    rmtree(fp)
 
     @property
     def parents(self):
