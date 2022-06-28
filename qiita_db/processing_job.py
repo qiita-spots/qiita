@@ -782,12 +782,12 @@ class ProcessingJob(qdb.base.QiitaObject):
                 value, "processing_job_status")
 
             if self.user.info['receive_processing_job_emails']:
-                # skip if software is internal
-                ignore_software = ('Qiita')
+                # skip if software is artifact definition
+                ignore_software = ('artifact definition', )
                 if self.command.software.name not in ignore_software:
                     subject = ('Job status change: %s (%s)' % (
                         self.command.name, self.id))
-                    message = ('New status: %s' % (new_status))
+                    message = ('New status: %s' % (value))
                     qdb.util.send_email(self.user.email, subject, message)
 
             sql = """UPDATE qiita.processing_job
