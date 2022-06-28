@@ -785,10 +785,12 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # skip if software is artifact definition
                 ignore_software = ('artifact definition', )
                 if self.command.software.name not in ignore_software:
-                    subject = ('Job status change: %s (%s)' % (
-                        self.command.name, self.id))
-                    message = ('New status: %s' % (value))
-                    qdb.util.send_email(self.user.email, subject, message)
+                    ignore_commands = ('Validate', 'complete_job')
+                    if self.command.name not in ignore_commands:
+                        subject = ('Job status change: %s (%s)' % (
+                            self.command.name, self.id))
+                        message = ('New status: %s' % (value))
+                        qdb.util.send_email(self.user.email, subject, message)
 
             sql = """UPDATE qiita.processing_job
                      SET processing_job_status_id = %s
