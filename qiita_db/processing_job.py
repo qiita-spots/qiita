@@ -781,16 +781,22 @@ class ProcessingJob(qdb.base.QiitaObject):
             new_status = qdb.util.convert_to_id(
                 value, "processing_job_status")
 
-            if self.user.info['receive_processing_job_emails']:
-                # skip if software is artifact definition
-                ignore_software = ('artifact definition', )
-                if self.command.software.name not in ignore_software:
-                    ignore_commands = ('Validate', 'complete_job')
-                    if self.command.name not in ignore_commands:
-                        subject = ('Job status change: %s (%s)' % (
-                            self.command.name, self.id))
-                        message = ('New status: %s' % (value))
-                        qdb.util.send_email(self.user.email, subject, message)
+            if value not in ('waiting'):
+                if self.user.info['receive_processing_job_emails']:
+                    # skip if software is artifact definition
+                    ignore_software = ('artifact definition', )
+                    if self.command.software.name not in ignore_software:
+                        ignore_commands = ('Validate', 'complete_job',
+                                           'release_validators')
+                        if self.command.name not in ignore_commands:
+                            subject = 'Job status change: %s (%s)' % (
+                                self.command.name, self.id)
+                            message = 'New status: %s' % (value)
+
+                            if value == 'error':
+                                message += f'\n\nError:\n{self.log.msg}'
+                            qdb.util.send_email(
+                                self.user.email, subject, message)
 
             sql = """UPDATE qiita.processing_job
                      SET processing_job_status_id = %s
