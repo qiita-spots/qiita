@@ -1471,7 +1471,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                     "Can only set up the log for jobs whose status is 'error'")
 
-            self._set_status('error')
             log = qdb.logger.LogEntry.create('Runtime', error)
 
             sql = """UPDATE qiita.processing_job
@@ -1483,6 +1482,9 @@ class ProcessingJob(qdb.base.QiitaObject):
             # All the children should be marked as failure
             for c in self.children:
                 c.complete(False, error="Parent job '%s' failed." % self.id)
+
+            # set as error after everything is in place
+            self._set_status('error')
 
     @property
     def heartbeat(self):
