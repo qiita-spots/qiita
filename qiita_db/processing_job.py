@@ -753,7 +753,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    def _set_status(self, value):
+    def _set_status(self, value, error_msg=None):
         """Sets the status of the job
 
         Parameters
@@ -761,6 +761,9 @@ class ProcessingJob(qdb.base.QiitaObject):
         value : str, {'queued', 'running', 'success', 'error',
                       'in_construction', 'waiting'}
             The new status of the job
+        error_msg : str, optional
+            If not None this is the message that is going to be sent to the
+            user when the value is 'error'
 
         Raises
         ------
@@ -793,8 +796,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                                 self.command.name, self.id)
                             message = 'New status: %s' % (value)
 
-                            if value == 'error':
-                                message += f'\n\nError:\n{self.log.msg}'
+                            if value == 'error' and error_msg is not None:
+                                message += f'\n\nError:\n{error_msg}'
                             qdb.util.send_email(
                                 self.user.email, subject, message)
 
@@ -1484,7 +1487,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 c.complete(False, error="Parent job '%s' failed." % self.id)
 
             # set as error after everything is in place
-            self._set_status('error')
+            self._set_status('error', message=error)
 
     @property
     def heartbeat(self):
