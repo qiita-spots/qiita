@@ -1487,7 +1487,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 c.complete(False, error="Parent job '%s' failed." % self.id)
 
             # set as error after everything is in place
-            self._set_status('error', message=error)
+            self._set_status('error', error_msg=error)
 
     @property
     def heartbeat(self):
