@@ -63,13 +63,8 @@ $(document).ready(function() {
       $('#clear-button').on('click', clear);
       {% if sel_data %}$('#no-selected').hide(){% end %}
 
-      {% if 'common' in locals() %}
-        var common_sample_fields = {% raw list(common['sample']) %};
-        var common_prep_fields = {% raw list(common['prep']) %};
-      {% else %}
-        var common_sample_fields = [];
-        var common_prep_fields = [];
-      {% end %}
+      var common_sample_fields = {% raw list(common['sample']) %};
+      var common_prep_fields = {% raw list(common['prep']) %};
 
       $.each($(".chosen-select"), function (_, element){
         var is_sample = element.id.startsWith('sample-metadata');
