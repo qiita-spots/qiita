@@ -784,7 +784,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             new_status = qdb.util.convert_to_id(
                 value, "processing_job_status")
 
-            if value not in ('waiting'):
+            if value not in {'waiting'}:
                 if self.user.info['receive_processing_job_emails']:
                     # skip if software is artifact definition
                     ignore_software = ('artifact definition', )
