@@ -1,5 +1,16 @@
 # Qiita changelog
 
+Version 2022.07
+---------------
+
+* Users can opt-in to get emails when their jobs change status in their User Information preferences.
+* Added BIOM artifact archiving to the system; this unlinks artifacts from the main processing but leaves them in the system in case they are needed in the future.
+* Added [qiime2.2022.02](https://github.com/qiita-spots/qp-qiime2/pull/68) to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
+* Users can now select multiple artifacts for analysis [qp-qiime2](https://github.com/qiita-spots/qp-qiime2/pull/69), which gives access to new commands like PCoA biplots.
+* [qtp-sequencing](https://github.com/qiita-spots/qtp-sequencing/pull/41/files) now uses fqtools to count the number of sequences in fastq/fastq.gz files as part as the artifact summary.
+* Artifact summaries can now be updated [qiita-spots #3205](https://github.com/qiita-spots/qiita/pull/3205).
+* Added to the internal (Sequence Processing Pipeline)[https://github.com/qiita-spots/qp-knight-lab-processing] the CHM13 genome so human studies are now filtered by GRCh38 genome + PhiX and CHM13 genome.
+
 Version 2022.05
 -----------------
 

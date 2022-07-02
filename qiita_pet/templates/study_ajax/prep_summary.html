@@ -407,6 +407,9 @@
       $('#new-prep-name').focus();
       $('#new-prep-name').select();
     });
+
+    qiita_websocket.init(window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', error, error);
+    qiita_websocket.add_callback('sel', show_alert);
   });
 
   function toggleCheckboxes(element){

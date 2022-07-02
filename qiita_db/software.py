@@ -51,9 +51,9 @@ class Command(qdb.base.QiitaObject):
     -------------
     create
     exists
-    get_commands_by_input_type(cls, artifact_types, active_only=True,
-    get_html_generator(cls, artifact_type):
-    get_validator(cls, artifact_type):
+    get_commands_by_input_type
+    get_html_generator
+    get_validator
 
     See Also
     --------
