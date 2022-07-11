@@ -265,6 +265,23 @@ It might be necessary to restart postgresql: `sudo service postgresql restart`.
 
 Furthermore, the `pg_hba.conf` file can be modified to change authentication type for local users to trust (rather than, e.g., md5) but we haven't tested this solution.
 
+#### `FATAL: password authentification failed for user "postgres"`
+If you get a traceback similar to this one when making a test environment:
+```python
+File "/home/jorge/miniconda3/envs/qiita/bin/qiita_db/environment_manager.py", 
+  line 158, in make_environment with qdb.sql_connection.TRMADMIN:
+File "/home/jorge/miniconda3/envs/qiita/bin/qiita_db/sql_connection.py", line 152, in __enter__ 
+  self._open_connection()
+File "/home/jorge/miniconda3/envs/qiita/bin/qiita_db/sql_connection.py", line 123, in _open_connection 
+  raise RuntimeError(ebase % (str(e), etext))
+RuntimeError: An OperationalError with the following message occured
+    connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL: password authentification failed for user "postgres" 
+```
+it can be solved by modifying the `pg_hba.conf` so that all md5 and peer are `trust` instead. Access the file with:
+```bash
+sudo vim /etc/postgresql/13/main/pg_hba.conf
+```
+
 #### `Error: You need to install postgresql-server-dev-X.Y for building a server-side extension or libpq-dev for building a client-side application.`
 
 Run the following. Note that for older ubuntu versions (< 14), these commands may install an older version of postgres (< 9.3) which may cause trouble. Ensure you're downloading and installing postgresql 9.3 via a different apt repository as per [instructions here](https://www.postgresql.org/download/linux/ubuntu/).
