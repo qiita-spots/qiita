@@ -55,7 +55,7 @@ source deactivate
 Install the non-python dependencies
 -----------------------------------
 
-* [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.5.14, we have tested most extensively with 9.5.15)
+* [PostgreSQL](http://www.postgresql.org/download/) (currently using v13)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
 * [webdis] (https://github.com/nicolasff/webdis) (latest version should be fine but we have tested the most with 9ee6fe2 - Feb 6, 2016)
 
@@ -67,7 +67,8 @@ There are several options to install these dependencies depending on your needs:
 
 ### PostgreSQL installation on Linux
 For Linux, you can install Postgres through these [instructions](https://computingforgeeks.com/how-to-install-postgresql-13-on-ubuntu/). These instructions were tested on Postgres v13 on Ubuntu v20.04.4.
-### PostgreSQL installation on Mac OS X
+
+### PostgreSQL installation on Mac OS X (Outdated)
 
 For Mac OS X, you can either install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5.
 
