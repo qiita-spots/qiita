@@ -174,7 +174,7 @@ Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.ba
 
 Update paths in the newly copied configuration file to match your settings, e.g. replace /home/travis/ with your user home directory.
 
-If you are working on Linux WSL, you will need to start the redis server in a separate Ubuntu window with the command provided [here](/home/runner/work/qiita/qiita/) before making a test environment. Next, make a test environment:
+If you are working on Linux WSL, you will need to start the redis server in a separate Ubuntu window with the command provided [here](https://github.com/qiita-spots/qiita/blob/master/INSTALL.md#start-qiita) before making a test environment. Next, make a test environment:
 
 ```bash
 qiita-env make --no-load-ontologies
