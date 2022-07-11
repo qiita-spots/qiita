@@ -87,6 +87,10 @@ Note that the command produces up to 6 output artifacts based on the aligner and
 - Per genome Predictions: contains the per genome level taxonomic predictions BIOM table
 - Per gene Predictions: Only WoLr1, contains the per gene level taxonomic predictions BIOM table
 
+.. note::
+   Woltka provides easy transformations for the "per gene Prediction table" to generate functional
+   profiles, `more information <https://github.com/qiyunzhu/woltka/blob/master/doc/wol.md#comparison>`
+
 Aligners
 ^^^^^^^^
 

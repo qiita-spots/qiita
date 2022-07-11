@@ -83,7 +83,7 @@ class DBUtilTests(DBUtilTestsBase):
         obs = qdb.util.get_table_cols("qiita_user")
         exp = {"email", "user_level_id", "password", "name", "affiliation",
                "address", "phone", "user_verify_code", "pass_reset_code",
-               "pass_reset_timestamp"}
+               "pass_reset_timestamp", "receive_processing_job_emails"}
         self.assertEqual(set(obs), exp)
 
     def test_exists_table(self):
@@ -808,7 +808,7 @@ class UtilTests(TestCase):
 
     def test_get_visibilities(self):
         obs = qdb.util.get_visibilities()
-        exp = ['awaiting_approval', 'sandbox', 'private', 'public']
+        exp = ['awaiting_approval', 'sandbox', 'private', 'public', 'archived']
         self.assertEqual(obs, exp)
 
     def test_infer_status(self):

@@ -10,7 +10,7 @@
 from setuptools import setup
 from glob import glob
 
-__version__ = "2022.04"
+__version__ = "2022.07"
 
 
 classes = """

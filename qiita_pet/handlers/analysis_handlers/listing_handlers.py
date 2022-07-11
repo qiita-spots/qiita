@@ -118,13 +118,15 @@ class SelectedSamplesHandler(BaseHandler):
 
         # finding common metadata fields
         metadata = analysis.metadata_categories
-        common = []
+        common = {'sample': set(), 'prep': set()}
         for i, (_, m) in enumerate(metadata.items()):
-            if i == 0:
-                common = {'sample': set(m['sample']), 'prep': set(m['prep'])}
-            else:
-                common['sample'] = common['sample'] & set(m['sample'])
-                common['prep'] = common['prep'] & set(m['prep'])
+            svals = set(m['sample'])
+            pvals = set(m['prep'])
+            if i != 0:
+                svals = common['sample'] & svals
+                pvals = common['prep'] & pvals
+            common['sample'] = svals
+            common['prep'] = pvals
 
         self.render("analysis_selected.html", sel_data=sel_data,
                     proc_info=proc_data_info, metadata=metadata, common=common)

@@ -92,6 +92,7 @@ class TestPrepAPIReadOnly(TestCase):
                            'Other'],
                    'User': []},
                'artifact_attached': True,
+               'archived_artifacts': [],
                'study_id': 1,
                'editable': True,
                'data_type': '18S',

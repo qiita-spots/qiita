@@ -753,7 +753,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    def _set_status(self, value):
+    def _set_status(self, value, error_msg=None):
         """Sets the status of the job
 
         Parameters
@@ -761,6 +761,9 @@ class ProcessingJob(qdb.base.QiitaObject):
         value : str, {'queued', 'running', 'success', 'error',
                       'in_construction', 'waiting'}
             The new status of the job
+        error_msg : str, optional
+            If not None this is the message that is going to be sent to the
+            user when the value is 'error'
 
         Raises
         ------
@@ -781,13 +784,23 @@ class ProcessingJob(qdb.base.QiitaObject):
             new_status = qdb.util.convert_to_id(
                 value, "processing_job_status")
 
-            if (new_status in ('running', 'success', 'error') and
-                    not self.command.analysis_only and
-                    self.user.level == 'admin'):
-                subject = ('Job status change: %s (%s)' % (
-                    self.command.name, self.id))
-                message = ('New status: %s' % (new_status))
-                qdb.util.send_email(self.user.email, subject, message)
+            if value not in {'waiting'}:
+                if self.user.info['receive_processing_job_emails']:
+                    # skip if software is artifact definition
+                    ignore_software = ('artifact definition', )
+                    if self.command.software.name not in ignore_software:
+                        ignore_commands = ('Validate', 'complete_job',
+                                           'release_validators')
+                        if self.command.name not in ignore_commands:
+                            subject = 'Job status change: %s (%s)' % (
+                                self.command.name, self.id)
+                            message = 'New status: %s' % (value)
+
+                            if value == 'error' and error_msg is not None:
+                                message += f'\n\nError:\n{error_msg}'
+                            qdb.util.send_email(
+                                self.user.email, subject, message)
+
             sql = """UPDATE qiita.processing_job
                      SET processing_job_status_id = %s
                      WHERE processing_job_id = %s"""
@@ -1461,7 +1474,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                     "Can only set up the log for jobs whose status is 'error'")
 
-            self._set_status('error')
             log = qdb.logger.LogEntry.create('Runtime', error)
 
             sql = """UPDATE qiita.processing_job
@@ -1473,6 +1485,9 @@ class ProcessingJob(qdb.base.QiitaObject):
             # All the children should be marked as failure
             for c in self.children:
                 c.complete(False, error="Parent job '%s' failed." % self.id)
+
+            # set as error after everything is in place
+            self._set_status('error', error_msg=error)
 
     @property
     def heartbeat(self):

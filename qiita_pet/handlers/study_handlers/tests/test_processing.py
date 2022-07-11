@@ -54,7 +54,8 @@ class TestListOptionsHandler(TestHandlerBase):
                               'sortmerna_max_pos': ['integer', '10000'],
                               'similarity': ['float', '0.97'],
                               'sortmerna_coverage': ['float', '0.97'],
-                              'threads': ['integer', '1']}}
+                              'threads': ['integer', '1']},
+              'extra_artifacts': {}}
         self.assertEqual(loads(response.body), exp)
 
         # test that it works fine with a job_id:artifact_type
