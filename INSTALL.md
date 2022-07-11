@@ -277,7 +277,7 @@ File "/home/jorge/miniconda3/envs/qiita/bin/qiita_db/sql_connection.py", line 12
 RuntimeError: An OperationalError with the following message occured
     connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL: password authentification failed for user "postgres" 
 ```
-it can be solved by modifying the `pg_hba.conf` so that all md5 and peer are `trust` instead. Access the file with:
+it can be solved by modifying the `pg_hba.conf` so that all md5 and peer are trust instead. Access the file with:
 ```bash
 sudo vim /etc/postgresql/13/main/pg_hba.conf
 ```
