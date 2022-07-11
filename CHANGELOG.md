@@ -9,7 +9,7 @@ Version 2022.07
 * Users can now select multiple artifacts for analysis [qp-qiime2](https://github.com/qiita-spots/qp-qiime2/pull/69), which gives access to new commands like PCoA biplots.
 * [qtp-sequencing](https://github.com/qiita-spots/qtp-sequencing/pull/41/files) now uses fqtools to count the number of sequences in fastq/fastq.gz files as part as the artifact summary.
 * Artifact summaries can now be updated [qiita-spots #3205](https://github.com/qiita-spots/qiita/pull/3205).
-* Added to the internal (Sequence Processing Pipeline)[https://github.com/qiita-spots/qp-knight-lab-processing] the CHM13 genome so human studies are now filtered by GRCh38 genome + PhiX and CHM13 genome.
+* Added to the internal [Sequence Processing Pipeline](https://github.com/qiita-spots/qp-knight-lab-processing) the CHM13 genome so human studies are now filtered by GRCh38 genome + PhiX and CHM13 genome.
 
 Version 2022.05
 -----------------
