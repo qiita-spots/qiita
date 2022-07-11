@@ -19,6 +19,7 @@ conda update conda
 Setup a virtual environment in conda named `qiita` by executing the following:
 
 ```bash
+conda config --add channels conda-forge
 conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx
 ```
 
@@ -64,6 +65,8 @@ There are several options to install these dependencies depending on your needs:
 - Alternatively, you could install them via conda. However, the conda repository may not have the exact versions of these dependencies that you want.
 - You could setup a full development environment with [Vagrant](https://www.vagrantup.com/), and continue using conda under it to primarily manage python dependencies. Note that we don't cover Vagrant in these instructions.
 
+### PostgreSQL installation on Linux
+For Linux, you can install Postgres through these [instructions](https://computingforgeeks.com/how-to-install-postgresql-13-on-ubuntu/). These instructions were tested on Postgres v13 on Ubuntu v20.04.4.
 ### PostgreSQL installation on Mac OS X
 
 For Mac OS X, you can either install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5.
@@ -82,6 +85,10 @@ Assuming you have [homebrew](http://www.brew.sh) installed, you can install redi
 ```bash
 brew update
 brew install homebrew/versions/redis28
+```
+Alternatively, you can sudo install the latest version of redis:
+```bash
+sudo apt-get install redis-server
 ```
 
 ### webdis
@@ -112,7 +119,7 @@ Install Qiita development version and its python dependencies
 Clone the git repository with the development version of Qiita into your current directory:
 
 ```bash
-git clone https://github.com/biocore/qiita.git
+git clone https://github.com/qiita-spots/qiita.git
 ```
 
 Navigate to the cloned directory and ensure your conda environment is active:
@@ -121,12 +128,17 @@ Navigate to the cloned directory and ensure your conda environment is active:
 cd qiita
 source activate qiita
 ```
-
+Before we install Qiita, make sure you have a few other tools installed:
+```bash
+sudo apt install gcc
+sudo apt-get install libpq-dev
+```
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
 
 ```bash
 pip install . --no-binary redbiom
 ```
+Note that if you get any errors or warnings with 'certifi', you can add the `--ignore-installed` tag to the command above.
 
 At this point, Qiita will be installed and the system will start. However,
 you will need to install plugins in order to process any kind of data. For a list
@@ -148,7 +160,7 @@ Move the Qiita sample configuration file to a different directory by executing:
  cp ./qiita_core/support_files/config_test.cfg ~/.qiita_config_test.cfg
 ```
 
-Note that you will need to change `BASE_URL = https://localhost:8383` to `BASE_URL = https://localhost:21174` if you are not using NGINX.
+Note that you will need to change `BASE_URL = https://localhost:8383` to `BASE_URL = https://localhost:21174` in the new copy of the configuration file if you are not using NGINX. Additionally, you will also need to change all URLs that start with `/home/runner/work/qiita/qiita/...` into wherever your qiita directory is (e.g. `/home/<username>/qiita/...`).
 
 
 Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.bashrc` if using bash; `.zshrc` if using zshell):
@@ -162,7 +174,7 @@ Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.ba
 
 Update paths in the newly copied configuration file to match your settings, e.g. replace /home/travis/ with your user home directory.
 
-Next, make a test environment:
+If you are working on Linux WSL, you will need to start the redis server in a separate Ubuntu window with the command provided [here](/home/runner/work/qiita/qiita/) before making a test environment. Next, make a test environment:
 
 ```bash
 qiita-env make --no-load-ontologies
