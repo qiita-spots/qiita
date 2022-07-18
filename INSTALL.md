@@ -66,8 +66,39 @@ There are several options to install these dependencies depending on your needs:
 - You could setup a full development environment with [Vagrant](https://www.vagrantup.com/), and continue using conda under it to primarily manage python dependencies. Note that we don't cover Vagrant in these instructions.
 
 ### PostgreSQL installation on Linux
-For Linux, you can install Postgres through these [instructions](https://computingforgeeks.com/how-to-install-postgresql-13-on-ubuntu/). These instructions were tested on Postgres v13 on Ubuntu v20.04.4.
+The following instructions have been adapted from [this site](https://computingforgeeks.com/how-to-install-postgresql-13-on-ubuntu/) and tested on Ubuntu v20.04.4 for Postgres v13.
 
+First, ensure that you have updated packages and reboot the system with:
+```bash
+sudo apt update && sudo apt -y full-upgrade
+[ -f /var/run/reboot-required ] && sudo reboot -f
+```
+You can reboot the system with `sudo reboot` in case any packages were updated.
+
+Next, we need to add the Postgres repository to our system:
+```bash
+sudo apt update
+sudo apt install curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
+curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc|sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" |sudo tee  /etc/apt/sources.list.d/pgdg.list
+```
+Adding the repository has added many different packages, which allows us to now install Postgres v13 with the following commands:
+```bash
+sudo apt update
+sudo apt install postgresql-13 postgresql-client-13
+```
+Now, we need to reconfigure the `pg_hba.conf` file and change all occurrences of `md5` and `peer` to `trust`. You can access the file with:
+```bash
+sudo vim /etc/postgresql/13/main/pg_hba.conf
+```
+To make sure all changes have been reflected, restart the Postgres server:
+```bash
+sudo service postgresql restart
+```
+Installing Postgres is now complete. Note that you will need to start the Postgres server every time you start the Qiita server. You can do this with the following command:
+```bash
+sudo service postgresql start
+```
 ### PostgreSQL installation on Mac OS X (Outdated)
 
 For Mac OS X, you can either install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5.
@@ -79,15 +110,15 @@ echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.5/bin/"'
 source ~/.bash_profile
 ```
 
-### Redis-server installation on Mac OS X
+### Redis-server installation on Mac OS X or Linux
 
-Assuming you have [homebrew](http://www.brew.sh) installed, you can install redis-server v2.8.x as follows:
+Assuming you have [homebrew](http://www.brew.sh) installed, you can install the latest version of the redis-server as follows:
 
 ```bash
 brew update
 brew install homebrew/versions/redis28
 ```
-Alternatively, you can sudo install the latest version of redis:
+Alternatively, you can sudo install redis:
 ```bash
 sudo apt-get install redis-server
 ```
@@ -129,9 +160,9 @@ Navigate to the cloned directory and ensure your conda environment is active:
 cd qiita
 source activate qiita
 ```
-Before we install Qiita, make sure you have a few other tools installed:
+If you are using a Windows Subsystem for Linux (WSL), you will need to ensure that you have a C++ compiler and that development libraries and include files for PostgreSQL are available. Type `cc` into your system to ensure that it doesn't result in `program not found`. The following commands will install a C++ compiler and  `libpq-dev`:
 ```bash
-sudo apt install gcc
+sudo apt install gcc              # alternatively, you can install clang instead
 sudo apt-get install libpq-dev
 ```
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
@@ -175,7 +206,11 @@ Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.ba
 
 Update paths in the newly copied configuration file to match your settings, e.g. replace /home/travis/ with your user home directory.
 
-If you are working on Linux WSL, you will need to start the redis server in a separate Ubuntu window with the command provided [here](https://github.com/qiita-spots/qiita/blob/master/INSTALL.md#start-qiita) before making a test environment. Next, make a test environment:
+If you are working on WSL, you will need to start the redis server with the following command before making a test environment:
+```bash
+redis-server --daemonize yes --port 7777
+```
+Next, make a test environment:
 
 ```bash
 qiita-env make --no-load-ontologies
@@ -264,23 +299,6 @@ ALTER USER postgres PASSWORD 'supersecurepassword';
 It might be necessary to restart postgresql: `sudo service postgresql restart`.
 
 Furthermore, the `pg_hba.conf` file can be modified to change authentication type for local users to trust (rather than, e.g., md5) but we haven't tested this solution.
-
-#### `FATAL: password authentification failed for user "postgres"`
-If you get a traceback similar to this one when making a test environment:
-```python
-File "/home/jorge/miniconda3/envs/qiita/bin/qiita_db/environment_manager.py", 
-  line 158, in make_environment with qdb.sql_connection.TRMADMIN:
-File "/home/jorge/miniconda3/envs/qiita/bin/qiita_db/sql_connection.py", line 152, in __enter__ 
-  self._open_connection()
-File "/home/jorge/miniconda3/envs/qiita/bin/qiita_db/sql_connection.py", line 123, in _open_connection 
-  raise RuntimeError(ebase % (str(e), etext))
-RuntimeError: An OperationalError with the following message occured
-    connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL: password authentification failed for user "postgres" 
-```
-it can be solved by modifying the `pg_hba.conf` so that all md5 and peer are trust instead. Access the file with:
-```bash
-sudo vim /etc/postgresql/13/main/pg_hba.conf
-```
 
 #### `Error: You need to install postgresql-server-dev-X.Y for building a server-side extension or libpq-dev for building a client-side application.`
 
