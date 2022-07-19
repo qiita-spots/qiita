@@ -6,7 +6,7 @@ Qiita is pip installable, but depends on specific versions of python and non-pyt
 
 ## Install and setup miniconda
 
-Download the appropriate installer [here](http://conda.pydata.org/docs/install/quick.html) corresponding to your operating system and execute it.
+Download the appropriate installer [here](https://repo.anaconda.com/miniconda/) corresponding to your operating system and execute it.
 
 Next, ensure conda is up-to-date.
 
@@ -41,7 +41,7 @@ $ which python
 (qiita)
 ```
 
-If you don't see this output, your `$PATH` variable was setup incorrectly or you haven't restarted your shell. Consult the [conda documentation](http://conda.pydata.org/docs/install/quick.html).
+If you don't see this output, your `$PATH` variable was setup incorrectly or you haven't restarted your shell. Consult the [conda documentation](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
 As long as you are in the active qiita environment, commands such as `pip install` or `python` will refer to and be contained within this virtual environment.
 
@@ -99,9 +99,9 @@ Installing Postgres is now complete. Note that you will need to start the Postgr
 ```bash
 sudo service postgresql start
 ```
-### PostgreSQL installation on Mac OS X (Outdated)
+### PostgreSQL installation on Mac OS X
 
-For Mac OS X, you can either install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5.
+For Mac OS X, you can either install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5, v13.
 
 You'll then need to ensure that the postgres binaries (for example, ``psql``) are in your executable search path (``$PATH`` environment variable). If you are using Postgres.app on OS X, you can do this by running the following, though you may have to replace`~/.bash_profile`with `~/.zshrc` if you're using zshell rather than the built-in bash, and you may have to change the version number `Versions/9.3/` to the exact one that you are installing:
 
@@ -110,14 +110,16 @@ echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.5/bin/"'
 source ~/.bash_profile
 ```
 
-### Redis-server installation on Mac OS X or Linux
+### Redis-server installation using Homebrew (Mac OS X, Linux)
 
-Assuming you have [homebrew](http://www.brew.sh) installed, you can install the latest version of the redis-server as follows:
+Assuming you have [homebrew](http://brew.sh) installed, you can install the latest version of the redis-server as follows:
 
 ```bash
 brew update
 brew install homebrew/versions/redis28
 ```
+### Redis-server installation using apt-get (Linux)
+
 Alternatively, you can sudo install redis:
 ```bash
 sudo apt-get install redis-server
@@ -160,7 +162,7 @@ Navigate to the cloned directory and ensure your conda environment is active:
 cd qiita
 source activate qiita
 ```
-If you are using a Windows Subsystem for Linux (WSL), you will need to ensure that you have a C++ compiler and that development libraries and include files for PostgreSQL are available. Type `cc` into your system to ensure that it doesn't result in `program not found`. The following commands will install a C++ compiler and  `libpq-dev`:
+If you are using Ubuntu or a Windows Subsystem for Linux (WSL), you will need to ensure that you have a C++ compiler and that development libraries and include files for PostgreSQL are available. Type `cc` into your system to ensure that it doesn't result in `program not found`. The following commands will install a C++ compiler and  `libpq-dev`:
 ```bash
 sudo apt install gcc              # alternatively, you can install clang instead
 sudo apt-get install libpq-dev
