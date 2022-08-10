@@ -2080,7 +2080,7 @@ def generate_analyses_list_per_study(study_id):
 
 
 def create_nested_path(path):
-    """Wraps makedirs() to make it safe to use across multiple concurrent calls.
+    """Wraps makedirs() to make it safe across multiple concurrent calls.
     Returns successfully if the path was created, or if it already exists.
     (Note, this alters the normal makedirs() behavior, where False is returned
     if the full path already exists.)

@@ -191,8 +191,8 @@ class TestEBISubmission(TestCase):
                        '1.SKM7.640188', '1.SKD7.640191', '1.SKB6.640176',
                        '1.SKM4.640180']
         for k in keys_to_del:
-            del(submission.samples[k])
-            del(submission.samples_prep[k])
+            del (submission.samples[k])
+            del (submission.samples_prep[k])
         obs = ET.tostring(submission.generate_sample_xml())
         self.assertEqual(obs.decode('ascii'), exp)
 
@@ -524,8 +524,8 @@ class TestEBISubmission(TestCase):
                        '1.SKM7.640188', '1.SKD7.640191', '1.SKB6.640176',
                        '1.SKM4.640180']
         for k in keys_to_del:
-            del(submission.samples[k])
-            del(submission.samples_prep[k])
+            del (submission.samples[k])
+            del (submission.samples_prep[k])
 
         obs = ET.tostring(submission.generate_experiment_xml())
         self.assertEqual(obs.decode('ascii'), exp)
@@ -583,8 +583,8 @@ class TestEBISubmission(TestCase):
         keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
                        '1.SKM8.640201', '1.SKM2.640199']
         for k in keys_to_del:
-            del(submission.samples[k])
-            del(submission.samples_prep[k])
+            del (submission.samples[k])
+            del (submission.samples_prep[k])
 
         submission.generate_demultiplexed_fastq(mtime=1)
         self.files_to_remove.append(submission.full_ebi_dir)
@@ -1001,8 +1001,8 @@ class TestEBISubmission(TestCase):
         keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
                        '1.SKM8.640201', '1.SKM2.640199', '1.SKB3.640195']
         for k in keys_to_del:
-            del(e.samples[k])
-            del(e.samples_prep[k])
+            del (e.samples[k])
+            del (e.samples_prep[k])
 
         # Genereate the XML files so the aliases are generated
         # and stored internally
