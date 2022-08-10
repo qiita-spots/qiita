@@ -53,27 +53,25 @@ class Watcher(Process):
     # 'running' in Qiita, as 'waiting' in Qiita connotes that the
     # main job itself has completed, and is waiting on validator
     # jobs to finish, etc. Revisit
-    torque_to_qiita_state_map = {'completed': 'completed',
-                                 'held': 'queued',
-                                 'queued': 'queued',
-                                 'exiting': 'running',
-                                 'running': 'running',
-                                 'moving': 'running',
-                                 'waiting': 'running',
-                                 'suspended': 'running',
-                                 'DROPPED': 'error'}
+    job_scheduler_to_qiita_state_map = {'completed': 'completed',
+                                        'held': 'queued',
+                                        'queued': 'queued',
+                                        'exiting': 'running',
+                                        'running': 'running',
+                                        'moving': 'running',
+                                        'waiting': 'running',
+                                        'suspended': 'running',
+                                        'DROPPED': 'error'}
 
     def __init__(self):
         super(Watcher, self).__init__()
 
         # set self.owner to qiita, or whomever owns processes we need to watch.
-        self.owner = qiita_config.trq_owner
+        self.owner = qiita_config.job_scheduler_owner
 
-        # Torque is set to drop jobs from its queue 60 seconds after
-        # completion, by default. Setting a polling value less than
-        # that allows for multiple chances to catch the exit status
-        # before it disappears.
-        self.polling_value = qiita_config.trq_poll_val
+        # Setting a polling value less than 60 seconds allows for multiple
+        # chances to catch the exit status before it disappears.
+        self.polling_value = qiita_config.job_scheduler_poll_val
 
         # the cross-process method by which to communicate across
         # process boundaries. Note that when Watcher object runs,
@@ -204,7 +202,8 @@ class Watcher(Process):
 
 def launch_local(env_script, start_script, url, job_id, job_dir):
 
-    # launch_local() differs from launch_torque(), as no Watcher() is used.
+    # launch_local() differs from launch_job_scheduler(), as no Watcher() is
+    # used.
     # each launch_local() process will execute the cmd as a child process,
     # wait, and update the database once cmd has completed.
     #
@@ -248,85 +247,81 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
         ProcessingJob(job_id).complete(False, error=error)
 
 
-def launch_torque(env_script, start_script, url, job_id, job_dir,
-                  dependent_job_id, resource_params):
+def launch_job_scheduler(env_script, start_script, url, job_id, job_dir,
+                         dependent_job_id, resource_params):
 
-    # note that job_id is Qiita's UUID, not a Torque job ID
+    # note that job_id is Qiita's UUID, not a job_scheduler job ID
     cmd = [start_script, url, job_id, job_dir]
 
-    # generating file contents to be used with qsub
     lines = []
 
-    # TODO: is PBS_JOBID is being set correctly?
-    lines.append("echo $PBS_JOBID")
+    lines.append("echo $SLURM_JOBID")
 
     # TODO: revisit below
     lines.append("source ~/.bash_profile")
     lines.append(env_script)
     lines.append(' '.join(cmd))
 
-    # writing the file to be used with qsub
+    # writing the script file
     create_nested_path(job_dir)
 
     fp = join(job_dir, '%s.txt' % job_id)
 
-    with open(fp, 'w') as torque_job_file:
-        torque_job_file.write("\n".join(lines))
+    with open(fp, 'w') as job_file:
+        job_file.write("\n".join(lines))
 
-    qsub_cmd = ['qsub']
+    sbatch_cmd = ['sbatch']
 
     if dependent_job_id:
         # note that a dependent job should be submitted before the
-        # 'parent' job ends, most likely. Torque doesn't keep job state
-        # around forever, and creating a dependency on a job already
-        # completed has not been tested.
-        qsub_cmd.append("-W")
-        qsub_cmd.append("depend=afterok:%s" % dependent_job_id)
+        # 'parent' job ends
+        sbatch_cmd.append("-d")
+        sbatch_cmd.append("afterok:%s" % dependent_job_id)
 
-    qsub_cmd.append(resource_params)
-    qsub_cmd.append(fp)
-    qsub_cmd.append("-o")
-    qsub_cmd.append("%s/qsub-output.txt" % job_dir)
-    qsub_cmd.append("-e")
-    qsub_cmd.append("%s/qsub-error.txt" % job_dir)
+    sbatch_cmd.append(resource_params)
+    sbatch_cmd.append(fp)
+    sbatch_cmd.append("--output=")
+    sbatch_cmd.append("%s/slurm-output.txt" % job_dir)
+    sbatch_cmd.append("--error")
+    sbatch_cmd.append("%s/slurm-error.txt" % job_dir)
     # TODO: revisit epilogue
-    qsub_cmd.append("-l")
-    qsub_cmd.append("epilogue=/home/qiita/qiita-epilogue.sh")
+    # sbatch_cmd.append("-l")
+    # sbatch_cmd.append("epilogue=/home/qiita/qiita-epilogue.sh")
 
     # Popen() may also need universal_newlines=True
     # may also need stdout = stdout.decode("utf-8").rstrip()
-    qsub_cmd = ' '.join(qsub_cmd)
+    sbatch_cmd = ' '.join(sbatch_cmd)
 
-    # Qopen is a wrapper for Popen() that allows us to wait on a qsub
-    # call, but return if the qsub command is not returning after a
+    # Qopen is a wrapper for Popen() that allows us to wait on a the command
+    # call, but return if the command is not returning after a
     # prolonged period of time.
-    q = Qopen(qsub_cmd)
+    q = Qopen(sbatch_cmd)
     q.start()
 
-    # wait for qsub_cmd to finish, but not longer than the number of
+    # wait for sbatch_cmd to finish, but not longer than the number of
     # seconds specified below.
     init_time = time()
     q.join(5)
     total_time = time() - init_time
     # for internal use, logging if the time is larger than 2 seconds
     if total_time > 2:
-        qdb.logger.LogEntry.create('Runtime', 'qsub return time', info={
+        qdb.logger.LogEntry.create('Runtime', 'sbatch return time', info={
             'time_in_seconds': str(total_time)})
 
-    # if q.returncode is None, it's because qsub did not return.
+    # if q.returncode is None, it's because command did not return.
     if q.returncode is None:
-        e = "Error Torque configuration information incorrect: %s" % qsub_cmd
+        e = "JobScheduler configuration information incorrect: %s" % sbatch_cmd
         raise IncompetentQiitaDeveloperError(e)
 
-    # q.returncode in this case means qsub successfully pushed the job
-    # onto Torque's queue.
+    # q.returncode in this case means command successfully pushed the job
+    # onto job_scheduler queue.
     if q.returncode != 0:
-        raise AssertionError("Error Torque could not launch %s (%d)" %
-                             (qsub_cmd, q.returncode))
+        raise AssertionError("JobScheduler could not launch %s (%d)" %
+                             (sbatch_cmd, q.returncode))
 
-    torque_job_id = q.stdout.decode('ascii').strip('\n')
+    job_id = q.stdout.decode('ascii').strip('\n').split(" ")[-1]
 
-    return torque_job_id
+    return job_id
 
 
 class Qopen(Thread):
@@ -395,8 +390,8 @@ class ProcessingJob(qdb.base.QiitaObject):
     _launch_map = {'qiita-plugin-launcher':
                    {'function': launch_local,
                     'execute_in_process': False},
-                   'qiita-plugin-launcher-qsub':
-                   {'function': launch_torque,
+                   'qiita-plugin-launcher-slurm':
+                   {'function': launch_job_scheduler,
                     'execute_in_process': True}}
 
     @classmethod
@@ -432,7 +427,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         Parameters
         ----------
         external_id : str
-            An external id (e.g. Torque Job ID)
+            An external id (e.g. job scheduler Job ID)
 
         Returns
         -------
