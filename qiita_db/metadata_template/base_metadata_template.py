@@ -1537,7 +1537,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         return result
 
     def _update_accession_numbers(self, column, values):
-        """Update accession numbers stored in `column` with the ones in `values`
+        """Update accession numbers stored in `column` with `values`
 
         Parameters
         ----------
