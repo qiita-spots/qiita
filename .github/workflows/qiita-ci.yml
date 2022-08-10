@@ -96,6 +96,9 @@ jobs:
           export REDBIOM_HOST="http://localhost:7379"
 
           pip install . --no-binary redbiom
+          # 10.2022
+          # this is for redbiom / biom-format (so fine to delete in the future)
+          pip install future
           pwd
           mkdir ~/.qiita_plugins
 
