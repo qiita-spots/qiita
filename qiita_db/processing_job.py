@@ -522,7 +522,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                         try:
                             # if eval has something that can't be processed
                             # it will raise a NameError
-                            mem = eval(value.format(
+                            mem = eval(part.format(
                                 samples=samples, columns=columns,
                                 input_size=input_size))
                         except NameError:
