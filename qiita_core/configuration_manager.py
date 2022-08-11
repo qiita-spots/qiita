@@ -249,7 +249,7 @@ class ConfigurationManager(object):
 
         if self.job_scheduler_dependency_q_cnt is not None:
             self.job_scheduler_dependency_q_cnt = int(
-                self.job_scheduler_poll_val)
+                self.job_scheduler_dependency_q_cnt)
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""
