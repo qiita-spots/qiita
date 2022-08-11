@@ -1348,7 +1348,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             self._set_validator_jobs(validator_jobs)
 
             # Submit m validator jobs as n lists of jobs
-            n = qiita_config.trq_dependency_q_cnt
+            n = qiita_config.job_scheduler_dependency_q_cnt
 
             # taken from:
             # https://www.geeksforgeeks.org/break-list-chunks-size-n-python/
