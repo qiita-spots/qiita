@@ -501,21 +501,20 @@ class ProcessingJob(qdb.base.QiitaObject):
                     '{input_size}' in allocation):
                 samples, columns, input_size = self.shape
                 parts = []
+                error_msg = ('Obvious incorrect allocation. Please '
+                             'contact qiita.help@gmail.com')
                 for part in allocation.split(' '):
                     if ('{samples}' in part or '{columns}' in part or
                             '{input_size}' in part):
-                        variable, value = part.split('=')
-                        error_msg = ('Obvious incorrect allocation. Please '
-                                     'contact qiita.help@gmail.com')
                         # to make sure that the formula is correct and avoid
                         # possible issues with conversions, we will check that
                         # all the variables {samples}/{columns}/{input_size}
                         # present in the formula are not None, if any is None
                         # we will set the job's error (will stop it) and the
                         # message is gonna be shown to the user within the job
-                        if (('{samples}' in value and samples is None) or
-                                ('{columns}' in value and columns is None) or
-                                ('{input_size}' in value and input_size is
+                        if (('{samples}' in part and samples is None) or
+                                ('{columns}' in part and columns is None) or
+                                ('{input_size}' in part and input_size is
                                  None)):
                             self._set_error(error_msg)
                             return 'Not valid'
@@ -533,8 +532,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                             if mem <= 0:
                                 self._set_error(error_msg)
                                 return 'Not valid'
-                            value = naturalsize(mem, gnu=True, format='%.0f')
-                            part = '%s=%s' % (variable, value)
+                            part = naturalsize(mem, gnu=True, format='%.0f')
 
                     parts.append(part)
 

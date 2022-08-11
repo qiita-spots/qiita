@@ -551,8 +551,9 @@ class ProcessingJobTest(TestCase):
         # here we can test that the validator shape and allocation is correct
         validator = validators[0]
         self.assertEqual(validator.parameters.values['artifact_type'], 'BIOM')
-        self.assertEqual(validator.get_resource_allocation_info(), '-q qiita '
-                         '-l nodes=1:ppn=1 -l mem=90gb -l walltime=150:00:00')
+        self.assertEqual(
+            validator.get_resource_allocation_info(),
+            '-p qiita -N 1 -n 1 --mem 90gb --time 150:00:00')
         self.assertEqual(validator.shape, (27, 31, None))
         # Test the output artifact is going to be named based on the
         # input parameters
