@@ -185,7 +185,7 @@ class ConfigurationManagerTests(TestCase):
 
         conf_setter = partial(self.conf.set, 'job_scheduler')
         conf_setter('JOB_SCHEDULER_JOB_OWNER', '')
-        obs.get_job_scheduler(self.conf)
+        obs._get_job_scheduler(self.conf)
         self.assertIsNone(obs.job_scheduler_owner)
 
     def test_get_postgres(self):
