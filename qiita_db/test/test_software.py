@@ -539,13 +539,13 @@ class SoftwareTestsIter(TestCase):
         # Command 2 is Split libraries and has defined resources
         self.assertEqual(
             qdb.software.Command(2).resource_allocation,
-            '-q qiita -l nodes=1:ppn=1 -l mem=60gb -l walltime=25:00:00')
+            '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00')
 
         # Command 9 is Summarize Taxa and has no defined resources so it goes
         # to defaults
         self.assertEqual(
             qdb.software.Command(9).resource_allocation,
-            '-q qiita -l nodes=1:ppn=5 -l pmem=8gb -l walltime=168:00:00')
+            '-p qiita -N 1 -n 5 --mem-per-cpu 8gb --time 168:00:00')
 
         # delete allocations to test errors
         qdb.sql_connection.perform_as_transaction(
