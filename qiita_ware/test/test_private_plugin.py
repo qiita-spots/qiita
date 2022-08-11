@@ -388,7 +388,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
                 sql = """UPDATE qiita.processing_job_resource_allocation
                          SET allocation = '{0}'
                          WHERE name = 'build_analysis_files'""".format(
-                            '-q qiita -l mem=%s' % memory)
+                            '-p qiita --mem %s' % memory)
                 TRN.add(sql)
                 TRN.execute()
 
@@ -398,7 +398,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
             '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00')
         _set_allocation('{samples}*1000')
         self.assertEqual(job.get_resource_allocation_info(),
-                         '-q qiita -l mem=4K')
+                         '-p qiita --mem 4K')
         _set_allocation('{columns}*1000')
         self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
         self.assertEqual(job.status, 'error')
