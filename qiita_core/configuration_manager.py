@@ -238,11 +238,18 @@ class ConfigurationManager(object):
         """Get the configuration of the job_scheduler section"""
         self.job_scheduler_owner = config.get(
             'job_scheduler', 'JOB_SCHEDULER_JOB_OWNER', fallback=None)
-        self.job_scheduler_poll_val = int(config.get(
-            'job_scheduler', 'JOB_SCHEDULER_POLLING_VALUE', fallback=None))
-        self.job_scheduler_dependency_q_cnt = int(config.get(
+        self.job_scheduler_poll_val = config.get(
+            'job_scheduler', 'JOB_SCHEDULER_POLLING_VALUE', fallback=None)
+        self.job_scheduler_dependency_q_cnt = config.get(
             'job_scheduler', 'JOB_SCHEDULER_PROCESSING_QUEUE_COUNT',
-            fallback=None))
+            fallback=None)
+
+        if self.job_scheduler_poll_val is not None:
+            self.job_scheduler_poll_val = int(self.job_scheduler_poll_val)
+
+        if self.job_scheduler_dependency_q_cnt is not None:
+            self.job_scheduler_dependency_q_cnt = int(
+                self.job_scheduler_poll_val)
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""
