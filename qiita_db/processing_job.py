@@ -291,7 +291,7 @@ def launch_job_scheduler(env_script, start_script, url, job_id, job_dir,
     if return_value != 0:
         raise AssertionError(f'Error submitting job: {sbatch_cmd} :: {stderr}')
 
-    job_id = stdout.decode('ascii').strip('\n').split(" ")[-1]
+    job_id = stdout.strip('\n').split(" ")[-1]
 
     return job_id
 
