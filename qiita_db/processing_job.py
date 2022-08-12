@@ -17,13 +17,11 @@ from json import dumps, loads
 from multiprocessing import Process, Queue, Event
 from re import search, findall
 from subprocess import Popen, PIPE
-from time import sleep, time
+from time import sleep
 from uuid import UUID
 from os.path import join
-from threading import Thread
 from humanize import naturalsize
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import create_nested_path
 
@@ -288,54 +286,14 @@ def launch_job_scheduler(env_script, start_script, url, job_id, job_dir,
     # sbatch_cmd.append("-l")
     # sbatch_cmd.append("epilogue=/home/qiita/qiita-epilogue.sh")
 
-    # Popen() may also need universal_newlines=True
-    # may also need stdout = stdout.decode("utf-8").rstrip()
-    sbatch_cmd = ' '.join(sbatch_cmd)
+    stdout, stderr, return_value = _system_call(' '.join(sbatch_cmd))
 
-    # Qopen is a wrapper for Popen() that allows us to wait on a the command
-    # call, but return if the command is not returning after a
-    # prolonged period of time.
-    q = Qopen(sbatch_cmd)
-    q.start()
+    if return_value != 0:
+        raise AssertionError(f'Error submitting job: {sbatch_cmd} :: {stderr}')
 
-    # wait for sbatch_cmd to finish, but not longer than the number of
-    # seconds specified below.
-    init_time = time()
-    q.join(5)
-    total_time = time() - init_time
-    # for internal use, logging if the time is larger than 2 seconds
-    if total_time > 2:
-        qdb.logger.LogEntry.create('Runtime', 'sbatch return time', info={
-            'time_in_seconds': str(total_time)})
-
-    # if q.returncode is None, it's because command did not return.
-    if q.returncode is None:
-        e = "JobScheduler configuration information incorrect: %s" % sbatch_cmd
-        raise IncompetentQiitaDeveloperError(e)
-
-    # q.returncode in this case means command successfully pushed the job
-    # onto job_scheduler queue.
-    if q.returncode != 0:
-        raise AssertionError("JobScheduler could not launch %s (%d)" %
-                             (sbatch_cmd, q.returncode))
-
-    job_id = q.stdout.decode('ascii').strip('\n').split(" ")[-1]
+    job_id = stdout.decode('ascii').strip('\n').split(" ")[-1]
 
     return job_id
-
-
-class Qopen(Thread):
-    def __init__(self, cmd):
-        super(Qopen, self).__init__()
-        self.cmd = cmd
-        self.stdout = None
-        self.stderr = None
-        self.returncode = None
-
-    def run(self):
-        proc = Popen(self.cmd, shell=True, stdout=PIPE, stderr=PIPE)
-        self.stdout, self.stderr = proc.communicate()
-        self.returncode = proc.returncode
 
 
 def _system_call(cmd):
