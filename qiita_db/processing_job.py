@@ -253,7 +253,7 @@ def launch_job_scheduler(env_script, start_script, url, job_id, job_dir,
     # note that job_id is Qiita's UUID, not a job_scheduler job ID
     cmd = [start_script, url, job_id, job_dir]
 
-    lines = []
+    lines = ['#!/bin/bash']
 
     lines.append("echo $SLURM_JOBID")
 
