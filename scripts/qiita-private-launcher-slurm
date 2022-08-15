@@ -12,6 +12,7 @@ from subprocess import Popen, PIPE
 from datetime import datetime
 from tempfile import mkdtemp
 from os.path import join
+from os import environ
 
 import click
 
@@ -20,9 +21,6 @@ SBATCHFILE = """#!/bin/bash
 #SBATCH -n=1
 #SBATCH --output=%s/slurm-output.txt
 #SBATCH --error=%s/slurm-error.txt
-
-// #TODO:
-// #PBS -l epilogue=/home/qiita/qiita-epilogue.sh
 
 # Commands to run
 echo $SLURM_JOBID
@@ -48,7 +46,13 @@ def start(qiita_env, command, arguments):
     fp = join(dirpath, 'private')
     with open(fp, 'w') as f:
         f.write(SBATCHFILE % (dirpath, dirpath, "\n".join(lines)))
+
     cmd = "sbatch %s" % fp
+
+    epilogue = environ.get('QIITA_JOB_SCHEDULER_EPILOGUE', '')
+    if epilogue:
+        cmd = f'{cmd} --epilog {epilogue}'
+
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
     if proc.returncode and proc.returncode != 0:

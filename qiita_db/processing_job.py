@@ -21,6 +21,7 @@ from time import sleep
 from uuid import UUID
 from os.path import join
 from humanize import naturalsize
+from os import environ
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import create_nested_path
@@ -282,9 +283,11 @@ def launch_job_scheduler(env_script, start_script, url, job_id, job_dir,
     sbatch_cmd.append("%s/slurm-output.txt" % job_dir)
     sbatch_cmd.append("--error")
     sbatch_cmd.append("%s/slurm-error.txt" % job_dir)
-    # TODO: revisit epilogue
-    # sbatch_cmd.append("-l")
-    # sbatch_cmd.append("epilogue=/home/qiita/qiita-epilogue.sh")
+
+    epilogue = environ.get('QIITA_JOB_SCHEDULER_EPILOGUE', '')
+    if epilogue:
+        sbatch_cmd.append("--epilog")
+        sbatch_cmd.append(epilogue)
 
     stdout, stderr, return_value = _system_call(' '.join(sbatch_cmd))
 
