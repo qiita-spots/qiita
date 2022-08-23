@@ -551,8 +551,9 @@ class ProcessingJobTest(TestCase):
         # here we can test that the validator shape and allocation is correct
         validator = validators[0]
         self.assertEqual(validator.parameters.values['artifact_type'], 'BIOM')
-        self.assertEqual(validator.get_resource_allocation_info(), '-q qiita '
-                         '-l nodes=1:ppn=1 -l mem=90gb -l walltime=150:00:00')
+        self.assertEqual(
+            validator.get_resource_allocation_info(),
+            '-p qiita -N 1 -n 1 --mem 90gb --time 150:00:00')
         self.assertEqual(validator.shape, (27, 31, None))
         # Test the output artifact is going to be named based on the
         # input parameters
@@ -787,16 +788,16 @@ class ProcessingJobTest(TestCase):
         jids = {
             # Split libraries FASTQ
             '6d368e16-2242-4cf8-87b4-a5dc40bb890b':
-                '-q qiita -l nodes=1:ppn=1 -l mem=120gb -l walltime=80:00:00',
+                '-p qiita -N 1 -n 1 --mem 120gb --time 80:00:00',
             # Pick closed-reference OTUs
             '80bf25f3-5f1d-4e10-9369-315e4244f6d5':
-                '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00',
+                '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00',
             # Single Rarefaction / Analysis
             '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0':
-                '-q qiita -l nodes=1:ppn=5 -l pmem=8gb -l walltime=168:00:00',
+                '-p qiita -N 1 -n 5 --mem-per-cpu 8gb --time 168:00:00',
             # Split libraries
             'bcc7ebcd-39c1-43e4-af2d-822e3589f14d':
-                '-q qiita -l nodes=1:ppn=1 -l mem=60gb -l walltime=25:00:00'}
+                '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00'}
 
         for jid, allocation in jids.items():
             job = qdb.processing_job.ProcessingJob(jid)
@@ -813,7 +814,7 @@ class ProcessingJobTest(TestCase):
             sql = """UPDATE qiita.processing_job_resource_allocation
                      SET allocation = '{0}'
                      WHERE name = 'Split libraries FASTQ'""".format(
-                        '-q qiita -l mem=%s' % memory)
+                        '-p qiita --mem %s' % memory)
             qdb.sql_connection.perform_as_transaction(sql)
 
         # let's start with something simple, samples*1000
@@ -821,27 +822,27 @@ class ProcessingJobTest(TestCase):
         _set_allocation('{samples}*1000')
         self.assertEqual(
             job_not_changed.get_resource_allocation_info(),
-            '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00')
+            '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00')
         self.assertEqual(job_changed.get_resource_allocation_info(),
-                         '-q qiita -l mem=26K')
+                         '-p qiita --mem 26K')
 
         # a little more complex ((samples+columns)*1000000)+4000000
         #                       ((   27  +  31   )*1000000)+4000000 ~ 62000000
         _set_allocation('(({samples}+{columns})*1000000)+4000000')
         self.assertEqual(
             job_not_changed.get_resource_allocation_info(),
-            '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00')
+            '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00')
         self.assertEqual(job_changed.get_resource_allocation_info(),
-                         '-q qiita -l mem=59M')
+                         '-p qiita --mem 59M')
 
         # now something real input_size+(2*1e+9)
         #                        116   +(2*1e+9) ~ 2000000116
         _set_allocation('{input_size}+(2*1e+9)')
         self.assertEqual(
             job_not_changed.get_resource_allocation_info(),
-            '-q qiita -l nodes=1:ppn=5 -l mem=120gb -l walltime=130:00:00')
+            '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00')
         self.assertEqual(job_changed.get_resource_allocation_info(),
-                         '-q qiita -l mem=2G')
+                         '-p qiita --mem 2G')
 
 
 @qiita_test_checker()
