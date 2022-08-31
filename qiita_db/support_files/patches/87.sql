@@ -1,6 +1,6 @@
 -- Aug 11, 2022
 -- updating resource allocations to use slurm
-UPDATE qiita.processing_job_resource_allocation processing_job_resource_allocation SET allocation =
+UPDATE qiita.processing_job_resource_allocation SET allocation =
 REPLACE(
   REPLACE(
     REPLACE(
@@ -13,4 +13,6 @@ REPLACE(
       '-l pmem=', '--mem-per-cpu '),
     '-l mem=', '--mem '),
   '-l walltime=', '--time '),
-'-p 1023', '--priority 1023');
+'-p 1023', '--qos=qiita_prio');
+
+INSERT INTO qiita.filepath_type (filepath_type) VALUES ('bam');
