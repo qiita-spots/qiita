@@ -135,6 +135,7 @@ class DBUtilTests(DBUtilTestsBase):
                'directory': 8, 'plain_text': 9, 'reference_seqs': 10,
                'reference_tax': 11, 'reference_tree': 12, 'log': 13,
                'sample_template': 14, 'prep_template': 15, 'qiime_map': 16,
+               'bam': 17
                }
         with qdb.sql_connection.TRN:
             qdb.sql_connection.TRN.add("SELECT filepath_type,filepath_type_id "
