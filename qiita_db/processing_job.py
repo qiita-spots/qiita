@@ -252,13 +252,18 @@ def launch_job_scheduler(env_script, start_script, url, job_id, job_dir,
     # note that job_id is Qiita's UUID, not a job_scheduler job ID
     cmd = [start_script, url, job_id, job_dir]
 
-    lines = ['#!/bin/bash']
-
+    lines = [
+        '#!/bin/bash'
+        f'#SBATCH --error {job_dir}/slurm-error.txt'
+        f'#SBATCH --output {job_dir}/slurm-output.txt']
     lines.append("echo $SLURM_JOBID")
-
-    # TODO: revisit below
     lines.append("source ~/.bash_profile")
     lines.append(env_script)
+
+    epilogue = environ.get('QIITA_JOB_SCHEDULER_EPILOGUE', '')
+    if epilogue:
+        lines.append(f"#SBATCH --epilog {epilogue}")
+
     lines.append(' '.join(cmd))
 
     # writing the script file
@@ -279,15 +284,6 @@ def launch_job_scheduler(env_script, start_script, url, job_id, job_dir,
 
     sbatch_cmd.append(resource_params)
     sbatch_cmd.append(fp)
-    sbatch_cmd.append("--output=")
-    sbatch_cmd.append("%s/slurm-output.txt" % job_dir)
-    sbatch_cmd.append("--error")
-    sbatch_cmd.append("%s/slurm-error.txt" % job_dir)
-
-    epilogue = environ.get('QIITA_JOB_SCHEDULER_EPILOGUE', '')
-    if epilogue:
-        sbatch_cmd.append("--epilog")
-        sbatch_cmd.append(epilogue)
 
     stdout, stderr, return_value = _system_call(' '.join(sbatch_cmd))
 
