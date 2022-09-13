@@ -253,8 +253,8 @@ def launch_job_scheduler(env_script, start_script, url, job_id, job_dir,
     cmd = [start_script, url, job_id, job_dir]
 
     lines = [
-        '#!/bin/bash'
-        f'#SBATCH --error {job_dir}/slurm-error.txt'
+        '#!/bin/bash',
+        f'#SBATCH --error {job_dir}/slurm-error.txt',
         f'#SBATCH --output {job_dir}/slurm-output.txt']
     lines.append("echo $SLURM_JOBID")
     lines.append("source ~/.bash_profile")
