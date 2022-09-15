@@ -96,7 +96,9 @@ jobs:
           export REDBIOM_HOST="http://localhost:7379"
 
           pip install . --no-binary redbiom
-          conda install -c conda-forge --yes biom-format
+          # 10.2022
+          # this is for redbiom / biom-format (so fine to delete in the future)
+          pip install future
           pwd
           mkdir ~/.qiita_plugins
 
@@ -182,6 +184,8 @@ jobs:
           conda activate qiita
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
+          # for testing we only need to have this set, not actually exist
+          export QIITA_JOB_SCHEDULER_EPILOGUE=`/path/to/epilogue/file`
           export REDBIOM_HOST="http://localhost:7379"
 
           nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=${COVER_PACKAGE// / --cover-package=} -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'

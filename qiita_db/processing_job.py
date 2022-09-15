@@ -17,13 +17,12 @@ from json import dumps, loads
 from multiprocessing import Process, Queue, Event
 from re import search, findall
 from subprocess import Popen, PIPE
-from time import sleep, time
+from time import sleep
 from uuid import UUID
 from os.path import join
-from threading import Thread
 from humanize import naturalsize
+from os import environ
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import create_nested_path
 
@@ -53,27 +52,25 @@ class Watcher(Process):
     # 'running' in Qiita, as 'waiting' in Qiita connotes that the
     # main job itself has completed, and is waiting on validator
     # jobs to finish, etc. Revisit
-    torque_to_qiita_state_map = {'completed': 'completed',
-                                 'held': 'queued',
-                                 'queued': 'queued',
-                                 'exiting': 'running',
-                                 'running': 'running',
-                                 'moving': 'running',
-                                 'waiting': 'running',
-                                 'suspended': 'running',
-                                 'DROPPED': 'error'}
+    job_scheduler_to_qiita_state_map = {'completed': 'completed',
+                                        'held': 'queued',
+                                        'queued': 'queued',
+                                        'exiting': 'running',
+                                        'running': 'running',
+                                        'moving': 'running',
+                                        'waiting': 'running',
+                                        'suspended': 'running',
+                                        'DROPPED': 'error'}
 
     def __init__(self):
         super(Watcher, self).__init__()
 
         # set self.owner to qiita, or whomever owns processes we need to watch.
-        self.owner = qiita_config.trq_owner
+        self.owner = qiita_config.job_scheduler_owner
 
-        # Torque is set to drop jobs from its queue 60 seconds after
-        # completion, by default. Setting a polling value less than
-        # that allows for multiple chances to catch the exit status
-        # before it disappears.
-        self.polling_value = qiita_config.trq_poll_val
+        # Setting a polling value less than 60 seconds allows for multiple
+        # chances to catch the exit status before it disappears.
+        self.polling_value = qiita_config.job_scheduler_poll_val
 
         # the cross-process method by which to communicate across
         # process boundaries. Note that when Watcher object runs,
@@ -204,7 +201,8 @@ class Watcher(Process):
 
 def launch_local(env_script, start_script, url, job_id, job_dir):
 
-    # launch_local() differs from launch_torque(), as no Watcher() is used.
+    # launch_local() differs from launch_job_scheduler(), as no Watcher() is
+    # used.
     # each launch_local() process will execute the cmd as a child process,
     # wait, and update the database once cmd has completed.
     #
@@ -248,99 +246,53 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
         ProcessingJob(job_id).complete(False, error=error)
 
 
-def launch_torque(env_script, start_script, url, job_id, job_dir,
-                  dependent_job_id, resource_params):
+def launch_job_scheduler(env_script, start_script, url, job_id, job_dir,
+                         dependent_job_id, resource_params):
 
-    # note that job_id is Qiita's UUID, not a Torque job ID
+    # note that job_id is Qiita's UUID, not a job_scheduler job ID
     cmd = [start_script, url, job_id, job_dir]
 
-    # generating file contents to be used with qsub
-    lines = []
-
-    # TODO: is PBS_JOBID is being set correctly?
-    lines.append("echo $PBS_JOBID")
-
-    # TODO: revisit below
+    lines = [
+        '#!/bin/bash',
+        f'#SBATCH --error {job_dir}/slurm-error.txt',
+        f'#SBATCH --output {job_dir}/slurm-output.txt']
+    lines.append("echo $SLURM_JOBID")
     lines.append("source ~/.bash_profile")
     lines.append(env_script)
+
+    epilogue = environ.get('QIITA_JOB_SCHEDULER_EPILOGUE', '')
+    if epilogue:
+        lines.append(f"#SBATCH --epilog {epilogue}")
+
     lines.append(' '.join(cmd))
 
-    # writing the file to be used with qsub
+    # writing the script file
     create_nested_path(job_dir)
 
     fp = join(job_dir, '%s.txt' % job_id)
 
-    with open(fp, 'w') as torque_job_file:
-        torque_job_file.write("\n".join(lines))
+    with open(fp, 'w') as job_file:
+        job_file.write("\n".join(lines))
 
-    qsub_cmd = ['qsub']
+    sbatch_cmd = ['sbatch']
 
     if dependent_job_id:
         # note that a dependent job should be submitted before the
-        # 'parent' job ends, most likely. Torque doesn't keep job state
-        # around forever, and creating a dependency on a job already
-        # completed has not been tested.
-        qsub_cmd.append("-W")
-        qsub_cmd.append("depend=afterok:%s" % dependent_job_id)
+        # 'parent' job ends
+        sbatch_cmd.append("-d")
+        sbatch_cmd.append("afterok:%s" % dependent_job_id)
 
-    qsub_cmd.append(resource_params)
-    qsub_cmd.append(fp)
-    qsub_cmd.append("-o")
-    qsub_cmd.append("%s/qsub-output.txt" % job_dir)
-    qsub_cmd.append("-e")
-    qsub_cmd.append("%s/qsub-error.txt" % job_dir)
-    # TODO: revisit epilogue
-    qsub_cmd.append("-l")
-    qsub_cmd.append("epilogue=/home/qiita/qiita-epilogue.sh")
+    sbatch_cmd.append(resource_params)
+    sbatch_cmd.append(fp)
 
-    # Popen() may also need universal_newlines=True
-    # may also need stdout = stdout.decode("utf-8").rstrip()
-    qsub_cmd = ' '.join(qsub_cmd)
+    stdout, stderr, return_value = _system_call(' '.join(sbatch_cmd))
 
-    # Qopen is a wrapper for Popen() that allows us to wait on a qsub
-    # call, but return if the qsub command is not returning after a
-    # prolonged period of time.
-    q = Qopen(qsub_cmd)
-    q.start()
+    if return_value != 0:
+        raise AssertionError(f'Error submitting job: {sbatch_cmd} :: {stderr}')
 
-    # wait for qsub_cmd to finish, but not longer than the number of
-    # seconds specified below.
-    init_time = time()
-    q.join(5)
-    total_time = time() - init_time
-    # for internal use, logging if the time is larger than 2 seconds
-    if total_time > 2:
-        qdb.logger.LogEntry.create('Runtime', 'qsub return time', info={
-            'time_in_seconds': str(total_time)})
+    job_id = stdout.strip('\n').split(" ")[-1]
 
-    # if q.returncode is None, it's because qsub did not return.
-    if q.returncode is None:
-        e = "Error Torque configuration information incorrect: %s" % qsub_cmd
-        raise IncompetentQiitaDeveloperError(e)
-
-    # q.returncode in this case means qsub successfully pushed the job
-    # onto Torque's queue.
-    if q.returncode != 0:
-        raise AssertionError("Error Torque could not launch %s (%d)" %
-                             (qsub_cmd, q.returncode))
-
-    torque_job_id = q.stdout.decode('ascii').strip('\n')
-
-    return torque_job_id
-
-
-class Qopen(Thread):
-    def __init__(self, cmd):
-        super(Qopen, self).__init__()
-        self.cmd = cmd
-        self.stdout = None
-        self.stderr = None
-        self.returncode = None
-
-    def run(self):
-        proc = Popen(self.cmd, shell=True, stdout=PIPE, stderr=PIPE)
-        self.stdout, self.stderr = proc.communicate()
-        self.returncode = proc.returncode
+    return job_id
 
 
 def _system_call(cmd):
@@ -395,8 +347,8 @@ class ProcessingJob(qdb.base.QiitaObject):
     _launch_map = {'qiita-plugin-launcher':
                    {'function': launch_local,
                     'execute_in_process': False},
-                   'qiita-plugin-launcher-qsub':
-                   {'function': launch_torque,
+                   'qiita-plugin-launcher-slurm':
+                   {'function': launch_job_scheduler,
                     'execute_in_process': True}}
 
     @classmethod
@@ -432,7 +384,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         Parameters
         ----------
         external_id : str
-            An external id (e.g. Torque Job ID)
+            An external id (e.g. job scheduler Job ID)
 
         Returns
         -------
@@ -506,21 +458,20 @@ class ProcessingJob(qdb.base.QiitaObject):
                     '{input_size}' in allocation):
                 samples, columns, input_size = self.shape
                 parts = []
+                error_msg = ('Obvious incorrect allocation. Please '
+                             'contact qiita.help@gmail.com')
                 for part in allocation.split(' '):
                     if ('{samples}' in part or '{columns}' in part or
                             '{input_size}' in part):
-                        variable, value = part.split('=')
-                        error_msg = ('Obvious incorrect allocation. Please '
-                                     'contact qiita.help@gmail.com')
                         # to make sure that the formula is correct and avoid
                         # possible issues with conversions, we will check that
                         # all the variables {samples}/{columns}/{input_size}
                         # present in the formula are not None, if any is None
                         # we will set the job's error (will stop it) and the
                         # message is gonna be shown to the user within the job
-                        if (('{samples}' in value and samples is None) or
-                                ('{columns}' in value and columns is None) or
-                                ('{input_size}' in value and input_size is
+                        if (('{samples}' in part and samples is None) or
+                                ('{columns}' in part and columns is None) or
+                                ('{input_size}' in part and input_size is
                                  None)):
                             self._set_error(error_msg)
                             return 'Not valid'
@@ -528,7 +479,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                         try:
                             # if eval has something that can't be processed
                             # it will raise a NameError
-                            mem = eval(value.format(
+                            mem = eval(part.format(
                                 samples=samples, columns=columns,
                                 input_size=input_size))
                         except NameError:
@@ -538,8 +489,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                             if mem <= 0:
                                 self._set_error(error_msg)
                                 return 'Not valid'
-                            value = naturalsize(mem, gnu=True, format='%.0f')
-                            part = '%s=%s' % (variable, value)
+                            part = naturalsize(mem, gnu=True, format='%.0f')
 
                     parts.append(part)
 
@@ -1353,7 +1303,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             self._set_validator_jobs(validator_jobs)
 
             # Submit m validator jobs as n lists of jobs
-            n = qiita_config.trq_dependency_q_cnt
+            n = qiita_config.job_scheduler_dependency_q_cnt
 
             # taken from:
             # https://www.geeksforgeeks.org/break-list-chunks-size-n-python/

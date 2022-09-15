@@ -12,17 +12,18 @@ from subprocess import Popen, PIPE
 from datetime import datetime
 from tempfile import mkdtemp
 from os.path import join
+from os import environ
 
 import click
 
-PBSFILE = """#!/bin/bash
-#PBS -l nodes=1:ppn=1
-#PBS -o %s/qsub-output.txt
-#PBS -e %s/qsub-error.txt
-#PBS -l epilogue=/home/qiita/qiita-epilogue.sh
+SBATCHFILE = """#!/bin/bash
+#SBATCH -N=1
+#SBATCH -n=1
+#SBATCH --output=%s/slurm-output.txt
+#SBATCH --error=%s/slurm-error.txt
 
 # Commands to run
-echo $PBS_JOBID
+echo $SLURM_JOBID
 %s
 """
 
@@ -42,11 +43,17 @@ def start(qiita_env, command, arguments):
     datestr = datetime.now().strftime("%Y%m%d_%I%M%S.%f")
     dirpath = mkdtemp(prefix=datestr,
                       dir='/projects/qiita_data/working_dir/private-jobs/')
-    fp = join(dirpath, 'private.qsub')
+    fp = join(dirpath, 'private')
     with open(fp, 'w') as f:
-        f.write(PBSFILE % (dirpath, dirpath, "\n".join(lines)))
-    qsub_cmd = "qsub %s" % fp
-    proc = Popen(qsub_cmd, shell=True, stdout=PIPE, stderr=PIPE)
+        f.write(SBATCHFILE % (dirpath, dirpath, "\n".join(lines)))
+
+    cmd = "sbatch %s" % fp
+
+    epilogue = environ.get('QIITA_JOB_SCHEDULER_EPILOGUE', '')
+    if epilogue:
+        cmd = f'{cmd} --epilog {epilogue}'
+
+    proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
     if proc.returncode and proc.returncode != 0:
         raise ValueError(

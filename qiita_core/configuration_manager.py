@@ -42,11 +42,11 @@ class ConfigurationManager(object):
         Max upload size
     valid_upload_extension : str
         The extensions that are valid to upload, comma separated
-    trq_owner : str
-        Email address of submitter of Torque jobs
-    trq_poll_val : int
-        Interval (in seconds) to wait between calls to Torque's qstat program
-    trq_dependency_q_cnt : int
+    job_scheduler_owner : str
+        Email address of submitter of jobs
+    job_scheduler_poll_val : int
+        Interval (in seconds) to wait between calls to job_scheduler program
+    job_scheduler_dependency_q_cnt : int
         Hard upper-limit on the number of an artifact's concurrent validation
         processes.
     user : str
@@ -145,7 +145,7 @@ class ConfigurationManager(object):
 
         self._get_main(config)
         self._get_smtp(config)
-        self._get_torque(config)
+        self._get_job_scheduler(config)
         self._get_postgres(config)
         self._get_redis(config)
         self._get_ebi(config)
@@ -234,22 +234,22 @@ class ConfigurationManager(object):
             self.key_file = join(install_dir, 'qiita_core', 'support_files',
                                  'server.key')
 
-    def _get_torque(self, config):
-        """Get the configuration of the torque section"""
-        self.trq_owner = config.get('torque', 'TORQUE_JOB_OWNER')
-        self.trq_poll_val = int(config.get('torque', 'TORQUE_POLLING_VALUE'))
-        self.trq_dependency_q_cnt = config.get('torque',
-                                               'TORQUE_PROCESSING_QUEUE_COUNT')
-        self.trq_dependency_q_cnt = int(self.trq_dependency_q_cnt)
+    def _get_job_scheduler(self, config):
+        """Get the configuration of the job_scheduler section"""
+        self.job_scheduler_owner = config.get(
+            'job_scheduler', 'JOB_SCHEDULER_JOB_OWNER', fallback=None)
+        self.job_scheduler_poll_val = config.get(
+            'job_scheduler', 'JOB_SCHEDULER_POLLING_VALUE', fallback=None)
+        self.job_scheduler_dependency_q_cnt = config.get(
+            'job_scheduler', 'JOB_SCHEDULER_PROCESSING_QUEUE_COUNT',
+            fallback=None)
 
-        if not self.trq_owner:
-            self.trq_owner = None
+        if self.job_scheduler_poll_val is not None:
+            self.job_scheduler_poll_val = int(self.job_scheduler_poll_val)
 
-        if not self.trq_poll_val:
-            self.trq_poll_val = None
-
-        if not self.trq_dependency_q_cnt:
-            self.trq_dependency_q_cnt = None
+        if self.job_scheduler_dependency_q_cnt is not None:
+            self.job_scheduler_dependency_q_cnt = int(
+                self.job_scheduler_dependency_q_cnt)
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""
