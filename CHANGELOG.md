@@ -1,5 +1,13 @@
 # Qiita changelog
 
+Version 2022.09
+---------------
+
+* Moved Qiita's code base and plugins to SLURM (from Torque). The plugins updated are: qiita-spots/qp-woltka, biocore/mg-scripts, qiita-spots/qp-spades, qiita-spots/qp-meta, qiita-spots/qp-fastp-minimap2.
+* Pinned the paramiko version to < 2.9 [as newer versions were causing issues with older systems](https://github.com/paramiko/paramiko/issues/1961#issuecomment-1008119073).
+* Pinned the scipy version to < 1.8 to avoid issues with the biom-format library.
+* Updates to the INSTALL instructions (thank you @aliu104 !)
+
 Version 2022.07
 ---------------
 
