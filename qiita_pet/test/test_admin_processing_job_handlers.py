@@ -51,6 +51,7 @@ class TestSampleValidation(BaseAdminTests):
         self.assertEqual(response.code, 200)
 
     def test_post(self):
+        # Check success
         post_args = {
             'qid': 1,
             'snames': 'SKB1.640202 SKB2.640194 BLANK.1A BLANK.1B'
@@ -61,7 +62,7 @@ class TestSampleValidation(BaseAdminTests):
         body = response.body.decode('ascii')
         for name in snames:
             self.assertIn(name, body)
-
+        # Check failure: invalid qiita id
         post_args = {
             'qid': 2,
             'snames': 'SKB1.640202 SKB2.640194 BLANK.1A BLANK.1B'
