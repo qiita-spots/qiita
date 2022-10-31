@@ -96,6 +96,7 @@ def get_qiita_version():
     try:
         repo = Repo(git_repo_path)
         sha = repo.active_branch.commit.hexsha
+        repo.__del__()
     except (InvalidGitRepositoryError, TypeError):
         sha = ''
 

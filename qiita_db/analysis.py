@@ -70,6 +70,22 @@ class Analysis(qdb.base.QiitaObject):
     _analysis_id_column = 'analysis_id'
 
     @classmethod
+    def iter(cls):
+        """Iter over the analyses"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT DISTINCT analysis_id
+                     FROM qiita.analysis
+                     JOIN qiita.analysis_portal USING (analysis_id)
+                     JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE portal = %s
+                     ORDER BY analysis_id"""
+            qdb.sql_connection.TRN.add(sql, [qiita_config.portal])
+            aids = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        for aid in aids:
+            yield cls(aid)
+
+    @classmethod
     def get_by_status(cls, status):
         """Returns all Analyses with given status
 
