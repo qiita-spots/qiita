@@ -22,6 +22,16 @@ from json import dumps
 # -----------------------------------------------------------------------------
 
 
+class TestAnalysisIter(TestCase):
+    def test_iter(self):
+        obs = list(qdb.analysis.Analysis.iter())
+        exp = [
+            qdb.analysis.Analysis(1), qdb.analysis.Analysis(2),
+            qdb.analysis.Analysis(3), qdb.analysis.Analysis(4),
+            qdb.analysis.Analysis(5), qdb.analysis.Analysis(6)]
+        self.assertCountEqual(obs, exp)
+
+
 @qiita_test_checker()
 class TestAnalysis(TestCase):
     def setUp(self):
@@ -103,14 +113,6 @@ class TestAnalysis(TestCase):
         self._wait_for_jobs(new)
 
         return new
-
-    def test_iter(self):
-        obs = list(qdb.analysis.Analysis.iter())
-        exp = [
-            qdb.analysis.Analysis(1), qdb.analysis.Analysis(2),
-            qdb.analysis.Analysis(3), qdb.analysis.Analysis(4),
-            qdb.analysis.Analysis(5), qdb.analysis.Analysis(6)]
-        self.assertCountEqual(obs, exp)
 
     def test_lock_samples(self):
         dflt = qdb.user.User('demo@microbio.me').default_analysis
