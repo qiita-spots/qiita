@@ -1940,7 +1940,7 @@ class TestSampleTemplate(TestCase):
                 'scientific_name': 'homo sapiens'},
             }
         exp = pd.DataFrame.from_dict(exp_dict, orient='index', dtype=str)
-        exp.index.name = 'sample_id'
+        exp.index.name = 'sample_name'
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
