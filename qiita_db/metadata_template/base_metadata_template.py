@@ -63,8 +63,10 @@ def _helper_get_categories(table):
                  WHERE sample_id = '{1}'""".format(table, QIITA_COLUMN_NAME)
         qdb.sql_connection.TRN.add(sql)
         results = qdb.sql_connection.TRN.execute_fetchflatten()
-        if results:
+        if results and results != [None]:
             results = sorted(loads(results[0]))
+        else:
+            results = []
         return results
 
 

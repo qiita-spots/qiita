@@ -104,6 +104,14 @@ class TestAnalysis(TestCase):
 
         return new
 
+    def test_iter(self):
+        obs = list(qdb.analysis.Analysis.iter())
+        exp = [
+            qdb.analysis.Analysis(1), qdb.analysis.Analysis(2),
+            qdb.analysis.Analysis(3), qdb.analysis.Analysis(4),
+            qdb.analysis.Analysis(5), qdb.analysis.Analysis(6)]
+        self.assertCountEqual(obs, exp)
+
     def test_lock_samples(self):
         dflt = qdb.user.User('demo@microbio.me').default_analysis
         # The default analysis can have samples added/removed
