@@ -1,0 +1,65 @@
+{% extends sitebase.html %}
+{% block head %}
+<style>
+    .column {
+    float: left;
+    width: 25%;
+    }
+
+    .row:after {
+    content: "";
+    display: table;
+    clear: both;
+    }
+</style>
+{% end %}
+{% block content %}
+<h1>Sample Validation</h1><br>
+{% if input %}
+<form action="{% raw qiita_config.portal_dir %}/admin/sample_validation/" method="post" id="sample_validation_form"> 
+    <label for="qid">Qiita id:</label><br>
+    <input type="text" id="qid" name="qid"><br>
+    <label for="snames">Sample names:</label><br>
+    <textarea id="sname" name="snames"></textarea><br><br>
+    <input type="submit" value="Submit">
+</form>
+{% else %}
+<div class="row">
+    <div class="column">
+        <h2>Matching</h2>
+        <ul>
+            {% for sample in matching %}
+            <li>{{ sample }}</li>
+            {% end %}
+        </ul>
+    </div> 
+    <div class="column">
+        <h2>Missing</h2>
+        <ul>
+            {% for sample in missing %}
+            <li>{{ sample }}</li>
+            {% end %}
+        </ul>
+    </div>
+    <div class="column">
+        <h2>Blank</h2>
+        <ul>
+            {% for sample in blank %}
+            <li>{{ sample }}</li>
+            {% end %}
+        </ul>
+    </div>
+    <div class="column">
+        <h2>Extra</h2>
+        <ul>
+            {% for sample in extra %}
+            <li>{{ sample }}</li>
+            {% end %}
+        </ul>
+    </div>
+</div>
+<form action="{% raw qiita_config.portal_dir %}/admin/sample_validation/" method="get" id="return_to_sample_validation_form">
+    <input type="submit" value="Validate more samples">
+</form>
+{% end %}
+{% end %}
