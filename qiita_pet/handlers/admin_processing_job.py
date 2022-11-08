@@ -13,6 +13,7 @@ from .base_handlers import BaseHandler
 from qiita_core.util import execute_as_transaction
 
 from qiita_db.software import Software
+from qiita_db.study import Study
 
 from json import dumps
 
@@ -92,3 +93,40 @@ class AJAXAdminProcessingJobListing(AdminProcessingJobBaseClass):
 
         # return the json in compact form to save transmit size
         self.write(dumps(results, separators=(',', ':')))
+
+
+class SampleValidation(AdminProcessingJobBaseClass):
+    @coroutine
+    @execute_as_transaction
+    def get(self):
+        self._check_access()
+
+        self.render("sample_validation.html", input=True)
+
+    @execute_as_transaction
+    def post(self):
+
+        # Get user-inputted qiita id and sample names
+        qid = self.get_argument("qid")
+        snames = self.get_argument("snames").split()
+
+        # Stripping leading qiita id from sample names
+        # Example: 1.SKB1.640202 -> SKB1.640202
+        qsnames = list(Study(qid).sample_template)
+        for i, qsname in enumerate(qsnames):
+            if qsname.startswith(qid):
+                qsnames[i] = qsname.replace(f'{qid}.', "", 1)
+
+        # Remove blank samples from sample names
+        blank = [x for x in snames if x.lower().startswith('blank')]
+        snames = [x for x in snames if 'blank' not in x.lower()]
+
+        # Validate user's sample names against qiita study
+        qsnames = set(qsnames)
+        snames = set(snames)
+        matching = qsnames.intersection(snames)
+        missing = qsnames.difference(snames)
+        extra = snames.difference(qsnames)
+
+        self.render("sample_validation.html", input=False, matching=matching,
+                    missing=missing, extra=extra, blank=blank)

@@ -45,5 +45,31 @@ class TestAJAXAdminProcessingJobListing(BaseAdminTests):
                       response.body.decode('ascii'))
 
 
+class TestSampleValidation(BaseAdminTests):
+    def test_get(self):
+        response = self.get('/admin/sample_validation/')
+        self.assertEqual(response.code, 200)
+
+    def test_post(self):
+        # Check success
+        post_args = {
+            'qid': 1,
+            'snames': 'SKB1.640202 SKB2.640194 BLANK.1A BLANK.1B'
+        }
+        response = self.post('/admin/sample_validation/', post_args)
+        self.assertEqual(response.code, 200)
+        snames = ['SKB1.640202', 'SKB2.640194', 'BLANK.1A', 'BLANK.1B']
+        body = response.body.decode('ascii')
+        for name in snames:
+            self.assertIn(name, body)
+        # Check failure: invalid qiita id
+        post_args = {
+            'qid': 2,
+            'snames': 'SKB1.640202 SKB2.640194 BLANK.1A BLANK.1B'
+        }
+        response = self.post('/admin/sample_validation/', post_args)
+        self.assertEqual(response.code, 500)
+
+
 if __name__ == "__main__":
     main()
