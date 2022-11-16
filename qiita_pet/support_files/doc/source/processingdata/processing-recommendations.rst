@@ -127,6 +127,33 @@ Reference databases
 
 Note that some of these are legacy option but not available for new processing.
 
+
+
+#. WoLr2 (“Web of Life” release 2): A significant upgrade from WoLr1. The genome
+   pool is an even representation of microbial diversity, sampled from
+   non-redundant bacterial and archaeal genomes from NCBI (RefSeq and GenBank,
+   complete and draft). A high-quality reference phylogeny was reconstructed
+   using the uDance workflow (manuscript in submission). Taxonomic
+   classifications were curated according to phylogeny based on GTDB (default)
+   and NCBI. Functional annotations were performed using EggNOG, GO, KEGG,
+   MetaCyc, Pfam and UniRef.
+
+   -  Domains: Bacteria, Archaea
+   -  Number of genomes: 15,953
+   -  Total length (bp): 48,809,171,826
+   -  Citation: Zhu Q, Mai U, Pfeiffer W, et al. Phylogenomics of 10,575 genomes
+      reveals evolutionary proximity between domains Bacteria and Archaea. Nat
+      Commun. 2019. 10(1):5477. doi: 10.1038/s41467-019-13443-4.
+   -  Numbers of taxonomic units:
+
+      - Domains: 2
+      - Phyla: 124
+      - Classes: 321
+      - Orders: 914
+      - Families: 2,057
+      - Genera: 6,811
+      - Species: 12,258
+
 #. WoLr1 ("Web of Life" release 1): An even representation of microbial diversity, selected using an prototype
    selection algorithm based on the MinHash distance matrix among all non-redundant bacterial and archaeal genomes
    from NCBI (RefSeq and GenBank, complete and draft), plus several genome quality control criteria. A
