@@ -20,7 +20,8 @@ from json import dumps
 
 class AdminProcessingJobBaseClass(BaseHandler):
     def _check_access(self):
-        if self.current_user.level not in {'admin', 'wet-lab admin'}:
+        if self.current_user is None or self.current_user.level not in {
+                'admin', 'wet-lab admin'}:
             raise HTTPError(403, reason="User %s doesn't have sufficient "
                             "privileges to view error page" %
                             self.current_user.email)
