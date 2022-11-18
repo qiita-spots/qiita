@@ -67,16 +67,16 @@ subsequent meta-analyses. Currently, the `fastp` command is set to autodetect ad
 wetlab processing and we provide the following host references for your convenience:
 
 - auto-detect adapters and artifacts + phix filtering: This is a `deblur artifacts <https://github.com/biocore/deblur/blob/master/deblur/support_files/artifacts.fa>`_ reference, mainly for debugging and testing
-- auto-detect adapters and cheetah + phix filtering
-- auto-detect adapters and cow + phix filtering
-- auto-detect adapters and hamster + phix filtering
-- auto-detect adapters and horse + phix filtering
+- auto-detect adapters and `cheetah <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/003/709/585/GCF_003709585.1_Aci_jub_2/GCF_003709585.1_Aci_jub_2_genomic.fna.gz>`_ + phix filtering
+- auto-detect adapters and `cow <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/003/205/GCA_000003205.6_Btau_5.0.1/GCA_000003205.6_Btau_5.0.1_genomic.fna.gz>`_ + phix filtering
+- auto-detect adapters and `hamster <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/017/639/785/GCF_017639785.1_BCM_Maur_2.0/GCF_017639785.1_BCM_Maur_2.0_genomic.fna.gz>`_ + phix filtering
+- auto-detect adapters and `horse <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/002/305/GCA_000002305.1_EquCab2.0/GCA_000002305.1_EquCab2.0_genomic.fna.gz>`_ + phix filtering
 - auto-detect adapters and merge_genomes + phix filtering : is the combined genomes of a cheetah, cow, hamster, horse, human, mouse, pig, rabbit, and rat
-- auto-detect adapters and mouse + phix filtering
-- auto-detect adapters and pig + phix filtering
-- auto-detect adapters and rabbit + phix filtering
-- auto-detect adapters and rat + phix filtering
-- auto-detect adapters only filtering [not recommended]
+- auto-detect adapters and `mouse <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_genomic.fna.gz>`_ + phix filtering
+- auto-detect adapters and `pig <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/003/025/GCF_000003025.6_Sscrofa11.1/GCF_000003025.6_Sscrofa11.1_genomic.fna.gz>`_ + phix filtering
+- auto-detect adapters and `rabbit <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/003/625/GCF_000003625.3_OryCun2.0/GCF_000003625.3_OryCun2.0_genomic.fna.gz>`_ + phix filtering
+- auto-detect adapters and `rat <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/895/GCA_000001895.4_Rnor_6.0/GCA_000001895.4_Rnor_6.0_genomic.fna.gz>`_ + phix filtering
+- auto-detect adapters only filtering
 
 Note that the command produces up to 6 output artifacts based on the aligner and database selected:
 
@@ -89,7 +89,7 @@ Note that the command produces up to 6 output artifacts based on the aligner and
 
 .. note::
    Woltka provides easy transformations for the "per gene Prediction table" to generate functional
-   profiles, `more information <https://github.com/qiyunzhu/woltka/blob/master/doc/wol.md#comparison>`
+   profiles, `more information <https://github.com/qiyunzhu/woltka/blob/master/doc/wol.md#comparison>`_.
 
 Aligners
 ^^^^^^^^
@@ -127,8 +127,6 @@ Reference databases
 
 Note that some of these are legacy option but not available for new processing.
 
-
-
 #. WoLr2 (“Web of Life” release 2): A significant upgrade from WoLr1. The genome
    pool is an even representation of microbial diversity, sampled from
    non-redundant bacterial and archaeal genomes from NCBI (RefSeq and GenBank,
@@ -153,6 +151,21 @@ Note that some of these are legacy option but not available for new processing.
       - Families: 2,057
       - Genera: 6,811
       - Species: 12,258
+
+#. RS210: Collection of reference microbial genomes sampled from the NCBI RefSeq
+   genome database, as of 2022-01-01. This time point corresponds to RefSeq
+   release 210.
+
+    - Genomes: 29,648
+    - Nucleotides: 926,894
+    - Basepairs: 111,767,286,504 (includes linkers)
+    - Numbers of taxonomic units:
+
+      - Archaea: 606
+      - Bacteria: 21,047
+      - Fungi: 409
+      - Protozoa: 93
+      - Viral: 7,493
 
 #. WoLr1 ("Web of Life" release 1): An even representation of microbial diversity, selected using an prototype
    selection algorithm based on the MinHash distance matrix among all non-redundant bacterial and archaeal genomes
