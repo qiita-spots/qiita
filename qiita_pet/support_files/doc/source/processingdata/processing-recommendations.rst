@@ -45,7 +45,7 @@ Shotgun sequencing
 ------------------
 
 Qiita currently has one active shotgun metagenomics data analysis pipeline: a per sample
-bowtie2 alignment step with Woltka classification using either the WoLr1 or Rep200 databases.
+bowtie2 alignment step with Woltka classification using either the WoLr1, WoLr2 (default) or RS210 databases.
 Below you will find more information about each of these options.
 
 .. note::

@@ -3,7 +3,7 @@
 Version 2022.11
 ---------------
 
-* Adding new Woltka v0.1.4 and WoLr2 - WoLr1 and rep200 are still available but not default.
+* Adding new Woltka v0.1.4 and WoLr2 - WoLr1 and RS210 are still available but not default.
 * Update qp-woltka so it runs faster, contribution with @wasade. Add newest improvements for woltka processing so it runs faster.
 * Fix qp-qiime2, "filter features" bug that expects a "feature metadata" value from the dropdown.
 * Avoid having [multiple git version](https://github.com/qiita-spots/qiita/issues/3216) commands running in the system - this in theory should fix some of the slow downs.
