@@ -1,5 +1,17 @@
 # Qiita changelog
 
+Version 2022.11
+---------------
+
+* Adding new Woltka v0.1.4 and WoLr2 - WoLr1 and RS210 (updated version of rep200) are available but not default.
+* Update qp-woltka so it runs faster, contribution with @wasade. Add newest improvements for woltka processing so it runs faster.
+* Fix qp-qiime2, "filter features" bug that expects a "feature metadata" value from the dropdown.
+* Avoid having [multiple git version](https://github.com/qiita-spots/qiita/issues/3216) commands running in the system - this in theory should fix some of the slow downs.
+* Fix sample_name in per preparation sample information files.
+* Now the sequencing artifacts (like per-sample-FASTQ, FASTA, etc) accept log files.
+* SortMeRNA via qp-meta will generate processing logs and will be added to their artifacts - note that this will only be available in newer runs AKA you can delete the outputs of past runs and rerun it.
+* Added new "Admin Sample Validation" to validate a list of sample names against what's available in a study, contributed by @sarayupai.
+
 Version 2022.09
 ---------------
 
