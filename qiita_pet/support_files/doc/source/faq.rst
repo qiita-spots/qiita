@@ -371,6 +371,15 @@ specially on:
   Qiita will not be able to process your samples.
 
 
+Software and Data Licensing
+---------------------------
+
+Qiita's software and its plugins can be found here: https://github.com/qiita-spots/. They are
+distributed with a BSD 3-Clause License. When you use the `Qiita WebServer <https://qiita.ucsd.edu/>`__,
+you are adhering to the `Qiita Terms <https://qiita.ucsd.edu/iframe/?iframe=qiita-terms>`__. All data
+downloaded from `qiita.ucsd.edu <https://qiita.ucsd.edu/>` and redbiom, including raw and processed data and metadata, are distributed under the BSD 3-Clause License.”
+
+
 How to cite Qiita?
 ------------------
 
