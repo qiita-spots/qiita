@@ -58,11 +58,8 @@ def _ssh_session(p_url, private_key):
 
         # step 2: connect to fileserver
         key = RSAKey.from_private_key_file(private_key)
-        # we need pkeys now based on
-        # https://github.com/paramiko/paramiko/issues/1961
-        pkeys = dict(pubkeys=['rsa-sha2-256', 'rsa-sha2-512'])
         ssh.connect(hostname, port=port, username=username,
-                    pkey=key, look_for_keys=False, disabled_algorithms=pkeys)
+                    pkey=key, look_for_keys=False)
         return ssh
     else:
         raise ValueError(
