@@ -64,11 +64,11 @@ class SSHTests(TestCase):
     def test_list_scp(self):
         kpath = join(self.temp_local_dir, 'tmp-key')
         copyfile(self.test_ssh_key, kpath)
-        print ('==========')
-        print ('==========')
-        print (kpath)
-        print ('scp://runner@localhost:' + self.remote_dir_path)
-        print ('==========')
+        print('==========')
+        print('==========')
+        print(self.test_ssh_key, kpath)
+        print('scp://runner@localhost:' + self.remote_dir_path)
+        print('==========')
         read_file_list = list_remote(
             'scp://runner@localhost:'+self.remote_dir_path, kpath)
         self.assertCountEqual(read_file_list, self.exp_files)
