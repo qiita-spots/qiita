@@ -54,10 +54,15 @@ def _ssh_session(p_url, private_key):
 
         # step 1: both schemes require an SSH connection
         ssh = SSHClient()
+        ssh.load_system_host_keys()
         ssh.set_missing_host_key_policy(AutoAddPolicy)
 
         # step 2: connect to fileserver
         key = RSAKey.from_private_key_file(private_key)
+        print('++++++++++++++++')
+        print('++++++++++++++++')
+        print(f'{hostname}, {port}, {username}')
+        print('++++++++++++++++')
         ssh.connect(hostname, port=port, username=username,
                     pkey=key, look_for_keys=False)
         return ssh
