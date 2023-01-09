@@ -59,10 +59,6 @@ def _ssh_session(p_url, private_key):
 
         # step 2: connect to fileserver
         key = RSAKey.from_private_key_file(private_key)
-        print('++++++++++++++++')
-        print('++++++++++++++++')
-        print(f'{hostname}, {port}, {username}')
-        print('++++++++++++++++')
         ssh.connect(hostname, port=port, username=username,
                     pkey=key, look_for_keys=False)
         return ssh
