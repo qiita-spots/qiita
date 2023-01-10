@@ -658,13 +658,15 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [all_ids])
 
     @classmethod
-    def archive(cls, artifact_id):
+    def archive(cls, artifact_id, clean_ancestors=True):
         """Archive artifact with artifact_id
 
         Parameters
         ----------
         artifact_id : int
             The artifact to be archived
+        clean_ancestors : bool
+            If other childless artifacts should be deleted
 
         Raises
         ------
@@ -689,15 +691,17 @@ class Artifact(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 'Only non raw artifacts can be archived')
 
-        # let's find all ancestors that can be deleted (it has parents and no
-        # ancestors (that have no descendants), and delete them
-        to_delete = [x for x in artifact.ancestors.nodes()
-                     if x.id != artifact_id and x.parents and
-                     not [y for y in x.descendants.nodes()
-                     if y.id not in (artifact_id, x.id)]]
-        # ignore artifacts that can and has been submitted to EBI
-        to_delete = [x for x in to_delete if not x.can_be_submitted_to_ebi or
-                     x.is_submitted_to_vamps]
+        to_delete = []
+        if clean_ancestors:
+            # let's find all ancestors that can be deleted (it has parents and no
+            # ancestors (that have no descendants), and delete them
+            to_delete = [x for x in artifact.ancestors.nodes()
+                         if x.id != artifact_id and x.parents and
+                         not [y for y in x.descendants.nodes()
+                         if y.id not in (artifact_id, x.id)]]
+            # ignore artifacts that can and has been submitted to EBI
+            to_delete = [x for x in to_delete if not x.can_be_submitted_to_ebi or
+                         x.is_submitted_to_ebi]
 
         # get the log file so we can delete
         fids = [x['fp_id'] for x in artifact.filepaths
