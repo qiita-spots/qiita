@@ -701,7 +701,8 @@ class Artifact(qdb.base.QiitaObject):
                          if y.id not in (artifact_id, x.id)]]
             # ignore artifacts that can and has been submitted to EBI
             to_delete = [x for x in to_delete if not x.can_be_submitted_to_ebi
-                         or x.is_submitted_to_ebi]
+                         and not x.is_submitted_to_ebi
+                         and not x.is_submitted_to_vamps]
 
         # get the log file so we can delete
         fids = [x['fp_id'] for x in artifact.filepaths
