@@ -693,15 +693,15 @@ class Artifact(qdb.base.QiitaObject):
 
         to_delete = []
         if clean_ancestors:
-            # let's find all ancestors that can be deleted (it has parents and no
-            # ancestors (that have no descendants), and delete them
+            # let's find all ancestors that can be deleted (it has parents and
+            # no ancestors (that have no descendants), and delete them
             to_delete = [x for x in artifact.ancestors.nodes()
                          if x.id != artifact_id and x.parents and
                          not [y for y in x.descendants.nodes()
                          if y.id not in (artifact_id, x.id)]]
             # ignore artifacts that can and has been submitted to EBI
-            to_delete = [x for x in to_delete if not x.can_be_submitted_to_ebi or
-                         x.is_submitted_to_ebi]
+            to_delete = [x for x in to_delete if not x.can_be_submitted_to_ebi
+                         or x.is_submitted_to_ebi]
 
         # get the log file so we can delete
         fids = [x['fp_id'] for x in artifact.filepaths
