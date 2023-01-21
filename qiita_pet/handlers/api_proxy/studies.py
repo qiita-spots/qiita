@@ -455,14 +455,6 @@ def study_patch_request(user_id, study_id,
             message = study.update_tags(User(user_id), req_value)
             return {'status': 'success',
                     'message': message}
-        elif attribute == 'specimen_id_column':
-            try:
-                study.specimen_id_column = req_value
-                return {'status': 'success',
-                        'message': 'Successfully updated specimen id column'}
-            except (QiitaDBLookupError, QiitaDBColumnError) as e:
-                return {'status': 'error',
-                        'message': str(e)}
         elif attribute == 'toggle_public_raw_download':
             try:
                 study.public_raw_download = not study.public_raw_download

@@ -21,3 +21,8 @@ ALTER TABLE qiita.default_workflow
     FOREIGN KEY (artifact_type_id)
     REFERENCES qiita.artifact_type(artifact_type_id)
     ON UPDATE CASCADE;
+
+-- Mar 17, 2022
+-- deleting specimen_id_column from qiita.study
+
+ALTER TABLE qiita.study DROP COLUMN specimen_id_column;

@@ -16,6 +16,9 @@ from qiita_db.sql_connection import TRN
 from qiita_db.environment_manager import reset_test_database
 
 
+REDIS_QIITA_GIT_SHA_KEY = 'qiita-git-sha'
+
+
 def is_test_environment():
     """Checks if Qiita is running in a test environment
 
@@ -81,6 +84,21 @@ def execute_as_transaction(func):
     return wrapper
 
 
+def update_redis_qiita_sha_version():
+    # the actual repo is the abspath of the current file without
+    # qiita_core
+    git_repo_path = dirname(dirname(__file__))
+
+    try:
+        repo = Repo(git_repo_path)
+        sha = repo.active_branch.commit.hexsha
+        repo.__del__()
+    except (InvalidGitRepositoryError, TypeError):
+        sha = ''
+
+    r_client.set(REDIS_QIITA_GIT_SHA_KEY, sha)
+
+
 def get_qiita_version():
     """Returns the Qiita version and Git sha if present
 
@@ -89,14 +107,8 @@ def get_qiita_version():
     tuple (version, sha)
         The Qiita version and SHA. SHA can be an empty string.
     """
-    # the actual repo is the abspath of the current file without
-    # qiita_core
-    git_repo_path = dirname(dirname(__file__))
-
-    try:
-        repo = Repo(git_repo_path)
-        sha = repo.active_branch.commit.hexsha
-    except (InvalidGitRepositoryError, TypeError):
+    sha = r_client.get(REDIS_QIITA_GIT_SHA_KEY)
+    if sha is None:
         sha = ''
 
     return (qiita_pet_lib_version, sha)

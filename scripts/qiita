@@ -20,6 +20,7 @@ import tornado.ioloop
 from psycopg2 import OperationalError
 
 import qiita_db as qdb
+from qiita_core.util import update_redis_qiita_sha_version
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
@@ -332,7 +333,7 @@ def start(port, master):
                 # register the job's changed status in Qiita.
                 qjob.complete(job_state, error=job_error)
 
-    if qiita_config.plugin_launcher == 'qiita-plugin-launcher-qsub':
+    if qiita_config.plugin_launcher == 'qiita-plugin-launcher-slurm':
         if master:
             # Only a single Watcher() process is desired
             gWatcher = qdb.processing_job.Watcher()
@@ -350,12 +351,13 @@ def start(port, master):
 
             # Thread() can be replaced with Process() if need be
             # update_database_func() requires a defined Watcher object.
-            # if plugin_launcher is defined as qsub, it should be
+            # if plugin_launcher is defined as slurm, it should be
             # defined.
             p = Thread(target=update_database_func)
             p.start()
 
     if master:
+        update_redis_qiita_sha_version()
         # Create/repopulate the usernames key so we can do autocomplete for
         # sharing. Note that we only do it in master so this is not created in
         # all workers and possibly hit this error:

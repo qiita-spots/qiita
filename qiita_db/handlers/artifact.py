@@ -109,7 +109,8 @@ class ArtifactHandler(OauthBaseHandler):
             # dictionary keyed by filepath type
             response['files'] = defaultdict(list)
             for x in artifact.filepaths:
-                response['files'][x['fp_type']].append(x['fp'])
+                response['files'][x['fp_type']].append(
+                    {'filepath': x['fp'], 'size': x['fp_size']})
 
         self.write(response)
 

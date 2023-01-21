@@ -242,7 +242,7 @@ def artifact_summary_get_request(user, artifact_id):
             'errored_summary_jobs': errored_summary_jobs}
 
 
-def artifact_summary_post_request(user, artifact_id):
+def artifact_summary_post_request(user, artifact_id, force_creation=False):
     """Launches the HTML summary generation and returns the job information
 
     Parameters
@@ -251,6 +251,8 @@ def artifact_summary_post_request(user, artifact_id):
         The user making the request
     artifact_id : int or str
         The artifact id
+    force_creation : bool
+        If all jobs should be ignored and it should force creation
 
     Returns
     -------
@@ -267,7 +269,7 @@ def artifact_summary_post_request(user, artifact_id):
     command = Command.get_html_generator(artifact.artifact_type)
     jobs = artifact.jobs(cmd=command)
     jobs = [j for j in jobs if j.status in ['queued', 'running', 'success']]
-    if jobs:
+    if not force_creation and jobs:
         # The HTML summary is either being generated or already generated.
         # Return the information of that job so we only generate the HTML
         # once - Magic number 0 -> we are ensuring that there is only one

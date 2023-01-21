@@ -1940,7 +1940,7 @@ class TestSampleTemplate(TestCase):
                 'scientific_name': 'homo sapiens'},
             }
         exp = pd.DataFrame.from_dict(exp_dict, orient='index', dtype=str)
-        exp.index.name = 'sample_id'
+        exp.index.name = 'sample_name'
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
@@ -2255,19 +2255,6 @@ class TestSampleTemplate(TestCase):
             self.metadata, self.new_study)
         st.delete_column('dna_extracted')
         self.assertNotIn('dna_extracted', st.categories)
-
-    def test_delete_column_specimen_id(self):
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(
-            self.metadata, self.new_study)
-        self.new_study.specimen_id_column = 'latitude'
-
-        with self.assertRaisesRegex(
-                qdb.exceptions.QiitaDBOperationNotPermittedError,
-                '"latitude" cannot be deleted, this column is currently '
-                r'selected as the tube identifier \(specimen_id_column\)'):
-            st.delete_column('latitude')
-
-        self.new_study.specimen_id_column = None
 
     def test_delete_samples(self):
         QE = qdb.exceptions

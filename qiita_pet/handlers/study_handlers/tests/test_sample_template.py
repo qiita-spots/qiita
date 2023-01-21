@@ -296,8 +296,7 @@ class TestHelpers(TestHandlerBase):
                            'sample_type', 'collection_timestamp',
                            'host_subject_id', 'description', 'latitude',
                            'longitude', 'scientific_name', 'env_package']),
-               'sample_restrictions': '',
-               'specimen_id_column': None}
+               'sample_restrictions': ''}
         self.assertEqual(obs, exp)
 
         # Test sample template doesn't exist
@@ -317,8 +316,7 @@ class TestHelpers(TestHandlerBase):
                'num_samples': 0,
                'num_columns': 0,
                'columns': [],
-               'sample_restrictions': '',
-               'specimen_id_column': None}
+               'sample_restrictions': ''}
         self.assertEqual(obs, exp)
 
     def test_sample_template_columns_get_req(self):
@@ -511,8 +509,7 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                            'sample_type', 'collection_timestamp',
                            'host_subject_id', 'description', 'latitude',
                            'longitude', 'scientific_name', 'env_package']),
-               'sample_restrictions': '',
-               'specimen_id_column': None}
+               'sample_restrictions': ''}
         self.assertDictEqual(obs, exp)
 
 

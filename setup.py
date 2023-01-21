@@ -10,7 +10,7 @@
 from setuptools import setup
 from glob import glob
 
-__version__ = "2021.11"
+__version__ = "2022.11"
 
 
 classes = """
@@ -108,7 +108,8 @@ setup(name='qiita-spots',
                         'networkx', 'humanize', 'wtforms<3.0.0', 'nltk',
                         'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx<3.0',
                         'gitpython', 'redbiom', 'pyzmq', 'sphinx_rtd_theme',
-                        'paramiko', 'seaborn',  'matplotlib', 'scipy', 'nose',
+                        'paramiko', 'seaborn',  'matplotlib', 'scipy<1.8',
+                        'nose',
                         'flake8', 'six', 'qiita-files @ https://github.com/'
                         'qiita-spots/qiita-files/archive/master.zip', 'mock',
                         'python-jose', 'markdown2', 'iteration_utilities',

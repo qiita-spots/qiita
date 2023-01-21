@@ -1080,9 +1080,9 @@ class EBISubmission(object):
                 if wrote_sequences:
                     demux_samples.add(s)
                 else:
-                    del(self.samples[s])
-                    del(self.samples_prep[s])
-                    del(self.sample_demux_fps[s])
+                    del (self.samples[s])
+                    del (self.samples_prep[s])
+                    del (self.sample_demux_fps[s])
                     remove(sample_fp)
         return demux_samples
 
@@ -1164,9 +1164,9 @@ class EBISubmission(object):
 
         if missing_samples:
             for ms in missing_samples:
-                del(self.samples[ms])
-                del(self.samples_prep[ms])
-                del(self.sample_demux_fps[ms])
+                del (self.samples[ms])
+                del (self.samples_prep[ms])
+                del (self.sample_demux_fps[ms])
 
         if not demux_samples:
             error_msg = ("All samples were removed from the submission "

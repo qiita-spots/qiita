@@ -6,7 +6,7 @@ Qiita is pip installable, but depends on specific versions of python and non-pyt
 
 ## Install and setup miniconda
 
-Download the appropriate installer [here](http://conda.pydata.org/docs/install/quick.html) corresponding to your operating system and execute it.
+Download the appropriate installer [here](https://repo.anaconda.com/miniconda/) corresponding to your operating system and execute it.
 
 Next, ensure conda is up-to-date.
 
@@ -19,6 +19,7 @@ conda update conda
 Setup a virtual environment in conda named `qiita` by executing the following:
 
 ```bash
+conda config --add channels conda-forge
 conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx
 ```
 
@@ -40,7 +41,7 @@ $ which python
 (qiita)
 ```
 
-If you don't see this output, your `$PATH` variable was setup incorrectly or you haven't restarted your shell. Consult the [conda documentation](http://conda.pydata.org/docs/install/quick.html).
+If you don't see this output, your `$PATH` variable was setup incorrectly or you haven't restarted your shell. Consult the [conda documentation](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
 As long as you are in the active qiita environment, commands such as `pip install` or `python` will refer to and be contained within this virtual environment.
 
@@ -54,7 +55,7 @@ source deactivate
 Install the non-python dependencies
 -----------------------------------
 
-* [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.5.14, we have tested most extensively with 9.5.15)
+* [PostgreSQL](http://www.postgresql.org/download/) (currently using v13)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
 * [webdis] (https://github.com/nicolasff/webdis) (latest version should be fine but we have tested the most with 9ee6fe2 - Feb 6, 2016)
 
@@ -64,9 +65,43 @@ There are several options to install these dependencies depending on your needs:
 - Alternatively, you could install them via conda. However, the conda repository may not have the exact versions of these dependencies that you want.
 - You could setup a full development environment with [Vagrant](https://www.vagrantup.com/), and continue using conda under it to primarily manage python dependencies. Note that we don't cover Vagrant in these instructions.
 
+### PostgreSQL installation on Linux
+The following instructions have been adapted from [this site](https://computingforgeeks.com/how-to-install-postgresql-13-on-ubuntu/) and tested on Ubuntu v20.04.4 for Postgres v13.
+
+First, ensure that you have updated packages and reboot the system with:
+```bash
+sudo apt update && sudo apt -y full-upgrade
+[ -f /var/run/reboot-required ] && sudo reboot -f
+```
+You can reboot the system with `sudo reboot` in case any packages were updated.
+
+Next, we need to add the Postgres repository to our system:
+```bash
+sudo apt update
+sudo apt install curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
+curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc|sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" |sudo tee  /etc/apt/sources.list.d/pgdg.list
+```
+Adding the repository has added many different packages, which allows us to now install Postgres v13 with the following commands:
+```bash
+sudo apt update
+sudo apt install postgresql-13 postgresql-client-13
+```
+Now, we need to reconfigure the `pg_hba.conf` file and change all occurrences of `md5` and `peer` to `trust`. You can access the file with:
+```bash
+sudo vim /etc/postgresql/13/main/pg_hba.conf
+```
+To make sure all changes have been reflected, restart the Postgres server:
+```bash
+sudo service postgresql restart
+```
+Installing Postgres is now complete. Note that you will need to start the Postgres server every time you start the Qiita server. You can do this with the following command:
+```bash
+sudo service postgresql start
+```
 ### PostgreSQL installation on Mac OS X
 
-For Mac OS X, you can either install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5.
+For Mac OS X, you can either install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5, v13.
 
 You'll then need to ensure that the postgres binaries (for example, ``psql``) are in your executable search path (``$PATH`` environment variable). If you are using Postgres.app on OS X, you can do this by running the following, though you may have to replace`~/.bash_profile`with `~/.zshrc` if you're using zshell rather than the built-in bash, and you may have to change the version number `Versions/9.3/` to the exact one that you are installing:
 
@@ -75,13 +110,19 @@ echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.5/bin/"'
 source ~/.bash_profile
 ```
 
-### Redis-server installation on Mac OS X
+### Redis-server installation using Homebrew (Mac OS X, Linux)
 
-Assuming you have [homebrew](http://www.brew.sh) installed, you can install redis-server v2.8.x as follows:
+Assuming you have [homebrew](http://brew.sh) installed, you can install the latest version of the redis-server as follows:
 
 ```bash
 brew update
 brew install homebrew/versions/redis28
+```
+### Redis-server installation using apt-get (Linux)
+
+Alternatively, you can sudo install redis:
+```bash
+sudo apt-get install redis-server
 ```
 
 ### webdis
@@ -112,7 +153,7 @@ Install Qiita development version and its python dependencies
 Clone the git repository with the development version of Qiita into your current directory:
 
 ```bash
-git clone https://github.com/biocore/qiita.git
+git clone https://github.com/qiita-spots/qiita.git
 ```
 
 Navigate to the cloned directory and ensure your conda environment is active:
@@ -121,12 +162,17 @@ Navigate to the cloned directory and ensure your conda environment is active:
 cd qiita
 source activate qiita
 ```
-
+If you are using Ubuntu or a Windows Subsystem for Linux (WSL), you will need to ensure that you have a C++ compiler and that development libraries and include files for PostgreSQL are available. Type `cc` into your system to ensure that it doesn't result in `program not found`. The following commands will install a C++ compiler and  `libpq-dev`:
+```bash
+sudo apt install gcc              # alternatively, you can install clang instead
+sudo apt-get install libpq-dev
+```
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
 
 ```bash
 pip install . --no-binary redbiom
 ```
+Note that if you get any errors or warnings with 'certifi', you can add the `--ignore-installed` tag to the command above.
 
 At this point, Qiita will be installed and the system will start. However,
 you will need to install plugins in order to process any kind of data. For a list
@@ -148,7 +194,7 @@ Move the Qiita sample configuration file to a different directory by executing:
  cp ./qiita_core/support_files/config_test.cfg ~/.qiita_config_test.cfg
 ```
 
-Note that you will need to change `BASE_URL = https://localhost:8383` to `BASE_URL = https://localhost:21174` if you are not using NGINX.
+Note that you will need to change `BASE_URL = https://localhost:8383` to `BASE_URL = https://localhost:21174` in the new copy of the configuration file if you are not using NGINX. Additionally, you will also need to change all URLs that start with `/home/runner/work/qiita/qiita/...` into wherever your qiita directory is (e.g. `/home/<username>/qiita/...`).
 
 
 Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.bashrc` if using bash; `.zshrc` if using zshell):
@@ -162,6 +208,10 @@ Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.ba
 
 Update paths in the newly copied configuration file to match your settings, e.g. replace /home/travis/ with your user home directory.
 
+If you are working on WSL, you will need to start the redis server with the following command before making a test environment:
+```bash
+redis-server --daemonize yes --port 7777
+```
 Next, make a test environment:
 
 ```bash
