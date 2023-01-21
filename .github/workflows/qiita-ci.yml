@@ -64,11 +64,11 @@ jobs:
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
           conda deactivate
-          conda update conda
-          echo "INSTALLING MAMBA"
-          conda install --quiet mamba
-          echo "INSTALLING QIITA VIA MAMBA"
-          mamba create --quiet --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
+          # conda update conda
+          # echo "INSTALLING MAMBA"
+          # conda install --quiet mamba
+          # echo "INSTALLING QIITA VIA MAMBA"
+          conda create --quiet --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
           conda env list
           conda activate qiita
           pip install -U pip
@@ -109,7 +109,7 @@ jobs:
         shell: bash -l {0}
         run: |
           wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
-          mamba env create --quiet -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
+          conda env create --quiet -n qtp-biom --file qiime2-2019.4-py36-linux-conda.yml
           rm qiime2-2019.4-py36-linux-conda.yml
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
