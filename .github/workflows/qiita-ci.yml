@@ -64,6 +64,8 @@ jobs:
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
           conda deactivate
+          conda update conda
+          conda update conda-build
           echo "INSTALLING MAMBA"
           conda install --quiet mamba
           echo "INSTALLING QIITA VIA MAMBA"
