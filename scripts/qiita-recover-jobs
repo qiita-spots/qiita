@@ -12,10 +12,10 @@ from qiita_db.sql_connection import TRN
 from qiita_db.processing_job import ProcessingJob
 import pandas as pd
 from time import sleep
-from datetime import timedelta
 from math import ceil
+from io import StringIO
 
-QIITA_QUEUE_LOG = '/home/qiita/qiita-queues-logs-DONT-DELETE.log'
+
 SLEEP_TIME = 6
 CHANCES = 3
 SQL = """SELECT processing_job_id
@@ -23,7 +23,6 @@ SQL = """SELECT processing_job_id
          JOIN qiita.processing_job_status
          USING (processing_job_status_id)
          WHERE processing_job_status = %s"""
-ARRAY_COMMANDS = set(['Woltka v0.1.1'])
 
 
 def _submit_jobs(jids_to_recover, recover_type):
@@ -42,37 +41,18 @@ def _submit_jobs(jids_to_recover, recover_type):
 
 
 def _retrieve_queue_jobs():
-    lines = check_output(["qstat", "-f"]).decode('ascii').split("\n")
+    # getting all the jobs in the queues
+    all_jobs = pd.read_csv(StringIO(
+        check_output(['squeue', '-o', '%all']).decode('ascii')), sep='|')
 
-    # looking for qiita jobs
-    # i-1: the line before is the job name, which is the internal qiita job id
-    job_names = [lines[i-1] for i, l in enumerate(lines)
-                 if l.startswith('    Job_Owner = qiita')]
+    # just keeping the qiita jobs
+    jobs = all_jobs[all_jobs.GROUP == 'qiita']
 
-    qiita_jids = []
-    for job in job_names:
-        # this should always be false but rather check
-        if 'Job_Name' not in job:
-            continue
-        # ignoring interactive jobs
-        if 'STDIN' in job:
-            continue
-
-        # removing extra info
-        jid = job[15:].replace('merge-', '').replace('.txt', '')
-        qiita_jids.append(jid)
+    # ignore the merge-jobs and get unique values
+    qiita_jids = jobs.NAME.str.replace('merge-', '').unique()
+    qiita_jids = [x.replace('.txt', '') for x in qiita_jids]
 
     return set(qiita_jids)
-
-
-def _count_jobs_in_scheduler():
-    # first let's count all regular jobs
-    j1 = len(check_output(['qstat']).decode('ascii').split("\n"))
-    # now, let's count the jobs in job arrays
-    lines = check_output(['qstat', '-f']).decode('ascii').split("\n")
-    j2 = sum([int(x.split(' ')[-1].split(',')[-1].split('-')[-1])
-              for x in lines if 'job_array_request' in x])
-    return j1 + j2
 
 
 def _get_jids_to_recover(recover_type):
@@ -84,57 +64,35 @@ def _get_jids_to_recover(recover_type):
         return jids_to_recover
 
 
-def _parse_queue_values(d):
-    max_mem = 0
-    max_pmem = 0
-    max_vmem = 0
-    max_wt = timedelta(hours=0, minutes=0, seconds=0)
-    d = d.split(',')
-    for dd in d:
-        if dd.startswith('mem'):
-            v = int(dd[4:-2])
-            if v > max_mem:
-                max_mem = v
-        elif dd.startswith('pmem'):
-            v = int(dd[5:-2])
-            if v > max_pmem:
-                max_pmem = v
-        elif dd.startswith('vmem'):
-            v = int(dd[5:-2])
-            if v > max_mem:
-                max_mem = v
-        elif dd.startswith('walltime'):
-            v = map(int, dd[9:].split(':'))
-            v = timedelta(hours=v[0], minutes=v[1], seconds=v[2])
-            if v > max_wt:
-                max_wt = v
-    return max_mem, max_pmem, max_vmem, max_wt
-
-
 def _qiita_queue_log_parse(jids_to_recover):
-    df = pd.read_csv(QIITA_QUEUE_LOG, sep='\t',
-                     index_col=None, header=None, dtype=str, names=[
-                        'bjid', 'user', 'group', 'jid', 'session',
-                        'resource-list', 'resource-used', 'queue', 'account',
-                        'exit-code', 'node'])
-    # remove the register and empty fields to avoid errors
-    df = df[(df.bjid != '0') &
-            (~df.bjid.isnull()) &
-            (~df.user.isnull()) &
-            (df.jid != 'register.txt')]
-    # generate the qiita job id
-    df['qjid'] = df.jid.apply(lambda x: x.split('.')[0])
-
     results = []
-    for jid, ddf in df.groupby('qjid'):
-        if jid in jids_to_recover:
-            vals = []
-            for _, r in ddf.iterrows():
-                vals.append({
-                    'exit-code': r['exit-code'],
-                    'resource-list': _parse_queue_values(r['resource-list']),
-                    'resource-used': _parse_queue_values(r['resource-used'])})
-            results.append((ProcessingJob(jid), vals))
+    for jid in jids_to_recover:
+        job = ProcessingJob(jid)
+        if job.external_id:
+            bvals = pd.read_csv(StringIO(check_output([
+                'sacct', '-p',
+                '--format=ExitCode,ReqMem,MaxRSS,CPUTimeRAW,TimelimitRaw',
+                '-j', f'{job.external_id}.batch']).decode(
+                'ascii')), sep='|').iloc[0].to_dict()
+            vals = pd.read_csv(StringIO(check_output([
+                'sacct', '-p',
+                '--format=ExitCode,ReqMem,MaxRSS,CPUTimeRAW,TimelimitRaw',
+                '-j', f'{job.external_id}']).decode(
+                'ascii')), sep='|').iloc[0].to_dict()
+            data = {
+                'exit-code': bvals['ExitCode'],
+                'mem-requested': bvals['ReqMem'],
+                'time-requested': vals['TimelimitRaw'],
+                'mem-used': bvals['MaxRSS'],
+                'time-used': bvals['CPUTimeRAW']}
+        else:
+            data = {
+                'exit-code': None,
+                'mem-requested': None,
+                'time-requested': None,
+                'mem-used': None,
+                'time-used': None}
+        results.append(job, data)
 
     return results
 

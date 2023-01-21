@@ -1417,8 +1417,9 @@ class TestPrepTemplate(TestCase):
         qdb.sql_connection.perform_as_transaction(
             'UPDATE qiita.default_workflow SET artifact_type_id = 10 WHERE '
             'default_workflow_id = 1')
-        with self.assertRaisesRegex(ValueError, 'taxa_summary is not part of '
-                                    'this preparation and cannot be applied'):
+        with self.assertRaisesRegex(ValueError, 'This preparation data type: '
+                                    '"16S" and/or artifact type "FASTQ" does '
+                                    'not have valid workflows'):
             pt.add_default_workflow(qdb.user.User('test@foo.bar'))
 
         # cleaning

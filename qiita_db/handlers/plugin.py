@@ -250,10 +250,16 @@ class ReloadPluginAPItestHandler(OauthBaseHandler):
     def post(self):
         """Reloads the plugins"""
         conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
-        for fp in conf_files:
-            software = qdb.software.Software.from_file(fp, update=True)
-            software.activate()
-
-            software.register_commands()
+        software = set([qdb.software.Software.from_file(fp, update=True)
+                        for fp in conf_files])
+        definition = set(
+            [s for s in software if s.type == 'artifact definition'])
+        transformation = software - definition
+        for s in definition:
+            s.activate()
+            s.register_commands()
+        for s in transformation:
+            s.activate()
+            s.register_commands()
 
         self.finish()

@@ -1,5 +1,59 @@
 # Qiita changelog
 
+Version 2022.11
+---------------
+
+* Adding new Woltka v0.1.4 and WoLr2 - WoLr1 and RS210 (updated version of rep200) are available but not default.
+* Update qp-woltka so it runs faster, contribution with @wasade. Add newest improvements for woltka processing so it runs faster.
+* Fix qp-qiime2, "filter features" bug that expects a "feature metadata" value from the dropdown.
+* Avoid having [multiple git version](https://github.com/qiita-spots/qiita/issues/3216) commands running in the system - this in theory should fix some of the slow downs.
+* Fix sample_name in per preparation sample information files.
+* Now the sequencing artifacts (like per-sample-FASTQ, FASTA, etc) accept log files.
+* SortMeRNA via qp-meta will generate processing logs and will be added to their artifacts - note that this will only be available in newer runs AKA you can delete the outputs of past runs and rerun it.
+* Added new "Admin Sample Validation" to validate a list of sample names against what's available in a study, contributed by @sarayupai.
+
+Version 2022.09
+---------------
+
+* Moved Qiita's code base and plugins to SLURM (from Torque). The plugins updated are: qiita-spots/qp-woltka, biocore/mg-scripts, qiita-spots/qp-spades, qiita-spots/qp-meta, qiita-spots/qp-fastp-minimap2.
+* Pinned the paramiko version to < 2.9 [as newer versions were causing issues with older systems](https://github.com/paramiko/paramiko/issues/1961#issuecomment-1008119073).
+* Pinned the scipy version to < 1.8 to avoid issues with the biom-format library.
+* Updates to the INSTALL instructions (thank you @aliu104 !)
+
+Version 2022.07
+---------------
+
+* Users can opt-in to get emails when their jobs change status in their User Information preferences.
+* Added BIOM artifact archiving to the system; this unlinks artifacts from the main processing but leaves them in the system in case they are needed in the future.
+* Added [qiime2.2022.02](https://github.com/qiita-spots/qp-qiime2/pull/68) to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization
+* Users can now select multiple artifacts for analysis [qp-qiime2](https://github.com/qiita-spots/qp-qiime2/pull/69), which gives access to new commands like PCoA biplots.
+* [qtp-sequencing](https://github.com/qiita-spots/qtp-sequencing/pull/41/files) now uses fqtools to count the number of sequences in fastq/fastq.gz files as part as the artifact summary.
+* Artifact summaries can now be updated [qiita-spots #3205](https://github.com/qiita-spots/qiita/pull/3205).
+* Added to the internal [Sequence Processing Pipeline](https://github.com/qiita-spots/qp-knight-lab-processing) the CHM13 genome so human studies are now filtered by GRCh38 genome + PhiX and CHM13 genome.
+
+Version 2022.05
+-----------------
+
+* Added `Artifact.iter()` for easier Artifact interactions.
+* Fixed the SCP Qiita transfer; [this was the problem and solution](https://github.com/paramiko/paramiko/issues/1961).
+* Added `User.email` to the Admin Job Processing listing.
+
+Version 2022.04
+---------------
+
+* Moved from Python 3.6 to 3.9.
+* Added support for Pandas 1.4.0, [details here](https://github.com/qiita-spots/qiita/pull/3174).
+* Updated all available JavaScript libraries, [details here](https://github.com/qiita-spots/qiita/pull/3177).
+* Users can select which metadata to use when creating a new analysis. By default only overlapping metadata in all studies is selected.
+* Now we can fully delete users in the backend.
+* Updated documentation to reflect the new EMPO version 2.
+* Fixed outstanding issues to add default workflow to a preparation, [details here](https://github.com/qiita-spots/qiita/issues/3158).
+* Fixed the following issues: [3183](https://github.com/qiita-spots/qiita/issues/3183), [3182](https://github.com/qiita-spots/qiita/issues/3182), [3170](https://github.com/qiita-spots/qiita/issues/3170), [3193](https://github.com/qiita-spots/qiita/pull/3193).
+* We deprecated the use of specimen_id from Qiita; this is no longer required in the backend or the GUI.
+* Moved [qp-fastp-minimap2](https://github.com/qiita-spots/qp-fastp-minimap2/) to per sample parallelization. Now an iSeq processing takes ~20min, while before it took close to 2hrs.
+* Fixed the following issues [qp-knight-lab-processing #15](https://github.com/qiita-spots/qp-knight-lab-processing/issues/15), [qp-knight-lab-processing #16](https://github.com/qiita-spots/qp-knight-lab-processing/issues/16), [qp-knight-lab-processing #17](https://github.com/qiita-spots/qp-knight-lab-processing/issues/17), [qp-knight-lab-processing #19](https://github.com/qiita-spots/qp-knight-lab-processing/issues/19), [mg-scripts #60](https://github.com/biocore/mg-scripts/issues/60), [mg-scripts #62](https://github.com/biocore/mg-scripts/issues/62) from the [Knight Lab Sequence Processing Pipeline](https://github.com/qiita-spots/qp-knight-lab-processing).
+
+
 Version 2021.11
 ---------------
 

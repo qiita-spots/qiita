@@ -56,7 +56,7 @@ class StudyPrepCreatorTests(RESTHandlerTestCase):
         exp = json_decode(response.body)
         exp_prep = PrepTemplate(exp['id']).to_dataframe()
 
-        prep_table.index.name = 'sample_id'
+        prep_table.index.name = 'sample_name'
 
         # sort columns to be comparable
         prep_table = prep_table[sorted(prep_table.columns.tolist())]

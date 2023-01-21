@@ -56,7 +56,7 @@ class RedbiomPublicSearch(BaseHandler):
                 'The query ("%s") did not work and may be malformed. Please '
                 'check the search help for more information on the queries.'
                 % query)
-        if not message:
+        if not message and redbiom_samples:
             study_artifacts = defaultdict(lambda: defaultdict(list))
             for ctx in contexts:
                 # redbiom.fetch.data_from_samples returns a biom, which we

@@ -548,8 +548,9 @@ class PrepTemplate(MetadataTemplate):
                      FROM qiita.prep_template
                         JOIN qiita.artifact USING (artifact_id)
                         JOIN qiita.visibility USING (visibility_id)
-                     WHERE prep_template_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id])
+                     WHERE prep_template_id = %s and visibility_id NOT IN %s"""
+            qdb.sql_connection.TRN.add(
+                sql, [self._id, qdb.util.artifact_visibilities_to_skip()])
 
             return qdb.util.infer_status(
                 qdb.sql_connection.TRN.execute_fetchindex())
@@ -809,12 +810,15 @@ class PrepTemplate(MetadataTemplate):
 
         # 2.
         pt_dt = self.data_type()
+        pt_artifact = self.artifact.artifact_type
         workflows = [wk for wk in qdb.software.DefaultWorkflow.iter()
-                     if pt_dt in wk.data_type]
+                     if wk.artifact_type == pt_artifact and
+                     pt_dt in wk.data_type]
         if not workflows:
             # raises option a.
-            raise ValueError(f'This preparation data type: "{pt_dt}" does not '
-                             'have valid workflows')
+            msg = (f'This preparation data type: "{pt_dt}" and/or artifact '
+                   f'type "{pt_artifact}" does not have valid workflows')
+            raise ValueError(msg)
         missing_artifacts = dict()
         for wk in workflows:
             missing_artifacts[wk] = dict()
@@ -919,3 +923,23 @@ class PrepTemplate(MetadataTemplate):
                         previous_jobs[current_job] = params
 
         return workflow
+
+    @property
+    def archived_artifacts(self):
+        """List of archived Artifacts
+
+        Returns
+        -------
+        list of qiita_db.artifact.Artifact
+            The list of archivde Artifacts
+        """
+        with qdb.sql_connection.TRN:
+
+            sql = """SELECT artifact_id
+                     FROM qiita.preparation_artifact
+                        LEFT JOIN qiita.artifact USING (artifact_id)
+                     WHERE prep_template_id = %s AND visibility_id IN %s"""
+            qdb.sql_connection.TRN.add(
+                sql, [self.id, qdb.util.artifact_visibilities_to_skip()])
+            return [qdb.artifact.Artifact(ai)
+                    for ai in qdb.sql_connection.TRN.execute_fetchflatten()]

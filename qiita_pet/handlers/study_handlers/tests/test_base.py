@@ -104,15 +104,6 @@ class TestStudy(OauthTestingBase):
                          data=arguments, asjson=True)
         self.assertEqual(obs.code, 405)
 
-    def test_patch_specimen_id_column(self):
-        data = {'op': 'replace', 'path': '/specimen_id_column',
-                'value': "anonymized_name"}
-        obs = self.patch('/study/1', headers=self.header,
-                         data=data, asjson=True)
-        self.assertEqual(obs.code, 200)
-        self.assertEqual(json_decode(obs.body), {"status": "success",
-                         "message": "Successfully updated specimen id column"})
-
 
 if __name__ == "__main__":
     main()

@@ -56,7 +56,6 @@ class Study(qdb.base.QiitaObject):
     status
     title
     owner
-    specimen_id_column
     autoloaded
 
     Methods
@@ -149,8 +148,9 @@ class Study(qdb.base.QiitaObject):
                      FROM qiita.visibility
                         JOIN qiita.artifact USING (visibility_id)
                         JOIN qiita.study_artifact USING (artifact_id)
-                     WHERE study_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id])
+                     WHERE study_id = %s and visibility_id NOT IN %s"""
+            qdb.sql_connection.TRN.add(
+                sql, [self._id, qdb.util.artifact_visibilities_to_skip()])
             return qdb.util.infer_status(
                 qdb.sql_connection.TRN.execute_fetchindex())
 
@@ -779,62 +779,6 @@ class Study(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.execute()
 
     @property
-    def specimen_id_column(self):
-        """Returns the specimen identifier column
-
-        Returns
-        -------
-        str
-            The name of the specimen id column
-        """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT specimen_id_column
-                     FROM qiita.study
-                     WHERE study_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
-
-    @specimen_id_column.setter
-    def specimen_id_column(self, value):
-        """Sets the specimen identifier column
-
-        Parameters
-        ----------
-        value : str
-            The name of the column with the specimen identifiers.
-
-        Raises
-        ------
-        QiitaDBLookupError
-            If value is not in the sample information for this study.
-            If the study does not have sample information.
-        QiitaDBColumnError
-            Category is not unique.
-        """
-        st = self.sample_template
-        if st is None:
-            raise qdb.exceptions.QiitaDBLookupError("Study does not have a "
-                                                    "sample information.")
-
-        if value is not None:
-            if value not in st.categories:
-                raise qdb.exceptions.QiitaDBLookupError("Category '%s' is not "
-                                                        "present in the sample"
-                                                        " information."
-                                                        % value)
-
-            observed_values = st.get_category(value)
-            if len(observed_values) != len(set(observed_values.values())):
-                raise qdb.exceptions.QiitaDBColumnError("The category does not"
-                                                        " contain unique "
-                                                        "values.")
-
-        sql = """UPDATE qiita.study SET
-                 specimen_id_column = %s
-                 WHERE study_id = %s"""
-        qdb.sql_connection.perform_as_transaction(sql, [value, self._id])
-
-    @property
     def investigation(self):
         """ Returns Investigation this study is part of
 
@@ -1155,8 +1099,9 @@ class Study(qdb.base.QiitaObject):
                         JOIN qiita.data_type USING (data_type_id)
                         JOIN qiita.study_artifact USING (artifact_id)
                         JOIN qiita.artifact_type USING (artifact_type_id)
-                     WHERE study_id = %s{0}
+                     WHERE study_id = %s{0} AND visibility_id NOT IN %s
                      ORDER BY artifact_id""".format(sql_where)
+            sql_args.append(qdb.util.artifact_visibilities_to_skip())
 
             qdb.sql_connection.TRN.add(sql, sql_args)
             return [qdb.artifact.Artifact(aid)

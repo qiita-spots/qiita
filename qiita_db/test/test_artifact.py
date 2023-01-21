@@ -40,10 +40,8 @@ class ArtifactTestsReadOnly(TestCase):
                qdb.artifact.Artifact(7)]
         self.assertEqual(obs, exp)
 
-    def test_iter_public(self):
-        obs = list(qdb.artifact.Artifact.iter_public())
-        exp = []
-        self.assertEqual(obs, exp)
+        exp.extend([qdb.artifact.Artifact(8), qdb.artifact.Artifact(9)])
+        self.assertEqual(list(qdb.artifact.Artifact.iter()), exp)
 
     def test_create_type(self):
         obs = qdb.artifact.Artifact.types()
@@ -1354,6 +1352,10 @@ class ArtifactTests(TestCase):
                        if x['fp_type'] == 'html_summary_dir']
         self.assertEqual(summary_dir, [])
 
+        # let's check if we update, we do _not_ remove the files
+        a.set_html_summary(exp3)
+        self.assertTrue(exists(a.html_summary_fp[1]))
+
     def test_descendants_with_jobs_one_element(self):
         artifact = qdb.artifact.Artifact.create(
             self.filepaths_root, 'FASTQ', prep_template=self.prep_template)
@@ -1361,6 +1363,43 @@ class ArtifactTests(TestCase):
         obs = self.prep_template.artifact.descendants_with_jobs.nodes()
         exp = [('artifact', artifact)]
         self.assertCountEqual(obs, exp)
+
+
+@qiita_test_checker()
+class ArtifactArchiveTests(TestCase):
+    def test_archive(self):
+        A = qdb.artifact.Artifact
+        QE = qdb.exceptions.QiitaDBOperationNotPermittedError
+
+        # check nodes, without any change
+        exp_nodes = [A(1), A(2), A(3), A(4), A(5), A(6)]
+        self.assertCountEqual(A(1).descendants.nodes(), exp_nodes)
+        obs_artifacts = len(qdb.util.get_artifacts_information([4, 5, 6, 8]))
+        self.assertEqual(4, obs_artifacts)
+
+        # check errors
+        with self.assertRaisesRegex(QE, 'Only public artifacts can be '
+                                    'archived'):
+            A.archive(1)
+        A(1).visibility = 'public'
+
+        with self.assertRaisesRegex(QE, 'Only BIOM artifacts can be archived'):
+            A.archive(1)
+
+        A(8).visibility = 'public'
+        with self.assertRaisesRegex(QE, 'Only non analysis artifacts can '
+                                    'be archived'):
+            A.archive(8)
+
+        for aid in range(4, 7):
+            ms = A(aid).merging_scheme
+            A.archive(aid)
+            self.assertEqual(ms, A(aid).merging_scheme)
+            exp_nodes.remove(A(aid))
+            self.assertCountEqual(A(1).descendants.nodes(), exp_nodes)
+
+        obs_artifacts = len(qdb.util.get_artifacts_information([4, 5, 6, 8]))
+        self.assertEqual(1, obs_artifacts)
 
 
 if __name__ == '__main__':

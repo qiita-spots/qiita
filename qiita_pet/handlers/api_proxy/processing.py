@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from json import loads, dumps
+from collections import defaultdict
 
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
@@ -80,18 +81,30 @@ def list_options_handler_get_req(command_id, artifact_id=None):
         A dictionary containing the commands information
         {'status': str,
          'message': str,
-         'options': list of dicts of {'id: str', 'name': str,
-                                      'values': dict of {str: str}}}
+         'options': list of dicts of {'id: str',
+                                      'name': str,
+                                      'values': dict of {str: str}},
+         'req_options': dict,
+         'opt_options': dict,
+         'extra_artifacts': dict}
     """
     def _helper_process_params(params):
         return dumps(
             {k: str(v).lower() for k, v in params.items()}, sort_keys=True)
 
     command = Command(command_id)
-    rparamers = command.required_parameters.keys()
+    rparamers = []
+    extra_atypes = []
+    analysis = None
+    for name, (type, atype) in command.required_parameters.items():
+        rparamers.append(name)
+        # [0] cause there is only one element
+        extra_atypes.append(atype[0])
+
     eparams = []
     if artifact_id is not None:
         artifact = Artifact(artifact_id)
+        analysis = artifact.analysis
         for job in artifact.jobs(cmd=command):
             jstatus = job.status
             outputs = job.outputs if job.status == 'success' else None
@@ -104,6 +117,18 @@ def list_options_handler_get_req(command_id, artifact_id=None):
                 del params[k]
             eparams.append(_helper_process_params(params))
 
+        # removing this artifact from extra_artifacts
+        if artifact.artifact_type in extra_atypes:
+            extra_atypes.remove(artifact.artifact_type)
+
+    extra_artifacts = defaultdict(list)
+    if analysis is not None:
+        analysis_artifacts = analysis.artifacts
+        for aa in analysis_artifacts:
+            atype = aa.artifact_type
+            if artifact_id != aa.id and atype in extra_atypes:
+                extra_artifacts[atype].append((aa.id, aa.name))
+
     options = [{'id': p.id, 'name': p.name, 'values': p.values}
                for p in command.default_parameter_sets
                if _helper_process_params(p.values) not in eparams]
@@ -111,7 +136,8 @@ def list_options_handler_get_req(command_id, artifact_id=None):
             'message': '',
             'options': options,
             'req_options': command.required_parameters,
-            'opt_options': command.optional_parameters}
+            'opt_options': command.optional_parameters,
+            'extra_artifacts': extra_artifacts}
 
 
 def workflow_handler_post_req(user_id, command_id, params):

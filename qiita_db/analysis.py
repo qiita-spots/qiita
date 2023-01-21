@@ -70,6 +70,22 @@ class Analysis(qdb.base.QiitaObject):
     _analysis_id_column = 'analysis_id'
 
     @classmethod
+    def iter(cls):
+        """Iter over the analyses"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT DISTINCT analysis_id
+                     FROM qiita.analysis
+                     JOIN qiita.analysis_portal USING (analysis_id)
+                     JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE portal = %s
+                     ORDER BY analysis_id"""
+            qdb.sql_connection.TRN.add(sql, [qiita_config.portal])
+            aids = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        for aid in aids:
+            yield cls(aid)
+
+    @classmethod
     def get_by_status(cls, status):
         """Returns all Analyses with given status
 
@@ -1086,12 +1102,12 @@ class Analysis(qdb.base.QiitaObject):
                 if si not in sample_infos:
                     si_df = si.to_dataframe()
                     if categories is not None:
-                        si_df = si_df[categories & set(si_df.columns)]
+                        si_df = si_df[set(categories) & set(si_df.columns)]
                     sample_infos[si] = si_df
                 pt = artifact.prep_templates[0]
                 pt_df = pt.to_dataframe()
                 if categories is not None:
-                    pt_df = pt_df[categories & set(pt_df.columns)]
+                    pt_df = pt_df[set(categories) & set(pt_df.columns)]
 
                 qm = pt_df.join(sample_infos[si], lsuffix="_prep")
 

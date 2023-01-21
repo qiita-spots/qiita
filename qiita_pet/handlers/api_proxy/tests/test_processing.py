@@ -68,7 +68,8 @@ class TestProcessingAPIReadOnly(TestCase):
                                'sortmerna_coverage': ['float', '0.97'],
                                'sortmerna_e_value': ['float', '1'],
                                'sortmerna_max_pos': ['integer', '10000'],
-                               'threads': ['integer', '1']}}
+                               'threads': ['integer', '1']},
+               'extra_artifacts': {}}
         # First check that the keys are the same
         self.assertCountEqual(obs, exp)
         self.assertEqual(obs['status'], exp['status'])
@@ -76,6 +77,7 @@ class TestProcessingAPIReadOnly(TestCase):
         self.assertEqual(obs['options'], exp['options'])
         self.assertEqual(obs['req_options'], exp['req_options'])
         self.assertEqual(obs['opt_options'], exp['opt_options'])
+        self.assertEqual(obs['extra_artifacts'], exp['extra_artifacts'])
 
     def test_job_ajax_get_req(self):
         obs = job_ajax_get_req("063e553b-327c-4818-ab4a-adfe58e49860")

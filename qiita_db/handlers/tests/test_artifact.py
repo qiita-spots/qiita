@@ -66,9 +66,13 @@ class ArtifactHandlerTests(OauthTestingBase):
         path_builder = partial(join, db_test_raw_dir)
         exp_fps = {
             "raw_forward_seqs":
-                [path_builder('1_s_G1_L001_sequences.fastq.gz')],
+                [{'filepath': path_builder('1_s_G1_L001_sequences.fastq.gz'),
+                  'size': 58}],
             "raw_barcodes":
-                [path_builder('1_s_G1_L001_sequences_barcodes.fastq.gz')]}
+                [{'filepath': path_builder(
+                  '1_s_G1_L001_sequences_barcodes.fastq.gz'),
+                  'size': 58}]
+        }
         exp = {
             'name': 'Raw data 1',
             'timestamp': '2012-10-01 09:30:27',
@@ -90,7 +94,9 @@ class ArtifactHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
         db_test_raw_dir = qdb.util.get_mountpoint('analysis')[0][1]
         path_builder = partial(join, db_test_raw_dir)
-        exp_fps = {"biom": [path_builder('1_analysis_18S.biom')]}
+        exp_fps = {
+            "biom": [{'filepath': path_builder('1_analysis_18S.biom'),
+                      'size': 1093210}]}
         exp = {
             'name': 'noname',
             'visibility': 'sandbox',

@@ -1726,6 +1726,7 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 JOIN qiita.filepath USING (filepath_id)
                 WHERE af.artifact_id = a.artifact_id) filepaths ON true
             WHERE a.artifact_id IN %s
+                AND a.visibility_id NOT IN %s
             GROUP BY a.artifact_id, a.name, a.command_id, sc.name,
                      a.generated_timestamp, dt.data_type, parent_id,
                      parent_info.command_id, parent_info.name
@@ -1774,7 +1775,8 @@ def get_artifacts_information(artifact_ids, only_biom=True):
         ps = {}
         algorithm_az = {'': ''}
         PT = qdb.metadata_template.prep_template.PrepTemplate
-        qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
+        qdb.sql_connection.TRN.add(sql, [
+            tuple(artifact_ids), qdb.util.artifact_visibilities_to_skip()])
         for row in qdb.sql_connection.TRN.execute_fetchindex():
             aid, name, cid, cname, gt, aparams, dt, pid, pcid, pname, \
                 pparams, filepaths, _, prep_template_id = row
@@ -1950,6 +1952,10 @@ def open_file(filepath_or, *args, **kwargs):
             fh.close()
 
 
+def artifact_visibilities_to_skip():
+    return tuple([qdb.util.convert_to_id('archived', "visibility")])
+
+
 def generate_analysis_list(analysis_ids, public_only=False):
     """Get general analysis information
 
@@ -2074,7 +2080,7 @@ def generate_analyses_list_per_study(study_id):
 
 
 def create_nested_path(path):
-    """Wraps makedirs() to make it safe to use across multiple concurrent calls.
+    """Wraps makedirs() to make it safe across multiple concurrent calls.
     Returns successfully if the path was created, or if it already exists.
     (Note, this alters the normal makedirs() behavior, where False is returned
     if the full path already exists.)

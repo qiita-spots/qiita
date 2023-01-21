@@ -59,10 +59,10 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.cookie_secret, "SECRET")
         self.assertEqual(obs.key_file, "/tmp/server.key")
 
-        # Torque section
-        self.assertEqual(obs.trq_owner, "torque_user@somewhere.org")
-        self.assertEqual(obs.trq_poll_val, 15)
-        self.assertEqual(obs.trq_dependency_q_cnt, 2)
+        # job_scheduler section
+        self.assertEqual(obs.job_scheduler_owner, "user@somewhere.org")
+        self.assertEqual(obs.job_scheduler_poll_val, 15)
+        self.assertEqual(obs.job_scheduler_dependency_q_cnt, 2)
 
         # Postgres section
         self.assertEqual(obs.user, "postgres")
@@ -180,13 +180,13 @@ class ConfigurationManagerTests(TestCase):
 
         self.assertEqual(obs.qiita_env, "")
 
-    def test_get_torque(self):
+    def test_get_job_scheduler(self):
         obs = ConfigurationManager()
 
-        conf_setter = partial(self.conf.set, 'torque')
-        conf_setter('TORQUE_JOB_OWNER', '')
-        obs._get_torque(self.conf)
-        self.assertIsNone(obs.trq_owner)
+        conf_setter = partial(self.conf.set, 'job_scheduler')
+        conf_setter('JOB_SCHEDULER_JOB_OWNER', '')
+        obs._get_job_scheduler(self.conf)
+        self.assertEqual('', obs.job_scheduler_owner)
 
     def test_get_postgres(self):
         obs = ConfigurationManager()
@@ -329,16 +329,16 @@ PASSWORD = andanotherpwd
 # The postgres password for the admin_user
 ADMIN_PASSWORD = thishastobesecure
 
-# ----------------------------- Torque settings -----------------------------
-[torque]
-# The email address of the submitter of Torque jobs
-TORQUE_JOB_OWNER = torque_user@somewhere.org
+# ------------------------- job_scheduler settings -------------------------
+[job_scheduler]
+# The email address of the submitter of jobs
+JOB_SCHEDULER_JOB_OWNER = user@somewhere.org
 
-# The number of seconds to wait between successive qstat calls
-TORQUE_POLLING_VALUE = 15
+# The number of seconds to wait between successive calls
+JOB_SCHEDULER_POLLING_VALUE = 15
 
 # Hard upper-limit on concurrently running validator jobs
-TORQUE_PROCESSING_QUEUE_COUNT = 2
+JOB_SCHEDULER_PROCESSING_QUEUE_COUNT = 2
 
 # ----------------------------- EBI settings -----------------------------
 [ebi]

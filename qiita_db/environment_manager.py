@@ -203,16 +203,12 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
 
             # Insert the settings values to the database
             sql = """INSERT INTO settings
-                     (test, base_data_dir, base_work_dir, trq_owner,
-                     trq_poll_val, trq_dependency_q_cnt)
-                     VALUES (%s, %s, %s, %s, %s, %s)"""
+                     (test, base_data_dir, base_work_dir)
+                     VALUES (%s, %s, %s)"""
             qdb.sql_connection.TRN.add(
                 sql, [test,
                       qiita_config.base_data_dir,
-                      qiita_config.working_dir,
-                      qiita_config.trq_owner,
-                      qiita_config.trq_poll_val,
-                      qiita_config.trq_dependency_q_cnt])
+                      qiita_config.working_dir])
             qdb.sql_connection.TRN.execute()
             create_layout(test=test, verbose=verbose)
 
