@@ -64,7 +64,9 @@ jobs:
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
           conda deactivate
+          echo "INSTALLING MAMBA"
           conda install --quiet mamba
+          echo "INSTALLING QIITA VIA MAMBA"
           mamba create --quiet --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
           conda env list
           conda activate qiita
