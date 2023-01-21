@@ -213,7 +213,7 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         body = _sample_creator(['1.SKM8.640201', 'blank.a1'])
         response = self.patch('/api/v1/study/1/samples', headers=self.headers,
                               data=body, asjson=True)
-        self.assertEqual(response.code, 200)
+        self.assertEqual(response.code, 201)
         # successful response should be empty string
         self.assertEqual(response.body, b'')
 
@@ -228,7 +228,7 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
 
         response = self.patch('/api/v1/study/1/samples', headers=self.headers,
                               data=body, asjson=True)
-        self.assertEqual(response.code, 200)
+        self.assertEqual(response.code, 201)
         # successful response should be empty string
         self.assertEqual(response.body, b'')
 
