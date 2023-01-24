@@ -168,8 +168,10 @@ class StudySamplesHandler(RESTHandler):
 
         categories = set(study.sample_template.categories)
 
-        if set(data.columns) != categories and set(data.columns).issubset(
-                categories):
+        # issuperset() will return True for true supersets or exact matches.
+        # In either case, keep processing. Subsets of categories remain
+        # invalid, however.
+        if not set(data.columns).issuperset(categories):
             self.fail('Not all sample information categories provided',
                       400)
             return
