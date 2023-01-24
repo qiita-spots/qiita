@@ -168,11 +168,11 @@ class StudySamplesHandler(RESTHandler):
 
         categories = set(study.sample_template.categories)
 
-        if set(data.columns) != categories:
-            if set(data.columns).issubset(categories):
-                self.fail('Not all sample information categories provided',
-                          400)
-                return
+        if set(data.columns) != categories and set(data.columns).issubset(
+                categories):
+            self.fail('Not all sample information categories provided',
+                      400)
+            return
 
         existing_samples = set(sample_info.index)
         overlapping_ids = set(data.index).intersection(existing_samples)

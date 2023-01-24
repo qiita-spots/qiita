@@ -16,23 +16,31 @@ from qiita_db.user import User
 from qiita_pet.test.rest.test_base import RESTHandlerTestCase
 
 
-def _sample_creator(ids):
-    categories = ['season_environment', 'env_package',
-                  'assigned_from_geo', 'texture', 'taxon_id',
-                  'depth', 'host_taxid', 'common_name',
-                  'water_content_soil', 'elevation', 'temp',
-                  'tot_nitro', 'samp_salinity', 'altitude',
-                  'env_biome', 'country', 'ph', 'anonymized_name',
-                  'tot_org_carb', 'description_duplicate',
-                  'env_feature', 'physical_specimen_location',
-                  'physical_specimen_remaining', 'dna_extracted',
-                  'sample_type', 'collection_timestamp',
-                  'host_subject_id', 'description',
-                  'latitude', 'longitude', 'scientific_name']
+def _sample_creator(ids, categories=None):
+    if categories is None:
+        categories = ['season_environment', 'env_package',
+                      'assigned_from_geo', 'texture', 'taxon_id',
+                      'depth', 'host_taxid', 'common_name',
+                      'water_content_soil', 'elevation', 'temp',
+                      'tot_nitro', 'samp_salinity', 'altitude',
+                      'env_biome', 'country', 'ph', 'anonymized_name',
+                      'tot_org_carb', 'description_duplicate',
+                      'env_feature', 'physical_specimen_location',
+                      'physical_specimen_remaining', 'dna_extracted',
+                      'sample_type', 'collection_timestamp',
+                      'host_subject_id', 'description',
+                      'latitude', 'longitude', 'scientific_name']
     return {i: {c: 1 for c in categories} for i in ids}
 
 
 class StudySamplesHandlerTests(RESTHandlerTestCase):
+    def _get_sample_categories(self, study_id):
+        response = self.get('/api/v1/study/1/samples/info',
+                            headers=self.headers)
+        self.assertEqual(response.code, 200)
+        obs = json_decode(response.body)
+        return obs['categories']
+
     def test_patch_accept_new_categories(self):
         body = {'1.SKM1.999998': {'dna_extracted': 'foo',
                                   'host_taxid': 'foo',
@@ -131,10 +139,6 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         self.assertIn('new_field1', obs['categories'])
         self.assertIn('new_field2', obs['categories'])
 
-        # TODO: need a test to get metadata for 1.SKM1.999998 and 1.SKM1.999999
-        # and confirm new_field1 and new_field2 are empty for the former and
-        # filled for the latter.
-
         # remove a few existing fields, representing retired fields.
         for sample_id in body:
             del (body[sample_id]['ph'])
@@ -205,12 +209,11 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         self.assertEqual(obs, exp)
 
     def test_patch_sample_ids_complete_metadata_and_unknown_metadata(self):
-        response = self.get('/api/v1/study/1/samples', headers=self.headers)
-        self.assertEqual(response.code, 200)
-
+        current = self._get_sample_categories(1)
         # If no new categories, both new and existing samples should succeed.
         # 640201 is an existing sample. blank.a1 is a new sample
-        body = _sample_creator(['1.SKM8.640201', 'blank.a1'])
+        body = _sample_creator(['1.SKM8.640201',
+                                'blank.a1'], categories=current)
         response = self.patch('/api/v1/study/1/samples', headers=self.headers,
                               data=body, asjson=True)
         self.assertEqual(response.code, 201)
@@ -220,7 +223,8 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         # If new categories are added, patch() should succeed.
         # New and existing samples should have new categories.
         # 640201 is an existing sample. blank.a2 is a new sample
-        body = _sample_creator(['1.SKM8.640201', 'blank.a2'])
+        body = _sample_creator(['1.SKM8.640201',
+                                'blank.a2'], categories=current)
         # body['blank.a2']['DOES_NOT_EXIST'] will be '', not None.
         # body['1.SKM8.640201']['WHAT'] will be '', not None.
         body['1.SKM8.640201']['DOES_NOT_EXIST'] = 'foo'
@@ -242,43 +246,24 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         obs = response.body.decode("utf-8").replace('NaN', 'null')
         obs = json.loads(obs)
 
-        exp = {'header': ['does_not_exist', 'what'],
-               'samples': {'1.SKM7.640188': [None, None],
-                           '1.SKD9.640182': [None, None],
-                           '1.SKB8.640193': [None, None],
-                           '1.SKD2.640178': [None, None],
-                           '1.SKM3.640197': [None, None],
-                           '1.SKM4.640180': [None, None],
-                           '1.SKB9.640200': [None, None],
-                           '1.SKB4.640189': [None, None],
-                           '1.SKB5.640181': [None, None],
-                           '1.SKB6.640176': [None, None],
-                           '1.SKM2.640199': [None, None],
-                           '1.SKM5.640177': [None, None],
-                           '1.SKB1.640202': [None, None],
-                           '1.SKD8.640184': [None, None],
-                           '1.SKD4.640185': [None, None],
-                           '1.SKB3.640195': [None, None],
-                           '1.SKM1.640183': [None, None],
-                           '1.SKB7.640196': [None, None],
-                           '1.SKD3.640198': [None, None],
-                           '1.SKD7.640191': [None, None],
-                           '1.SKD6.640190': [None, None],
-                           '1.SKB2.640194': [None, None],
-                           '1.SKM9.640192': [None, None],
-                           '1.SKM6.640187': [None, None],
-                           '1.SKD5.640186': [None, None],
-                           '1.SKD1.640179': [None, None],
-                           '1.blank.a1': [None, None],
-                           '1.blank.a2': ['', 'bar'],
-                           '1.SKM8.640201': ['foo', '']}}
+        self.assertEqual(obs['header'], ['does_not_exist', 'what'])
 
-        self.assertDictEqual(obs, exp)
+        self.assertEqual(obs['samples']['1.blank.a2'], ['', 'bar'])
+        self.assertEqual(obs['samples']['1.SKM8.640201'], ['foo', ''])
+
+        # as the number and names of samples is dynamic, simply confirm the
+        # other samples are unchanged.
+        for sample in obs['samples']:
+            if sample not in ['1.blank.a2', '1.SKM8.640201']:
+                print(sample)
+                self.assertEqual(obs['samples'][sample], [None, None])
 
         # If categories were removed, both existing and new samples should
         # fail.
         # 640201 is an existing sample. blank.a3 is a new sample
-        body = _sample_creator(['1.SKM8.640201', 'blank.a3'])
+        current = self._get_sample_categories(1)
+        body = _sample_creator(['1.SKM8.640201',
+                                'blank.a3'], categories=current)
         del (body['1.SKM8.640201']['env_biome'])
         del (body['blank.a3']['env_biome'])
 
@@ -290,7 +275,9 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         self.assertEqual(obs, exp)
 
     def test_patch_sample_ids_already_exist(self):
-        body = _sample_creator(['1.SKM8.640201', '1.SKM3.640197'])
+        current = self._get_sample_categories(1)
+        body = _sample_creator(['1.SKM8.640201',
+                                '1.SKM3.640197'], categories=current)
         response = self.patch('/api/v1/study/1/samples', headers=self.headers,
                               data=body, asjson=True)
         self.assertEqual(response.code, 200)
@@ -302,7 +289,8 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         self.assertNotEqual(df.loc['1.SKM4.640180']['elevation'], '1')
 
     def test_patch_sample_ids_do_not_exist(self):
-        body = _sample_creator(['blank.a1'])
+        current = self._get_sample_categories(1)
+        body = _sample_creator(['blank.a1'], categories=current)
         response = self.patch('/api/v1/study/1/samples', headers=self.headers,
                               data=body, asjson=True)
         self.assertEqual(response.code, 201)
@@ -311,7 +299,10 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         self.assertEqual(df.loc['1.blank.a1']['elevation'], '1')
 
     def test_patch_sample_ids_partially_exist(self):
-        body = _sample_creator(['blank.b1', '1.SKM5.640177', '1.SKB9.640200'])
+        current = self._get_sample_categories(1)
+        body = _sample_creator(['blank.b1',
+                                '1.SKM5.640177',
+                                '1.SKB9.640200'], categories=current)
         response = self.patch('/api/v1/study/1/samples', headers=self.headers,
                               data=body, asjson=True)
         self.assertEqual(response.code, 201)
