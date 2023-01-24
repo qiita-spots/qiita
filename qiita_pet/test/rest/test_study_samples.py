@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
+import json
 from unittest import main
 from datetime import datetime
 
@@ -16,23 +16,141 @@ from qiita_db.user import User
 from qiita_pet.test.rest.test_base import RESTHandlerTestCase
 
 
-def _sample_creator(ids):
-    categories = ['season_environment', 'env_package',
-                  'assigned_from_geo', 'texture', 'taxon_id',
-                  'depth', 'host_taxid', 'common_name',
-                  'water_content_soil', 'elevation', 'temp',
-                  'tot_nitro', 'samp_salinity', 'altitude',
-                  'env_biome', 'country', 'ph', 'anonymized_name',
-                  'tot_org_carb', 'description_duplicate',
-                  'env_feature', 'physical_specimen_location',
-                  'physical_specimen_remaining', 'dna_extracted',
-                  'sample_type', 'collection_timestamp',
-                  'host_subject_id', 'description',
-                  'latitude', 'longitude', 'scientific_name']
+def _sample_creator(ids, categories=None):
+    if categories is None:
+        categories = ['season_environment', 'env_package',
+                      'assigned_from_geo', 'texture', 'taxon_id',
+                      'depth', 'host_taxid', 'common_name',
+                      'water_content_soil', 'elevation', 'temp',
+                      'tot_nitro', 'samp_salinity', 'altitude',
+                      'env_biome', 'country', 'ph', 'anonymized_name',
+                      'tot_org_carb', 'description_duplicate',
+                      'env_feature', 'physical_specimen_location',
+                      'physical_specimen_remaining', 'dna_extracted',
+                      'sample_type', 'collection_timestamp',
+                      'host_subject_id', 'description',
+                      'latitude', 'longitude', 'scientific_name']
     return {i: {c: 1 for c in categories} for i in ids}
 
 
 class StudySamplesHandlerTests(RESTHandlerTestCase):
+    def _get_sample_categories(self, study_id):
+        response = self.get('/api/v1/study/1/samples/info',
+                            headers=self.headers)
+        self.assertEqual(response.code, 200)
+        obs = json_decode(response.body)
+        return obs['categories']
+
+    def test_patch_accept_new_categories(self):
+        body = {'1.SKM1.999998': {'dna_extracted': 'foo',
+                                  'host_taxid': 'foo',
+                                  'altitude': 'foo',
+                                  'description_duplicate': 'foo',
+                                  'temp': 'foo',
+                                  'country': 'foo',
+                                  'texture': 'foo',
+                                  'latitude': '32.7157',
+                                  'assigned_from_geo': 'foo',
+                                  'tot_org_carb': 'foo',
+                                  'env_feature': 'foo',
+                                  'depth': 'foo',
+                                  'tot_nitro': 'foo',
+                                  'anonymized_name': 'foo',
+                                  'scientific_name': 'foo',
+                                  'samp_salinity': 'foo',
+                                  'ph': 'foo',
+                                  'taxon_id': '9999',
+                                  'season_environment': 'foo',
+                                  'physical_specimen_remaining': 'foo',
+                                  'host_subject_id': 'foo',
+                                  'water_content_soil': 'foo',
+                                  'env_biome': 'foo',
+                                  'env_package': 'foo',
+                                  'elevation': 'foo',
+                                  'collection_timestamp': ('2014-05-29 '
+                                                           '12:24:15'),
+                                  'sample_type': 'foo',
+                                  'physical_specimen_location': 'foo',
+                                  'longitude': '117.1611',
+                                  'common_name': 'foo',
+                                  'description': 'foo'}}
+
+        # first, confirm this should patch successfully: all fields present
+        # note that response is 201 if using patch to add new samples, 200 if
+        # updating existing samples.
+        response = self.patch('/api/v1/study/1/samples', headers=self.headers,
+                              data=body, asjson=True)
+        self.assertEqual(response.code, 201)
+
+        body = {'1.SKM1.999999': {'dna_extracted': 'foo',
+                                  'host_taxid': 'foo',
+                                  'altitude': 'foo',
+                                  'description_duplicate': 'foo',
+                                  'temp': 'foo',
+                                  'country': 'foo',
+                                  'texture': 'foo',
+                                  'latitude': '32.7157',
+                                  'assigned_from_geo': 'foo',
+                                  'tot_org_carb': 'foo',
+                                  'env_feature': 'foo',
+                                  'depth': 'foo',
+                                  'tot_nitro': 'foo',
+                                  'anonymized_name': 'foo',
+                                  'scientific_name': 'foo',
+                                  'samp_salinity': 'foo',
+                                  'ph': 'foo',
+                                  'taxon_id': '9999',
+                                  'season_environment': 'foo',
+                                  'physical_specimen_remaining': 'foo',
+                                  'host_subject_id': 'foo',
+                                  'water_content_soil': 'foo',
+                                  'env_biome': 'foo',
+                                  'env_package': 'foo',
+                                  'elevation': 'foo',
+                                  'collection_timestamp': ('2014-05-29 '
+                                                           '12:24:15'),
+                                  'sample_type': 'foo',
+                                  'physical_specimen_location': 'foo',
+                                  'longitude': '117.1611',
+                                  'common_name': 'foo',
+                                  'description': 'foo'}}
+
+        # add a new field to one sample_id, making body a superset of values.
+        body['1.SKM1.999999']['new_field1'] = 'some_value'
+        body['1.SKM1.999999']['new_field2'] = 'another_value'
+
+        # this test should pass.
+        response = self.patch('/api/v1/study/1/samples', headers=self.headers,
+                              data=body, asjson=True)
+        self.assertEqual(response.code, 201)
+
+        # confirm new samples were added.
+        response = self.get('/api/v1/study/1/samples', headers=self.headers)
+        self.assertEqual(response.code, 200)
+        obs = json_decode(response.body)
+        self.assertIn('1.SKM1.999998', obs)
+        self.assertIn('1.SKM1.999999', obs)
+
+        # confirm new categories are a part of the samples.
+        response = self.get('/api/v1/study/1/samples/info',
+                            headers=self.headers)
+        self.assertEqual(response.code, 200)
+        obs = json_decode(response.body)
+        self.assertIn('new_field1', obs['categories'])
+        self.assertIn('new_field2', obs['categories'])
+
+        # remove a few existing fields, representing retired fields.
+        for sample_id in body:
+            del (body[sample_id]['ph'])
+            del (body[sample_id]['water_content_soil'])
+
+        exp = {'message': 'Not all sample information categories provided'}
+        response = self.patch('/api/v1/study/1/samples', headers=self.headers,
+                              data=body, asjson=True)
+        self.assertEqual(response.code, 400)
+        obs = json_decode(response.body)
+        self.assertEqual(obs, exp)
+
     def test_patch_no_study(self):
         body = {'sampleid1': {'category_a': 'value_a'},
                 'sampleid2': {'category_b': 'value_b'}}
@@ -91,13 +209,65 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         self.assertEqual(obs, exp)
 
     def test_patch_sample_ids_complete_metadata_and_unknown_metadata(self):
-        body = _sample_creator(['1.SKM8.640201', 'blank.a1'])
-        body['1.SKM8.640201']['DOES_NOT_EXIST'] = 'foo'
-        body['blank.a1']['WHAT'] = 'bar'
+        current = self._get_sample_categories(1)
+        # If no new categories, both new and existing samples should succeed.
+        # 640201 is an existing sample. blank.a1 is a new sample
+        body = _sample_creator(['1.SKM8.640201',
+                                'blank.a1'], categories=current)
+        response = self.patch('/api/v1/study/1/samples', headers=self.headers,
+                              data=body, asjson=True)
+        self.assertEqual(response.code, 201)
+        # successful response should be empty string
+        self.assertEqual(response.body, b'')
 
-        exp = {'message': "Some categories do not exist in the sample "
-                          "information",
-               'categories_not_found': ['DOES_NOT_EXIST', 'WHAT']}
+        # If new categories are added, patch() should succeed.
+        # New and existing samples should have new categories.
+        # 640201 is an existing sample. blank.a2 is a new sample
+        body = _sample_creator(['1.SKM8.640201',
+                                'blank.a2'], categories=current)
+        # body['blank.a2']['DOES_NOT_EXIST'] will be '', not None.
+        # body['1.SKM8.640201']['WHAT'] will be '', not None.
+        body['1.SKM8.640201']['DOES_NOT_EXIST'] = 'foo'
+        body['blank.a2']['WHAT'] = 'bar'
+
+        response = self.patch('/api/v1/study/1/samples', headers=self.headers,
+                              data=body, asjson=True)
+        self.assertEqual(response.code, 201)
+        # successful response should be empty string
+        self.assertEqual(response.body, b'')
+
+        response = self.get(('/api/v1/study/1/samples/categories='
+                             'does_not_exist,what'), headers=self.headers)
+        self.assertEqual(response.code, 200)
+
+        # decode results manually from bytes, replacing non-JSON-spec 'NaN'
+        # values with JSON-spec 'null'. These will convert to Python None
+        # values when load()ed.
+        obs = response.body.decode("utf-8").replace('NaN', 'null')
+        obs = json.loads(obs)
+
+        self.assertEqual(obs['header'], ['does_not_exist', 'what'])
+
+        self.assertEqual(obs['samples']['1.blank.a2'], ['', 'bar'])
+        self.assertEqual(obs['samples']['1.SKM8.640201'], ['foo', ''])
+
+        # as the number and names of samples is dynamic, simply confirm the
+        # other samples are unchanged.
+        for sample in obs['samples']:
+            if sample not in ['1.blank.a2', '1.SKM8.640201']:
+                print(sample)
+                self.assertEqual(obs['samples'][sample], [None, None])
+
+        # If categories were removed, both existing and new samples should
+        # fail.
+        # 640201 is an existing sample. blank.a3 is a new sample
+        current = self._get_sample_categories(1)
+        body = _sample_creator(['1.SKM8.640201',
+                                'blank.a3'], categories=current)
+        del (body['1.SKM8.640201']['env_biome'])
+        del (body['blank.a3']['env_biome'])
+
+        exp = {'message': 'Not all sample information categories provided'}
         response = self.patch('/api/v1/study/1/samples', headers=self.headers,
                               data=body, asjson=True)
         self.assertEqual(response.code, 400)
@@ -105,7 +275,9 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         self.assertEqual(obs, exp)
 
     def test_patch_sample_ids_already_exist(self):
-        body = _sample_creator(['1.SKM8.640201', '1.SKM3.640197'])
+        current = self._get_sample_categories(1)
+        body = _sample_creator(['1.SKM8.640201',
+                                '1.SKM3.640197'], categories=current)
         response = self.patch('/api/v1/study/1/samples', headers=self.headers,
                               data=body, asjson=True)
         self.assertEqual(response.code, 200)
@@ -117,7 +289,8 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         self.assertNotEqual(df.loc['1.SKM4.640180']['elevation'], '1')
 
     def test_patch_sample_ids_do_not_exist(self):
-        body = _sample_creator(['blank.a1'])
+        current = self._get_sample_categories(1)
+        body = _sample_creator(['blank.a1'], categories=current)
         response = self.patch('/api/v1/study/1/samples', headers=self.headers,
                               data=body, asjson=True)
         self.assertEqual(response.code, 201)
@@ -126,7 +299,10 @@ class StudySamplesHandlerTests(RESTHandlerTestCase):
         self.assertEqual(df.loc['1.blank.a1']['elevation'], '1')
 
     def test_patch_sample_ids_partially_exist(self):
-        body = _sample_creator(['blank.b1', '1.SKM5.640177', '1.SKB9.640200'])
+        current = self._get_sample_categories(1)
+        body = _sample_creator(['blank.b1',
+                                '1.SKM5.640177',
+                                '1.SKB9.640200'], categories=current)
         response = self.patch('/api/v1/study/1/samples', headers=self.headers,
                               data=body, asjson=True)
         self.assertEqual(response.code, 201)

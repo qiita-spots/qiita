@@ -168,15 +168,12 @@ class StudySamplesHandler(RESTHandler):
 
         categories = set(study.sample_template.categories)
 
-        if set(data.columns) != categories:
-            if set(data.columns).issubset(categories):
-                self.fail('Not all sample information categories provided',
-                          400)
-            else:
-                unknown = set(data.columns) - categories
-                self.fail("Some categories do not exist in the sample "
-                          "information", 400,
-                          categories_not_found=sorted(unknown))
+        # issuperset() will return True for true supersets or exact matches.
+        # In either case, keep processing. Subsets of categories remain
+        # invalid, however.
+        if not set(data.columns).issuperset(categories):
+            self.fail('Not all sample information categories provided',
+                      400)
             return
 
         existing_samples = set(sample_info.index)
@@ -186,15 +183,21 @@ class StudySamplesHandler(RESTHandler):
 
         # warnings generated are not currently caught
         # see https://github.com/biocore/qiita/issues/2096
-        if overlapping_ids:
-            to_update = data.loc[overlapping_ids]
-            study.sample_template.update(to_update)
-            status = 200
 
+        # processing new_ids first allows us to extend the sample_template
+        # w/new columns before calling update(). update() will return an
+        # error if unexpected columns are found.
         if new_ids:
             to_extend = data.loc[new_ids]
             study.sample_template.extend(to_extend)
             status = 201
+
+        if overlapping_ids:
+            to_update = data.loc[overlapping_ids]
+            study.sample_template.update(to_update)
+            if status == 500:
+                # don't overwrite a possible status = 201
+                status = 200
 
         self.set_status(status)
         self.finish()
