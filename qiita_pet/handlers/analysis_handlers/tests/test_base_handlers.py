@@ -45,18 +45,19 @@ class TestBaseHandlersUtils(TestCase):
                         'Soils', ('Pick closed-reference OTUs | Split '
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
+                            '1.SKM4.640180', '1.SKM9.640192'], {'1'}),
                     5: (1, 'Identification of the Microbiomes for Cannabis '
                         'Soils', ('Pick closed-reference OTUs | Split '
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
+                            '1.SKM4.640180', '1.SKM9.640192'], {'1'}),
                     6: (1, 'Identification of the Microbiomes for Cannabis '
                         'Soils', ('Pick closed-reference OTUs | Split '
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192'])},
+                            '1.SKM4.640180', '1.SKM9.640192'], {'1'})},
                'alert_msg': ''}
+
         self.assertEqual(obs, exp)
 
         r_client.set('analysis_1', dumps({'job_id': 'job_id'}))
@@ -73,17 +74,17 @@ class TestBaseHandlersUtils(TestCase):
                         'Soils', ('Pick closed-reference OTUs | Split '
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
+                            '1.SKM4.640180', '1.SKM9.640192'], {'1'}),
                     5: (1, 'Identification of the Microbiomes for Cannabis '
                         'Soils', ('Pick closed-reference OTUs | Split '
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
+                            '1.SKM4.640180', '1.SKM9.640192'], {'1'}),
                     6: (1, 'Identification of the Microbiomes for Cannabis '
                         'Soils', ('Pick closed-reference OTUs | Split '
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192'])},
+                            '1.SKM4.640180', '1.SKM9.640192'], {'1'})},
                'alert_msg': 'An artifact is being deleted from this analysis'}
         self.assertEqual(obs, exp)
 
@@ -103,17 +104,17 @@ class TestBaseHandlersUtils(TestCase):
                         'Soils', ('Pick closed-reference OTUs | Split '
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
+                            '1.SKM4.640180', '1.SKM9.640192'], {'1'}),
                     5: (1, 'Identification of the Microbiomes for Cannabis '
                         'Soils', ('Pick closed-reference OTUs | Split '
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192']),
+                            '1.SKM4.640180', '1.SKM9.640192'], {'1'}),
                     6: (1, 'Identification of the Microbiomes for Cannabis '
                         'Soils', ('Pick closed-reference OTUs | Split '
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                            '1.SKM4.640180', '1.SKM9.640192'])},
+                            '1.SKM4.640180', '1.SKM9.640192'], {'1'})},
                'alert_msg': 'Error deleting artifact'}
         self.assertEqual(obs, exp)
 

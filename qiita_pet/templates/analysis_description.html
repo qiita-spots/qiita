@@ -66,6 +66,7 @@
             <thead>
               <tr>
                 <th>Artifact ID</th>
+                <th>Prep IDs</th>
                 <th>Study Title</th>
                 <th>Parent Processing</th>
                 <th>Merging Scheme</th>
@@ -76,6 +77,7 @@
               {% for aid, data in artifacts.items() %}
                 <tr>
                   <td>{{aid}}</td>
+                  <td>{{', '.join(data[4])}}</td>
                   <td><a href="{% raw qiita_config.portal_dir %}/study/description/{{data[0]}}" target="_blank">{{data[1]}}</a></td>
                   <td>{{data[2][1]}}</td>
                   <td>{{data[2][0]}}</td>
