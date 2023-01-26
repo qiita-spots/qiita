@@ -126,7 +126,7 @@ class TestBaseHandlersUtils(TestCase):
                'artifacts_being_deleted': [],
                'nodes': [
                     ('job', 'job', job_id, 'Single Rarefaction', 'success'),
-                    ('artifact', 'BIOM', 9, 'noname\n(BIOM)', 'outdated'),
+                    ('artifact', 'BIOM', 9, 'noname\n(BIOM)', 'artifact'),
                     ('artifact', 'BIOM',   8, 'noname\n(BIOM)', 'artifact')],
                'workflow': None}
         self.assertCountEqual(obs, exp)
