@@ -74,9 +74,10 @@ def analysis_description_handler_get_request(analysis_id, user):
     artifacts = {}
     for aid, samples in analysis.samples.items():
         artifact = Artifact(aid)
+        foo = list(set([str(x.id) for x in artifact.prep_templates]))
         study = artifact.study
         artifacts[aid] = (
-            study.id, study.title, artifact.merging_scheme, samples)
+            study.id, study.title, artifact.merging_scheme, samples, foo)
 
     return {'analysis_name': analysis.name,
             'analysis_id': analysis.id,
