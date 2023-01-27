@@ -491,6 +491,7 @@ class DBUtilTests(DBUtilTestsBase):
         path_for_removal = join(qdb.util.get_mountpoint("uploads")[0][1],
                                 str(study_id))
         for x in filepaths:
+            print(x['fp'])
             self.assertFalse(exists(x['fp']))
 
             f_name = basename(x['fp'])
