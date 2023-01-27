@@ -9,7 +9,7 @@
 from unittest import TestCase, main
 from tempfile import mkstemp, mkdtemp, NamedTemporaryFile, TemporaryFile
 from os import close, remove, mkdir
-from os.path import join, exists, basename, dirname
+from os.path import join, exists, basename
 from shutil import rmtree
 from datetime import datetime
 from functools import partial

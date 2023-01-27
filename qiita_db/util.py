@@ -965,9 +965,11 @@ def move_filepaths_to_upload_folder(study_id, filepaths, do_not_move=None):
         for x in filepaths:
             qdb.sql_connection.TRN.add(sql, [x['fp_id']])
 
-            if x['fp_type'] in ('html_summary',
-                                'html_summary_dir') or basename(
-                x['fp']) in do_not_move:
+            f_type = x['fp_type']
+            f_name = basename(x['fp'])
+
+            if f_type in ('html_summary',
+                          'html_summary_dir') or f_name in do_not_move:
                 _rm_files(qdb.sql_connection.TRN, x['fp'])
             else:
                 destination = path_builder(basename(x['fp']))
