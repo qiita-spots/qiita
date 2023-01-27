@@ -9,7 +9,7 @@
 from unittest import TestCase, main
 from tempfile import mkstemp, mkdtemp, NamedTemporaryFile, TemporaryFile
 from os import close, remove, mkdir
-from os.path import join, exists, basename
+from os.path import join, exists, basename, dirname
 from shutil import rmtree
 from datetime import datetime
 from functools import partial
@@ -384,12 +384,13 @@ class DBUtilTests(DBUtilTestsBase):
         # we are going to test the move_filepaths_to_upload_folder indirectly
         # by creating an artifact and deleting it. To accomplish this we need
         # to create a new prep info file, attach a biom with html_summary and
-        # then deleting it. However, we will do this twice to assure that
+        # then delete it. However, we will do this twice to assure that
         # there are no conflicts with this
         study_id = 1
         # creating the 2 sets of files for the 2 artifacts
         fd, seqs_fp1 = mkstemp(suffix='_seqs.fastq')
         close(fd)
+
         html_fp1 = mkdtemp()
         html_fp1 = join(html_fp1, 'support_files')
         mkdir(html_fp1)
@@ -397,11 +398,32 @@ class DBUtilTests(DBUtilTestsBase):
             fp.write(">AAA\nAAA")
         fd, seqs_fp2 = mkstemp(suffix='_seqs.fastq')
         close(fd)
+
         html_fp2 = mkdtemp()
         html_fp2 = join(html_fp2, 'support_files')
         mkdir(html_fp2)
         with open(join(html_fp2, 'index.html'), 'w') as fp:
             fp.write(">AAA\nAAA")
+
+        # create an additional directory named 'more_files' and populate it
+        # with two files that shouldn't be moved back into the uploads
+        # directory when an artifact is deleted, and one that should.
+        more_files_fp = mkdtemp()
+        more_files_fp = join(more_files_fp, 'more_files')
+        mkdir(more_files_fp)
+        test_files = [(join(more_files_fp, x), 1) for x in
+                      ['qtp-sequencing-validate-data.csv',
+                       'feature-table.qza',
+                       'good_file.txt']]
+
+        # create the files
+        for file_name, _ in test_files:
+            with open(file_name, 'w') as fp:
+                fp.write("This is a test file.\n")
+
+        # verify that the files exist
+        for file_name, _ in test_files:
+            self.assertTrue(exists(file_name))
 
         # creating new prep info file
         metadata_dict = {
@@ -422,7 +444,7 @@ class DBUtilTests(DBUtilTestsBase):
 
         # inserting artifact 1
         artifact1 = qdb.artifact.Artifact.create(
-            [(seqs_fp1, 1), (html_fp1, 'html_summary')], "FASTQ",
+            [(seqs_fp1, 1), (html_fp1, 'html_summary')] + test_files, "FASTQ",
             prep_template=pt1)
         # inserting artifact 2
         artifact2 = qdb.artifact.Artifact.create(
@@ -433,8 +455,23 @@ class DBUtilTests(DBUtilTestsBase):
         filepaths = artifact1.filepaths
         filepaths.extend(artifact2.filepaths)
 
-        # delete artifacts
+        # delete artifact 1
         qdb.artifact.Artifact.delete(artifact1.id)
+
+        # now that artifact 1 is deleted, confirm that all three test files
+        # are removed.
+        for file_name, _ in test_files:
+            self.assertFalse(exists(file_name))
+
+        # confirm that the 'bad_files' were not moved back into the uploads
+        # directory, but the 'good_file.txt' was.
+        uploads = qdb.util.get_files_from_uploads_folders("1")
+        bad_files = [basename(x[0]) for x in test_files if
+                     'good_file.txt' not in x[0]]
+        for _, some_path, _ in uploads:
+            self.assertFalse(basename(some_path) in bad_files)
+
+        # finish deleting artifacts
         qdb.artifact.Artifact.delete(artifact2.id)
 
         # now let's create another artifact with the same filenames that
@@ -455,7 +492,17 @@ class DBUtilTests(DBUtilTestsBase):
                                 str(study_id))
         for x in filepaths:
             self.assertFalse(exists(x['fp']))
-            new_fp = join(path_for_removal, basename(x['fp']))
+
+            f_name = basename(x['fp'])
+
+            if f_name in bad_files:
+                # skip the check for file-names in bad_files,
+                # because they were already checked above and they were
+                # already deleted.
+                continue
+
+            new_fp = join(path_for_removal, f_name)
+
             if x['fp_type'] == 'html_summary':
                 # The html summary gets removed, not moved
                 self.assertFalse(exists(new_fp))

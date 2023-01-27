@@ -940,7 +940,7 @@ def empty_trash_upload_folder(delete_files=True):
             qdb.sql_connection.TRN.execute()
 
 
-def move_filepaths_to_upload_folder(study_id, filepaths):
+def move_filepaths_to_upload_folder(study_id, filepaths, do_not_move=None):
     r"""Goes over the filepaths list and moves all the filepaths that are not
     used in any place to the upload folder of the study
 
@@ -950,6 +950,8 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
         The study id to where the files should be returned to
     filepaths : list
         List of filepaths to move to the upload folder
+    do_not_move : list
+        List of filenames to delete rather than move to upload folder
     """
     with qdb.sql_connection.TRN:
         uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
@@ -963,7 +965,9 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
         for x in filepaths:
             qdb.sql_connection.TRN.add(sql, [x['fp_id']])
 
-            if x['fp_type'] in ('html_summary', 'html_summary_dir'):
+            if x['fp_type'] in ('html_summary',
+                                'html_summary_dir') or basename(
+                x['fp']) in do_not_move:
                 _rm_files(qdb.sql_connection.TRN, x['fp'])
             else:
                 destination = path_builder(basename(x['fp']))
