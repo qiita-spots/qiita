@@ -618,18 +618,13 @@ class Artifact(qdb.base.QiitaObject):
                      WHERE artifact_id IN %s"""
             qdb.sql_connection.TRN.add(sql, [all_ids])
 
-            # do not move these files back to upload folder.
-            dnm = ['qtp-sequencing-validate-data.csv', 'feature-table.qza']
-
             # If the first artifact to be deleted, instance, doesn't have
             # parents and study is not None (None means is an analysis), we
             # move the files to the uploads folder. We also need
             # to nullify the column in the prep template table
             if not instance.parents and study is not None:
                 qdb.util.move_filepaths_to_upload_folder(study.id,
-                                                         filepaths,
-                                                         do_not_move=dnm)
-
+                                                         filepaths)
                 # there are cases that an artifact would not be linked to a
                 # study
                 pt_ids = [tuple([pt.id]) for a in all_artifacts
