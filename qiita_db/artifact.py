@@ -623,9 +623,8 @@ class Artifact(qdb.base.QiitaObject):
             # move the files to the uploads folder. We also need
             # to nullify the column in the prep template table
             if not instance.parents and study is not None:
-                qdb.util.move_filepaths_to_upload_folder(
-                    study.id, filepaths)
-
+                qdb.util.move_filepaths_to_upload_folder(study.id,
+                                                         filepaths)
                 # there are cases that an artifact would not be linked to a
                 # study
                 pt_ids = [tuple([pt.id]) for a in all_artifacts

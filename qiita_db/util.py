@@ -958,19 +958,26 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
 
         path_builder = partial(join, uploads_fp)
 
+        # do not move these files back to upload folder.
+        do_not_move = ['qtp-sequencing-validate-data.csv', 'feature-table.qza']
+
         # We can now go over and remove all the filepaths
         sql = """DELETE FROM qiita.filepath WHERE filepath_id = %s"""
         for x in filepaths:
             qdb.sql_connection.TRN.add(sql, [x['fp_id']])
 
-            if x['fp_type'] in ('html_summary', 'html_summary_dir'):
+            if (x['fp_type'] in ('html_summary',
+                                 'html_summary_dir') or
+                    basename(x['fp']) in do_not_move):
                 _rm_files(qdb.sql_connection.TRN, x['fp'])
-            else:
-                destination = path_builder(basename(x['fp']))
+                continue
 
-                qdb.sql_connection.TRN.add_post_rollback_func(
-                    move, destination, x['fp'])
-                move(x['fp'], destination)
+            # if files were not removed, then they should be moved.
+            destination = path_builder(basename(x['fp']))
+            qdb.sql_connection.TRN.add_post_rollback_func(move,
+                                                          destination,
+                                                          x['fp'])
+            move(x['fp'], destination)
 
         qdb.sql_connection.TRN.execute()
 
