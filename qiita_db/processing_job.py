@@ -703,7 +703,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    def _notify_updated_status(self, value, error_msg):
+    def _generate_notification_message(self, value, error_msg):
         ignored_software = ('artifact definition',)
         ignored_commands = ('Validate', 'complete_job', 'release_validators')
 
@@ -796,8 +796,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         if value == 'error' and error_msg is not None:
             message += f'\n\nError:\n{error_msg}'
 
-        # send email
-        qdb.util.send_email(self.user.email, subject, message)
+        return {'subject': subject, 'message': message}
 
     def _set_status(self, value, error_msg=None):
         """Sets the status of the job
@@ -830,7 +829,11 @@ class ProcessingJob(qdb.base.QiitaObject):
             new_status = qdb.util.convert_to_id(
                 value, "processing_job_status")
 
-            self._notify_updated_status(value, error_msg)
+            msg = self._generate_notification_message(value, error_msg)
+            if msg:
+                # send email
+                qdb.util.send_email(self.user.email, msg['subject'],
+                                    msg['message'])
 
             sql = """UPDATE qiita.processing_job
                      SET processing_job_status_id = %s
