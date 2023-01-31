@@ -594,7 +594,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if vals[0] == 'artifact':
                     artifact_info = parameters.values[pname]
                     # If the artifact_info is a list, then the artifact
-                    # still doesn't exists because the current job is part
+                    # still doesn't exist because the current job is part
                     # of a workflow, so we can't link
                     if not isinstance(artifact_info, list):
                         TTRN.add(sql, [artifact_info, job_id])
@@ -703,6 +703,102 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
+    def _notify_updated_status(self, value, error_msg):
+        ignored_software = ('artifact definition',)
+        ignored_commands = ('Validate', 'complete_job', 'release_validators')
+
+        # abort early conditions (don't send an email notification)
+        # tentatively accept the overhead of a function-call, even when a
+        # notification isn't sent, just to keep the logic clean and
+        # centralized.
+
+        if value == 'waiting':
+            # notification not needed.
+            return
+
+        if not self.user.info['receive_processing_job_emails']:
+            # notification not needed.
+            return
+
+        if self.command.software.name in ignored_software:
+            # notification not needed.
+            return
+
+        if self.command.name in ignored_commands:
+            # notification not needed.
+            return
+
+        # generate subject line
+        subject = 'Job status change: %s (%s)' % (self.command.name, self.id)
+
+        # generate message line
+        message = ''
+
+        input_artifacts = self.input_artifacts
+        if input_artifacts is None:
+            # this is an admin job. display command name and parameters
+            message = (f'Admin Job {self.command.name} '
+                       f'{self.command.parameters}')
+        else:
+            for artifact in input_artifacts:
+                if artifact.prep_templates is not None:
+                    # this is a processing job. display the study id as link,
+                    # prep ids, data_type, and command name.
+                    study_ids = [x.study_id for x in artifact.prep_templates]
+                    prep_ids = [x.id for x in artifact.prep_templates]
+                    data_types = [x.data_type() for x in
+                                  artifact.prep_templates]
+
+                    # there should only be one study id
+                    study_ids = set(study_ids)
+                    if len(study_ids) > 1:
+                        raise qdb.exceptions.QiitaError("More than one Study "
+                                                        "ID was found: "
+                                                        f"{study_ids}")
+                    study_id = study_ids.pop()
+
+                    # there should be at least one prep_id and probably more.
+                    prep_ids = set(prep_ids)
+                    if len(prep_ids) == 0:
+                        raise qdb.exceptions.QiitaError("No Prep IDs were "
+                                                        "found")
+                    # convert into a string for presentation.
+                    prep_ids = [str(x) for x in prep_ids]
+                    prep_ids = ', '.join(prep_ids)
+
+                    # there should be only one data type.
+                    data_types = set(data_types)
+                    if len(data_types) > 1:
+                        raise qdb.exceptions.QiitaError("More than one data "
+                                                        "type was found: "
+                                                        f"{data_types}")
+                    data_type = data_types.pop()
+
+                    message = f'Processing Job: {self.command.name}\n'
+                    message += 'Study <A HREF="https://qiita.ucsd.edu/study/'
+                    message += f'description/{study_id}">{study_id}'
+                    message += '</A>\n'
+                    message += f'Prep IDs: {prep_ids}\n'
+                    message += f'Data Type: {data_type}\n'
+                elif artifact.analysis is not None:
+                    # this is an analysis job. display analysis id as link and
+                    # the command name.
+                    message = f'Analysis Job {self.command.name} '
+                    message += '<A HREF="https://qiita.ucsd.edu/analysis/'
+                    message += f'description/{artifact.analysis.id}">'
+                    message += f'{artifact.analysis.id}</A>\n'
+                else:
+                    raise qdb.exceptions.QiitaError("Unknown Condition")
+
+        # append legacy message line
+        message += 'New status: %s' % (value)
+
+        if value == 'error' and error_msg is not None:
+            message += f'\n\nError:\n{error_msg}'
+
+        # send email
+        qdb.util.send_email(self.user.email, subject, message)
+
     def _set_status(self, value, error_msg=None):
         """Sets the status of the job
 
@@ -734,22 +830,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             new_status = qdb.util.convert_to_id(
                 value, "processing_job_status")
 
-            if value not in {'waiting'}:
-                if self.user.info['receive_processing_job_emails']:
-                    # skip if software is artifact definition
-                    ignore_software = ('artifact definition', )
-                    if self.command.software.name not in ignore_software:
-                        ignore_commands = ('Validate', 'complete_job',
-                                           'release_validators')
-                        if self.command.name not in ignore_commands:
-                            subject = 'Job status change: %s (%s)' % (
-                                self.command.name, self.id)
-                            message = 'New status: %s' % (value)
-
-                            if value == 'error' and error_msg is not None:
-                                message += f'\n\nError:\n{error_msg}'
-                            qdb.util.send_email(
-                                self.user.email, subject, message)
+            self._notify_updated_status(value, error_msg)
 
             sql = """UPDATE qiita.processing_job
                      SET processing_job_status_id = %s
