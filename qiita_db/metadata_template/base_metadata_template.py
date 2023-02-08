@@ -54,6 +54,22 @@ from string import ascii_letters, digits
 # information
 QIITA_COLUMN_NAME = 'qiita_sample_column_names'
 
+INSDC_NULL_VALUES = {
+    'not collected': 'not collected',
+    'not provided': 'not provided',
+    'restricted access': 'restricted access',
+    'not applicable': 'not applicable',
+    'unspecified': 'not applicable',
+    'not_collected': 'not collected',
+    'not_provided': 'not provided',
+    'restricted_access': 'restricted access',
+    'not_applicable': 'not applicable',
+    'missing: not collected': 'not collected',
+    'missing: not provided': 'not provided',
+    'missing: restricted access': 'restricted access',
+    'missing: not applicable': 'not applicable',
+}
+
 
 def _helper_get_categories(table):
     """This is a helper function to avoid duplication of code"""
@@ -584,6 +600,15 @@ class MetadataTemplate(qdb.base.QiitaObject):
         if len(set(md_template.columns)) != len(md_template.columns):
             raise qdb.exceptions.QiitaDBDuplicateHeaderError(
                 set(duplicates(md_template.columns)))
+
+        # validate the INSDC_NULL_VALUES
+        _df = md_template.fillna("").applymap(str.lower)
+        _ddf = _df[_df.isin(INSDC_NULL_VALUES.keys()).any(axis=1)]
+        if _ddf.shape[0] != 0:
+            for c in _ddf.columns:
+                if set(INSDC_NULL_VALUES) & set(_ddf[c].values):
+                    for s, v in _ddf[c].to_dict().items():
+                        md_template[c][s] = INSDC_NULL_VALUES[v]
 
         return md_template
 
