@@ -602,7 +602,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 set(duplicates(md_template.columns)))
 
         # validate the INSDC_NULL_VALUES
-        _df = md_template.fillna("").applymap(str.lower)
+        _df = md_template.fillna("").applymap(str).applymap(str.lower)
         _ddf = _df[_df.isin(INSDC_NULL_VALUES.keys()).any(axis=1)]
         if _ddf.shape[0] != 0:
             for c in _ddf.columns:
