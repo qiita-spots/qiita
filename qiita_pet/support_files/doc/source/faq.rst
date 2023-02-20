@@ -381,6 +381,35 @@ downloaded from `qiita.ucsd.edu <https://qiita.ucsd.edu/>` and redbiom, includin
 and metadata, are distributed under the BSD 3-Clause License.
 
 
+Some of the studies have `Qiita-EBI Import` as the PI, why is this?
+-------------------------------------------------------------------
+
+These are studies that were downloaded to Qiita via `qebil <https://github.com/ucsd-cmi/qebil>`. If you want
+us to add your study, please send us an email.
+
+Now, if you are wondering about the possible "Processing notes", here are their explanation:
+
+-  MISSING: One or more of the fastq files for your study were unavailable for download from
+   EBI/ENA or the downloaded files were found to contain corrupt data and were excluded from our
+   automatic association and processing. A list of the affected samples and their corresponding
+   EBI/ENA ftp links can be found in the .MISSING. preparation information files in the Uploads
+   section of this page. If you would like to attempt to manually download and/or correct the
+   fastq files, please visit the linked EBI/ENA project page in the Study details and follow our
+   instructions for manually associating and processing the files.
+
+- TOOMANYREADS: One or more of the fastq files for your study were found to contain more read
+  files than indicated by the single or paired-end read technology that EBI/ENA indicated was
+  used for processing the sample. This is most likely the case for studies where index reads
+  have been included in a separate file as part of the upload, however our automated system
+  is unable to readily distinguish this. A list of the affected samples and their corresponding
+  EBI/ENA ftp links can be found in the .TOOMANYREADS. preparation information files in the
+  Uploads section of this page. If you would like to attempt to have these samples processed,
+  please visit the linked EBI/ENA project page in the Study details and either a) follow our
+  instructions for manually associating and processing the files here or b) email us to
+  indicate that the study should be processed with the assumption that the first file
+  associated with a samples is an index read file.
+
+
 How to cite Qiita?
 ------------------
 

@@ -1,5 +1,22 @@
 # Qiita changelog
 
+Version 2023.02
+---------------
+
+* Added "Software and Data Licensing" to the Qiita FAQ page.
+* External resources can now add new sample metadata categories to a study via
+the `/api/v1/study/` endpoint.
+* Added preparation-id to the GUI list of artifacts used in an analysis.
+* Added automatic lower-casing to INSDC null values [#3246](https://github.com/qiita-spots/qiita/issues/3246).
+* ArtifactHandler now returns the file size and full path of the files available in
+an Artifact. This change had two consequences: (1) the plugins now can control
+their behavior based on the file sizes, and (2) all plugins had to be updated to use this new feature.
+* Added [qiita_client.artifact_and_preparation_files](https://github.com/qiita-spots/qiita_client)
+to help plugins filter per_sample_FASTQ based on size and ignore small file sizes.
+* Added qiime2.2022.11 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization.
+* Added support for Amplicon data to the internal [Sequence Processing Pipeline](https://github.com/qiita-spots/qp-knight-lab-processing).
+
+
 Version 2022.11
 ---------------
 

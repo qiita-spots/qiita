@@ -608,7 +608,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             for c in _ddf.columns:
                 if set(INSDC_NULL_VALUES) & set(_ddf[c].values):
                     for s, v in _ddf[c].to_dict().items():
-                        md_template[c][s] = INSDC_NULL_VALUES[v]
+                        if v in INSDC_NULL_VALUES:
+                            md_template[c][s] = INSDC_NULL_VALUES[v]
 
         return md_template
 
