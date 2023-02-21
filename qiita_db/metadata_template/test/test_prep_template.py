@@ -298,6 +298,7 @@ class TestPrepTemplate(TestCase):
                             'qiita_prep_id': 1000,
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
+                            'insdc_nulls': '3.6',
                             'experiment_design_description': 'BBBB'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
@@ -311,6 +312,7 @@ class TestPrepTemplate(TestCase):
                             'qiita_prep_id': 1000,
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
+                            'insdc_nulls': 'NoT applicable',
                             'experiment_design_description': 'BBBB'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
@@ -324,6 +326,7 @@ class TestPrepTemplate(TestCase):
                             'qiita_prep_id': 1000,
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
+                            'insdc_nulls': 'unspecified',
                             'experiment_design_description': 'BBBB'}
             }
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
@@ -342,6 +345,7 @@ class TestPrepTemplate(TestCase):
                               'qiita_prep_id': 1000,
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
+                              'insdc_nulls': '3.6',
                               'experiment_design_description': 'BBBB'},
             '1.SKD8.640184': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
@@ -355,6 +359,7 @@ class TestPrepTemplate(TestCase):
                               'qiita_prep_id': 1000,
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
+                              'insdc_nulls': 'not applicable',
                               'experiment_design_description': 'BBBB'},
             '1.SKB7.640196': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
@@ -368,6 +373,7 @@ class TestPrepTemplate(TestCase):
                               'qiita_prep_id': 1000,
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
+                              'insdc_nulls': 'not applicable',
                               'experiment_design_description': 'BBBB'}
             }
         self.metadata_prefixed = pd.DataFrame.from_dict(metadata_prefixed_dict,
@@ -730,6 +736,7 @@ class TestPrepTemplate(TestCase):
                               'platform': 'Illumina',
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
+                              'insdc_nulls': '3.6',
                               'experiment_design_description': 'BBBB'},
             '2.SKD8.640184': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
@@ -742,6 +749,7 @@ class TestPrepTemplate(TestCase):
                               'platform': 'Illumina',
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
+                              'insdc_nulls': 'not applicable',
                               'experiment_design_description': 'BBBB'},
             '2.SKB7.640196': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
@@ -754,13 +762,16 @@ class TestPrepTemplate(TestCase):
                               'platform': 'Illumina',
                               'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
+                              'insdc_nulls': 'not applicable',
                               'experiment_design_description': 'BBBB'}
             }
         exp = pd.DataFrame.from_dict(metadata_dict, orient='index', dtype=str)
+
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
         exp.sort_index(axis=1, inplace=True)
+
         assert_frame_equal(obs, exp, check_like=True)
 
     def test_clean_validate_template_no_forbidden_words1(self):
@@ -909,7 +920,7 @@ class TestPrepTemplate(TestCase):
                           'run_prefix', 'barcode', 'primer', 'platform',
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
-                          'center_project_name', 'emp_status'}
+                          'center_project_name', 'insdc_nulls', 'emp_status'}
         self.assertCountEqual(pt.categories, exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
@@ -924,6 +935,7 @@ class TestPrepTemplate(TestCase):
                 'str_column': 'Value for sample 3',
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
+                'insdc_nulls': 'not applicable',
                 'emp_status': 'EMP'},
             '%s.SKB8.640193' % self.test_study.id: {
                 'barcode': 'GTCCGCAAGTTA',
@@ -937,6 +949,7 @@ class TestPrepTemplate(TestCase):
                 'str_column': 'Value for sample 1',
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
+                'insdc_nulls': '3.6',
                 'emp_status': 'EMP'},
             '%s.SKD8.640184' % self.test_study.id: {
                 'barcode': 'CGTAGAGCTCTC',
@@ -950,6 +963,7 @@ class TestPrepTemplate(TestCase):
                 'str_column': 'Value for sample 2',
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
+                'insdc_nulls': 'not applicable',
                 'emp_status': 'EMP'}
         }
         for s_id in exp_sample_ids:
@@ -1068,7 +1082,7 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(pt._get_sample_ids(), exp_sample_ids)
         self.assertEqual(len(pt), 3)
         exp_categories = {'str_column', 'ebi_submission_accession',
-                          'run_prefix', 'primer', 'platform',
+                          'run_prefix', 'primer', 'platform', 'insdc_nulls',
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
@@ -1085,6 +1099,7 @@ class TestPrepTemplate(TestCase):
                 'str_column': 'Value for sample 3',
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
+                'insdc_nulls': 'not applicable',
                 'emp_status': 'EMP'},
             '%s.SKB8.640193' % self.test_study.id: {
                 'ebi_submission_accession': None,
@@ -1097,6 +1112,7 @@ class TestPrepTemplate(TestCase):
                 'str_column': 'Value for sample 1',
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
+                'insdc_nulls': '3.6',
                 'emp_status': 'EMP'},
             '%s.SKD8.640184' % self.test_study.id: {
                 'ebi_submission_accession': None,
@@ -1109,6 +1125,7 @@ class TestPrepTemplate(TestCase):
                 'str_column': 'Value for sample 2',
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
+                'insdc_nulls': 'not applicable',
                 'emp_status': 'EMP'}
         }
         for s_id in exp_sample_ids:
@@ -1217,6 +1234,7 @@ class TestPrepTemplate(TestCase):
         self._clean_up_files.append(fp)
         with open(fp, newline=None) as f:
             obs = f.read()
+
         self.assertEqual(obs, EXP_PREP_TEMPLATE.format(pt.id))
 
         # cleaning
@@ -1803,17 +1821,17 @@ class TestPrepTemplate(TestCase):
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
-    'instrument_model\tlibrary_construction_protocol\tplatform\tprimer\t'
-    'qiita_prep_id\trun_prefix\tstr_column\n'
+    'insdc_nulls\tinstrument_model\tlibrary_construction_protocol\tplatform\t'
+    'primer\tqiita_prep_id\trun_prefix\tstr_column\n'
     '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
-    's_G1_L002_sequences\tValue for sample 3\n'
+    'not applicable\tIllumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\t'
+    '{0}\ts_G1_L002_sequences\tValue for sample 3\n'
     '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
-    's_G1_L001_sequences\tValue for sample 1\n'
+    '3.6\tIllumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\t'
+    '{0}\ts_G1_L001_sequences\tValue for sample 1\n'
     '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
-    's_G1_L001_sequences\tValue for sample 2\n')
+    'not applicable\tIllumina MiSeq\tAAAA\tIllumina\tGTGCCAGCMGCCGCGGTAA\t'
+    '{0}\ts_G1_L001_sequences\tValue for sample 2\n')
 
 
 if __name__ == '__main__':
