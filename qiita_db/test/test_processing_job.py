@@ -69,6 +69,7 @@ class ProcessingJobTest(TestCase):
             "b72369f9-a886-4193-8d3d-f7b504168e75")
         self.tester4 = qdb.processing_job.ProcessingJob(
             "d19f76ee-274e-4c1b-b3a2-a12d73507c55")
+
         self._clean_up_files = []
 
     def _get_all_job_ids(self):
@@ -843,6 +844,98 @@ class ProcessingJobTest(TestCase):
             '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00')
         self.assertEqual(job_changed.get_resource_allocation_info(),
                          '-p qiita --mem 2G')
+
+    def test_notification_mail_generation(self):
+        # Almost all processing-jobs in testing are owned by test@foo.bar
+        # and are of type 'Split libraries FASTQ'.
+
+        # as 'test@foo.bar' is not set to receive notifications, let's
+        # first manually set their configuration to 'true'.
+        sql = ("UPDATE qiita.qiita_user SET receive_processing_job_emails"
+               " = true WHERE email = 'test@foo.bar'")
+
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+
+        # with or w/out an error message, a status of 'waiting' should
+        # immediately return with a 'None' message.
+        obs = self.tester1._generate_notification_message('waiting', None)
+        self.assertEqual(obs, None)
+        obs = self.tester1._generate_notification_message('waiting',
+                                                          'Hello World')
+        self.assertEqual(obs, None)
+
+        # An error message in the parameter should show a difference for
+        # messages of type 'error'.
+        obs = self.tester1._generate_notification_message('error', None)
+
+        exp = {'subject': ('Job status change: Split libraries FASTQ '
+                           '(063e553b-327c-4818-ab4a-adfe58e49860)'),
+               'message': ('Processing Job: Split libraries FASTQ\nStudy '
+                           '<A HREF="https://qiita.ucsd.edu/study/description'
+                           '/1">1</A>\nPrep IDs: 1\nData Type: 18S\nNew '
+                           'status: error')}
+
+        self.assertDictEqual(obs, exp)
+
+        obs = self.tester1._generate_notification_message('error',
+                                                          'An Error Message')
+
+        exp = {'subject': ('Job status change: Split libraries FASTQ '
+                           '(063e553b-327c-4818-ab4a-adfe58e49860)'),
+               'message': ('Processing Job: Split libraries FASTQ\nStudy '
+                           '<A HREF="https://qiita.ucsd.edu/study/description'
+                           '/1">1</A>\nPrep IDs: 1\nData Type: 18S\nNew status'
+                           ': error\n\nError:\nAn Error Message')}
+
+        self.assertDictEqual(obs, exp)
+
+        # The inclusion of an error message has no effect on other valid
+        # status types e.g. 'running'.
+        obs = self.tester1._generate_notification_message('running', None)
+
+        exp = {'subject': ('Job status change: Split libraries FASTQ '
+                           '(063e553b-327c-4818-ab4a-adfe58e49860)'),
+               'message': ('Processing Job: Split libraries FASTQ\nStudy '
+                           '<A HREF="https://qiita.ucsd.edu/study/description'
+                           '/1">1</A>\nPrep IDs: 1\nData Type: 18S\nNew status'
+                           ': running')}
+
+        self.assertDictEqual(obs, exp)
+
+        obs = self.tester1._generate_notification_message('running', 'Yahoo!')
+
+        exp = {'subject': ('Job status change: Split libraries FASTQ '
+                           '(063e553b-327c-4818-ab4a-adfe58e49860)'),
+               'message': ('Processing Job: Split libraries FASTQ\nStudy '
+                           '<A HREF="https://qiita.ucsd.edu/study/description'
+                           '/1">1</A>\nPrep IDs: 1\nData Type: 18S\nNew status'
+                           ': running')}
+
+        self.assertDictEqual(obs, exp)
+
+        # as 'test@foo.bar' is not set to receive notifications, let's
+        # first manually set their configuration to 'true'.
+        # reset test@foo.bar to 'false' to test expectations for a non-
+        # privileged user.
+        sql = ("UPDATE qiita.qiita_user SET receive_processing_job_emails"
+               " = false WHERE email = 'test@foo.bar'")
+
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+
+        # waiting should still return w/out a message.
+        obs = self.tester1._generate_notification_message('waiting', None)
+        self.assertEqual(obs, None)
+
+        # an error status should now return nothing.
+        obs = self.tester1._generate_notification_message('error',
+                                                          'An Error Message')
+        self.assertEqual(obs, None)
+
+        # other status messages should also return nothing.
+        obs = self.tester1._generate_notification_message('running', None)
+        self.assertEqual(obs, None)
 
 
 @qiita_test_checker()
