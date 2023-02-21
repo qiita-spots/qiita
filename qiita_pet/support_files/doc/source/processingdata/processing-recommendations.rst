@@ -81,15 +81,24 @@ wetlab processing and we provide the following host references for your convenie
 Note that the command produces up to 6 output artifacts based on the aligner and database selected:
 
 - Alignment Profile: contains the raw alignment file and the no rank classification BIOM table
-- Taxonomic Prediction - phylum: contains the phylum level taxonomic predictions BIOM table
-- Taxonomic Prediction - genus: contains the genus level taxonomic predictions BIOM table
-- Taxonomic Prediction - species: contains the genus level taxonomic predictions BIOM table
 - Per genome Predictions: contains the per genome level taxonomic predictions BIOM table
-- Per gene Predictions: Only WoLr1, contains the per gene level taxonomic predictions BIOM table
+- Per gene Predictions: Only WoLr1 & WoLr2, contains the per gene level taxonomic predictions BIOM table
+- KEGG Pathways: Only WoLr2, contains the functional profile
+- KEGG Ontology (KO): Only WoLr2, contains the functional profile
+- KEGG Enzyme (EZ): Only WoLr2, contains the functional profile
+
 
 .. note::
-   Woltka provides easy transformations for the "per gene Prediction table" to generate functional
-   profiles, `more information <https://github.com/qiyunzhu/woltka/blob/master/doc/wol.md#comparison>`_.
+   Woltka 0.1.4 only produces per-genome, per-gene and functional profiles as we are moving
+   to Operational Genomic Units (OGUs), which have higher resolution than taxonomic units
+   for community ecology, and were shown to deliver stronger biological signals in
+   downstream analyses. For more information please read: `Phylogeny-Aware Analysis of
+   Metagenome Community Ecology Based on Matched Reference Genomes while Bypassing
+   Taxonomy <https://journals.asm.org/doi/10.1128/msystems.00167-22>`_. To work on lower
+   taxonomic levels (like species or genus) you can follow `these instructions
+   <https://github.com/qiyunzhu/woltka/blob/master/doc/collapse.md#collapse-to-level>`_ and use
+   this `lineages.txt <http://ftp.microbio.me/pub/wol2/taxonomy/lineages.txt>`_ file
+   with your collapse command.
 
 Aligners
 ^^^^^^^^
@@ -245,7 +254,7 @@ Metatranscriptome processing
 Qiita currently has one active Metatranscriptome data analysis pipeline, as follows:
 
 #. Ribosomal read filtering via `SortMeRNA <https://pubmed.ncbi.nlm.nih.gov/23071270/>`_; details below. This produces a `Ribosomal reads` and a `Non-ribosomal reads` artifact/
-#. Taxonomic profiling via Woltka; for more information see details above.
+#. Sequence profiling via Woltka; for more information see details above.
 
 Sample processing guidelines for metatranscriptomic data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
