@@ -14,6 +14,7 @@ their behavior based on the file sizes, and (2) all plugins had to be updated to
 * Added [qiita_client.artifact_and_preparation_files](https://github.com/qiita-spots/qiita_client)
 to help plugins filter per_sample_FASTQ based on size and ignore small file sizes.
 * Added qiime2.2022.11 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization.
+* Added q2-mislabeled to the qiime2.2022.11.
 * Added support for Amplicon data to the internal [Sequence Processing Pipeline](https://github.com/qiita-spots/qp-knight-lab-processing).
 
 
