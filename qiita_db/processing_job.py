@@ -714,19 +714,19 @@ class ProcessingJob(qdb.base.QiitaObject):
 
         if value == 'waiting':
             # notification not needed.
-            return
+            return None
 
         if not self.user.info['receive_processing_job_emails']:
             # notification not needed.
-            return
+            return None
 
         if self.command.software.name in ignored_software:
             # notification not needed.
-            return
+            return None
 
         if self.command.name in ignored_commands:
             # notification not needed.
-            return
+            return None
 
         # generate subject line
         subject = 'Job status change: %s (%s)' % (self.command.name, self.id)
@@ -830,7 +830,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 value, "processing_job_status")
 
             msg = self._generate_notification_message(value, error_msg)
-            if msg:
+            if msg is not None:
                 # send email
                 qdb.util.send_email(self.user.email, msg['subject'],
                                     msg['message'])
