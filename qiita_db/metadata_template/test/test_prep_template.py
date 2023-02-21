@@ -723,7 +723,10 @@ class TestPrepTemplate(TestCase):
 
     def test_clean_validate_template(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
-        obs = PT._clean_validate_template(self.metadata, 2)
+        # modify input to make sure we hit all cases
+        md = self.metadata.copy()
+        md.loc['SKB7.640196']['str_column'] = 'UnSpeciFied'
+        obs = PT._clean_validate_template(md, 2)
         metadata_dict = {
             '2.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
@@ -755,7 +758,7 @@ class TestPrepTemplate(TestCase):
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
                               'emp_status': 'EMP',
-                              'str_column': 'Value for sample 3',
+                              'str_column': 'not applicable',
                               'primer': 'GTGCCAGCMGCCGCGGTAA',
                               'barcode': 'CCTCTGAGAGCT',
                               'run_prefix': "s_G1_L002_sequences",
