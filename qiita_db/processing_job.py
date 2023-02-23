@@ -775,7 +775,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     data_type = data_types.pop()
 
                     message = f'Processing Job: {self.command.name}\n'
-                    message += f'{qiita_config.base_url}study/'
+                    message += f'{qiita_config.base_url}/study/'
                     message += f'description/{study_id}\n'
                     message += f'Prep IDs: {prep_ids}\n'
                     message += f'Data Type: {data_type}\n'
@@ -783,7 +783,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     # this is an analysis job. display analysis id as link and
                     # the command name.
                     message = f'Analysis Job {self.command.name}\n'
-                    message += f'{qiita_config.base_url}analysis/'
+                    message += f'{qiita_config.base_url}/analysis/'
                     message += f'description/{artifact.analysis.id}/\n'
                 else:
                     raise qdb.exceptions.QiitaError("Unknown Condition")
