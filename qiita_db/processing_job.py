@@ -783,7 +783,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     # this is an analysis job. display analysis id as link and
                     # the command name.
                     message = f'Analysis Job {self.command.name}\n'
-                    message += f'{qiita_config.base_url}/analysis/'
+                    message += f'{qiita_config.base_url}analysis/'
                     message += f'description/{artifact.analysis.id}/\n'
                 else:
                     raise qdb.exceptions.QiitaError("Unknown Condition")

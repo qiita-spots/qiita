@@ -915,7 +915,7 @@ class ProcessingJobTest(TestCase):
         exp = {'subject': 'Job status change: Single Rarefaction '
                           '(8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0)',
                'message': 'Analysis Job Single Rarefaction\n'
-                          f'{qiita_config.base_url}/analysis/description/1/\n'
+                          f'{qiita_config.base_url}analysis/description/1/\n'
                           'New status: running'}
         self.assertDictEqual(obs, exp)
 
