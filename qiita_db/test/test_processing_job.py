@@ -873,7 +873,7 @@ class ProcessingJobTest(TestCase):
         exp = {'subject': ('Job status change: Split libraries FASTQ '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
                'message': ('Processing Job: Split libraries FASTQ\n'
-                           f'{qiita_config.base_url}study/description/1'
+                           f'{qiita_config.base_url}/study/description/1'
                            '\nPrep IDs: 1\nData Type: 18S\nNew '
                            'status: error')}
         self.assertDictEqual(obs, exp)
@@ -883,7 +883,7 @@ class ProcessingJobTest(TestCase):
         exp = {'subject': ('Job status change: Split libraries FASTQ '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
                'message': ('Processing Job: Split libraries FASTQ\n'
-                           f'{qiita_config.base_url}study/description/1\n'
+                           f'{qiita_config.base_url}/study/description/1\n'
                            'Prep IDs: 1\nData Type: 18S\nNew status'
                            ': error\n\nError:\nAn Error Message')}
         self.assertDictEqual(obs, exp)
@@ -894,7 +894,7 @@ class ProcessingJobTest(TestCase):
         exp = {'subject': ('Job status change: Split libraries FASTQ '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
                'message': ('Processing Job: Split libraries FASTQ\n'
-                           f'{qiita_config.base_url}study/description/1\n'
+                           f'{qiita_config.base_url}/study/description/1\n'
                            'Prep IDs: 1\nData Type: 18S\nNew status'
                            ': running')}
         self.assertDictEqual(obs, exp)
@@ -903,7 +903,7 @@ class ProcessingJobTest(TestCase):
         exp = {'subject': ('Job status change: Split libraries FASTQ '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
                'message': ('Processing Job: Split libraries FASTQ\n'
-                           f'{qiita_config.base_url}study/description/1\n'
+                           f'{qiita_config.base_url}/study/description/1\n'
                            'Prep IDs: 1\nData Type: 18S\nNew status'
                            ': running')}
         self.assertDictEqual(obs, exp)
@@ -915,7 +915,7 @@ class ProcessingJobTest(TestCase):
         exp = {'subject': 'Job status change: Single Rarefaction '
                           '(8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0)',
                'message': 'Analysis Job Single Rarefaction\n'
-                          f'{qiita_config.base_url}analysis/description/1/\n'
+                          f'{qiita_config.base_url}/analysis/description/1/\n'
                           'New status: running'}
         self.assertDictEqual(obs, exp)
 
