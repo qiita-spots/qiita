@@ -18,6 +18,7 @@ import pandas as pd
 
 import qiita_db as qdb
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import qiita_config
 
 
 def _create_job(force=True):
@@ -871,47 +872,51 @@ class ProcessingJobTest(TestCase):
 
         exp = {'subject': ('Job status change: Split libraries FASTQ '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
-               'message': ('Processing Job: Split libraries FASTQ\nStudy '
-                           '<A HREF="https://qiita.ucsd.edu/study/description'
-                           '/1">1</A>\nPrep IDs: 1\nData Type: 18S\nNew '
+               'message': ('Processing Job: Split libraries FASTQ\n'
+                           f'{qiita_config.base_url}study/description/1'
+                           '\nPrep IDs: 1\nData Type: 18S\nNew '
                            'status: error')}
-
         self.assertDictEqual(obs, exp)
 
         obs = self.tester1._generate_notification_message('error',
                                                           'An Error Message')
-
         exp = {'subject': ('Job status change: Split libraries FASTQ '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
-               'message': ('Processing Job: Split libraries FASTQ\nStudy '
-                           '<A HREF="https://qiita.ucsd.edu/study/description'
-                           '/1">1</A>\nPrep IDs: 1\nData Type: 18S\nNew status'
+               'message': ('Processing Job: Split libraries FASTQ\n'
+                           f'{qiita_config.base_url}study/description/1\n'
+                           'Prep IDs: 1\nData Type: 18S\nNew status'
                            ': error\n\nError:\nAn Error Message')}
-
         self.assertDictEqual(obs, exp)
 
         # The inclusion of an error message has no effect on other valid
         # status types e.g. 'running'.
         obs = self.tester1._generate_notification_message('running', None)
-
         exp = {'subject': ('Job status change: Split libraries FASTQ '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
-               'message': ('Processing Job: Split libraries FASTQ\nStudy '
-                           '<A HREF="https://qiita.ucsd.edu/study/description'
-                           '/1">1</A>\nPrep IDs: 1\nData Type: 18S\nNew status'
+               'message': ('Processing Job: Split libraries FASTQ\n'
+                           f'{qiita_config.base_url}study/description/1\n'
+                           'Prep IDs: 1\nData Type: 18S\nNew status'
                            ': running')}
-
         self.assertDictEqual(obs, exp)
 
         obs = self.tester1._generate_notification_message('running', 'Yahoo!')
-
         exp = {'subject': ('Job status change: Split libraries FASTQ '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
-               'message': ('Processing Job: Split libraries FASTQ\nStudy '
-                           '<A HREF="https://qiita.ucsd.edu/study/description'
-                           '/1">1</A>\nPrep IDs: 1\nData Type: 18S\nNew status'
+               'message': ('Processing Job: Split libraries FASTQ\n'
+                           f'{qiita_config.base_url}study/description/1\n'
+                           'Prep IDs: 1\nData Type: 18S\nNew status'
                            ': running')}
+        self.assertDictEqual(obs, exp)
 
+        # checking analysis emails
+        jid = '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0'
+        pj = qdb.processing_job.ProcessingJob(jid)
+        obs = pj._generate_notification_message('running', 'Yahoo!')
+        exp = {'subject': 'Job status change: Single Rarefaction '
+                          '(8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0)',
+               'message': 'Analysis Job Single Rarefaction\n'
+                          f'{qiita_config.base_url}/analysis/description/1/\n'
+                          'New status: running'}
         self.assertDictEqual(obs, exp)
 
         # as 'test@foo.bar' is not set to receive notifications, let's
@@ -920,7 +925,6 @@ class ProcessingJobTest(TestCase):
         # privileged user.
         sql = ("UPDATE qiita.qiita_user SET receive_processing_job_emails"
                " = false WHERE email = 'test@foo.bar'")
-
         with qdb.sql_connection.TRN:
             qdb.sql_connection.TRN.add(sql)
 
