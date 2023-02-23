@@ -741,7 +741,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                        f'{self.command.parameters}')
         else:
             for artifact in input_artifacts:
-                if artifact.prep_templates is not None:
+                if artifact.prep_templates:
                     # this is a processing job. display the study id as link,
                     # prep ids, data_type, and command name.
                     study_ids = [x.study_id for x in artifact.prep_templates]
@@ -775,18 +775,16 @@ class ProcessingJob(qdb.base.QiitaObject):
                     data_type = data_types.pop()
 
                     message = f'Processing Job: {self.command.name}\n'
-                    message += 'Study <A HREF="https://qiita.ucsd.edu/study/'
-                    message += f'description/{study_id}">{study_id}'
-                    message += '</A>\n'
+                    message += f'{qiita_config.base_url}study/'
+                    message += f'description/{study_id}\n'
                     message += f'Prep IDs: {prep_ids}\n'
                     message += f'Data Type: {data_type}\n'
-                elif artifact.analysis is not None:
+                elif artifact.analysis:
                     # this is an analysis job. display analysis id as link and
                     # the command name.
-                    message = f'Analysis Job {self.command.name} '
-                    message += '<A HREF="https://qiita.ucsd.edu/analysis/'
-                    message += f'description/{artifact.analysis.id}">'
-                    message += f'{artifact.analysis.id}</A>\n'
+                    message = f'Analysis Job {self.command.name}\n'
+                    message += f'{qiita_config.base_url}analysis/'
+                    message += f'description/{artifact.analysis.id}/\n'
                 else:
                     raise qdb.exceptions.QiitaError("Unknown Condition")
 
