@@ -69,7 +69,7 @@ from qiita_db.handlers.sample_information import SampleInfoDBHandler
 from qiita_db.handlers.user import UserInfoDBHandler, UsersListDBHandler
 from qiita_db.handlers.prep_template import (
     PrepTemplateDataHandler, PrepTemplateAPItestHandler,
-    PrepTemplateDBHandler)
+    PrepTemplateAPIHandler, PrepTemplateDBHandler)
 from qiita_db.handlers.oauth2 import TokenAuthHandler
 from qiita_db.handlers.reference import ReferenceHandler
 from qiita_db.handlers.core import ResetAPItestHandler
@@ -167,6 +167,7 @@ class Application(tornado.web.Application):
             (r"/prep_template/(.*)/graph/", PrepTemplateGraphHandler),
             (r"/prep_template/(.*)/jobs/", PrepTemplateJobHandler),
             (r"/ontology/", OntologyHandler),
+
             # ORDER FOR /study/description/ SUBPAGES HERE MATTERS.
             # Same reasoning as below. /study/description/(.*) should be last.
             (r"/study/description/sample_template/overview/",
@@ -224,6 +225,7 @@ class Application(tornado.web.Application):
             (r"/qiita_db/sample_information/(.*)/data/", SampleInfoDBHandler),
             (r"/qiita_db/prep_template/(.*)/data/", PrepTemplateDataHandler),
             (r"/qiita_db/prep_template/(.*)/", PrepTemplateDBHandler),
+            (r"/qiita_db/prep_template/", PrepTemplateAPIHandler),
             (r"/qiita_db/references/(.*)/", ReferenceHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/commands/(.*)/activate/",
              CommandActivateHandler),

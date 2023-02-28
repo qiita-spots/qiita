@@ -115,7 +115,7 @@ class PrepTemplateDataHandler(OauthBaseHandler):
         self.write(response)
 
 
-class PrepTemplateAPItestHandler(OauthBaseHandler):
+class PrepTemplateAPIHandler(OauthBaseHandler):
     @authenticate_oauth
     def post(self):
         prep_info_dict = loads(self.get_argument('prep_info'))
@@ -126,3 +126,7 @@ class PrepTemplateAPItestHandler(OauthBaseHandler):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             metadata, qdb.study.Study(study), data_type)
         self.write({'prep': pt.id})
+
+
+class PrepTemplateAPItestHandler(OauthBaseHandler):
+    pass

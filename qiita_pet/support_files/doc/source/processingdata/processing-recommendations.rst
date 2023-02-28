@@ -81,8 +81,8 @@ wetlab processing and we provide the following host references for your convenie
 Note that the command produces up to 6 output artifacts based on the aligner and database selected:
 
 - Alignment Profile: contains the raw alignment file and the no rank classification BIOM table
-- Per genome Predictions: contains the per genome level taxonomic predictions BIOM table
-- Per gene Predictions: Only WoLr1 & WoLr2, contains the per gene level taxonomic predictions BIOM table
+- Per genome Predictions: contains the per genome level predictions BIOM table
+- Per gene Predictions: Only WoLr1 & WoLr2, contains the per gene level predictions BIOM table
 - KEGG Pathways: Only WoLr2, contains the functional profile
 - KEGG Ontology (KO): Only WoLr2, contains the functional profile
 - KEGG Enzyme (EZ): Only WoLr2, contains the functional profile
