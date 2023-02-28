@@ -128,5 +128,5 @@ class PrepTemplateAPIHandler(OauthBaseHandler):
         self.write({'prep': pt.id})
 
 
-class PrepTemplateAPItestHandler(OauthBaseHandler):
+class PrepTemplateAPItestHandler(PrepTemplateAPIHandler):
     pass
