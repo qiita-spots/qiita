@@ -23,6 +23,7 @@ class StudyIndexHandler(BaseHandler):
         study = to_int(study_id)
         level = self.get_argument('level', '')
         message = self.get_argument('message', '')
+        prep_id = self.get_argument('prep_id', default=None)
 
         study_info = study_get_req(study, self.current_user.id)
         if study_info['status'] != 'success':
@@ -31,6 +32,9 @@ class StudyIndexHandler(BaseHandler):
         if message != '' and level != '':
             study_info['level'] = level
             study_info['message'] = message
+
+        if prep_id:
+            study_info['study_info']['prep_id'] = to_int(prep_id)
 
         self.render("study_base.html", **study_info)
 
