@@ -9,23 +9,25 @@
   var prep_colums = jQuery.map(
     Object.keys(rows[0]), function(e) { if (e.startsWith("prep")) return e });
   for(var i=0;i<rows.length;i++) {
-    rows[i]['sample-delete'] = '';
+    rows[i]['sample-delete'] = 'unchecked';
   }
   function toggleCheckboxes(element){
-    var checked = element.checked ? 'checked' : '';
+    var checked = element.checked ? 'checked' : 'unchecked';
     $.each(rows, function(i, d){
       $('.sample-delete[name="' + d['sample'] + '"]').prop('checked', checked);
       rows[i]['sample-delete'] = checked;
     });
   }
   function toggleCheckbox(element){
-    var checked = element.checked ? 'checked' : '';
-    var row = $(element).prop('value');
-    rows[row]["sample-delete"] = checked;
-  }
+    if(element['sample-delete'] == 'checked') {
+      element['sample-delete'] = 'unchecked';
+    } else {
+      element['sample-delete'] = 'checked';
+    };
+    }
   function linkFormatter(row, cell, value, columnDef, dataContext) {
     {% if user_can_edit %}
-      return "<input type='checkbox' class='sample-delete' value='" + row + "' name='" + rows[row]['sample'] + "' onchange='toggleCheckbox(this)' " + rows[row]['sample-delete'] + ">";
+      return "<input type='checkbox' class='sample-delete' value='" + row + "' name='" + rows[row]['sample'] + "'>";
     {% else %}
       return ""
     {% end %}
@@ -116,6 +118,13 @@
 		grid.invalidate();
     grid.render();
 	});
+  grid.onClick.subscribe(function(e, args){
+    let cell = grid.getCellFromEvent(e);
+    if(grid.getColumns()[cell.cell].id == "sample-delete") {
+        toggleCheckbox(grid.getDataItem(cell.row))
+      }
+    });
+
 
   function add_meta() {
     var metadata_category = $("#metadata_category").val();
