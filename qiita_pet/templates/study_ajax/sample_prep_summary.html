@@ -6,7 +6,7 @@
   var column_width_factor = 10;
   var rows = {% raw list(rows.values()) %};
   // setting up checkboxes
-  var prep_colums = jQuery.map(
+  var prep_columns = jQuery.map(
     Object.keys(rows[0]), function(e) { if (e.startsWith("prep")) return e });
   for(var i=0;i<rows.length;i++) {
     rows[i]['sample-delete'] = '';
@@ -19,13 +19,19 @@
     });
   }
   function toggleCheckbox(element){
-    var checked = element.checked ? 'checked' : '';
-    var row = $(element).prop('value');
-    rows[row]["sample-delete"] = checked;
-  }
+    if(element['sample-delete'] == 'checked') {
+      element['sample-delete'] = '';
+      // if user clicks inside row and column, but not in checkbox, this will force checkbox to change.
+      $('.sample-delete[name="' + element['sample'] + '"]').prop('checked', '');
+    } else {
+      element['sample-delete'] = 'checked';
+      // if user clicks inside row and column, but not in checkbox, this will force checkbox to change.
+      $('.sample-delete[name="' + element['sample'] + '"]').prop('checked', 'checked');
+    };
+    }
   function linkFormatter(row, cell, value, columnDef, dataContext) {
     {% if user_can_edit %}
-      return "<input type='checkbox' class='sample-delete' value='" + row + "' name='" + rows[row]['sample'] + "' onchange='toggleCheckbox(this)' " + rows[row]['sample-delete'] + ">";
+      return "<input type='checkbox' class='sample-delete' value='" + row + "' name='" + rows[row]['sample'] + "'>";
     {% else %}
       return ""
     {% end %}
@@ -44,7 +50,7 @@
       var to_delete = [];
       $.each(rows, function(i, row){
         var sample_delete = jQuery.map(
-          prep_colums, function(pc) { if (row[pc] === 'X') return pc });
+          prep_columns, function(pc) { if (row[pc] === 'X') return pc });
         if (sample_delete.length === 0){
           to_delete.push(row['sample'])
         }
@@ -64,7 +70,7 @@
 
     // adding header
     var header = ['sample_name']
-    $.each(prep_colums, function(i, prep){
+    $.each(prep_columns, function(i, prep){
       header.push(prep_names[prep]);
     });
     information.push(header.join('\t'))
@@ -72,7 +78,7 @@
     // adding data
     $.each(rows, function (i, row){
       var line = [row['sample']]
-      $.each(prep_colums, function(i, prep){
+      $.each(prep_columns, function(i, prep){
         line.push(row[prep]);
       });
       information.push(line.join('\t'));
@@ -116,6 +122,12 @@
 		grid.invalidate();
     grid.render();
 	});
+  grid.onClick.subscribe(function(e, args){
+    let cell = grid.getCellFromEvent(e);
+    if(grid.getColumns()[cell.cell].id == "sample-delete") {
+        toggleCheckbox(grid.getDataItem(cell.row))
+      }
+    });
 
   function add_meta() {
     var metadata_category = $("#metadata_category").val();
