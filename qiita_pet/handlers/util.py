@@ -81,7 +81,7 @@ doi_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"http://dx.doi.org/{0}\">{0}</a>")
 
 
-def to_int(value):
+def to_int(value, reason=None):
     """Transforms `value` to an integer
 
     Parameters
@@ -102,8 +102,9 @@ def to_int(value):
     try:
         res = int(value)
     except ValueError:
-        raise HTTPError(400, reason="%s cannot be converted to an "
-                        "integer" % value)
+        msg = f"{value} cannot be converted to an integer" if reason is None \
+              else reason
+        raise HTTPError(400, reason=msg)
     return res
 
 

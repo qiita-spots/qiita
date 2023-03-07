@@ -17,10 +17,17 @@ class StudyIndexHandlerTests(TestHandlerBase):
     def test_get_exists(self):
         response = self.get('/study/description/1')
         self.assertEqual(response.code, 200)
+        self.assertTrue('study/description/baseinfo' in str(response.body))
 
     def test_get_no_exists(self):
         response = self.get('/study/description/245')
         self.assertEqual(response.code, 404)
+
+    def test_get_prep_page(self):
+        response = self.get('/study/description/1?prep_id=1')
+        self.assertEqual(response.code, 200)
+        self.assertTrue('study/description/prep_template' in
+                        str(response.body))
 
 
 class StudyBaseInfoAJAX(TestHandlerBase):

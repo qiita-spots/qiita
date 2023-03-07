@@ -64,7 +64,11 @@
     // Populate the different sections of the page
     populate_data_type_menu_div();
     // The initial page to be shown is the base information of the study
-    populate_main_div("{% raw qiita_config.portal_dir %}/study/description/baseinfo/", { study_id: {{study_info['study_id']}}});
+    {% if 'prep_id' in study_info %}
+        populate_main_div("{% raw qiita_config.portal_dir %}/study/description/prep_template/", { prep_id: {{study_info['prep_id']}}, study_id: {{study_info['study_id']}}});
+    {% else %}
+        populate_main_div("{% raw qiita_config.portal_dir %}/study/description/baseinfo/", { study_id: {{study_info['study_id']}}});
+    {% end %}
 
     {% if study_info['num_samples'] > 0 %}
       $("#sample-summary-btn").show();
