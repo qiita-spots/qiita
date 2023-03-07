@@ -71,7 +71,6 @@ wetlab processing and we provide the following host references for your convenie
 - auto-detect adapters and `cow <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/003/205/GCA_000003205.6_Btau_5.0.1/GCA_000003205.6_Btau_5.0.1_genomic.fna.gz>`_ + phix filtering
 - auto-detect adapters and `hamster <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/017/639/785/GCF_017639785.1_BCM_Maur_2.0/GCF_017639785.1_BCM_Maur_2.0_genomic.fna.gz>`_ + phix filtering
 - auto-detect adapters and `horse <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/002/305/GCA_000002305.1_EquCab2.0/GCA_000002305.1_EquCab2.0_genomic.fna.gz>`_ + phix filtering
-- auto-detect adapters and merge_genomes + phix filtering : is the combined genomes of a cheetah, cow, hamster, horse, human, mouse, pig, rabbit, and rat
 - auto-detect adapters and `mouse <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_genomic.fna.gz>`_ + phix filtering
 - auto-detect adapters and `pig <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/003/025/GCF_000003025.6_Sscrofa11.1/GCF_000003025.6_Sscrofa11.1_genomic.fna.gz>`_ + phix filtering
 - auto-detect adapters and `rabbit <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/003/625/GCF_000003625.3_OryCun2.0/GCF_000003625.3_OryCun2.0_genomic.fna.gz>`_ + phix filtering

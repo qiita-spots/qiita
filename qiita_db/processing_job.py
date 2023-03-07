@@ -729,7 +729,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             return None
 
         # generate subject line
-        subject = 'Job status change: %s (%s)' % (self.command.name, self.id)
+        subject = '%s: %s - %s' % (self.command.name, self.status, self.id)
 
         # generate message line
         message = ''
