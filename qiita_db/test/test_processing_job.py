@@ -870,7 +870,7 @@ class ProcessingJobTest(TestCase):
         # messages of type 'error'.
         obs = self.tester1._generate_notification_message('error', None)
 
-        exp = {'subject': ('Split libraries FASTQ: error '
+        exp = {'subject': ('Split libraries FASTQ: queued '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
                'message': ('Processing Job: Split libraries FASTQ\n'
                            f'{qiita_config.base_url}/study/description/1'
