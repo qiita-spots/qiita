@@ -870,7 +870,7 @@ class ProcessingJobTest(TestCase):
         # messages of type 'error'.
         obs = self.tester1._generate_notification_message('error', None)
 
-        exp = {'subject': ('Job status change: Split libraries FASTQ '
+        exp = {'subject': ('Split libraries FASTQ: error '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
                'message': ('Processing Job: Split libraries FASTQ\n'
                            f'{qiita_config.base_url}/study/description/1'
@@ -880,7 +880,7 @@ class ProcessingJobTest(TestCase):
 
         obs = self.tester1._generate_notification_message('error',
                                                           'An Error Message')
-        exp = {'subject': ('Job status change: Split libraries FASTQ '
+        exp = {'subject': ('Split libraries FASTQ: error '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
                'message': ('Processing Job: Split libraries FASTQ\n'
                            f'{qiita_config.base_url}/study/description/1\n'
@@ -891,7 +891,7 @@ class ProcessingJobTest(TestCase):
         # The inclusion of an error message has no effect on other valid
         # status types e.g. 'running'.
         obs = self.tester1._generate_notification_message('running', None)
-        exp = {'subject': ('Job status change: Split libraries FASTQ '
+        exp = {'subject': ('Split libraries FASTQ: running '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
                'message': ('Processing Job: Split libraries FASTQ\n'
                            f'{qiita_config.base_url}/study/description/1\n'
@@ -900,7 +900,7 @@ class ProcessingJobTest(TestCase):
         self.assertDictEqual(obs, exp)
 
         obs = self.tester1._generate_notification_message('running', 'Yahoo!')
-        exp = {'subject': ('Job status change: Split libraries FASTQ '
+        exp = {'subject': ('Split libraries FASTQ: running '
                            '(063e553b-327c-4818-ab4a-adfe58e49860)'),
                'message': ('Processing Job: Split libraries FASTQ\n'
                            f'{qiita_config.base_url}/study/description/1\n'
@@ -912,7 +912,7 @@ class ProcessingJobTest(TestCase):
         jid = '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0'
         pj = qdb.processing_job.ProcessingJob(jid)
         obs = pj._generate_notification_message('running', 'Yahoo!')
-        exp = {'subject': 'Job status change: Single Rarefaction '
+        exp = {'subject': 'Single Rarefaction: running '
                           '(8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0)',
                'message': 'Analysis Job Single Rarefaction\n'
                           f'{qiita_config.base_url}/analysis/description/1/\n'
