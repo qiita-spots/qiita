@@ -6,7 +6,7 @@ Currently, Qiita supports the processing of raw data from:
 #. Target gene barcoded sequencing
 #. Shotgun sequencing
 #. Metatranscriptome sequencing
-#. Genome Isolate sequencing
+#. Genome isolate sequencing
 
 Note that the selected processing recommendations are mainly guided towards performing meta-analyses,
 this is combine different studies, even from different wet lab techniques or
@@ -63,20 +63,19 @@ The current workflow is as follows:
 
 Note that we recommend only uploading sequences that have already been through QC and human sequence removal. However, we
 recommend that all sequence files go through adapter and host filtering within the system to ensure they are ready for
-subsequent meta-analyses. Currently, the `fastp` command is set to autodetect adaptors so this command is available for all different
-wetlab processing and we provide the following host references for your convenience:
+subsequent meta-analyses. We currently provide the several options for your convenience. For each the `fastp` command is set to autodetect and remove universal adapter sequences (i.e., 'GATCGGAAGAGCACACGTCTGAACTCCAGTCAC' for R1 reads and 'GATCGGAAGAGCGTCGTGTAGGGAAAGGAGTGT' for R2 reads). We also provide the following host reference genomes for filtering against; each also filters against three phi x sequences (i.e., `HM753704.1 <https://www.ncbi.nlm.nih.gov/nuccore/HM753704.1/>`_, `JF719728.1 <https://www.ncbi.nlm.nih.gov/nuccore/JF719728.1>`_, `J02482.1 <https://www.ncbi.nlm.nih.gov/nuccore/J02482.1>`_):
 
-- auto-detect adapters and artifacts + phix filtering: This is a `deblur artifacts <https://github.com/biocore/deblur/blob/master/deblur/support_files/artifacts.fa>`_ reference, mainly for debugging and testing
-- auto-detect adapters and `cheetah <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/003/709/585/GCF_003709585.1_Aci_jub_2/GCF_003709585.1_Aci_jub_2_genomic.fna.gz>`_ + phix filtering
-- auto-detect adapters and `cow <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/003/205/GCA_000003205.6_Btau_5.0.1/GCA_000003205.6_Btau_5.0.1_genomic.fna.gz>`_ + phix filtering
-- auto-detect adapters and `hamster <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/017/639/785/GCF_017639785.1_BCM_Maur_2.0/GCF_017639785.1_BCM_Maur_2.0_genomic.fna.gz>`_ + phix filtering
-- auto-detect adapters and `horse <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/002/305/GCA_000002305.1_EquCab2.0/GCA_000002305.1_EquCab2.0_genomic.fna.gz>`_ + phix filtering
-- auto-detect adapters and merge_genomes + phix filtering : is the combined genomes of a cheetah, cow, hamster, horse, human, mouse, pig, rabbit, and rat
-- auto-detect adapters and `mouse <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_genomic.fna.gz>`_ + phix filtering
-- auto-detect adapters and `pig <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/003/025/GCF_000003025.6_Sscrofa11.1/GCF_000003025.6_Sscrofa11.1_genomic.fna.gz>`_ + phix filtering
-- auto-detect adapters and `rabbit <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/003/625/GCF_000003625.3_OryCun2.0/GCF_000003625.3_OryCun2.0_genomic.fna.gz>`_ + phix filtering
-- auto-detect adapters and `rat <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/895/GCA_000001895.4_Rnor_6.0/GCA_000001895.4_Rnor_6.0_genomic.fna.gz>`_ + phix filtering
-- auto-detect adapters only filtering
+- auto-detect adapters and artifacts + phix filtering: This is a `deblur artifacts <https://github.com/biocore/deblur/blob/master/deblur/support_files/artifacts.fa>`_ reference, mainly for debugging and testing. Includes another adapter sequence (i.e., 'ATCTCGTATGCCGTCTTCTGC').
+- auto-detect adapters and **cheetah** + phix filtering. Includes cheetah (*Acinonyx jubatus*) reference `GCF_003709585.1 (Aci_jub_2) <https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_003709585.1/>`_. `Download link <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/003/709/585/GCF_003709585.1_Aci_jub_2/GCF_003709585.1_Aci_jub_2_genomic.fna.gz>`_
+- auto-detect adapters and **cow** + phix filtering. Includes cow (*Bos taurus*) reference `GCF_000003205.7 (Btau_5.0.1) <https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000003205.7/>`_. `Download link <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/003/205/GCA_000003205.6_Btau_5.0.1/GCA_000003205.6_Btau_5.0.1_genomic.fna.gz>`_
+- auto-detect adapters and **hamster** + phix filtering. Includes golden hamster (*Mesocricetus auratus*) reference `GCF_017639785.1 (BCM_Maur_2.0) <https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_017639785.1/>`_. `Download link <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/017/639/785/GCF_017639785.1_BCM_Maur_2.0/GCF_017639785.1_BCM_Maur_2.0_genomic.fna.gz>`_
+- auto-detect adapters and **horse** + phix filtering. Includes horse (*Equus caballus*) reference `GCF_000002305.2 (EquCab2.0) <https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000002305.2/>`_. `Download link <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/002/305/GCA_000002305.1_EquCab2.0/GCA_000002305.1_EquCab2.0_genomic.fna.gz>`_
+- auto-detect adapters and **merge_genomes** + phix filtering. Includes the genomes of cheetah, cow, hamster, horse, mouse, pig, rabbit, and rat described here.
+- auto-detect adapters and **mouse** + phix filtering. Includes house mouse (*Mus musculus*) reference `GCF_000001635.27 (GRCm39) <https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000001635.27/>`_. `Download link <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_genomic.fna.gz>`_
+- auto-detect adapters and **pig** + phix filtering. Includes pig (*Sus scrofa*) reference `GCF_000003025.6 (Sscrofa11.1) <https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000003025.6/>`_. `Download link <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/003/025/GCF_000003025.6_Sscrofa11.1/GCF_000003025.6_Sscrofa11.1_genomic.fna.gz>`_
+- auto-detect adapters and **rabbit** + phix filtering. Includes rabbit (*Oryctolagus cuniculus*) reference `GCF_000003625.3 (OryCun2.0) <https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000003625.3/>`_. `Download link <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/003/625/GCF_000003625.3_OryCun2.0/GCF_000003625.3_OryCun2.0_genomic.fna.gz>`_
+- auto-detect adapters and **rat** + phix filtering. Includes Norway rat (*Rattus norvegicus*) reference `GCF_000001895.5 (Rnor_6.0) <https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000001895.5/>`_. `Download link <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/895/GCA_000001895.4_Rnor_6.0/GCA_000001895.4_Rnor_6.0_genomic.fna.gz>`_
+- auto-detect adapters only filtering. Only includes the two adapter sequences noted above.
 
 Note that the command produces up to 6 output artifacts based on the aligner and database selected:
 
