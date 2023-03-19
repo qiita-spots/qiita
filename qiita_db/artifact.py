@@ -1617,9 +1617,10 @@ class Artifact(qdb.base.QiitaObject):
                 sql += " AND is_analysis = False"
                 # get the workflows that match this artifact so we can filter
                 # the available commands based on the commands in the worflows
-                # for that artifact
-                dws = [w for w in qdb.software.DefaultWorkflow.iter()
-                       if self.data_type in w.data_type]
+                # for that artifact - except is the artifact_type == 'BIOM'
+                if self.artifact_type != 'BIOM':
+                    dws = [w for w in qdb.software.DefaultWorkflow.iter()
+                           if self.data_type in w.data_type]
             else:
                 sql += " AND is_analysis = True"
 
