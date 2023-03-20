@@ -23,6 +23,7 @@ class StudyIndexHandler(BaseHandler):
         study = to_int(study_id)
         level = self.get_argument('level', '')
         message = self.get_argument('message', '')
+        prep_id = self.get_argument('prep_id', default=None)
 
         study_info = study_get_req(study, self.current_user.id)
         if study_info['status'] != 'success':
@@ -31,6 +32,25 @@ class StudyIndexHandler(BaseHandler):
         if message != '' and level != '':
             study_info['level'] = level
             study_info['message'] = message
+
+        if prep_id:
+            msg = f"'{prep_id}' is not a valid preparation for this study"
+            study_info['study_info']['prep_id'] = to_int(prep_id, msg)
+
+            # prep_id is an integer - confirm that it's a valid prep_id.
+            prep_info = study_prep_get_req(study, self.current_user.id)
+            if prep_info['status'] != 'success':
+                raise HTTPError(404, reason=prep_info['message'])
+
+            prep_ids = []
+            for prep_type in prep_info['info']:
+                # prep_type will be either '18S', '16S', or similarly named.
+                # generate a list of prep-ids from the preps in each list.
+                prep_ids += [x['id'] for x in prep_info['info'][prep_type]]
+
+            if study_info['study_info']['prep_id'] not in prep_ids:
+                raise HTTPError(400, reason=(f"'{prep_id}' is not a valid "
+                                             "preparation for this study"))
 
         self.render("study_base.html", **study_info)
 
