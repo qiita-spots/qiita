@@ -193,8 +193,9 @@ def get_network_nodes_edges(graph, full_access, nodes=None, edges=None):
             atype = 'job'
             name = n[1].command.name
             status = n[1].status
-            if status == 'in_construction':
-                workflow_id = n[1].processing_job_workflow.id
+            wkflow = n[1].processing_job_workflow
+            if status == 'in_construction' and wkflow is not None:
+                workflow_id = wkflow.id
         elif n[0] == 'artifact':
             atype = n[1].artifact_type
             status = 'artifact'
