@@ -72,15 +72,15 @@ class UtilTests(TestCase):
         biom_metadata_release, archive_release = get_release_info('private')
         # note that we are testing not equal as we should have some information
         # and then we will test that at least the 2nd element is correct
-        self.assertNotEqual(biom_metadata_release, (b'', b'', b''))
+        self.assertNotEqual(biom_metadata_release, ('', '', ''))
         self.assertEqual(biom_metadata_release[1],
-                         b'releases/QIITA-private.tgz')
-        self.assertEqual(archive_release, (b'', b'', b''))
+                         'releases/QIITA-private.tgz')
+        self.assertEqual(archive_release, ('', '', ''))
 
         generate_plugin_releases()
         biom_metadata_release, archive_release = get_release_info('public')
-        self.assertEqual(biom_metadata_release, (b'', b'', b''))
-        self.assertNotEqual(archive_release, (b'', b'', b''))
+        self.assertEqual(biom_metadata_release, ('', '', ''))
+        self.assertNotEqual(archive_release, ('', '', ''))
 
 
 if __name__ == '__main__':
