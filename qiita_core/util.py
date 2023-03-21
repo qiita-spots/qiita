@@ -135,12 +135,9 @@ def get_release_info(study_status='public'):
     timestamp = r_client.get('%s:release:%s:time' % (portal, study_status))
     # replacing None values for empty strings as the text is displayed nicely
     # in the GUI
-    if md5sum is None:
-        md5sum = b''
-    if filepath is None:
-        filepath = b''
-    if timestamp is None:
-        timestamp = b''
+    md5sum = '' if md5sum is None else md5sum.decode('ascii')
+    filepath = '' if filepath is None else filepath.decode('ascii')
+    timestamp = '' if timestamp is None else timestamp.decode('ascii')
     biom_metadata_release = ((md5sum, filepath, timestamp))
 
     md5sum = r_client.get('release-archive:md5sum')
@@ -148,12 +145,9 @@ def get_release_info(study_status='public'):
     timestamp = r_client.get('release-archive:time')
     # replacing None values for empty strings as the text is displayed nicely
     # in the GUI
-    if md5sum is None:
-        md5sum = b''
-    if filepath is None:
-        filepath = b''
-    if timestamp is None:
-        timestamp = b''
+    md5sum = '' if md5sum is None else md5sum.decode('ascii')
+    filepath = '' if filepath is None else filepath.decode('ascii')
+    timestamp = '' if timestamp is None else timestamp.decode('ascii')
     archive_release = ((md5sum, filepath, timestamp))
 
     return (biom_metadata_release, archive_release)
