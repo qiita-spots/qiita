@@ -61,7 +61,13 @@ class RedbiomPublicSearch(BaseHandler):
             for ctx in contexts:
                 # redbiom.fetch.data_from_samples returns a biom, which we
                 # will ignore, and a dict: {sample_id_in_table: original_id}
-                _, data = redbiom.fetch.data_from_samples(ctx, redbiom_samples)
+                try:
+                    # if redbiom can't find a valid sample in the context it
+                    # will raise a ValueError: max() arg is an empty sequence
+                    _, data = redbiom.fetch.data_from_samples(
+                        ctx, redbiom_samples)
+                except ValueError:
+                    continue
                 for idx in data.keys():
                     sample_id, aid = idx.rsplit('.', 1)
                     sid = sample_id.split('.', 1)[0]
