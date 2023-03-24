@@ -1,5 +1,19 @@
 # Qiita changelog
 
+Version 2023.03
+---------------
+
+* Added "Sample Validation" for all Admin levels.
+* Tools and Plugins can add preparation information via the endpoint: `/qiita_db/prep_template/`.
+* Users can now access specific preparations via the URL by adding it as a parameter: `/study/description/<study_id>?prep_id=<prep_id>`.
+* The internal [Sequence Processing Pipeline](https://github.com/qiita-spots/qp-knight-lab-processing) now automatically inserts new BLANKs to the sample information file, adds the preparation information file to Qiita, and keeps a record of which preparations were inserted to which studies.
+* Added the possibility of processing BIOM artifacts in the processing pipeline.
+* Added qiime2.2023.2 to the system; which updated these plugins: qp-qiime2, qtp-biom, qtp-diversity, qtp-visualization.
+* Added q2-greengeenes2 to the system, specifically actions: `filter_features` and `non_v4_16s`. This is the first processing (vs. analysis) plugin added to the system.
+* Fixed the [diversity pcoa_biplot](https://github.com/qiita-spots/qiita/issues/3266) functionality and added the [emperor biplot](https://github.com/qiita-spots/qiita/issues/3255) action.
+* The system can now validate QIIME 2 `FeatureData[Sequences]` via `qtp-diversity`.
+* Fixed the following issues [#3249](https://github.com/qiita-spots/qiita/issues/3249), [#3264](https://github.com/qiita-spots/qiita/issues/3264), [#3245](https://github.com/qiita-spots/qiita/issues/3245), [#3243](https://github.com/qiita-spots/qiita/issues/3243).
+
 Version 2023.02
 ---------------
 
