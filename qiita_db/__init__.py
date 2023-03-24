@@ -27,7 +27,7 @@ from . import study
 from . import user
 from . import processing_job
 
-__version__ = "2023.02"
+__version__ = "2023.03"
 
 __all__ = ["analysis", "artifact",  "archive", "base", "commands",
            "environment_manager", "exceptions", "investigation", "logger",
