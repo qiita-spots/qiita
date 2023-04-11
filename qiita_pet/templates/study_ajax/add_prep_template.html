@@ -6,6 +6,7 @@ $(document).ready(function () {
   // Hide the user and new ontology divs
   $("#user-ena-info").hide();
   $("#new-ena-info").hide();
+
   // If the ena-ontology select changes, check if we need to show the user list
   $("#ena-ontology").change(function ( event ) {
     if( $("#ena-ontology").val() == "Other" ) {
@@ -16,7 +17,9 @@ $(document).ready(function () {
       $("#new-ena-info").hide();
     }
   });
-  // If the user-ena-info select changes, check if we need to show the
+
+  // If the user-ena-info select changes, check if we need to show the user
+  // list.
   $("#user-ena-info").change(function ( event ) {
     if( $("#user-ontology").val() == "New Type" ) {
       $("#new-ena-info").show();
@@ -26,18 +29,17 @@ $(document).ready(function () {
     }
   });
 
-  // Make sure that the form gets validated prior submission
-  $("#create-prep-form").validate();
-
   // change the submit behavior
   $("#create-prep-form").submit(function(event){
     event.preventDefault();
+
     // Add the study id as parameter
     $('<input>').attr({
       type: 'hidden',
       name: 'study_id',
       value: '{{study_id}}'
     }).appendTo('#create-prep-form');
+
     $.ajax({
       url: $('#create-prep-form').attr('action'),
       type: "POST",
@@ -55,6 +57,7 @@ $(document).ready(function () {
       }
     });
   });
+
 });
 </script>
 <h3>Add a new preparation file: <small>(* Required fields)</small></h3>
@@ -125,7 +128,6 @@ $(document).ready(function () {
       <input type="textbox" id="new-ontology" name="new-ontology" class="form-control">
     </div>
   </div>
-
   <div class="row">
     <div class="col-md-12">
       <input type="submit" class="btn btn-sm btn-success" value="Create New Preparation">
