@@ -4,7 +4,7 @@ from os.path import exists, join, basename
 from shutil import move
 
 from biom import load_table
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 from functools import partial
 
 from qiita_core.util import qiita_test_checker
