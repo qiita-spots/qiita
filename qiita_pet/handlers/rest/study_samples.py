@@ -178,7 +178,7 @@ class StudySamplesHandler(RESTHandler):
 
         existing_samples = set(sample_info.index)
         overlapping_ids = set(data.index).intersection(existing_samples)
-        new_ids = set(data.index) - existing_samples
+        new_ids = list(set(data.index) - existing_samples)
         status = 500
 
         # warnings generated are not currently caught
