@@ -1172,7 +1172,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             df = self.to_dataframe()
             if samples is not None:
-                df = df.loc[samples]
+                df = df.loc[list(samples)]
 
             # Sorting the dataframe so multiple serializations of the metadata
             # template are consistent.
