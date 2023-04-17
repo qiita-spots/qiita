@@ -178,7 +178,7 @@ class StudySamplesHandler(RESTHandler):
 
         existing_samples = set(sample_info.index)
         overlapping_ids = set(data.index).intersection(existing_samples)
-        new_ids = set(data.index) - existing_samples
+        new_ids = list(set(data.index) - existing_samples)
         status = 500
 
         # warnings generated are not currently caught
@@ -193,7 +193,7 @@ class StudySamplesHandler(RESTHandler):
             status = 201
 
         if overlapping_ids:
-            to_update = data.loc[overlapping_ids]
+            to_update = data.loc[list(overlapping_ids)]
             study.sample_template.update(to_update)
             if status == 500:
                 # don't overwrite a possible status = 201

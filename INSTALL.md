@@ -20,7 +20,7 @@ Setup a virtual environment in conda named `qiita` by executing the following:
 
 ```bash
 conda config --add channels conda-forge
-conda create -q --yes -n qiita python=3.6 pip libgfortran numpy nginx
+conda create -q --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
 ```
 
 ### Brief introduction to managing conda environments

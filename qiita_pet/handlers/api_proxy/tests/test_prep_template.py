@@ -463,6 +463,7 @@ class TestPrepAPI(TestCase):
                    'description of these fields.'],
                'file': 'update.txt',
                'id': 'ignored in test'}
+
         self.assertCountEqual(obs['message'].split('\n'), exp['message'])
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['file'], exp['file'])
