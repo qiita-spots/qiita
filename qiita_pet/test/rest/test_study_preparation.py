@@ -63,7 +63,7 @@ class StudyPrepCreatorTests(RESTHandlerTestCase):
         exp_prep = exp_prep[sorted(exp_prep.columns.tolist())]
         exp_prep.drop('qiita_prep_id', axis=1, inplace=True)
 
-        pd.util.testing.assert_frame_equal(prep_table, exp_prep)
+        pd.testing.assert_frame_equal(prep_table, exp_prep)
 
 
 class StudyPrepArtifactCreatorTests(RESTHandlerTestCase):

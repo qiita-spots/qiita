@@ -193,7 +193,7 @@ class StudySamplesHandler(RESTHandler):
             status = 201
 
         if overlapping_ids:
-            to_update = data.loc[overlapping_ids]
+            to_update = data.loc[list(overlapping_ids)]
             study.sample_template.update(to_update)
             if status == 500:
                 # don't overwrite a possible status = 201
