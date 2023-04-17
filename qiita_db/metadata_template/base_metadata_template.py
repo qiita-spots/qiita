@@ -895,6 +895,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                     # added to the database. None of the existing values will
                     # be modified (see update for that functionality). Remember
                     # that || is a jsonb to update or add a new key/value
+                    existing_samples = list(existing_samples)
                     md_filtered = md_template[new_cols].loc[existing_samples]
                     for sid, df in md_filtered.iterrows():
                         values = dict(df.items())
