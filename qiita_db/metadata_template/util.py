@@ -154,7 +154,6 @@ def load_template_to_dataframe(fn, index='sample_name'):
             sep='\t',
             dtype=str,
             encoding='utf-8',
-            infer_datetime_format=False,
             keep_default_na=False,
             index_col=False,
             comment='\t',
