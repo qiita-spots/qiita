@@ -1108,7 +1108,8 @@ class Analysis(qdb.base.QiitaObject):
                 pt = artifact.prep_templates[0]
                 pt_df = pt.to_dataframe()
                 if categories is not None:
-                    pt_df = pt_df[set(categories) & set(pt_df.columns)]
+                    pt_df = pt_df[list(set(categories) &
+                                       set(pt_df.columns))]
 
                 qm = pt_df.join(sample_infos[si], lsuffix="_prep")
 
