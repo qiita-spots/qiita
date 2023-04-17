@@ -1134,7 +1134,7 @@ class Analysis(qdb.base.QiitaObject):
                 qm['qiita_owner'] = study_owner.info['name']
                 qm['qiita_principal_investigator'] = pi.name
 
-                qm = qm.loc[samps]
+                qm = qm.loc[list(samps)]
                 to_concat.append(qm)
 
             merged_map = pd.concat(to_concat)
