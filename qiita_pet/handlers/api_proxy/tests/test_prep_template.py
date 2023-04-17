@@ -463,11 +463,8 @@ class TestPrepAPI(TestCase):
                    'description of these fields.'],
                'file': 'update.txt',
                'id': 'ignored in test'}
-        print("####")
-        print(obs['message'])
-        print("####")
+
         self.assertCountEqual(obs['message'].split('\n'), exp['message'])
-        self.assertTrue(False)
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['file'], exp['file'])
         self.assertIsInstance(obs['id'], int)
