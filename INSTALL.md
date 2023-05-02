@@ -20,7 +20,7 @@ Setup a virtual environment in conda named `qiita` by executing the following:
 
 ```bash
 conda config --add channels conda-forge
-conda create -q --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
+conda create -q --yes -n qiita python=3.9 pip libgfortran numpy nginx
 ```
 
 ### Brief introduction to managing conda environments
@@ -101,7 +101,7 @@ sudo service postgresql start
 ```
 ### PostgreSQL installation on Mac OS X
 
-For Mac OS X, you can either install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5, v13.
+For Mac OS X, you can install postgres through the [Postgres.app](https://postgresapp.com/downloads.html). These instructions were tested with the Postgres.app v9.5 and v13.
 
 You'll then need to ensure that the postgres binaries (for example, ``psql``) are in your executable search path (``$PATH`` environment variable). If you are using Postgres.app on OS X, you can do this by running the following, though you may have to replace`~/.bash_profile`with `~/.zshrc` if you're using zshell rather than the built-in bash, and you may have to change the version number `Versions/9.3/` to the exact one that you are installing:
 
@@ -334,6 +334,13 @@ sudo apt-get install postgresql-contrib
 # or: sudo apt-get install postgresql-contrib-9.3 depending on your OS and apt repository versions
 ```
 
+### Apple Silicon Mac (M1/M2)
+
+#### `no such file or directory` or `fatal error: file not found`
+
+M1 and M2 macs have a new feature for homebrew where homebrew is not installed to the path `usr/local/bin` like Intel Macs are, but to `opt/homebrew/bin`. Since some old code likely hasn't been updated yet, this error could possibly be from the code looking into the old Intel Mac path. Make that homebrew libraries are being searched for in the `opt/homebrew/lib` path.
+
+More information on this error can be found [here](https://earthly.dev/blog/homebrew-on-m1/).
 
 
 ## General Troubleshooting
