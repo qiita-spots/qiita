@@ -48,16 +48,7 @@ def check_artifact_access(user, artifact):
     if artifact.visibility == 'public':
         # if it's public we need to confirm that this artifact has no possible
         # human sequences
-        has_human = False
-        if artifact.artifact_type == 'per_sample_FASTQ':
-            st = study.sample_template
-            if 'env_package' in st.categories:
-                asamples = {s for pt in artifact.prep_templates for s in pt}
-                hh = [1 for s, v in st.get_category('env_package').items()
-                      if s in asamples and v.startswith('human-')]
-                if hh:
-                    has_human = True
-        if has_human and not study.has_access(user):
+        if artifact.has_human and not study.has_access(user, True):
             raise QiitaHTTPError(403, "Access denied to artifact %s"
                                       % artifact.id)
     else:
