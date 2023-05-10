@@ -1557,11 +1557,18 @@ class Artifact(qdb.base.QiitaObject):
         if self.artifact_type == 'per_sample_FASTQ':
             st = self.study.sample_template
             if 'env_package' in st.categories:
-                asamples = {s for pt in self.prep_templates for s in pt}
-                for s, v in st.get_category('env_package').items():
-                    if s in asamples and v.startswith('human-'):
-                        has_human = True
-                        break
+                sql = f"""SELECT DISTINCT sample_values->>'env_package'
+                          FROM qiita.sample_{st.id} WHERE sample_id in (
+                              SELECT sample_id from qiita.preparation_artifact
+                              LEFT JOIN qiita.prep_template_sample USING (
+                                  prep_template_id)
+                              WHERE artifact_id = {self.id})"""
+                with qdb.sql_connection.TRN:
+                    qdb.sql_connection.TRN.add(sql)
+                    for v in qdb.sql_connection.TRN.execute_fetchflatten():
+                        if v.startswith('human-'):
+                            has_human = True
+                            break
 
         return has_human
 

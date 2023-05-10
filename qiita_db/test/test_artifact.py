@@ -677,6 +677,28 @@ class ArtifactTests(TestCase):
 
         self._clean_up_files = [self.fp1, self.fp2, self.fp3, self.fp4]
 
+        # per_sample_FASTQ Metagenomic example
+
+        self.prep_template_per_sample_fastq = \
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                metadata, qdb.study.Study(1), "Metagenomic")
+        fd, self.fwd = mkstemp(prefix='SKB8.640193', suffix='_R1.fastq')
+        close(fd)
+        with open(self.fwd, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 1:N:0:\n"
+                    "NACGTAGGGTGCAAGCGTTGTCCGGAATNA\n"
+                    "+\n"
+                    "#1=DDFFFHHHHHJJJJJJJJJJJJGII#0\n")
+        fd, self.rev = mkstemp(prefix='SKB8.640193', suffix='_R2.fastq')
+        close(fd)
+        with open(self.rev, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 1:N:0:\n"
+                    "NACGTAGGGTGCAAGCGTTGTCCGGAATNA\n"
+                    "+\n"
+                    "#1=DDFFFHHHHHJJJJJJJJJJJJGII#0\n")
+
+        self._clean_up_files.extend([self.fwd, self.rev])
+
     def tearDown(self):
         for f in self._clean_up_files:
             if exists(f):
@@ -1363,6 +1385,26 @@ class ArtifactTests(TestCase):
         obs = self.prep_template.artifact.descendants_with_jobs.nodes()
         exp = [('artifact', artifact)]
         self.assertCountEqual(obs, exp)
+
+    def test_has_human(self):
+        # testing a FASTQ artifact (1), should be False
+        self.assertFalse(qdb.artifact.Artifact(1).has_human)
+
+        # create a per_sample_FASTQ
+        artifact = qdb.artifact.Artifact.create(
+            [(self.fwd, 1), (self.rev, 2)], "per_sample_FASTQ",
+            prep_template=self.prep_template_per_sample_fastq)
+
+        # this should be False as there are no human samples
+        self.assertFalse(artifact.has_human)
+
+        # let's make it True by making the samle human-*
+        df = pd.DataFrame.from_dict(
+            {'1.SKB8.640193': {'env_package': 'human-bla'}},
+            orient='index', dtype=str)
+        artifact.study.sample_template.update(df)
+
+        self.assertTrue(artifact.has_human)
 
 
 @qiita_test_checker()
