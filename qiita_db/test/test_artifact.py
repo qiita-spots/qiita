@@ -1400,7 +1400,7 @@ class ArtifactTests(TestCase):
 
         # let's make it True by making the samle human-*
         df = pd.DataFrame.from_dict(
-            {'1.SKB8.640193': {'env_package': 'human-bla'}},
+            {'1.SKB8.640193': {'env_package': 'human-oral'}},
             orient='index', dtype=str)
         artifact.study.sample_template.update(df)
 
