@@ -1,5 +1,19 @@
 # Qiita changelog
 
+Version 2023.05
+---------------
+
+**_NOTE:_** Human-associated shotgun samples have been determined to leak human
+DNA, even with state of the art human read filtering mechanisms in place. To
+address this critical privacy concern as soon as possible, we are limiting
+per-sample FASTQ downloads to admins and study owners for human-associated
+shotgun samples, and in parallel we are (a) working with EBI-ENA to address
+submitted data and (b) updating Qiita to only allow download of sequence data
+that positively matches to a microbial specific database.
+
+* Added "Artifact.has_human" to check if an artifact has samples that can potentially contain human sequences.
+
+
 Version 2023.03
 ---------------
 
