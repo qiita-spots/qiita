@@ -235,7 +235,7 @@ class DownloadStudyBIOMSHandler(BaseHandlerDownload):
              (self.current_user in study.shared_with)))
 
         for a in study.artifacts(artifact_type='BIOM'):
-            if full_access or a.visibility == 'public':
+            if full_access or a.visibility == 'public' and not a.has_human:
                 to_download.extend(self._list_artifact_files_nginx(a))
 
         self._write_nginx_file_list(to_download)
@@ -289,7 +289,7 @@ class DownloadRawData(BaseHandlerDownload):
         to_download = []
         for a in study.artifacts():
             if not a.parents:
-                if not is_owner and a.visibility != 'public':
+                if not is_owner and (a.visibility != 'public' or a.has_human):
                     continue
                 to_download.extend(self._list_artifact_files_nginx(a))
 
@@ -460,7 +460,7 @@ class DownloadPublicHandler(BaseHandlerDownload):
                         artifacts = study.artifacts(
                             dtype=data_type, artifact_type='BIOM')
                     for a in artifacts:
-                        if a.visibility != 'public':
+                        if a.visibility != 'public' or a.has_human:
                             continue
                         to_download.extend(self._list_artifact_files_nginx(a))
 
@@ -497,6 +497,10 @@ class DownloadPublicArtifactHandler(BaseHandlerDownload):
                 if artifact.visibility != 'public':
                     raise HTTPError(404, reason='Artifact is not public. If '
                                     'this is a mistake contact: '
+                                    'qiita.help@gmail.com')
+                elif artifact.has_human:
+                    raise HTTPError(404, reason='Artifact has possible human '
+                                    'sequences. If this is a mistake contact: '
                                     'qiita.help@gmail.com')
                 else:
                     to_download = self._list_artifact_files_nginx(artifact)
