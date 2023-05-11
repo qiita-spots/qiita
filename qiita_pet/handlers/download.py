@@ -235,7 +235,7 @@ class DownloadStudyBIOMSHandler(BaseHandlerDownload):
              (self.current_user in study.shared_with)))
 
         for a in study.artifacts(artifact_type='BIOM'):
-            if full_access or a.visibility == 'public' and not a.has_human:
+            if full_access or (a.visibility == 'public' and not a.has_human):
                 to_download.extend(self._list_artifact_files_nginx(a))
 
         self._write_nginx_file_list(to_download)
