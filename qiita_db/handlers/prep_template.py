@@ -121,10 +121,11 @@ class PrepTemplateAPIHandler(OauthBaseHandler):
         prep_info_dict = loads(self.get_argument('prep_info'))
         study = self.get_argument('study')
         data_type = self.get_argument('data_type')
+        name = self.get_argument('name', None)
 
         metadata = pd.DataFrame.from_dict(prep_info_dict, orient='index')
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
-            metadata, qdb.study.Study(study), data_type)
+            metadata, qdb.study.Study(study), data_type, name=name)
         self.write({'prep': pt.id})
 
 
