@@ -152,8 +152,9 @@ class PrepTemplateAPItestHandlerTests(OauthTestingBase):
         self.assertCountEqual(obs.keys(), ['prep'])
 
         pt = qdb.metadata_template.prep_template.PrepTemplate(obs['prep'])
-        # default name
+        # default name, and creation_job_id
         self.assertTrue(pt.name.startswith('Prep information'))
+        self.assertIsNone(pt.creation_job_id)
         self.assertCountEqual(pt.keys(), ['1.SKB8.640193', '1.SKD8.640184'])
 
         # testing that a new prep doesn't break the call due to empty artifact
@@ -163,11 +164,13 @@ class PrepTemplateAPItestHandlerTests(OauthTestingBase):
 
         # testing that using a non default value actually works
         data['name'] = 'my long and informative name'
+        data['job-id'] = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
         obs = self.post('/apitest/prep_template/', headers=self.header,
                         data=data)
         obs = loads(obs.body)
         pt = qdb.metadata_template.prep_template.PrepTemplate(obs['prep'])
         self.assertEqual(pt.name, data['name'])
+        self.assertEqual(pt.creation_job_id, data['job-id'])
 
 
 if __name__ == '__main__':

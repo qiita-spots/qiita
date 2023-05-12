@@ -93,7 +93,7 @@ class PrepTemplate(MetadataTemplate):
 
     @classmethod
     def create(cls, md_template, study, data_type, investigation_type=None,
-               name=None):
+               name=None, creation_job_id=None):
         r"""Creates the metadata template in the database
 
         Parameters
@@ -108,6 +108,8 @@ class PrepTemplate(MetadataTemplate):
             The investigation type, if relevant
         name : str, optional
             The prep template name
+        creation_job_id : str, optional
+            The prep template creation_job_id
 
         Returns
         -------
@@ -151,11 +153,20 @@ class PrepTemplate(MetadataTemplate):
                                  f"of samples: {ms}")
 
             # Insert the metadata template
-            sql = """INSERT INTO qiita.prep_template
-                        (data_type_id, investigation_type)
-                     VALUES (%s, %s)
-                     RETURNING prep_template_id"""
-            qdb.sql_connection.TRN.add(sql, [data_type_id, investigation_type])
+            if creation_job_id:
+                sql = """INSERT INTO qiita.prep_template
+                            (data_type_id, investigation_type, creation_job_id)
+                         VALUES (%s, %s, %s)
+                         RETURNING prep_template_id"""
+                qdb.sql_connection.TRN.add(
+                    sql, [data_type_id, investigation_type, creation_job_id])
+            else:
+                sql = """INSERT INTO qiita.prep_template
+                            (data_type_id, investigation_type)
+                         VALUES (%s, %s)
+                         RETURNING prep_template_id"""
+                qdb.sql_connection.TRN.add(
+                    sql, [data_type_id, investigation_type])
             prep_id = qdb.sql_connection.TRN.execute_fetchlast()
 
             try:
@@ -943,3 +954,19 @@ class PrepTemplate(MetadataTemplate):
                 sql, [self.id, qdb.util.artifact_visibilities_to_skip()])
             return [qdb.artifact.Artifact(ai)
                     for ai in qdb.sql_connection.TRN.execute_fetchflatten()]
+
+    @property
+    def creation_job_id(self):
+        """The creation_job_id of the prep information
+
+        Returns
+        -------
+        str
+            The creation_job_id of the prep information
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT creation_job_id
+                     FROM qiita.prep_template
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
