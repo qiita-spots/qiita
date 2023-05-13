@@ -43,8 +43,15 @@ def check_artifact_access(user, artifact):
     """
     if user.level in ('admin', 'wet-lab admin'):
         return
-    if artifact.visibility != 'public':
-        study = artifact.study
+
+    study = artifact.study
+    if artifact.visibility == 'public':
+        # if it's public we need to confirm that this artifact has no possible
+        # human sequences
+        if artifact.has_human and not study.has_access(user, True):
+            raise QiitaHTTPError(403, "Access denied to artifact %s"
+                                      % artifact.id)
+    else:
         analysis = artifact.analysis
         if study:
             if not study.has_access(user):

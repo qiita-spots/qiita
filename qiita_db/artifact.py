@@ -43,6 +43,7 @@ class Artifact(qdb.base.QiitaObject):
     prep_template
     ebi_run_accession
     study
+    has_human
 
     Methods
     -------
@@ -1549,6 +1550,27 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()
         return qdb.processing_job.ProcessingJob(res[0][0]) if res else None
+
+    @property
+    def has_human(self):
+        has_human = False
+        if self.artifact_type == 'per_sample_FASTQ':
+            st = self.study.sample_template
+            if 'env_package' in st.categories:
+                sql = f"""SELECT DISTINCT sample_values->>'env_package'
+                          FROM qiita.sample_{st.id} WHERE sample_id in (
+                              SELECT sample_id from qiita.preparation_artifact
+                              LEFT JOIN qiita.prep_template_sample USING (
+                                  prep_template_id)
+                              WHERE artifact_id = {self.id})"""
+                with qdb.sql_connection.TRN:
+                    qdb.sql_connection.TRN.add(sql)
+                    for v in qdb.sql_connection.TRN.execute_fetchflatten():
+                        if v.startswith('human-'):
+                            has_human = True
+                            break
+
+        return has_human
 
     def jobs(self, cmd=None, status=None, show_hidden=False):
         """Jobs that used this artifact as input
