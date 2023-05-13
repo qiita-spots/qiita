@@ -67,12 +67,18 @@ class PrepTemplateAJAX(BaseHandler):
         """Send formatted summary page of prep template"""
         prep_id = to_int(self.get_argument('prep_id'))
         row_id = self.get_argument('row_id', '0')
+        current_user = self.current_user
 
-        res = prep_template_ajax_get_req(self.current_user.id, prep_id)
+        res = prep_template_ajax_get_req(current_user.id, prep_id)
         res['prep_id'] = prep_id
         res['row_id'] = row_id
         # Escape the message just in case javascript breaking characters in it
         res['alert_message'] = url_escape(res['alert_message'])
+        res['user_level'] = current_user.level
+        if res['creation_job'] is not None:
+            vals = res['creation_job'].values
+            res['creation_job_filename'] = vals['filename']
+            res['creation_job_filename_body'] = vals['body']
 
         self.render('study_ajax/prep_summary.html', **res)
 

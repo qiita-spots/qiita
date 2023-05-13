@@ -992,6 +992,9 @@
 			<column name="modification_timestamp" type="timestamp" length="0" decimal="6" jt="93" >
 				<defo><![CDATA[CURRENT_TIMESTAMP]]></defo>
 			</column>
+			<column name="creation_job_id" type="uuid" jt="1111" >
+				<defo><![CDATA[NULL]]></defo>
+			</column>
 			<index name="pk_prep_template" unique="PRIMARY_KEY" >
 				<column name="prep_template_id" />
 			</index>

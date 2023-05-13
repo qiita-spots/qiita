@@ -109,6 +109,7 @@ class TestPrepAPIReadOnly(TestCase):
                            '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
                            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'],
                'deprecated': False,
+               'creation_job': None,
                'alert_message': ''}
 
         self.assertDictEqual(obs, exp)

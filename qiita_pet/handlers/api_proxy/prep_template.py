@@ -155,6 +155,10 @@ def prep_template_ajax_get_req(user_id, prep_id):
 
     success, restrictions = pt.validate_restrictions()
 
+    creation_job = pt.creation_job_id
+    if creation_job is not None:
+        creation_job = ProcessingJob(creation_job)
+
     return {'status': 'success',
             'message': '',
             'name': name,
@@ -175,6 +179,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'prep_restrictions': restrictions,
             'samples': sorted(list(pt.keys())),
             'deprecated': deprecated,
+            'creation_job': creation_job,
             'alert_message': alert_msg}
 
 
