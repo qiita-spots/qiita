@@ -136,7 +136,7 @@ class TestStudyAPI1(TestStudyAPI):
     def test_study_get_req_no_access(self):
         obs = study_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_study_get_req_no_exists(self):
@@ -254,13 +254,13 @@ class TestStudyAPI1(TestStudyAPI):
     def test_study_prep_get_req_no_access(self):
         obs = study_prep_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_study_delete_req_no_access(self):
         obs = study_delete_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_study_delete_req_no_exists(self):

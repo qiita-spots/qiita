@@ -34,7 +34,8 @@ from qiita_pet.handlers.api_proxy import (
 SAMPLE_TEMPLATE_KEY_FORMAT = 'sample_template_%s'
 
 
-def sample_template_checks(study_id, user, check_exists=False):
+def sample_template_checks(study_id, user, check_exists=False,
+                           no_public=False):
     """Performs different checks and raises errors if any of the checks fail
 
     Parameters
@@ -45,6 +46,8 @@ def sample_template_checks(study_id, user, check_exists=False):
         The user trying to access the study
     check_exists : bool, optional
         If true, check if the sample template exists
+    no_public : bool, optional
+        If true, public studies will not be used for checking permissions
 
     Raises
     ------
@@ -57,8 +60,8 @@ def sample_template_checks(study_id, user, check_exists=False):
         study = Study(int(study_id))
     except QiitaDBUnknownIDError:
         raise HTTPError(404, reason='Study does not exist')
-    if not study.has_access(user):
-        raise HTTPError(403, reason='User does not have access to study')
+    if not study.has_access(user, no_public=no_public):
+        raise HTTPError(403, reason='User has insufficient permissions')
 
     # Check if the sample template exists
     if check_exists and not SampleTemplate.exists(study_id):
@@ -160,7 +163,7 @@ def sample_template_handler_patch_request(user, req_op, req_path,
     study_id = int(req_path[0])
     # Check if the current user has access to the study and if the sample
     # template exists
-    sample_template_checks(study_id, user, check_exists=True)
+    sample_template_checks(study_id, user, check_exists=True, no_public=True)
 
     if req_op == 'remove':
         # Path format
@@ -501,7 +504,7 @@ class SampleAJAX(BaseHandler):
         if res['status'] == 'error':
             if 'does not exist' in res['message']:
                 raise HTTPError(404, reason=res['message'])
-            elif 'User does not have access to study' in res['message']:
+            elif 'User has insufficient permissions' in res['message']:
                 raise HTTPError(403, reason=res['message'])
             else:
                 raise HTTPError(500, reason=res['message'])

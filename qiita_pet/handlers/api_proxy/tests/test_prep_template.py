@@ -186,7 +186,7 @@ class TestPrepAPIReadOnly(TestCase):
     def test_prep_template_get_req_no_access(self):
         obs = prep_template_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_prep_template_get_req_no_exists(self):
@@ -206,13 +206,13 @@ class TestPrepAPIReadOnly(TestCase):
     def test_prep_template_filepaths_get_req_no_access(self):
         obs = prep_template_filepaths_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_prep_template_graph_get_req_no_access(self):
         obs = prep_template_graph_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_prep_template_graph_get_req_no_exists(self):
@@ -276,7 +276,7 @@ class TestPrepAPIReadOnly(TestCase):
     def test_prep_template_summary_get_req_no_access(self):
         obs = prep_template_summary_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_prep_template_summary_get_req_no_exists(self):
@@ -426,7 +426,7 @@ class TestPrepAPI(TestCase):
 
         obs = prep_template_jobs_get_req(pt.id, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_process_investigation_type(self):
@@ -482,7 +482,7 @@ class TestPrepAPI(TestCase):
         # User doesn't have access
         obs = prep_template_post_req(1, 'demo@microbio.me', 'filepath', '16S')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
         # The file does not exist
@@ -577,7 +577,7 @@ class TestPrepAPI(TestCase):
             'demo@microbio.me', 'replace', '/%s/investigation_type' % pt.id,
             'Cancer Genomics')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
         # File does not exists
         obs = prep_template_patch_req(
@@ -607,7 +607,7 @@ class TestPrepAPI(TestCase):
     def test_prep_template_delete_req_no_access(self):
         obs = prep_template_delete_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_prep_template_delete_req_no_prep(self):

@@ -38,7 +38,7 @@ def check_access(study_id, user_id):
                 'message': 'Study does not exist'}
     if not study.has_access(User(user_id)):
         return {'status': 'error',
-                'message': 'User does not have access to study'}
+                'message': 'User has insufficient permissions'}
     return {}
 
 
