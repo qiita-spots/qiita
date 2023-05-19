@@ -125,9 +125,13 @@ class SampleValidation(AdminProcessingJobBaseClass):
         tube_ids = set()
         if "tube_id" in st.categories:
             for qsname, tid in st.get_category("tube_id").items():
+                formatted_name = qsname
+                if qsname.startswith(qid):
+                    formatted_name = qsname.replace(f'{qid}.', "", 1)
+
                 tube_ids.add(tid)
-                tube_ids_dict[qsname.replace(f'{qid}.', "", 1) if qsname.startswith(qid) else qsname] = tid
-                tube_ids_rev[tid] = qsname.replace(f'{qid}.', "", 1) if qsname.startswith(qid) else qsname
+                tube_ids_dict[formatted_name] = tid
+                tube_ids_rev[tid] = formatted_name
 
         # Adds tube ids after sample name in paranthesis
         if len(tube_ids) > 0:
@@ -135,7 +139,7 @@ class SampleValidation(AdminProcessingJobBaseClass):
                 if sname in qsnames:
                     snames[i] = f'{sname} ({tube_ids_dict[sname]})'
                 elif sname in tube_ids:
-                    snames[i] = f'{tube_ids_rev[sname]} ({sname})' 
+                    snames[i] = f'{tube_ids_rev[sname]} ({sname})'
 
         # Finds duplicates in the samples
         seen = dict()
@@ -144,19 +148,27 @@ class SampleValidation(AdminProcessingJobBaseClass):
                 seen[sample] += 1
             else:
                 seen[sample] = 1
-        
-        duplicates = set([f'{sample} \u00D7 {num}' for sample, num in seen.items() if num > 1])
+
+        duplicates = []
+        for sample, num in seen.items():
+            if num > 1:
+                duplicates.append(f'{sample} \u00D7 {num}')
+        duplicates = set(duplicates)
 
         # Remove blank samples from sample names
         blank = set([x for x in snames if x.lower().startswith('blank')])
         snames = [x for x in snames if 'blank' not in x.lower()]
 
         # Validate user's sample names against qiita study
-        qsnames = set(qsnames) if len(tube_ids) == 0 else set([f'{x} ({tube_ids_dict[x]})' for x in qsnames])
+        if len(tube_ids) == 0:
+            qsnames = set(qsnames)
+        else:
+            qsnames = set([f'{x} ({tube_ids_dict[x]})' for x in qsnames])
         snames = set(snames)
         matching = qsnames.intersection(snames)
         missing = qsnames.difference(snames)
         extra = snames.difference(qsnames)
-        
+
         self.render("sample_validation.html", input=False, matching=matching,
-                    missing=missing, extra=extra, blank=blank, duplicates=duplicates)
+                    missing=missing, extra=extra, blank=blank,
+                    duplicates=duplicates)
