@@ -105,28 +105,58 @@ class SampleValidation(AdminProcessingJobBaseClass):
 
     @execute_as_transaction
     def post(self):
-
-        # Get user-inputted qiita id and sample names
+        # Get user-inputted qiita id and sample names / tube_ids
         qid = self.get_argument("qid")
         snames = self.get_argument("snames").split()
 
+        # Get study give qiita id
+        st = Study(qid).sample_template
+
         # Stripping leading qiita id from sample names
         # Example: 1.SKB1.640202 -> SKB1.640202
-        qsnames = list(Study(qid).sample_template)
+        qsnames = list(st)
         for i, qsname in enumerate(qsnames):
             if qsname.startswith(qid):
                 qsnames[i] = qsname.replace(f'{qid}.', "", 1)
 
+        # Adds tube ids to a dict with key as tube id and value as qsname
+        tube_ids_dict = dict()
+        tube_ids_rev = dict()
+        tube_ids = set()
+        if "tube_id" in st.categories:
+            for qsname, tid in st.get_category("tube_id").items():
+                tube_ids.add(tid)
+                tube_ids_dict[qsname.replace(f'{qid}.', "", 1) if qsname.startswith(qid) else qsname] = tid
+                tube_ids_rev[tid] = qsname.replace(f'{qid}.', "", 1) if qsname.startswith(qid) else qsname
+
+        # Adds tube ids after sample name in paranthesis
+        if len(tube_ids) > 0:
+            for i, sname in enumerate(snames):
+                if sname in qsnames:
+                    snames[i] = f'{sname} ({tube_ids_dict[sname]})'
+                elif sname in tube_ids:
+                    snames[i] = f'{tube_ids_rev[sname]} ({sname})' 
+
+        # Finds duplicates in the samples
+        seen = dict()
+        for sample in snames:
+            if sample in seen:
+                seen[sample] += 1
+            else:
+                seen[sample] = 1
+        
+        duplicates = set([f'{sample} \u00D7 {num}' for sample, num in seen.items() if num > 1])
+
         # Remove blank samples from sample names
-        blank = [x for x in snames if x.lower().startswith('blank')]
+        blank = set([x for x in snames if x.lower().startswith('blank')])
         snames = [x for x in snames if 'blank' not in x.lower()]
 
         # Validate user's sample names against qiita study
-        qsnames = set(qsnames)
+        qsnames = set(qsnames) if len(tube_ids) == 0 else set([f'{x} ({tube_ids_dict[x]})' for x in qsnames])
         snames = set(snames)
         matching = qsnames.intersection(snames)
         missing = qsnames.difference(snames)
         extra = snames.difference(qsnames)
-
+        
         self.render("sample_validation.html", input=False, matching=matching,
-                    missing=missing, extra=extra, blank=blank)
+                    missing=missing, extra=extra, blank=blank, duplicates=duplicates)

@@ -3,7 +3,7 @@
 <style>
     .column {
     float: left;
-    width: 25%;
+    width: 20%;
     }
 
     .row:after {
@@ -45,6 +45,14 @@
         <h2>Blank</h2>
         <ul>
             {% for sample in blank %}
+            <li>{{ sample }}</li>
+            {% end %}
+        </ul>
+    </div>
+    <div class="column">
+        <h2>Duplicates</h2>
+        <ul>
+            {% for sample in duplicates %}
             <li>{{ sample }}</li>
             {% end %}
         </ul>
