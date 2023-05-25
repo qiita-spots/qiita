@@ -103,7 +103,7 @@ setup(name='qiita-spots',
       # making sure that numpy is installed before biom
       setup_requires=['numpy', 'cython'],
       install_requires=['psycopg2', 'click', 'bcrypt', 'pandas<2.0',
-                        'biom-format', 'tornado<6.0', 'toredis', 'redis',
+                        'biom-format', 'tornado', 'toredis', 'redis',
                         'scp', 'pyparsing', 'h5py',  'natsort', 'nose', 'pep8',
                         'networkx', 'humanize', 'wtforms<3.0.0', 'nltk',
                         'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx<3.0',
