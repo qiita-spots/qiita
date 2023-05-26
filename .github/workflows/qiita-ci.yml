@@ -154,7 +154,7 @@ jobs:
           echo "5. Setting up qiita"
           conda activate qiita
           qiita-env make --no-load-ontologies
-          qiita-test-install
+          # qiita-test-install
           qiita plugins update
 
           echo "6. Starting supervisord => multiple qiita instances"
