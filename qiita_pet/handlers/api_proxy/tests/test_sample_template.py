@@ -118,7 +118,7 @@ class TestSampleAPI(TestCase):
     def test_sample_template_get_req_no_access(self):
         obs = sample_template_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_sample_template_get_req_no_template(self):
@@ -148,7 +148,7 @@ class TestSampleAPI(TestCase):
         obs = analyses_associated_with_study(
             self.new_study.id, 'shared@foo.bar')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_get_sample_template_processing_status(self):
@@ -221,7 +221,7 @@ class TestSampleAPI(TestCase):
     def test_sample_template_samples_get_req_no_access(self):
         obs = sample_template_samples_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_sample_template_sample_get_req_no_template(self):
@@ -269,7 +269,7 @@ class TestSampleAPI(TestCase):
         obs = sample_template_category_get_req('latitude', 1,
                                                'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_sample_template_category_get_req_no_template(self):
@@ -291,7 +291,7 @@ class TestSampleAPI(TestCase):
     def test_sample_template_filepaths_get_req_no_access(self):
         obs = sample_template_filepaths_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_sample_template_filepaths_get_req_no_template(self):
@@ -321,7 +321,7 @@ class TestSampleAPI(TestCase):
     def test_sample_template_meta_cats_get_req_no_access(self):
         obs = sample_template_meta_cats_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_sample_template_meta_cats_get_req_no_template(self):

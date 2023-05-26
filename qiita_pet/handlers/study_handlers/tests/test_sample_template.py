@@ -83,7 +83,7 @@ class TestHelpers(TestHandlerBase):
 
         # Test user doesn't have access to the study
         with self.assertRaisesRegex(HTTPError,
-                                    'User does not have access to study'):
+                                    'User has insufficient permissions'):
             sample_template_checks(1, User('demo@microbio.me'))
 
         # Test sample template doesn't exist
@@ -96,7 +96,7 @@ class TestHelpers(TestHandlerBase):
     def test_sample_template_handler_post_request(self):
         # Test user doesn't have access
         with self.assertRaisesRegex(HTTPError,
-                                    'User does not have access to study'):
+                                    'User has insufficient permissions'):
             sample_template_handler_post_request(
                 1, User('demo@microbio.me'), 'ignored')
 
@@ -148,7 +148,7 @@ class TestHelpers(TestHandlerBase):
 
         # Test user doesn't have access
         with self.assertRaisesRegex(HTTPError,
-                                    'User does not have access to study'):
+                                    'User has insufficient permissions'):
             sample_template_handler_patch_request(
                 User('demo@microbio.me'), "remove",
                 "/1/columns/season_environment/")
@@ -236,7 +236,7 @@ class TestHelpers(TestHandlerBase):
     def test_sample_template_handler_delete_request(self):
         # Test user doesn't have access
         with self.assertRaisesRegex(HTTPError,
-                                    'User does not have access to study'):
+                                    'User has insufficient permissions'):
             sample_template_handler_delete_request(
                 1, User('demo@microbio.me'))
 
@@ -264,7 +264,7 @@ class TestHelpers(TestHandlerBase):
     def test_sample_template_overview_handler_get_request(self):
         # Test user doesn't have access
         with self.assertRaisesRegex(HTTPError,
-                                    'User does not have access to study'):
+                                    'User has insufficient permissions'):
             sample_template_overview_handler_get_request(
                 1, User('demo@microbio.me'))
 
@@ -322,7 +322,7 @@ class TestHelpers(TestHandlerBase):
     def test_sample_template_columns_get_req(self):
         # Test user doesn't have access
         with self.assertRaisesRegex(HTTPError,
-                                    'User does not have access to study'):
+                                    'User has insufficient permissions'):
             sample_template_columns_get_req(1, None, User('demo@microbio.me'))
 
         # Test study doesn't exist

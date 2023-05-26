@@ -20,7 +20,7 @@ class TestUtil(TestCase):
     def test_check_access_no_access(self):
         obs = check_access(1, 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_check_access_bad_id(self):

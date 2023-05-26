@@ -35,7 +35,7 @@ class TestArtifactAPIReadOnly(TestCase):
     def test_artifact_get_req_no_access(self):
         obs = artifact_get_req('demo@microbio.me', 1)
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_artifact_get_req(self):
@@ -95,7 +95,7 @@ class TestArtifactAPIReadOnly(TestCase):
     def test_artifact_graph_get_req_no_access(self):
         obs = artifact_graph_get_req(1, 'ancestors', 'demo@microbio.me')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_artifact_graph_get_req_bad_direction(self):
@@ -187,7 +187,7 @@ class TestArtifactAPI(TestCase):
 
         obs = artifact_get_prep_req('demo@microbio.me', [4])
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_artifact_get_info(self):
@@ -283,7 +283,7 @@ class TestArtifactAPI(TestCase):
         obs = artifact_post_req("demo@microbio.me", filepaths, artifact_type,
                                 name, pt.id)
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
         # A file does not exist
@@ -326,7 +326,7 @@ class TestArtifactAPI(TestCase):
     def test_artifact_status_put_req_no_access(self):
         obs = artifact_status_put_req(1, 'demo@microbio.me', 'sandbox')
         exp = {'status': 'error',
-               'message': 'User does not have access to study'}
+               'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)
 
     def test_artifact_status_put_req_unknown_status(self):
