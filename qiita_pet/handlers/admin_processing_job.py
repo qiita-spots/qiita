@@ -16,6 +16,7 @@ from qiita_db.software import Software
 from qiita_db.study import Study
 
 from json import dumps
+from collections import Counter
 
 
 class AdminProcessingJobBaseClass(BaseHandler):
@@ -110,50 +111,44 @@ class SampleValidation(AdminProcessingJobBaseClass):
         snames = self.get_argument("snames").split()
 
         # Get study give qiita id
-        st = Study(qid).sample_template
+        study = Study(qid).sample_template
 
         # Stripping leading qiita id from sample names
         # Example: 1.SKB1.640202 -> SKB1.640202
-        qsnames = list(st)
+        qsnames = list(study)
         for i, qsname in enumerate(qsnames):
             if qsname.startswith(qid):
                 qsnames[i] = qsname.replace(f'{qid}.', "", 1)
 
-        # Adds tube ids to a dict with key as tube id and value as qsname
-        tube_ids_dict = dict()
+        # Creates a way to access a tube_id by its corresponding sample name
+        # and vice versa, which is important to adding tube_id in parentheses
+        # after a sample name a few lines later
+        tube_ids_lookup = dict()
         tube_ids_rev = dict()
         tube_ids = set()
-        if "tube_id" in st.categories:
-            for qsname, tid in st.get_category("tube_id").items():
+        if "anonymized_name" in study.categories:
+            for qsname, tid in study.get_category("anonymized_name").items():
                 formatted_name = qsname
                 if qsname.startswith(qid):
                     formatted_name = qsname.replace(f'{qid}.', "", 1)
 
                 tube_ids.add(tid)
-                tube_ids_dict[formatted_name] = tid
+                tube_ids_lookup[formatted_name] = tid
                 tube_ids_rev[tid] = formatted_name
 
-        # Adds tube ids after sample name in paranthesis
+        # Adds tube ids after sample name in parentheses
         if len(tube_ids) > 0:
             for i, sname in enumerate(snames):
                 if sname in qsnames:
-                    snames[i] = f'{sname} ({tube_ids_dict[sname]})'
+                    snames[i] = f'{sname} ({tube_ids_lookup[sname]})'
                 elif sname in tube_ids:
                     snames[i] = f'{tube_ids_rev[sname]} ({sname})'
 
         # Finds duplicates in the samples
-        seen = dict()
+        seen = Counter()
         for sample in snames:
-            if sample in seen:
-                seen[sample] += 1
-            else:
-                seen[sample] = 1
-
-        duplicates = []
-        for sample, num in seen.items():
-            if num > 1:
-                duplicates.append(f'{sample} \u00D7 {num}')
-        duplicates = set(duplicates)
+            seen[sample] += 1
+        duplicates = [f'{s} \u00D7 {seen[s]}' for s in seen if seen[s] > 1]
 
         # Remove blank samples from sample names
         blank = set([x for x in snames if x.lower().startswith('blank')])
@@ -163,7 +158,7 @@ class SampleValidation(AdminProcessingJobBaseClass):
         if len(tube_ids) == 0:
             qsnames = set(qsnames)
         else:
-            qsnames = set([f'{x} ({tube_ids_dict[x]})' for x in qsnames])
+            qsnames = set([f'{x} ({tube_ids_lookup[x]})' for x in qsnames])
         snames = set(snames)
         matching = qsnames.intersection(snames)
         missing = qsnames.difference(snames)
