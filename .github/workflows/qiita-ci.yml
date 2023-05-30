@@ -108,6 +108,9 @@ jobs:
           # add demo root CA to certifi package's cache of root CAs,
           # since server.crt is no longer a self-signed cert.
           cat `pwd`/qiita_core/support_files/rootCA.crt >> `python -c "import certifi;print(certifi.where())"`
+          cat `python -c "import certifi;print(certifi.where())"`
+          echo `python -c "import certifi;print(certifi.where())"`
+
 
       - name: Install plugins
         shell: bash -l {0}
