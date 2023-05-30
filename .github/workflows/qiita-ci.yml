@@ -105,6 +105,10 @@ jobs:
           pwd
           mkdir ~/.qiita_plugins
 
+          # add demo root CA to certifi package's cache of root CAs,
+          # since server.crt is no longer a self-signed cert.
+          cat `pwd`/qiita_core/support_files/rootCA.crt >> `python -c "import certifi;print(certifi.where())"`
+
       - name: Install plugins
         shell: bash -l {0}
         run: |
@@ -118,6 +122,11 @@ jobs:
           pip install -U pip
           pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
           pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip
+
+          # add demo root CA to certifi package's cache of root CAs,
+          # since server.crt is no longer a self-signed cert.
+          cat `pwd`/qiita_core/support_files/rootCA.crt >> `python -c "import certifi;print(certifi.where())"`
+
           configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
 
       - name: Starting services
