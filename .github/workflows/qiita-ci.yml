@@ -119,6 +119,7 @@ jobs:
           conda env create --quiet -n qtp-biom --file qiime2-2022.11-py38-linux-conda.yml
           rm qiime2-2022.11-py38-linux-conda.yml
           export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/rootCA.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
           conda activate qtp-biom
@@ -133,7 +134,11 @@ jobs:
           # cat `python -c "import certifi;print(certifi.where())"`
           # echo `python -c "import certifi;print(certifi.where())"`
 
-          configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
+          # configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
+          # when adding the rootCA to certifi, we don't need to specify --server-cert option anymore.
+          # however if we do, we want to use the CA Cert, not the Server Cert because it's not self-signed anymore.
+          # the switch --server-cert should be renamed since the param is really to specify an external CA cert.
+          configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_ROOTCA_CERT
 
       - name: Starting services
         shell: bash -l {0}
