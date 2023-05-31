@@ -64,10 +64,6 @@ jobs:
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
           conda deactivate
-          # conda update conda
-          # echo "INSTALLING MAMBA"
-          # conda install --quiet mamba
-          # echo "INSTALLING QIITA VIA MAMBA"
           conda create --quiet --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
           conda env list
           conda activate qiita
@@ -105,13 +101,6 @@ jobs:
           pwd
           mkdir ~/.qiita_plugins
 
-          # add demo root CA to certifi package's cache of root CAs,
-          # since server.crt is no longer a self-signed cert.
-          cat `pwd`/qiita_core/support_files/rootCA.crt >> `python -c "import certifi;print(certifi.where())"`
-          # cat `python -c "import certifi;print(certifi.where())"`
-          # echo `python -c "import certifi;print(certifi.where())"`
-
-
       - name: Install plugins
         shell: bash -l {0}
         run: |
@@ -127,17 +116,10 @@ jobs:
           pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
           pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip
 
-          # add demo root CA to certifi package's cache of root CAs,
-          # since server.crt is no longer a self-signed cert.
-          # echo `pwd`
-          cat `pwd`/qiita_core/support_files/rootCA.crt >> `python -c "import certifi;print(certifi.where())"`
-          # cat `python -c "import certifi;print(certifi.where())"`
+          # if QIITA_ROOTCA_CERT is appended to certifi's cacert.pem file,
+          # then --server-cert does not need to be specified to any plugin,
+          # including configure_biom.
           # echo `python -c "import certifi;print(certifi.where())"`
-
-          # configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
-          # when adding the rootCA to certifi, we don't need to specify --server-cert option anymore.
-          # however if we do, we want to use the CA Cert, not the Server Cert because it's not self-signed anymore.
-          # the switch --server-cert should be renamed since the param is really to specify an external CA cert.
           configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_ROOTCA_CERT
 
       - name: Starting services
@@ -186,14 +168,6 @@ jobs:
           conda deactivate
           conda activate qtp-biom
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
-          # confirm environment is still set up as we want it to be where error is occurring
-          # echo `pwd`
-          # echo `python -c "import certifi;print(certifi.where())"`
-          # cat `python -c "import certifi;print(certifi.where())"`
-          echo `md5sum /home/runner/work/qiita/qiita/qiita_core/support_files/server.crt`
-          echo `md5sum /home/runner/work/qiita/qiita/qiita_core/support_files/server.key`
-          echo `md5sum /home/runner/work/qiita/qiita/qiita_core/support_files/rootCA.crt`
-          echo `md5sum /home/runner/work/qiita/qiita/qiita_core/support_files/rootCA.key`
           start_biom https://localhost:8383 register ignored
           conda deactivate
 
