@@ -182,9 +182,13 @@ jobs:
           conda activate qtp-biom
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
           # confirm environment is still set up as we want it to be where error is occurring
-          echo `pwd`
-          echo `python -c "import certifi;print(certifi.where())"`
-          cat `python -c "import certifi;print(certifi.where())"`
+          # echo `pwd`
+          # echo `python -c "import certifi;print(certifi.where())"`
+          # cat `python -c "import certifi;print(certifi.where())"`
+          echo `md5sum /home/runner/work/qiita/qiita/qiita_core/support_files/server.crt`
+          echo `md5sum /home/runner/work/qiita/qiita/qiita_core/support_files/server.key`
+          echo `md5sum /home/runner/work/qiita/qiita/qiita_core/support_files/rootCA.crt`
+          echo `md5sum /home/runner/work/qiita/qiita/qiita_core/support_files/rootCA.key`
           start_biom https://localhost:8383 register ignored
           conda deactivate
 
