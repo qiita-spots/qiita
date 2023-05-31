@@ -150,10 +150,10 @@ class ConfigurationManagerTests(TestCase):
         # Default certificate_file
         self.assertTrue(
             obs.certificate_file.endswith(
-                "/qiita_core/support_files/server.crt"))
+                "/qiita_core/support_files/ci_server.crt"))
         # Default key_file
         self.assertTrue(
-            obs.key_file.endswith("/qiita_core/support_files/server.key"))
+            obs.key_file.endswith("/qiita_core/support_files/ci_server.key"))
 
         # BASE_DATA_DIR does not exist
         conf_setter('BASE_DATA_DIR', '/surprised/if/this/dir/exists')

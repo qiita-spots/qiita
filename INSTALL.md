@@ -397,16 +397,18 @@ In the event that you get `_tkinter.TclError: no display name and no $DISPLAY en
 ## Generating certs for individual Qiita installations
 
 Qiita comes with a set of certs used for continuous integration (CI) tests. These certs are located in qiita_core/support_files/ and are not the certs used in production Qiita; they are for development use ONLY. When installing Qiita for development purposes you may wish to generate a set of certs and keys for your own use.
+dd
 
+### First, generate a new root CA private key and certificate:
 
-First, generaet a new root CA private key and certificate:
 `openssl req -x509 -sha256 -days 356 -nodes -newkey rsa:2048 -subj "/CN=localhost/C=US/L=San Diego" -keyout ci_rootca.key -out ci_rootca.crt`
 
-Second, generate a new server private key:
+### Second, generate a new server private key:
 
 `openssl genrsa -out ci_server.key 2048`
 
-Copy the following to a new file named csr.conf and modify to suit your needs
+### Copy the following to a new file named csr.conf and modify to suit your needs
+
 `[ req ]
 default_bits = 2048
 prompt = no
@@ -429,10 +431,12 @@ subjectAltName = @alt_names
 DNS.1 = localhost
 IP.1 = 127.0.0.1`
 
-Next, generate a certificate signing request
+### Next, generate a certificate signing request
+
 `openssl req -new -key ci_server.key -out ci_server.csr -config csr.conf`
 
-Copy the following to a new file named cert.conf and modify to suit your needs
+### Copy the following to a new file named cert.conf and modify to suit your needs
+
 `authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
 keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
@@ -441,14 +445,18 @@ subjectAltName = @alt_names
 [alt_names]
 DNS.1 = localhost`
 
-Lastly, generate a new server.crt that's signed with your root-CA certificate to use with your server.key
+### Lastly, generate a new server.crt that's signed with your root-CA certificate to use with your server.key
+
 `openssl x509 -req -in ci_server.csr -CA ci_rootca.crt -CAkey ci_rootca.key -CAcreateserial -out ci_server.crt -days 365 -sha256 -extfile cert.conf`
 
-The contents of server.crt can be appended to certifi package's CA cache after which the CA cert won't need to be passed to QiitaClient objects and the like.
+### The contents of server.crt can be appended to certifi package's CA cache after which the CA cert won't need to be passed to QiitaClient objects and the like.
+
 Start python interactively and get location of cacert.pem
+
 `import certifi
 certifi.where()
 '/Users/qiita_user/miniconda3/lib/python3.9/site-packages/certifi/cacert.pem'`
 
-Append ci_rootca.crt to cacert.pem
+### Append ci_rootca.crt to cacert.pem
+
 `cat ci_rootca.crt >> '/Users/qiita_user/miniconda3/lib/python3.9/site-packages/certifi/cacert.pem'`
