@@ -64,10 +64,6 @@ jobs:
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
           conda deactivate
-          # conda update conda
-          # echo "INSTALLING MAMBA"
-          # conda install --quiet mamba
-          # echo "INSTALLING QIITA VIA MAMBA"
           conda create --quiet --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
           conda env list
           conda activate qiita
@@ -94,7 +90,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda activate qiita
-          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
 
@@ -111,20 +107,25 @@ jobs:
           wget https://data.qiime2.org/distro/core/qiime2-2022.11-py38-linux-conda.yml
           conda env create --quiet -n qtp-biom --file qiime2-2022.11-py38-linux-conda.yml
           rm qiime2-2022.11-py38-linux-conda.yml
-          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
           conda activate qtp-biom
           pip install -U pip
           pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
           pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip
-          configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_SERVER_CERT
+
+          # if QIITA_ROOTCA_CERT is appended to certifi's cacert.pem file,
+          # then --server-cert does not need to be specified to any plugin,
+          # including configure_biom.
+          # echo `python -c "import certifi;print(certifi.where())"`
+          configure_biom --env-script "source /home/runner/.profile; conda activate qtp-biom" --server-cert $QIITA_ROOTCA_CERT
 
       - name: Starting services
         shell: bash -l {0}
         run: |
           conda activate qiita
-          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
 
@@ -188,7 +189,7 @@ jobs:
           COVER_PACKAGE: ${{ matrix.cover_package }}
         run: |
           conda activate qiita
-          export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+          export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           # for testing we only need to have this set, not actually exist
           export QIITA_JOB_SCHEDULER_EPILOGUE=`/path/to/epilogue/file`

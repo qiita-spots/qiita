@@ -54,9 +54,9 @@ setup(name='qiita-spots',
       package_data={
           'qiita_core': [
               'support_files/config_test.cfg'
-              'support_files/server.crt',
-              'support_files/server.csr',
-              'support_files/server.key'
+              'support_files/ci_server.crt',
+              'support_files/ci_server.csr',
+              'support_files/ci_server.key'
             ],
           'qiita_db': [
               'support_files/*.sql',
