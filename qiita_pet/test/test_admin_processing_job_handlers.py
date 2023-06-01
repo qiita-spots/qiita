@@ -62,13 +62,15 @@ class TestSampleValidation(BaseAdminTests):
         body = response.body.decode('ascii')
         for name in snames:
             self.assertIn(name, body)
+
         # Check failure: invalid qiita id
         post_args = {
             'qid': 2,
             'snames': 'SKB1.640202 SKB2.640194 BLANK.1A BLANK.1B'
         }
         response = self.post('/admin/sample_validation/', post_args)
-        self.assertEqual(response.code, 500)
+        self.assertEqual(response.code, 200)
+        self.assertIn('Study 2 does not exist', response.body.decode('ascii'))
 
 
 if __name__ == "__main__":
