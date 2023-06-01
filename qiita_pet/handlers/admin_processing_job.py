@@ -102,7 +102,7 @@ class SampleValidation(AdminProcessingJobBaseClass):
     def get(self):
         self._check_access()
 
-        self.render("sample_validation.html", input=True)
+        self.render("sample_validation.html", input=True, error=None)
 
     @execute_as_transaction
     def post(self):
