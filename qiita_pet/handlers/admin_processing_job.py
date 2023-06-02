@@ -127,7 +127,7 @@ class SampleValidation(AdminProcessingJobBaseClass):
 
             # Remove blank samples from sample names
             blank = [x for x in snames if x.lower().startswith('blank')]
-            snames = [x for x in snames if 'blank' not in x.lower()]
+            snames = set(snames) - set(blank)
 
             # Validate user's sample names against qiita study
             qsnames = set(qsnames)
