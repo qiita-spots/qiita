@@ -14,6 +14,7 @@ from qiita_core.util import execute_as_transaction
 
 from qiita_db.software import Software
 from qiita_db.study import Study
+from qiita_db.exceptions import QiitaDBUnknownIDError
 
 from json import dumps
 
@@ -101,32 +102,39 @@ class SampleValidation(AdminProcessingJobBaseClass):
     def get(self):
         self._check_access()
 
-        self.render("sample_validation.html", input=True)
+        self.render("sample_validation.html", input=True, error=None)
 
     @execute_as_transaction
     def post(self):
-
         # Get user-inputted qiita id and sample names
         qid = self.get_argument("qid")
         snames = self.get_argument("snames").split()
+        error, matching, missing, extra, blank = [None]*5
 
         # Stripping leading qiita id from sample names
         # Example: 1.SKB1.640202 -> SKB1.640202
-        qsnames = list(Study(qid).sample_template)
-        for i, qsname in enumerate(qsnames):
-            if qsname.startswith(qid):
-                qsnames[i] = qsname.replace(f'{qid}.', "", 1)
+        try:
+            qsnames = list(Study(qid).sample_template)
+        except TypeError:
+            error = f'Study {qid} seems to have no sample template'
+        except QiitaDBUnknownIDError:
+            error = f'Study {qid} does not exist'
 
-        # Remove blank samples from sample names
-        blank = [x for x in snames if x.lower().startswith('blank')]
-        snames = [x for x in snames if 'blank' not in x.lower()]
+        if error is None:
+            for i, qsname in enumerate(qsnames):
+                if qsname.startswith(qid):
+                    qsnames[i] = qsname.replace(f'{qid}.', "", 1)
 
-        # Validate user's sample names against qiita study
-        qsnames = set(qsnames)
-        snames = set(snames)
-        matching = qsnames.intersection(snames)
-        missing = qsnames.difference(snames)
-        extra = snames.difference(qsnames)
+            # Remove blank samples from sample names
+            blank = [x for x in snames if x.lower().startswith('blank')]
+            snames = set(snames) - set(blank)
+
+            # Validate user's sample names against qiita study
+            qsnames = set(qsnames)
+            snames = set(snames)
+            matching = qsnames.intersection(snames)
+            missing = qsnames.difference(snames)
+            extra = snames.difference(qsnames)
 
         self.render("sample_validation.html", input=False, matching=matching,
-                    missing=missing, extra=extra, blank=blank)
+                    missing=missing, extra=extra, blank=blank, error=error)
