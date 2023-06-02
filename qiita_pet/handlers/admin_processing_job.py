@@ -17,6 +17,7 @@ from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
 
 from json import dumps
+from collections import Counter
 
 
 class AdminProcessingJobBaseClass(BaseHandler):
@@ -109,21 +110,43 @@ class SampleValidation(AdminProcessingJobBaseClass):
         # Get user-inputted qiita id and sample names
         qid = self.get_argument("qid")
         snames = self.get_argument("snames").split()
-        error, matching, missing, extra, blank = [None]*5
+        error, matching, missing, extra, blank, duplicates = [None]*6
 
         # Stripping leading qiita id from sample names
         # Example: 1.SKB1.640202 -> SKB1.640202
         try:
-            qsnames = list(Study(qid).sample_template)
+            st = Study(qid).sample_template
+            qsnames = list(st)
         except TypeError:
             error = f'Study {qid} seems to have no sample template'
         except QiitaDBUnknownIDError:
             error = f'Study {qid} does not exist'
 
         if error is None:
+            # if tube_id is present then this should take precedence in qsnames
+            tube_ids = dict()
+            if "tube_id" in st.categories:
+                for k, v in st.get_category("tube_id").items():
+                    # ignoring empty values
+                    if v in (None, 'None', ''):
+                        continue
+                    if k.startswith(qid):
+                        k = k.replace(f'{qid}.', "", 1)
+                    tube_ids[k] = v
+
             for i, qsname in enumerate(qsnames):
                 if qsname.startswith(qid):
-                    qsnames[i] = qsname.replace(f'{qid}.', "", 1)
+                    qsname = qsname.replace(f'{qid}.', "", 1)
+                if qsname in tube_ids:
+                    nname = f'{qsname}, tube_id: {tube_ids[qsname]}'
+                    snames = [s if s != tube_ids[qsname] else nname
+                              for s in snames]
+                    qsname = nname
+                qsnames[i] = qsname
+
+            # Finds duplicates in the samples
+            seen = Counter(snames)
+            duplicates = [f'{s} \u00D7 {seen[s]}' for s in seen if seen[s] > 1]
 
             # Remove blank samples from sample names
             blank = [x for x in snames if x.lower().startswith('blank')]
@@ -137,4 +160,5 @@ class SampleValidation(AdminProcessingJobBaseClass):
             extra = snames.difference(qsnames)
 
         self.render("sample_validation.html", input=False, matching=matching,
-                    missing=missing, extra=extra, blank=blank, error=error)
+                    missing=missing, extra=extra, blank=blank,
+                    duplicates=duplicates, error=error)
