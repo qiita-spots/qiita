@@ -10,8 +10,10 @@ from unittest import main
 from json import loads
 
 from mock import Mock
+import pandas as pd
 
 from qiita_db.user import User
+from qiita_db.metadata_template.sample_template import SampleTemplate as ST
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
@@ -59,6 +61,21 @@ class TestSampleValidation(BaseAdminTests):
         response = self.post('/admin/sample_validation/', post_args)
         self.assertEqual(response.code, 200)
         snames = ['SKB1.640202', 'SKB2.640194', 'BLANK.1A', 'BLANK.1B']
+        body = response.body.decode('ascii')
+        for name in snames:
+            self.assertIn(name, body)
+
+        # Check succes with tube_id
+        md_dict = {'SKB1.640202': {'tube_id': '12345'}}
+        md_ext = pd.DataFrame.from_dict(md_dict, orient='index', dtype=str)
+        ST(1).extend(md_ext)
+        post_args = {
+            'qid': 1,
+            'snames': '12345 SKB2.640194 BLANK.1A BLANK.1B'
+        }
+        response = self.post('/admin/sample_validation/', post_args)
+        self.assertEqual(response.code, 200)
+        snames = ['SKB2.640194', 'SKB1.640202, tube_id: 12345']
         body = response.body.decode('ascii')
         for name in snames:
             self.assertIn(name, body)
