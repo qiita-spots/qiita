@@ -405,26 +405,6 @@ class DBUtilTests(DBUtilTestsBase):
         with open(join(html_fp2, 'index.html'), 'w') as fp:
             fp.write(">AAA\nAAA")
 
-        # create an additional directory named 'more_files' and populate it
-        # with two files that shouldn't be moved back into the uploads
-        # directory when an artifact is deleted, and one that should.
-        more_files_fp = mkdtemp()
-        more_files_fp = join(more_files_fp, 'more_files')
-        mkdir(more_files_fp)
-        test_files = [(join(more_files_fp, x), 1) for x in
-                      ['qtp-sequencing-validate-data.csv',
-                       'feature-table.qza',
-                       'good_file.txt']]
-
-        # create the files
-        for file_name, _ in test_files:
-            with open(file_name, 'w') as fp:
-                fp.write("This is a test file.\n")
-
-        # verify that the files exist
-        for file_name, _ in test_files:
-            self.assertTrue(exists(file_name))
-
         # creating new prep info file
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
@@ -444,35 +424,35 @@ class DBUtilTests(DBUtilTestsBase):
 
         # inserting artifact 1
         artifact1 = qdb.artifact.Artifact.create(
-            [(seqs_fp1, 1), (html_fp1, 'html_summary')] + test_files, "FASTQ",
+            [(seqs_fp1, 1), (html_fp1, 'html_summary')], "FASTQ",
             prep_template=pt1)
+        filepaths = artifact1.filepaths
         # inserting artifact 2
         artifact2 = qdb.artifact.Artifact.create(
             [(seqs_fp2, 1), (html_fp2, 'html_summary')], "FASTQ",
             prep_template=pt2)
-
-        # retrieving filepaths
-        filepaths = artifact1.filepaths
         filepaths.extend(artifact2.filepaths)
+
+        # get before delete files in upload folders
+        GUPLOADS = qdb.util.get_files_from_uploads_folders
+        upload_files = set(GUPLOADS("1"))
 
         # delete artifact 1
         qdb.artifact.Artifact.delete(artifact1.id)
 
-        # now that artifact 1 is deleted, confirm that all three test files
-        # are removed.
-        for file_name, _ in test_files:
-            self.assertFalse(exists(file_name))
+        # confirm that _only_ the fastq from the file is recovered; this means
+        # that all the extra files/folders were ignored
+        diff_upload = set(GUPLOADS("1")) - set(upload_files)
+        self.assertEqual(len(diff_upload), 1)
+        self.assertEqual(diff_upload.pop()[1], basename(seqs_fp1))
 
-        # confirm that the 'bad_files' were not moved back into the uploads
-        # directory, but the 'good_file.txt' was.
-        uploads = qdb.util.get_files_from_uploads_folders("1")
-        bad_files = [basename(x[0]) for x in test_files if
-                     'good_file.txt' not in x[0]]
-        for _, some_path, _ in uploads:
-            self.assertFalse(basename(some_path) in bad_files)
-
-        # finish deleting artifacts
+        # finish deleting artifacts :: there should be a new fastq
         qdb.artifact.Artifact.delete(artifact2.id)
+        diff_upload = set(GUPLOADS("1")) - set(upload_files)
+        self.assertEqual(len(diff_upload), 2)
+        self.assertCountEqual(
+            [x[1] for x in diff_upload],
+            [basename(seqs_fp1), basename(seqs_fp2)])
 
         # now let's create another artifact with the same filenames that
         # artifact1 so we can test successfull overlapping of names
@@ -484,32 +464,19 @@ class DBUtilTests(DBUtilTestsBase):
         artifact3 = qdb.artifact.Artifact.create(
             [(seqs_fp1, 1), (html_fp1, 'html_summary')], "FASTQ",
             prep_template=pt1)
-        filepaths.extend(artifact2.filepaths)
+        filepaths.extend(artifact3.filepaths)
         qdb.artifact.Artifact.delete(artifact3.id)
 
-        # check that they do not exist in the old path but do in the new one
-        path_for_removal = join(qdb.util.get_mountpoint("uploads")[0][1],
-                                str(study_id))
+        # files should be the same as the previous test
+        diff_upload = set(GUPLOADS("1")) - set(upload_files)
+        self.assertEqual(len(diff_upload), 2)
+        self.assertCountEqual(
+            [x[1] for x in diff_upload],
+            [basename(seqs_fp1), basename(seqs_fp2)])
+
+        bd = qdb.util.get_mountpoint("uploads")[0][1]
         for x in filepaths:
-            self.assertFalse(exists(x['fp']))
-
-            f_name = basename(x['fp'])
-
-            if f_name in bad_files:
-                # skip the check for file-names in bad_files,
-                # because they were already checked above and they were
-                # already deleted.
-                continue
-
-            new_fp = join(path_for_removal, f_name)
-
-            if x['fp_type'] == 'html_summary':
-                # The html summary gets removed, not moved
-                self.assertFalse(exists(new_fp))
-            else:
-                self.assertTrue(exists(new_fp))
-
-            self.files_to_remove.append(new_fp)
+            self.files_to_remove.append(join(bd, "1", basename(x['fp'])))
 
     def test_get_mountpoint(self):
         exp = [(5, join(qdb.util.get_db_files_base_dir(), 'raw_data'))]
