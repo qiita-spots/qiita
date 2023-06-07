@@ -970,3 +970,12 @@ class PrepTemplate(MetadataTemplate):
                      WHERE prep_template_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @creation_job_id.setter
+    def creation_job_id(self, creation_job_id):
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.prep_template
+                     SET creation_job_id = %s
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [creation_job_id, self.id])
+            qdb.sql_connection.TRN.execute()
