@@ -72,11 +72,13 @@ class AJAXAdminProcessingJobListing(AdminProcessingJobBaseClass):
                             (heartbeat > current_date - interval '14' day OR
                              heartbeat is NULL)"""
             TRN.add(sql, [command_id])
+            print (f'-----> {command_id}')
             jids = TRN.execute_fetchflatten()
 
         jobs = []
         for jid in jids:
             job = PJ(jid)
+            msg = ''
             if job.status == 'error':
                 msg = job.log.msg
             elif job.status == 'running':
