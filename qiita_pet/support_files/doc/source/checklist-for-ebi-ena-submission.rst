@@ -76,8 +76,15 @@ Remember, metadata is the most important part for an analysis, without it we onl
       6. *env_biome*, *env_feature*, *env_material*, *env_package*, for options `visit ENVO <http://ols.wordvis.com/>`__
       7. *elevation*, *latitude*, *longitude*
       8. *physical_specimen_location*
-      9. *collection_timestamp*
-      10. *empo_1*, *empo_2*, *empo_3*, *empo_4*, more info: :ref:`empo`
+      9. *collection_date*
+      10. *country*
+
+          .. note::
+             The EBI-ENA submission requires to have *geographic location (country and/or sea)*
+             so during submission Qiita will automatically replace *country* to match that
+             requirement.
+
+      11. *empo_1*, *empo_2*, *empo_3*, *empo_4*, more info: :ref:`empo`
 
          .. table::
             :widths: auto

@@ -402,6 +402,9 @@ class EBISubmission(object):
 
         for sample_name in sorted(samples):
             sample_info = dict(self.samples[sample_name])
+            if 'country' in sample_info.keys():
+                nname = 'geographic location (country and/or sea)'
+                sample_info[nname] = sample_info['country']
 
             sample_accession = self._ebi_sample_accessions[sample_name]
             if self.action in ('ADD', 'VALIDATE'):

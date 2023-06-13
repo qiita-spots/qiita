@@ -229,7 +229,8 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
             nunique[(nunique <= int(nsamples * .01)) |
                     (nunique >= int(nsamples * .5))].index)
         cols_to_drop = cols_to_drop - {'taxon_id', 'scientific_name',
-                                       'description'}
+                                       'description', 'country',
+                                       'collection_date'}
         all_samples = ebi_submission.sample_template.ebi_sample_accessions
         samples = [k for k in ebi_submission.samples if all_samples[k] is None]
         if samples:
