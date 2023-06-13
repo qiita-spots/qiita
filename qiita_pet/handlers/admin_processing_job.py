@@ -86,12 +86,12 @@ class AJAXAdminProcessingJobListing(AdminProcessingJobBaseClass):
             outputs = []
             if job.status == 'success':
                 outputs = [[k, v.id] for k, v in job.outputs.items()]
-                validator_jobs = [v.id for v in job.validator_jobs]
+            validator_jobs = [v.id for v in job.validator_jobs]
 
-                if job.heartbeat is not None:
-                    heartbeat = job.heartbeat.strftime('%Y-%m-%d %H:%M:%S')
-                else:
-                    heartbeat = 'N/A'
+            if job.heartbeat is not None:
+                heartbeat = job.heartbeat.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                heartbeat = 'N/A'
 
             jobs.append([job.id, job.command.name, job.status, msg,
                          outputs, validator_jobs, heartbeat,
