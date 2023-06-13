@@ -63,7 +63,7 @@ class AJAXAdminProcessingJobListing(AdminProcessingJobBaseClass):
             # different versions of the same plugin will have different
             # command_id, this will make sure to get them all (commands)
             sql = """SELECT processing_job_id FROM qiita.processing_job
-                     WHERE command_id in (
+                     WHERE hidden = false and command_id in (
                         SELECT command_id FROM qiita.software_command
                         WHERE
                             name in (
