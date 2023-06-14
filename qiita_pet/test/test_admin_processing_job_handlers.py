@@ -32,7 +32,7 @@ class TestAdminProcessingJob(BaseAdminTests):
 
 class TestAJAXAdminProcessingJobListing(BaseAdminTests):
     def test_get(self):
-        response = self.get('/admin/processing_jobs/list?sEcho=3&commandId=1')
+        response = self.get('/admin/processing_jobs/list?sEcho=3&commandId=2')
         self.assertEqual(response.code, 200)
 
         exp = {'sEcho': '3', 'recordsTotal': 0, 'recordsFiltered': 0,

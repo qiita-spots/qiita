@@ -172,6 +172,11 @@ class PrepTemplateAPItestHandlerTests(OauthTestingBase):
         self.assertEqual(pt.name, data['name'])
         self.assertEqual(pt.creation_job_id, data['job-id'])
 
+        # testing setter
+        jid = 'aaaaaaaa-aaaa-bbbb-aaaa-aaaaaaaaaaaa'
+        pt.creation_job_id = jid
+        self.assertEqual(pt.creation_job_id, jid)
+
 
 if __name__ == '__main__':
     main()

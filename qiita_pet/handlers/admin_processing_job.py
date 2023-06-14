@@ -15,6 +15,8 @@ from qiita_core.util import execute_as_transaction
 from qiita_db.software import Software
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.sql_connection import TRN
+from qiita_db.processing_job import ProcessingJob as PJ
 
 from json import dumps
 from collections import Counter
@@ -57,35 +59,44 @@ class AJAXAdminProcessingJobListing(AdminProcessingJobBaseClass):
         echo = self.get_argument('sEcho')
         command_id = int(self.get_argument('commandId'))
 
+        with TRN:
+            # different versions of the same plugin will have different
+            # command_id, this will make sure to get them all (commands)
+            sql = """SELECT processing_job_id FROM qiita.processing_job
+                     WHERE hidden = false and command_id in (
+                        SELECT command_id FROM qiita.software_command
+                        WHERE
+                            name in (
+                                SELECT name FROM qiita.software_command
+                                WHERE command_id = %s)) AND
+                            (heartbeat > current_date - interval '14' day OR
+                             heartbeat is NULL)"""
+            TRN.add(sql, [command_id])
+            jids = TRN.execute_fetchflatten()
+
         jobs = []
-        for ps in self._get_private_software():
-            for cmd in ps.commands:
-                if cmd.id != command_id:
-                    continue
+        for jid in jids:
+            job = PJ(jid)
+            msg = ''
+            if job.status == 'error':
+                msg = job.log.msg
+            elif job.status == 'running':
+                msg = job.step
+            msg = msg.replace('\n', '</br>')
+            outputs = []
+            if job.status == 'success':
+                outputs = [[k, v.id] for k, v in job.outputs.items()]
+            validator_jobs = [v.id for v in job.validator_jobs]
 
-                for job in cmd.processing_jobs:
-                    if job.hidden:
-                        continue
-                    msg = ''
-                    if job.status == 'error':
-                        msg = job.log.msg
-                    elif job.status == 'running':
-                        msg = job.step
-                    msg = msg.replace('\n', '</br>')
-                    outputs = []
-                    if job.status == 'success':
-                        outputs = [[k, v.id] for k, v in job.outputs.items()]
-                    validator_jobs = [v.id for v in job.validator_jobs]
+            if job.heartbeat is not None:
+                heartbeat = job.heartbeat.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                heartbeat = 'N/A'
 
-                    if job.heartbeat is not None:
-                        heartbeat = job.heartbeat.strftime('%Y-%m-%d %H:%M:%S')
-                    else:
-                        heartbeat = 'N/A'
-
-                    jobs.append([job.id, job.command.name, job.status, msg,
-                                 outputs, validator_jobs, heartbeat,
-                                 job.parameters.values, job.external_id,
-                                 job.user.email])
+            jobs.append([job.id, job.command.name, job.status, msg,
+                         outputs, validator_jobs, heartbeat,
+                         job.parameters.values, job.external_id,
+                         job.user.email])
         results = {
             "sEcho": echo,
             "recordsTotal": len(jobs),

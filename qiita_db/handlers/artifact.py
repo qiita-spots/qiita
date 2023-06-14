@@ -320,5 +320,4 @@ class APIArtifactHandler(OauthBaseHandler):
         r_client.set('prep_template_%d' % prep_id,
                      dumps({'job_id': new_job.id, 'is_qiita_job': True}))
 
-        self.write(new_job.id)
-        self.finish()
+        self.finish({'job_id': new_job.id})

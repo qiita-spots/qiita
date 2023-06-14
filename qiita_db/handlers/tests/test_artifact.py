@@ -368,7 +368,7 @@ class APIArtifactHandlerTests(OauthTestingBase):
         # send the new data
         del data['prep_id']
         obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
-        jid = obs.body.decode("utf-8")
+        jid = loads(obs.body)['job_id']
 
         job = qdb.processing_job.ProcessingJob(jid)
         while job.status not in ('error', 'success'):
@@ -404,7 +404,7 @@ class APIArtifactHandlerTests(OauthTestingBase):
                 'files': dumps({'biom': [fp]})}
 
         obs = self.post('/qiita_db/artifact/', headers=self.header, data=data)
-        jid = obs.body.decode("utf-8")
+        jid = loads(obs.body)['job_id']
 
         job = qdb.processing_job.ProcessingJob(jid)
         while job.status not in ('error', 'success'):

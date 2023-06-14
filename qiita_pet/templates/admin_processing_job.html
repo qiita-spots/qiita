@@ -71,12 +71,12 @@
       };
 
       out.push('<b class="' + statusToClass[status] + '">' + status + ' ' +
-                row[0] + ' </b> [ ' + row[9] + ' ]</br>');
+                row[0] + ' (' + row[8] + ') </b> [ ' + row[9] + ' ]</br>');
 
       if (status === 'running' || status === 'queued') {
         // row[0] is qiita job-id
         // row[3] is status 'Step n of 6' and other messages
-        out.push('[' + row[8] + ']</br> <i>' + row[3] + '</i>')
+        out.push('<i>' + row[3] + '</i>')
       }
       else {
         // We write a callback attribute on the link to be able to display a

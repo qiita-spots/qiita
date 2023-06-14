@@ -76,9 +76,9 @@ class PrepTemplateAJAX(BaseHandler):
         res['alert_message'] = url_escape(res['alert_message'])
         res['user_level'] = current_user.level
         if res['creation_job'] is not None:
-            vals = res['creation_job'].values
-            res['creation_job_filename'] = vals['filename']
-            res['creation_job_filename_body'] = vals['body']
+            fp = res['creation_job'].parameters.values['sample_sheet']
+            res['creation_job_filename'] = fp['filename']
+            res['creation_job_filename_body'] = fp['body']
 
         self.render('study_ajax/prep_summary.html', **res)
 
