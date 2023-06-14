@@ -80,7 +80,7 @@ Remember, metadata is the most important part for an analysis, without it we onl
       10. *country*
 
           .. note::
-             The EBI-ENA submission requires to have *geographic location (country and/or sea)*
+             The EBI-ENA submission requires to have a *geographic location (country and/or sea)*
              so during submission Qiita will automatically replace *country* to match that
              requirement.
 
