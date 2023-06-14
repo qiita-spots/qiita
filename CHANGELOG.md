@@ -1,5 +1,16 @@
 # Qiita changelog
 
+Version 2023.06
+---------------
+
+* EBI-ENA submissions require a sample metadata column: **geographic location (country and/or sea)**, Qiita will automatically rename **country** to satisfy this requirement.
+* The qp-knight-lab-processing was [refactored for better performance and testing](https://github.com/qiita-spots/qp-knight-lab-processing/pull/60); mainly contributed by @charles-cowart.
+* Admin Sample Validation now uses tube_id; mainly contributed by @CatFish47.
+* Registered users cannot start sample deletion jobs within public studies.
+* The qp-knight-lab-processing now links the SPP job to the preparation it creates and links the created files to that preparation. Note that no files are being moved to the upload folder.
+* Fixed the following issues [#3227](https://github.com/qiita-spots/qiita/issues/3227), [#3279](https://github.com/qiita-spots/qiita/issues/3279).
+
+
 Version 2023.05
 ---------------
 
