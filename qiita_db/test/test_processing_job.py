@@ -870,50 +870,47 @@ class ProcessingJobTest(TestCase):
         # messages of type 'error'.
         obs = self.tester1._generate_notification_message('error', None)
 
-        exp = {'subject': ('Split libraries FASTQ: error '
-                           '(063e553b-327c-4818-ab4a-adfe58e49860)'),
-               'message': ('Processing Job: Split libraries FASTQ\n'
-                           f'{qiita_config.base_url}/study/description/1'
-                           '\nPrep IDs: 1\nData Type: 18S\nNew '
-                           'status: error')}
+        exp = {'subject': ('Split libraries FASTQ: error, 063e553b-327c-4818-'
+                           'ab4a-adfe58e49860 [Not Available]'),
+               'message': ('Split libraries FASTQ\nPrep IDs: 1'
+                           f'\n{qiita_config.base_url}/study/description/1?'
+                           'prep_id=1\nData Type: 18S\nNew status: error')}
         self.assertDictEqual(obs, exp)
 
         obs = self.tester1._generate_notification_message('error',
                                                           'An Error Message')
-        exp = {'subject': ('Split libraries FASTQ: error '
-                           '(063e553b-327c-4818-ab4a-adfe58e49860)'),
-               'message': ('Processing Job: Split libraries FASTQ\n'
-                           f'{qiita_config.base_url}/study/description/1\n'
-                           'Prep IDs: 1\nData Type: 18S\nNew status'
-                           ': error\n\nError:\nAn Error Message')}
+        exp = {'subject': ('Split libraries FASTQ: error, 063e553b-327c-4818-'
+                           'ab4a-adfe58e49860 [Not Available]'),
+               'message': ('Split libraries FASTQ\nPrep IDs: 1'
+                           f'\n{qiita_config.base_url}/study/description/1?'
+                           'prep_id=1\nData Type: 18S\nNew status: error'
+                           '\n\nError:\nAn Error Message')}
         self.assertDictEqual(obs, exp)
 
         # The inclusion of an error message has no effect on other valid
         # status types e.g. 'running'.
         obs = self.tester1._generate_notification_message('running', None)
-        exp = {'subject': ('Split libraries FASTQ: running '
-                           '(063e553b-327c-4818-ab4a-adfe58e49860)'),
-               'message': ('Processing Job: Split libraries FASTQ\n'
-                           f'{qiita_config.base_url}/study/description/1\n'
-                           'Prep IDs: 1\nData Type: 18S\nNew status'
-                           ': running')}
+        exp = {'subject': ('Split libraries FASTQ: running, 063e553b-327c-'
+                           '4818-ab4a-adfe58e49860 [Not Available]'),
+               'message': ('Split libraries FASTQ\nPrep IDs: 1'
+                           f'\n{qiita_config.base_url}/study/description/1?'
+                           'prep_id=1\nData Type: 18S\nNew status: running')}
         self.assertDictEqual(obs, exp)
 
         obs = self.tester1._generate_notification_message('running', 'Yahoo!')
-        exp = {'subject': ('Split libraries FASTQ: running '
-                           '(063e553b-327c-4818-ab4a-adfe58e49860)'),
-               'message': ('Processing Job: Split libraries FASTQ\n'
-                           f'{qiita_config.base_url}/study/description/1\n'
-                           'Prep IDs: 1\nData Type: 18S\nNew status'
-                           ': running')}
+        exp = {'subject': ('Split libraries FASTQ: running, 063e553b-327c-'
+                           '4818-ab4a-adfe58e49860 [Not Available]'),
+               'message': ('Split libraries FASTQ\nPrep IDs: 1'
+                           f'\n{qiita_config.base_url}/study/description/1?'
+                           'prep_id=1\nData Type: 18S\nNew status: running')}
         self.assertDictEqual(obs, exp)
 
         # checking analysis emails
         jid = '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0'
         pj = qdb.processing_job.ProcessingJob(jid)
         obs = pj._generate_notification_message('running', 'Yahoo!')
-        exp = {'subject': 'Single Rarefaction: running '
-                          '(8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0)',
+        exp = {'subject': ('Single Rarefaction: running, 8a7a8461-e8a1-'
+                           '4b4e-a428-1bc2f4d3ebd0 [Not Available]'),
                'message': 'Analysis Job Single Rarefaction\n'
                           f'{qiita_config.base_url}/analysis/description/1/\n'
                           'New status: running'}

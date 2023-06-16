@@ -759,7 +759,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     study_id = study_ids.pop()
 
                     # there should be at least one prep_id and probably more.
-                    prep_ids = set(prep_ids)
+                    prep_ids = list(set(prep_ids))
                     if len(prep_ids) == 0:
                         raise qdb.exceptions.QiitaError("No Prep IDs were "
                                                         "found")
@@ -782,7 +782,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                                                         f"{data_types}")
                     data_type = data_types.pop()
 
-                    message = f'Processing Job: {self.command.name}\n'
+                    message = f'{self.command.name}\n'
                     message += f'Prep IDs: {prep_ids}\n'
                     message += f'{study_url}\n'
                     message += f'Data Type: {data_type}\n'
