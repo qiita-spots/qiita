@@ -8,7 +8,8 @@ Version 2023.06
 * Admin Sample Validation now uses tube_id; mainly contributed by @CatFish47.
 * Registered users cannot start sample deletion jobs within public studies.
 * The qp-knight-lab-processing now links the SPP job to the preparation it creates and links the created files to that preparation. Note that no files are being moved to the upload folder.
-* Fixed the following issues [#3227](https://github.com/qiita-spots/qiita/issues/3227), [#3279](https://github.com/qiita-spots/qiita/issues/3279).
+* Fixed the following issues [#3227](https://github.com/qiita-spots/qiita/issues/3227), [#3279](https://github.com/qiita-spots/qiita/issues/3280), [#3227](https://github.com/qiita-spots/qiita/issues/3280).
+* Added ProcessingJob.external_id to status-report messages generated, and added sending an email to our system-admin when a (wet-lab) admin job errors.
 
 
 Version 2023.05

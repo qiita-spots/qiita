@@ -729,7 +729,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             return None
 
         # generate subject line
-        subject = '%s: %s (%s)' % (self.command.name, value, self.id)
+        subject = (f'{self.command.name}: {value}, {self.id} '
+                   f'[{self.external_id}]')
 
         # generate message line
         message = ''
@@ -758,10 +759,17 @@ class ProcessingJob(qdb.base.QiitaObject):
                     study_id = study_ids.pop()
 
                     # there should be at least one prep_id and probably more.
-                    prep_ids = set(prep_ids)
+                    prep_ids = list(set(prep_ids))
                     if len(prep_ids) == 0:
                         raise qdb.exceptions.QiitaError("No Prep IDs were "
                                                         "found")
+                    if len(prep_ids) == 1:
+                        study_url = (f'{qiita_config.base_url}/study/'
+                                     f'description/{study_id}?prep_id='
+                                     f'{prep_ids[0]}')
+                    else:
+                        study_url = (f'{qiita_config.base_url}/study/'
+                                     f'description/{study_id}')
                     # convert into a string for presentation.
                     prep_ids = [str(x) for x in prep_ids]
                     prep_ids = ', '.join(prep_ids)
@@ -774,10 +782,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                                                         f"{data_types}")
                     data_type = data_types.pop()
 
-                    message = f'Processing Job: {self.command.name}\n'
-                    message += f'{qiita_config.base_url}/study/'
-                    message += f'description/{study_id}\n'
+                    message = f'{self.command.name}\n'
                     message += f'Prep IDs: {prep_ids}\n'
+                    message += f'{study_url}\n'
                     message += f'Data Type: {data_type}\n'
                 elif artifact.analysis:
                     # this is an analysis job. display analysis id as link and
@@ -832,6 +839,12 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # send email
                 qdb.util.send_email(self.user.email, msg['subject'],
                                     msg['message'])
+                # send email to our sys-admin if error from admin
+                if self.user.level in {'admin', 'wet-lab admin'}:
+                    if value == 'error':
+                        qdb.util.send_email(
+                            'jdereus@health.ucsd.edu', msg['subject'],
+                            msg['message'])
 
             sql = """UPDATE qiita.processing_job
                      SET processing_job_status_id = %s
