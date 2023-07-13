@@ -556,7 +556,7 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(
             validator.get_resource_allocation_info(),
             '-p qiita -N 1 -n 1 --mem 90gb --time 150:00:00')
-        self.assertEqual(validator.shape, (27, 31, None))
+        self.assertEqual(validator.shape, (27, 53, None))
         # Test the output artifact is going to be named based on the
         # input parameters
         self.assertEqual(
@@ -774,17 +774,62 @@ class ProcessingJobTest(TestCase):
     def test_shape(self):
         jids = {
             # Split libraries FASTQ
-            '6d368e16-2242-4cf8-87b4-a5dc40bb890b': (27, 31, 116),
+            '6d368e16-2242-4cf8-87b4-a5dc40bb890b': (27, 53, 116),
             # Pick closed-reference OTUs
-            '80bf25f3-5f1d-4e10-9369-315e4244f6d5': (27, 31, 0),
+            '80bf25f3-5f1d-4e10-9369-315e4244f6d5': (27, 53, 0),
             # Single Rarefaction / Analysis
             '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0': (5, 56, 3770436),
             # Split libraries
-            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d': (27, 31, 116)}
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d': (27, 53, 116)}
 
         for jid, shape in jids.items():
             job = qdb.processing_job.ProcessingJob(jid)
             self.assertEqual(job.shape, shape)
+
+    def test_shape_special_cases(self):
+        # get any given job/command/allocation and make sure nothing changed
+        pj = qdb.processing_job.ProcessingJob(
+            '6d368e16-2242-4cf8-87b4-a5dc40bb890b')
+        command = pj.command
+        current_allocation = pj.get_resource_allocation_info()
+        self.assertEqual(current_allocation,
+                         '-p qiita -N 1 -n 1 --mem 120gb --time 80:00:00')
+
+        # now, let's update that job allocation and make sure that things
+        # work as expected
+        tests = [
+            # (resource allocation, specific allocation)
+            # 1. tests that nlog works
+            ('-p qiita -N 1 -n 1 --mem nlog({samples})*100 --time {columns}',
+             '-p qiita -N 1 -n 1 --mem 329B --time 0:00:53'),
+            # 2. days in time works fine
+            ('-p qiita -N 1 -n 1 --mem 10g --time {columns}*10000',
+             '-p qiita -N 1 -n 1 --mem 10g --time 6-3:13:20'),
+            ('-p qiita -N 1 -n 1 --mem 20g --time {columns}*1631',
+             '-p qiita -N 1 -n 1 --mem 20g --time 1-0:00:43'),
+            # 3. conditionals work
+            ('-p qiita -N 1 -n 1 --mem 10g --time {columns}*1631 '
+             'if {columns}*1631 < 86400 else 86400',
+             '-p qiita -N 1 -n 1 --mem 10g --time 1-0:00:00'),
+            ('-p qiita -N 1 -n 1 --mem 10g --time {columns}*1631 '
+             'if {columns}*1631 > 86400 else 86400',
+             '-p qiita -N 1 -n 1 --mem 10g --time 1-0:00:43'),
+            # --qos=qiita_prio
+            ('-p qiita -N 1 -n 1 --mem 10g --time 1:00:00 --qos=qiita_prio',
+             '-p qiita -N 1 -n 1 --mem 10g --time 1:00:00 --qos=qiita_prio'),
+            # all the combinations
+            ('-p qiita -N 1 -n 1 --mem nlog({samples})*100000 --time '
+             '{columns}*1631 if {columns}*1631 > 86400 else 86400 '
+             '--qos=qiita_prio',
+             '-p qiita -N 1 -n 1 --mem 322K --time 1-0:00:43 '
+             '--qos=qiita_prio'),
+        ]
+        for ra, sra in tests:
+            sql = ("UPDATE qiita.processing_job_resource_allocation "
+                   f"SET allocation = '{ra}'"
+                   f"WHERE name = '{command.name}'")
+            qdb.sql_connection.perform_as_transaction(sql)
+            self.assertEqual(sra, pj.get_resource_allocation_info())
 
     def test_get_resource_allocation_info(self):
         jids = {
@@ -835,7 +880,7 @@ class ProcessingJobTest(TestCase):
             job_not_changed.get_resource_allocation_info(),
             '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00')
         self.assertEqual(job_changed.get_resource_allocation_info(),
-                         '-p qiita --mem 59M')
+                         '-p qiita --mem 80M')
 
         # now something real input_size+(2*1e+9)
         #                        116   +(2*1e+9) ~ 2000000116
