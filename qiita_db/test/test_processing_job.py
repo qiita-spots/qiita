@@ -831,6 +831,12 @@ class ProcessingJobTest(TestCase):
             qdb.sql_connection.perform_as_transaction(sql)
             self.assertEqual(sra, pj.get_resource_allocation_info())
 
+        # return allocation
+        sql = ("UPDATE qiita.processing_job_resource_allocation "
+               f"SET allocation = '{current_allocation}'"
+               f"WHERE name = '{command.name}'")
+        qdb.sql_connection.perform_as_transaction(sql)
+
     def test_get_resource_allocation_info(self):
         jids = {
             # Split libraries FASTQ
@@ -890,6 +896,13 @@ class ProcessingJobTest(TestCase):
             '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00')
         self.assertEqual(job_changed.get_resource_allocation_info(),
                          '-p qiita --mem 2G')
+
+        # restore allocation
+        sql = ("UPDATE qiita.processing_job_resource_allocation "
+               "SET allocation = '-p qiita -N 1 -n 1 --mem 120gb "
+               "--time 80:00:00' "
+               "WHERE name = 'Split libraries FASTQ'")
+        qdb.sql_connection.perform_as_transaction(sql)
 
     def test_notification_mail_generation(self):
         # Almost all processing-jobs in testing are owned by test@foo.bar
