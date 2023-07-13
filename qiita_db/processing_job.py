@@ -1869,6 +1869,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         input_size = None
 
         parameters = self.parameters.values
+        QUIDError = qdb.exceptions.QiitaDBUnknownIDError
 
         if self.command.name == 'Validate':
             # Validate only has two options to calculate it's size: template (a
@@ -1878,7 +1879,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 try:
                     PT = qdb.metadata_template.prep_template.PrepTemplate
                     prep_info = PT(parameters['template'])
-                except qdb.exceptions.QiitaDBUnknownIDError:
+                except QUIDError:
                     pass
                 else:
                     study_id = prep_info.study_id
@@ -1908,8 +1909,25 @@ class ProcessingJob(qdb.base.QiitaObject):
             elif 'artifact' in parameters:
                 try:
                     artifact = qdb.artifact.Artifact(parameters['artifact'])
-                except qdb.exceptions.QiitaDBUnknownIDError:
+                except QUIDError:
                     pass
+        elif self.command.name == 'delete_sample_or_column':
+            v = self.parameters.values
+            try:
+                MT = qdb.metadata_template
+                if v['obj_class'] == 'SampleTemplate':
+                    obj = MT.sample_template.SampleTemplate(v['obj_id'])
+                else:
+                    obj = MT.prep_template.PrepTemplate(v['obj_id'])
+            except QUIDError:
+                pass
+            samples = len(obj)
+        elif self.command.name == 'Sequence Processing Pipeline':
+            body = self.parameters.values['sample_sheet']['body']
+            samples = body.count('\r')
+            stemp = body.count('\n')
+            if stemp > samples:
+                samples = stemp
         elif self.input_artifacts:
             artifact = self.input_artifacts[0]
             if artifact.artifact_type == 'BIOM':
@@ -1933,7 +1951,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         if study_id is not None:
             try:
                 st = qdb.study.Study(study_id).sample_template
-            except qdb.exceptions.QiitaDBUnknownIDError:
+            except QUIDError:
                 pass
             else:
                 if prep_info is not None:
