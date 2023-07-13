@@ -9,9 +9,10 @@
 import networkx as nx
 import qiita_db as qdb
 import pandas as pd
+from numpy import log as nlog # noqa
 
 from collections import defaultdict, Iterable
-from datetime import datetime
+from datetime import datetime, timedelta
 from itertools import chain
 from json import dumps, loads
 from multiprocessing import Process, Queue, Event
@@ -460,7 +461,21 @@ class ProcessingJob(qdb.base.QiitaObject):
                 parts = []
                 error_msg = ('Obvious incorrect allocation. Please '
                              'contact qiita.help@gmail.com')
-                for part in allocation.split(' '):
+                for part in allocation.split('--'):
+                    param = ''
+                    if part.startswith('time '):
+                        param = 'time '
+                    elif part.startswith('mem '):
+                        param = 'mem '
+                    else:
+                        # if parts is empty, this is the first part so no --
+                        if parts:
+                            parts.append(f'--{part.strip()}')
+                        else:
+                            parts.append(part.strip())
+                        continue
+
+                    part = part[len(param):]
                     if ('{samples}' in part or '{columns}' in part or
                             '{input_size}' in part):
                         # to make sure that the formula is correct and avoid
@@ -479,19 +494,29 @@ class ProcessingJob(qdb.base.QiitaObject):
                         try:
                             # if eval has something that can't be processed
                             # it will raise a NameError
-                            mem = eval(part.format(
+                            value = eval(part.format(
                                 samples=samples, columns=columns,
                                 input_size=input_size))
                         except NameError:
                             self._set_error(error_msg)
                             return 'Not valid'
                         else:
-                            if mem <= 0:
+                            if value <= 0:
                                 self._set_error(error_msg)
                                 return 'Not valid'
-                            part = naturalsize(mem, gnu=True, format='%.0f')
 
-                    parts.append(part)
+                            if param == 'time ':
+                                td = timedelta(seconds=value)
+                                if td.days > 0:
+                                    days = td.days
+                                    td = td - timedelta(days=days)
+                                    part = f'{days}-{str(td)}'
+                                else:
+                                    part = str(td)
+                            else:
+                                part = naturalsize(
+                                    value, gnu=True, format='%.0f')
+                    parts.append(f'--{param}{part}'.strip())
 
                 allocation = ' '.join(parts)
 
@@ -1837,12 +1862,14 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         samples = None
         columns = None
+        prep_info = None
         study_id = None
         analysis_id = None
         artifact = None
         input_size = None
 
         parameters = self.parameters.values
+        QUIDError = qdb.exceptions.QiitaDBUnknownIDError
 
         if self.command.name == 'Validate':
             # Validate only has two options to calculate it's size: template (a
@@ -1850,12 +1877,12 @@ class ProcessingJob(qdb.base.QiitaObject):
             # analysis). However, 'template' can be present and be None
             if 'template' in parameters and parameters['template'] is not None:
                 try:
-                    pt = qdb.metadata_template.prep_template.PrepTemplate(
-                        parameters['template'])
-                except qdb.exceptions.QiitaDBUnknownIDError:
+                    PT = qdb.metadata_template.prep_template.PrepTemplate
+                    prep_info = PT(parameters['template'])
+                except QUIDError:
                     pass
                 else:
-                    study_id = pt.study_id
+                    study_id = prep_info.study_id
             elif 'analysis' in parameters:
                 analysis_id = parameters['analysis']
         elif self.command.name == 'build_analysis_files':
@@ -1863,8 +1890,13 @@ class ProcessingJob(qdb.base.QiitaObject):
             # exist yet
             sanalysis = qdb.analysis.Analysis(parameters['analysis']).samples
             samples = sum([len(sams) for sams in sanalysis.values()])
+            # only count the biom files
             input_size = sum([fp['fp_size'] for aid in sanalysis
-                              for fp in qdb.artifact.Artifact(aid).filepaths])
+                              for fp in qdb.artifact.Artifact(aid).filepaths
+                              if fp['fp_type'] == 'biom'])
+            columns = self.parameters.values['categories']
+            if columns is not None:
+                columns = len(columns)
         elif self.command.software.name == 'Qiita':
             if 'study' in parameters:
                 study_id = parameters['study']
@@ -1877,17 +1909,41 @@ class ProcessingJob(qdb.base.QiitaObject):
             elif 'artifact' in parameters:
                 try:
                     artifact = qdb.artifact.Artifact(parameters['artifact'])
-                except qdb.exceptions.QiitaDBUnknownIDError:
+                except QUIDError:
                     pass
+        elif self.command.name == 'delete_sample_or_column':
+            v = self.parameters.values
+            try:
+                MT = qdb.metadata_template
+                if v['obj_class'] == 'SampleTemplate':
+                    obj = MT.sample_template.SampleTemplate(v['obj_id'])
+                else:
+                    obj = MT.prep_template.PrepTemplate(v['obj_id'])
+            except QUIDError:
+                pass
+            samples = len(obj)
+        elif self.command.name == 'Sequence Processing Pipeline':
+            body = self.parameters.values['sample_sheet']['body']
+            samples = body.count('\r')
+            stemp = body.count('\n')
+            if stemp > samples:
+                samples = stemp
         elif self.input_artifacts:
             artifact = self.input_artifacts[0]
-            input_size = sum([fp['fp_size'] for a in self.input_artifacts
-                              for fp in a.filepaths])
+            if artifact.artifact_type == 'BIOM':
+                input_size = sum([fp['fp_size'] for a in self.input_artifacts
+                                  for fp in a.filepaths
+                                  if fp['fp_type'] == 'biom'])
+            else:
+                input_size = sum([fp['fp_size'] for a in self.input_artifacts
+                                  for fp in a.filepaths])
 
         # if there is an artifact, then we need to get the study_id/analysis_id
         if artifact is not None:
             if artifact.study is not None:
-                study_id = artifact.study.id
+                # only count samples in the prep template
+                prep_info = artifact.prep_templates[0]
+                study_id = prep_info.study_id
             elif artifact.analysis is not None:
                 analysis_id = artifact.analysis.id
 
@@ -1895,11 +1951,15 @@ class ProcessingJob(qdb.base.QiitaObject):
         if study_id is not None:
             try:
                 st = qdb.study.Study(study_id).sample_template
-            except qdb.exceptions.QiitaDBUnknownIDError:
+            except QUIDError:
                 pass
             else:
-                samples = len(st)
-                columns = len(st.categories)
+                if prep_info is not None:
+                    samples = len(prep_info)
+                    columns = len(prep_info.categories) + len(st.categories)
+                else:
+                    samples = len(st)
+                    columns = len(st.categories)
         elif analysis_id is not None:
             try:
                 analysis = qdb.analysis.Analysis(analysis_id)
