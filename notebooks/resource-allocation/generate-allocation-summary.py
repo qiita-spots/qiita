@@ -1,18 +1,17 @@
-
 from qiita_db.software import Software
 from subprocess import check_output
 import pandas as pd
 from io import StringIO
 from qiita_db.exceptions import QiitaDBUnknownIDError
-from qiita_db.artifact import Artifact
-from qiita_db.analysis import Analysis
 from qiita_db.processing_job import ProcessingJob
-from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.metadata_template.sample_template import SampleTemplate
 from json import loads
-from datetime import datetime
+from os.path import join
+
 
 all_commands = [c for s in Software.iter(False) for c in s.commands]
+
+# retrieving only the numerice external_id means that we are only focusing
+# on barnacle2/slurm jobs
 main_jobs = [j for c in all_commands for j in c.processing_jobs
              if j.status == 'success' and j.external_id.isnumeric()]
 
@@ -33,8 +32,14 @@ for i, j in enumerate(main_jobs):
     try:
         samples, columns, input_size = j.shape
     except QiitaDBUnknownIDError:
+        # this will be raised if the study or the analysis has been deleted;
+        # in other words, the processing_job was ran but the details about it
+        # were erased when the user deleted them - however, we keep the job for
+        # the record
         continue
     except TypeError as e:
+        # similar to the except above, exept that for these 2 commands, we have
+        # the study_id as None
         if cmd.name in {'create_sample_template', 'delete_sample_template'}:
             continue
         else:
@@ -52,40 +57,14 @@ for i, j in enumerate(main_jobs):
             extra_info = ','.join({
                 x['artifact_type'] for x in artifacts.values()
                 if 'artifact_type' in x})
-    elif cmd.name == 'delete_sample_or_column':
-        v = j.parameters.values
-        try:
-            if v['obj_class'] == 'SampleTemplate':
-                obj = SampleTemplate(v['obj_id'])
-            else:
-                obj = PrepTemplate(v['obj_id'])
-        except QiitaDBUnknownIDError:
-            continue
-        samples = len(obj)
-    elif cmd.name == 'build_analysis_files':
-        analysis = Analysis(j.parameters.values['analysis'])
-        extra_info = sum([fp['fp_size']
-                          for x in analysis.samples.keys()
-                          for fp in Artifact(x).filepaths
-                          if fp['fp_type'] == 'biom'])
-        columns = j.parameters.values['categories']
-        if columns is not None:
-            columns = len(j.parameters.values['categories'])
-    elif cmd.name == 'Sequence Processing Pipeline':
-        body = j.parameters.values['sample_sheet']['body']
-        extra_info = body.count('\r')
-        ei = body.count('\n')
-        if ei > extra_info:
-            extra_info = ei
-        extra_info = f'({extra_info}, {body.startswith("sample_name")})'
     elif cmd.name == 'Validate':
         input_size = sum([len(x) for x in loads(
             j.parameters.values['files']).values()])
         sname = f"{sname} - {j.parameters.values['artifact_type']}"
     elif cmd.name == 'Alpha rarefaction curves [alpha_rarefaction]':
         extra_info = j.parameters.values[
-            ('The maximum rarefaction depth. Must be greater than min_depth. '
-             '(max_depth)')]
+            ('The number of rarefaction depths to include between min_depth '
+             'and max_depth. (steps)')]
 
     _d['external_id'] = eid
     _d['sId'] = s.id
@@ -102,6 +81,5 @@ for i, j in enumerate(main_jobs):
 
 df = pd.concat(data)
 
-df.to_csv(
-    f'/panfs/qiita/job_stats_{datetime.now().strftime("%m%d%y")}.tsv.gz',
-    sep='\t', index=False)
+fn = join('/panfs', 'qiita', f'jobs_{df.Start.max()[:10]}.tsv.gz')
+df.to_csv(fn, sep='\t', index=False)

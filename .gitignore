@@ -66,3 +66,9 @@ qiita_ware/test/test_data/test_key
 
 # configuration files as they will change based on local machines
 qiita_pet/*.conf
+
+# jupyter notebooks temp data
+.ipynb_checkpoints/
+
+# jupyter notebooks input data
+notebooks/*/*.tsv.gz
