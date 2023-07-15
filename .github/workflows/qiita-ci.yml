@@ -234,4 +234,4 @@ jobs:
     - name: lint
       run: |
         pip install -q flake8
-        flake8 qiita_* setup.py scripts/qiita*
+        flake8 qiita_* setup.py scripts/qiita* notebooks/*/*.py

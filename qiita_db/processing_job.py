@@ -1898,30 +1898,32 @@ class ProcessingJob(qdb.base.QiitaObject):
             if columns is not None:
                 columns = len(columns)
         elif self.command.software.name == 'Qiita':
-            if 'study' in parameters:
-                study_id = parameters['study']
-            elif 'study_id' in parameters:
-                study_id = parameters['study_id']
-            elif 'analysis' in parameters:
-                analysis_id = parameters['analysis']
-            elif 'analysis_id' in parameters:
-                analysis_id = parameters['analysis_id']
-            elif 'artifact' in parameters:
+            if self.command.name == 'delete_sample_or_column':
+                MT = qdb.metadata_template
+                _id = parameters['obj_id']
                 try:
-                    artifact = qdb.artifact.Artifact(parameters['artifact'])
+                    if parameters['obj_class'] == 'SampleTemplate':
+                        obj = MT.sample_template.SampleTemplate(_id)
+                    else:
+                        obj = MT.prep_template.PrepTemplate(_id)
+                    samples = len(obj)
                 except QUIDError:
                     pass
-        elif self.command.name == 'delete_sample_or_column':
-            v = self.parameters.values
-            try:
-                MT = qdb.metadata_template
-                if v['obj_class'] == 'SampleTemplate':
-                    obj = MT.sample_template.SampleTemplate(v['obj_id'])
-                else:
-                    obj = MT.prep_template.PrepTemplate(v['obj_id'])
-            except QUIDError:
-                pass
-            samples = len(obj)
+            else:
+                if 'study' in parameters:
+                    study_id = parameters['study']
+                elif 'study_id' in parameters:
+                    study_id = parameters['study_id']
+                elif 'analysis' in parameters:
+                    analysis_id = parameters['analysis']
+                elif 'analysis_id' in parameters:
+                    analysis_id = parameters['analysis_id']
+                elif 'artifact' in parameters:
+                    try:
+                        artifact = qdb.artifact.Artifact(
+                            parameters['artifact'])
+                    except QUIDError:
+                        pass
         elif self.command.name == 'Sequence Processing Pipeline':
             body = self.parameters.values['sample_sheet']['body']
             samples = body.count('\r')
