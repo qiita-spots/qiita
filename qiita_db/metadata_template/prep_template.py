@@ -726,13 +726,15 @@ class PrepTemplate(MetadataTemplate):
     def max_samples():
         return qdb.util.max_preparation_samples()
 
-    def add_default_workflow(self, user):
+    def add_default_workflow(self, user, workflow=None):
         """The modification timestamp of the prep information
 
         Parameters
         ----------
         user : qiita_db.user.User
             The user that requested to add the default workflows
+        workflow : qiita_db.processing_job.ProcessingWorkflow
+            The workflow to add the default processing
 
         Returns
         -------
@@ -806,9 +808,14 @@ class PrepTemplate(MetadataTemplate):
         #    workflow
 
         # 1.
-        prep_jobs = [j for c in self.artifact.descendants.nodes()
-                     for j in c.jobs(show_hidden=True)
-                     if j.command.software.type == 'artifact transformation']
+        # let's assume that if there is a workflow, there are no jobs
+        if workflow is not None:
+            prep_jobs = []
+        else:
+            prep_jobs = [j for c in self.artifact.descendants.nodes()
+                         for j in c.jobs(show_hidden=True)
+                         if j.command.software.type ==
+                         'artifact transformation']
         merging_schemes = {
             qdb.archive.Archive.get_merging_scheme_from_job(j): {
                 x: y.id for x, y in j.outputs.items()}
@@ -821,7 +828,14 @@ class PrepTemplate(MetadataTemplate):
 
         # 2.
         pt_dt = self.data_type()
-        pt_artifact = self.artifact.artifact_type
+        # if there is a workflow, we would need to get the artifact_type from
+        # the job
+        if workflow is not None:
+            current_job = list(workflow.graph.nodes())[0]
+            pt_artifact = current_job.parameters.values['artifact_type']
+        else:
+            current_job = None
+            pt_artifact = self.artifact.artifact_type
         workflows = [wk for wk in qdb.software.DefaultWorkflow.iter()
                      if wk.artifact_type == pt_artifact and
                      pt_dt in wk.data_type]
@@ -846,7 +860,6 @@ class PrepTemplate(MetadataTemplate):
             raise ValueError('This preparation is complete')
 
         # 3.
-        workflow = None
         for wk, wk_data in missing_artifacts.items():
             previous_jobs = dict()
             for ma, node in wk_data.items():
@@ -886,10 +899,13 @@ class PrepTemplate(MetadataTemplate):
 
                     cmds_to_create.append([pdp_cmd, params, reqp])
 
-                    init_artifacts = {wkartifact_type: self.artifact.id}
+                    if workflow is not None:
+                        init_artifacts = {
+                            wkartifact_type: f'{current_job.id}:'}
+                    else:
+                        init_artifacts = {wkartifact_type: self.artifact.id}
 
                 cmds_to_create.reverse()
-                current_job = None
                 for i, (cmd, params, rp) in enumerate(cmds_to_create):
                     previous_job = current_job
                     if previous_job is None:
