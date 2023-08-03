@@ -832,7 +832,7 @@ class PrepTemplate(MetadataTemplate):
         # the job
         if workflow is not None:
             starting_job = list(workflow.graph.nodes())[0]
-            pt_artifact = current_job.parameters.values['artifact_type']
+            pt_artifact = starting_job.parameters.values['artifact_type']
         else:
             starting_job = None
             pt_artifact = self.artifact.artifact_type
