@@ -1569,7 +1569,7 @@ class Parameters(object):
 
     def __eq__(self, other):
         """Equality based on the parameter values and the command"""
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
         if self.command != other.command:
             return False
