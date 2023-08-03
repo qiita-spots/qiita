@@ -831,10 +831,10 @@ class PrepTemplate(MetadataTemplate):
         # if there is a workflow, we would need to get the artifact_type from
         # the job
         if workflow is not None:
-            current_job = list(workflow.graph.nodes())[0]
+            starting_job = list(workflow.graph.nodes())[0]
             pt_artifact = current_job.parameters.values['artifact_type']
         else:
-            current_job = None
+            starting_job = None
             pt_artifact = self.artifact.artifact_type
         workflows = [wk for wk in qdb.software.DefaultWorkflow.iter()
                      if wk.artifact_type == pt_artifact and
@@ -899,13 +899,15 @@ class PrepTemplate(MetadataTemplate):
 
                     cmds_to_create.append([pdp_cmd, params, reqp])
 
-                    if workflow is not None:
+                    if starting_job is not None:
                         init_artifacts = {
-                            wkartifact_type: f'{current_job.id}:'}
+                            wkartifact_type: f'{starting_job.id}:'}
+                        starting_job = None
                     else:
                         init_artifacts = {wkartifact_type: self.artifact.id}
 
                 cmds_to_create.reverse()
+                current_job = None
                 for i, (cmd, params, rp) in enumerate(cmds_to_create):
                     previous_job = current_job
                     if previous_job is None:
