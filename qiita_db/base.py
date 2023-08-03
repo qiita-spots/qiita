@@ -203,7 +203,7 @@ class QiitaObject(object):
 
     def __eq__(self, other):
         r"""Self and other are equal based on type and database id"""
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
         if other._id != self._id:
             return False
