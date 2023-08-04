@@ -902,14 +902,17 @@ class PrepTemplate(MetadataTemplate):
                     if starting_job is not None:
                         init_artifacts = {
                             wkartifact_type: f'{starting_job.id}:'}
-                        starting_job = None
                     else:
                         init_artifacts = {wkartifact_type: self.artifact.id}
 
                 cmds_to_create.reverse()
                 current_job = None
                 for i, (cmd, params, rp) in enumerate(cmds_to_create):
-                    previous_job = current_job
+                    if starting_job is not None:
+                        previous_job = starting_job
+                        starting_job = None
+                    else:
+                        previous_job = current_job
                     if previous_job is None:
                         req_params = dict()
                         for iname, dname in rp.items():
