@@ -727,13 +727,13 @@ class PrepTemplate(MetadataTemplate):
         return qdb.util.max_preparation_samples()
 
     def add_default_workflow(self, user, workflow=None):
-        """The modification timestamp of the prep information
+        """Adds the commands of the default workflow to this preparation
 
         Parameters
         ----------
         user : qiita_db.user.User
             The user that requested to add the default workflows
-        workflow : qiita_db.processing_job.ProcessingWorkflow
+        workflow : qiita_db.processing_job.ProcessingWorkflow, optional
             The workflow to add the default processing
 
         Returns
@@ -747,6 +747,13 @@ class PrepTemplate(MetadataTemplate):
             a. If this preparation doesn't have valid workflows
             b. This preparation has been fully processed (no new steps needed)
             c. If there is no valid initial artifact to start the workflow
+
+        Notes
+        -----
+        This method adds the commands in a default workflow (definition) to
+        the preparation, if a workflow (object) is passed it will add the
+        commands to the last artifact in that workflow but if it's None it will
+        create a new workflow (default)
         """
         # helper functions to avoid duplication of code
 
