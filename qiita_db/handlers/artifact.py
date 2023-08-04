@@ -267,6 +267,7 @@ class APIArtifactHandler(OauthBaseHandler):
         atype = self.get_argument('artifact_type')
         aname = self.get_argument('command_artifact_name', 'Name')
         files = self.get_argument('files')
+        add_default_workflow = self.get_argument('add_default_workflow', False)
 
         if job_id is None and prep_id is None:
             raise HTTPError(
@@ -314,8 +315,18 @@ class APIArtifactHandler(OauthBaseHandler):
         values['template'] = prep_id
         cmd = qdb.software.Command.get_validator(atype)
         params = qdb.software.Parameters.load(cmd, values_dict=values)
-        new_job = PJ.create(user, params, True)
-        new_job.submit()
+        if add_default_workflow:
+            pwk = qdb.processing_job.ProcessingWorkflow.from_scratch(
+                user, params, name=f'ProcessingWorkflow for {job_id}')
+            # the new job is the first job in the workflow
+            new_job = list(pwk.graph.nodes())[0]
+            # adding default pipeline to the preparation
+            pt = qdb.metadata_template.prep_template.PrepTemplate(prep_id)
+            pt.add_default_workflow(user, pwk)
+            pwk.submit()
+        else:
+            new_job = PJ.create(user, params, True)
+            new_job.submit()
 
         r_client.set('prep_template_%d' % prep_id,
                      dumps({'job_id': new_job.id, 'is_qiita_job': True}))

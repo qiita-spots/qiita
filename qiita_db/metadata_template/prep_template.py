@@ -726,13 +726,15 @@ class PrepTemplate(MetadataTemplate):
     def max_samples():
         return qdb.util.max_preparation_samples()
 
-    def add_default_workflow(self, user):
-        """The modification timestamp of the prep information
+    def add_default_workflow(self, user, workflow=None):
+        """Adds the commands of the default workflow to this preparation
 
         Parameters
         ----------
         user : qiita_db.user.User
             The user that requested to add the default workflows
+        workflow : qiita_db.processing_job.ProcessingWorkflow, optional
+            The workflow to add the default processing
 
         Returns
         -------
@@ -745,6 +747,13 @@ class PrepTemplate(MetadataTemplate):
             a. If this preparation doesn't have valid workflows
             b. This preparation has been fully processed (no new steps needed)
             c. If there is no valid initial artifact to start the workflow
+
+        Notes
+        -----
+        This method adds the commands in a default workflow (definition) to
+        the preparation, if a workflow (object) is passed it will add the
+        commands to the last artifact in that workflow but if it's None it will
+        create a new workflow (default)
         """
         # helper functions to avoid duplication of code
 
@@ -806,9 +815,14 @@ class PrepTemplate(MetadataTemplate):
         #    workflow
 
         # 1.
-        prep_jobs = [j for c in self.artifact.descendants.nodes()
-                     for j in c.jobs(show_hidden=True)
-                     if j.command.software.type == 'artifact transformation']
+        # let's assume that if there is a workflow, there are no jobs
+        if workflow is not None:
+            prep_jobs = []
+        else:
+            prep_jobs = [j for c in self.artifact.descendants.nodes()
+                         for j in c.jobs(show_hidden=True)
+                         if j.command.software.type ==
+                         'artifact transformation']
         merging_schemes = {
             qdb.archive.Archive.get_merging_scheme_from_job(j): {
                 x: y.id for x, y in j.outputs.items()}
@@ -821,7 +835,14 @@ class PrepTemplate(MetadataTemplate):
 
         # 2.
         pt_dt = self.data_type()
-        pt_artifact = self.artifact.artifact_type
+        # if there is a workflow, we would need to get the artifact_type from
+        # the job
+        if workflow is not None:
+            starting_job = list(workflow.graph.nodes())[0]
+            pt_artifact = starting_job.parameters.values['artifact_type']
+        else:
+            starting_job = None
+            pt_artifact = self.artifact.artifact_type
         workflows = [wk for wk in qdb.software.DefaultWorkflow.iter()
                      if wk.artifact_type == pt_artifact and
                      pt_dt in wk.data_type]
@@ -846,7 +867,6 @@ class PrepTemplate(MetadataTemplate):
             raise ValueError('This preparation is complete')
 
         # 3.
-        workflow = None
         for wk, wk_data in missing_artifacts.items():
             previous_jobs = dict()
             for ma, node in wk_data.items():
@@ -886,12 +906,20 @@ class PrepTemplate(MetadataTemplate):
 
                     cmds_to_create.append([pdp_cmd, params, reqp])
 
-                    init_artifacts = {wkartifact_type: self.artifact.id}
+                    if starting_job is not None:
+                        init_artifacts = {
+                            wkartifact_type: f'{starting_job.id}:'}
+                    else:
+                        init_artifacts = {wkartifact_type: self.artifact.id}
 
                 cmds_to_create.reverse()
                 current_job = None
                 for i, (cmd, params, rp) in enumerate(cmds_to_create):
-                    previous_job = current_job
+                    if starting_job is not None:
+                        previous_job = starting_job
+                        starting_job = None
+                    else:
+                        previous_job = current_job
                     if previous_job is None:
                         req_params = dict()
                         for iname, dname in rp.items():
