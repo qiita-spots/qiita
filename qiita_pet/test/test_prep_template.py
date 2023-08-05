@@ -57,7 +57,7 @@ class TestPrepTemplateHandler(TestHandlerBase):
     def test_patch(self):
         arguments = {'op': 'replace',
                      'path': '/1/investigation_type/',
-                     'value': 'Cancer Genomics'}
+                     'value': 'RNA-Seq'}
         response = self.patch('/prep_template/', data=arguments)
         self.assertEqual(response.code, 200)
         exp = {'status': 'success', 'message': ''}

@@ -34,28 +34,15 @@ class TestOntology(TestCase):
 
     def testTerms(self):
         obs = self.ontology.terms
-        self.assertEqual(obs, [
-            'Whole Genome Sequencing',
-            'Metagenomics',
-            'Transcriptome Analysis',
-            'Resequencing',
-            'Epigenetics',
-            'Synthetic Genomics',
-            'Forensic or Paleo-genomics',
-            'Gene Regulation Study',
-            'Cancer Genomics',
-            'Population Genomics',
-            'RNASeq',
-            'Exome Sequencing',
-            'Pooled Clone Sequencing',
-            'Other'])
+        self.assertEqual(
+            obs, ['WGS', 'Metagenomics', 'Amplicon', 'RNA-Seq', 'Other'])
 
     def test_user_defined_terms(self):
         obs = self.ontology.user_defined_terms
         self.assertEqual(obs, [])
 
     def test_term_type(self):
-        obs = self.ontology.term_type('RNASeq')
+        obs = self.ontology.term_type('RNA-Seq')
         self.assertEqual('ontology', obs)
 
         obs = self.ontology.term_type('Sasquatch')
