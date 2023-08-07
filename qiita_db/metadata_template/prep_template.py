@@ -134,7 +134,7 @@ class PrepTemplate(MetadataTemplate):
             # If the investigation_type is None let's add it based on the
             # data_type being created - if possible
             if investigation_type is None:
-                if data_type_str in {'16S', '18S', 'ITS'}:
+                if data_type_str in TARGET_GENE_DATA_TYPES:
                     investigation_type = 'Amplicon'
                 elif data_type_str == 'Metagenomic':
                     investigation_type = 'WGS'
