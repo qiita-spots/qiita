@@ -467,10 +467,8 @@ class TestEBISubmission(TestCase):
         # raise error as we are missing columns
         # artifact.prep_templates[0] cause there should only be 1
         exp_text = ("Errors found during EBI submission for study #1, "
-                    "artifact #%d and prep template #%d:\nUnrecognized "
-                    "investigation type: 'None'. This term is neither one of "
-                    "the official terms nor one of the user-defined terms in "
-                    "the ENA ontology.\nThese samples do not have a valid "
+                    "artifact #%d and prep template #%d:\n"
+                    "These samples do not have a valid "
                     "platform (instrumet model wasn't checked): "
                     "1.SKD6.640190\nThese samples do not have a valid "
                     "instrument model: 1.SKM6.640187" % (

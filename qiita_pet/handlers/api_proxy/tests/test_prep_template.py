@@ -38,12 +38,7 @@ class TestPrepAPIReadOnly(TestCase):
     def test_get_ENA_ontology(self):
         obs = _get_ENA_ontology()
         exp = {
-            'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
-                    'Forensic or Paleo-genomics', 'Gene Regulation Study',
-                    'Metagenomics', 'Pooled Clone Sequencing',
-                    'Population Genomics', 'RNASeq', 'Resequencing',
-                    'Synthetic Genomics', 'Transcriptome Analysis',
-                    'Whole Genome Sequencing', 'Other'],
+            'ENA': ['Amplicon', 'Metagenomics', 'RNA-Seq', 'WGS', 'Other'],
             'User': []}
         self.assertEqual(obs, exp)
 
@@ -58,12 +53,7 @@ class TestPrepAPIReadOnly(TestCase):
                            'Multiomic', 'Proteomic', 'Transcriptomics',
                            'Viromics'],
             'ontology': {
-                'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
-                        'Forensic or Paleo-genomics', 'Gene Regulation Study',
-                        'Metagenomics', 'Pooled Clone Sequencing',
-                        'Population Genomics', 'RNASeq', 'Resequencing',
-                        'Synthetic Genomics', 'Transcriptome Analysis',
-                        'Whole Genome Sequencing', 'Other'],
+                'ENA': ['Amplicon', 'Metagenomics', 'RNA-Seq', 'WGS', 'Other'],
                 'User': []}}
 
         self.assertEqual(obs, exp)
@@ -83,12 +73,7 @@ class TestPrepAPIReadOnly(TestCase):
                'num_columns': 22,
                'investigation_type': 'Metagenomics',
                'ontology': {
-                   'ENA': ['Cancer Genomics', 'Epigenetics',
-                           'Exome Sequencing', 'Forensic or Paleo-genomics',
-                           'Gene Regulation Study', 'Metagenomics',
-                           'Pooled Clone Sequencing', 'Population Genomics',
-                           'RNASeq', 'Resequencing', 'Synthetic Genomics',
-                           'Transcriptome Analysis', 'Whole Genome Sequencing',
+                   'ENA': ['Amplicon', 'Metagenomics', 'RNA-Seq', 'WGS',
                            'Other'],
                    'User': []},
                'artifact_attached': True,
@@ -518,10 +503,10 @@ class TestPrepAPI(TestCase):
         # Update investigation type
         obs = prep_template_patch_req(
             'test@foo.bar', 'replace', '/%s/investigation_type' % pt.id,
-            'Cancer Genomics')
+            'RNA-Seq')
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(obs, exp)
-        self.assertEqual(pt.investigation_type, 'Cancer Genomics')
+        self.assertEqual(pt.investigation_type, 'RNA-Seq')
         # Update prep template data
         obs = prep_template_patch_req(
             'test@foo.bar', 'replace', '/%s/data' % pt.id, 'update.txt')
@@ -551,7 +536,7 @@ class TestPrepAPI(TestCase):
         # Operation not supported
         obs = prep_template_patch_req(
             'test@foo.bar', 'add', '/1/investigation_type',
-            'Cancer Genomics')
+            'RNA-Seq')
         exp = {'status': 'error',
                'message': 'Operation "add" not supported. '
                           'Current supported operations: replace, remove',
@@ -560,14 +545,14 @@ class TestPrepAPI(TestCase):
         # Incorrect path parameter
         obs = prep_template_patch_req(
             'test@foo.bar', 'replace', '/investigation_type',
-            'Cancer Genomics')
+            'RNA-Seq')
         exp = {'status': 'error',
                'message': 'Incorrect path parameter'}
         self.assertEqual(obs, exp)
         # Incorrect attribute
         obs = prep_template_patch_req(
             'test@foo.bar', 'replace', '/1/other_attribute',
-            'Cancer Genomics')
+            'RNA-Seq')
         exp = {'status': 'error',
                'message': 'Attribute "other_attribute" not found. '
                           'Please, check the path parameter'}
@@ -575,7 +560,7 @@ class TestPrepAPI(TestCase):
         # User doesn't have access
         obs = prep_template_patch_req(
             'demo@microbio.me', 'replace', '/%s/investigation_type' % pt.id,
-            'Cancer Genomics')
+            'RNA-Seq')
         exp = {'status': 'error',
                'message': 'User has insufficient permissions'}
         self.assertEqual(obs, exp)

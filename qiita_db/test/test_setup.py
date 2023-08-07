@@ -75,7 +75,7 @@ class SetupTest(TestCase):
         self.assertTrue(check_count('qiita.ontology', 1))
 
     def test_ontology_terms(self):
-        self.assertTrue(check_count('qiita.term', 14))
+        self.assertTrue(check_count('qiita.term', 5))
 
 
 if __name__ == '__main__':

@@ -122,11 +122,6 @@ class PrepTemplate(MetadataTemplate):
             If a required column is missing in md_template
         """
         with qdb.sql_connection.TRN:
-            # If the investigation_type is supplied, make sure it is one of
-            # the recognized investigation types
-            if investigation_type is not None:
-                cls.validate_investigation_type(investigation_type)
-
             # Check if the data_type is the id or the string
             if isinstance(data_type, int):
                 data_type_id = data_type
@@ -135,6 +130,18 @@ class PrepTemplate(MetadataTemplate):
             else:
                 data_type_id = qdb.util.convert_to_id(data_type, "data_type")
                 data_type_str = data_type
+
+            # If the investigation_type is None let's add it based on the
+            # data_type being created - if possible
+            if investigation_type is None:
+                if data_type_str in TARGET_GENE_DATA_TYPES:
+                    investigation_type = 'Amplicon'
+                elif data_type_str == 'Metagenomic':
+                    investigation_type = 'WGS'
+                elif data_type_str == 'Metatranscriptomic':
+                    investigation_type = 'RNA-Seq'
+            if investigation_type is not None:
+                cls.validate_investigation_type(investigation_type)
 
             pt_cols = PREP_TEMPLATE_COLUMNS
             if data_type_str in TARGET_GENE_DATA_TYPES:
