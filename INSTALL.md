@@ -181,7 +181,7 @@ github organization. Each of the plugins have their own installation instruction
 suggest looking at each individual .travis.yml file to see detailed installation
 instructions. Note that the most common plugins are:
 - [qtp-biom](https://github.com/qiita-spots/qtp-biom)
-- [qtp-target-gene](https://github.com/qiita-spots/qtp-target-gene)
+- [qtp-sequencing](https://github.com/qiita-spots/qtp-sequencing)
 - [qp-target-gene](https://github.com/qiita-spots/qp-target-gene)
 
 ## Configure Qiita
@@ -206,9 +206,7 @@ Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.ba
   source activate qiita
 ```
 
-Update paths in the newly copied configuration file to match your settings, e.g. replace /home/travis/ with your user home directory.
-
-If you are working on WSL, you will need to start the redis server with the following command before making a test environment:
+If you are working on Mac OS X or WSL, you will need to start the redis server with the following command before making a test environment:
 ```bash
 redis-server --daemonize yes --port 7777
 ```
@@ -224,7 +222,7 @@ Finally, redbiom relies on the REDBIOM_HOST environment variable to set the URL 
 export REDBIOM_HOST=http://my_host.com:7379
 ```
 
-## Confirgure NGINX and supervisor
+## Configure NGINX and supervisor
 
 (NGINX)[https://www.nginx.com/] is not a requirement for Qiita development but it's highly recommended for deploys as this will allow us
 to have multiple workers. Note that we are already installing (NGINX)[https://www.nginx.com/] within the Qiita conda environment; also,
