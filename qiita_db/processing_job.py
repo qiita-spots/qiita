@@ -513,6 +513,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                                     part = f'{days}-{str(td)}'
                                 else:
                                     part = str(td)
+                                part = part.split('.')[0]
                             else:
                                 part = naturalsize(
                                     value, gnu=True, format='%.0f')
@@ -1309,6 +1310,11 @@ class ProcessingJob(qdb.base.QiitaObject):
                     filepaths, atype, prep_template=pt, analysis=an,
                     data_type=data_type, name=job_params['name'])
                 self._set_status('success')
+
+                # releasing children
+                for c in self.children:
+                    if c.status == 'waiting':
+                        c.submit()
 
     def _complete_artifact_transformation(self, artifacts_data):
         """Performs the needed steps to complete an artifact transformation job
