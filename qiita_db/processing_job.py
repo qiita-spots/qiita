@@ -1311,7 +1311,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                     data_type=data_type, name=job_params['name'])
                 self._set_status('success')
 
-                self._update_and_launch_children({None: artifact.id})
+                if list(self.children):
+                    self._update_and_launch_children({atype: artifact.id})
 
     def _complete_artifact_transformation(self, artifacts_data):
         """Performs the needed steps to complete an artifact transformation job
