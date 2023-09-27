@@ -1306,15 +1306,12 @@ class ProcessingJob(qdb.base.QiitaObject):
                     an = None
                     data_type = 'Job Output Folder'
 
-                qdb.artifact.Artifact.create(
+                artifact = qdb.artifact.Artifact.create(
                     filepaths, atype, prep_template=pt, analysis=an,
                     data_type=data_type, name=job_params['name'])
                 self._set_status('success')
 
-                # releasing children
-                for c in self.children:
-                    if c.status == 'waiting':
-                        c.submit()
+                self._update_and_launch_children({None: artifact.id})
 
     def _complete_artifact_transformation(self, artifacts_data):
         """Performs the needed steps to complete an artifact transformation job
