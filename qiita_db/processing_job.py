@@ -1311,10 +1311,10 @@ class ProcessingJob(qdb.base.QiitaObject):
                     data_type=data_type, name=job_params['name'])
                 self._set_status('success')
 
-                # we need to update the children jobs to replace the input
-                # for the newly created artifact via the validator
-                for c in self.children:
-                    self._helper_update_children({atype: artifact.id})
+            # we need to update the children jobs to replace the input
+            # for the newly created artifact via the validator
+            for c in self.children:
+                self._helper_update_children({atype: artifact.id})
 
     def _complete_artifact_transformation(self, artifacts_data):
         """Performs the needed steps to complete an artifact transformation job
