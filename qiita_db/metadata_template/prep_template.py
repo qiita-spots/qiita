@@ -846,7 +846,6 @@ class PrepTemplate(MetadataTemplate):
         # the job
         if workflow is not None:
             starting_job = list(workflow.graph.nodes())[0]
-            main_starting_job = starting_job
             pt_artifact = starting_job.parameters.values['artifact_type']
         else:
             starting_job = None
@@ -914,7 +913,7 @@ class PrepTemplate(MetadataTemplate):
 
                     cmds_to_create.append([pdp_cmd, params, reqp])
 
-                    if main_starting_job is not None:
+                    if starting_job is not None:
                         init_artifacts = {
                             wkartifact_type: f'{starting_job.id}:'}
                     else:
@@ -922,10 +921,11 @@ class PrepTemplate(MetadataTemplate):
 
                 cmds_to_create.reverse()
                 current_job = None
+                loop_starting_job = starting_job
                 for i, (cmd, params, rp) in enumerate(cmds_to_create):
-                    if starting_job is not None:
-                        previous_job = starting_job
-                        starting_job = None
+                    if loop_starting_job is not None:
+                        previous_job = loop_starting_job
+                        loop_starting_job = None
                     else:
                         previous_job = current_job
                     if previous_job is None:
