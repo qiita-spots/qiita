@@ -1315,6 +1315,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             # for the newly created artifact via the validator
             for c in self.children:
                 self._helper_update_children({atype: artifact.id})
+                c.submit()
 
     def _complete_artifact_transformation(self, artifacts_data):
         """Performs the needed steps to complete an artifact transformation job

@@ -317,7 +317,7 @@ class APIArtifactHandler(OauthBaseHandler):
         params = qdb.software.Parameters.load(cmd, values_dict=values)
         if add_default_workflow or add_default_workflow == 'True':
             pwk = qdb.processing_job.ProcessingWorkflow.from_scratch(
-                user, params, name=f'ProcessingWorkflow for {job_id}')
+                user, params, name=f'ProcessingWorkflow for {prep_id}')
             # the new job is the first job in the workflow
             new_job = list(pwk.graph.nodes())[0]
             # adding default pipeline to the preparation
