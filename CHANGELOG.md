@@ -1,5 +1,17 @@
 # Qiita changelog
 
+Version 2023.10
+---------------
+
+* Added a new notebooks folder to the repository to allocate the resource-allocation code and plotting.
+* Allowed dynamic resource allocations for time (before it was only for memory), and allowed complex formulas (via eval).
+* Deployed the new resource allocation formulas. This included changes on how the ProcesingJob.shape method calculates its variables, which include: (a) `build_analysis_files`: only use the `biom` file (vs. all of them); and (b) the SPP counts the input-file number of lines know the number of samples.
+* qp-woltka generates a new file: coverates.tgz, which contains: (a) artifact.cov: the coverages of this artifact, can be used with other coverages to generate combined coverages; (b) coverage_percentage.txt: the total percentage coverage per-genome of this artifact; and (c) coverages folder: the per-sample coverage.
+* The SPP now supports replicates within the same lane/run and creates multiple preparations as needed.
+* The SPP automatically adds and executes the default pipeline after it is done generating and linking the raw data.
+* Other fixes: [#3300](https://github.com/qiita-spots/qiita/issues/3300), [metapool #135](https://github.com/biocore/metagenomics_pooling_notebook/pull/135), [metapool #136](https://github.com/biocore/metagenomics_pooling_notebook/pull/136), [qtp-sequencing #47](https://github.com/qiita-spots/qtp-sequencing/pull/47).
+
+
 Version 2023.06
 ---------------
 

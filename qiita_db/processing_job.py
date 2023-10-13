@@ -1971,7 +1971,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if prep_info is not None:
                     samples = len(prep_info)
                     columns = len(prep_info.categories) + len(st.categories)
-                else:
+                elif st is not None:
                     samples = len(st)
                     columns = len(st.categories)
         elif analysis_id is not None:
