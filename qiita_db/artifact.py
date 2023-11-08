@@ -1566,7 +1566,8 @@ class Artifact(qdb.base.QiitaObject):
                 with qdb.sql_connection.TRN:
                     qdb.sql_connection.TRN.add(sql)
                     for v in qdb.sql_connection.TRN.execute_fetchflatten():
-                        if v.startswith('human-'):
+                        # str is needed as v could be None
+                        if str(v).startswith('human-'):
                             has_human = True
                             break
 
