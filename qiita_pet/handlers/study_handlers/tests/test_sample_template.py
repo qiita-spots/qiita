@@ -297,6 +297,9 @@ class TestHelpers(TestHandlerBase):
                            'host_subject_id', 'description', 'latitude',
                            'longitude', 'scientific_name', 'env_package']),
                'sample_restrictions': ''}
+        # the first element is the current fp and the name is based on the
+        # last update so just removing to easy test
+        obs['st_files'].pop(0)
         self.assertEqual(obs, exp)
 
         # Test sample template doesn't exist
@@ -317,6 +320,9 @@ class TestHelpers(TestHandlerBase):
                'num_columns': 0,
                'columns': [],
                'sample_restrictions': ''}
+        # the first element is the current fp and the name is based on the
+        # last update so just removing to easy test
+        obs['st_files'].pop(0)
         self.assertEqual(obs, exp)
 
     def test_sample_template_columns_get_req(self):
@@ -510,6 +516,9 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                            'host_subject_id', 'description', 'latitude',
                            'longitude', 'scientific_name', 'env_package']),
                'sample_restrictions': ''}
+        # the first element is the current fp and the name is based on the
+        # last update so just removing to easy test
+        obs['st_files'].pop(0)
         self.assertDictEqual(obs, exp)
 
 
