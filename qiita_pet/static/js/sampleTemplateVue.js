@@ -44,6 +44,7 @@ Vue.component('sample-template-page', {
               '<div class="row">' +
                 '<div class="col-md-12">' +
                   '<h3>Sample Information<span id="title-h3"></span></h3>' +
+                  '<h6>Last update: <span id="current-sample-info"></span></h6>' +
                 '</div>' +
               '</div>' +
               // Processing div
@@ -376,6 +377,7 @@ Vue.component('sample-template-page', {
 
       // Add the buttons next to the title
       // Download Sample Information button
+      $('#current-sample-info').append(vm.current_file.split('_')[1].split('.')[0]);
       $('#title-h3').append(' ');
       $btn = $('<a>').addClass('btn btn-default').attr('href', vm.portal + '/download/' + vm.downloadId).appendTo('#title-h3');
       $('<span>').addClass('glyphicon glyphicon-download-alt').appendTo($btn);
@@ -575,7 +577,8 @@ Vue.component('sample-template-page', {
         vm.userCanEdit = data['user_can_edit'];
         vm.job = data['job'];
         vm.downloadId = data['download_id'];
-        vm.oldFiles = data['old_files'];
+        vm.current_file = data['st_files'][0];
+        vm.oldFiles = data['st_files'].slice(1);
         vm.numSamples = data['num_samples'];
         vm.numColumns = data['num_columns'];
         vm.columns = data['columns'];

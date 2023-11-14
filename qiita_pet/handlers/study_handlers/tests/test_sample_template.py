@@ -281,7 +281,7 @@ class TestHelpers(TestHandlerBase):
                'user_can_edit': True,
                'job': None,
                'download_id': 23,
-               'old_files': ['1_19700101-000000.txt'],
+               'st_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
                'num_columns': 31,
                'columns': sorted(
@@ -312,7 +312,7 @@ class TestHelpers(TestHandlerBase):
                'user_can_edit': True,
                'job': None,
                'download_id': None,
-               'old_files': [],
+               'st_files': [],
                'num_samples': 0,
                'num_columns': 0,
                'columns': [],
@@ -494,7 +494,7 @@ class TestSampleTemplateOverviewHandler(TestHandlerBase):
                'user_can_edit': True,
                'job': None,
                'download_id': 23,
-               'old_files': ['1_19700101-000000.txt'],
+               'st_files': ['1_19700101-000000.txt'],
                'num_samples': 27,
                'num_columns': 31,
                'columns': sorted(

@@ -423,6 +423,9 @@
 <!-- Prep template title and buttons -->
 <div class="row">
   <div class="col-md-12">
+    {% if other_filepaths is not None %}
+      <h6>Last update: {{ other_filepaths[0].split('_')[-1] }}</h6>
+    {% end %}
     <h4>
       {% if deprecated %}
         <span class="label label-danger">This Preparation Information has been DEPRECATED</span>
@@ -558,7 +561,7 @@
         {% end %}
         <div id="other-filepaths" class="collapse">
           <small>
-            {% raw '<br/>'.join(other_filepaths) %}
+            {% raw '<br/>'.join(other_filepaths[1:]) %}
           </small>
         </div>
         <div id="prep-artifact-summary-div" class="tab-pane fade in active">
