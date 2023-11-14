@@ -1989,6 +1989,20 @@ class ProcessingJob(qdb.base.QiitaObject):
 
         return samples, columns, input_size
 
+    @property
+    def complete_processing_job(self):
+        sql = """SELECT processing_job_id FROM qiita.software_command
+                    JOIN qiita.processing_job USING (command_id)
+                    WHERE name = 'complete_job' AND
+                        command_parameters->>'job_id' = %s LIMIT 1"""
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            result = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        if result:
+            return ProcessingJob(result[0])
+        return None
+
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
     """Models a workflow defined by the user
