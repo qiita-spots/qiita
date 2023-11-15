@@ -2003,6 +2003,20 @@ class ProcessingJob(qdb.base.QiitaObject):
             return ProcessingJob(result[0])
         return None
 
+    @property
+    def print_trace(self):
+        """ Prints the full trace of the job, from it self to validators
+        and complete jobs"""
+        print(f'{self.id} [{self.external_id}] - {self.command.name}')
+        cjob = self.complete_processing_job
+        print(f'  {cjob.id} [cjob.external_id]')
+        vjob = self.release_validator_job
+        print(f'    {vjob.id} [vjob.external_id]')
+        for v in self.validator_jobs:
+            print(f'     {v.id} [{v.external_id}] - {v.command.name}')
+            cjob = v.complete_processing_job
+            print(f'         {cjob.id} [cjob.external_id]')
+
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
     """Models a workflow defined by the user
