@@ -685,6 +685,14 @@ class TestAnalysis(TestCase):
 
         self.assertTrue(analysis.is_public)
 
+    def test_slurm_reservation(self):
+        analysis = qdb.analysis.Analysis(1)
+        self.assertIsNone(analysis.slurm_reservation)
+        text = 'this is a tests!'
+        analysis.slurm_reservation = text
+        self.assertEqual(analysis._slurm_reservation(), [text])
+        self.assertIsNone(analysis.slurm_reservation)
+
 
 if __name__ == "__main__":
     main()
