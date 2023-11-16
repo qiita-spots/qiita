@@ -122,10 +122,12 @@ def list_options_handler_get_req(command_id, artifact_id=None):
         if artifact.artifact_type in extra_atypes:
             extra_atypes.remove(artifact.artifact_type)
 
-        for aa in artifact.prep_templates[0].artifact.descendants.nodes():
-            atype = aa.artifact_type
-            if artifact_id != aa.id and atype in extra_atypes:
-                extra_artifacts[atype].append((aa.id, aa.name))
+        pts = artifact.prep_templates
+        if pts:
+            for aa in pts[0].artifact.descendants.nodes():
+                atype = aa.artifact_type
+                if artifact_id != aa.id and atype in extra_atypes:
+                    extra_artifacts[atype].append((aa.id, aa.name))
 
     if analysis is not None:
         analysis_artifacts = analysis.artifacts
