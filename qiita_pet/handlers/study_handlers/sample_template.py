@@ -358,7 +358,7 @@ def sample_template_overview_handler_get_request(study_id, user):
     # Specific information if it exists or not:
     data_types = []
     st_fp_id = None
-    old_files = []
+    st_files = []
     num_samples = 0
     num_cols = 0
     columns = []
@@ -369,11 +369,9 @@ def sample_template_overview_handler_get_request(study_id, user):
         # the list of old filepaths
         st = SampleTemplate(study_id)
         all_st_files = st.get_filepaths()
-        # The current sample template file is the first one in the list
-        # (pop(0)) and we are interested only in the id ([0])
-        st_fp_id = all_st_files.pop(0)[0]
+        st_fp_id = all_st_files[0][0]
         # For the old filepaths we are only interested in their basename
-        old_files = [basename(fp) for _, fp in all_st_files]
+        st_files = [basename(fp) for _, fp in all_st_files]
         # The number of samples - this is a space efficient way of counting
         # the number of samples. Doing len(list(st.keys())) creates a list
         # that we are not using
@@ -393,7 +391,7 @@ def sample_template_overview_handler_get_request(study_id, user):
             'user_can_edit': Study(study_id).can_edit(user),
             'job': job,
             'download_id': st_fp_id,
-            'old_files': old_files,
+            'st_files': st_files,
             'num_samples': num_samples,
             'num_columns': num_cols,
             'columns': columns,
