@@ -1991,6 +1991,38 @@ class ProcessingJob(qdb.base.QiitaObject):
 
         return samples, columns, input_size
 
+    @property
+    def complete_processing_job(self):
+        sql = """SELECT processing_job_id FROM qiita.software_command
+                    JOIN qiita.processing_job USING (command_id)
+                    WHERE name = 'complete_job' AND
+                        command_parameters->>'job_id' = %s LIMIT 1"""
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            result = qdb.sql_connection.TRN.execute_fetchflatten()
+
+        if result:
+            return qdb.processing_job.ProcessingJob(result[0])
+        return None
+
+    @property
+    def trace(self):
+        """ Returns as a text array the full trace of the job, from itself
+            to validators and complete jobs"""
+        lines = [f'{self.id} [{self.external_id}] - {self.command.name}']
+        cjob = self.complete_processing_job
+        if cjob is not None:
+            lines.append(f'  {cjob.id} [{cjob.external_id}]')
+            vjob = self.release_validator_job
+            if vjob is not None:
+                lines.append(f'    {vjob.id} [{vjob.external_id}]')
+        for v in self.validator_jobs:
+            lines.append(f'     {v.id} [{v.external_id}] - {v.command.name}')
+            cjob = v.complete_processing_job
+            if cjob is not None:
+                lines.append(f'         {cjob.id} [{cjob.external_id}]')
+        return lines
+
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
     """Models a workflow defined by the user

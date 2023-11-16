@@ -415,7 +415,6 @@ class ProcessingJobTest(TestCase):
         job._set_status('running')
         job.complete(True)
         self.assertEqual(job.status, 'success')
-
         job = qdb.processing_job.ProcessingJob.create(
             qdb.user.User('test@foo.bar'),
             qdb.software.Parameters.load(

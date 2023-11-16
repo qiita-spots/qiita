@@ -102,6 +102,7 @@ def list_options_handler_get_req(command_id, artifact_id=None):
         extra_atypes.append(atype[0])
 
     eparams = []
+    extra_artifacts = defaultdict(list)
     if artifact_id is not None:
         artifact = Artifact(artifact_id)
         analysis = artifact.analysis
@@ -117,11 +118,17 @@ def list_options_handler_get_req(command_id, artifact_id=None):
                 del params[k]
             eparams.append(_helper_process_params(params))
 
-        # removing this artifact from extra_artifacts
+        # removing this artifact from extra_atypes
         if artifact.artifact_type in extra_atypes:
             extra_atypes.remove(artifact.artifact_type)
 
-    extra_artifacts = defaultdict(list)
+        pts = artifact.prep_templates
+        if pts:
+            for aa in pts[0].artifact.descendants.nodes():
+                atype = aa.artifact_type
+                if artifact_id != aa.id and atype in extra_atypes:
+                    extra_artifacts[atype].append((aa.id, aa.name))
+
     if analysis is not None:
         analysis_artifacts = analysis.artifacts
         for aa in analysis_artifacts:
