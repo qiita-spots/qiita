@@ -369,6 +369,7 @@ def sample_template_overview_handler_get_request(study_id, user):
         # the list of old filepaths
         st = SampleTemplate(study_id)
         all_st_files = st.get_filepaths()
+        st_fp_id = all_st_files[0][0]
         # For the old filepaths we are only interested in their basename
         st_files = [basename(fp) for _, fp in all_st_files]
         # The number of samples - this is a space efficient way of counting

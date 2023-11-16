@@ -320,9 +320,6 @@ class TestHelpers(TestHandlerBase):
                'num_columns': 0,
                'columns': [],
                'sample_restrictions': ''}
-        # the first element is the current fp and the name is based on the
-        # last update so just removing to easy test
-        obs['st_files'].pop(0)
         self.assertEqual(obs, exp)
 
     def test_sample_template_columns_get_req(self):
