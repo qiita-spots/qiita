@@ -205,6 +205,8 @@ class CompleteHandlerTests(OauthTestingBase):
                              dumps({'BIOM': ['file']}),
                              'artifact_type': 'BIOM'}))
         job._set_status('running')
+        # here we can test that the complete_processing_job is None
+        self.assertIsNone(job.complete_processing_job)
 
         fd, fp = mkstemp(suffix='_table.biom')
         close(fd)
@@ -226,6 +228,13 @@ class CompleteHandlerTests(OauthTestingBase):
         self.assertEqual(job.status, 'success')
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
+        # and now that is not None
+        cj = job.complete_processing_job
+        self.assertIsNotNone(cj)
+        # additionally we can test that job.print_trace is correct
+        self.assertEqual(job.trace, [
+            f'{job.id} [Not Available] - Validate',
+            f'  {cj.id} [{cj.external_id}]'])
 
     def test_post_job_success_with_archive(self):
         pt = npt.assert_warns(

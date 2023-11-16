@@ -2000,22 +2000,26 @@ class ProcessingJob(qdb.base.QiitaObject):
             result = qdb.sql_connection.TRN.execute_fetchflatten()
 
         if result:
-            return ProcessingJob(result[0])
+            return qdb.processing_job.ProcessingJob(result[0])
         return None
 
     @property
-    def print_trace(self):
-        """ Prints the full trace of the job, from it self to validators
-        and complete jobs"""
-        print(f'{self.id} [{self.external_id}] - {self.command.name}')
+    def trace(self):
+        """ Returns as a text array the full trace of the job, from itself
+            to validators and complete jobs"""
+        lines = [f'{self.id} [{self.external_id}] - {self.command.name}']
         cjob = self.complete_processing_job
-        print(f'  {cjob.id} [cjob.external_id]')
-        vjob = self.release_validator_job
-        print(f'    {vjob.id} [vjob.external_id]')
+        if cjob is not None:
+            lines.append(f'  {cjob.id} [{cjob.external_id}]')
+            vjob = self.release_validator_job
+            if vjob is not None:
+                lines.append(f'    {vjob.id} [{vjob.external_id}]')
         for v in self.validator_jobs:
-            print(f'     {v.id} [{v.external_id}] - {v.command.name}')
+            lines.append(f'     {v.id} [{v.external_id}] - {v.command.name}')
             cjob = v.complete_processing_job
-            print(f'         {cjob.id} [cjob.external_id]')
+            if cjob is not None:
+                lines.append(f'         {cjob.id} [{cjob.external_id}]')
+        return lines
 
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
