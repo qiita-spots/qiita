@@ -1756,10 +1756,12 @@ class ProcessingJob(qdb.base.QiitaObject):
         ready = self._update_children(mapping)
         # Submit all the children that already have all the input parameters
         for c in ready:
-            c.submit()
-            # some jobs create several children jobs/validators and this can
-            # clog the submission process; giving it a second to avoid this
-            sleep(1)
+            if c.status in {'in_construction', 'waiting'}:
+                c.submit()
+                # some jobs create several children jobs/validators and this
+                # can clog the submission process; giving it a second to
+                # avoid this
+                sleep(1)
 
     @property
     def outputs(self):

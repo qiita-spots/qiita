@@ -68,10 +68,6 @@ for i, j in enumerate(main_jobs):
         extra_info = j.parameters.values[
             ('The number of rarefaction depths to include between min_depth '
              'and max_depth. (steps)')]
-    elif cmd.name == 'build_analysis_files':
-        extra_info = j.parameters.values[
-            ('The number of rarefaction depths to include between min_depth '
-             'and max_depth. (steps)')]
 
     _d['external_id'] = eid
     _d['sId'] = s.id
