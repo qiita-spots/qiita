@@ -2,7 +2,7 @@
 <project name="PostgreSQL" id="Project_fb1" database="PostgreSQL" >
 	<schema name="qiita" >
 		<table name="analysis" >
-			<comment><![CDATA[hHolds analysis information]]></comment>
+			<comment><![CDATA[Holds analysis information]]></comment>
 			<column name="analysis_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo><![CDATA[nextval('qiita.analysis_analysis_id_seq'::regclass)]]></defo>
 				<comment><![CDATA[Unique identifier for analysis]]></comment>
@@ -24,6 +24,9 @@
 				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="logging_id" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="slurm_reservation" type="varchar" jt="12" mandatory="y" >
+				<defo><![CDATA['']]></defo>
+			</column>
 			<index name="pk_analysis" unique="PRIMARY_KEY" >
 				<column name="analysis_id" />
 			</index>
@@ -1722,6 +1725,10 @@ Controlled Vocabulary]]></comment>
 				<comment><![CDATA[One of the user levels (admin, user, guest, etc)]]></comment>
 			</column>
 			<column name="description" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="slurm_parameters" type="varchar" jt="12" mandatory="y" >
+				<defo><![CDATA['']]></defo>
+				<comment><![CDATA[Specific per_user_level slurm  parameters]]></comment>
+			</column>
 			<index name="pk_user_level" unique="PRIMARY_KEY" >
 				<column name="user_level_id" />
 			</index>
