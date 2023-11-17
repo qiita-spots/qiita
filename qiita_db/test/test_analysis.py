@@ -688,7 +688,7 @@ class TestAnalysis(TestCase):
     def test_slurm_reservation(self):
         analysis = qdb.analysis.Analysis(1)
         self.assertIsNone(analysis.slurm_reservation)
-        text = 'this is a tests!'
+        text = 'this is a test!'
         analysis.slurm_reservation = text
         self.assertEqual(analysis._slurm_reservation(), [text])
         self.assertIsNone(analysis.slurm_reservation)
