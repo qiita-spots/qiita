@@ -398,7 +398,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [external_id])
             return cls(qdb.sql_connection.TRN.execute_fetchlast())
 
-    def get_resource_allocation_info(self):
+    @property
+    def resource_allocation_info(self):
         """Return resource allocation defined for this job. For
         external computational resources only.
 
@@ -408,21 +409,30 @@ class ProcessingJob(qdb.base.QiitaObject):
             A resource allocation string useful to the external resource
         """
         with qdb.sql_connection.TRN:
+            analysis = None
             if self.command.name == 'complete_job':
                 jtype = 'COMPLETE_JOBS_RESOURCE_PARAM'
-                v = loads(self.parameters.values['payload'])
+                params = self.parameters.values
+                v = loads(params['payload'])
                 # assume an empty string for name is preferable to None
                 name = ''
                 if v['artifacts'] is not None:
                     an_element = list(v['artifacts'].keys())[0]
                     name = v['artifacts'][an_element]['artifact_type']
+                ia = ProcessingJob(params['job_id']).input_artifacts
+                if ia:
+                    analysis = ia[0].analysis
             elif self.command.name == 'release_validators':
                 jtype = 'RELEASE_VALIDATORS_RESOURCE_PARAM'
                 tmp = ProcessingJob(self.parameters.values['job'])
                 name = tmp.parameters.command.name
+                analysis = tmp.input_artifacts[0].analysis
             elif self.command.name == 'Validate':
                 jtype = 'VALIDATOR'
-                name = self.parameters.values['artifact_type']
+                vals = self.parameters.values
+                name = vals['artifact_type']
+                if vals['analysis'] is not None:
+                    analysis = qdb.analysis.Analysis(vals['analysis'])
             elif self.id == 'register':
                 jtype = 'REGISTER'
                 name = 'REGISTER'
@@ -430,6 +440,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # assume anything else is a command
                 jtype = 'RESOURCE_PARAMS_COMMAND'
                 name = self.command.name
+                ia = self.input_artifacts
+                if ia:
+                    analysis = ia[0].analysis
 
             # first, query for resources matching name and type
             sql = """SELECT allocation FROM
@@ -454,6 +467,13 @@ class ProcessingJob(qdb.base.QiitaObject):
                         "Could not match %s to a resource allocation!" % name)
 
             allocation = result[0]
+            # adding user_level extra parameters
+            allocation = f'{allocation} {self.user.slurm_parameters}'.strip()
+            # adding analysis reservation
+            if analysis is not None:
+                sr = analysis.slurm_reservation
+                if sr is not None:
+                    allocation = f'{allocation} --reservation {sr}'
 
             if ('{samples}' in allocation or '{columns}' in allocation or
                     '{input_size}' in allocation):
@@ -1005,7 +1025,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # before returning immediately, usually with a job ID that can
                 # be used to monitor the job's progress.
 
-                resource_params = self.get_resource_allocation_info()
+                resource_params = self.resource_allocation_info
 
                 # note that parent_job_id is being passed transparently from
                 # submit declaration to the launcher.
@@ -2009,18 +2029,23 @@ class ProcessingJob(qdb.base.QiitaObject):
     def trace(self):
         """ Returns as a text array the full trace of the job, from itself
             to validators and complete jobs"""
-        lines = [f'{self.id} [{self.external_id}] - {self.command.name}']
+        lines = [f'{self.id} [{self.external_id}]: '
+                 f'{self.command.name} | {self.resource_allocation_info}']
         cjob = self.complete_processing_job
         if cjob is not None:
-            lines.append(f'  {cjob.id} [{cjob.external_id}]')
+            lines.append(f'  {cjob.id} [{cjob.external_id}] | '
+                         f'{cjob.resource_allocation_info}')
             vjob = self.release_validator_job
             if vjob is not None:
-                lines.append(f'    {vjob.id} [{vjob.external_id}]')
+                lines.append(f'    {vjob.id} [{vjob.external_id}] '
+                             f'| {vjob.resource_allocation_info}')
         for v in self.validator_jobs:
-            lines.append(f'     {v.id} [{v.external_id}] - {v.command.name}')
+            lines.append(f'     {v.id} [{v.external_id}]: '
+                         f'{v.command.name} | {v.resource_allocation_info}')
             cjob = v.complete_processing_job
             if cjob is not None:
-                lines.append(f'         {cjob.id} [{cjob.external_id}]')
+                lines.append(f'         {cjob.id} [{cjob.external_id}] '
+                             f'| {cjob.resource_allocation_info}')
         return lines
 
 

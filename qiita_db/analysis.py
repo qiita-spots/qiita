@@ -1177,3 +1177,47 @@ class Analysis(qdb.base.QiitaObject):
                      VALUES (%s, %s{1})""".format(col, dtid)
             qdb.sql_connection.TRN.add(sql, [self._id, fpid])
             qdb.sql_connection.TRN.execute()
+
+    def _slurm_reservation(self):
+        """Helper method for the slurm_reservation property"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT slurm_reservation
+                     FROM qiita.{0}
+                     WHERE analysis_id = %s""".format(self._table)
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return qdb.sql_connection.TRN.execute_fetchflatten()
+
+    @property
+    def slurm_reservation(self):
+        """Returns a valid reservation if it exists
+
+        Returns
+        -------
+        str or None
+            returns the slurm reservation or None
+        """
+        slurm_reservation = self._slurm_reservation()
+
+        if slurm_reservation:
+            slurm_reservation = slurm_reservation[0]
+            cmd = f"scontrol show reservations {slurm_reservation}"
+            p_out, p_err, rv = qdb.processing_job._system_call(cmd)
+            if rv == 0:
+                return slurm_reservation
+
+        return None
+
+    @slurm_reservation.setter
+    def slurm_reservation(self, slurm_reservation):
+        """Changes the slurm reservation of the analysis
+
+        Parameters
+        ----------
+        slurm_reservation : str
+            New slurm_reservation for the analysis
+        """
+        sql = """UPDATE qiita.{0}
+                 SET slurm_reservation = %s
+                 WHERE analysis_id = %s""".format(self._table)
+        qdb.sql_connection.perform_as_transaction(
+            sql, [slurm_reservation, self._id])

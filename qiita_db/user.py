@@ -565,6 +565,17 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.sql_connection.TRN.execute_fetchindex()
 
+    @property
+    def slurm_parameters(self):
+        "Returns the slumn parameters for this user given by its user level"
+        with qdb.sql_connection.TRN:
+            sql = """SELECT slurm_parameters
+                     FROM qiita.user_level
+                     JOIN qiita.qiita_user USING (user_level_id)
+                     WHERE email = %s"""
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return qdb.sql_connection.TRN.execute_fetchflatten()[0]
+
     # ------- methods ---------
     def user_artifacts(self, artifact_type=None):
         """Returns the artifacts owned by the user, grouped by study

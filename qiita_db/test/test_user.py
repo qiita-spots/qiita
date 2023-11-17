@@ -513,6 +513,12 @@ class UserTest(TestCase):
 
         user.update_email('bla@ble.bli')
 
+    def test_slurm_parameters(self):
+        self.assertEqual(qdb.user.User('shared@foo.bar').slurm_parameters,
+                         '--nice 10000')
+        self.assertEqual(qdb.user.User('admin@foo.bar').slurm_parameters,
+                         '--nice 5000')
+
 
 @qiita_test_checker()
 class DeleteUser(TestCase):
