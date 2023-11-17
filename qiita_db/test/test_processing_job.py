@@ -553,7 +553,7 @@ class ProcessingJobTest(TestCase):
         validator = validators[0]
         self.assertEqual(validator.parameters.values['artifact_type'], 'BIOM')
         self.assertEqual(
-            validator.get_resource_allocation_info(),
+            validator.resource_allocation_info,
             '-p qiita -N 1 -n 1 --mem 90gb --time 150:00:00')
         self.assertEqual(validator.shape, (27, 53, None))
         # Test the output artifact is going to be named based on the
@@ -790,7 +790,7 @@ class ProcessingJobTest(TestCase):
         pj = qdb.processing_job.ProcessingJob(
             '6d368e16-2242-4cf8-87b4-a5dc40bb890b')
         command = pj.command
-        current_allocation = pj.get_resource_allocation_info()
+        current_allocation = pj.resource_allocation_info
         self.assertEqual(current_allocation,
                          '-p qiita -N 1 -n 1 --mem 120gb --time 80:00:00')
 
@@ -828,7 +828,7 @@ class ProcessingJobTest(TestCase):
                    f"SET allocation = '{ra}'"
                    f"WHERE name = '{command.name}'")
             qdb.sql_connection.perform_as_transaction(sql)
-            self.assertEqual(sra, pj.get_resource_allocation_info())
+            self.assertEqual(sra, pj.resource_allocation_info)
 
         # return allocation
         sql = ("UPDATE qiita.processing_job_resource_allocation "
@@ -853,7 +853,7 @@ class ProcessingJobTest(TestCase):
 
         for jid, allocation in jids.items():
             job = qdb.processing_job.ProcessingJob(jid)
-            self.assertEqual(job.get_resource_allocation_info(), allocation)
+            self.assertEqual(job.resource_allocation_info, allocation)
 
         # now let's test get_resource_allocation_info formulas, fun!!
         job_changed = qdb.processing_job.ProcessingJob(
@@ -873,27 +873,27 @@ class ProcessingJobTest(TestCase):
         #                                         27*1000 ~ 27000
         _set_allocation('{samples}*1000')
         self.assertEqual(
-            job_not_changed.get_resource_allocation_info(),
+            job_not_changed.resource_allocation_info,
             '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00')
-        self.assertEqual(job_changed.get_resource_allocation_info(),
+        self.assertEqual(job_changed.resource_allocation_info,
                          '-p qiita --mem 26K')
 
         # a little more complex ((samples+columns)*1000000)+4000000
         #                       ((   27  +  31   )*1000000)+4000000 ~ 62000000
         _set_allocation('(({samples}+{columns})*1000000)+4000000')
         self.assertEqual(
-            job_not_changed.get_resource_allocation_info(),
+            job_not_changed.resource_allocation_info,
             '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00')
-        self.assertEqual(job_changed.get_resource_allocation_info(),
+        self.assertEqual(job_changed.resource_allocation_info,
                          '-p qiita --mem 80M')
 
         # now something real input_size+(2*1e+9)
         #                        116   +(2*1e+9) ~ 2000000116
         _set_allocation('{input_size}+(2*1e+9)')
         self.assertEqual(
-            job_not_changed.get_resource_allocation_info(),
+            job_not_changed.resource_allocation_info,
             '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00')
-        self.assertEqual(job_changed.get_resource_allocation_info(),
+        self.assertEqual(job_changed.resource_allocation_info,
                          '-p qiita --mem 2G')
 
         # restore allocation

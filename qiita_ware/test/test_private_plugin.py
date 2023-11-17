@@ -394,13 +394,13 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
 
         self.assertEqual(job.shape, (4, None, 1256812))
         self.assertEqual(
-            job.get_resource_allocation_info(),
-            '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00')
+            job.resource_allocation_info,
+            '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00 --nice 10000')
         _set_allocation('{samples}*1000')
-        self.assertEqual(job.get_resource_allocation_info(),
-                         '-p qiita --mem 4K')
+        self.assertEqual(job.resource_allocation_info,
+                         '-p qiita --mem 4K --nice 10000')
         _set_allocation('{columns}*1000')
-        self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
+        self.assertEqual(job.resource_allocation_info, 'Not valid')
         self.assertEqual(job.status, 'error')
         self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
                          'contact qiita.help@gmail.com')
@@ -409,7 +409,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         job = self._create_job('build_analysis_files', {
             'analysis': 3, 'merge_dup_sample_ids': True, 'categories': None})
         _set_allocation('{input_size}*N')
-        self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
+        self.assertEqual(job.resource_allocation_info, 'Not valid')
         self.assertEqual(job.status, 'error')
         self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
                          'contact qiita.help@gmail.com')
@@ -418,7 +418,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         job = self._create_job('build_analysis_files', {
             'analysis': 3, 'merge_dup_sample_ids': True, 'categories': None})
         _set_allocation('-{samples}')
-        self.assertEqual(job.get_resource_allocation_info(), 'Not valid')
+        self.assertEqual(job.resource_allocation_info, 'Not valid')
         self.assertEqual(job.status, 'error')
         self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
                          'contact qiita.help@gmail.com')
