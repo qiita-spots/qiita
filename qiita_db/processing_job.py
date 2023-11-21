@@ -419,9 +419,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if v['artifacts'] is not None:
                     an_element = list(v['artifacts'].keys())[0]
                     name = v['artifacts'][an_element]['artifact_type']
-                ia = ProcessingJob(params['job_id']).input_artifacts
-                if ia:
-                    analysis = ia[0].analysis
+                pjob_params = ProcessingJob(params['job_id']).parameters.values
+                if pjob_params['analysis'] is not None:
+                    analysis = qdb.analysis.Analysis(pjob_params['analysis'])
             elif self.command.name == 'release_validators':
                 jtype = 'RELEASE_VALIDATORS_RESOURCE_PARAM'
                 tmp = ProcessingJob(self.parameters.values['job'])

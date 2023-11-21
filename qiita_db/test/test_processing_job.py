@@ -554,7 +554,7 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(validator.parameters.values['artifact_type'], 'BIOM')
         self.assertEqual(
             validator.resource_allocation_info,
-            '-p qiita -N 1 -n 1 --mem 90gb --time 150:00:00 --nice 10000')
+            '-p qiita -N 1 -n 1 --mem 90gb --time 150:00:00 --nice=10000')
         self.assertEqual(validator.shape, (27, 53, None))
         # Test the output artifact is going to be named based on the
         # input parameters
@@ -793,7 +793,7 @@ class ProcessingJobTest(TestCase):
         current_allocation = pj.resource_allocation_info
         self.assertEqual(current_allocation,
                          '-p qiita -N 1 -n 1 --mem 120gb --time 80:00:00 '
-                         '--nice 10000')
+                         '--nice=10000')
 
         # now, let's update that job allocation and make sure that things
         # work as expected
@@ -801,29 +801,29 @@ class ProcessingJobTest(TestCase):
             # (resource allocation, specific allocation)
             # 1. tests that nlog works
             ('-p qiita -N 1 -n 1 --mem nlog({samples})*100 --time {columns}',
-             '-p qiita -N 1 -n 1 --mem 329B --time 0:00:53 --nice 10000'),
+             '-p qiita -N 1 -n 1 --mem 329B --time 0:00:53 --nice=10000'),
             # 2. days in time works fine
             ('-p qiita -N 1 -n 1 --mem 10g --time {columns}*10000',
-             '-p qiita -N 1 -n 1 --mem 10g --time 6-3:13:20 --nice 10000'),
+             '-p qiita -N 1 -n 1 --mem 10g --time 6-3:13:20 --nice=10000'),
             ('-p qiita -N 1 -n 1 --mem 20g --time {columns}*1631',
-             '-p qiita -N 1 -n 1 --mem 20g --time 1-0:00:43 --nice 10000'),
+             '-p qiita -N 1 -n 1 --mem 20g --time 1-0:00:43 --nice=10000'),
             # 3. conditionals work
             ('-p qiita -N 1 -n 1 --mem 10g --time {columns}*1631 '
              'if {columns}*1631 < 86400 else 86400',
-             '-p qiita -N 1 -n 1 --mem 10g --time 1-0:00:00 --nice 10000'),
+             '-p qiita -N 1 -n 1 --mem 10g --time 1-0:00:00 --nice=10000'),
             ('-p qiita -N 1 -n 1 --mem 10g --time {columns}*1631 '
              'if {columns}*1631 > 86400 else 86400',
-             '-p qiita -N 1 -n 1 --mem 10g --time 1-0:00:43 --nice 10000'),
+             '-p qiita -N 1 -n 1 --mem 10g --time 1-0:00:43 --nice=10000'),
             # --qos=qiita_prio
             ('-p qiita -N 1 -n 1 --mem 10g --time 1:00:00 --qos=qiita_prio',
              '-p qiita -N 1 -n 1 --mem 10g --time 1:00:00 --qos=qiita_prio '
-             '--nice 10000'),
+             '--nice=10000'),
             # all the combinations
             ('-p qiita -N 1 -n 1 --mem nlog({samples})*100000 --time '
              '{columns}*1631 if {columns}*1631 > 86400 else 86400 '
              '--qos=qiita_prio',
              '-p qiita -N 1 -n 1 --mem 322K --time 1-0:00:43 '
-             '--qos=qiita_prio --nice 10000'),
+             '--qos=qiita_prio --nice=10000'),
         ]
         for ra, sra in tests:
             sql = ("UPDATE qiita.processing_job_resource_allocation "
@@ -842,17 +842,17 @@ class ProcessingJobTest(TestCase):
         jids = {
             # Split libraries FASTQ
             '6d368e16-2242-4cf8-87b4-a5dc40bb890b':
-                '-p qiita -N 1 -n 1 --mem 120gb --time 80:00:00 --nice 10000',
+                '-p qiita -N 1 -n 1 --mem 120gb --time 80:00:00 --nice=10000',
             # Pick closed-reference OTUs
             '80bf25f3-5f1d-4e10-9369-315e4244f6d5':
-                '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00 --nice 10000',
+                '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00 --nice=10000',
             # Single Rarefaction / Analysis
             '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0':
                 '-p qiita -N 1 -n 5 --mem-per-cpu 8gb --time 168:00:00 '
-                '--nice 10000',
+                '--nice=10000',
             # Split libraries
             'bcc7ebcd-39c1-43e4-af2d-822e3589f14d':
-                '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00 --nice 10000'}
+                '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00 --nice=10000'}
 
         for jid, allocation in jids.items():
             job = qdb.processing_job.ProcessingJob(jid)
@@ -877,27 +877,27 @@ class ProcessingJobTest(TestCase):
         _set_allocation('{samples}*1000')
         self.assertEqual(
             job_not_changed.resource_allocation_info,
-            '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00 --nice 10000')
+            '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00 --nice=10000')
         self.assertEqual(job_changed.resource_allocation_info,
-                         '-p qiita --mem 26K --nice 10000')
+                         '-p qiita --mem 26K --nice=10000')
 
         # a little more complex ((samples+columns)*1000000)+4000000
         #                       ((   27  +  31   )*1000000)+4000000 ~ 62000000
         _set_allocation('(({samples}+{columns})*1000000)+4000000')
         self.assertEqual(
             job_not_changed.resource_allocation_info,
-            '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00 --nice 10000')
+            '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00 --nice=10000')
         self.assertEqual(job_changed.resource_allocation_info,
-                         '-p qiita --mem 80M --nice 10000')
+                         '-p qiita --mem 80M --nice=10000')
 
         # now something real input_size+(2*1e+9)
         #                        116   +(2*1e+9) ~ 2000000116
         _set_allocation('{input_size}+(2*1e+9)')
         self.assertEqual(
             job_not_changed.resource_allocation_info,
-            '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00 --nice 10000')
+            '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00 --nice=10000')
         self.assertEqual(job_changed.resource_allocation_info,
-                         '-p qiita --mem 2G --nice 10000')
+                         '-p qiita --mem 2G --nice=10000')
 
         # restore allocation
         sql = ("UPDATE qiita.processing_job_resource_allocation "

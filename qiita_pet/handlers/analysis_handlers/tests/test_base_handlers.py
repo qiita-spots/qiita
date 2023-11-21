@@ -56,8 +56,8 @@ class TestBaseHandlersUtils(TestCase):
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
                             '1.SKM4.640180', '1.SKM9.640192'], {'1'})},
+               'analysis_reservation': '',
                'alert_msg': ''}
-
         self.assertEqual(obs, exp)
 
         r_client.set('analysis_1', dumps({'job_id': 'job_id'}))
@@ -85,7 +85,8 @@ class TestBaseHandlersUtils(TestCase):
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
                             '1.SKM4.640180', '1.SKM9.640192'], {'1'})},
-               'alert_msg': 'An artifact is being deleted from this analysis'}
+               'alert_msg': 'An artifact is being deleted from this analysis',
+               'analysis_reservation': ''}
         self.assertEqual(obs, exp)
 
         r_client.set('job_id', dumps(
@@ -115,7 +116,8 @@ class TestBaseHandlersUtils(TestCase):
                                   'libraries FASTQ', 'QIIME v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
                             '1.SKM4.640180', '1.SKM9.640192'], {'1'})},
-               'alert_msg': 'Error deleting artifact'}
+               'alert_msg': 'Error deleting artifact',
+               'analysis_reservation': ''}
         self.assertEqual(obs, exp)
 
     def test_analyisis_graph_handler_get_request(self):
@@ -198,6 +200,25 @@ class TestBaseHandlers(TestHandlerBase):
         obs = loads(response.body)
         exp = {job_id: {'status': 'queued', 'step': None, 'error': ""}}
         self.assertEqual(obs, exp)
+
+    def test_patch(self):
+        # first let's check that the reservation is not set
+        analysis = Analysis(1)
+        self.assertEqual(analysis._slurm_reservation(), [''])
+
+        # now, let's change it to something different
+        reservation = 'my-reservation'
+        arguments = {
+            'op': 'replace', 'path': 'reservation', 'value': reservation}
+        self.patch(f'/analysis/description/{analysis.id}/', data=arguments)
+        self.assertEqual(analysis._slurm_reservation(), [reservation])
+
+        # then bring it back
+        reservation = ''
+        arguments = {
+            'op': 'replace', 'path': 'reservation', 'value': reservation}
+        self.patch(f'/analysis/description/{analysis.id}/', data=arguments)
+        self.assertEqual(analysis._slurm_reservation(), [reservation])
 
 
 class TestAnalysisGraphHandler(TestHandlerBase):

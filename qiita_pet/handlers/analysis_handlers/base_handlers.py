@@ -27,6 +27,7 @@ class CreateAnalysisHandler(BaseHandler):
         desc = self.get_argument('description')
         mdsi = self.get_argument('merge_duplicated_sample_ids', False)
         metadata = self.request.arguments.get('analysis-metadata', None)
+        reservation = self.get_argument('reservation', None)
         # we need to change from bytes to strings
         if metadata is not None:
             metadata = [m.decode('utf-8') for m in metadata]
@@ -36,6 +37,9 @@ class CreateAnalysisHandler(BaseHandler):
         analysis = Analysis.create(
             self.current_user, name, desc, merge_duplicated_sample_ids=mdsi,
             from_default=True, categories=metadata)
+
+        if reservation is not None:
+            analysis.slurm_reservation = reservation
 
         self.redirect(u"%s/analysis/description/%s/"
                       % (qiita_config.portal_dir, analysis.id))
@@ -86,10 +90,11 @@ def analysis_description_handler_get_request(analysis_id, user):
             'analysis_mapping_id': analysis.mapping_file,
             'alert_type': alert_type,
             'artifacts': artifacts,
+            'analysis_reservation': analysis._slurm_reservation()[0],
             'alert_msg': alert_msg}
 
 
-class AnalysisDescriptionHandler(BaseHandler):
+class AnalysisHandler(BaseHandler):
     @authenticated
     @execute_as_transaction
     def get(self, analysis_id):
@@ -118,6 +123,26 @@ class AnalysisDescriptionHandler(BaseHandler):
             res['message'] = message
 
         self.render("analysis_description.html", **res)
+
+    @authenticated
+    @execute_as_transaction
+    def patch(self, analysis_id):
+        """Patches a analysis
+
+        Follows the JSON PATCH specification:
+        https://tools.ietf.org/html/rfc6902
+        """
+        req_op = self.get_argument('op')
+        req_path = self.get_argument('path')
+        req_value = self.get_argument('value', None)
+
+        if req_op == 'replace' and req_path == 'reservation':
+            Analysis(analysis_id).slurm_reservation = req_value
+            response = {'status': 'success', 'message': ''}
+        else:
+            response = {'status': 'error', 'message': 'Not implemented'}
+
+        self.write(response)
 
 
 def analyisis_graph_handler_get_request(analysis_id, user):

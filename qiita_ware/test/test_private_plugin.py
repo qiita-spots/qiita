@@ -395,10 +395,10 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertEqual(job.shape, (4, None, 1256812))
         self.assertEqual(
             job.resource_allocation_info,
-            '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00 --nice 10000')
+            '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00 --nice=10000')
         _set_allocation('{samples}*1000')
         self.assertEqual(job.resource_allocation_info,
-                         '-p qiita --mem 4K --nice 10000')
+                         '-p qiita --mem 4K --nice=10000')
         _set_allocation('{columns}*1000')
         self.assertEqual(job.resource_allocation_info, 'Not valid')
         self.assertEqual(job.status, 'error')

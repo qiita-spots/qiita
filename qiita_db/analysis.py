@@ -1198,11 +1198,10 @@ class Analysis(qdb.base.QiitaObject):
         """
         slurm_reservation = self._slurm_reservation()
 
-        if slurm_reservation:
-            slurm_reservation = slurm_reservation[0]
-            cmd = f"scontrol show reservations {slurm_reservation}"
+        if slurm_reservation and slurm_reservation[0] != '':
+            cmd = f"scontrol show reservations {slurm_reservation[0]}"
             p_out, p_err, rv = qdb.processing_job._system_call(cmd)
-            if rv == 0:
+            if rv == 0 and p_out != 'No reservations in the system\n':
                 return slurm_reservation
 
         return None

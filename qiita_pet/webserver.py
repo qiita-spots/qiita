@@ -28,7 +28,7 @@ from qiita_pet.handlers.admin_processing_job import (
     AdminProcessingJob, AJAXAdminProcessingJobListing, SampleValidation)
 from qiita_pet.handlers.analysis_handlers import (
     ListAnalysesHandler, AnalysisSummaryAJAX, SelectedSamplesHandler,
-    AnalysisDescriptionHandler, AnalysisGraphHandler, CreateAnalysisHandler,
+    AnalysisHandler, AnalysisGraphHandler, CreateAnalysisHandler,
     AnalysisJobsHandler, ShareAnalysisAJAX)
 from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateHandler,
@@ -123,7 +123,7 @@ class Application(tornado.web.Application):
             (r"/analysis/selected/socket/", SelectedSocketHandler),
             (r"/analysis/description/(.*)/graph/", AnalysisGraphHandler),
             (r"/analysis/description/(.*)/jobs/", AnalysisJobsHandler),
-            (r"/analysis/description/(.*)/", AnalysisDescriptionHandler),
+            (r"/analysis/description/(.*)/", AnalysisHandler),
             (r"/analysis/sharing/", ShareAnalysisAJAX),
             (r"/artifact/samples/", ArtifactGetSamples),
             (r"/artifact/info/", ArtifactGetInfo),
