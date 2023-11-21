@@ -36,10 +36,7 @@ class CreateAnalysisHandler(BaseHandler):
             mdsi = True
         analysis = Analysis.create(
             self.current_user, name, desc, merge_duplicated_sample_ids=mdsi,
-            from_default=True, categories=metadata)
-
-        if reservation is not None:
-            analysis.slurm_reservation = reservation
+            from_default=True, categories=metadata, reservation=reservation)
 
         self.redirect(u"%s/analysis/description/%s/"
                       % (qiita_config.portal_dir, analysis.id))

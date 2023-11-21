@@ -127,7 +127,8 @@ class Analysis(qdb.base.QiitaObject):
 
     @classmethod
     def create(cls, owner, name, description, from_default=False,
-               merge_duplicated_sample_ids=False, categories=None):
+               merge_duplicated_sample_ids=False, categories=None,
+               reservation=None):
         """Creates a new analysis on the database
 
         Parameters
@@ -187,6 +188,8 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, args, many=True)
 
             instance = cls(a_id)
+            if reservation is not None:
+                instance.slurm_reservation = reservation
 
             # Once the analysis is created, we can create the mapping file and
             # the initial set of artifacts
