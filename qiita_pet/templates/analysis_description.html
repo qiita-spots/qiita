@@ -5,6 +5,31 @@
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
 
 <script type="text/javascript">
+  /*
+   * update_analysis_reservation will update the analysis resevation
+   *
+   * @param analysis_id: The id of the analysis to update
+   * @param reservation: The reservation
+   *
+   */
+
+  function update_analysis_reservation(analysis_id, reservation) {
+    $.ajax({
+      url: '{% raw qiita_config.portal_dir %}/analysis/description/{{analysis_id}}/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': 'reservation', 'value': reservation},
+      success: function(data) {
+        $('#analysis-reservation-modal-view').modal('hide');
+        if(data.status == 'error') {
+          bootstrapAlert(data.message, "danger");
+        } else {
+          $('#reservation').val(reservation);
+          $('#analysis-reservation-modal-data').text("Reservation: " + reservation);
+        }
+      }
+    });
+
+  }
 
   $(document).ready(function(){
     // Create the processing network view object
@@ -51,6 +76,9 @@
         {% if not analysis_is_public %}
           <a class="btn btn-default" onclick="if (confirm('Are you sure you want to make this analysis public? Note that this will not allow you to delete your analysis later.')) { $('#make-public').submit(); }"><span class="glyphicon glyphicon-globe"></span> Make analysis public</a>
         {% end %}
+        <a class="btn btn-default" data-toggle="modal" data-target="#analysis-reservation-modal-view"><span class="glyphicon glyphicon-pencil" name="analysis-reservation-modal-data" id="analysis-reservation-modal-data"> Reservation: {% raw analysis_reservation %}</span></a>
+
+
       </small>
     </h2>
     <a class="btn btn-info" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"><span class=" glyphicon glyphicon-share"></span></a> Shared with: <span id="shared_html_{{analysis_id}}"></span>
@@ -121,6 +149,28 @@
         </div>
     </div>
   </div>
+</div>
+
+<!-- Modal used to change reservation -->
+<div class="modal fade" id="analysis-reservation-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+ <div class="modal-dialog">
+   <div class="modal-content">
+     <div class="modal-header">
+       <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+       <h4 class="modal-title" id="myModalLabel">Modify Reservation Setting</h4>
+     </div>
+       <div class="modal-body">
+         <div>
+           <div class="form-group">
+             <label for="shares-select">Reservation (optional)</label>
+             <input type="text" class="form-control" id="reservation" name="reservation" value="{{ analysis_reservation }}" placeholder="Reservation (optional)">
+             <button id="update-reservation-btn" class="btn btn-default" onclick="update_analysis_reservation({{analysis_id}}, $('#reservation').val());">Update</button>
+           </div>
+         </div>
+       </div>
+       <div class="modal-footer"></div>
+   </div>
+ </div>
 </div>
 
 {% end %}

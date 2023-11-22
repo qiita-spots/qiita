@@ -127,7 +127,8 @@ class Analysis(qdb.base.QiitaObject):
 
     @classmethod
     def create(cls, owner, name, description, from_default=False,
-               merge_duplicated_sample_ids=False, categories=None):
+               merge_duplicated_sample_ids=False, categories=None,
+               reservation=None):
         """Creates a new analysis on the database
 
         Parameters
@@ -147,6 +148,8 @@ class Analysis(qdb.base.QiitaObject):
             the artifact id
         categories : list of str, optional
             If not None, use _only_ these categories for the metaanalysis
+        reservation : str
+            The slurm reservation to asign to the analysis
 
         Returns
         -------
@@ -187,6 +190,8 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, args, many=True)
 
             instance = cls(a_id)
+            if reservation is not None:
+                instance.slurm_reservation = reservation
 
             # Once the analysis is created, we can create the mapping file and
             # the initial set of artifacts
@@ -1198,12 +1203,11 @@ class Analysis(qdb.base.QiitaObject):
         """
         slurm_reservation = self._slurm_reservation()
 
-        if slurm_reservation:
-            slurm_reservation = slurm_reservation[0]
-            cmd = f"scontrol show reservations {slurm_reservation}"
+        if slurm_reservation and slurm_reservation[0] != '':
+            cmd = f"scontrol show reservations {slurm_reservation[0]}"
             p_out, p_err, rv = qdb.processing_job._system_call(cmd)
-            if rv == 0:
-                return slurm_reservation
+            if rv == 0 and p_out != 'No reservations in the system\n':
+                return slurm_reservation[0]
 
         return None
 

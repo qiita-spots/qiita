@@ -7,13 +7,13 @@
 # -----------------------------------------------------------------------------
 
 from .util import check_analysis_access
-from .base_handlers import (CreateAnalysisHandler, AnalysisDescriptionHandler,
+from .base_handlers import (CreateAnalysisHandler, AnalysisHandler,
                             AnalysisGraphHandler, AnalysisJobsHandler)
 from .listing_handlers import (ListAnalysesHandler, AnalysisSummaryAJAX,
                                SelectedSamplesHandler)
 from .sharing_handlers import ShareAnalysisAJAX
 
-__all__ = ['CreateAnalysisHandler', 'AnalysisDescriptionHandler',
+__all__ = ['CreateAnalysisHandler', 'AnalysisHandler',
            'AnalysisGraphHandler', 'AnalysisJobsHandler',
            'ListAnalysesHandler', 'AnalysisSummaryAJAX',
            'SelectedSamplesHandler', 'check_analysis_access',
