@@ -425,7 +425,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 job = ProcessingJob(params['job_id'])
                 params = job.parameters.values
                 ia = job.input_artifacts
-                if 'analysis' in params:
+                if 'analysis' in params and params['analysis'] is not None:
                     analysis = qdb.analysis.Analysis(params['analysis'])
                 elif ia:
                     analysis = ia[0].analysis
@@ -451,7 +451,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # input_artifacts or use the parameter 'analysis' of self
                 params = self.parameters.values
                 ia = self.input_artifacts
-                if 'analysis' in params:
+                if 'analysis' in params and params['analysis'] is not None:
                     analysis = qdb.analysis.Analysis(params['analysis'])
                 elif ia:
                     analysis = ia[0].analysis
