@@ -148,6 +148,8 @@ class Analysis(qdb.base.QiitaObject):
             the artifact id
         categories : list of str, optional
             If not None, use _only_ these categories for the metaanalysis
+        reservation : str
+            The slurm reservation to asign to the analysis
 
         Returns
         -------
