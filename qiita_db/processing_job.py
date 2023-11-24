@@ -433,7 +433,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 jtype = 'RELEASE_VALIDATORS_RESOURCE_PARAM'
                 tmp = ProcessingJob(self.parameters.values['job'])
                 name = tmp.parameters.command.name
-                if tmp.input_artifacts
+                if tmp.input_artifacts:
                     analysis = tmp.input_artifacts[0].analysis
             elif self.command.name == 'Validate':
                 jtype = 'VALIDATOR'
