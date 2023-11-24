@@ -410,6 +410,17 @@ Now, if you are wondering about the possible "Processing notes", here are their 
   associated with a samples is an index read file.
 
 
+Are you planning a workshop or class?
+-------------------------------------------------------------------
+
+We encourage users to use Qiita for their classes and/or workshops and to facilitate processing
+we urge  users to request a special reservation in the system. A reservation should help your
+and your participant jobs to move quicker in the system. If you are interested, please send us
+an email to qiita.help@gmail.com and add the name of your workshop/course, the number of
+participants, the expected days this will happen. Note that reservations are only available for
+analysis and not for sequencing processing, and that the reservation can be added/edited during
+the creation of the analysis or at any point within each individual analysis page.
+
 How to cite Qiita?
 ------------------
 
