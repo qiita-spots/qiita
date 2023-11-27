@@ -1190,6 +1190,25 @@ class DefaultWorkflowTests(TestCase):
                 {'connections': qdb.software.DefaultWorkflowEdge(2)})]
         self.assertCountEqual(obs.edges(data=True), exp)
 
+    def test_parameters(self):
+        empty_params = {'prep': {}, 'sample': {}}
+        dw = qdb.software.DefaultWorkflow(1)
+        self.assertEqual(dw.parameters, empty_params)
+
+        values = {
+            'sample': {'environment_name': 'human'},
+            'prep': {'instrument_mode': 'MiSeq'},
+            'extra': {'x': 'y'}
+        }
+        with self.assertRaises(ValueError):
+            dw.parameters = values
+
+        del values['extra']
+        dw.parameters = values
+        self.assertEqual(values, dw.parameters)
+        dw.parameters = empty_params
+        self.assertEqual(empty_params, dw.parameters)
+
 
 CONF_TEMPLATE = """[main]
 NAME = %s

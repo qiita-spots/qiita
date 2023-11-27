@@ -850,13 +850,35 @@ class PrepTemplate(MetadataTemplate):
         else:
             starting_job = None
             pt_artifact = self.artifact.artifact_type
-        workflows = [wk for wk in qdb.software.DefaultWorkflow.iter()
-                     if wk.artifact_type == pt_artifact and
-                     pt_dt in wk.data_type]
+
+        workflows = []
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        for wk in qdb.software.DefaultWorkflow.iter():
+            if wk.artifact_type == pt_artifact and pt_dt in wk.data_type:
+                wk_params = wk.parameters
+                reqs_satisfied = True
+
+                if wk_params['sample']:
+                    df = ST(self.study_id).to_dataframe(samples=list(self))
+                    for k, v in wk_params['sample'].items():
+                        if k not in df.columns or v not in df[k].unique():
+                            reqs_satisfied = False
+
+                if wk_params['prep']:
+                    df = self.to_dataframe()
+                    for k, v in wk_params['prep'].items():
+                        if k not in df.columns or v not in df[k].unique():
+                            reqs_satisfied = False
+
+                if reqs_satisfied:
+                    workflows.append(wk)
+
         if not workflows:
             # raises option a.
             msg = (f'This preparation data type: "{pt_dt}" and/or artifact '
-                   f'type "{pt_artifact}" does not have valid workflows')
+                   f'type "{pt_artifact}" does not have valid workflows; this '
+                   'could be due to required parameters, please check the '
+                   'available workflows.')
             raise ValueError(msg)
         missing_artifacts = dict()
         for wk in workflows:

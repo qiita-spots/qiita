@@ -2000,3 +2000,46 @@ class DefaultWorkflow(qdb.base.QiitaObject):
                 e = DefaultWorkflowEdge(edge_id)
                 g.add_edge(nodes[p_id], nodes[c_id], connections=e)
         return g
+
+    @property
+    def parameters(self):
+        """Retrieves the parameters that the workflow can be applied to
+
+        Returns
+        ----------
+        dict, dict
+            The dictionary of valid key: value pairs given by the sample or
+            the preparation info file
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT parameters
+                     FROM qiita.default_workflow
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchflatten()[0]
+
+    @parameters.setter
+    def parameters(self, values):
+        """Sets the parameters that the workflow can be applied to
+
+        Parameters
+        ----------
+        dict : {'sample': dict, 'prep': dict}
+            dict of dict with the key: value pairs for the 'sample' and 'prep'
+            info files
+
+        Raises
+        ------
+        ValueError
+            if the passed parameter is not a properly formated dict
+        """
+        if not isinstance(values, dict) or \
+                set(values.keys()) != set(['prep', 'sample']):
+            raise ValueError("Improper format for values, should be "
+                             "{'sample': dict, 'prep': dict} ")
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.default_workflow
+                     SET parameters = %s
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.perform_as_transaction(
+                sql, [dumps(values), self._id])
