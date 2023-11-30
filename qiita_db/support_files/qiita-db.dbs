@@ -555,6 +555,9 @@
 			<column name="artifact_type_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo><![CDATA[3]]></defo>
 			</column>
+			<column name="parameters" type="jsonb" jt="2000" mandatory="y" >
+				<defo><![CDATA[{"sample": {}, "prep": {}}]]></defo>
+			</column>
 			<index name="pk_default_workflow" unique="PRIMARY_KEY" >
 				<column name="default_workflow_id" />
 			</index>
