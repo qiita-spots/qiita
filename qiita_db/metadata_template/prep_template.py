@@ -328,7 +328,7 @@ class PrepTemplate(MetadataTemplate):
         Returns
         -------
         dict
-            The dict of restictions based on the data_type
+            The dict of restrictions based on the data_type
         """
         pt_cols = deepcopy(PREP_TEMPLATE_COLUMNS)
         if self.data_type() in TARGET_GENE_DATA_TYPES:
