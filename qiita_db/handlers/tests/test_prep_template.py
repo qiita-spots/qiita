@@ -130,6 +130,41 @@ class PrepTemplateDataHandlerTests(OauthTestingBase):
             'qiita_prep_id': '1'}
         self.assertEqual(obs, exp)
 
+    def test_get_sample_information(self):
+        obs = self.get(
+            '/qiita_db/prep_template/1/data/?sample_information=true',
+            headers=self.header)
+        self.assertEqual(obs.code, 200)
+
+        obs = loads(obs.body)
+        self.assertCountEqual(obs.keys(), ['data'])
+
+        # let's just check that the samples and the keys from the first element
+        # match - this assures us that is the sample_info, the rest is
+        # basically the same as the regular prep_info
+        obs = obs['data']
+        exp = ['1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195',
+               '1.SKB6.640176', '1.SKD6.640190', '1.SKM6.640187',
+               '1.SKD9.640182', '1.SKM8.640201', '1.SKM2.640199',
+               '1.SKD2.640178', '1.SKB7.640196', '1.SKD4.640185',
+               '1.SKB8.640193', '1.SKM3.640197', '1.SKD5.640186',
+               '1.SKB1.640202', '1.SKM1.640183', '1.SKD1.640179',
+               '1.SKD3.640198', '1.SKB5.640181', '1.SKB4.640189',
+               '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
+               '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191']
+        self.assertCountEqual(list(obs.keys()), exp)
+        exp = ['ph', 'temp', 'depth', 'country', 'texture', 'altitude',
+               'latitude', 'taxon_id', 'elevation', 'env_biome', 'longitude',
+               'tot_nitro', 'host_taxid', 'common_name', 'description',
+               'env_feature', 'env_package', 'sample_type', 'tot_org_carb',
+               'dna_extracted', 'samp_salinity', 'anonymized_name',
+               'host_subject_id', 'scientific_name', 'assigned_from_geo',
+               'season_environment', 'water_content_soil',
+               'collection_timestamp', 'description_duplicate',
+               'physical_specimen_location', 'physical_specimen_remaining',
+               'qiita_study_id']
+        self.assertCountEqual(obs['1.SKB2.640194'].keys(), exp)
+
 
 class PrepTemplateAPItestHandlerTests(OauthTestingBase):
     def test_post(self):

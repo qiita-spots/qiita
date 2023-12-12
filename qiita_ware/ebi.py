@@ -191,7 +191,7 @@ class EBISubmission(object):
         st_restrictions = [self.sample_template.columns_restrictions['EBI']]
         pt_restrictions = [self.prep_template.columns_restrictions['EBI']]
         if self.artifact.data_type in TARGET_GENE_DATA_TYPES:
-            # adding restictions on primer and barcode as these are
+            # adding restrictions on primer and barcode as these are
             # conditionally requiered for target gene
             pt_restrictions.append(
                 PREP_TEMPLATE_COLUMNS_TARGET_GENE['demultiplex'])

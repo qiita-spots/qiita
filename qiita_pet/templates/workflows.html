@@ -88,7 +88,31 @@ function makePopper(node) {
           <div class="col-sm-7" style="background-color: #DCDCDC; height: 650px" id="workflow_{{i}}"></div>
           <div class="col-sm-5">
             <h4>
-              Application: {{', '.join(w['data_types'])}}
+              Application: {{', '.join(w['data_types'])}} ->
+              {% if w['parameters_sample'] or w['parameters_prep'] %}
+                  parameter restrictions:
+                  <br/>
+                  <ul>
+                  {% if w['parameters_sample'] %}
+                    <li>Sample Information</li>
+                    <ul>
+                    {% for k, v in w['parameters_sample'].items() %}
+                      <li>{{k}}: {{v}}</li>
+                    {% end %}
+                    </ul>
+                  {% end %}
+                  {% if w['parameters_prep'] %}
+                    <li>Prep Information</li>
+                    <ul>
+                    {% for k, v in w['parameters_prep'].items() %}
+                      <li>{{k}}: {{v}}</li>
+                    {% end %}
+                    </ul>
+                  {% end %}
+                  </ul>
+              {% else %}
+                NO parameters restrictions
+              {% end %}
               <hr/>
               {{w['name']}}
             </h4>

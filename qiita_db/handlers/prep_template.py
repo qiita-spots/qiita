@@ -108,9 +108,16 @@ class PrepTemplateDataHandler(OauthBaseHandler):
         dict
             The contents of the prep information keyed by sample id
         """
+        sample_info = self.get_argument('sample_information', False)
+
         with qdb.sql_connection.TRN:
             pt = _get_prep_template(prep_id)
-            response = {'data': pt.to_dataframe().to_dict(orient='index')}
+            if not sample_info:
+                response = {'data': pt.to_dataframe().to_dict(orient='index')}
+            else:
+                ST = qdb.metadata_template.sample_template.SampleTemplate
+                response = {'data': ST(pt.study_id).to_dataframe(
+                    samples=list(pt)).to_dict(orient='index')}
 
         self.write(response)
 

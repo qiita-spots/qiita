@@ -142,9 +142,13 @@ def _retrive_workflows(active):
                 edges.append([name_y, name])
                 main_nodes[name_y][b] = name
 
+        wparams = w.parameters
+
         workflows.append(
             {'name': w.name, 'id': w.id, 'data_types': w.data_type,
              'description': w.description,
+             'parameters_sample': wparams['sample'],
+             'parameters_prep': wparams['prep'],
              'nodes': nodes, 'edges': edges})
 
     return workflows

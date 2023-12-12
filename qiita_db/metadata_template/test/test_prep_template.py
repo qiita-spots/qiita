@@ -1369,8 +1369,8 @@ class TestPrepTemplate(TestCase):
 
         # here we can test that we can properly create a workflow but we are
         # going to add lot more steps to make it more complex by adding a
-        # couple of new scenarios
-        # 1/2. adds a new path that should be kept separate all the way; this
+        # few more scenarios
+        # 1/4. adds a new path that should be kept separate all the way; this
         #      is to emulate what happens with different trimming (different
         #      default parameter) and deblur (same for each of the previous
         #      steps)
@@ -1385,7 +1385,7 @@ class TestPrepTemplate(TestCase):
                 default_workflow_edge_id, parent_output_id, child_input_id)
             VALUES (4, 1, 3)"""
         qdb.sql_connection.perform_as_transaction(sql)
-        # 2/2. adds a new path that should be kept together and then separate;
+        # 2/4. adds a new path that should be kept together and then separate;
         #      this is to simulate what happens with MTX/WGS processing, one
         #      single QC step (together) and 2 separete profilers
         sql = """
@@ -1407,7 +1407,7 @@ class TestPrepTemplate(TestCase):
             VALUES (5, 1, 3)
             """
         qdb.sql_connection.perform_as_transaction(sql)
-        # Finally, we need to "activate" the merging scheme values of the
+        # 3/4. we need to "activate" the merging scheme values of the
         # commands so they are actually different:
         # 31->'Pick closed-reference OTUs', 6->'Split libraries FASTQ'
         sql = """
@@ -1415,7 +1415,28 @@ class TestPrepTemplate(TestCase):
             SET check_biom_merge = true
             WHERE command_parameter_id IN (31, 6)"""
         qdb.sql_connection.perform_as_transaction(sql)
+        # 4/4. update so we check the prep info file for a valid value
+        sql = """
+            UPDATE qiita.default_workflow
+            SET parameters = '
+                {"sample": {"scientific_name": "1118232"},
+                 "prep": {"center_name": "ANL - 1"}}'::JSONB
+            WHERE default_workflow_id = 1"""
+        qdb.sql_connection.perform_as_transaction(sql)
 
+        # let's check that nothing is found due to the parameters, in specific
+        # "prep": {"center_name": "ANL - 1"}
+        with self.assertRaisesRegex(ValueError, 'This preparation data type: '
+                                    '"16S" and/or artifact type "FASTQ" does '
+                                    'not have valid workflows; this could be '
+                                    'due to required parameters, please check '
+                                    'the available workflows.'):
+            pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+
+        # now, let's replace the parameters for something fine
+        qdb.software.DefaultWorkflow(1).parameters = {
+            "sample": {"scientific_name": "1118232"},
+            "prep": {"center_name": "ANL"}}
         wk = pt.add_default_workflow(qdb.user.User('test@foo.bar'))
         self.assertEqual(len(wk.graph.nodes), 5)
         self.assertEqual(len(wk.graph.edges), 3)
@@ -1427,7 +1448,7 @@ class TestPrepTemplate(TestCase):
              'Pick closed-reference OTUs'])
 
         # now let's try to generate again and it should fail cause the jobs
-        # are alrady created
+        # are already created
         with self.assertRaisesRegex(ValueError, "Cannot create job because "
                                     "the parameters are the same as jobs"):
             pt.add_default_workflow(qdb.user.User('test@foo.bar'))

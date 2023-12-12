@@ -168,7 +168,7 @@ class SampleTemplate(MetadataTemplate):
         Returns
         -------
         dict
-            The dict of restictions
+            The dict of restrictions
         """
         return qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS
 

@@ -175,6 +175,7 @@ WORKFLOWS = [
     {'name': 'FASTQ upstream workflow', 'id': 1, 'data_types': ['16S', '18S'],
      'description': 'This accepts html <a href="https://qiita.ucsd.edu">Qiita!'
                     '</a><br/><br/><b>BYE!</b>',
+     'parameters_sample': {}, 'parameters_prep': {},
      'nodes': [
         ['params_1', 1, 'Split libraries FASTQ', 'Defaults', {
             'max_bad_run_length': '3', 'min_per_read_length_fraction': '0.75',
@@ -198,6 +199,7 @@ WORKFLOWS = [
         ['params_2', 'output_params_2_OTU table | BIOM']]},
     {'name': 'FASTA upstream workflow', 'id': 2, 'data_types': ['18S'],
      'description': 'This is another description',
+     'parameters_sample': {}, 'parameters_prep': {},
      'nodes': [
         ['params_3', 2, 'Split libraries', 'Defaults with Golay 12 barcodes', {
             'min_seq_len': '200', 'max_seq_len': '1000',
@@ -224,6 +226,7 @@ WORKFLOWS = [
         ['params_4', 'output_params_4_OTU table | BIOM']]},
     {'name': 'Per sample FASTQ upstream workflow', 'id': 3,
      'data_types': ['ITS'], 'description': None,
+     'parameters_sample': {}, 'parameters_prep': {},
      'nodes': [
         ['params_5', 1, 'Split libraries FASTQ', 'per sample FASTQ defaults', {
             'max_bad_run_length': '3', 'min_per_read_length_fraction': '0.75',
