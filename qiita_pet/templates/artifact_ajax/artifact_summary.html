@@ -125,6 +125,7 @@
         {% if processing_info['software_deprecated'] %}
           <div class="alert alert-danger" role="alert">
             Danger, the software that generated this artifact was produced by a software version with a known bug and the results are wrong, please re-run with the newer version.
+            {% raw processing_info['software_description'] %}
           </div>
         {% elif not processing_info['command_active'] %}
           <div class="alert alert-warning" role="alert">

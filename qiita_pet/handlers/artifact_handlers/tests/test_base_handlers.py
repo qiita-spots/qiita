@@ -243,6 +243,12 @@ class TestBaseHandlersUtils(TestCase):
                            private_download_button % 2),
                'processing_info': {
                  'command_active': True, 'software_deprecated': False,
+                 'software_description': ('Quantitative Insights Into '
+                                          'Microbial Ecology (QIIME) is an '
+                                          'open-source bioinformatics '
+                                          'pipeline for performing '
+                                          'microbiome analysis from raw DNA '
+                                          'sequencing data'),
                  'command': 'Split libraries FASTQ',
                  'processing_parameters': {
                    'max_barcode_errors': '1.5', 'sequence_max_n': '0',
