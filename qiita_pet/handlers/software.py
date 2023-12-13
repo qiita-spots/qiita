@@ -146,7 +146,7 @@ def _retrive_workflows(active):
 
         workflows.append(
             {'name': w.name, 'id': w.id, 'data_types': w.data_type,
-             'description': w.description,
+             'description': w.description, 'active': w.active,
              'parameters_sample': wparams['sample'],
              'parameters_prep': wparams['prep'],
              'nodes': nodes, 'edges': edges})
