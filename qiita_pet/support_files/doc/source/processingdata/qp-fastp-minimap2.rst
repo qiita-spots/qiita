@@ -14,7 +14,7 @@ qp-fastp-minimap2 plugin was performing adapter autodetection and filtering.
 However, because this flag was not specified, that behavior did not occur.
 
 In the metagenomic dataset the adapters were discovered in, we observed a few
-sequences with high replication, which assignments to a few genomes in RS210.
+sequences with high replication, with assignments to a few genomes in RS210.
 The coverage of those genomes, using all metagenomic short reads, was constrained
 to very specific regions. The replicated sequences exhibited high identity to
 known adapters. As such, we suspect the replicated sequences we observed were
