@@ -77,6 +77,12 @@ subsequent meta-analyses. We currently provide the several options for your conv
 - auto-detect adapters and **rat** + phix filtering. Includes Norway rat (*Rattus norvegicus*) reference `GCF_000001895.5 (Rnor_6.0) <https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000001895.5/>`_. `GCF_000001895.5 fna <https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/895/GCA_000001895.4_Rnor_6.0/GCA_000001895.4_Rnor_6.0_genomic.fna.gz>`_
 - auto-detect adapters only filtering. Only includes the two adapter sequences noted above.
 
+For more information about the versions in this plugin, visit:
+
+.. toctree::
+
+   qp-fastp-minimap2.rst
+
 Note that the command produces up to 6 output artifacts based on the aligner and database selected:
 
 - Alignment Profile: contains the raw alignment file and the no rank classification BIOM table

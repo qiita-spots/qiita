@@ -228,6 +228,7 @@ def artifact_summary_get_request(user, artifact_id):
             'processing_parameters': proc_params.values,
             'command_active': cmd.active,
             'software_deprecated': sw.deprecated,
+            'software_description': sw.description
             }
     else:
         processing_info = {}
