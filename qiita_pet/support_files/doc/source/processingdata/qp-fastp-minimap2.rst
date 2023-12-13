@@ -1,5 +1,5 @@
-Adapter and host filtering v2023.12
-===================================
+Adapter and host filtering
+==========================
 
 At the end of August 2023, we discovered that the parameters used by
 qp-fastp-minimap2 did not trigger application of adapter filtering. By default,
@@ -32,4 +32,6 @@ The fastp autodetection is compile-time limited to `the first 256k sequences <ht
 Because of this, we opted for a more conservative approach of not relying on
 autodetection and instead we now test all adapters that fastp is aware of. Specifically,
 we now provide fastp a known adapters FASTA which is a serialized representation
-of their `known adapter list <https://github.com/OpenGene/fastp/blob/7784d047fdf0a8df4211967156f5c97920c6d2e8/src/knownadapters.h#L11>`.
+of their `known adapter list <https://github.com/OpenGene/fastp/blob/7784d047fdf0a8df4211967156f5c97920c6d2e8/src/knownadapters.h#L11>`_.
+
+The new command is named: `Adapter and host filtering v2023.12`.
