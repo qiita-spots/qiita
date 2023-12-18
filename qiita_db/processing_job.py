@@ -999,7 +999,9 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.commit()
 
         job_dir = join(qdb.util.get_work_base_dir(), self.id)
-        software = self.command.software
+        command = self.command
+        software = command.software
+        cname = command.name
         plugin_start_script = software.start_script
         plugin_env_script = software.environment_script
 
@@ -1011,7 +1013,15 @@ class ProcessingJob(qdb.base.QiitaObject):
         # case where we are going to execute some command and then wait for the
         # plugin to return their own id (first implemented for
         # fast-bowtie2+woltka)
-        if 'ENVIRONMENT' in plugin_env_script:
+        #
+        # This is the hardcoded lines described in issue:
+        # https://github.com/qiita-spots/qiita/issues/3340
+        # the idea is that in the future we shouldn't check specific command
+        # names to know if it should be executed differently and the
+        # plugin should let Qiita know that a specific command should be ran
+        # as job array or not
+        cnames_to_skip = {'Calculate Cell Counts'}
+        if 'ENVIRONMENT' in plugin_env_script and cname not in cnames_to_skip:
             # the job has to be in running state so the plugin can change its`
             # status
             with qdb.sql_connection.TRN:
