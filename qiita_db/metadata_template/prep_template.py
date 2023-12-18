@@ -851,20 +851,30 @@ class PrepTemplate(MetadataTemplate):
             starting_job = None
             pt_artifact = self.artifact.artifact_type
 
-        workflows = []
+        all_workflows = [wk for wk in qdb.software.DefaultWorkflow.iter()]
+        # are there any workflows with parameters?
+        check_requirements = False
+        default_parameters = {'prep': {}, 'sample': {}}
+        if [wk for wk in all_workflows if wk.parameters != default_parameters]:
+            check_requirements = True
         ST = qdb.metadata_template.sample_template.SampleTemplate
-        for wk in qdb.software.DefaultWorkflow.iter():
+        workflows = []
+        for wk in all_workflows:
             if wk.artifact_type == pt_artifact and pt_dt in wk.data_type:
+                if check_requirements and wk.parameters == default_parameters:
+                    continue
                 wk_params = wk.parameters
                 reqs_satisfied = True
 
                 if wk_params['sample']:
+                    check_requirements = True
                     df = ST(self.study_id).to_dataframe(samples=list(self))
                     for k, v in wk_params['sample'].items():
                         if k not in df.columns or v not in df[k].unique():
                             reqs_satisfied = False
 
                 if wk_params['prep']:
+                    check_requirements = True
                     df = self.to_dataframe()
                     for k, v in wk_params['prep'].items():
                         if k not in df.columns or v not in df[k].unique():
