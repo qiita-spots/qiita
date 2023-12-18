@@ -1021,7 +1021,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         # plugin should let Qiita know that a specific command should be ran
         # as job array or not
         cnames_to_skip = {'Calculate Cell Counts'}
-        if 'ENVIRONMENT' in plugin_env_script and not cname in cnames_to_skip:
+        if 'ENVIRONMENT' in plugin_env_script and cname not in cnames_to_skip:
             # the job has to be in running state so the plugin can change its`
             # status
             with qdb.sql_connection.TRN:
