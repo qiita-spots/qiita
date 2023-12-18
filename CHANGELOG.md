@@ -5,7 +5,6 @@ Version 2023.12
 
 * The sample and preparation information pages will display the timestamp of their last update.
 * Added a ProcessingJob.complete_processing_job method to retrieve the job that is completing the current job.
-* Added a ProcessingJob.complete_processing_job method to retrieve the job that is completing the current job.
 * Added a ProcessingJob.trace method to trace all the jobs of a processing_job.
 * Analyses now accept SLURM reservation's via the GUI; this will be [helpful for workshops or classes](https://qiita.ucsd.edu/static/doc/html/faq.html#are-you-planning-a-workshop-or-class).
 * Admins can now add per-user-level SLURM submission parameters via the DB; this is helpful to prioritize wet-lab and admin jobs.

@@ -867,14 +867,12 @@ class PrepTemplate(MetadataTemplate):
                 reqs_satisfied = True
 
                 if wk_params['sample']:
-                    check_requirements = True
                     df = ST(self.study_id).to_dataframe(samples=list(self))
                     for k, v in wk_params['sample'].items():
                         if k not in df.columns or v not in df[k].unique():
                             reqs_satisfied = False
 
                 if wk_params['prep']:
-                    check_requirements = True
                     df = self.to_dataframe()
                     for k, v in wk_params['prep'].items():
                         if k not in df.columns or v not in df[k].unique():
