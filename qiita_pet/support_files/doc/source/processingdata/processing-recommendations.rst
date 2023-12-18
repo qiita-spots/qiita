@@ -45,7 +45,7 @@ Shotgun sequencing
 ------------------
 
 Qiita currently has one active shotgun metagenomics data analysis pipeline: a per sample
-bowtie2 alignment step with Woltka classification using either the WoLr1, WoLr2 (default) or RS210 databases.
+bowtie2 alignment step with Woltka classification using either the WoLr2 (default) or RS210 databases.
 Below you will find more information about each of these options.
 
 .. note::
@@ -87,7 +87,7 @@ Note that the command produces up to 6 output artifacts based on the aligner and
 
 - Alignment Profile: contains the raw alignment file and the no rank classification BIOM table
 - Per genome Predictions: contains the per genome level predictions BIOM table
-- Per gene Predictions: Only WoLr1 & WoLr2, contains the per gene level predictions BIOM table
+- Per gene Predictions: Only WoLr2, contains the per gene level predictions BIOM table
 - KEGG Pathways: Only WoLr2, contains the functional profile
 - KEGG Ontology (KO): Only WoLr2, contains the functional profile
 - KEGG Enzyme (EZ): Only WoLr2, contains the functional profile

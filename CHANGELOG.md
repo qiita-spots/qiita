@@ -1,5 +1,20 @@
 # Qiita changelog
 
+Version 2023.12
+---------------
+
+* The sample and preparation information pages will display the timestamp of their last update.
+* Added a ProcessingJob.complete_processing_job method to retrieve the job that is completing the current job.
+* Added a ProcessingJob.complete_processing_job method to retrieve the job that is completing the current job.
+* Added a ProcessingJob.trace method to trace all the jobs of a processing_job.
+* Analyses now accept SLURM reservation's via the GUI; this will be [helpful for workshops or classes](https://qiita.ucsd.edu/static/doc/html/faq.html#are-you-planning-a-workshop-or-class).
+* Admins can now add per-user-level SLURM submission parameters via the DB; this is helpful to prioritize wet-lab and admin jobs.
+* Workflow definitions can now use sample or preparation information columns/values to differentiate between them.
+* Updated the Adapter and host filtering plugin (qp-fastp-minimap2) to v2023.12 addressing a bug in adapter filtering; [more information](https://qiita.ucsd.edu/static/doc/html/processingdata/qp-fastp-minimap2.html).
+* Other fixes: [3334](https://github.com/qiita-spots/qiita/pull/3334), [3338](https://github.com/qiita-spots/qiita/pull/3338). Thank you @sjanssen2.
+* The internal Sequence Processing Pipeline is now using the human pan-genome reference, together with the GRCh38 genome + PhiX and CHM13 genome for human host filtering.
+
+
 Version 2023.10
 ---------------
 
