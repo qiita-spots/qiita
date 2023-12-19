@@ -1447,6 +1447,30 @@ class TestPrepTemplate(TestCase):
              'Pick closed-reference OTUs', 'Pick closed-reference OTUs',
              'Pick closed-reference OTUs'])
 
+        # at this point we can error all the previous steps, add a new smaller
+        # workflow and make sure you get the same one as before because it will
+        # have a higher match than the new one
+        for pj in wk.graph.nodes:
+            pj._set_error('Killed')
+        sql = """UPDATE qiita.default_workflow_data_type
+                 SET data_type_id = 1
+                 WHERE default_workflow_id = 2"""
+        qdb.sql_connection.perform_as_transaction(sql)
+        wk = pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+        self.assertEqual(len(wk.graph.nodes), 5)
+        self.assertEqual(len(wk.graph.edges), 3)
+        self.assertCountEqual(
+            [x.command.name for x in wk.graph.nodes],
+            # we should have 2 split libraries and 3 close reference
+            ['Split libraries FASTQ', 'Split libraries FASTQ',
+             'Pick closed-reference OTUs', 'Pick closed-reference OTUs',
+             'Pick closed-reference OTUs'])
+        # let's return it back
+        sql = """UPDATE qiita.default_workflow_data_type
+                 SET data_type_id = 2
+                 WHERE default_workflow_id = 2"""
+        qdb.sql_connection.perform_as_transaction(sql)
+
         # now let's try to generate again and it should fail cause the jobs
         # are already created
         with self.assertRaisesRegex(ValueError, "Cannot create job because "

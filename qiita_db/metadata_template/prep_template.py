@@ -853,33 +853,32 @@ class PrepTemplate(MetadataTemplate):
 
         all_workflows = [wk for wk in qdb.software.DefaultWorkflow.iter()]
         # are there any workflows with parameters?
-        check_requirements = False
-        default_parameters = {'prep': {}, 'sample': {}}
-        if [wk for wk in all_workflows if wk.parameters != default_parameters]:
-            check_requirements = True
         ST = qdb.metadata_template.sample_template.SampleTemplate
         workflows = []
         for wk in all_workflows:
             if wk.artifact_type == pt_artifact and pt_dt in wk.data_type:
-                if check_requirements and wk.parameters == default_parameters:
-                    continue
                 wk_params = wk.parameters
                 reqs_satisfied = True
+                total_conditions_satisfied = 0
 
                 if wk_params['sample']:
                     df = ST(self.study_id).to_dataframe(samples=list(self))
                     for k, v in wk_params['sample'].items():
                         if k not in df.columns or v not in df[k].unique():
                             reqs_satisfied = False
+                        else:
+                            total_conditions_satisfied += 1
 
                 if wk_params['prep']:
                     df = self.to_dataframe()
                     for k, v in wk_params['prep'].items():
                         if k not in df.columns or v not in df[k].unique():
                             reqs_satisfied = False
+                        else:
+                            total_conditions_satisfied += 1
 
                 if reqs_satisfied:
-                    workflows.append(wk)
+                    workflows.append((total_conditions_satisfied, wk))
 
         if not workflows:
             # raises option a.
@@ -888,8 +887,12 @@ class PrepTemplate(MetadataTemplate):
                    'could be due to required parameters, please check the '
                    'available workflows.')
             raise ValueError(msg)
+
+        # let's just keep one, let's give it preference to the one with the
+        # most total_conditions_satisfied
+        workflows = sorted(workflows, key=lambda x: x[0], reverse=True)[:1]
         missing_artifacts = dict()
-        for wk in workflows:
+        for _, wk in workflows:
             missing_artifacts[wk] = dict()
             for node, degree in wk.graph.out_degree():
                 if degree != 0:
