@@ -890,8 +890,7 @@ class PrepTemplate(MetadataTemplate):
 
         # let's just keep one, let's give it preference to the one with the
         # most total_conditions_satisfied
-        workflows = sorted(workflows, reverse=True)[:1]
-
+        workflows = sorted(workflows, key=lambda x: x[0], reverse=True)[:1]
         missing_artifacts = dict()
         for _, wk in workflows:
             missing_artifacts[wk] = dict()
