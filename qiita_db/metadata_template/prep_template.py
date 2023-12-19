@@ -893,7 +893,7 @@ class PrepTemplate(MetadataTemplate):
         workflows = sorted(workflows, reverse=True)[:1]
 
         missing_artifacts = dict()
-        for wk in workflows:
+        for _, wk in workflows:
             missing_artifacts[wk] = dict()
             for node, degree in wk.graph.out_degree():
                 if degree != 0:
