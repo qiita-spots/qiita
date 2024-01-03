@@ -21,12 +21,12 @@ class TestPublicHandler(TestHandlerBase):
 
         response = self.get('/public/?study_id=100')
         self.assertEqual(response.code, 422)
-        self.assertIn("Study 100 doesn't exist",
+        self.assertIn("Study 100 doesn&#39;t exist",
                       response.body.decode('ascii'))
 
         response = self.get('/public/?artifact_id=100')
         self.assertEqual(response.code, 422)
-        self.assertIn("Artifact 100 doesn't exist",
+        self.assertIn("Artifact 100 doesn&#39;t exist",
                       response.body.decode('ascii'))
 
         response = self.get('/public/?artifact_id=1')
@@ -58,7 +58,7 @@ class TestPublicHandler(TestHandlerBase):
 
         response = self.get('/public/?artifact_id=8')
         self.assertEqual(response.code, 422)
-        self.assertIn("Artifact 8 doesn't belong to a study",
+        self.assertIn("Artifact 8 doesn&#39;t belong to a study",
                       response.body.decode('ascii'))
 
 
