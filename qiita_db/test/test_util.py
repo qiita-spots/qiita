@@ -1291,6 +1291,12 @@ class PurgeFilepathsTests(DBUtilTestsBase):
         fps_viewed = self._get_current_filepaths()
         self.assertCountEqual(fps_expected, fps_viewed)
 
+    def test_quick_mounts_purge(self):
+        obs = qdb.util.quick_mounts_purge()
+        exp = ('----------------------\nTotal files 0 0 Bytes\n------------'
+               '----------')
+        self.assertEqual(obs, exp)
+
 
 STUDY_INFO = {
     'study_id': 1,
