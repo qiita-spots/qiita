@@ -49,13 +49,14 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, exists, getsize
-from os import walk, remove, listdir, rename
+from os import walk, remove, listdir, rename, stat
 from glob import glob
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
 from tempfile import mkstemp
 from csv import writer as csv_writer
 from datetime import datetime
+from time import time as now
 from itertools import chain
 from contextlib import contextmanager
 import h5py
@@ -894,6 +895,73 @@ def purge_filepaths(delete_files=True):
             qdb.sql_connection.TRN.add("SELECT 42")
 
             qdb.sql_connection.TRN.execute()
+
+
+def quick_mounts_purge():
+    r"""This is a quick mount purge as it only slightly relies on the database
+
+    Notes
+    -----
+        Currently we delete anything older than 30 days that is not linked
+        to the database. This number is intentionally hardcoded in the code.
+        At the time of this writing this number seem high but keeping it
+        this way to be safe. In the future, if needed, it can be changed.
+    """
+    with qdb.sql_connection.TRN:
+        main_sql = """SELECT data_directory_id FROM qiita.artifact_type at
+                  LEFT JOIN qiita.data_directory dd ON (
+                      dd.data_type = at.artifact_type)
+                  WHERE subdirectory = true"""
+        qdb.sql_connection.TRN.add(main_sql)
+        mp_ids = qdb.sql_connection.TRN.execute_fetchflatten()
+        mounts = [qdb.util.get_mountpoint_path_by_id(x) for x in mp_ids]
+        folders = [join(x, f) for x in mounts for f in listdir(x)
+                   if f.isnumeric()]
+
+    # getting all unlinked folders
+    to_delete = []
+    for i, f in enumerate(folders):
+        vals = f.split('/')
+        aid = int(vals[-1])
+        artifact_type = vals[-2]
+        if artifact_type == 'FeatureData[Taxonomy]':
+            continue
+
+        try:
+            a = qdb.artifact.Artifact(aid)
+        except qdb.exceptions.QiitaDBUnknownIDError:
+            to_delete.append(f)
+            continue
+        if not a.artifact_type.startswith(artifact_type):
+            raise ValueError('Review artifact type: '
+                             f'{a.id} {artifact_type} {a.artifact_type}')
+
+    # now, let's just keep those older than 30 days (in seconds)
+    ignore = now() - (30*86400)
+    to_keep = [x for x in to_delete if stat(x).st_mtime >= ignore]
+    to_delete = set(to_delete) - set(to_keep)
+
+    # get stats to report
+    stats = dict()
+    for td in to_delete:
+        f = td.split('/')[-2]
+        if f not in stats:
+            stats[f] = 0
+        stats[f] += sum([getsize(join(p, fp)) for p, ds, fs in walk(td)
+                         for fp in fs])
+
+    report = ['----------------------']
+    for f, s in stats.items():
+        report.append(f'{f}\t{naturalsize(s)}')
+    report.append(
+        f'Total files {len(to_delete)} {naturalsize(sum(stats.values()))}')
+    report.append('----------------------')
+
+    for td in list(to_delete):
+        if exists(td):
+            rmtree(td)
+
+    return '\n'.join(report)
 
 
 def _rm_exists(fp, obj, _id, delete_files):

@@ -1291,6 +1291,12 @@ class PurgeFilepathsTests(DBUtilTestsBase):
         fps_viewed = self._get_current_filepaths()
         self.assertCountEqual(fps_expected, fps_viewed)
 
+    def test_quick_mounts_purge(self):
+        # one of the tests creates a conflicting artifact_type so this test
+        # will always raise this ValueError
+        with self.assertRaises(ValueError):
+            qdb.util.quick_mounts_purge()
+
 
 STUDY_INFO = {
     'study_id': 1,

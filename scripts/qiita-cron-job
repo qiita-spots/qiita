@@ -12,7 +12,8 @@ import click
 
 from qiita_db.util import (
     purge_filepaths as qiita_purge_filepaths,
-    empty_trash_upload_folder as qiita_empty_trash_upload_folder)
+    empty_trash_upload_folder as qiita_empty_trash_upload_folder,
+    quick_mounts_purge as qiita_quick_mounts_purge)
 from qiita_db.meta_util import (
     update_redis_stats as qiita_update_redis_stats,
     generate_biom_and_metadata_release as
@@ -60,6 +61,11 @@ def purge_json_web_tokens():
 @commands.command()
 def generate_plugin_releases():
     qiita_generate_plugin_releases()
+
+
+@commands.command()
+def quick_mounts_purge():
+    print(qiita_quick_mounts_purge())
 
 
 if __name__ == "__main__":
