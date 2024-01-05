@@ -902,10 +902,10 @@ def quick_mounts_purge():
 
     Notes
     -----
-        Currenlty we delete anything older than 30 days that is not linked
+        Currently we delete anything older than 30 days that is not linked
         to the database. This number is intentionally hardcoded in the code.
-        At time of writting this number seem high but keeping it this way to be
-        safe. In the future, if needed, it can be changes.
+        At the time of this writing this number seem high but keeping it
+        this way to be safe. In the future, if needed, it can be changed.
     """
     with qdb.sql_connection.TRN:
         main_sql = """SELECT data_directory_id FROM qiita.artifact_type at
@@ -958,9 +958,8 @@ def quick_mounts_purge():
     report.append('----------------------')
 
     for td in list(to_delete):
-        if not exists(td):
-            continue
-        rmtree(td)
+        if exists(td):
+            rmtree(td)
 
     return '\n'.join(report)
 
