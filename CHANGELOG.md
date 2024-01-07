@@ -3,6 +3,8 @@
 Version 2023.12
 ---------------
 
+Deployed on January 8th, 2024
+
 * The sample and preparation information pages will display the timestamp of their last update.
 * Added a ProcessingJob.complete_processing_job method to retrieve the job that is completing the current job.
 * Added a ProcessingJob.trace method to trace all the jobs of a processing_job.
