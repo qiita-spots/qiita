@@ -83,9 +83,9 @@ class PrepTemplateAJAX(BaseHandler):
             summary = None
             if res['creation_job'].outputs:
                 summary = relpath(
-                    qiita_config.base_data_dir,
                     # [0] is the id, [1] is the filepath
-                    res['creation_job'].outputs['output'].html_summary_fp[1])
+                    res['creation_job'].outputs['output'].html_summary_fp[1],
+                    qiita_config.base_data_dir)
             res['creation_job_artifact_summary'] = summary
 
         self.render('study_ajax/prep_summary.html', **res)
