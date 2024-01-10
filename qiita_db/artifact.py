@@ -1277,10 +1277,8 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             sql_edges = qdb.sql_connection.TRN.execute_fetchindex()
 
-            lineage = nx.DiGraph()
-            edges = set()
-            nodes = {}
-            if sql_edges:
+            # helper function to reduce code duplication
+            def _helper(sql_edges, edges, nodes):
                 for jid, pid, cid in sql_edges:
                     if jid not in nodes:
                         nodes[jid] = ('job',
@@ -1291,6 +1289,23 @@ class Artifact(qdb.base.QiitaObject):
                         nodes[cid] = ('artifact', qdb.artifact.Artifact(cid))
                     edges.add((nodes[pid], nodes[jid]))
                     edges.add((nodes[jid], nodes[cid]))
+
+            lineage = nx.DiGraph()
+            edges = set()
+            nodes = {}
+            if sql_edges:
+                _helper(sql_edges, edges, nodes)
+                # if this is an Analysis, then we need to also check for
+                # any job/artifact with in the Analysis
+                if self.analysis is not None:
+                    roots = [a for a in self.analysis.artifacts
+                             if not a.parents and a != self]
+                    for r in roots:
+                        # add the root to the options then their children
+                        nodes[r.id] = ('artifact', r)
+                        qdb.sql_connection.TRN.add(sql, [r.id])
+                        sql_edges = qdb.sql_connection.TRN.execute_fetchindex()
+                        _helper(sql_edges, edges, nodes)
             else:
                 nodes[self.id] = ('artifact', self)
                 lineage.add_node(nodes[self.id])
