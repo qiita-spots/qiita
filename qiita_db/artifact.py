@@ -1292,23 +1292,26 @@ class Artifact(qdb.base.QiitaObject):
 
             lineage = nx.DiGraph()
             edges = set()
-            nodes = {}
+            nodes = dict()
+            extra_edges = set()
+            extra_nodes = dict()
             if sql_edges:
                 _helper(sql_edges, edges, nodes)
-                # if this is an Analysis, then we need to also check for
-                # any job/artifact with in the Analysis
-                if self.analysis is not None:
-                    roots = [a for a in self.analysis.artifacts
-                             if not a.parents and a != self]
-                    for r in roots:
-                        # add the root to the options then their children
-                        nodes[r.id] = ('artifact', r)
-                        qdb.sql_connection.TRN.add(sql, [r.id])
-                        sql_edges = qdb.sql_connection.TRN.execute_fetchindex()
-                        _helper(sql_edges, edges, nodes)
             else:
                 nodes[self.id] = ('artifact', self)
                 lineage.add_node(nodes[self.id])
+            # if this is an Analysis we need to check if there are extra
+            # edges/nodes as there is a chance that there are connecions
+            # between them
+            if self.analysis is not None:
+                roots = [a for a in self.analysis.artifacts
+                         if not a.parents and a != self]
+                for r in roots:
+                    # add the root to the options then their children
+                    extra_nodes[r.id] = ('artifact', r)
+                    qdb.sql_connection.TRN.add(sql, [r.id])
+                    sql_edges = qdb.sql_connection.TRN.execute_fetchindex()
+                    _helper(sql_edges, extra_edges, extra_nodes)
 
             # The code above returns all the jobs that have been successfully
             # executed. We need to add all the jobs that are in all the other
@@ -1344,8 +1347,10 @@ class Artifact(qdb.base.QiitaObject):
                             # need to check both the input_artifacts and the
                             # pending properties
                             for in_art in n_obj.input_artifacts:
-                                _add_edge(edges, nodes[in_art.id],
-                                          nodes[n_obj.id])
+                                iid = in_art.id
+                                if iid not in nodes and iid in extra_nodes:
+                                    nodes[iid] = extra_nodes[iid]
+                                _add_edge(edges, nodes[iid], nodes[n_obj.id])
 
                             pending = n_obj.pending
                             for pred_id in pending:
