@@ -196,7 +196,9 @@ def analyisis_graph_handler_get_request(analysis_id, user):
                 # This should never happen, but worth having a useful message
                 raise ValueError('More than one workflow in a single analysis')
 
-    return {'edges': edges, 'nodes': nodes, 'workflow': wf_id,
+    # the list(set()) is to remove any duplicated nodes
+    return {'edges': list(set(edges)), 'nodes': list(set(nodes)),
+            'workflow': wf_id,
             'artifacts_being_deleted': artifacts_being_deleted}
 
 
