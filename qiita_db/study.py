@@ -1175,17 +1175,33 @@ class Study(qdb.base.QiitaObject):
             Whether user has access to study or not
         """
         with qdb.sql_connection.TRN:
-            # if admin or superuser, just return true
-            if user.level in {'superuser', 'admin'}:
+            # return true if the user is one of the admins or if the study is
+            # public
+            if user.level in {'superuser', 'admin'} or self.public:
                 return True
 
-            if no_public:
-                study_set = user.user_studies | user.shared_studies
-            else:
-                study_set = user.user_studies | user.shared_studies | \
-                    self.get_by_status('public')
+            # let's check if the study belongs to this user or has been
+            # shared with them
+            sql = """SELECT EXISTS (
+                        SELECT study_id
+                        FROM qiita.study
+                        JOIN qiita.study_portal USING (study_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                        WHERE email = %s AND portal = %s AND study_id = %s
+                        UNION
+                        SELECT study_id
+                        FROM qiita.study_users
+                        JOIN qiita.study_portal USING (study_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                        WHERE email = %s AND portal = %s AND study_id = %s
+                    )
+                  """
+            qdb.sql_connection.TRN.add(
+                sql, [user.email, qiita_config.portal, self.id,
+                      user.email, qiita_config.portal, self.id])
+            result = qdb.sql_connection.TRN.execute_fetchlast()
 
-            return self in study_set
+            return result
 
     def can_edit(self, user):
         """Returns whether the given user can edit the study

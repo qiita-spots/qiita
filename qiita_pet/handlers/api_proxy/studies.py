@@ -114,8 +114,8 @@ def study_get_req(study_id, user_id):
     study_info['has_access_to_raw_data'] = study.has_access(
         User(user_id), True) or study.public_raw_download
 
-    study_info['show_biom_download_button'] = 'BIOM' in [
-        a.artifact_type for a in study.artifacts()]
+    study_info['show_biom_download_button'] = len(
+        study.artifacts(artifact_type='BIOM')) != 0
     study_info['show_raw_download_button'] = any([
         True for pt in study.prep_templates() if pt.artifact is not None])
 
@@ -205,49 +205,46 @@ def study_prep_get_req(study_id, user_id):
     study = Study(int(study_id))
     prep_info = defaultdict(list)
     editable = study.can_edit(User(user_id))
-    for dtype in study.data_types:
-        dtype_infos = list()
-        for prep in study.prep_templates(dtype):
-            if prep.status != 'public' and not editable:
-                continue
-            start_artifact = prep.artifact
-            info = {
-                'name': prep.name,
-                'id': prep.id,
-                'status': prep.status,
-                'total_samples': len(prep),
-                'creation_timestamp': prep.creation_timestamp,
-                'modification_timestamp': prep.modification_timestamp
-            }
-            if start_artifact is not None:
-                youngest_artifact = prep.artifact.youngest_artifact
-                info['start_artifact'] = start_artifact.artifact_type
-                info['start_artifact_id'] = start_artifact.id
-                info['num_artifact_children'] = len(start_artifact.children)
-                info['youngest_artifact_name'] = youngest_artifact.name
-                info['youngest_artifact_type'] = \
-                    youngest_artifact.artifact_type
-                info['youngest_artifact'] = '%s - %s' % (
-                    youngest_artifact.name, youngest_artifact.artifact_type)
-                info['ebi_experiment'] = len(
-                    [v for _, v in prep.ebi_experiment_accessions.items()
-                     if v is not None])
-            else:
-                info['start_artifact'] = None
-                info['start_artifact_id'] = None
-                info['youngest_artifact'] = None
-                info['num_artifact_children'] = 0
-                info['youngest_artifact_name'] = None
-                info['youngest_artifact_type'] = None
-                info['ebi_experiment'] = 0
+    for prep in study.prep_templates():
+        status = prep.status
+        if status != 'public' and not editable:
+            continue
+        start_artifact = prep.artifact
+        info = {
+            'name': prep.name,
+            'id': prep.id,
+            'status': status,
+            'total_samples': len(prep),
+            'creation_timestamp': prep.creation_timestamp,
+            'modification_timestamp': prep.modification_timestamp
+        }
+        if start_artifact is not None:
+            youngest_artifact = prep.artifact.youngest_artifact
+            info['start_artifact'] = start_artifact.artifact_type
+            info['start_artifact_id'] = start_artifact.id
+            info['num_artifact_children'] = len(start_artifact.children)
+            info['youngest_artifact_name'] = youngest_artifact.name
+            info['youngest_artifact_type'] = \
+                youngest_artifact.artifact_type
+            info['youngest_artifact'] = '%s - %s' % (
+                youngest_artifact.name, youngest_artifact.artifact_type)
+            info['ebi_experiment'] = len(
+                [v for _, v in prep.ebi_experiment_accessions.items()
+                 if v is not None])
+        else:
+            info['start_artifact'] = None
+            info['start_artifact_id'] = None
+            info['youngest_artifact'] = None
+            info['num_artifact_children'] = 0
+            info['youngest_artifact_name'] = None
+            info['youngest_artifact_type'] = None
+            info['ebi_experiment'] = 0
+        prep_info[prep.data_type()].append(info)
 
-            dtype_infos.append(info)
-
-        # default sort is in ascending order of creation timestamp
-        sorted_info = sorted(dtype_infos,
-                             key=lambda k: k['creation_timestamp'],
-                             reverse=False)
-        prep_info[dtype] = sorted_info
+    # default sort is in ascending order of creation timestamp
+    for dt, pts in prep_info.items():
+        prep_info[dt] = sorted(pts, key=lambda k: k['creation_timestamp'],
+                               reverse=False)
 
     return {'status': 'success',
             'message': '',
