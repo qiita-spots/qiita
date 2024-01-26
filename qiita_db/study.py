@@ -1177,7 +1177,7 @@ class Study(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             # return true if the user is one of the admins or if the study is
             # public
-            if user.level in {'superuser', 'admin'} or self.public:
+            if user.level in {'superuser', 'admin'} or self.status == 'public':
                 return True
 
             # let's check if the study belongs to this user or has been
