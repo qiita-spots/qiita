@@ -215,40 +215,64 @@ def submit_EBI(artifact_id, action, send, test=False, test_size=False):
         LogEntry.create(
             'Runtime', 'The submission: %d is larger than allowed (%d), will '
             'try to fix: %d' % (artifact_id, max_size, total_size))
-        # transform current metadata to dataframe for easier curation
-        rows = {k: dict(v) for k, v in ebi_submission.samples.items()}
-        df = pd.DataFrame.from_dict(rows, orient='index')
-        # remove unique columns and same value in all columns
-        nunique = df.apply(pd.Series.nunique)
-        nsamples = len(df.index)
-        cols_to_drop = set(
-            nunique[(nunique == 1) | (nunique == nsamples)].index)
-        # maximize deletion by removing also columns that are almost all the
-        # same or almost all unique
-        cols_to_drop = set(
-            nunique[(nunique <= int(nsamples * .01)) |
-                    (nunique >= int(nsamples * .5))].index)
-        cols_to_drop = cols_to_drop - {'taxon_id', 'scientific_name',
-                                       'description', 'country',
-                                       'collection_date'}
-        all_samples = ebi_submission.sample_template.ebi_sample_accessions
-        samples = [k for k in ebi_submission.samples if all_samples[k] is None]
-        if samples:
-            ebi_submission.write_xml_file(
-                ebi_submission.generate_sample_xml(samples, cols_to_drop),
-                ebi_submission.sample_xml_fp)
 
+        def _reduce_metadata(low=0.01, high=0.5):
+            # helper function to
+            # transform current metadata to dataframe for easier curation
+            rows = {k: dict(v) for k, v in ebi_submission.samples.items()}
+            df = pd.DataFrame.from_dict(rows, orient='index')
+            # remove unique columns and same value in all columns
+            nunique = df.apply(pd.Series.nunique)
+            nsamples = len(df.index)
+            cols_to_drop = set(
+                nunique[(nunique == 1) | (nunique == nsamples)].index)
+            # maximize deletion by removing also columns that are almost all
+            # the same or almost all unique
+            cols_to_drop = set(
+                nunique[(nunique <= int(nsamples * low)) |
+                        (nunique >= int(nsamples * high))].index)
+            cols_to_drop = cols_to_drop - {'taxon_id', 'scientific_name',
+                                           'description', 'country',
+                                           'collection_date'}
+            all_samples = ebi_submission.sample_template.ebi_sample_accessions
+
+            if action == 'ADD':
+                samples = [k for k in ebi_submission.samples
+                           if all_samples[k] is None]
+            else:
+                samples = [k for k in ebi_submission.samples
+                           if all_samples[k] is not None]
+            if samples:
+                ebi_submission.write_xml_file(
+                    ebi_submission.generate_sample_xml(samples, cols_to_drop),
+                    ebi_submission.sample_xml_fp)
+
+        # let's try with the default pameters
+        _reduce_metadata()
         # now let's recalculate the size to make sure it's fine
         new_total_size = sum([stat(tr).st_size
                               for tr in to_review if tr is not None])
         LogEntry.create(
-            'Runtime', 'The submission: %d after cleaning is %d and was %d' % (
+            'Runtime',
+            'The submission: %d after defaul cleaning is %d and was %d' % (
                 artifact_id, total_size, new_total_size))
         if new_total_size > max_size:
-            raise ComputeError(
-                'Even after cleaning the submission: %d is too large. Before '
-                'cleaning: %d, after: %d' % (
+            LogEntry.create(
+                'Runtime', 'Submission %d still too big, will try more '
+                'stringent parameters' % (artifact_id))
+
+            _reduce_metadata(0.05, 0.4)
+            new_total_size = sum([stat(tr).st_size
+                                  for tr in to_review if tr is not None])
+            LogEntry.create(
+                'Runtime',
+                'The submission: %d after defaul cleaning is %d and was %d' % (
                     artifact_id, total_size, new_total_size))
+            if new_total_size > max_size:
+                raise ComputeError(
+                    'Even after cleaning the submission: %d is too large. '
+                    'Before cleaning: %d, after: %d' % (
+                        artifact_id, total_size, new_total_size))
 
     st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
     if send:

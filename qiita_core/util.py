@@ -151,3 +151,15 @@ def get_release_info(study_status='public'):
     archive_release = ((md5sum, filepath, timestamp))
 
     return (biom_metadata_release, archive_release)
+
+
+def MaxRSS_helper(x):
+    if x[-1] == 'K':
+        y = float(x[:-1]) * 1000
+    elif x[-1] == 'M':
+        y = float(x[:-1]) * 1000000
+    elif x[-1] == 'G':
+        y = float(x[:-1]) * 1000000000
+    else:
+        y = float(x)
+    return y
