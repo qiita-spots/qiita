@@ -203,7 +203,7 @@ def study_prep_get_req(study_id, user_id):
         return access_error
     # Can only pass ids over API, so need to instantiate object
     study = Study(int(study_id))
-    prep_info = defaultdict(list)
+    prep_info = {dtype: [] for dtype in study.data_types}
     editable = study.can_edit(User(user_id))
     for prep in study.prep_templates():
         status = prep.status
