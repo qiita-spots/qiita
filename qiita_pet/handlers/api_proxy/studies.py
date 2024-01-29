@@ -11,6 +11,8 @@ from json import dumps, loads
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
+from qiita_db.artifact import Artifact
+from qiita_db.sql_connection import TRN
 from qiita_db.user import User
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBLookupError
@@ -201,50 +203,71 @@ def study_prep_get_req(study_id, user_id):
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
-    # Can only pass ids over API, so need to instantiate object
+
     study = Study(int(study_id))
     prep_info = {dtype: [] for dtype in study.data_types}
     editable = study.can_edit(User(user_id))
-    for prep in study.prep_templates():
-        status = prep.status
-        if status != 'public' and not editable:
-            continue
-        start_artifact = prep.artifact
-        info = {
-            'name': prep.name,
-            'id': prep.id,
-            'status': status,
-            'total_samples': len(prep),
-            'creation_timestamp': prep.creation_timestamp,
-            'modification_timestamp': prep.modification_timestamp
-        }
-        if start_artifact is not None:
-            youngest_artifact = prep.artifact.youngest_artifact
-            info['start_artifact'] = start_artifact.artifact_type
-            info['start_artifact_id'] = start_artifact.id
-            info['num_artifact_children'] = len(start_artifact.children)
-            info['youngest_artifact_name'] = youngest_artifact.name
-            info['youngest_artifact_type'] = \
-                youngest_artifact.artifact_type
-            info['youngest_artifact'] = '%s - %s' % (
-                youngest_artifact.name, youngest_artifact.artifact_type)
-            info['ebi_experiment'] = len(
-                [v for _, v in prep.ebi_experiment_accessions.items()
-                 if v is not None])
-        else:
-            info['start_artifact'] = None
-            info['start_artifact_id'] = None
-            info['youngest_artifact'] = None
-            info['num_artifact_children'] = 0
-            info['youngest_artifact_name'] = None
-            info['youngest_artifact_type'] = None
-            info['ebi_experiment'] = 0
-        prep_info[prep.data_type()].append(info)
+    with TRN:
+        sql = """SELECT prep_template_id, pt.name as name, data_type,
+                        artifact_id,
+                        creation_timestamp, modification_timestamp, visibility,
+                        (SELECT COUNT(sample_id)
+                         FROM qiita.prep_template_sample
+                         WHERE prep_template_id = spt.prep_template_id)
+                        as total_samples,
+                        (SELECT COUNT(sample_id)
+                         FROM qiita.prep_template_sample
+                         WHERE prep_template_id = spt.prep_template_id
+                            AND ebi_experiment_accession != '')
+                        as ebi_experiment
+                 FROM qiita.study_prep_template spt
+                    LEFT JOIN qiita.prep_template pt USING (prep_template_id)
+                    LEFT JOIN qiita.data_type USING (data_type_id)
+                    LEFT JOIN qiita.artifact USING (artifact_id)
+                    LEFT JOIN qiita.visibility USING (visibility_id)
+                 WHERE study_id = %s
+                 GROUP BY prep_template_id, pt.name, data_type, artifact_id,
+                          creation_timestamp, modification_timestamp,
+                          visibility
+                 ORDER BY creation_timestamp"""
 
-    # default sort is in ascending order of creation timestamp
-    for dt, pts in prep_info.items():
-        prep_info[dt] = sorted(pts, key=lambda k: k['creation_timestamp'],
-                               reverse=False)
+        TRN.add(sql, [study_id])
+        for row in TRN.execute_fetchindex():
+            row = dict(row)
+            if row['visibility'] != 'public' and not editable:
+                continue
+            # for those preps that have no artifact
+            if row['visibility'] is None:
+                row['visibility'] = 'sandbox'
+
+            info = {
+                'name': row['name'],
+                'id': row['prep_template_id'],
+                'status': row['visibility'],
+                'total_samples': row['total_samples'],
+                'creation_timestamp': row['creation_timestamp'],
+                'modification_timestamp': row['modification_timestamp'],
+                'start_artifact': None,
+                'start_artifact_id': None,
+                'youngest_artifact': None,
+                'num_artifact_children': 0,
+                'youngest_artifact_name': None,
+                'youngest_artifact_type': None,
+                'ebi_experiment': row['ebi_experiment']
+            }
+            if row['artifact_id'] is not None:
+                start_artifact = Artifact(row['artifact_id'])
+                youngest_artifact = start_artifact.youngest_artifact
+                info['start_artifact'] = start_artifact.artifact_type
+                info['start_artifact_id'] = row['artifact_id']
+                info['num_artifact_children'] = len(start_artifact.children)
+                info['youngest_artifact_name'] = youngest_artifact.name
+                info['youngest_artifact_type'] = \
+                    youngest_artifact.artifact_type
+                info['youngest_artifact'] = '%s - %s' % (
+                    youngest_artifact.name, youngest_artifact.artifact_type)
+
+            prep_info[row['data_type']].append(info)
 
     return {'status': 'success',
             'message': '',
