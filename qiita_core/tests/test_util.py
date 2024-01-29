@@ -10,7 +10,7 @@ from unittest import TestCase, main
 
 from qiita_core.util import (
     qiita_test_checker, execute_as_transaction, get_qiita_version,
-    is_test_environment, get_release_info)
+    is_test_environment, get_release_info, MaxRSS_helper)
 from qiita_db.meta_util import (
     generate_biom_and_metadata_release, generate_plugin_releases)
 import qiita_db as qdb
@@ -81,6 +81,20 @@ class UtilTests(TestCase):
         biom_metadata_release, archive_release = get_release_info('public')
         self.assertEqual(biom_metadata_release, ('', '', ''))
         self.assertNotEqual(archive_release, ('', '', ''))
+
+    def test_MaxRSS_helper(self):
+        tests = [
+            ('6', 6.0),
+            ('6K', 6000),
+            ('6M', 6000000),
+            ('6G', 6000000000),
+            ('6.9', 6.9),
+            ('6.9K', 6900),
+            ('6.9M', 6900000),
+            ('6.9G', 6900000000),
+        ]
+        for x, y in tests:
+            self.assertEqual(MaxRSS_helper(x), y)
 
 
 if __name__ == '__main__':
