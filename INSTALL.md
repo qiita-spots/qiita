@@ -224,15 +224,15 @@ export REDBIOM_HOST=http://my_host.com:7379
 
 ## Configure NGINX and supervisor
 
-(NGINX)[https://www.nginx.com/] is not a requirement for Qiita development but it's highly recommended for deploys as this will allow us
-to have multiple workers. Note that we are already installing (NGINX)[https://www.nginx.com/] within the Qiita conda environment; also,
-that Qiita comes with an example (NGINX)[https://www.nginx.com/]  config file: `qiita_pet/nginx_example.conf`, which is used in the Travis builds.
+[NGINX](https://www.nginx.com/) is not a requirement for Qiita development but it's highly recommended for deploys as this will allow us
+to have multiple workers. Note that we are already installing [NGINX](https://www.nginx.com/) within the Qiita conda environment; also,
+that Qiita comes with an example [NGINX](https://www.nginx.com/)  config file: `qiita_pet/nginx_example.conf`, which is used in the Travis builds.
 
-Now, (supervisor)[https://github.com/Supervisor/supervisor] will allow us to start all the workers we want based on its configuration file; and we
-need that both the (NGINX)[https://www.nginx.com/] and (supervisor)[https://github.com/Supervisor/supervisor] config files to match. For our Travis
+Now, [supervisor](https://github.com/Supervisor/supervisor) will allow us to start all the workers we want based on its configuration file; and we
+need that both the [NGINX](https://www.nginx.com/) and [supervisor](https://github.com/Supervisor/supervisor) config files to match. For our Travis
 testing we are creating 3 workers: 21174 for master and 21175-6 as a regular workers.
 
-If you are using (NGINX)[https://www.nginx.com/] via conda, you are going to need to create the NGINX folder within the environment; thus run:
+If you are using [NGINX](https://www.nginx.com/) via conda, you are going to need to create the NGINX folder within the environment; thus run:
 
 ```bash
 mkdir -p ${CONDA_PREFIX}/var/run/nginx/
