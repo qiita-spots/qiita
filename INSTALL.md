@@ -162,9 +162,9 @@ Navigate to the cloned directory and ensure your conda environment is active:
 cd qiita
 source activate qiita
 ```
-If you are using Ubuntu or a Windows Subsystem for Linux (WSL), you will need to ensure that you have a C++ compiler and that development libraries and include files for PostgreSQL are available. Type `cc` into your system to ensure that it doesn't result in `program not found`. The following commands will install a C++ compiler and  `libpq-dev`:
+If you are using Ubuntu or a Windows Subsystem for Linux (WSL), you will need to ensure that you have a C++ compiler and that development libraries and include files for PostgreSQL are available. Type `cc` into your system to ensure that it doesn't result in `program not found`. If you use the the GNU Compiler Collection, make sure to have `gcc` and `g++` available. The following commands will install a C++ compiler and  `libpq-dev`:
 ```bash
-sudo apt install gcc              # alternatively, you can install clang instead
+sudo apt install gcc g++             # alternatively, you can install clang instead
 sudo apt-get install libpq-dev
 ```
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
