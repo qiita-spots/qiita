@@ -178,7 +178,7 @@ At this point, Qiita will be installed and the system will start. However,
 you will need to install plugins in order to process any kind of data. For a list
 of available plugins, visit the [Qiita Spots](https://github.com/qiita-spots)
 github organization. Each of the plugins have their own installation instructions, we
-suggest looking at each individual .travis.yml file to see detailed installation
+suggest looking at each individual .github/workflows/qiita-plugin-ci.yml file to see detailed installation
 instructions. Note that the most common plugins are:
 - [qtp-biom](https://github.com/qiita-spots/qtp-biom)
 - [qtp-sequencing](https://github.com/qiita-spots/qtp-sequencing)
