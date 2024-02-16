@@ -155,7 +155,7 @@ jobs:
           echo "5. Setting up qiita"
           conda activate qiita
           # adapt environment_script for private qiita plugins from travis to github actions.
-          sed 's#export PATH="/home/travis/miniconda3/bin:$PATH"; source #source /home/runner/.profile#; conda ' -i qiita_db/support_files/patches/54.sql
+          sed 's#export PATH="/home/travis/miniconda3/bin:$PATH"; source #source /home/runner/.profile; conda #' -i qiita_db/support_files/patches/54.sql
           qiita-env make --no-load-ontologies
           qiita-test-install
           qiita plugins update
