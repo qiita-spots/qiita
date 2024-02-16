@@ -864,18 +864,18 @@ class PrepTemplate(MetadataTemplate):
                 if wk_params['sample']:
                     df = ST(self.study_id).to_dataframe(samples=list(self))
                     for k, v in wk_params['sample'].items():
-                        if k not in df.columns:
-                            if v != '*' and v not in df[k].unique():
-                                reqs_satisfied = False
+                        if k not in df.columns or (v != '*' and v not in
+                                                   df[k].unique()):
+                            reqs_satisfied = False
                         else:
                             total_conditions_satisfied += 1
 
                 if wk_params['prep']:
                     df = self.to_dataframe()
                     for k, v in wk_params['prep'].items():
-                        if k not in df.columns:
-                            if v != '*' and v not in df[k].unique():
-                                reqs_satisfied = False
+                        if k not in df.columns or (v != '*' and v not in
+                                                   df[k].unique()):
+                            reqs_satisfied = False
                         else:
                             total_conditions_satisfied += 1
 
