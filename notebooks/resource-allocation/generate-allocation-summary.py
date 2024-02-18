@@ -5,6 +5,7 @@ from io import StringIO
 from json import loads
 from os.path import join
 
+from qiita_core.util import MaxRSS_helper
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.software import Software
@@ -117,19 +118,8 @@ df = pd.DataFrame(df)
 print('Make sure that only 0/K/M exist', set(
     df.MaxRSS.apply(lambda x: str(x)[-1])))
 
-
-def _helper(x):
-    if x[-1] == 'K':
-        y = float(x[:-1]) * 1000
-    elif x[-1] == 'M':
-        y = float(x[:-1]) * 1000000
-    else:
-        y = float(x)
-    return y
-
-
 # Generating new columns
-df['MaxRSSRaw'] = df.MaxRSS.apply(lambda x: _helper(str(x)))
+df['MaxRSSRaw'] = df.MaxRSS.apply(lambda x: MaxRSS_helper(str(x)))
 df['ElapsedRawTime'] = df.ElapsedRaw.apply(
     lambda x: timedelta(seconds=float(x)))
 

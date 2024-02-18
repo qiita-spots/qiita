@@ -5,12 +5,13 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from os.path import join
+from os.path import join, relpath
 
 from tornado.web import authenticated
 from tornado.escape import url_escape
 import pandas as pd
 
+from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import (get_files_from_uploads_folders, get_mountpoint,
@@ -79,6 +80,13 @@ class PrepTemplateAJAX(BaseHandler):
             fp = res['creation_job'].parameters.values['sample_sheet']
             res['creation_job_filename'] = fp['filename']
             res['creation_job_filename_body'] = fp['body']
+            summary = None
+            if res['creation_job'].outputs:
+                summary = relpath(
+                    # [0] is the id, [1] is the filepath
+                    res['creation_job'].outputs['output'].html_summary_fp[1],
+                    qiita_config.base_data_dir)
+            res['creation_job_artifact_summary'] = summary
 
         self.render('study_ajax/prep_summary.html', **res)
 
