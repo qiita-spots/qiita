@@ -711,7 +711,7 @@ class SoftwareTests(TestCase):
         self._clean_up_files.append(fp)
         with open(fp, 'w') as f:
             f.write(CONF_TEMPLATE %
-                    ('QIIME', '1.9.1', 'Different description',
+                    ('QIIMEq2', '1.9.1', 'Different description',
                      'source activate qiime', 'start_qiime',
                      'artifact transformation',
                      '[["10.1038/nmeth.f.303", "20383131"]]', client_id,
@@ -719,10 +719,10 @@ class SoftwareTests(TestCase):
         with warnings.catch_warnings(record=True) as warns:
             obs = qdb.software.Software.from_file(fp)
             obs_warns = [str(w.message) for w in warns]
-            exp_warns = ['Plugin "QIIME" version "1.9.1" config file does not '
-                         'match with stored information. Check the config file'
-                         ' or run "qiita plugin update" to update the plugin '
-                         'information. Offending values: description, '
+            exp_warns = ['Plugin "QIIMEq2" version "1.9.1" config file does '
+                         'not match with stored information. Check the config '
+                         'file or run "qiita plugin update" to update the '
+                         'plugin information. Offending values: description, '
                          'environment_script, start_script']
             self.assertCountEqual(obs_warns, exp_warns)
 
