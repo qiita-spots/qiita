@@ -381,15 +381,15 @@ class MetaUtilTests(TestCase):
             'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
             '%s\t%s\t4\tIllumina\t16S rRNA\t'
             'Pick closed-reference OTUs | Split libraries FASTQ\t'
-            'QIIME v1.9.1\tQIIME v1.9.1\n' % (fn_sample, fn_prep),
+            'QIIMEq2 v1.9.1\tQIIMEq2 v1.9.1\n' % (fn_sample, fn_prep),
             'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
             '%s\t%s\t5\tIllumina\t16S rRNA\t'
             'Pick closed-reference OTUs | Split libraries FASTQ\t'
-            'QIIME v1.9.1\tQIIME v1.9.1\n' % (fn_sample, fn_prep),
+            'QIIMEq2 v1.9.1\tQIIMEq2 v1.9.1\n' % (fn_sample, fn_prep),
             'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
             'm\t%s\t%s\t6\tIllumina\t16S rRNA\t'
             'Pick closed-reference OTUs | Split libraries FASTQ\t'
-            'QIIME v1.9.1\tQIIME v1.9.1' % (fn_sample, fn_prep)]
+            'QIIMEq2 v1.9.1\tQIIMEq2 v1.9.1' % (fn_sample, fn_prep)]
         self.assertEqual(txt_obs, txt_exp)
 
         # whatever the configuration was, we will change to settings so we can

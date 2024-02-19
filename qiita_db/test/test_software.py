@@ -342,7 +342,7 @@ class CommandTests(TestCase):
                 self.outputs)
 
         # the output type doesn't exist
-        with self.assertRaisesRegex(ValueError, "Error creating QIIME, Split "
+        with self.assertRaisesRegex(ValueError, "Error creating QIIMEq2, Split "
                                     "libraries - wrong output, This is a "
                                     "command for testing - Unknown "
                                     "artifact_type: BLA!"):
@@ -567,7 +567,7 @@ class SoftwareTests(TestCase):
                 remove(f)
 
     def test_from_name_and_version(self):
-        obs = qdb.software.Software.from_name_and_version('QIIME', '1.9.1')
+        obs = qdb.software.Software.from_name_and_version('QIIMEq2', '1.9.1')
         exp = qdb.software.Software(1)
         self.assertEqual(obs, exp)
 
@@ -578,13 +578,13 @@ class SoftwareTests(TestCase):
 
         # Wrong name
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.software.Software.from_name_and_version('QiIME', '1.9.1')
+            qdb.software.Software.from_name_and_version('QiIMEq2', '1.9.1')
         # Wrong version
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.software.Software.from_name_and_version('QIIME', '1.9.0')
+            qdb.software.Software.from_name_and_version('QIIMEq2', '1.9.0')
 
     def test_name(self):
-        self.assertEqual(qdb.software.Software(1).name, "QIIME")
+        self.assertEqual(qdb.software.Software(1).name, "QIIMEq2")
 
     def test_version(self):
         self.assertEqual(qdb.software.Software(1).version, "1.9.1")
@@ -694,7 +694,7 @@ class SoftwareTests(TestCase):
         self._clean_up_files.append(fp)
         with open(fp, 'w') as f:
             f.write(CONF_TEMPLATE %
-                    ('QIIME', '1.9.1',
+                    ('QIIMEq2', '1.9.1',
                      'Quantitative Insights Into Microbial Ecology (QIIME) '
                      'is an open-source bioinformatics pipeline for '
                      'performing microbiome analysis from raw DNA '
@@ -829,7 +829,7 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.client_secret, 'client_secret')
 
     def test_exists(self):
-        self.assertTrue(qdb.software.Software.exists("QIIME", "1.9.1"))
+        self.assertTrue(qdb.software.Software.exists("QIIMEq2", "1.9.1"))
         self.assertFalse(qdb.software.Software.exists("NewPlugin", "1.9.1"))
         self.assertFalse(qdb.software.Software.exists("QIIME", "2.0.0"))
 
