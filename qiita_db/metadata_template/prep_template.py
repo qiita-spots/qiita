@@ -927,15 +927,16 @@ class PrepTemplate(MetadataTemplate):
                     # be a safe assumption
                     for pnode, cxn in zip(pnodes, cxns):
                         info = _get_node_info(wk, pnode)
-                        if init_artifacts is None:
-                            init_artifacts = dict()
-                        for k, v in merging_schemes[info].items():
-                            if k in cxn:
-                                k = cxn[k]
-                            init_artifacts[k] = v
+                        if info in merging_schemes:
+                            if init_artifacts is None:
+                                init_artifacts = dict()
+                            for k, v in merging_schemes[info].items():
+                                if k in cxn:
+                                    k = cxn[k]
+                                init_artifacts[k] = v
 
-                    reqp = {x: y[1][0]
-                            for x, y in cdp_cmd.required_parameters.items()}
+                    rp = cdp_cmd.required_parameters
+                    reqp = {x: y[1][0] for x, y in rp.items()}
 
                     cmds_to_create.append([cdp_cmd, params, reqp])
 
@@ -979,8 +980,10 @@ class PrepTemplate(MetadataTemplate):
                                        'this preparation; this might be due '
                                        'to missing steps or not having the '
                                        'correct raw data.')
-                                # raises option c.
-                                raise ValueError(msg)
+                                init_artifacts[aname] = init_artifacts[aid]
+                                if aname not in init_artifacts:
+                                    # raises option c.
+                                    raise ValueError(msg)
                             req_params[aname] = init_artifacts[aname]
                     else:
                         req_params = dict()
