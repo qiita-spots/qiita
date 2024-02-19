@@ -85,7 +85,7 @@ class CommandListHandlerTests(OauthTestingBase):
                            'param2': '2.4',
                            'param3': 'False'}})
             }
-        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/', data=data,
+        obs = self.post('/qiita_db/plugins/QIIMEq2/1.9.1/commands/', data=data,
                         headers=self.header)
         self.assertEqual(obs.code, 200)
         obs = _get_command('QIIME', '1.9.1', 'New Command')
