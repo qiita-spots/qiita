@@ -106,10 +106,10 @@ class CommandListHandlerTests(OauthTestingBase):
             'default_parameter_sets': dumps({'dflt1': {'param1': 'test'}}),
             'analysis_only': True
         }
-        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/', data=data,
+        obs = self.post('/qiita_db/plugins/QIIMEq2/1.9.1/commands/', data=data,
                         headers=self.header)
         self.assertEqual(obs.code, 200)
-        obs = _get_command('QIIME', '1.9.1', 'New analysis command')
+        obs = _get_command('QIIMEq2', '1.9.1', 'New analysis command')
         self.assertEqual(obs.name, 'New analysis command')
         self.assertTrue(obs.analysis_only)
         self.assertEqual(obs.merging_scheme,
