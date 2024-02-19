@@ -342,8 +342,8 @@ class CommandTests(TestCase):
                 self.outputs)
 
         # the output type doesn't exist
-        with self.assertRaisesRegex(ValueError, "Error creating QIIMEq2, Split "
-                                    "libraries - wrong output, This is a "
+        with self.assertRaisesRegex(ValueError, "Error creating QIIMEq2, Split"
+                                    " libraries - wrong output, This is a "
                                     "command for testing - Unknown "
                                     "artifact_type: BLA!"):
             qdb.software.Command.create(
