@@ -43,17 +43,17 @@ class TestBaseHandlersUtils(TestCase):
                'artifacts': {
                     4: (1, 'Identification of the Microbiomes for Cannabis '
                         'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                                  'libraries FASTQ', 'QIIMEq2 v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
                             '1.SKM4.640180', '1.SKM9.640192'], {'1'}),
                     5: (1, 'Identification of the Microbiomes for Cannabis '
                         'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                                  'libraries FASTQ', 'QIIMEq2 v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
                             '1.SKM4.640180', '1.SKM9.640192'], {'1'}),
                     6: (1, 'Identification of the Microbiomes for Cannabis '
                         'Soils', ('Pick closed-reference OTUs | Split '
-                                  'libraries FASTQ', 'QIIME v1.9.1'), [
+                                  'libraries FASTQ', 'QIIMEq2 v1.9.1'), [
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
                             '1.SKM4.640180', '1.SKM9.640192'], {'1'})},
                'analysis_reservation': '',

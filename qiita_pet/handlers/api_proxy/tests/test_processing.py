@@ -103,7 +103,7 @@ class TestProcessingAPIReadOnly(TestCase):
             'command': 'Split libraries FASTQ',
             'command_description': 'Demultiplexes and applies quality '
                                    'control to FASTQ data',
-            'software': 'QIIME',
+            'software': 'QIIMEq2',
             'software_version': '1.9.1'}
         self.assertEqual(obs, exp)
 
