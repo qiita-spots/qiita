@@ -13,7 +13,7 @@ Deployed on January 8th, 2024
 * Workflow definitions can now use sample or preparation information columns/values to differentiate between them.
 * Updated the Adapter and host filtering plugin (qp-fastp-minimap2) to v2023.12 addressing a bug in adapter filtering; [more information](https://qiita.ucsd.edu/static/doc/html/processingdata/qp-fastp-minimap2.html).
 * Other fixes: [3334](https://github.com/qiita-spots/qiita/pull/3334), [3338](https://github.com/qiita-spots/qiita/pull/3338). Thank you @sjanssen2.
-* The internal Sequence Processing Pipeline is now using the human pan-genome reference, together with the GRCh38 genome + PhiX and CHM13 genome for human host filtering.
+* The internal Sequence Processing Pipeline is now using the human pan-genome reference, together with the GRCh38 genome + PhiX and T2T-CHM13v2.0 genome for human host filtering.
 
 
 Version 2023.10
