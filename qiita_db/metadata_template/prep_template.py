@@ -917,7 +917,8 @@ class PrepTemplate(MetadataTemplate):
                 predecessors = _get_predecessors(wk, node)
                 cmds_to_create = []
                 init_artifacts = None
-                for i, (pnodes, cnode, cxns) in enumerate(predecessors):
+                # we only need to "loop" over the first element
+                for pnodes, cnode, cxns in predecessors[:1]:
                     cdp = cnode.default_parameter
                     cdp_cmd = cdp.command
                     params = cdp.values.copy()
