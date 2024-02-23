@@ -903,8 +903,9 @@ class PrepTemplate(MetadataTemplate):
         # let's just keep one, let's give it preference to the one with the
         # most total_conditions_satisfied
         _, wk = sorted(workflows, key=lambda x: x[0], reverse=True)[0]
+        GH = wk.graph
         missing_artifacts = dict()
-        for node, degree in wk.graph.out_degree():
+        for node, degree in GH.out_degree():
             if degree != 0:
                 continue
             mscheme = _get_node_info(wk, node)
@@ -982,7 +983,18 @@ class PrepTemplate(MetadataTemplate):
                             raise ValueError(msg)
                         req_params[iname] = init_artifacts[dname]
                     if len(dp.command.required_parameters) > 1:
-                        raise ValueError('Not implemented')
+                        for pn in GH.predecessors(node):
+                            info = _get_node_info(wk, pn)
+                            n, cnx, _ = GH.get_edge_data(
+                                pn, node)['connections'].connections[0]
+                            if info not in merging_schemes or \
+                                    n not in merging_schemes[info]:
+                                msg = ('This workflow contains a step with '
+                                       'multiple inputs so it cannot be '
+                                       'completed automatically, please add '
+                                       'the commands by hand.')
+                                raise ValueError(msg)
+                            req_params[cnx] = merging_schemes[info][n]
                 else:
                     if len(dp.command.required_parameters) == 1:
                         cxns = dict()
@@ -991,7 +1003,6 @@ class PrepTemplate(MetadataTemplate):
                             cxns[dname] = iname
                         connections = {previous_job: cxns}
                     else:
-                        GH = wk.graph
                         connections = dict()
                         for pn in GH.predecessors(node):
                             pndp = pn.default_parameter
