@@ -81,11 +81,12 @@ class PrepTemplateAJAX(BaseHandler):
             res['creation_job_filename'] = fp['filename']
             res['creation_job_filename_body'] = fp['body']
             summary = None
-            if res['creation_job'].outputs:
-                summary = relpath(
+            if res['creation_job'].status == 'success':
+                if res['creation_job'].outputs:
                     # [0] is the id, [1] is the filepath
-                    res['creation_job'].outputs['output'].html_summary_fp[1],
-                    qiita_config.base_data_dir)
+                    _file = res['creation_job'].outputs[
+                        'output'].html_summary_fp[1]
+                    summary = relpath(_file, qiita_config.base_data_dir)
             res['creation_job_artifact_summary'] = summary
 
         self.render('study_ajax/prep_summary.html', **res)
