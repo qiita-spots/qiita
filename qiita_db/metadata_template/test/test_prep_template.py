@@ -1477,6 +1477,46 @@ class TestPrepTemplate(TestCase):
                                     "the parameters are the same as jobs"):
             pt.add_default_workflow(qdb.user.User('test@foo.bar'))
 
+        # Then, let's clean up again and add a new command/step with 2
+        # BIOM input artifacts
+        for pj in wk.graph.nodes:
+            pj._set_error('Killed')
+        cmd = qdb.software.Command.create(
+            qdb.software.Software(1), "Multiple BIOM as inputs", "", {
+                    'req_artifact_1': ['artifact:["BIOM"]', None],
+                    'req_artifact_2': ['artifact:["BIOM"]', None],
+            }, outputs={'MB-output': 'BIOM'})
+        cmd_dp = qdb.software.DefaultParameters.create("", cmd)
+        # creating the new node for the cmd and linking it's two inputs with
+        # two inputs
+        sql = f"""
+            INSERT INTO qiita.default_workflow_node (
+                default_workflow_id, default_parameter_set_id)
+            VALUES (1, {cmd_dp.id});
+            INSERT INTO qiita.default_workflow_edge (
+                parent_id, child_id)
+            VALUES (8, 10);
+            INSERT INTO qiita.default_workflow_edge (
+                parent_id, child_id)
+            VALUES (9, 10);
+            INSERT INTO qiita.default_workflow_edge_connections (
+                default_workflow_edge_id, parent_output_id, child_input_id)
+            VALUES (6, 3, 99);
+            INSERT INTO qiita.default_workflow_edge_connections (
+                default_workflow_edge_id, parent_output_id, child_input_id)
+            VALUES (7, 3, 100)
+            """
+        qdb.sql_connection.perform_as_transaction(sql)
+        wk = pt.add_default_workflow(qdb.user.User('test@foo.bar'))
+        self.assertEqual(len(wk.graph.nodes), 6)
+        self.assertEqual(len(wk.graph.edges), 5)
+        self.assertCountEqual(
+            [x.command.name for x in wk.graph.nodes],
+            # we should have 2 split libraries and 3 close reference
+            ['Split libraries FASTQ', 'Split libraries FASTQ',
+             'Pick closed-reference OTUs', 'Pick closed-reference OTUs',
+             'Pick closed-reference OTUs', 'Multiple BIOM as inputs'])
+
         # now let's test that an error is raised when there is no valid initial
         # input data; this moves the data type from FASTQ to taxa_summary for
         # the default_workflow_id = 1
