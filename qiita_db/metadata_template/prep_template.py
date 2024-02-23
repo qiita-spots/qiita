@@ -809,7 +809,8 @@ class PrepTemplate(MetadataTemplate):
                 parents.remove(pnode)
                 if parents:
                     for pnode in parents:
-                        pred.extend(_get_predecessors(workflow, pnode))
+                        # [-1] just adding the parent and not its ancestors
+                        pred.extend([_get_predecessors(workflow, pnode)[-1]])
 
                 pred.append(data)
                 return pred
