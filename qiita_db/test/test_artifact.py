@@ -469,10 +469,10 @@ class ArtifactTestsReadOnly(TestCase):
                          ('Split libraries FASTQ | N/A', 'N/A'))
         self.assertEqual(qdb.artifact.Artifact(4).merging_scheme,
                          ('Pick closed-reference OTUs | Split libraries FASTQ',
-                          'QIIME v1.9.1'))
+                          'QIIMEq2 v1.9.1'))
         self.assertEqual(qdb.artifact.Artifact(5).merging_scheme,
                          ('Pick closed-reference OTUs | Split libraries FASTQ',
-                          'QIIME v1.9.1'))
+                          'QIIMEq2 v1.9.1'))
 
     def test_jobs(self):
         # Returning all jobs

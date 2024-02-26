@@ -258,7 +258,7 @@ class TestBaseHandlersUtils(TestCase):
                    'rev_comp_mapping_barcodes': 'False',
                    'min_per_read_length_fraction': '0.75',
                    'barcode_type': 'golay_12'},
-                 'software_version': '1.9.1', 'software': 'QIIME'},
+                 'software_version': '1.9.1', 'software': 'QIIMEq2'},
                'files': exp_files,
                'is_from_analysis': False,
                'summary': None,
