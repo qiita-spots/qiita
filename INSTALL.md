@@ -162,9 +162,9 @@ Navigate to the cloned directory and ensure your conda environment is active:
 cd qiita
 source activate qiita
 ```
-If you are using Ubuntu or a Windows Subsystem for Linux (WSL), you will need to ensure that you have a C++ compiler and that development libraries and include files for PostgreSQL are available. Type `cc` into your system to ensure that it doesn't result in `program not found`. The following commands will install a C++ compiler and  `libpq-dev`:
+If you are using Ubuntu or a Windows Subsystem for Linux (WSL), you will need to ensure that you have a C++ compiler and that development libraries and include files for PostgreSQL are available. Type `cc` into your system to ensure that it doesn't result in `program not found`. If you use the the GNU Compiler Collection, make sure to have `gcc` and `g++` available. The following commands will install a C++ compiler and  `libpq-dev`:
 ```bash
-sudo apt install gcc              # alternatively, you can install clang instead
+sudo apt install gcc g++             # alternatively, you can install clang instead
 sudo apt-get install libpq-dev
 ```
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
@@ -178,7 +178,7 @@ At this point, Qiita will be installed and the system will start. However,
 you will need to install plugins in order to process any kind of data. For a list
 of available plugins, visit the [Qiita Spots](https://github.com/qiita-spots)
 github organization. Each of the plugins have their own installation instructions, we
-suggest looking at each individual .travis.yml file to see detailed installation
+suggest looking at each individual .github/workflows/qiita-plugin-ci.yml file to see detailed installation
 instructions. Note that the most common plugins are:
 - [qtp-biom](https://github.com/qiita-spots/qtp-biom)
 - [qtp-sequencing](https://github.com/qiita-spots/qtp-sequencing)
@@ -224,15 +224,15 @@ export REDBIOM_HOST=http://my_host.com:7379
 
 ## Configure NGINX and supervisor
 
-(NGINX)[https://www.nginx.com/] is not a requirement for Qiita development but it's highly recommended for deploys as this will allow us
-to have multiple workers. Note that we are already installing (NGINX)[https://www.nginx.com/] within the Qiita conda environment; also,
-that Qiita comes with an example (NGINX)[https://www.nginx.com/]  config file: `qiita_pet/nginx_example.conf`, which is used in the Travis builds.
+[NGINX](https://www.nginx.com/) is not a requirement for Qiita development but it's highly recommended for deploys as this will allow us
+to have multiple workers. Note that we are already installing [NGINX](https://www.nginx.com/) within the Qiita conda environment; also,
+that Qiita comes with an example [NGINX](https://www.nginx.com/)  config file: `qiita_pet/nginx_example.conf`, which is used in the Travis builds.
 
-Now, (supervisor)[https://github.com/Supervisor/supervisor] will allow us to start all the workers we want based on its configuration file; and we
-need that both the (NGINX)[https://www.nginx.com/] and (supervisor)[https://github.com/Supervisor/supervisor] config files to match. For our Travis
+Now, [supervisor](https://github.com/Supervisor/supervisor) will allow us to start all the workers we want based on its configuration file; and we
+need that both the [NGINX](https://www.nginx.com/) and [supervisor](https://github.com/Supervisor/supervisor) config files to match. For our Travis
 testing we are creating 3 workers: 21174 for master and 21175-6 as a regular workers.
 
-If you are using (NGINX)[https://www.nginx.com/] via conda, you are going to need to create the NGINX folder within the environment; thus run:
+If you are using [NGINX](https://www.nginx.com/) via conda, you are going to need to create the NGINX folder within the environment; thus run:
 
 ```bash
 mkdir -p ${CONDA_PREFIX}/var/run/nginx/
@@ -256,7 +256,7 @@ Start the qiita server:
 qiita pet webserver start
 ```
 
-If all the above commands executed correctly, you should be able to access Qiita by going in your browser to https://localhost:21174 if you are not using NGINX, or https://localhost:8383 if you are using NGINX, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
+If all the above commands executed correctly, you should be able to access Qiita by going in your browser to https://localhost:21174 if you are not using NGINX, or https://localhost:8383 if you are using NGINX, to login use `test@foo.bar` and `password` as the credentials. (Login as `admin@foo.bar` with `password` to see admin functionality. In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
 
 
 

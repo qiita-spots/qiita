@@ -45,6 +45,11 @@ class DBUtilTests(DBUtilTestsBase):
         obs = qdb.util.max_preparation_samples()
         self.assertEqual(obs, 800)
 
+    def test_max_artifacts_in_workflow(self):
+        """Test that we get the correct max_artifacts_in_workflow"""
+        obs = qdb.util.max_artifacts_in_workflow()
+        self.assertEqual(obs, 35)
+
     def test_filepath_id_to_object_id(self):
         # filepaths 1, 2 belongs to artifact 1
         self.assertEqual(qdb.util.filepath_id_to_object_id(1), 1)

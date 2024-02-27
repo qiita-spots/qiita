@@ -229,8 +229,7 @@ class TestStudyAPI1(TestStudyAPI):
 
         # actual test
         obs = study_prep_get_req(study.id, user_email)
-        temp_info = defaultdict(list)
-        temp_info['16S'] = [
+        temp_info = {'16S': [
             {"status": 'sandbox',
              'name': 'Prep information %d' % pt.id,
              'start_artifact': None, 'youngest_artifact': None,
@@ -241,7 +240,7 @@ class TestStudyAPI1(TestStudyAPI):
              'num_artifact_children': 0,
              'youngest_artifact_name': None,
              'youngest_artifact_type': None,
-             'total_samples': 3}]
+             'total_samples': 3}]}
 
         exp = {
             'info': temp_info,

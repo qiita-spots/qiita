@@ -1020,7 +1020,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         # names to know if it should be executed differently and the
         # plugin should let Qiita know that a specific command should be ran
         # as job array or not
-        cnames_to_skip = {'Calculate Cell Counts'}
+        cnames_to_skip = {'Calculate Cell Counts', 'Calculate RNA Copy Counts'}
         if 'ENVIRONMENT' in plugin_env_script and cname not in cnames_to_skip:
             # the job has to be in running state so the plugin can change its`
             # status
@@ -2391,6 +2391,20 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             self._raise_if_not_in_construction()
+
+            # checking that the new number of artifacts is not above
+            # max_artifacts_in_workflow
+            current_artifacts = sum(
+                [len(j.command.outputs) for j in self.graph.nodes()])
+            to_add_artifacts = len(dflt_params.command.outputs)
+            total_artifacts = current_artifacts + to_add_artifacts
+            max_artifacts = qdb.util.max_artifacts_in_workflow()
+            if total_artifacts > max_artifacts:
+                raise ValueError(
+                    "Cannot add new job because it will create more "
+                    f"artifacts (current: {current_artifacts} + new: "
+                    f"{to_add_artifacts} = {total_artifacts}) that what is "
+                    f"allowed in a single workflow ({max_artifacts})")
 
             if connections:
                 # The new Job depends on previous jobs in the workflow

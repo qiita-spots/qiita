@@ -1,5 +1,18 @@
 # Qiita changelog
 
+Version 2024.02
+---------------
+
+Deployed on February 27th, 2024
+
+* Default workflows now accept commands with multiple inputs.
+* The loading time of the main study page was improved [#3350](https://github.com/qiita-spots/qiita/pull/3350).
+* SPP improvements - mainly @charles-cowart, thank you! Errors are now show to the user in the GUI [#127](hhttps://github.com/biocore/mg-scripts/pull/127), admins can restart jobs [#129](hhttps://github.com/biocore/mg-scripts/pull/129), adapter-trimmer files now are stored and their sequence counts are part of the prep-info [#126](hhttps://github.com/biocore/mg-scripts/pull/126), and support for per instrument/data-type configuration [#123](hhttps://github.com/biocore/mg-scripts/pull/123).
+* The internal Sequence Processing Pipeline is now using the https://www.gencodegenes.org human transcripts v44 for Metatranscriptomic data - additional to the human pan-genome reference, with the GRCh38 genome + PhiX and T2T-CHM13v2.0 genome - for human host filtering.
+* Added a command to qp-woltka: 'Calculate RNA Copy Counts'.
+* Other fixes - mainly by @sjanssen2, thank you!: [#3345](https://github.com/qiita-spots/qiita/pull/3345),[#3224](https://github.com/qiita-spots/qiita/pull/3224),  [#3357](https://github.com/qiita-spots/qiita/pull/3357), [#3358](https://github.com/qiita-spots/qiita/pull/3358), [#3359](https://github.com/qiita-spots/qiita/pull/3359), [#3362](https://github.com/qiita-spots/qiita/pull/3362), [#3364](https://github.com/qiita-spots/qiita/pull/3364).
+
+
 Version 2023.12
 ---------------
 
@@ -14,6 +27,7 @@ Deployed on January 8th, 2024
 * Updated the Adapter and host filtering plugin (qp-fastp-minimap2) to v2023.12 addressing a bug in adapter filtering; [more information](https://qiita.ucsd.edu/static/doc/html/processingdata/qp-fastp-minimap2.html).
 * Other fixes: [3334](https://github.com/qiita-spots/qiita/pull/3334), [3338](https://github.com/qiita-spots/qiita/pull/3338). Thank you @sjanssen2.
 * The internal Sequence Processing Pipeline is now using the human pan-genome reference, together with the GRCh38 genome + PhiX and T2T-CHM13v2.0 genome for human host filtering.
+* Added two new commands to qp-woltka: 'SynDNA Woltka' & 'Calculate Cell Counts'.
 
 
 Version 2023.10

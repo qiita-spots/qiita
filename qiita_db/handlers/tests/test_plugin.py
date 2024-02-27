@@ -18,7 +18,7 @@ import qiita_db as qdb
 
 class UtilTests(TestCase):
     def test_get_plugin(self):
-        obs = _get_plugin("QIIME", "1.9.1")
+        obs = _get_plugin("QIIMEq2", "1.9.1")
         exp = qdb.software.Software(1)
         self.assertEqual(obs, exp)
 
@@ -27,7 +27,7 @@ class UtilTests(TestCase):
             _get_plugin("QiIME", "1.9.1")
 
     def test_get_command(self):
-        obs = _get_command('QIIME', '1.9.1', 'Split libraries FASTQ')
+        obs = _get_command('QIIMEq2', '1.9.1', 'Split libraries FASTQ')
         exp = qdb.software.Command(1)
         self.assertEqual(obs, exp)
 
@@ -38,18 +38,18 @@ class UtilTests(TestCase):
 
 class PluginHandlerTests(OauthTestingBase):
     def test_get_plugin_does_not_exist(self):
-        obs = self.get('/qiita_db/plugins/QIIME/1.9.0/', headers=self.header)
+        obs = self.get('/qiita_db/plugins/QIIMEq2/1.9.0/', headers=self.header)
         self.assertEqual(obs.code, 404)
 
     def test_get_no_header(self):
-        obs = self.get('/qiita_db/plugins/QIIME/1.9.0/')
+        obs = self.get('/qiita_db/plugins/QIIMEq2/1.9.0/')
         self.assertEqual(obs.code, 400)
 
     def test_get(self):
-        obs = self.get('/qiita_db/plugins/QIIME/1.9.1/', headers=self.header)
+        obs = self.get('/qiita_db/plugins/QIIMEq2/1.9.1/', headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {
-            'name': 'QIIME',
+            'name': 'QIIMEq2',
             'version': '1.9.1',
             'description': 'Quantitative Insights Into Microbial Ecology '
                            '(QIIME) is an open-source bioinformatics pipeline '
@@ -85,10 +85,10 @@ class CommandListHandlerTests(OauthTestingBase):
                            'param2': '2.4',
                            'param3': 'False'}})
             }
-        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/', data=data,
+        obs = self.post('/qiita_db/plugins/QIIMEq2/1.9.1/commands/', data=data,
                         headers=self.header)
         self.assertEqual(obs.code, 200)
-        obs = _get_command('QIIME', '1.9.1', 'New Command')
+        obs = _get_command('QIIMEq2', '1.9.1', 'New Command')
         self.assertEqual(obs.name, 'New Command')
         self.assertFalse(obs.analysis_only)
 
@@ -106,10 +106,10 @@ class CommandListHandlerTests(OauthTestingBase):
             'default_parameter_sets': dumps({'dflt1': {'param1': 'test'}}),
             'analysis_only': True
         }
-        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/', data=data,
+        obs = self.post('/qiita_db/plugins/QIIMEq2/1.9.1/commands/', data=data,
                         headers=self.header)
         self.assertEqual(obs.code, 200)
-        obs = _get_command('QIIME', '1.9.1', 'New analysis command')
+        obs = _get_command('QIIMEq2', '1.9.1', 'New analysis command')
         self.assertEqual(obs.name, 'New analysis command')
         self.assertTrue(obs.analysis_only)
         self.assertEqual(obs.merging_scheme,
@@ -125,12 +125,12 @@ class CommandHandlerTests(OauthTestingBase):
 
     def test_get_no_header(self):
         obs = self.get(
-            '/qiita_db/plugins/QIIME/1.9.1/commands/Split%20libraries/')
+            '/qiita_db/plugins/QIIMEq2/1.9.1/commands/Split%20libraries/')
         self.assertEqual(obs.code, 400)
 
     def test_get(self):
         obs = self.get(
-            '/qiita_db/plugins/QIIME/1.9.1/commands/Split%20libraries/',
+            '/qiita_db/plugins/QIIMEq2/1.9.1/commands/Split%20libraries/',
             headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'name': 'Split libraries',
@@ -195,20 +195,20 @@ class CommandHandlerTests(OauthTestingBase):
 
 class CommandActivateHandlerTests(OauthTestingBase):
     def test_post_command_does_not_exist(self):
-        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/'
+        obs = self.post('/qiita_db/plugins/QIIMEq2/1.9.1/commands/'
                         'UNKNOWN/activate/',
                         headers=self.header, data={})
         self.assertEqual(obs.code, 404)
 
     def test_post_no_header(self):
-        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/'
+        obs = self.post('/qiita_db/plugins/QIIMEq2/1.9.1/commands/'
                         'Split%20libraries/activate/', data={})
         self.assertEqual(obs.code, 400)
 
     def test_post(self):
         qdb.software.Software.deactivate_all()
         self.assertFalse(qdb.software.Command(2).active)
-        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/'
+        obs = self.post('/qiita_db/plugins/QIIMEq2/1.9.1/commands/'
                         'Split%20libraries/activate/', headers=self.header,
                         data={})
         self.assertEqual(obs.code, 200)

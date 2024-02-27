@@ -1205,6 +1205,18 @@ class ProcessingWorkflowTests(TestCase):
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             qdb.processing_job.ProcessingWorkflow(1).add({}, None)
 
+        # test that the qdb.util.max_artifacts_in_workflow
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.perform_as_transaction(
+                "UPDATE settings set max_artifacts_in_workflow = 1")
+            with self.assertRaisesRegex(
+                    ValueError, "Cannot add new job because it will create "
+                    "more artifacts "):
+                qdb.processing_job.ProcessingWorkflow(2).add(
+                    qdb.software.DefaultParameters(1),
+                    req_params={'input_data': 1}, force=True)
+            qdb.sql_connection.TRN.rollback()
+
     def test_remove(self):
         exp_command = qdb.software.Command(1)
         json_str = (

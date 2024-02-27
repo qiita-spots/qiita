@@ -416,6 +416,20 @@ def max_preparation_samples():
         return qdb.sql_connection.TRN.execute_fetchlast()
 
 
+def max_artifacts_in_workflow():
+    r"""Returns the max number of artifacts allowed in a single workflow
+
+    Returns
+    -------
+    int
+        The max number of artifacts allowed in a single workflow
+    """
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add(
+            "SELECT max_artifacts_in_workflow FROM settings")
+        return qdb.sql_connection.TRN.execute_fetchlast()
+
+
 def compute_checksum(path):
     r"""Returns the checksum of the file pointed by path
 

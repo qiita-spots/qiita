@@ -469,10 +469,10 @@ class ArtifactTestsReadOnly(TestCase):
                          ('Split libraries FASTQ | N/A', 'N/A'))
         self.assertEqual(qdb.artifact.Artifact(4).merging_scheme,
                          ('Pick closed-reference OTUs | Split libraries FASTQ',
-                          'QIIME v1.9.1'))
+                          'QIIMEq2 v1.9.1'))
         self.assertEqual(qdb.artifact.Artifact(5).merging_scheme,
                          ('Pick closed-reference OTUs | Split libraries FASTQ',
-                          'QIIME v1.9.1'))
+                          'QIIMEq2 v1.9.1'))
 
     def test_jobs(self):
         # Returning all jobs
@@ -1405,6 +1405,42 @@ class ArtifactTests(TestCase):
         artifact.study.sample_template.update(df)
 
         self.assertTrue(artifact.has_human)
+
+    def test_descendants_with_jobs(self):
+        # let's tests that we can connect two artifacts with different root
+        # in the same analysis
+        # 1. make sure there are 3 nodes
+        a = qdb.artifact.Artifact(8)
+        self.assertEqual(len(a.descendants_with_jobs.nodes), 3)
+        self.assertEqual(len(a.analysis.artifacts), 2)
+        # 2. add a new root and make sure we see it
+        c = qdb.artifact.Artifact.create(
+            self.filepaths_root, "BIOM", analysis=a.analysis,
+            data_type="16S")
+        self.assertEqual(len(a.analysis.artifacts), 3)
+        # 3. add jobs conencting the new artifact to the other root
+        #    a -> job -> b
+        #    c
+        #    job1 connects b & c
+        #    job2 connects a & c
+        cmd = qdb.software.Command.create(
+            qdb.software.Software(1),
+            "CommandWithMultipleInputs", "", {
+                'input_b': ['artifact:["BIOM"]', None],
+                'input_c': ['artifact:["BIOM"]', None]}, {'out': 'BIOM'})
+        params = qdb.software.Parameters.load(
+            cmd, values_dict={'input_b': a.children[0].id, 'input_c': c.id})
+        job1 = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params)
+        params = qdb.software.Parameters.load(
+            cmd, values_dict={'input_b': a.id, 'input_c': c.id})
+        job2 = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params)
+
+        jobs = [j[1] for e in a.descendants_with_jobs.edges
+                for j in e if j[0] == 'job']
+        self.assertIn(job1, jobs)
+        self.assertIn(job2, jobs)
 
 
 @qiita_test_checker()
