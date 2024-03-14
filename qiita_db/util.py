@@ -73,6 +73,12 @@ import qiita_db as qdb
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+import pandas as pd
+from datetime import timedelta
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import minimize
+
 
 def scrub_data(s):
     r"""Scrubs data fields of characters not allowed by PostgreSQL
@@ -2311,3 +2317,182 @@ def send_email(to, subject, body):
         raise RuntimeError("Can't send email!")
     finally:
         smtp.close()
+
+
+def resource_allocation_plot(file, cname, sname='all'):
+    """Builds resource allocation plot for given filename and jobs
+
+    Parameters
+    ----------
+    file : str, required
+        Builds plot for the specified file name. Usually provided as tsv.gz
+    cname: str, required
+        Specified job type
+    sname: str, optional
+        Specified job sub type.
+
+    Returns
+    ----------
+    matplotlib.pyplot object
+        Returns a matplotlib object with a plot
+    """
+    # Constants
+    global M1G
+    M1G = 2**30
+    global COL_NAME
+    COL_NAME = 'samples * columns'
+
+    df = pd.read_csv(file, sep='\t', dtype={'extra_info': str})
+    df['ElapsedRawTime'] = pd.to_timedelta(df.ElapsedRawTime)
+    # Diversity types - alpha_vector ; BIOM type - BIOM
+    if sname == "all":
+        _df = df[(df.cName == cname)].copy()
+    else:
+        _df = df[(df.cName == cname) & (df.sName == sname)].copy()
+
+    fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
+    _df.dropna(subset=['samples', 'columns'], inplace=True)
+    _df[COL_NAME] = _df.samples * _df['columns']
+    ax = axs[0]
+    models = [mem_model1]
+    _resource_allocation_plot_helper(_df, ax, cname, sname, "MaxRSSRaw",
+                                     models)
+
+    ax = axs[1]
+    models = [time_model1]
+    _resource_allocation_plot_helper(_df, ax, cname, sname, "ElapsedRaw",
+                                     models)
+    return fig, axs
+
+
+def _resource_allocation_plot_helper(_df, ax, cname, sname, curr, models):
+    """Helper function for resource allocation plot. Builds plot for MaxRSSRaw
+    and ElapsedRaw
+
+    Parameters
+    ----------
+    _df: pandas dataframe, required
+        Filtered dataframe for the plot
+    ax : matplotlib axes, required
+        Axes for current subplot
+    cname: str, required
+        Specified job type
+    sname: str, optional
+        Specified job sub type.
+    curr: str, required
+        Either MaxRSSRaw or ElapsedRaw
+    models: list, required
+        List of functions that will be used for visualization
+
+    """
+
+    x_data, y_data = _df[COL_NAME], _df[curr]
+    ax.scatter(x_data, y_data, s=2)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_ylabel(curr)
+    ax.set_xlabel("samples * columns")
+
+    best_model, options = _resource_allocation_calculate(x_data, y_data,
+                                                         models)
+    k, a, b = options.x
+
+    x_plot = np.array(sorted(_df[COL_NAME].unique()))
+    shift = 0
+    x_plot_adjusted = np.exp(np.log(x_plot) - shift)
+    y_plot = best_model(x_plot_adjusted, k, a, b)
+    ax.plot(x_plot_adjusted, y_plot, linewidth=1, color='orange')
+
+    x_plot = np.array(_df[COL_NAME])
+    x_plot_adjusted = np.exp(np.log(x_plot) - shift)
+    _df[f'c{curr}'] = best_model(x_plot_adjusted, k, a, b)
+    maxi = naturalsize(_df[curr].max(), gnu=True) if curr == "MaxRSSRaw" else \
+        timedelta(seconds=float(_df[curr].max()))
+    cmax = naturalsize(max(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
+        timedelta(seconds=float(max(y_plot)))
+    mini = naturalsize(_df[curr].min(), gnu=True) if curr == "MaxRSSRaw" else \
+        timedelta(seconds=float(_df[curr].min()))
+    cmin = naturalsize(min(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
+        timedelta(seconds=float(min(y_plot)))
+
+    failures_df = _df[_df[curr] > _df[f'c{curr}']]
+    failures = failures_df.shape[0]
+
+    ax.scatter(failures_df[COL_NAME], failures_df[curr], color='red', s=3)
+
+    ax.set_title(f'{cname}: {sname}\n real: {mini} || {maxi}\n'
+                 f'calculated: {cmin} || {cmax}\n'
+                 f'failures: {failures}')
+
+
+def _resource_allocation_calculate(x, y, models):
+    """Helper function for resource allocation plot. Calculates best_model and
+    best_result given the models list and x,y data.
+
+    Parameters
+    ----------
+    x: pandas.Series (pandas column), required
+        Represents x data for the function calculation
+    y: pandas.Series (pandas column), required
+        Represents y data for the function calculation
+    models: list, required
+        List of functions that will be used for visualization
+
+    Returns
+    ----------
+    best_model: function
+        best fitting function for the current list models
+    best_result: object
+        object containing constants for the best model (e.g. k, a, b in kx+b*a)
+    """
+
+    init = [1, 1, 1]
+    best_model = None
+    best_loss = np.inf
+    best_result = None
+    for model in models:
+        bounds = [(0, float('inf')), (0, float('inf')), (0, float('inf'))]
+        options = minimize(_resource_allocation_custom_loss, init,
+                           args=(x, y, model))
+        if options.fun < best_loss:
+            best_loss = options.fun
+            best_model = model
+            best_result = options
+    return best_model, best_result
+
+
+def _resource_allocation_custom_loss(params, x, y, model):
+    """Helper function for resource allocation plot. Calculates custom loss
+    for given model.
+
+    Parameters
+    ----------
+    params: list, required
+        Initial list of integers for the given model
+    x: pandas.Series (pandas column), required
+        Represents x data for the function calculation
+    y: pandas.Series (pandas column), required
+        Represents y data for the function calculation
+    models: list, required
+        List of functions that will be used for visualization
+
+    Returns
+    ----------
+    float
+        The mean of the list returned by the loss calculation (np.where)
+    """
+    k, a, b = params
+    errors = y - model(x, k, a, b)
+    # Penalty weights
+    w1, w2 = 10000, 1
+    # positive error
+    loss = np.where(errors > 0, w1 * errors**2, w2 * errors**2)
+    return np.mean(loss)
+
+
+def mem_model1(x, k, a, b):
+    return k*np.log(x) + x * a + b
+
+
+def time_model1(x, k, a, b):
+    return a + b + (np.log(x) * k)

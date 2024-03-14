@@ -21,6 +21,8 @@ import pandas as pd
 from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
 
+from matplotlib.figure import Figure
+import numpy as np
 
 @qiita_test_checker()
 class DBUtilTestsBase(TestCase):
@@ -1301,6 +1303,30 @@ class PurgeFilepathsTests(DBUtilTestsBase):
         # will always raise this ValueError
         with self.assertRaises(ValueError):
             qdb.util.quick_mounts_purge()
+
+
+class ResourceAllocationPlotTests():
+    def __init__(self) -> None:
+        self.PATH_TO_DATA = '''../../notebooks/resource-allocation/data/
+    jobs_2024-02-21.tsv.gz'''
+        self.CNAME = "Validate"
+        self.SNAME = "Diversity types - alpha_vector"
+
+
+    def _get_return_value(self):
+        return qdb.util.resource_allocation_plot(self.PATH_TO_DATA, self.CNAME, 
+                                                 self.SNAME)
+    
+    def _test_return_value_type(self):
+        fig, axs = self._get_return_value()
+        assert isinstance(fig, Figure), "Returned object is Matplotlib Figure"
+
+    # TODO test individual functions. E.g. constants returned by minimize.
+
+    
+    
+
+        
 
 
 STUDY_INFO = {
