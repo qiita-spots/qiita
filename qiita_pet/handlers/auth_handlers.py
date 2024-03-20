@@ -12,9 +12,10 @@ import os
 from tornado.escape import url_escape, json_encode, json_decode
 from tornado.auth import OAuth2Mixin
 from tornado.curl_httpclient import CurlAsyncHTTPClient
-from tornado.web import HTTPError
+from tornado.web import HTTPError, authenticated
 
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.handlers.portal import PortalEditBase
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.util import execute_as_transaction
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
@@ -24,6 +25,7 @@ from qiita_db.user import User
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBDuplicateError,
                                  QiitaDBError)
 from qiita_db.logger import LogEntry
+import qiita_db as qdb
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -298,7 +300,7 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
                 self.set_secure_cookie("user", username)
                 # self.set_secure_cookie("token", access_token)
 
-            self.redirect('%s/' % qiita_config.base_url)
+            self.redirect("%s/" % qiita_config.portal_dir)
         else:
             # step 1: no code from IdP yet, thus retrieve one now
             self.authorize_redirect(
@@ -358,3 +360,77 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
                 qiita_config.portal_dir, url_escape(msg)))
         else:
             return
+
+
+class AdminOIDCUserAuthorization(PortalEditBase):
+    """User Verification for Qiita-Account Creation following OIDC Login"""
+    @authenticated
+    @execute_as_transaction
+    def get(self):
+        # render page and transfer headers to be included for the table
+        self.check_admin()
+        headers=["email","name","affiliation","address", "phone"]
+        self.render('admin_user_authorization.html', headers=headers,
+                    submit_url="/admin/user_authorization/")
+
+    def post(self):
+        # check if logged in user is admin and fetch all checked boxes as well
+        # as the action
+        self.check_admin()
+        users = map(str, self.get_arguments('selected'))
+        action = self.get_argument('action')
+        # depending on the action either autorize (add) user or delete user
+        # from db (remove)
+        for user in users:
+            try:
+                with warnings.catch_warnings(record=True) as warns:
+                    if action == "Add":
+                        self.authorize_user(user)
+                    elif action == "Remove":
+                        user_to_delete = User(user)
+                        user_to_delete.delete(user)
+                    else:
+                        raise HTTPError(400,
+                                        reason="Unknown action: %s" % action)
+            except QiitaDBError as e:
+                self.write(action.upper() + " ERROR:<br/>" + str(e))
+                return
+        msg = '; '.join([str(w.message) for w in warns])
+        self.write(action + " completed successfully<br/>" + msg)
+
+    @authenticated
+    @execute_as_transaction
+    def authorize_user(self, user):
+        # authorize user by verifying login manually using tue standard Qiita
+        # verify function
+        self.check_admin()
+        User.verify_code(user, User(user).info['user_verify_code'], "create")
+        return
+
+
+class AdminOIDCUserAuthorizationAjax(PortalEditBase):
+    @authenticated
+    @execute_as_transaction
+    def get(self):
+        # retrieving users with an unverified level
+        self.check_admin()
+        with qdb.sql_connection.TRN:
+            sql = """SELECT email,name,affiliation,address,phone
+                     FROM qiita.qiita_user
+                     WHERE user_level_id='5'"""
+            qdb.sql_connection.TRN.add(sql)
+            users =  qdb.sql_connection.TRN.execute()[1:]
+        result = []
+        # fetching information for each user
+        for list in users:
+            for user in list:
+                usermail = user[0]
+                user_unit = {}
+                user_unit['email'] = User(usermail).email
+                user_unit['name'] = User(usermail).info['name']
+                user_unit['affiliation'] = User(usermail).info['affiliation']
+                user_unit['address'] = User(usermail).info['address']
+                user_unit['phone'] = User(usermail).info['phone']
+                result.append(user_unit)
+        # returning information as JSON
+        self.write(dumps(result))

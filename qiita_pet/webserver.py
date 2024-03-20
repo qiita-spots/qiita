@@ -21,7 +21,8 @@ from qiita_pet.handlers.base_handlers import (
     MainHandler, NoPageHandler, IFrame)
 from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler,
-    AuthLoginOIDCHandler)
+    AuthLoginOIDCHandler, AdminOIDCUserAuthorization,
+    AdminOIDCUserAuthorizationAjax)
 from qiita_pet.handlers.user_handlers import (
     ChangeForgotPasswordHandler, ForgotPasswordHandler, UserProfileHandler,
     UserMessagesHander, UserJobs)
@@ -242,10 +243,10 @@ class Application(tornado.web.Application):
         # through the settings file
         if len(qiita_config.oidc) > 0:
             handlers.extend([
-                (r"/auth/login_OIDC/(.*)", AuthLoginOIDCHandler)
-                #(r"/admin/user_authorization/", AdminOIDCUserAuthorization),
-                #(r"/admin/user_authorizationAjax/",
-                # AdminOIDCUserAuthorizationAjax),
+                (r"/auth/login_OIDC/(.*)", AuthLoginOIDCHandler),
+                (r"/admin/user_authorization/", AdminOIDCUserAuthorization),
+                (r"/admin/user_authorizationAjax/",
+                 AdminOIDCUserAuthorizationAjax),
             ])
 
         # rest endpoints
