@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from tornado.escape import url_escape, json_encode
+from tornado.auth import OAuth2Mixin
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config, r_client
@@ -177,3 +178,21 @@ class AuthLogoutHandler(BaseHandler):
     def get(self):
         self.clear_cookie("user")
         self.redirect("%s/" % qiita_config.portal_dir)
+
+
+class KeycloakMixin(OAuth2Mixin):
+    pass
+
+
+class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
+    async def get(self, login):
+        code = self.get_argument('code', False)
+        if code:
+            # step 2: we got a code and now want to exchange it for a user
+            # access token
+            print("step2")
+            pass
+        else:
+            # step 1: no code from IdP yet, thus retrieve one now
+            print("step1")
+            pass
