@@ -21,6 +21,44 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBDuplicateError,
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
+
+
+
+import os
+import datetime
+import inspect
+
+INDENT = 0
+
+def inc_indent():
+    global INDENT
+    INDENT += 1
+def dec_indent():
+    global INDENT
+    INDENT -= 1
+def stefan(msg, inc=0, fn='oidc.log'):
+    global INDENT
+    if inc < 0:
+        dec_indent()
+    fp='/homes/sjanssen/bcf_qiita/Logs/%s' % fn
+    current_time = datetime.datetime.now()
+    pid = os.getpid()
+    FH = open(fp, 'a')
+    source = inspect.stack()[1]
+    FH.write("%stime=%s, pid=%s, fct=%s, file=%s, msg=%s\n" % (
+        "~~" * INDENT,
+        current_time,
+        pid,
+        source.function,
+        source.filename,
+        msg))
+    FH.close()
+    if inc > 0:
+        inc_indent()
+
+
+
+
 class AuthCreateHandler(BaseHandler):
     """User Creation"""
     def get(self):
@@ -183,14 +221,39 @@ class KeycloakMixin(OAuth2Mixin):
 
 
 class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
-    async def get(self, login):
+    async def post(self, login):
         code = self.get_argument('code', False)
+
+        # Qiita might be configured for multiple identity providers. We learn
+        # which one the user chose through different name attributes of the
+        # html form button
+        idp = None
+        msg = ""
+        if hasattr(self, 'path_args') and (len(self.path_args) > 0) and \
+           (self.path_args[0] != None) and (self.path_args[0] != ""):
+            idp = self.path_args[0]
+        else:
+            msg = 'External Identity Provider not specified!'
+        if idp not in qiita_config.oidc.keys():
+            msg = 'Unknown Identity Provider "%s", please check config file.' % idp
+
+        if idp is None:
+            self.render("index.html", message=msg, level='warning')
+
+        stefan("code is %s, idp = %s" % (code, idp), inc=+1)
         if code:
             # step 2: we got a code and now want to exchange it for a user
             # access token
-            print("step2")
+            stefan("step2")
             pass
         else:
             # step 1: no code from IdP yet, thus retrieve one now
-            print("step1")
-            pass
+            stefan("step1")
+            self.authorize_redirect(
+                 redirect_uri=qiita_config.base_url + qiita_config.oidc[idp]['redirect_endpoint'],
+                 client_id=qiita_config.oidc[idp]['client_id'],
+                 client_secret=qiita_config.oidc[idp]['client_secret'],
+                 response_type='code',
+                 scope=['openid']
+            )
+        stefan("ende", inc=-1)
