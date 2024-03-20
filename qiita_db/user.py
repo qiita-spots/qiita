@@ -252,8 +252,8 @@ class User(qdb.base.QiitaObject):
         Parameters
         ----------
         email : str
-            The user's email fetched from the User Info of the Identity Provider
-            upon successful authentication.
+            The user's email fetched from the User Info of the Identity
+            Provider upon successful authentication.
 
         Raises
         ------
@@ -267,7 +267,8 @@ class User(qdb.base.QiitaObject):
         # OIDC user registration purely for admins
         info['email'] = email
         info['password'] = "not_necessary_due_to_OIDC"
-        #verify code is necessary to manually authorize users on the admin page
+        # verify code is necessary to manually authorize users on the admin
+        # page
         info['user_verify_code'] = "OIDC"
         qdb.util.check_table_cols(info, cls._table)
         columns = info.keys()

@@ -6,8 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from tornado.escape import url_escape, json_encode
+import urllib.parse
+import os
+
+from tornado.escape import url_escape, json_encode, json_decode
 from tornado.auth import OAuth2Mixin
+from tornado.curl_httpclient import CurlAsyncHTTPClient
+from tornado.web import HTTPError
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config, r_client
@@ -18,45 +23,8 @@ from qiita_db.util import send_email
 from qiita_db.user import User
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBDuplicateError,
                                  QiitaDBError)
+from qiita_db.logger import LogEntry
 # login code modified from https://gist.github.com/guillaumevincent/4771570
-
-
-
-
-
-import os
-import datetime
-import inspect
-
-INDENT = 0
-
-def inc_indent():
-    global INDENT
-    INDENT += 1
-def dec_indent():
-    global INDENT
-    INDENT -= 1
-def stefan(msg, inc=0, fn='oidc.log'):
-    global INDENT
-    if inc < 0:
-        dec_indent()
-    fp='/homes/sjanssen/bcf_qiita/Logs/%s' % fn
-    current_time = datetime.datetime.now()
-    pid = os.getpid()
-    FH = open(fp, 'a')
-    source = inspect.stack()[1]
-    FH.write("%stime=%s, pid=%s, fct=%s, file=%s, msg=%s\n" % (
-        "~~" * INDENT,
-        current_time,
-        pid,
-        source.function,
-        source.filename,
-        msg))
-    FH.close()
-    if inc > 0:
-        inc_indent()
-
-
 
 
 class AuthCreateHandler(BaseHandler):
@@ -219,43 +187,176 @@ class AuthLogoutHandler(BaseHandler):
 
 
 class KeycloakMixin(OAuth2Mixin):
-    pass
+    config = dict()
+
+    # environment variables that define proxies
+    vars_proxy = [env for env in os.environ if env.lower().endswith('_proxy')]
+    proxies = list(sorted({os.environ[var] for var in vars_proxy}))
+    if len(proxies) > 1:
+        msg = ("The OS serving Qiita defines multiple proxy servers via "
+               "environment variables, but with different values. Using the "
+               "first one:\n  %s") % '\n  '.join(
+                ['%s=%s' % (var, os.environ[var]) for var in vars_proxy])
+        LogEntry.create('Runtime', msg)
+    try:
+        config['proxy_host'] = ':'.join(proxies[0].split(':')[:-1])
+        config['proxy_port'] = int(proxies[0].split(':')[-1])
+    except IndexError:
+        LogEntry.create('Runtime', ("Your proxy configuration doesn't seem to "
+                                    "follow the host:port pattern."))
+
+    def get_auth_http_client(self):
+        return CurlAsyncHTTPClient()
+
+    async def get_authenticated_user(self, redirect_uri: str, code: str):
+        http = self.get_auth_http_client()
+        body = urllib.parse.urlencode(
+            {
+                "redirect_uri": redirect_uri,
+                "code": code,
+                "client_id": qiita_config.oidc[self.idp]['client_id'],
+                "client_secret": qiita_config.oidc[self.idp]['client_secret'],
+                "grant_type": "authorization_code"
+            }
+        )
+        response = await http.fetch(
+            self._OAUTH_ACCESS_TOKEN_URL,
+            method="POST",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            body=body,
+            **self.config,
+        )
+        return json_decode(response.body)
 
 
 class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
+    idp = None
+    email_support = 'qiita.help@gmail.com'
+
     async def post(self, login):
         code = self.get_argument('code', False)
 
         # Qiita might be configured for multiple identity providers. We learn
         # which one the user chose through different name attributes of the
         # html form button
-        idp = None
         msg = ""
+        self.idp = None
         if hasattr(self, 'path_args') and (len(self.path_args) > 0) and \
-           (self.path_args[0] != None) and (self.path_args[0] != ""):
-            idp = self.path_args[0]
+           (self.path_args[0] is not None) and (self.path_args[0] != ""):
+            self.idp = self.path_args[0]
         else:
             msg = 'External Identity Provider not specified!'
-        if idp not in qiita_config.oidc.keys():
-            msg = 'Unknown Identity Provider "%s", please check config file.' % idp
+        if self.idp not in qiita_config.oidc.keys():
+            msg = ('Unknown Identity Provider "%s", '
+                   'please check config file.') % self.idp
 
-        if idp is None:
+        if self.idp is None:
             self.render("index.html", message=msg, level='warning')
 
-        stefan("code is %s, idp = %s" % (code, idp), inc=+1)
+        self._OAUTH_AUTHORIZE_URL = qiita_config.oidc[self.idp][
+            'authorize_url']
+        self._OAUTH_ACCESS_TOKEN_URL = qiita_config.oidc[self.idp][
+            'accesstoken_url']
+        self._OAUTH_USERINFO_URL = qiita_config.oidc[self.idp][
+            'userinfo_url']
+
         if code:
             # step 2: we got a code and now want to exchange it for a user
             # access token
-            stefan("step2")
-            pass
+            access = await self.get_authenticated_user(
+                redirect_uri='%s%s' % (
+                    qiita_config.base_url,
+                    qiita_config.oidc[self.idp]['redirect_endpoint']),
+                code=code)
+            access_token = access['access_token']
+            if not access_token:
+                raise HTTPError(400, (
+                    "failed to exchange code for access token with "
+                    "identity provider '%s'") % self.idp)
+
+            # step 3: obtain user information (email, username, ...) from IdP
+            http = self.get_auth_http_client()
+            user_info_res = await http.fetch(
+                self._OAUTH_USERINFO_URL,
+                method="GET",
+                headers={"Accept": "application/json",
+                         "Authorization": "Bearer {}".format(access_token)},
+                **self.config,
+            )
+            user_info = json_decode(user_info_res.body.decode(
+                'utf8', 'replace'))
+
+            if ('email' not in user_info.keys()) or \
+               (user_info['email'] is None) or (user_info['email'] == ""):
+                raise HTTPError(400, (
+                    "Email address was not provided "
+                    "from your identity provider '%s'") % self.idp)
+
+            username = user_info['email']
+            if not User.exists(username):
+                self.create_new_user(username)
+            else:
+                self.not_verified(username)
+                self.set_secure_cookie("user", username)
+                # self.set_secure_cookie("token", access_token)
+
+            self.redirect('%s/' % qiita_config.base_url)
         else:
             # step 1: no code from IdP yet, thus retrieve one now
-            stefan("step1")
             self.authorize_redirect(
-                 redirect_uri=qiita_config.base_url + qiita_config.oidc[idp]['redirect_endpoint'],
-                 client_id=qiita_config.oidc[idp]['client_id'],
-                 client_secret=qiita_config.oidc[idp]['client_secret'],
+                 redirect_uri='%s%s' % (
+                    qiita_config.base_url,
+                    qiita_config.oidc[self.idp]['redirect_endpoint']),
+                 client_id=qiita_config.oidc[self.idp]['client_id'],
+                 client_secret=qiita_config.oidc[self.idp]['client_secret'],
                  response_type='code',
                  scope=['openid']
             )
-        stefan("ende", inc=-1)
+    get = post  # redirect will use GET method
+
+    @execute_as_transaction
+    def create_new_user(self, username):
+        try:
+            created = User.create_oidc(username)
+        except QiitaDBDuplicateError:
+            msg = "Email already registered as a user"
+        if created:
+            try:
+                # qiita_config.base_url doesn't have a / at the end, but the
+                # qiita_config.portal_dir has it at the beginning but not at
+                # the end. This constructs the correct URL
+                msg = (("<h3>User Successfully Registered!</h3><p>Your Qiita "
+                        "account has been successfully registered using '%s', "
+                        "which was provided by the identity provider '%s'. "
+                        "Your account is now awaiting authorization by a Qiita"
+                        " admin.</p><p>If you have any questions regarding "
+                        "the authorization process, please email us at <a "
+                        "href=\"mailto:%s\">%s</a>.</p>") % (
+                            username,
+                            qiita_config.oidc[self.idp]['label'],
+                            self.email_support,
+                            self.email_support))
+
+                self.redirect(u"%s/?level=success&message=%s" % (
+                    qiita_config.portal_dir, url_escape(msg)))
+            except Exception:
+                msg = (("Unable to create account. Please contact the qiita "
+                        "developers at <a href='mailto:%s'>%s</a>") % (
+                        self.email_support, self.email_support))
+                self.redirect(u"%s/?level=danger&message=%s" % (
+                    qiita_config.portal_dir, url_escape(msg)))
+                return
+        else:
+            error_msg = u"?error=" + url_escape(msg)
+            self.redirect(u"%s/%s" % (qiita_config.portal_dir, error_msg))
+
+    def not_verified(self, username):
+        user = User(username)
+        if user.level == "unverified":
+            msg = (("You are not yet verified by an admin. Please wait or "
+                    "contact the qiita developers at <a href='mailto:%s"
+                    "'>%s</a>") % (self.email_support, self.email_support))
+            self.redirect(u"%s/?level=danger&message=%s" % (
+                qiita_config.portal_dir, url_escape(msg)))
+        else:
+            return
