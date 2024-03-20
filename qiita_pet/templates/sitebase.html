@@ -160,7 +160,7 @@
         // Based on http://codepen.io/willvincent/pen/LbeKKW
         //    and   https://datatables.net/examples/api/row_details.html
 
-        {% if len(qiita_config.oidc) > 0 %}
+        {% if len(qiita_config.oidc) > 1 %}
           $('.modal').css({
             'top': '30%',
             'margin-top': '-'+($('.modal').height() / 2)+'px',
