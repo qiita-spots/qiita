@@ -117,6 +117,24 @@ class ConfigurationManager(object):
         The script used to start the plugins
     plugin_dir : str
         The path to the directory containing the plugin configuration files
+    None (=internal user authentication) or one or several 'oidc_' sections
+    to use external identity providers (IdP) with following values:
+    client_id : str
+        The name you registered Qiita with at the external IdP
+    client_secret : str
+        A secret string with which Qiita identifies at the external IdP (not
+        all IdPs need a secret)
+    redirect_endpoint : str
+        The internal Qiita endpoint the IdP shall redirect the user after
+        logging in
+    authorize_url : str
+        The URL of the IdP to obtain a code (step 1)
+    accesstoken_url : str
+        The URL of the IdP to exchange the code from step 1 for an access
+        token (step 2)
+    userinfo_url : str
+        The URL of the IdP to obtain information about the user, like email,
+        username, ...
 
     Raises
     ------
@@ -152,6 +170,7 @@ class ConfigurationManager(object):
         self._get_vamps(config)
         self._get_portal(config)
         self._iframe(config)
+        self._get_oidc(config)
 
     def _get_main(self, config):
         """Get the configuration of the main section"""
@@ -319,3 +338,35 @@ class ConfigurationManager(object):
 
     def _iframe(self, config):
         self.iframe_qiimp = config.get('iframe', 'QIIMP')
+
+    def _get_oidc(self, config):
+        """Get the configuration of the open ID connect section(s)
+           User can provide multiple sections with naming schema oidc_foo where
+           foo is the name of an Identity Provider - Qiita can handle multiple
+           Identity Providers simultaneously.
+           """
+        PREFIX = 'oidc_'
+        self.oidc = dict()
+        for section_name in config.sections():
+            if section_name.startswith(PREFIX):
+                provider = dict()
+                provider['client_id'] = config.get(
+                    section_name, 'CLIENT_ID', fallback=None)
+                provider['client_secret'] = config.get(
+                    section_name, 'CLIENT_SECRET', fallback=None)
+                provider['redirect_endpoint'] = config.get(
+                    section_name, 'REDIRECT_ENDPOINT')
+                if provider['redirect_endpoint']:
+                    if not provider['redirect_endpoint'].startswith('/'):
+                        provider['redirect_endpoint'] = '/%s' % provider[
+                            'redirect_endpoint']
+                    if provider['redirect_endpoint'].endswith('/'):
+                        provider['redirect_endpoint'] = provider[
+                            'redirect_endpoint'][:-1]
+                provider['authorize_url'] = config.get(
+                    section_name, 'AUTHORIZE_URL')
+                provider['accesstoken_url'] = config.get(
+                    section_name, 'ACCESS_TOKEN_URL')
+                provider['userinfo_url'] = config.get(
+                    section_name, 'USERINFO_URL')
+                self.oidc[section_name[len(PREFIX):]] = provider

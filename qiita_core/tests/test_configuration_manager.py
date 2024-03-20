@@ -214,6 +214,32 @@ class ConfigurationManagerTests(TestCase):
         obs._get_portal(self.conf)
         self.assertEqual(obs.portal_dir, "/gold_portal")
 
+    def test_get_postgres(self):
+        SECTION_NAME = 'oidc_academicid'
+        obs = ConfigurationManager()
+        self.assertTrue(len(obs.oidc), 1)
+        self.assertTrue(obs.oidc.keys(), [SECTION_NAME])
+
+        # assert endpoint starts with /
+        self.conf.set(SECTION_NAME, 'REDIRECT_ENDPOINT', 'auth/something')
+        obs._get_oidc(self.conf)
+        self.assertEqual(obs.oidc['academicid']['redirect_endpoint'],
+                         '/auth/something')
+
+        # assert endpoint does not end with /
+        self.conf.set(SECTION_NAME, 'REDIRECT_ENDPOINT', 'auth/something/')
+        obs._get_oidc(self.conf)
+        self.assertEqual(obs.oidc['academicid']['redirect_endpoint'],
+                         '/auth/something')
+
+        self.conf.set(SECTION_NAME, 'CLIENT_ID', 'foo')
+        obs._get_oidc(self.conf)
+        self.assertEqual(obs.oidc['academicid']['client_id'], "foo")
+
+        self.assertTrue('gwdg.de' in obs.oidc['academicid']['authorize_url'])
+        self.assertTrue('gwdg.de' in obs.oidc['academicid']['accesstoken_url'])
+        self.assertTrue('gwdg.de' in obs.oidc['academicid']['userinfo_url'])
+
 
 CONF = """
 # ------------------------------ Main settings --------------------------------
@@ -383,6 +409,32 @@ PORTAL_FP = /tmp/portal.cfg
 # ----------------------------- iframes settings ---------------------------
 [iframe]
 QIIMP = https://localhost:8898/
+
+# ------------------- External Identity Provider settings ------------------
+[oidc_academicid]
+
+# client ID for Qiita as registered at your Identity Provider of choice
+CLIENT_ID = gi-qiita-prod
+
+# client secret to verify Qiita as the correct client. Not all IdPs require this
+CLIENT_SECRET = 5M6zKl8SKrlnRP4tPgtrgZpCpcYCj7uK
+
+# redirect URL (end point in your Qiita instance), to which the IdP redirects
+# after user types in his/her credentials. If you don't want to change code in
+# qiita_pet/webserver.py the URL must follow the pattern:
+# base_URL/auth/login_OIDC/foo where foo is the name of this config section
+# without the oidc_ prefix!
+REDIRECT_ENDPOINT = /auth/login_OIDC/academicid
+
+# URL for step 1: obtain code
+AUTHORIZE_URL = https://keycloak.sso.gwdg.de/auth/realms/academiccloud/protocol/openid-connect/auth
+
+# URL for step 2: obtain user token
+ACCESS_TOKEN_URL = https://keycloak.sso.gwdg.de/auth/realms/academiccloud/protocol/openid-connect/token
+
+# URL for step 3: obtain user infos
+USERINFO_URL = https://keycloak.sso.gwdg.de/auth/realms/academiccloud/protocol/openid-connect/userinfo
+
 """
 
 if __name__ == '__main__':
