@@ -135,6 +135,8 @@ class ConfigurationManager(object):
     userinfo_url : str
         The URL of the IdP to obtain information about the user, like email,
         username, ...
+    label : str
+        A speaking label for the Identity Provider
 
     Raises
     ------
@@ -369,4 +371,8 @@ class ConfigurationManager(object):
                     section_name, 'ACCESS_TOKEN_URL')
                 provider['userinfo_url'] = config.get(
                     section_name, 'USERINFO_URL')
+                provider['label'] = config.get(section_name, 'LABEL')
+                if not provider['label']:
+                    # fallback, if no label is provided
+                    provider['label'] = section_name[len(PREFIX):]
                 self.oidc[section_name[len(PREFIX):]] = provider
