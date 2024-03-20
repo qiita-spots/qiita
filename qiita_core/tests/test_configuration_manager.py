@@ -315,6 +315,13 @@ class ConfigurationManagerTests(TestCase):
         self.assertTrue('gwdg.de' in obs.oidc['academicid']['accesstoken_url'])
         self.assertTrue('gwdg.de' in obs.oidc['academicid']['userinfo_url'])
 
+        self.assertEqual(obs.oidc['academicid']['label'],
+                         'GWDG Academic Cloud')
+        # test fallback, if no label is provided
+        self.conf.set(SECTION_NAME, 'LABEL', '')
+        obs._get_oidc(self.conf)
+        self.assertEqual(obs.oidc['academicid']['label'], 'academicid')
+
 
 CONF = """
 # ------------------------------ Main settings --------------------------------
