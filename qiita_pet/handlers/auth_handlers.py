@@ -8,6 +8,7 @@
 
 import urllib.parse
 import os
+import warnings
 
 from tornado.escape import url_escape, json_encode, json_decode
 from tornado.auth import OAuth2Mixin
@@ -371,7 +372,7 @@ class AdminOIDCUserAuthorization(PortalEditBase):
     def get(self):
         # render page and transfer headers to be included for the table
         self.check_admin()
-        headers=["email","name","affiliation","address", "phone"]
+        headers = ["email", "name", "affiliation", "address", "phone"]
         self.render('admin_user_authorization.html', headers=headers,
                     submit_url="/admin/user_authorization/")
 
@@ -421,7 +422,7 @@ class AdminOIDCUserAuthorizationAjax(PortalEditBase):
                      FROM qiita.qiita_user
                      WHERE user_level_id='5'"""
             qdb.sql_connection.TRN.add(sql)
-            users =  qdb.sql_connection.TRN.execute()[1:]
+            users = qdb.sql_connection.TRN.execute()[1:]
         result = []
         # fetching information for each user
         for list in users:
@@ -435,4 +436,4 @@ class AdminOIDCUserAuthorizationAjax(PortalEditBase):
                 user_unit['phone'] = User(usermail).info['phone']
                 result.append(user_unit)
         # returning information as JSON
-        self.write(dumps(result))
+        self.write(json_encode(result))
