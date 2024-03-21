@@ -117,6 +117,12 @@ class ConfigurationManager(object):
         The script used to start the plugins
     plugin_dir : str
         The path to the directory containing the plugin configuration files
+    help_email : str
+        The email address a user should write to when asking for help
+        Defaults to qiita.help@gmail.com
+    sysadmin_email : str
+        The email address, Qiita sends internal notifications to a sys admin
+        Defaults to jdereus@health.ucsd.edu
 
     Raises
     ------
@@ -233,6 +239,14 @@ class ConfigurationManager(object):
         if not self.key_file:
             self.key_file = join(install_dir, 'qiita_core', 'support_files',
                                  'ci_server.key')
+
+        self.help_email = config.get('main', 'HELP_EMAIL')
+        if not self.help_email:
+            self.help_email = 'qiita.help@gmail.com'
+
+        self.sysadmin_email = config.get('main', 'SYSADMIN_EMAIL')
+        if not self.sysadmin_email:
+            self.sysadmin_email = 'jdereus@health.ucsd.edu'
 
     def _get_job_scheduler(self, config):
         """Get the configuration of the job_scheduler section"""

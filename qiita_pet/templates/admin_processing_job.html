@@ -191,7 +191,7 @@
         $inp.attr('type', 'file');
       }
       else {
-        bootstrapAlert("Error: Parameter type (" + p_type + ") not recognized. Please, take a screenshot and <a href='mailto:qiita.help@gmail.com'>contact us</a>", "danger");
+        bootstrapAlert("Error: Parameter type (" + p_type + ") not recognized. Please, take a screenshot and <a href='mailto:{% raw qiita_config.portal_dir %}'>contact us</a>", "danger");
       }
     }
 

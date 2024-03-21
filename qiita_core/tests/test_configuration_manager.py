@@ -180,6 +180,24 @@ class ConfigurationManagerTests(TestCase):
 
         self.assertEqual(obs.qiita_env, "")
 
+    def test_help_email(self):
+        obs = ConfigurationManager()
+
+        obs._get_main(self.conf)
+        self.assertEqual(obs.help_email, 'foo@bar.com')
+        self.assertEqual(obs.sysadmin_email, 'jeff@bar.com')
+
+        # test if it falls back to qiita.help@gmail.com
+        self.conf.set('main', 'HELP_EMAIL', '')
+        obs._get_main(self.conf)
+        self.assertEqual(obs.help_email, 'qiita.help@gmail.com')
+
+        # test if it falls back to qiita.help@gmail.com
+        self.conf.set('main', 'SYSADMIN_EMAIL', '')
+        obs._get_main(self.conf)
+        self.assertEqual(obs.sysadmin_email, 'jdereus@health.ucsd.edu')
+
+
     def test_get_job_scheduler(self):
         obs = ConfigurationManager()
 
@@ -273,6 +291,12 @@ COOKIE_SECRET = SECRET
 
 # The value used to secure JWTs for delegated permission artifact download.
 JWT_SECRET = SUPER_SECRET
+
+# Address a user should write to when asking for help
+HELP_EMAIL = foo@bar.com
+
+# The email address, Qiita sends internal notifications to a sys admin
+SYSADMIN_EMAIL = jeff@bar.com
 
 # ----------------------------- SMTP settings -----------------------------
 [smtp]

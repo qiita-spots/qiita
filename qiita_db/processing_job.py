@@ -493,7 +493,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 samples, columns, input_size = self.shape
                 parts = []
                 error_msg = ('Obvious incorrect allocation. Please '
-                             'contact qiita.help@gmail.com')
+                             'contact %s' % qiita_config.help_email)
                 for part in allocation.split('--'):
                     param = ''
                     if part.startswith('time '):
@@ -902,7 +902,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if self.user.level in {'admin', 'wet-lab admin'}:
                     if value == 'error':
                         qdb.util.send_email(
-                            'jdereus@health.ucsd.edu', msg['subject'],
+                            qiita_config.sysadmin_email, msg['subject'],
                             msg['message'])
 
             sql = """UPDATE qiita.processing_job

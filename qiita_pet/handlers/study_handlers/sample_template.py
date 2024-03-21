@@ -214,8 +214,8 @@ def sample_template_handler_patch_request(user, req_op, req_path,
                 # the system
                 filepath = req_value
                 if not exists(filepath):
-                    reason = ('Upload file not found (%s), please report to '
-                              'qiita.help@gmail.com' % filepath)
+                    reason = ('Upload file not found (%s), please report to %s'
+                              % (filepath, qiita_config.help_email))
                     raise HTTPError(404, reason=reason)
             else:
                 # Check if the file exists
