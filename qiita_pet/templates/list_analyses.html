@@ -121,7 +121,7 @@
         message.append(' '+data[level]);
         // prepend the "Need help" message
         if (level == 'warning' || level == 'danger'){
-          message.append('<p style="text-align:center">Need help? Send us an <a href="mailto:qiita.help@gmail.com">email</a>.</p>');
+          message.append('<p style="text-align:center">Need help? Send us an <a href="mailto:{% raw qiita_config.portal_dir %}">email</a>.</p>');
         }
         analyses_all_messages.prepend(message);
       }
