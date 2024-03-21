@@ -160,18 +160,6 @@
         // Based on http://codepen.io/willvincent/pen/LbeKKW
         //    and   https://datatables.net/examples/api/row_details.html
 
-        {% if len(qiita_config.oidc) > 1 %}
-          $('.modal').css({
-            'top': '30%',
-            'margin-top': '-'+($('.modal').height() / 2)+'px',
-            'margin-left': '+'+($('.modal').width() / 3)+'px'});
-          $('#qiita_signin_modal').click(function(e){
-            e.preventDefault();
-            $('.qiita_auth_signin_options').modal('hide');
-            window.location.href = '{% raw qiita_config.portal_dir %}';
-          });
-        {% end %}
-
         Vue.component('data-table-processing-jobs', {
         template: '<table id="processing-jobs-datatables"></table>',
         props: ['jobs'],
@@ -467,22 +455,7 @@
             <!-- if multiple alternative identity providers are configures, user must make a choice -->
             {% elif len(qiita_config.oidc) > 1 %}
               <ul class="navbar-form navbar-right" role="form" method="post">
-                <button id="oidc_modal_button" onclick="document.getElementById('oidc_modal').style.display='block'" class="btn btn-success">Sign In</button>
-                <div id="oidc_modal" class="modal modal-dialog-centered" style="width:60%; ">
-                  <div class="modal-content">
-                    <div class="modal-dialog modal-dialog-centered" role="document">
-                      <span onclick="document.getElementById('oidc_modal').style.display='none'" class="close">&times;</span>
-                      <p>Please Login via your preferred OIDC Identity Provider</p>
-                      <div style="display: inline-flex;">
-                        {% for idp in qiita_config.oidc %}
-                          <form action="{% raw qiita_config.portal_dir %}{% raw qiita_config.oidc[idp]['redirect_endpoint'] %}" method="post">
-                            <button type="submit" class="btn btn-success" name="{{idp}}">{{qiita_config.oidc[idp]['label']}}</button>
-                          </form>
-                        {% end %}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <a type="button" data-toggle="modal" data-target=".qiita-oidc" class="btn btn-success">Sign In</a>
               </ul>
             <!-- otherwise show the login form -->
             {% else %}
@@ -657,6 +630,26 @@
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- login via multiple identity service provider shown as a modal view -->
+    <div class="modal fade qiita-oidc" tabindex="-1" role="dialog" aria-labelledby="Login through external service provider">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Login</h4>
+          </div>
+          <div class="modal-body">
+            <p>Please choose your login provider!</p>
+            {% for idp in qiita_config.oidc %}
+              <a href="{% raw qiita_config.portal_dir %}{% raw qiita_config.oidc[idp]['redirect_endpoint'] %}" class="btn btn-success">{{qiita_config.oidc[idp]['label']}}</a>
+            {% end %}
+          </div>
+          <div class="modal-footer">
+          </div>
+        </div>
       </div>
     </div>
 
