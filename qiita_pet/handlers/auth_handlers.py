@@ -14,6 +14,7 @@ from tornado.escape import url_escape, json_encode, json_decode
 from tornado.auth import OAuth2Mixin
 from tornado.curl_httpclient import CurlAsyncHTTPClient
 from tornado.web import HTTPError, authenticated
+from tornado.httpclient import HTTPClientError
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.portal import PortalEditBase
@@ -191,6 +192,7 @@ class AuthLogoutHandler(BaseHandler):
 
 class KeycloakMixin(OAuth2Mixin):
     config = dict()
+    email_support = 'qiita.help@gmail.com'
 
     # environment variables that define proxies
     vars_proxy = [env for env in os.environ if env.lower().endswith('_proxy')]
@@ -222,14 +224,22 @@ class KeycloakMixin(OAuth2Mixin):
                 "grant_type": "authorization_code"
             }
         )
-        response = await http.fetch(
-            self._OAUTH_ACCESS_TOKEN_URL,
-            method="POST",
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            body=body,
-            **self.config,
-        )
-        return json_decode(response.body)
+        try:
+            response = await http.fetch(
+                self._OAUTH_ACCESS_TOKEN_URL,
+                method="POST",
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                body=body,
+                **self.config)
+            return json_decode(response.body)
+        except HTTPClientError as e:
+            msg = ("The external identity provider '%s' returns an '%s' error"
+                   ", when sending a request against '%s'. Thus, we cannot log"
+                   "you in. Please contact the Qiita support team at "
+                   "<a href='mailto:%s'>%s</a>") % (
+                   self.idp, str(e), self._OAUTH_ACCESS_TOKEN_URL,
+                   self.email_support, self.email_support)
+            self.render("index.html", message=msg, level='danger')
 
 
 class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
@@ -252,6 +262,7 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
         if self.idp not in qiita_config.oidc.keys():
             msg = ('Unknown Identity Provider "%s", '
                    'please check config file.') % self.idp
+            self.idp = None
 
         if self.idp is None:
             self.render("index.html", message=msg, level='warning')
@@ -279,31 +290,42 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
 
             # step 3: obtain user information (email, username, ...) from IdP
             http = self.get_auth_http_client()
-            user_info_res = await http.fetch(
-                self._OAUTH_USERINFO_URL,
-                method="GET",
-                headers={"Accept": "application/json",
-                         "Authorization": "Bearer {}".format(access_token)},
-                **self.config,
-            )
-            user_info = json_decode(user_info_res.body.decode(
-                'utf8', 'replace'))
+            try:
+                user_info_res = await http.fetch(
+                    self._OAUTH_USERINFO_URL,
+                    method="GET",
+                    headers={
+                        "Accept": "application/json",
+                        "Authorization": "Bearer {}".format(access_token)},
+                    **self.config,
+                )
+                user_info = json_decode(user_info_res.body.decode(
+                    'utf8', 'replace'))
 
-            if ('email' not in user_info.keys()) or \
-               (user_info['email'] is None) or (user_info['email'] == ""):
-                raise HTTPError(400, (
-                    "Email address was not provided "
-                    "from your identity provider '%s'") % self.idp)
+                if ('email' not in user_info.keys()) or \
+                   (user_info['email'] is None) or (user_info['email'] == ""):
+                    raise HTTPError(400, (
+                        "Email address was not provided "
+                        "from your identity provider '%s'") % self.idp)
 
-            username = user_info['email']
-            if not User.exists(username):
-                self.create_new_user(username)
-            else:
-                self.not_verified(username)
-                self.set_secure_cookie("user", username)
-                # self.set_secure_cookie("token", access_token)
+                username = user_info['email']
+                if not User.exists(username):
+                    self.create_new_user(username)
+                else:
+                    self.not_verified(username)
+                    self.set_secure_cookie("user", username)
+                    # self.set_secure_cookie("token", access_token)
 
-            self.redirect("%s/" % qiita_config.portal_dir)
+                self.redirect("%s/" % qiita_config.portal_dir)
+            except HTTPClientError as e:
+                msg = (
+                    "The external identity provider '%s' returns an '%s' error"
+                    ", when sending a request against '%s'. Thus, we cannot "
+                    "log you in. Please contact the Qiita support team at "
+                    "<a href='mailto:%s'>%s</a>") % (
+                    self.idp, str(e), self._OAUTH_USERINFO_URL,
+                    self.email_support, self.email_support)
+                self.render("index.html", message=msg, level='danger')
         else:
             # step 1: no code from IdP yet, thus retrieve one now
             self.authorize_redirect(
