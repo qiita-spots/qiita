@@ -106,13 +106,6 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", MainHandler),
-            (r"/auth/login/", AuthLoginHandler),
-            (r"/auth/logout/", AuthLogoutHandler),
-            (r"/auth/create/", AuthCreateHandler),
-            (r"/auth/verify/(.*)", AuthVerifyHandler),
-            (r"/auth/forgot/", ForgotPasswordHandler),
-            (r"/auth/reset/(.*)", ChangeForgotPasswordHandler),
-            (r"/profile/", UserProfileHandler),
             (r"/user/messages/", UserMessagesHander),
             (r"/user/jobs/", UserJobs),
             (r"/static/(.*)", tornado.web.StaticFileHandler,
@@ -247,6 +240,17 @@ class Application(tornado.web.Application):
                 (r"/admin/user_authorization/", AdminOIDCUserAuthorization),
                 (r"/admin/user_authorizationAjax/",
                  AdminOIDCUserAuthorizationAjax),
+            ])
+        else:
+            # Qiita's traditional, internal user authentication
+            handlers.extend([
+                (r"/auth/login/", AuthLoginHandler),
+                (r"/auth/logout/", AuthLogoutHandler),
+                (r"/auth/create/", AuthCreateHandler),
+                (r"/auth/verify/(.*)", AuthVerifyHandler),
+                (r"/auth/forgot/", ForgotPasswordHandler),
+                (r"/auth/reset/(.*)", ChangeForgotPasswordHandler),
+                (r"/profile/", UserProfileHandler)
             ])
 
         # rest endpoints
