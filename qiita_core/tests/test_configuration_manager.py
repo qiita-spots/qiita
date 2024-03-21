@@ -197,7 +197,6 @@ class ConfigurationManagerTests(TestCase):
         obs._get_main(self.conf)
         self.assertEqual(obs.sysadmin_email, 'jdereus@health.ucsd.edu')
 
-
     def test_get_job_scheduler(self):
         obs = ConfigurationManager()
 

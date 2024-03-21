@@ -12,7 +12,7 @@ from tempfile import NamedTemporaryFile
 
 from tornado.web import authenticated, HTTPError
 
-from qiita_core.qiita_settings import r_client
+from qiita_core.qiita_settings import r_client, qiita_config
 from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import get_files_from_uploads_folders
