@@ -119,10 +119,8 @@ class ConfigurationManager(object):
         The path to the directory containing the plugin configuration files
     help_email : str
         The email address a user should write to when asking for help
-        Defaults to qiita.help@gmail.com
     sysadmin_email : str
         The email address, Qiita sends internal notifications to a sys admin
-        Defaults to jdereus@health.ucsd.edu
 
     Raises
     ------
@@ -247,6 +245,11 @@ class ConfigurationManager(object):
                 "section of Qiita's config file. This address is essential "
                 "for users to ask for help as it is displayed at various "
                 "location throughout Qiita's web pages.")
+        if (self.help_email == 'foo@bar.com') and \
+           (self.test_environment is False):
+            warnings.warn(
+                "Using the github fake email for HELP_EMAIL, "
+                "are you sure this is OK?")
 
         self.sysadmin_email = config.get('main', 'SYSADMIN_EMAIL')
         if not self.sysadmin_email:
@@ -255,6 +258,11 @@ class ConfigurationManager(object):
                 "section of Qiita's config file. Serious issues will "
                 "automatically be reported to a sys admin, an according "
                 "address is therefore required!")
+        if (self.sysadmin_email == 'jeff@bar.com') and \
+           (self.test_environment is False):
+            warnings.warn(
+                "Using the github fake email for SYSADMIN_EMAIL, "
+                "are you sure this is OK?")
 
     def _get_job_scheduler(self, config):
         """Get the configuration of the job_scheduler section"""
