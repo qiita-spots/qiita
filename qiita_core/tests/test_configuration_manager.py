@@ -189,13 +189,13 @@ class ConfigurationManagerTests(TestCase):
 
         # test if it falls back to qiita.help@gmail.com
         self.conf.set('main', 'HELP_EMAIL', '')
-        obs._get_main(self.conf)
-        self.assertEqual(obs.help_email, 'qiita.help@gmail.com')
+        with self.assertRaises(ValueError):
+            obs._get_main(self.conf)
 
         # test if it falls back to qiita.help@gmail.com
         self.conf.set('main', 'SYSADMIN_EMAIL', '')
-        obs._get_main(self.conf)
-        self.assertEqual(obs.sysadmin_email, 'jdereus@health.ucsd.edu')
+        with self.assertRaises(ValueError):
+            obs._get_main(self.conf)
 
     def test_get_job_scheduler(self):
         obs = ConfigurationManager()

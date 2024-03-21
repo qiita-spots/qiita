@@ -242,11 +242,19 @@ class ConfigurationManager(object):
 
         self.help_email = config.get('main', 'HELP_EMAIL')
         if not self.help_email:
-            self.help_email = 'qiita.help@gmail.com'
+            raise ValueError(
+                "You did not specify the HELP_EMAIL address in the main "
+                "section of Qiita's config file. This address is essential "
+                "for users to ask for help as it is displayed at various "
+                "location throughout Qiita's web pages.")
 
         self.sysadmin_email = config.get('main', 'SYSADMIN_EMAIL')
         if not self.sysadmin_email:
-            self.sysadmin_email = 'jdereus@health.ucsd.edu'
+            raise ValueError(
+                "You did not specify the SYSADMIN_EMAIL address in the main "
+                "section of Qiita's config file. Serious issues will "
+                "automatically be reported to a sys admin, an according "
+                "address is therefore required!")
 
     def _get_job_scheduler(self, config):
         """Get the configuration of the job_scheduler section"""
