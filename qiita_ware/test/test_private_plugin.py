@@ -403,7 +403,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertEqual(job.resource_allocation_info, 'Not valid')
         self.assertEqual(job.status, 'error')
         self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
-                         'contact qiita.help@gmail.com')
+                         'contact foo@bar.com')
 
         # now let's test something that will cause not a number input_size*N
         job = self._create_job('build_analysis_files', {
@@ -412,7 +412,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertEqual(job.resource_allocation_info, 'Not valid')
         self.assertEqual(job.status, 'error')
         self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
-                         'contact qiita.help@gmail.com')
+                         'contact foo@bar.com')
 
         # now let's test something that will return a negative number -samples
         job = self._create_job('build_analysis_files', {
@@ -421,7 +421,7 @@ class TestPrivatePlugin(BaseTestPrivatePlugin):
         self.assertEqual(job.resource_allocation_info, 'Not valid')
         self.assertEqual(job.status, 'error')
         self.assertEqual(job.log.msg, 'Obvious incorrect allocation. Please '
-                         'contact qiita.help@gmail.com')
+                         'contact foo@bar.com')
 
         # now let's test a full build_analysis_files job
         job = self._create_job('build_analysis_files', {
