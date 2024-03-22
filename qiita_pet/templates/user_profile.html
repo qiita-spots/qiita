@@ -34,6 +34,7 @@ $( document ).ready(function() { dualpass_validator(); });
       <button type="submit" class="btn btn-success">Save Edits</button>
     </form>
   </div>
+  {% if len(qiita_config.oidc) == 0 %}  <!-- user cannot change password here, but with his/her external identity provider -->
   <div class="col-lg-6">
   <h3>Change Password</h3>
   <form role="form" action="{% raw qiita_config.portal_dir %}/profile/" method="post" id="change_pass" name="change_pass" class="dualpass">
@@ -54,5 +55,6 @@ $( document ).ready(function() { dualpass_validator(); });
 <button class="btn btn-danger">Change Password</button>
 </form>
   </div>
+  {% end %}
 </div>
 {%end%}

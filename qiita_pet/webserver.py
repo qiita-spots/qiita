@@ -109,6 +109,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/", MainHandler),
             (r"/auth/logout/", AuthLogoutHandler),
+            (r"/profile/", UserProfileHandler),
             (r"/user/messages/", UserMessagesHander),
             (r"/user/jobs/", UserJobs),
             (r"/static/(.*)", tornado.web.StaticFileHandler,
@@ -256,8 +257,7 @@ class Application(tornado.web.Application):
                 (r"/auth/create/", AuthCreateHandler),
                 (r"/auth/verify/(.*)", AuthVerifyHandler),
                 (r"/auth/forgot/", ForgotPasswordHandler),
-                (r"/auth/reset/(.*)", ChangeForgotPasswordHandler),
-                (r"/profile/", UserProfileHandler)
+                (r"/auth/reset/(.*)", ChangeForgotPasswordHandler)
             ])
 
         # rest endpoints
