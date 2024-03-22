@@ -117,6 +117,10 @@ class ConfigurationManager(object):
         The script used to start the plugins
     plugin_dir : str
         The path to the directory containing the plugin configuration files
+    help_email : str
+        The email address a user should write to when asking for help
+    sysadmin_email : str
+        The email address, Qiita sends internal notifications to a sys admin
     None (=internal user authentication) or one or several 'oidc_' sections
     to use external identity providers (IdP) with following values:
     client_id : str
@@ -254,6 +258,32 @@ class ConfigurationManager(object):
         if not self.key_file:
             self.key_file = join(install_dir, 'qiita_core', 'support_files',
                                  'ci_server.key')
+
+        self.help_email = config.get('main', 'HELP_EMAIL')
+        if not self.help_email:
+            raise ValueError(
+                "You did not specify the HELP_EMAIL address in the main "
+                "section of Qiita's config file. This address is essential "
+                "for users to ask for help as it is displayed at various "
+                "location throughout Qiita's web pages.")
+        if (self.help_email == 'foo@bar.com') and \
+           (self.test_environment is False):
+            warnings.warn(
+                "Using the github fake email for HELP_EMAIL, "
+                "are you sure this is OK?")
+
+        self.sysadmin_email = config.get('main', 'SYSADMIN_EMAIL')
+        if not self.sysadmin_email:
+            raise ValueError(
+                "You did not specify the SYSADMIN_EMAIL address in the main "
+                "section of Qiita's config file. Serious issues will "
+                "automatically be reported to a sys admin, an according "
+                "address is therefore required!")
+        if (self.sysadmin_email == 'jeff@bar.com') and \
+           (self.test_environment is False):
+            warnings.warn(
+                "Using the github fake email for SYSADMIN_EMAIL, "
+                "are you sure this is OK?")
 
     def _get_job_scheduler(self, config):
         """Get the configuration of the job_scheduler section"""

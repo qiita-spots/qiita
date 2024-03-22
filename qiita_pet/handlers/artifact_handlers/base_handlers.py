@@ -370,7 +370,7 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
 
             sid = artifact.study.id
             if artifact.visibility == 'awaiting_approval':
-                email_to = 'qiita.help@gmail.com'
+                email_to = qiita_config.help_email
                 subject = ('QIITA: Artifact %s awaiting_approval. Study %d, '
                            'Prep %d' % (artifact_id, sid,
                                         artifact.prep_templates[0].id))
