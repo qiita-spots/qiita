@@ -245,7 +245,7 @@ class User(qdb.base.QiitaObject):
             return cls(email)
 
     @classmethod
-    def create_oidc(cls, email):
+    def create_oidc(cls, email, user_info, idp):
         """Creates a new user with information obtained from an external
            identity provider
 
@@ -254,6 +254,10 @@ class User(qdb.base.QiitaObject):
         email : str
             The user's email fetched from the User Info of the Identity
             Provider upon successful authentication.
+        user_info : dict
+            User information provided by the external identity provider
+        idp : str
+            The label of the external identity provider as set in config file
 
         Raises
         ------
@@ -269,7 +273,11 @@ class User(qdb.base.QiitaObject):
         info['password'] = "not_necessary_due_to_OIDC"
         # verify code is necessary to manually authorize users on the admin
         # page
-        info['user_verify_code'] = "OIDC"
+        info['user_verify_code'] = idp
+        # check if we got useful information from the IdP
+        if 'name' in user_info.keys():
+            info['name'] = user_info['name']
+
         qdb.util.check_table_cols(info, cls._table)
         columns = info.keys()
         values = [info[col] for col in columns]
