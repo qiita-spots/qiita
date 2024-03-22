@@ -62,8 +62,8 @@ class AuthCreateHandler(BaseHandler):
                               url_escape(username), url))
             except Exception:
                 msg = ("Unable to send verification email. Please contact the "
-                       "qiita developers at <a href='mailto:qiita.help"
-                       "@gmail.com'>qiita.help@gmail.com</a>")
+                       "qiita developers at <a href='mailto:%s'>%s</a>") % (
+                       qiita_config.help_email, qiita_config.help_email)
                 self.redirect(u"%s/?level=danger&message=%s"
                               % (qiita_config.portal_dir, url_escape(msg)))
                 return
@@ -75,8 +75,9 @@ class AuthCreateHandler(BaseHandler):
                    "<p>If you don't receive your activation email within a "
                    "couple of minutes, check your spam folder. If you still "
                    "don't see it, send us an email at <a "
-                   "href=\"mailto:qiita.help@gmail.com\">qiita.help@gmail.com"
-                   "</a>.</p>")
+                   "href=\"mailto:%s\">%s"
+                   "</a>.</p>") % (qiita_config.help_email,
+                                   qiita_config.help_email)
             self.redirect(u"%s/?level=success&message=%s" %
                           (qiita_config.portal_dir, url_escape(msg)))
         else:
@@ -135,7 +136,8 @@ class AuthLoginHandler(BaseHandler):
                        "the verify link. You may need to check your spam "
                        "folder to find the email.<br/>If a verification email"
                        " has not arrived in 15 minutes, please email <a href='"
-                       "mailto:qiita.help@gmail.com'>qiita.help@gmail.com</a>")
+                       "mailto:%s'>%s</a>") % (qiita_config.help_email,
+                                               qiita_config.help_email)
         except QiitaDBUnknownIDError:
             msg = "Unknown user"
         except RuntimeError:

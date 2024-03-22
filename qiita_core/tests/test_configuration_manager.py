@@ -29,7 +29,7 @@ class ConfigurationManagerTests(TestCase):
 
         self.conf = ConfigParser()
         with open(self.conf_fp, newline=None) as f:
-            self.conf.readfp(f)
+            self.conf.read_file(f)
 
     def tearDown(self):
         if self.old_conf_fp is not None:
@@ -132,6 +132,8 @@ class ConfigurationManagerTests(TestCase):
 
         # Warning raised if No files will be allowed to be uploaded
         # Warning raised if no cookie_secret
+        self.conf.set('main', 'HELP_EMAIL', 'ignore@me')
+        self.conf.set('main', 'SYSADMIN_EMAIL', 'ignore@me')
         with warnings.catch_warnings(record=True) as warns:
             obs._get_main(self.conf)
 
@@ -179,6 +181,35 @@ class ConfigurationManagerTests(TestCase):
             obs._get_main(self.conf)
 
         self.assertEqual(obs.qiita_env, "")
+
+    def test_help_email(self):
+        obs = ConfigurationManager()
+
+        with warnings.catch_warnings(record=True) as warns:
+            # warning get only issued when in non test environment
+            self.conf.set('main', 'TEST_ENVIRONMENT', 'FALSE')
+
+            obs._get_main(self.conf)
+            self.assertEqual(obs.help_email, 'foo@bar.com')
+            self.assertEqual(obs.sysadmin_email, 'jeff@bar.com')
+
+            obs_warns = [str(w.message) for w in warns]
+            exp_warns = [
+                'Using the github fake email for HELP_EMAIL, '
+                'are you sure this is OK?',
+                'Using the github fake email for SYSADMIN_EMAIL, '
+                'are you sure this is OK?']
+            self.assertCountEqual(obs_warns, exp_warns)
+
+        # test if it falls back to qiita.help@gmail.com
+        self.conf.set('main', 'HELP_EMAIL', '')
+        with self.assertRaises(ValueError):
+            obs._get_main(self.conf)
+
+        # test if it falls back to qiita.help@gmail.com
+        self.conf.set('main', 'SYSADMIN_EMAIL', '')
+        with self.assertRaises(ValueError):
+            obs._get_main(self.conf)
 
     def test_get_job_scheduler(self):
         obs = ConfigurationManager()
@@ -273,6 +304,12 @@ COOKIE_SECRET = SECRET
 
 # The value used to secure JWTs for delegated permission artifact download.
 JWT_SECRET = SUPER_SECRET
+
+# Address a user should write to when asking for help
+HELP_EMAIL = foo@bar.com
+
+# The email address, Qiita sends internal notifications to a sys admin
+SYSADMIN_EMAIL = jeff@bar.com
 
 # ----------------------------- SMTP settings -----------------------------
 [smtp]

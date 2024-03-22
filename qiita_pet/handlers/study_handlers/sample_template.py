@@ -12,7 +12,7 @@ from tempfile import NamedTemporaryFile
 
 from tornado.web import authenticated, HTTPError
 
-from qiita_core.qiita_settings import r_client
+from qiita_core.qiita_settings import r_client, qiita_config
 from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import get_files_from_uploads_folders
@@ -214,8 +214,8 @@ def sample_template_handler_patch_request(user, req_op, req_path,
                 # the system
                 filepath = req_value
                 if not exists(filepath):
-                    reason = ('Upload file not found (%s), please report to '
-                              'qiita.help@gmail.com' % filepath)
+                    reason = ('Upload file not found (%s), please report to %s'
+                              % (filepath, qiita_config.help_email))
                     raise HTTPError(404, reason=reason)
             else:
                 # Check if the file exists

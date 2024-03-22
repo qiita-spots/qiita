@@ -3,7 +3,7 @@
     <h1 style="text-align:center">ERROR: CODE {{status_code}}!</h1>
     <h2 style="text-align:center">{% raw escape(error) %}</h2>
     <p style="text-align:center">The error has been logged and will be looked at.</p>
-    <p style="text-align:center">Need help? Send us an <a href="mailto:qiita.help@gmail.com">email</a>.</p>
+    <p style="text-align:center">Need help? Send us an <a href="mailto:{% raw qiita_config.help_email %}">email</a>.</p>
     {% if is_admin %}
     <p style="text-align:center">Go to the <a href="{% raw qiita_config.portal_dir %}/admin/error/">error page</a> to view the logs</p>
     {% end %}
