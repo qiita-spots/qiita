@@ -192,7 +192,6 @@ class AuthLogoutHandler(BaseHandler):
 
 class KeycloakMixin(OAuth2Mixin):
     config = dict()
-    email_support = 'qiita.help@gmail.com'
 
     # environment variables that define proxies
     vars_proxy = [env for env in os.environ if env.lower().endswith('_proxy')]
@@ -235,16 +234,15 @@ class KeycloakMixin(OAuth2Mixin):
         except HTTPClientError as e:
             msg = ("The external identity provider '%s' returns an '%s' error"
                    ", when sending a request against '%s'. Thus, we cannot log"
-                   "you in. Please contact the Qiita support team at "
+                   " you in. Please contact the Qiita support team at "
                    "<a href='mailto:%s'>%s</a>") % (
                    self.idp, str(e), self._OAUTH_ACCESS_TOKEN_URL,
-                   self.email_support, self.email_support)
+                   qiita_config.help_email, qiita_config.help_email)
             self.render("index.html", message=msg, level='danger')
 
 
 class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
     idp = None
-    email_support = 'qiita.help@gmail.com'
 
     async def post(self, login):
         code = self.get_argument('code', False)
@@ -297,8 +295,7 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
                     headers={
                         "Accept": "application/json",
                         "Authorization": "Bearer {}".format(access_token)},
-                    **self.config,
-                )
+                    **self.config)
                 user_info = json_decode(user_info_res.body.decode(
                     'utf8', 'replace'))
 
@@ -310,13 +307,11 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
 
                 username = user_info['email']
                 if not User.exists(username):
-                    self.create_new_user(username)
+                    self.create_new_user(username, user_info, self.idp)
                 else:
-                    self.not_verified(username)
-                    self.set_secure_cookie("user", username)
+                    self.check_verified(username)
                     # self.set_secure_cookie("token", access_token)
 
-                self.redirect("%s/" % qiita_config.portal_dir)
             except HTTPClientError as e:
                 msg = (
                     "The external identity provider '%s' returns an '%s' error"
@@ -324,7 +319,7 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
                     "log you in. Please contact the Qiita support team at "
                     "<a href='mailto:%s'>%s</a>") % (
                     self.idp, str(e), self._OAUTH_USERINFO_URL,
-                    self.email_support, self.email_support)
+                    qiita_config.help_email, qiita_config.help_email)
                 self.render("index.html", message=msg, level='danger')
         else:
             # step 1: no code from IdP yet, thus retrieve one now
@@ -340,9 +335,9 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
     get = post  # redirect will use GET method
 
     @execute_as_transaction
-    def create_new_user(self, username):
+    def create_new_user(self, username, user_info, idp):
         try:
-            created = User.create_oidc(username)
+            created = User.create_oidc(username, user_info, idp)
         except QiitaDBDuplicateError:
             msg = "Email already registered as a user"
         if created:
@@ -359,15 +354,15 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
                         "href=\"mailto:%s\">%s</a>.</p>") % (
                             username,
                             qiita_config.oidc[self.idp]['label'],
-                            self.email_support,
-                            self.email_support))
+                            qiita_config.help_email,
+                            qiita_config.help_email))
 
                 self.redirect(u"%s/?level=success&message=%s" % (
                     qiita_config.portal_dir, url_escape(msg)))
             except Exception:
                 msg = (("Unable to create account. Please contact the qiita "
                         "developers at <a href='mailto:%s'>%s</a>") % (
-                        self.email_support, self.email_support))
+                        qiita_config.help_email, qiita_config.help_email))
                 self.redirect(u"%s/?level=danger&message=%s" % (
                     qiita_config.portal_dir, url_escape(msg)))
                 return
@@ -375,16 +370,18 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
             error_msg = u"?error=" + url_escape(msg)
             self.redirect(u"%s/%s" % (qiita_config.portal_dir, error_msg))
 
-    def not_verified(self, username):
+    def check_verified(self, username):
         user = User(username)
         if user.level == "unverified":
             msg = (("You are not yet verified by an admin. Please wait or "
                     "contact the qiita developers at <a href='mailto:%s"
-                    "'>%s</a>") % (self.email_support, self.email_support))
+                    "'>%s</a>") % (qiita_config.help_email,
+                                   qiita_config.help_email))
             self.redirect(u"%s/?level=danger&message=%s" % (
                 qiita_config.portal_dir, url_escape(msg)))
         else:
-            return
+            self.set_secure_cookie("user", username)
+            self.redirect("%s/" % qiita_config.portal_dir)
 
 
 class AdminOIDCUserAuthorization(PortalEditBase):
@@ -409,9 +406,9 @@ class AdminOIDCUserAuthorization(PortalEditBase):
         for user in users:
             try:
                 with warnings.catch_warnings(record=True) as warns:
-                    if action == "Add":
+                    if action == "Authorize_Users":
                         self.authorize_user(user)
-                    elif action == "Remove":
+                    elif action == "Remove_Users":
                         user_to_delete = User(user)
                         user_to_delete.delete(user)
                     else:
