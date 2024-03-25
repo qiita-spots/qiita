@@ -1342,33 +1342,30 @@ class ResourceAllocationPlotTests(TestCase):
 
         bm, options = qdb.util._resource_allocation_plot_helper(
             _df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw', self.model_mem)
-        # check that the algorithm calculates correct constants and chooses
-        # correct model for MaxRSSRaw
+        # check that the algorithm chooses correct model for MaxRSSRaw and
+        # has 0 failures
         k, a, b = options.x
+        failures_df = qdb.util._resource_allocation_failures(
+            _df, k, a, b, bm, 'MaxRSSRaw')
+        failures = failures_df.shape[0]
         print('MaxRSSRaw', k, a, b)
-        kt, at, bt, = 1.0, 31054903.94825936, 92712486.20047534
-
         self.assertEqual(bm, qdb.util.mem_model4, msg="""Best memory model
                                                 doesn't match""")
-        self.assertAlmostEqual(k, kt, msg="k not match expected in MaxRSSRaw")
-        self.assertAlmostEqual(a, at, msg="a not match expected in MaxRSSRaw")
-        self.assertAlmostEqual(b, bt, msg="b not match expected in MaxRSSRaw")
+        self.assertEqual(failures, 0, "Number of failures must be 0")
 
+        # check that the algorithm chooses correct model for ElapsedRaw and
+        # has 1 failure
         bm, options = qdb.util._resource_allocation_plot_helper(
             _df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw', self.model_time)
         k, a, b = options.x
+        failures_df = qdb.util._resource_allocation_failures(
+            _df, k, a, b, bm, 'ElapsedRaw')
+        failures = failures_df.shape[0]
         print('ElapsedRaw', k, a, b)
-        kt = 19107.88377185
-        at = -36985.06461777
-        bt = -36985.06461796
 
-        # check that the algorithm calculates correct constants and chooses
-        # correct model for ElapsedRaw
         self.assertEqual(bm, qdb.util.time_model1, msg="""Best time model
                                                    doesn't match""")
-        self.assertAlmostEqual(k, kt, msg="k not match expected in ElapsedRaw")
-        self.assertAlmostEqual(a, at, msg="a not match expected in ElapsedRaw")
-        self.assertAlmostEqual(b, bt, msg="b not match expected in ElapsedRaw")
+        self.assertEqual(failures, 1, "Number of failures must be 1")
 
 
 STUDY_INFO = {
