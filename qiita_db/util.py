@@ -2337,14 +2337,10 @@ def resource_allocation_plot(file, cname, sname='all'):
         Returns a matplotlib object with a plot
     """
     # Constants
-    global M1G
-    M1G = 2**30
-    global COL_NAME
     COL_NAME = 'samples * columns'
 
     df = pd.read_csv(file, sep='\t', dtype={'extra_info': str})
     df['ElapsedRawTime'] = pd.to_timedelta(df.ElapsedRawTime)
-    # Diversity types - alpha_vector ; BIOM type - BIOM
     if sname == "all":
         _df = df[(df.cName == cname)].copy()
     else:
@@ -2354,18 +2350,23 @@ def resource_allocation_plot(file, cname, sname='all'):
     _df.dropna(subset=['samples', 'columns'], inplace=True)
     _df[COL_NAME] = _df.samples * _df['columns']
     ax = axs[0]
-    models = [mem_model1]
+    # k a b
+    # bmin = _df['MaxRSSRaw'].min()
+    models = [mem_model1, mem_model2, mem_model3, mem_model4]
     _resource_allocation_plot_helper(_df, ax, cname, sname, "MaxRSSRaw",
                                      models)
 
+    # bmin = _df['ElapsedRaw'].min()
     ax = axs[1]
-    models = [time_model1]
+    models = [time_model1, time_model2, time_model3, time_model4]
     _resource_allocation_plot_helper(_df, ax, cname, sname, "ElapsedRaw",
                                      models)
     return fig, axs
 
 
 def _resource_allocation_plot_helper(_df, ax, cname, sname, curr, models):
+    COL_NAME = 'samples * columns'
+    M1G = 2**30
     """Helper function for resource allocation plot. Builds plot for MaxRSSRaw
     and ElapsedRaw
 
@@ -2387,45 +2388,80 @@ def _resource_allocation_plot_helper(_df, ax, cname, sname, curr, models):
     """
 
     x_data, y_data = _df[COL_NAME], _df[curr]
-    ax.scatter(x_data, y_data, s=2)
+    ax.scatter(x_data, y_data, s=2, label="data")
+    d = dict()
+    for index, row in _df.iterrows():
+        x_value = int(row[COL_NAME])
+        y_value = row[curr]
+        if x_value not in d:
+            d[x_value] = []
+        d[x_value].append(y_value)
+
+    for key in d.keys():
+        d[key].sort()
+        d[key] = [d[key][-1] * 1.05]
+
+    x_data = []
+    y_data = []
+
+    # Populate the lists with data from the dictionary
+    for x, ys in d.items():
+        for y in ys:
+            x_data.append(x)
+            y_data.append(y)
+
+    x_data = np.array(x_data)
+    y_data = np.array(y_data)
+
+    # ax.scatter(x_data, y_data, color='purple', s=2)
+
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_ylabel(curr)
     ax.set_xlabel("samples * columns")
 
-    best_model, options = _resource_allocation_calculate(x_data, y_data,
-                                                         models)
+    best_model, options = _resource_allocation_calculate(_df, x_data, y_data,
+                                                         models, curr, 100)
     k, a, b = options.x
-
     x_plot = np.array(sorted(_df[COL_NAME].unique()))
-    shift = 0
-    x_plot_adjusted = np.exp(np.log(x_plot) - shift)
-    y_plot = best_model(x_plot_adjusted, k, a, b)
-    ax.plot(x_plot_adjusted, y_plot, linewidth=1, color='orange')
 
-    x_plot = np.array(_df[COL_NAME])
-    x_plot_adjusted = np.exp(np.log(x_plot) - shift)
-    _df[f'c{curr}'] = best_model(x_plot_adjusted, k, a, b)
+    if curr == "MaxRSSRaw":
+        y_plot = M1G*1.5 + (np.log(x_plot)*M1G*1.5) + (x_plot*3500)
+        ax.plot(x_plot, y_plot, linewidth=1, color='red',
+                label="predefined curve")
+    if curr == "ElapsedRaw":
+        y_plot = 600 + (np.log(x_plot)*3000)
+        ax.plot(x_plot, y_plot, linewidth=1, color='red',
+                label="predefined curve")
+
+    y_plot = best_model(x_plot, k, a, b)
+    ax.plot(x_plot, y_plot, linewidth=1, color='orange')
+
     maxi = naturalsize(_df[curr].max(), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(_df[curr].max()))
     cmax = naturalsize(max(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(max(y_plot)))
+
     mini = naturalsize(_df[curr].min(), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(_df[curr].min()))
     cmin = naturalsize(min(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(min(y_plot)))
 
-    failures_df = _df[_df[curr] > _df[f'c{curr}']]
+    x_plot = np.array(_df[COL_NAME])
+    failures_df = _resource_allocation_failures(_df, k, a, b, best_model, curr)
     failures = failures_df.shape[0]
 
-    ax.scatter(failures_df[COL_NAME], failures_df[curr], color='red', s=3)
+    ax.scatter(failures_df[COL_NAME], failures_df[curr], color='red', s=3,
+               label="failures")
 
     ax.set_title(f'{cname}: {sname}\n real: {mini} || {maxi}\n'
                  f'calculated: {cmin} || {cmax}\n'
                  f'failures: {failures}')
+    ax.legend(loc='upper left')
+    return best_model, options
 
 
-def _resource_allocation_calculate(x, y, models):
+def _resource_allocation_calculate(_df, x, y, models, type_, depth):
     """Helper function for resource allocation plot. Calculates best_model and
     best_result given the models list and x,y data.
 
@@ -2437,6 +2473,8 @@ def _resource_allocation_calculate(x, y, models):
         Represents y data for the function calculation
     models: list, required
         List of functions that will be used for visualization
+    depth: int, required
+        Maximum number of iterations in binary search
 
     Returns
     ----------
@@ -2448,20 +2486,78 @@ def _resource_allocation_calculate(x, y, models):
 
     init = [1, 1, 1]
     best_model = None
-    best_loss = np.inf
     best_result = None
+    best_failures = np.inf
+    best_max = np.inf
+    counter = 0
     for model in models:
-        bounds = [(0, float('inf')), (0, float('inf')), (0, float('inf'))]
-        options = minimize(_resource_allocation_custom_loss, init,
-                           args=(x, y, model))
-        if options.fun < best_loss:
-            best_loss = options.fun
-            best_model = model
-            best_result = options
+        counter += 1
+        sl = 2000
+        sr = 100000
+        left = sl
+        right = sr
+        prev_failures = np.inf
+        min_max = np.inf
+        cnt = 0
+
+        res = [1, 1, 1]  # k, a, b
+
+        while left < right and cnt < depth:
+            middle = (left + right) // 2
+            options = minimize(_resource_allocation_custom_loss, init,
+                               args=(x, y, model, middle))
+            k, a, b = options.x
+            failures_df = _resource_allocation_failures(_df, k, a, b, model,
+                                                        type_)
+            y_plot = model(x, k, a, b)
+            cmax = max(y_plot)
+            cmin = min(y_plot)
+            failures = failures_df.shape[0]
+
+            if failures < prev_failures:
+                prev_failures = failures
+                right = middle
+                min_max = cmax
+                res = options
+
+            elif failures > prev_failures:
+                left = middle
+            else:
+                if cmin < 0:
+                    left = middle
+                elif cmax < min_max:
+                    min_max = cmax
+                    res = options
+                    right = middle
+                else:
+                    right = middle
+
+            if left >= right and cnt < depth:
+                sl += 10000
+                sr += 10000
+                left = sl
+                right = sr
+
+            cnt += 1
+
+        # it's ok if we have a couple failures
+        failure_tolerance = 3
+        is_acceptable_based_on_failures = (
+            prev_failures <= failure_tolerance or abs(
+                prev_failures - best_failures) < failure_tolerance or
+            best_failures == np.inf)
+
+        # case where less failures
+        if is_acceptable_based_on_failures:
+            if min_max <= best_max:
+                best_failures = prev_failures
+                best_max = min_max
+                best_model = model
+                best_result = res
     return best_model, best_result
 
 
-def _resource_allocation_custom_loss(params, x, y, model):
+def _resource_allocation_custom_loss(params, x, y, model, p):
     """Helper function for resource allocation plot. Calculates custom loss
     for given model.
 
@@ -2475,6 +2571,8 @@ def _resource_allocation_custom_loss(params, x, y, model):
         Represents y data for the function calculation
     models: list, required
         List of functions that will be used for visualization
+    p: int, required
+        Penalty weight for custom loss function
 
     Returns
     ----------
@@ -2482,17 +2580,74 @@ def _resource_allocation_custom_loss(params, x, y, model):
         The mean of the list returned by the loss calculation (np.where)
     """
     k, a, b = params
-    errors = y - model(x, k, a, b)
-    # Penalty weights
-    w1, w2 = 10000, 1
-    # positive error
-    loss = np.where(errors > 0, w1 * errors**2, w2 * errors**2)
-    return np.mean(loss)
+
+    residuals = y - model(x, k, a, b)
+    # Apply a heavier penalty to points below the curve
+    penalty = p
+    weighted_residuals = np.where(residuals > 0, penalty * residuals**2,
+                                  residuals**2)
+    return np.mean(weighted_residuals)
+
+
+def _resource_allocation_failures(_df, k, a, b, model, type_):
+    """Helper function for resource allocation plot. Creates a dataframe with
+    failures.
+
+    Parameters
+    ----------
+    _df: pandas.Dataframe, required
+        Represents dataframe containing current jobs data
+    k: int, required
+        k constant in a model
+    a: int, required
+        a constant in a model
+    b: int, required
+        b constant in a model
+    model: function, required
+        Current function
+    type_: str, required
+        Specifies for which type we're getting failures (e.g. MaxRSSRaw)
+
+    Returns
+    ----------
+    pandas.Dataframe
+        Dataframe containing failures for current type.
+    """
+
+    COL_NAME = 'samples * columns'
+    x_plot = np.array(_df[COL_NAME])
+    _df[f'c{type_}'] = model(x_plot, k, a, b)
+    failures_df = _df[_df[type_] > _df[f'c{type_}']]
+    return failures_df
 
 
 def mem_model1(x, k, a, b):
     return k*np.log(x) + x * a + b
 
 
+def mem_model2(x, k, a, b):
+    return k*np.log(x) + b * np.log(x)**2 + a
+
+
+def mem_model3(x, k, a, b):
+    return k*np.log(x) + b * np.log(x)**2 + a*np.log(x)**3
+
+
+def mem_model4(x, k, a, b):
+    return k*np.log(x) + b * np.log(x)**2 + a*np.log(x)**2.5
+
+
 def time_model1(x, k, a, b):
-    return a + b + (np.log(x) * k)
+    return a + b + np.log(x) * k
+
+
+def time_model2(x, k, a, b):
+    return a + b*x + np.log(x) * k
+
+
+def time_model3(x, k, a, b):
+    return a + b*np.log(x)**2 + np.log(x) * k
+
+
+def time_model4(x, k, a, b):
+    return a*np.log(x)**3 + b*np.log(x)**2 + np.log(x) * k

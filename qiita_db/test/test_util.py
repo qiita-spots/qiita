@@ -22,7 +22,10 @@ from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
 
 from matplotlib.figure import Figure
-import numpy as np
+from matplotlib.axes import Axes
+import matplotlib.pyplot as plt
+
+
 
 @qiita_test_checker()
 class DBUtilTestsBase(TestCase):
@@ -1305,28 +1308,65 @@ class PurgeFilepathsTests(DBUtilTestsBase):
             qdb.util.quick_mounts_purge()
 
 
-class ResourceAllocationPlotTests():
-    def __init__(self) -> None:
-        self.PATH_TO_DATA = '''../../notebooks/resource-allocation/data/
-    jobs_2024-02-21.tsv.gz'''
+class ResourceAllocationPlotTests(TestCase):
+    def setUp(self):
+        self.model_mem = [qdb.util.mem_model1, qdb.util.mem_model2,
+                          qdb.util.mem_model3, qdb.util.mem_model4]
+        self.model_time = [qdb.util.time_model1, qdb.util.time_model2,
+                           qdb.util.time_model3, qdb.util.time_model4]
+        self.PATH_TO_DATA = ('./qiita_db/test/test_data/jobs_2024-02-21.tsv.gz')
         self.CNAME = "Validate"
         self.SNAME = "Diversity types - alpha_vector"
+        self.COL_NAME = 'samples * columns'
+        self.df = pd.read_csv(self.PATH_TO_DATA, sep='\t',
+                              dtype={'extra_info': str})
 
-
-    def _get_return_value(self):
-        return qdb.util.resource_allocation_plot(self.PATH_TO_DATA, self.CNAME, 
-                                                 self.SNAME)
-    
-    def _test_return_value_type(self):
-        fig, axs = self._get_return_value()
-        assert isinstance(fig, Figure), "Returned object is Matplotlib Figure"
-
-    # TODO test individual functions. E.g. constants returned by minimize.
-
-    
-    
-
+    def test_plot_return(self):
+        # check the plot returns correct objects
+        fig1, axs1 = qdb.util.resource_allocation_plot(self.PATH_TO_DATA,
+                                                       self.CNAME, self.SNAME)
+        self.assertIsInstance(
+            fig1, Figure,
+            "Returned object fig1 is not a Matplotlib Figure")
         
+        for ax in axs1:
+            self.assertIsInstance(
+                ax, Axes,
+                "Returned object axs1 is not a single Matplotlib Axes object")
+
+    def test_minimize_const(self):
+        _df = self.df[(self.df.cName == self.CNAME)
+                      & (self.df.sName == self.SNAME)].copy()
+        _df.dropna(subset=['samples', 'columns'], inplace=True)
+        _df[self.COL_NAME] = _df.samples * _df['columns']
+        fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
+
+        bm, options = qdb.util._resource_allocation_plot_helper(_df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw', self.model_mem)
+        # check that the algorithm calculates correct constants and chooses
+        # correct model for MaxRSSRaw
+        k, a, b = options.x
+        kt, at, bt, = 1.0, 31054903.94825936, 92712486.20047534
+
+        self.assertEqual(bm, qdb.util.mem_model4, msg="""Best memory model
+                                                doesn't match""")
+        self.assertAlmostEqual(k, kt, msg="k not match expected in MaxRSSRaw")
+        self.assertAlmostEqual(a, at, msg="a not match expected in MaxRSSRaw")
+        self.assertAlmostEqual(b, bt, msg="b not match expected in MaxRSSRaw")
+
+        bm, options = qdb.util._resource_allocation_plot_helper(_df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw', self.model_time)
+        k, a, b = options.x
+        print(k, a, b)
+        kt = 19107.88377185 
+        at = -36985.06461777 
+        bt = -36985.06461796
+
+        # check that the algorithm calculates correct constants and chooses
+        # correct model for ElapsedRaw
+        self.assertEqual(bm, qdb.util.time_model1, msg="""Best time model
+                                                   doesn't match""")
+        self.assertAlmostEqual(k, kt, msg="k not match expected in ElapsedRaw")
+        self.assertAlmostEqual(a, at, msg="a not match expected in ElapsedRaw")
+        self.assertAlmostEqual(b, bt, msg="b not match expected in ElapsedRaw")
 
 
 STUDY_INFO = {
