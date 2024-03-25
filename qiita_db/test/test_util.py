@@ -1345,6 +1345,7 @@ class ResourceAllocationPlotTests(TestCase):
         # check that the algorithm calculates correct constants and chooses
         # correct model for MaxRSSRaw
         k, a, b = options.x
+        print('MaxRSSRaw', k, a, b)
         kt, at, bt, = 1.0, 31054903.94825936, 92712486.20047534
 
         self.assertEqual(bm, qdb.util.mem_model4, msg="""Best memory model
@@ -1356,7 +1357,7 @@ class ResourceAllocationPlotTests(TestCase):
         bm, options = qdb.util._resource_allocation_plot_helper(
             _df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw', self.model_time)
         k, a, b = options.x
-        print(k, a, b)
+        print('ElapsedRaw', k, a, b)
         kt = 19107.88377185
         at = -36985.06461777
         bt = -36985.06461796
