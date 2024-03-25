@@ -1323,8 +1323,8 @@ class ResourceAllocationPlotTests(TestCase):
 
     def test_plot_return(self):
         # check the plot returns correct objects
-        fig1, axs1 = qdb.util.resource_allocation_plot(self.PATH_TO_DATA,
-                                                       self.CNAME, self.SNAME)
+        fig1, axs1 = qdb.util.resource_allocation_plot(
+            self.PATH_TO_DATA, self.CNAME, self.SNAME, self.COL_NAME)
         self.assertIsInstance(
             fig1, Figure,
             "Returned object fig1 is not a Matplotlib Figure")
@@ -1341,12 +1341,14 @@ class ResourceAllocationPlotTests(TestCase):
         fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
         bm, options = qdb.util._resource_allocation_plot_helper(
-            _df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw', self.model_mem)
+            _df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw', self.model_mem,
+            self.COL_NAME)
         # check that the algorithm chooses correct model for MaxRSSRaw and
         # has 0 failures
         k, a, b = options.x
+
         failures_df = qdb.util._resource_allocation_failures(
-            _df, k, a, b, bm, 'MaxRSSRaw')
+            _df, k, a, b, bm, self.COL_NAME, 'MaxRSSRaw')
         failures = failures_df.shape[0]
         print('MaxRSSRaw', k, a, b)
         self.assertEqual(bm, qdb.util.mem_model4, msg="""Best memory model
@@ -1356,10 +1358,11 @@ class ResourceAllocationPlotTests(TestCase):
         # check that the algorithm chooses correct model for ElapsedRaw and
         # has 1 failure
         bm, options = qdb.util._resource_allocation_plot_helper(
-            _df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw', self.model_time)
+            _df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw', self.model_time,
+            self.COL_NAME)
         k, a, b = options.x
         failures_df = qdb.util._resource_allocation_failures(
-            _df, k, a, b, bm, 'ElapsedRaw')
+            _df, k, a, b, bm, self.COL_NAME, 'ElapsedRaw')
         failures = failures_df.shape[0]
         print('ElapsedRaw', k, a, b)
 
