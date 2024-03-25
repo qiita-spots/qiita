@@ -26,7 +26,6 @@ from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 
 
-
 @qiita_test_checker()
 class DBUtilTestsBase(TestCase):
     def setUp(self):
@@ -1314,7 +1313,8 @@ class ResourceAllocationPlotTests(TestCase):
                           qdb.util.mem_model3, qdb.util.mem_model4]
         self.model_time = [qdb.util.time_model1, qdb.util.time_model2,
                            qdb.util.time_model3, qdb.util.time_model4]
-        self.PATH_TO_DATA = ('./qiita_db/test/test_data/jobs_2024-02-21.tsv.gz')
+        self.PATH_TO_DATA = ('./qiita_db/test/test_data/'
+                             'jobs_2024-02-21.tsv.gz')
         self.CNAME = "Validate"
         self.SNAME = "Diversity types - alpha_vector"
         self.COL_NAME = 'samples * columns'
@@ -1328,7 +1328,6 @@ class ResourceAllocationPlotTests(TestCase):
         self.assertIsInstance(
             fig1, Figure,
             "Returned object fig1 is not a Matplotlib Figure")
-        
         for ax in axs1:
             self.assertIsInstance(
                 ax, Axes,
@@ -1341,7 +1340,8 @@ class ResourceAllocationPlotTests(TestCase):
         _df[self.COL_NAME] = _df.samples * _df['columns']
         fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
-        bm, options = qdb.util._resource_allocation_plot_helper(_df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw', self.model_mem)
+        bm, options = qdb.util._resource_allocation_plot_helper(
+            _df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw', self.model_mem)
         # check that the algorithm calculates correct constants and chooses
         # correct model for MaxRSSRaw
         k, a, b = options.x
@@ -1353,11 +1353,12 @@ class ResourceAllocationPlotTests(TestCase):
         self.assertAlmostEqual(a, at, msg="a not match expected in MaxRSSRaw")
         self.assertAlmostEqual(b, bt, msg="b not match expected in MaxRSSRaw")
 
-        bm, options = qdb.util._resource_allocation_plot_helper(_df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw', self.model_time)
+        bm, options = qdb.util._resource_allocation_plot_helper(
+            _df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw', self.model_time)
         k, a, b = options.x
         print(k, a, b)
-        kt = 19107.88377185 
-        at = -36985.06461777 
+        kt = 19107.88377185
+        at = -36985.06461777
         bt = -36985.06461796
 
         # check that the algorithm calculates correct constants and chooses
