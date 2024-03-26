@@ -24,6 +24,7 @@ import qiita_db as qdb
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 @qiita_test_checker()
@@ -1309,22 +1310,44 @@ class PurgeFilepathsTests(DBUtilTestsBase):
 
 class ResourceAllocationPlotTests(TestCase):
     def setUp(self):
-        self.model_mem = [qdb.util.mem_model1, qdb.util.mem_model2,
-                          qdb.util.mem_model3, qdb.util.mem_model4]
-        self.model_time = [qdb.util.time_model1, qdb.util.time_model2,
-                           qdb.util.time_model3, qdb.util.time_model4]
+
+        self.mem_model1 = (
+            lambda x, k, a, b: k * np.log(x) + x * a + b)
+        self.mem_model2 = (
+            lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 + a)
+        self.mem_model3 = (
+            lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
+            a * np.log(x)**3)
+        self.mem_model4 = (
+            lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
+            a * np.log(x)**2.5)
+        self.model_mem = [self.mem_model1, self.mem_model2,
+                          self.mem_model3, self.mem_model4]
+
+        self.time_model1 = (
+            lambda x, k, a, b: a + b + np.log(x) * k)
+        self.time_model2 = (
+            lambda x, k, a, b: a + b * x + np.log(x) * k)
+        self.time_model3 = (
+            lambda x, k, a, b: a + b * np.log(x)**2 + np.log(x) * k)
+        self.time_model4 = (
+            lambda x, k, a, b: a * np.log(x)**3 + b * np.log(x)**2
+            + np.log(x) * k)
+
+        self.model_time = [self.time_model1, self.time_model2,
+                           self.time_model3, self.time_model4]
         self.PATH_TO_DATA = ('./qiita_db/test/test_data/'
                              'jobs_2024-02-21.tsv.gz')
         self.CNAME = "Validate"
         self.SNAME = "Diversity types - alpha_vector"
-        self.COL_NAME = 'samples * columns'
+        self.col_name = 'samples * columns'
         self.df = pd.read_csv(self.PATH_TO_DATA, sep='\t',
                               dtype={'extra_info': str})
 
     def test_plot_return(self):
         # check the plot returns correct objects
         fig1, axs1 = qdb.util.resource_allocation_plot(
-            self.PATH_TO_DATA, self.CNAME, self.SNAME, self.COL_NAME)
+            self.PATH_TO_DATA, self.CNAME, self.SNAME, self.col_name)
         self.assertIsInstance(
             fig1, Figure,
             "Returned object fig1 is not a Matplotlib Figure")
@@ -1334,39 +1357,36 @@ class ResourceAllocationPlotTests(TestCase):
                 "Returned object axs1 is not a single Matplotlib Axes object")
 
     def test_minimize_const(self):
-        _df = self.df[(self.df.cName == self.CNAME)
-                      & (self.df.sName == self.SNAME)].copy()
-        _df.dropna(subset=['samples', 'columns'], inplace=True)
-        _df[self.COL_NAME] = _df.samples * _df['columns']
+        self.df = self.df[
+            (self.df.cName == self.CNAME) & (self.df.sName == self.SNAME)]
+        self.df.dropna(subset=['samples', 'columns'], inplace=True)
+        self.df[self.col_name] = self.df.samples * self.df['columns']
         fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
         bm, options = qdb.util._resource_allocation_plot_helper(
-            _df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw', self.model_mem,
-            self.COL_NAME)
+            self.df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw',
+            self.model_mem, self.col_name)
         # check that the algorithm chooses correct model for MaxRSSRaw and
         # has 0 failures
         k, a, b = options.x
-
         failures_df = qdb.util._resource_allocation_failures(
-            _df, k, a, b, bm, self.COL_NAME, 'MaxRSSRaw')
+            self.df, k, a, b, bm, self.col_name, 'MaxRSSRaw')
         failures = failures_df.shape[0]
-        print('MaxRSSRaw', k, a, b)
-        self.assertEqual(bm, qdb.util.mem_model4, msg="""Best memory model
+        self.assertEqual(bm, self.mem_model4, msg="""Best memory model
                                                 doesn't match""")
         self.assertEqual(failures, 0, "Number of failures must be 0")
 
         # check that the algorithm chooses correct model for ElapsedRaw and
         # has 1 failure
         bm, options = qdb.util._resource_allocation_plot_helper(
-            _df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw', self.model_time,
-            self.COL_NAME)
+            self.df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw',
+            self.model_time, self.col_name)
         k, a, b = options.x
         failures_df = qdb.util._resource_allocation_failures(
-            _df, k, a, b, bm, self.COL_NAME, 'ElapsedRaw')
+            self.df, k, a, b, bm, self.col_name, 'ElapsedRaw')
         failures = failures_df.shape[0]
-        print('ElapsedRaw', k, a, b)
 
-        self.assertEqual(bm, qdb.util.time_model1, msg="""Best time model
+        self.assertEqual(bm, self.time_model1, msg="""Best time model
                                                    doesn't match""")
         self.assertEqual(failures, 1, "Number of failures must be 1")
 

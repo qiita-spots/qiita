@@ -2319,7 +2319,7 @@ def send_email(to, subject, body):
         smtp.close()
 
 
-def resource_allocation_plot(file, cname, sname, COL_NAME):
+def resource_allocation_plot(file, cname, sname, col_name):
     """Builds resource allocation plot for given filename and jobs
 
     Parameters
@@ -2330,7 +2330,7 @@ def resource_allocation_plot(file, cname, sname, COL_NAME):
         Specified job type
     sname: str, required
         Specified job sub type.
-    COL_NAME: str, required
+    col_name: str, required
         Specifies x axis for the graph
 
     Returns
@@ -2343,32 +2343,45 @@ def resource_allocation_plot(file, cname, sname, COL_NAME):
     df['ElapsedRawTime'] = pd.to_timedelta(df.ElapsedRawTime)
     df = df[(df.cName == cname) & (df.sName == sname)]
     df.dropna(subset=['samples', 'columns'], inplace=True)
-    df[COL_NAME] = df.samples * df['columns']
-    df[COL_NAME] = df[COL_NAME].astype(int)
+    df[col_name] = df.samples * df['columns']
+    df[col_name] = df[col_name].astype(int)
 
     fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
     ax = axs[0]
+    # models for memory
+    mem_model1 = (lambda x, k, a, b: k * np.log(x) + x * a + b)
+    mem_model2 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 + a)
+    mem_model3 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
+                  a * np.log(x)**3)
+    mem_model4 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
+                  a * np.log(x)**2.5)
     models = [mem_model1, mem_model2, mem_model3, mem_model4]
     _resource_allocation_plot_helper(
-        df, ax, cname, sname, "MaxRSSRaw", models, COL_NAME)
+        df, ax, cname, sname, "MaxRSSRaw", models, col_name)
 
     ax = axs[1]
+    # models for time
+    time_model1 = (lambda x, k, a, b: a + b + np.log(x) * k)
+    time_model2 = (lambda x, k, a, b: a + b * x + np.log(x) * k)
+    time_model3 = (lambda x, k, a, b: a + b * np.log(x)**2 + np.log(x) * k)
+    time_model4 = (lambda x, k, a, b: a * np.log(x)**3 + b * np.log(x)**2
+                   + np.log(x) * k)
     models = [time_model1, time_model2, time_model3, time_model4]
     _resource_allocation_plot_helper(
-        df, ax, cname, sname, "ElapsedRaw", models, COL_NAME)
+        df, ax, cname, sname, "ElapsedRaw", models, col_name)
 
     return fig, axs
 
 
 def _resource_allocation_plot_helper(
-        _df, ax, cname, sname, curr, models, COL_NAME):
+        df, ax, cname, sname, curr, models, col_name):
     """Helper function for resource allocation plot. Builds plot for MaxRSSRaw
     and ElapsedRaw
 
     Parameters
     ----------
-    _df: pandas dataframe, required
+    df: pandas dataframe, required
         Filtered dataframe for the plot
     ax : matplotlib axes, required
         Axes for current subplot
@@ -2376,7 +2389,7 @@ def _resource_allocation_plot_helper(
         Specified job type
     sname: str, required
         Specified job sub type.
-    COL_NAME: str, required
+    col_name: str, required
         Specifies x axis for the graph
     curr: str, required
         Either MaxRSSRaw or ElapsedRaw
@@ -2385,11 +2398,11 @@ def _resource_allocation_plot_helper(
 
     """
 
-    x_data, y_data = _df[COL_NAME], _df[curr]
+    x_data, y_data = df[col_name], df[curr]
     ax.scatter(x_data, y_data, s=2, label="data")
     d = dict()
-    for index, row in _df.iterrows():
-        x_value = row[COL_NAME]
+    for index, row in df.iterrows():
+        x_value = row[col_name]
         y_value = row[curr]
         if x_value not in d:
             d[x_value] = []
@@ -2414,31 +2427,32 @@ def _resource_allocation_plot_helper(
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_ylabel(curr)
-    ax.set_xlabel(COL_NAME)
+    ax.set_xlabel(col_name)
 
+    # 100 - number of maximum iterations, 3 - number of failures we tolerate
     best_model, options = _resource_allocation_calculate(
-        _df, x_data, y_data, models, curr, COL_NAME, 100)
+        df, x_data, y_data, models, curr, col_name, 100, 3)
     k, a, b = options.x
-    x_plot = np.array(sorted(_df[COL_NAME].unique()))
+    x_plot = np.array(sorted(df[col_name].unique()))
     y_plot = best_model(x_plot, k, a, b)
     ax.plot(x_plot, y_plot, linewidth=1, color='orange')
 
-    maxi = naturalsize(_df[curr].max(), gnu=True) if curr == "MaxRSSRaw" else \
-        timedelta(seconds=float(_df[curr].max()))
+    maxi = naturalsize(df[curr].max(), gnu=True) if curr == "MaxRSSRaw" else \
+        timedelta(seconds=float(df[curr].max()))
     cmax = naturalsize(max(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(max(y_plot)))
 
-    mini = naturalsize(_df[curr].min(), gnu=True) if curr == "MaxRSSRaw" else \
-        timedelta(seconds=float(_df[curr].min()))
+    mini = naturalsize(df[curr].min(), gnu=True) if curr == "MaxRSSRaw" else \
+        timedelta(seconds=float(df[curr].min()))
     cmin = naturalsize(min(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(min(y_plot)))
 
-    x_plot = np.array(_df[COL_NAME])
+    x_plot = np.array(df[col_name])
     failures_df = _resource_allocation_failures(
-        _df, k, a, b, best_model, COL_NAME, curr)
+        df, k, a, b, best_model, col_name, curr)
     failures = failures_df.shape[0]
 
-    ax.scatter(failures_df[COL_NAME], failures_df[curr], color='red', s=3,
+    ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
                label="failures")
 
     ax.set_title(f'{cname}: {sname}\n real: {mini} || {maxi}\n'
@@ -2448,7 +2462,8 @@ def _resource_allocation_plot_helper(
     return best_model, options
 
 
-def _resource_allocation_calculate(_df, x, y, models, type_, COL_NAME, depth):
+def _resource_allocation_calculate(
+        df, x, y, models, type_, col_name, depth, tolerance):
     """Helper function for resource allocation plot. Calculates best_model and
     best_result given the models list and x,y data.
 
@@ -2460,12 +2475,14 @@ def _resource_allocation_calculate(_df, x, y, models, type_, COL_NAME, depth):
         Represents y data for the function calculation
     type_: str, required
         current type (e.g. MaxRSSRaw)
-    COL_NAME: str, required
+    col_name: str, required
         Specifies x axis for the graph
     models: list, required
         List of functions that will be used for visualization
     depth: int, required
         Maximum number of iterations in binary search
+    tolerance: int, required,
+        Tolerance to number of failures possible to be considered as a model
 
     Returns
     ----------
@@ -2480,11 +2497,11 @@ def _resource_allocation_calculate(_df, x, y, models, type_, COL_NAME, depth):
     best_result = None
     best_failures = np.inf
     best_max = np.inf
-    counter = 0
     for model in models:
-        counter += 1
         # start values for binary search, where sl is left, sr is right
-        sl = 2000
+        # penalty weight must be positive & non-zero, hence, sl >= 1.
+        # the upper bound for error can be an arbitrary large number
+        sl = 1
         sr = 100000
         left = sl
         right = sr
@@ -2501,7 +2518,7 @@ def _resource_allocation_calculate(_df, x, y, models, type_, COL_NAME, depth):
                                args=(x, y, model, middle))
             k, a, b = options.x
             failures_df = _resource_allocation_failures(
-                _df, k, a, b, model, COL_NAME, type_)
+                df, k, a, b, model, col_name, type_)
             y_plot = model(x, k, a, b)
             cmax = max(y_plot)
             cmin = min(y_plot)
@@ -2534,11 +2551,12 @@ def _resource_allocation_calculate(_df, x, y, models, type_, COL_NAME, depth):
 
             cnt += 1
 
-        # it's ok if we have a couple failures
-        failure_tolerance = 3
+        # check whether we tolerate a couple failures
+        # this is helpful if the model that has e.g. 1 failure is a better fit
+        # overall based on maximum calculated value.
         is_acceptable_based_on_failures = (
-            prev_failures <= failure_tolerance or abs(
-                prev_failures - best_failures) < failure_tolerance or
+            prev_failures <= tolerance or abs(
+                prev_failures - best_failures) < tolerance or
             best_failures == np.inf)
 
         # case where less failures
@@ -2583,13 +2601,13 @@ def _resource_allocation_custom_loss(params, x, y, model, p):
     return np.mean(weighted_residuals)
 
 
-def _resource_allocation_failures(_df, k, a, b, model, COL_NAME, type_):
+def _resource_allocation_failures(df, k, a, b, model, col_name, type_):
     """Helper function for resource allocation plot. Creates a dataframe with
     failures.
 
     Parameters
     ----------
-    _df: pandas.Dataframe, required
+    df: pandas.Dataframe, required
         Represents dataframe containing current jobs data
     k: int, required
         k constant in a model
@@ -2599,7 +2617,7 @@ def _resource_allocation_failures(_df, k, a, b, model, COL_NAME, type_):
         b constant in a model
     model: function, required
         Current function
-    COL_NAME: str, required
+    col_name: str, required
         Specifies x axis for the graph
     type_: str, required
         Specifies for which type we're getting failures (e.g. MaxRSSRaw)
@@ -2610,183 +2628,7 @@ def _resource_allocation_failures(_df, k, a, b, model, COL_NAME, type_):
         Dataframe containing failures for current type.
     """
 
-    x_plot = np.array(_df[COL_NAME])
-    _df[f'c{type_}'] = model(x_plot, k, a, b)
-    failures_df = _df[_df[type_] > _df[f'c{type_}']]
+    x_plot = np.array(df[col_name])
+    df[f'c{type_}'] = model(x_plot, k, a, b)
+    failures_df = df[df[type_] > df[f'c{type_}']]
     return failures_df
-
-
-def mem_model1(x, k, a, b):
-    """Potential model for MaxRSSRaw in resource allocation plot.
-
-    Parameters
-    ----------
-    x: np.array, required
-        x points in a graph
-    k: int, required
-        k constant in a model
-    a: int, required
-        a constant in a model
-    b: int, required
-        b constant in a model
-
-    Returns
-    ----------
-    np.array
-        Numpy array representing y values for the model given constants.
-    """
-    return k * np.log(x) + x * a + b
-
-
-def mem_model2(x, k, a, b):
-    """Potential model for MaxRSSRaw in resource allocation plot.
-
-    Parameters
-    ----------
-    x: np.array, required
-        x points in a graph
-    k: int, required
-        k constant in a model
-    a: int, required
-        a constant in a model
-    b: int, required
-        b constant in a model
-
-    Returns
-    ----------
-    np.array
-        Numpy array representing y values for the model given constants.
-    """
-    return k * np.log(x) + b * np.log(x)**2 + a
-
-
-def mem_model3(x, k, a, b):
-    """Potential model for MaxRSSRaw in resource allocation plot.
-
-    Parameters
-    ----------
-    x: np.array, required
-        x points in a graph
-    k: int, required
-        k constant in a model
-    a: int, required
-        a constant in a model
-    b: int, required
-        b constant in a model
-
-    Returns
-    ----------
-    np.array
-        Numpy array representing y values for the model given constants.
-    """
-    return k * np.log(x) + b * np.log(x)**2 + a * np.log(x)**3
-
-
-def mem_model4(x, k, a, b):
-    """Potential model for MaxRSSRaw in resource allocation plot.
-
-    Parameters
-    ----------
-    x: np.array, required
-        x points in a graph
-    k: int, required
-        k constant in a model
-    a: int, required
-        a constant in a model
-    b: int, required
-        b constant in a model
-
-    Returns
-    ----------
-    np.array
-        Numpy array representing y values for the model given constants.
-    """
-    return k * np.log(x) + b * np.log(x)**2 + a * np.log(x)**2.5
-
-
-def time_model1(x, k, a, b):
-    """Potential model for ElapsedRaw in resource allocation plot.
-
-    Parameters
-    ----------
-    x: np.array, required
-        x points in a graph
-    k: int, required
-        k constant in a model
-    a: int, required
-        a constant in a model
-    b: int, required
-        b constant in a model
-
-    Returns
-    ----------
-    np.array
-        Numpy array representing y values for the model given constants.
-    """
-    return a + b + np.log(x) * k
-
-
-def time_model2(x, k, a, b):
-    """Potential model for ElapsedRaw in resource allocation plot.
-
-    Parameters
-    ----------
-    x: np.array, required
-        x points in a graph
-    k: int, required
-        k constant in a model
-    a: int, required
-        a constant in a model
-    b: int, required
-        b constant in a model
-
-    Returns
-    ----------
-    np.array
-        Numpy array representing y values for the model given constants.
-    """
-    return a + b * x + np.log(x) * k
-
-
-def time_model3(x, k, a, b):
-    """Potential model for ElapsedRaw in resource allocation plot.
-
-    Parameters
-    ----------
-    x: np.array, required
-        x points in a graph
-    k: int, required
-        k constant in a model
-    a: int, required
-        a constant in a model
-    b: int, required
-        b constant in a model
-
-    Returns
-    ----------
-    np.array
-        Numpy array representing y values for the model given constants.
-    """
-    return a + b * np.log(x)**2 + np.log(x) * k
-
-
-def time_model4(x, k, a, b):
-    """Potential model for ElapsedRaw in resource allocation plot.
-
-    Parameters
-    ----------
-    x: np.array, required
-        x points in a graph
-    k: int, required
-        k constant in a model
-    a: int, required
-        a constant in a model
-    b: int, required
-        b constant in a model
-
-    Returns
-    ----------
-    np.array
-        Numpy array representing y values for the model given constants.
-    """
-    return a * np.log(x)**3 + b * np.log(x)**2 + np.log(x) * k
