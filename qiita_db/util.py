@@ -79,6 +79,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import minimize
 
+# memory constant functions defined for @resource_allocation_plot
+mem_model1 = (lambda x, k, a, b: k * np.log(x) + x * a + b)
+mem_model2 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 + a)
+mem_model3 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
+              a * np.log(x)**3)
+mem_model4 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
+              a * np.log(x)**2.5)
+MODELS_MEM = [mem_model1, mem_model2, mem_model3, mem_model4]
+
+# time constant functions defined for @resource_allocation_plot
+time_model1 = (lambda x, k, a, b: a + b + np.log(x) * k)
+time_model2 = (lambda x, k, a, b: a + b * x + np.log(x) * k)
+time_model3 = (lambda x, k, a, b: a + b * np.log(x)**2 + np.log(x) * k)
+time_model4 = (lambda x, k, a, b: a * np.log(x)**3 + b * np.log(x)**2
+               + np.log(x) * k)
+
+MODELS_TIME = [time_model1, time_model2, time_model3, time_model4]
+
 
 def scrub_data(s):
     r"""Scrubs data fields of characters not allowed by PostgreSQL
@@ -2350,26 +2368,13 @@ def resource_allocation_plot(file, cname, sname, col_name):
 
     ax = axs[0]
     # models for memory
-    mem_model1 = (lambda x, k, a, b: k * np.log(x) + x * a + b)
-    mem_model2 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 + a)
-    mem_model3 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
-                  a * np.log(x)**3)
-    mem_model4 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
-                  a * np.log(x)**2.5)
-    models = [mem_model1, mem_model2, mem_model3, mem_model4]
     _resource_allocation_plot_helper(
-        df, ax, cname, sname, "MaxRSSRaw", models, col_name)
+        df, ax, cname, sname, "MaxRSSRaw", MODELS_MEM, col_name)
 
     ax = axs[1]
     # models for time
-    time_model1 = (lambda x, k, a, b: a + b + np.log(x) * k)
-    time_model2 = (lambda x, k, a, b: a + b * x + np.log(x) * k)
-    time_model3 = (lambda x, k, a, b: a + b * np.log(x)**2 + np.log(x) * k)
-    time_model4 = (lambda x, k, a, b: a * np.log(x)**3 + b * np.log(x)**2
-                   + np.log(x) * k)
-    models = [time_model1, time_model2, time_model3, time_model4]
     _resource_allocation_plot_helper(
-        df, ax, cname, sname, "ElapsedRaw", models, col_name)
+        df, ax, cname, sname, "ElapsedRaw", MODELS_TIME, col_name)
 
     return fig, axs
 
