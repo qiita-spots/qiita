@@ -1092,7 +1092,7 @@ class Study(qdb.base.QiitaObject):
 
             if artifact_type:
                 sql_args.append(artifact_type)
-                sql_where += "AND artifact_type = %s"
+                sql_where += " AND artifact_type = %s"
 
             sql = """SELECT artifact_id
                      FROM qiita.artifact

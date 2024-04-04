@@ -245,6 +245,50 @@ class ConfigurationManagerTests(TestCase):
         obs._get_portal(self.conf)
         self.assertEqual(obs.portal_dir, "/gold_portal")
 
+    def test_get_portal_latlong(self):
+        obs = ConfigurationManager()
+
+        # if parameters are given, but not set, they should default to Boulder
+        self.assertEqual(obs.stats_map_center_latitude, 40.01027)
+        self.assertEqual(obs.stats_map_center_longitude, -105.24827)
+
+        # a string cannot be parsed as a float
+        self.conf.set('portal', 'STATS_MAP_CENTER_LATITUDE', 'kurt')
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+
+        # check for illegal float values
+        self.conf.set('portal', 'STATS_MAP_CENTER_LATITUDE', "-200")
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+        self.conf.set('portal', 'STATS_MAP_CENTER_LATITUDE', "200")
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+
+        # check if value defaults if option is missing altogether
+        self.conf.remove_option('portal', 'STATS_MAP_CENTER_LATITUDE')
+        obs._get_portal(self.conf)
+        self.assertEqual(obs.stats_map_center_latitude, 40.01027)
+
+        # same as above, but for longitude
+        # a string cannot be parsed as a float
+        self.conf.set('portal', 'STATS_MAP_CENTER_LONGITUDE', 'kurt')
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+
+        # check for illegal float values
+        self.conf.set('portal', 'STATS_MAP_CENTER_LONGITUDE', "-200")
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+        self.conf.set('portal', 'STATS_MAP_CENTER_LONGITUDE', "200")
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+
+        # check if value defaults if option is missing altogether
+        self.conf.remove_option('portal', 'STATS_MAP_CENTER_LONGITUDE')
+        obs._get_portal(self.conf)
+        self.assertEqual(obs.stats_map_center_longitude, -105.24827)
+
     def test_get_oidc(self):
         SECTION_NAME = 'oidc_academicid'
         obs = ConfigurationManager()
@@ -277,7 +321,6 @@ class ConfigurationManagerTests(TestCase):
         self.conf.set(SECTION_NAME, 'LABEL', '')
         obs._get_oidc(self.conf)
         self.assertEqual(obs.oidc['academicid']['label'], 'academicid')
-
 
 CONF = """
 # ------------------------------ Main settings --------------------------------
@@ -449,6 +492,14 @@ PORTAL_DIR = /portal
 
 # Full path to portal styling config file
 PORTAL_FP = /tmp/portal.cfg
+
+# The center latitude of the world map, shown on the Stats map.
+# Defaults to 40.01027 (Boulder, CO, USA)
+STATS_MAP_CENTER_LATITUDE =
+
+# The center longitude of the world map, shown on the Stats map.
+# Defaults to -105.24827 (Boulder, CO, USA)
+STATS_MAP_CENTER_LONGITUDE =
 
 # ----------------------------- iframes settings ---------------------------
 [iframe]

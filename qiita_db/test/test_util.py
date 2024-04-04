@@ -21,6 +21,10 @@ import pandas as pd
 from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
 
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
+import matplotlib.pyplot as plt
+
 
 @qiita_test_checker()
 class DBUtilTestsBase(TestCase):
@@ -1301,6 +1305,64 @@ class PurgeFilepathsTests(DBUtilTestsBase):
         # will always raise this ValueError
         with self.assertRaises(ValueError):
             qdb.util.quick_mounts_purge()
+
+
+class ResourceAllocationPlotTests(TestCase):
+    def setUp(self):
+
+        self.PATH_TO_DATA = ('./qiita_db/test/test_data/'
+                             'jobs_2024-02-21.tsv.gz')
+        self.CNAME = "Validate"
+        self.SNAME = "Diversity types - alpha_vector"
+        self.col_name = 'samples * columns'
+        self.df = pd.read_csv(self.PATH_TO_DATA, sep='\t',
+                              dtype={'extra_info': str})
+
+    def test_plot_return(self):
+        # check the plot returns correct objects
+        fig1, axs1 = qdb.util.resource_allocation_plot(
+            self.PATH_TO_DATA, self.CNAME, self.SNAME, self.col_name)
+        self.assertIsInstance(
+            fig1, Figure,
+            "Returned object fig1 is not a Matplotlib Figure")
+        for ax in axs1:
+            self.assertIsInstance(
+                ax, Axes,
+                "Returned object axs1 is not a single Matplotlib Axes object")
+
+    def test_minimize_const(self):
+        self.df = self.df[
+            (self.df.cName == self.CNAME) & (self.df.sName == self.SNAME)]
+        self.df.dropna(subset=['samples', 'columns'], inplace=True)
+        self.df[self.col_name] = self.df.samples * self.df['columns']
+        fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
+
+        bm, options = qdb.util._resource_allocation_plot_helper(
+            self.df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw',
+            qdb.util.MODELS_MEM, self.col_name)
+        # check that the algorithm chooses correct model for MaxRSSRaw and
+        # has 0 failures
+        k, a, b = options.x
+        failures_df = qdb.util._resource_allocation_failures(
+            self.df, k, a, b, bm, self.col_name, 'MaxRSSRaw')
+        failures = failures_df.shape[0]
+        self.assertEqual(bm, qdb.util.mem_model4, msg="""Best memory model
+                                                doesn't match""")
+        self.assertEqual(failures, 0, "Number of failures must be 0")
+
+        # check that the algorithm chooses correct model for ElapsedRaw and
+        # has 1 failure
+        bm, options = qdb.util._resource_allocation_plot_helper(
+            self.df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw',
+            qdb.util.MODELS_TIME, self.col_name)
+        k, a, b = options.x
+        failures_df = qdb.util._resource_allocation_failures(
+            self.df, k, a, b, bm, self.col_name, 'ElapsedRaw')
+        failures = failures_df.shape[0]
+
+        self.assertEqual(bm, qdb.util.time_model1, msg="""Best time model
+                                                   doesn't match""")
+        self.assertEqual(failures, 1, "Number of failures must be 1")
 
 
 STUDY_INFO = {
