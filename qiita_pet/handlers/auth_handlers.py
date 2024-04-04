@@ -202,12 +202,15 @@ class KeycloakMixin(OAuth2Mixin):
                "first one:\n  %s") % '\n  '.join(
                 ['%s=%s' % (var, os.environ[var]) for var in vars_proxy])
         LogEntry.create('Runtime', msg)
-    try:
-        config['proxy_host'] = ':'.join(proxies[0].split(':')[:-1])
-        config['proxy_port'] = int(proxies[0].split(':')[-1])
-    except IndexError:
-        LogEntry.create('Runtime', ("Your proxy configuration doesn't seem to "
-                                    "follow the host:port pattern."))
+    elif len(proxies) == 1:
+        try:
+            config['proxy_host'] = ':'.join(proxies[0].split(':')[:-1])
+            config['proxy_port'] = int(proxies[0].split(':')[-1])
+        except IndexError:
+            LogEntry.create(
+                'Runtime',
+                ("Your proxy configuration doesn't seem to "
+                 "follow the host:port pattern."))
 
     def get_auth_http_client(self):
         return CurlAsyncHTTPClient()
@@ -309,8 +312,8 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
                 if not User.exists(username):
                     self.create_new_user(username, user_info, self.idp)
                 else:
-                    self.check_verified(username)
-                    # self.set_secure_cookie("token", access_token)
+                    self.set_secure_cookie("user", username)
+                    self.redirect("%s/" % qiita_config.portal_dir)
 
             except HTTPClientError as e:
                 msg = (
@@ -336,123 +339,34 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
 
     @execute_as_transaction
     def create_new_user(self, username, user_info, idp):
+        msg, msg_level = None, None  # 'danger', 'success', 'info', 'warning'
         try:
+            # create user stub
             created = User.create_oidc(username, user_info, idp)
-        except QiitaDBDuplicateError:
-            msg = "Email already registered as a user"
-        if created:
-            try:
-                # qiita_config.base_url doesn't have a / at the end, but the
-                # qiita_config.portal_dir has it at the beginning but not at
-                # the end. This constructs the correct URL
-                msg = (("<h3>User Successfully Registered!</h3><p>Your Qiita "
-                        "account has been successfully registered using '%s', "
-                        "which was provided by the identity provider '%s'. "
-                        "Your account is now awaiting authorization by a Qiita"
-                        " admin.</p><p>If you have any questions regarding "
-                        "the authorization process, please email us at <a "
-                        "href=\"mailto:%s\">%s</a>.</p>") % (
-                            username,
-                            qiita_config.oidc[self.idp]['label'],
-                            qiita_config.help_email,
-                            qiita_config.help_email))
+            if created:
+                msg, msg_level = ((
+                    "<h3>User Successfully Registered!</h3><p>Your user '%s',"
+                    " provided through '%s', has been successfully registered"
+                    " and activated. Welcome to Qiita!</p>"
+                    "<p>Please direct any upcoming questions to "
+                    "<a href=\"mailto:%s\">%s</a></p>") % (
+                        username, qiita_config.oidc[idp]['label'],
+                        qiita_config.help_email,
+                        qiita_config.help_email)), 'success'
+            else:
+                msg, msg_level = (
+                    ("Unable to create account. Please contact the qiita "
+                     "developers at <a href='mailto:%s'>%s</a>") % (
+                        qiita_config.help_email,
+                        qiita_config.help_email)), 'danger'
 
-                self.redirect(u"%s/?level=success&message=%s" % (
-                    qiita_config.portal_dir, url_escape(msg)))
-            except Exception:
-                msg = (("Unable to create account. Please contact the qiita "
-                        "developers at <a href='mailto:%s'>%s</a>") % (
-                        qiita_config.help_email, qiita_config.help_email))
-                self.redirect(u"%s/?level=danger&message=%s" % (
-                    qiita_config.portal_dir, url_escape(msg)))
-                return
-        else:
-            error_msg = u"?error=" + url_escape(msg)
-            self.redirect(u"%s/%s" % (qiita_config.portal_dir, error_msg))
+            # activate user
+            User.verify_code(
+                username, User(username).info['user_verify_code'], "create")
 
-    def check_verified(self, username):
-        user = User(username)
-        if user.level == "unverified":
-            msg = (("You are not yet verified by an admin. Please wait or "
-                    "contact the qiita developers at <a href='mailto:%s"
-                    "'>%s</a>") % (qiita_config.help_email,
-                                   qiita_config.help_email))
-            self.redirect(u"%s/?level=danger&message=%s" % (
-                qiita_config.portal_dir, url_escape(msg)))
-        else:
             self.set_secure_cookie("user", username)
-            self.redirect("%s/" % qiita_config.portal_dir)
+        except QiitaDBDuplicateError:
+            msg, msg_level = "Email already registered as a user", 'info'
 
-
-class AdminOIDCUserAuthorization(PortalEditBase):
-    """User Verification for Qiita-Account Creation following OIDC Login"""
-    @authenticated
-    @execute_as_transaction
-    def get(self):
-        # render page and transfer headers to be included for the table
-        self.check_admin()
-        headers = ["email", "name", "affiliation", "address", "phone"]
-        self.render('admin_user_authorization.html', headers=headers,
-                    submit_url="/admin/user_authorization/")
-
-    def post(self):
-        # check if logged in user is admin and fetch all checked boxes as well
-        # as the action
-        self.check_admin()
-        users = map(str, self.get_arguments('selected'))
-        action = self.get_argument('action')
-        # depending on the action either autorize (add) user or delete user
-        # from db (remove)
-        for user in users:
-            try:
-                with warnings.catch_warnings(record=True) as warns:
-                    if action == "Authorize_Users":
-                        self.authorize_user(user)
-                    elif action == "Remove_Users":
-                        user_to_delete = User(user)
-                        user_to_delete.delete(user)
-                    else:
-                        raise HTTPError(400,
-                                        reason="Unknown action: %s" % action)
-            except QiitaDBError as e:
-                self.write(action.upper() + " ERROR:<br/>" + str(e))
-                return
-        msg = '; '.join([str(w.message) for w in warns])
-        self.write(action + " completed successfully<br/>" + msg)
-
-    @authenticated
-    @execute_as_transaction
-    def authorize_user(self, user):
-        # authorize user by verifying login manually using tue standard Qiita
-        # verify function
-        self.check_admin()
-        User.verify_code(user, User(user).info['user_verify_code'], "create")
-        return
-
-
-class AdminOIDCUserAuthorizationAjax(PortalEditBase):
-    @authenticated
-    @execute_as_transaction
-    def get(self):
-        # retrieving users with an unverified level
-        self.check_admin()
-        with qdb.sql_connection.TRN:
-            sql = """SELECT email,name,affiliation,address,phone
-                     FROM qiita.qiita_user
-                     WHERE user_level_id='5'"""
-            qdb.sql_connection.TRN.add(sql)
-            users = qdb.sql_connection.TRN.execute()[1:]
-        result = []
-        # fetching information for each user
-        for list in users:
-            for user in list:
-                usermail = user[0]
-                user_unit = {}
-                user_unit['email'] = User(usermail).email
-                user_unit['name'] = User(usermail).info['name']
-                user_unit['affiliation'] = User(usermail).info['affiliation']
-                user_unit['address'] = User(usermail).info['address']
-                user_unit['phone'] = User(usermail).info['phone']
-                result.append(user_unit)
-        # returning information as JSON
-        self.write(json_encode(result))
+        self.redirect(u"%s/?level=%s&message=%s" % (
+             qiita_config.portal_dir, msg_level, url_escape(msg)))
