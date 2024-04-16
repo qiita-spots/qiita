@@ -72,3 +72,6 @@ qiita_pet/*.conf
 
 # jupyter notebooks input data
 notebooks/*/*.tsv.gz
+
+# jupyter notebooks input data
+notebooks/resource-allocation/data

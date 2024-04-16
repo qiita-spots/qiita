@@ -109,6 +109,12 @@ class ConfigurationManager(object):
         The portal subdirectory used in the URL
     portal_fp : str
         The filepath to the portal styling config file
+    stats_map_center_latitude : float
+        The center latitude of the world map, shown on the Stats map.
+        Defaults to 40.01027 (Boulder, CO, USA)
+    stats_map_center_longitude : float
+        The center longitude of the world map, shown on the Stats map.
+        Defaults to -105.24827 (Boulder, CO, USA)
     qiita_env : str
         The script used to start the qiita environment
     private_launcher : str
@@ -117,6 +123,10 @@ class ConfigurationManager(object):
         The script used to start the plugins
     plugin_dir : str
         The path to the directory containing the plugin configuration files
+    help_email : str
+        The email address a user should write to when asking for help
+    sysadmin_email : str
+        The email address, Qiita sends internal notifications to a sys admin
 
     Raises
     ------
@@ -234,6 +244,32 @@ class ConfigurationManager(object):
             self.key_file = join(install_dir, 'qiita_core', 'support_files',
                                  'ci_server.key')
 
+        self.help_email = config.get('main', 'HELP_EMAIL')
+        if not self.help_email:
+            raise ValueError(
+                "You did not specify the HELP_EMAIL address in the main "
+                "section of Qiita's config file. This address is essential "
+                "for users to ask for help as it is displayed at various "
+                "location throughout Qiita's web pages.")
+        if (self.help_email == 'foo@bar.com') and \
+           (self.test_environment is False):
+            warnings.warn(
+                "Using the github fake email for HELP_EMAIL, "
+                "are you sure this is OK?")
+
+        self.sysadmin_email = config.get('main', 'SYSADMIN_EMAIL')
+        if not self.sysadmin_email:
+            raise ValueError(
+                "You did not specify the SYSADMIN_EMAIL address in the main "
+                "section of Qiita's config file. Serious issues will "
+                "automatically be reported to a sys admin, an according "
+                "address is therefore required!")
+        if (self.sysadmin_email == 'jeff@bar.com') and \
+           (self.test_environment is False):
+            warnings.warn(
+                "Using the github fake email for SYSADMIN_EMAIL, "
+                "are you sure this is OK?")
+
     def _get_job_scheduler(self, config):
         """Get the configuration of the job_scheduler section"""
         self.job_scheduler_owner = config.get(
@@ -316,6 +352,41 @@ class ConfigurationManager(object):
                 self.portal_dir = self.portal_dir[:-1]
         else:
             self.portal_dir = ""
+
+        msg = ("The value %s for %s you set in Qiita's configuration file "
+               "(section 'portal') for the Stats world map cannot be "
+               "intepreted as a float! %s")
+        lat_default = 40.01027  # Boulder CO, USA
+        try:
+            self.stats_map_center_latitude = config.get(
+                'portal', 'STATS_MAP_CENTER_LATITUDE', fallback=lat_default)
+            if self.stats_map_center_latitude == '':
+                self.stats_map_center_latitude = lat_default
+            self.stats_map_center_latitude = float(
+                self.stats_map_center_latitude)
+        except ValueError as e:
+            raise ValueError(msg % (self.stats_map_center_latitude,
+                                    'STATS_MAP_CENTER_LATITUDE', e))
+
+        lon_default = -105.24827  # Boulder CO, USA
+        try:
+            self.stats_map_center_longitude = config.get(
+                'portal', 'STATS_MAP_CENTER_LONGITUDE', fallback=lon_default)
+            if self.stats_map_center_longitude == '':
+                self.stats_map_center_longitude = lon_default
+            self.stats_map_center_longitude = float(
+                self.stats_map_center_longitude)
+        except ValueError as e:
+            raise ValueError(msg % (self.stats_map_center_longitude,
+                                    'STATS_MAP_CENTER_LONGITUDE', e))
+        for (name, val) in [('latitude', self.stats_map_center_latitude),
+                            ('longitude', self.stats_map_center_longitude)]:
+            msg = ("The %s of %s you set in Qiita's configuration file "
+                   "(section 'portal') for the Stats world map cannot be %s!")
+            if val < -180:
+                raise ValueError(msg % (name, val, 'smaller than -180°'))
+            if val > 180:
+                raise ValueError(msg % (name, val, 'larger than 180°'))
 
     def _iframe(self, config):
         self.iframe_qiimp = config.get('iframe', 'QIIMP')

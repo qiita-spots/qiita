@@ -387,7 +387,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
         response = self.get('/public_download/?data=raw&study_id=1')
         self.assertEqual(response.code, 404)
         self.assertEqual(response.reason, 'Study is not public. '
-                         'If this is a mistake contact: qiita.help@gmail.com')
+                         'If this is a mistake contact: foo@bar.com')
 
         # 7 is an uploaded biom, which should now be available but as it's a
         # biom, only the prep info file will be retrieved
@@ -395,7 +395,7 @@ class TestDownloadPublicHandler(TestHandlerBase):
         response = self.get('/public_download/?data=raw&study_id=1')
         self.assertEqual(response.code, 422)
         self.assertEqual(response.reason, 'No raw data access. '
-                         'If this is a mistake contact: qiita.help@gmail.com')
+                         'If this is a mistake contact: foo@bar.com')
 
         # check success
         response = self.get('/public_download/?data=biom&study_id=1')
@@ -426,12 +426,12 @@ class TestDownloadPublicHandler(TestHandlerBase):
             '/public_download/?data=raw&study_id=1&data_type=Genomics')
         self.assertEqual(response.code, 422)
         self.assertEqual(response.reason, 'Nothing to download. If this is a '
-                         'mistake contact: qiita.help@gmail.com')
+                         'mistake contact: foo@bar.com')
         response = self.get(
             '/public_download/?data=biom&study_id=1&data_type=Genomics')
         self.assertEqual(response.code, 422)
         self.assertEqual(response.reason, 'Nothing to download. If this is a '
-                         'mistake contact: qiita.help@gmail.com')
+                         'mistake contact: foo@bar.com')
 
         # check success
         Artifact(5).visibility = 'public'
@@ -521,7 +521,7 @@ class TestDownloadPublicArtifactHandler(TestHandlerBase):
         response = self.get('/public_artifact_download/?artifact_id=3')
         self.assertEqual(response.code, 404)
         self.assertEqual(response.reason, 'Artifact is not public. If this is '
-                         'a mistake contact: qiita.help@gmail.com')
+                         'a mistake contact: foo@bar.com')
 
         # check success
         Artifact(5).visibility = 'public'

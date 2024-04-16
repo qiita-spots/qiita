@@ -445,12 +445,12 @@ class DownloadPublicHandler(BaseHandlerDownload):
                 public_raw_download = study.public_raw_download
                 if study.status != 'public':
                     raise HTTPError(404, reason='Study is not public. If this '
-                                    'is a mistake contact: '
-                                    'qiita.help@gmail.com')
+                                    'is a mistake contact: %s' %
+                                    qiita_config.help_email)
                 elif data == 'raw' and not public_raw_download:
                     raise HTTPError(422, reason='No raw data access. If this '
-                                    'is a mistake contact: '
-                                    'qiita.help@gmail.com')
+                                    'is a mistake contact: %s'
+                                    % qiita_config.help_email)
                 else:
                     # raw data
                     artifacts = [a for a in study.artifacts(dtype=data_type)
@@ -466,8 +466,8 @@ class DownloadPublicHandler(BaseHandlerDownload):
 
                 if not to_download:
                     raise HTTPError(422, reason='Nothing to download. If '
-                                    'this is a mistake contact: '
-                                    'qiita.help@gmail.com')
+                                    'this is a mistake contact: %s'
+                                    % qiita_config.help_email)
                 else:
                     self._write_nginx_file_list(to_download)
 
@@ -496,18 +496,18 @@ class DownloadPublicArtifactHandler(BaseHandlerDownload):
             else:
                 if artifact.visibility != 'public':
                     raise HTTPError(404, reason='Artifact is not public. If '
-                                    'this is a mistake contact: '
-                                    'qiita.help@gmail.com')
+                                    'this is a mistake contact: %s'
+                                    % qiita_config.help_email)
                 elif artifact.has_human:
                     raise HTTPError(404, reason='Artifact has possible human '
                                     'sequences. If this is a mistake contact: '
-                                    'qiita.help@gmail.com')
+                                    '%s' % qiita_config.help_email)
                 else:
                     to_download = self._list_artifact_files_nginx(artifact)
                     if not to_download:
                         raise HTTPError(422, reason='Nothing to download. If '
-                                        'this is a mistake contact: '
-                                        'qiita.help@gmail.com')
+                                        'this is a mistake contact: %s'
+                                        % qiita_config.help_email)
                     else:
                         self._write_nginx_file_list(to_download)
 
@@ -600,8 +600,8 @@ class DownloadPrivateArtifactHandler(BaseHandlerDownload):
         to_download = self._list_artifact_files_nginx(artifact)
         if not to_download:
             raise HTTPError(422, reason='Nothing to download. If '
-                                        'this is a mistake contact: '
-                                        'qiita.help@gmail.com')
+                                        'this is a mistake contact: %s' %
+                                        qiita_config.help_email)
         else:
             self._write_nginx_file_list(to_download)
 

@@ -29,7 +29,7 @@ class ConfigurationManagerTests(TestCase):
 
         self.conf = ConfigParser()
         with open(self.conf_fp, newline=None) as f:
-            self.conf.readfp(f)
+            self.conf.read_file(f)
 
     def tearDown(self):
         if self.old_conf_fp is not None:
@@ -132,6 +132,8 @@ class ConfigurationManagerTests(TestCase):
 
         # Warning raised if No files will be allowed to be uploaded
         # Warning raised if no cookie_secret
+        self.conf.set('main', 'HELP_EMAIL', 'ignore@me')
+        self.conf.set('main', 'SYSADMIN_EMAIL', 'ignore@me')
         with warnings.catch_warnings(record=True) as warns:
             obs._get_main(self.conf)
 
@@ -180,6 +182,35 @@ class ConfigurationManagerTests(TestCase):
 
         self.assertEqual(obs.qiita_env, "")
 
+    def test_help_email(self):
+        obs = ConfigurationManager()
+
+        with warnings.catch_warnings(record=True) as warns:
+            # warning get only issued when in non test environment
+            self.conf.set('main', 'TEST_ENVIRONMENT', 'FALSE')
+
+            obs._get_main(self.conf)
+            self.assertEqual(obs.help_email, 'foo@bar.com')
+            self.assertEqual(obs.sysadmin_email, 'jeff@bar.com')
+
+            obs_warns = [str(w.message) for w in warns]
+            exp_warns = [
+                'Using the github fake email for HELP_EMAIL, '
+                'are you sure this is OK?',
+                'Using the github fake email for SYSADMIN_EMAIL, '
+                'are you sure this is OK?']
+            self.assertCountEqual(obs_warns, exp_warns)
+
+        # test if it falls back to qiita.help@gmail.com
+        self.conf.set('main', 'HELP_EMAIL', '')
+        with self.assertRaises(ValueError):
+            obs._get_main(self.conf)
+
+        # test if it falls back to qiita.help@gmail.com
+        self.conf.set('main', 'SYSADMIN_EMAIL', '')
+        with self.assertRaises(ValueError):
+            obs._get_main(self.conf)
+
     def test_get_job_scheduler(self):
         obs = ConfigurationManager()
 
@@ -213,6 +244,50 @@ class ConfigurationManagerTests(TestCase):
         conf_setter('PORTAL_DIR', '/gold_portal/')
         obs._get_portal(self.conf)
         self.assertEqual(obs.portal_dir, "/gold_portal")
+
+    def test_get_portal_latlong(self):
+        obs = ConfigurationManager()
+
+        # if parameters are given, but not set, they should default to Boulder
+        self.assertEqual(obs.stats_map_center_latitude, 40.01027)
+        self.assertEqual(obs.stats_map_center_longitude, -105.24827)
+
+        # a string cannot be parsed as a float
+        self.conf.set('portal', 'STATS_MAP_CENTER_LATITUDE', 'kurt')
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+
+        # check for illegal float values
+        self.conf.set('portal', 'STATS_MAP_CENTER_LATITUDE', "-200")
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+        self.conf.set('portal', 'STATS_MAP_CENTER_LATITUDE', "200")
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+
+        # check if value defaults if option is missing altogether
+        self.conf.remove_option('portal', 'STATS_MAP_CENTER_LATITUDE')
+        obs._get_portal(self.conf)
+        self.assertEqual(obs.stats_map_center_latitude, 40.01027)
+
+        # same as above, but for longitude
+        # a string cannot be parsed as a float
+        self.conf.set('portal', 'STATS_MAP_CENTER_LONGITUDE', 'kurt')
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+
+        # check for illegal float values
+        self.conf.set('portal', 'STATS_MAP_CENTER_LONGITUDE', "-200")
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+        self.conf.set('portal', 'STATS_MAP_CENTER_LONGITUDE', "200")
+        with self.assertRaises(ValueError):
+            obs._get_portal(self.conf)
+
+        # check if value defaults if option is missing altogether
+        self.conf.remove_option('portal', 'STATS_MAP_CENTER_LONGITUDE')
+        obs._get_portal(self.conf)
+        self.assertEqual(obs.stats_map_center_longitude, -105.24827)
 
 
 CONF = """
@@ -273,6 +348,12 @@ COOKIE_SECRET = SECRET
 
 # The value used to secure JWTs for delegated permission artifact download.
 JWT_SECRET = SUPER_SECRET
+
+# Address a user should write to when asking for help
+HELP_EMAIL = foo@bar.com
+
+# The email address, Qiita sends internal notifications to a sys admin
+SYSADMIN_EMAIL = jeff@bar.com
 
 # ----------------------------- SMTP settings -----------------------------
 [smtp]
@@ -379,6 +460,14 @@ PORTAL_DIR = /portal
 
 # Full path to portal styling config file
 PORTAL_FP = /tmp/portal.cfg
+
+# The center latitude of the world map, shown on the Stats map.
+# Defaults to 40.01027 (Boulder, CO, USA)
+STATS_MAP_CENTER_LATITUDE =
+
+# The center longitude of the world map, shown on the Stats map.
+# Defaults to -105.24827 (Boulder, CO, USA)
+STATS_MAP_CENTER_LONGITUDE =
 
 # ----------------------------- iframes settings ---------------------------
 [iframe]
