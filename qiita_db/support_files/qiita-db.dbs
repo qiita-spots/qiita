@@ -1326,6 +1326,22 @@
 				<column name="sample_id" />
 			</index>
 		</table>
+		<table name="settings" prior="base_work_dir" >
+			<column name="test" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[true]]></defo>
+			</column>
+			<column name="base_data_dir" type="varchar" jt="12" mandatory="y" />
+			<column name="base_work_dir" type="varchar" jt="12" mandatory="y" />
+			<column name="current_patch" type="varchar" jt="12" mandatory="y" >
+				<defo><![CDATA['unpatched'::character varying]]></defo>
+			</column>
+			<column name="max_preparation_samples" type="integer" jt="4" >
+				<defo><![CDATA[800]]></defo>
+			</column>
+			<column name="max_artifacts_in_workflow" type="integer" jt="4" >
+				<defo><![CDATA[35]]></defo>
+			</column>
+		</table>
 		<table name="severity" >
 			<column name="severity_id" type="integer" length="10" decimal="0" jt="4" mandatory="y" >
 				<defo><![CDATA[nextval('qiita.severity_severity_id_seq'::regclass)]]></defo>
@@ -1337,6 +1353,23 @@
 			<index name="idx_severity" unique="UNIQUE_KEY" >
 				<column name="severity" />
 			</index>
+		</table>
+		<table name="slurm_resource_allocations" prior="tbl" >
+			<column name="processing_job_id" type="uuid" jt="1111" mandatory="y" />
+			<column name="samples" type="integer" jt="4" />
+			<column name="columns" type="integer" jt="4" />
+			<column name="input_size" type="bigint" jt="-5" />
+			<column name="extra_info" type="varchar" jt="12" >
+				<defo><![CDATA[null]]></defo>
+			</column>
+			<column name="memory_used" type="bigint" jt="-5" />
+			<column name="walltime_used" type="integer" jt="4" />
+			<index name="pk_slurm_resource_allocations_processing_job_id" unique="PRIMARY_KEY" >
+				<column name="processing_job_id" />
+			</index>
+			<fk name="fk_slurm_resource_allocations" to_schema="qiita" to_table="processing_job" >
+				<fk_column name="processing_job_id" pk="processing_job_id" />
+			</fk>
 		</table>
 		<table name="software" >
 			<column name="software_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
@@ -2023,14 +2056,14 @@ $function$
 	</schema>
 	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.18.jar" driver_desc="Standard" host="localhost" port="5432" instance="qiita_test" user="antoniog" />
 	<layout name="Qiita DB Schema" id="Layout_1647" show_column_type="y" show_relation="columns" >
-		<comment><![CDATA[Qiita DB Schema]]></comment>
+		<comment><![CDATA[Qiita DB]]></comment>
 		<entity schema="qiita" name="analysis" color="D1BEF4" x="720" y="48" />
 		<entity schema="qiita" name="analysis_artifact" color="D1BEF4" x="496" y="48" />
 		<entity schema="qiita" name="analysis_filepath" color="F4DDBE" x="1680" y="624" />
 		<entity schema="qiita" name="analysis_portal" color="D1BEF4" x="1024" y="64" />
 		<entity schema="qiita" name="analysis_processing_job" color="D1BEF4" x="416" y="304" />
 		<entity schema="qiita" name="analysis_sample" color="D1BEF4" x="752" y="272" />
-		<entity schema="qiita" name="analysis_users" color="D1BEF4" x="304" y="176" />
+		<entity schema="qiita" name="analysis_users" color="D1BEF4" x="352" y="176" />
 		<entity schema="qiita" name="archive_feature_value" color="D1BEF4" x="1312" y="48" />
 		<entity schema="qiita" name="archive_merging_scheme" color="D1BEF4" x="1616" y="48" />
 		<entity schema="qiita" name="artifact" color="BED3F4" x="2160" y="576" />
@@ -2091,7 +2124,9 @@ $function$
 		<entity schema="qiita" name="restrictions" color="BED3F4" x="2768" y="1424" />
 		<entity schema="qiita" name="sample_template_filepath" color="BED3F4" x="2720" y="1296" />
 		<entity schema="qiita" name="sample_x" color="BED3F4" x="912" y="1408" />
+		<entity schema="qiita" name="settings" color="F82E15" x="64" y="160" />
 		<entity schema="qiita" name="severity" color="F4DDBE" x="1632" y="240" />
+		<entity schema="qiita" name="slurm_resource_allocations" color="F4DDBE" x="1888" y="640" />
 		<entity schema="qiita" name="software" color="F4DDBE" x="3232" y="320" />
 		<entity schema="qiita" name="software_artifact_type" color="BEBEF4" x="2128" y="304" />
 		<entity schema="qiita" name="software_command" color="F4DDBE" x="2880" y="320" />
