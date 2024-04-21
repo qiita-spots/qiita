@@ -117,6 +117,9 @@ class EBISubmission(object):
                        'PACBIO_SMRT': ['PACBIO RS',
                                        'PACBIO RS II',
                                        'SEQUEL',
+                                       'ONSO',
+                                       'REVIO',
+                                       'SEQUEL IIE',
                                        'SEQUEL II']}
 
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"

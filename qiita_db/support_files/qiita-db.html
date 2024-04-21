@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang='en-us' xmlns='http://www.w3.org/1999/xhtml' >
 <head>
-<title>PostgreSQL</title>
+<title>Qiita DB</title>
 <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
 <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no' />
 <link rel='shortcut icon' href='https://dbschema.com/images/favicon.ico'>
@@ -286,6 +286,11 @@ a {
      <stop offset='40%' stop-color='#28621D' /> 
      <stop offset='100%' stop-color='#2A5023' /> 
   </linearGradient>
+  <linearGradient id='tbg_F82E15' x1='0%' y1='0%' x2='0%' y2='100%' >
+     <stop offset='0%' stop-color='#7F261C' /> 
+     <stop offset='40%' stop-color='#62241D' /> 
+     <stop offset='100%' stop-color='#502723' /> 
+  </linearGradient>
 </defs>
 
 <!-- == Desktop == -->
@@ -294,7 +299,7 @@ a {
 <!-- == Legend == -->
 <g transform='translate(10,10)'>
   <rect x='10' y='10' width='230' height='56' rx='6' ry='6' style='fill:url(#legendGradient);filter:url(#shadow);'/> 
-  <text x='20' y='25' class='legendTitle' >PostgreSQL</text> 
+  <text x='20' y='25' class='legendTitle' >Qiita DB</text> 
   <a xlink:href='https://dbschema.com'><text x='20' y='39' class='legendSubTitle'><tspan>(c) DbSchema</tspan></text></a> 
   <text x='20' y='53' class='legendSubTitle'><tspan>Hover columns to read the comments.</tspan></text> 
 </g>
@@ -397,21 +402,21 @@ analysis_sample ref artifact ( artifact_id )</title>
 analysis_sample ref artifact ( artifact_id )</title></path>
 <text x='922' y='283' transform='rotate(0 922,283)' class='relName'>artifact_id</text>
 <!-- == Fk 'analysis_users_fk_analysis_users_analysis' == -->
-<path id='analysis_users_fk_analysis_users_analysis'  onmouseover="hghl(['analysis_users_fk_analysis_users_analysis','qiita.analysis_users.analysis_id','qiita.analysis.analysis_id'])" onmouseout="uhghl(['analysis_users_fk_analysis_users_analysis','qiita.analysis_users.analysis_id','qiita.analysis.analysis_id'])" transform='translate(8,0)' class='scene' d='M 432,160L 432,152Q 432,144 440,144L 704,144' >
+<path id='analysis_users_fk_analysis_users_analysis'  onmouseover="hghl(['analysis_users_fk_analysis_users_analysis','qiita.analysis_users.analysis_id','qiita.analysis.analysis_id'])" onmouseout="uhghl(['analysis_users_fk_analysis_users_analysis','qiita.analysis_users.analysis_id','qiita.analysis.analysis_id'])" transform='translate(8,0)' class='scene' d='M 480,160L 480,152Q 480,144 488,144L 704,144' >
 	<title>Fk fk_analysis_users_analysis
 analysis_users ref analysis ( analysis_id )</title>
 </path>
-<path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 432,160L 432,152Q 432,144 440,144L 704,144' ><title>Fk fk_analysis_users_analysis
+<path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 480,160L 480,152Q 480,144 488,144L 704,144' ><title>Fk fk_analysis_users_analysis
 analysis_users ref analysis ( analysis_id )</title></path>
-<text x='435' y='158' transform='rotate(270 435,158)' class='relName'>analysis_id</text>
+<text x='483' y='158' transform='rotate(270 483,158)' class='relName'>analysis_id</text>
 <!-- == Fk 'analysis_users_fk_analysis_users_user' == -->
-<path id='analysis_users_fk_analysis_users_user'  onmouseover="hghl(['analysis_users_fk_analysis_users_user','qiita.analysis_users.email','qiita.qiita_user.email'])" onmouseout="uhghl(['analysis_users_fk_analysis_users_user','qiita.analysis_users.email','qiita.qiita_user.email'])" transform='translate(8,0)' class='scene' d='M 336,256L 336,1216' >
+<path id='analysis_users_fk_analysis_users_user'  onmouseover="hghl(['analysis_users_fk_analysis_users_user','qiita.analysis_users.email','qiita.qiita_user.email'])" onmouseout="uhghl(['analysis_users_fk_analysis_users_user','qiita.analysis_users.email','qiita.qiita_user.email'])" transform='translate(8,0)' class='scene' d='M 368,256L 368,1240Q 368,1248 360,1248L 352,1248' >
 	<title>Fk fk_analysis_users_user
 analysis_users ref qiita_user ( email )</title>
 </path>
-<path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 336,256L 336,1216' ><title>Fk fk_analysis_users_user
+<path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 368,256L 368,1240Q 368,1248 360,1248L 352,1248' ><title>Fk fk_analysis_users_user
 analysis_users ref qiita_user ( email )</title></path>
-<text x='349' y='258' transform='rotate(90 349,258)' class='relName'>email</text>
+<text x='381' y='258' transform='rotate(90 381,258)' class='relName'>email</text>
 <!-- == Fk 'archive_feature_value_fk_archive_feature_value' == -->
 <path id='archive_feature_value_fk_archive_feature_value'  onmouseover="hghl(['archive_feature_value_fk_archive_feature_value','qiita.archive_feature_value.archive_merging_scheme_id','qiita.archive_merging_scheme.archive_merging_scheme_id'])" onmouseout="uhghl(['archive_feature_value_fk_archive_feature_value','qiita.archive_feature_value.archive_merging_scheme_id','qiita.archive_merging_scheme.archive_merging_scheme_id'])" transform='translate(8,0)' class='scene' d='M 1568,64L 1600,64' >
 	<title>Fk fk_archive_feature_value
@@ -917,13 +922,13 @@ processing_job ref processing_job_status ( processing_job_status_id )</title>
 processing_job ref processing_job_status ( processing_job_status_id )</title></path>
 <text x='1373' y='827' transform='rotate(0 1373,827)' class='relName'>processing_job_status_id</text>
 <!-- == Fk 'processing_job_fk_processing_job' == -->
-<path id='processing_job_fk_processing_job'  onmouseover="hghl(['processing_job_fk_processing_job','qiita.processing_job.command_id','qiita.software_command.command_id'])" onmouseout="uhghl(['processing_job_fk_processing_job','qiita.processing_job.command_id','qiita.software_command.command_id'])" transform='translate(8,0)' class='scene' d='M 1776,800L 2856,800Q 2864,800 2864,792L 2864,520Q 2864,512 2872,512L 2888,512Q 2896,512 2896,504L 2896,496' >
+<path id='processing_job_fk_processing_job'  onmouseover="hghl(['processing_job_fk_processing_job','qiita.processing_job.command_id','qiita.software_command.command_id'])" onmouseout="uhghl(['processing_job_fk_processing_job','qiita.processing_job.command_id','qiita.software_command.command_id'])" transform='translate(8,0)' class='scene' d='M 1776,816L 2856,816Q 2864,816 2864,808L 2864,520Q 2864,512 2872,512L 2888,512Q 2896,512 2896,504L 2896,496' >
 	<title>Fk fk_processing_job
 processing_job ref software_command ( command_id )</title>
 </path>
-<path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 1776,800L 2856,800Q 2864,800 2864,792L 2864,520Q 2864,512 2872,512L 2888,512Q 2896,512 2896,504L 2896,496' ><title>Fk fk_processing_job
+<path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 1776,816L 2856,816Q 2864,816 2864,808L 2864,520Q 2864,512 2872,512L 2888,512Q 2896,512 2896,504L 2896,496' ><title>Fk fk_processing_job
 processing_job ref software_command ( command_id )</title></path>
-<text x='1786' y='795' transform='rotate(0 1786,795)' class='relName'>command_id</text>
+<text x='1786' y='811' transform='rotate(0 1786,811)' class='relName'>command_id</text>
 <!-- == Fk 'processing_job_validator_fk_processing_job_validator_c' == -->
 <path id='processing_job_validator_fk_processing_job_validator_c'  onmouseover="hghl(['processing_job_validator_fk_processing_job_validator_c','qiita.processing_job_validator.validator_id','qiita.processing_job.processing_job_id'])" onmouseout="uhghl(['processing_job_validator_fk_processing_job_validator_c','qiita.processing_job_validator.validator_id','qiita.processing_job.processing_job_id'])" transform='translate(8,0)' class='scene' d='M 1504,1088L 1504,952Q 1504,944 1512,944L 1520,944' >
 	<title>Fk fk_processing_job_validator_c
@@ -997,13 +1002,21 @@ sample_template_filepath ref filepath ( filepath_id )</title>
 sample_template_filepath ref filepath ( filepath_id )</title></path>
 <text x='2922' y='1307' transform='rotate(0 2922,1307)' class='relName'>filepath_id</text>
 <!-- == Fk 'sample_template_filepath_fk_study_id' == -->
-<path id='sample_template_filepath_fk_study_id'  onmouseover="hghl(['sample_template_filepath_fk_study_id','qiita.sample_template_filepath.study_id','qiita.study.study_id'])" onmouseout="uhghl(['sample_template_filepath_fk_study_id','qiita.sample_template_filepath.study_id','qiita.study.study_id'])" transform='translate(8,0)' class='scene' d='M 2704,1296L 2440,1296Q 2432,1296 2432,1288L 2432,1256Q 2432,1248 2424,1248L 1880,1248Q 1872,1248 1872,1256L 1872,1336Q 1872,1344 1864,1344L 376,1344Q 368,1344 368,1336L 368,872Q 368,864 360,864L 320,864' >
+<path id='sample_template_filepath_fk_study_id'  onmouseover="hghl(['sample_template_filepath_fk_study_id','qiita.sample_template_filepath.study_id','qiita.study.study_id'])" onmouseout="uhghl(['sample_template_filepath_fk_study_id','qiita.sample_template_filepath.study_id','qiita.study.study_id'])" transform='translate(8,0)' class='scene' d='M 2704,1296L 2440,1296Q 2432,1296 2432,1288L 2432,1256Q 2432,1248 2424,1248L 1880,1248Q 1872,1248 1872,1256L 1872,1336Q 1872,1344 1864,1344L 376,1344Q 368,1344 368,1352L 368,1464Q 368,1472 360,1472L 24,1472Q 16,1472 16,1464L 16,872Q 16,864 24,864L 32,864' >
 	<title>Fk fk_study_id
 sample_template_filepath ref study ( study_id )</title>
 </path>
-<path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 2704,1296L 2440,1296Q 2432,1296 2432,1288L 2432,1256Q 2432,1248 2424,1248L 1880,1248Q 1872,1248 1872,1256L 1872,1336Q 1872,1344 1864,1344L 376,1344Q 368,1344 368,1336L 368,872Q 368,864 360,864L 320,864' ><title>Fk fk_study_id
+<path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 2704,1296L 2440,1296Q 2432,1296 2432,1288L 2432,1256Q 2432,1248 2424,1248L 1880,1248Q 1872,1248 1872,1256L 1872,1336Q 1872,1344 1864,1344L 376,1344Q 368,1344 368,1352L 368,1464Q 368,1472 360,1472L 24,1472Q 16,1472 16,1464L 16,872Q 16,864 24,864L 32,864' ><title>Fk fk_study_id
 sample_template_filepath ref study ( study_id )</title></path>
 <text x='2661' y='1291' transform='rotate(0 2661,1291)' class='relName'>study_id</text>
+<!-- == Fk 'slurm_resource_allocations_fk_slurm_resource_allocations' == -->
+<path id='slurm_resource_allocations_fk_slurm_resource_allocations'  onmouseover="hghl(['slurm_resource_allocations_fk_slurm_resource_allocations','qiita.slurm_resource_allocations.processing_job_id','qiita.processing_job.processing_job_id'])" onmouseout="uhghl(['slurm_resource_allocations_fk_slurm_resource_allocations','qiita.slurm_resource_allocations.processing_job_id','qiita.processing_job.processing_job_id'])" transform='translate(8,0)' class='scene' d='M 1872,736L 1768,736Q 1760,736 1760,744L 1760,752' >
+	<title>Fk fk_slurm_resource_allocations
+slurm_resource_allocations ref processing_job ( processing_job_id )</title>
+</path>
+<path transform='translate(8,0)' marker-start='url(#foot1)' marker-end='url(#arrow1)'    d='M 1872,736L 1768,736Q 1760,736 1760,744L 1760,752' ><title>Fk fk_slurm_resource_allocations
+slurm_resource_allocations ref processing_job ( processing_job_id )</title></path>
+<text x='1770' y='731' transform='rotate(0 1770,731)' class='relName'>processing_job_id</text>
 <!-- == Fk 'software_fk_software_software_type' == -->
 <path id='software_fk_software_software_type'  onmouseover="hghl(['software_fk_software_software_type','qiita.software.software_type_id','qiita.software_type.software_type_id'])" onmouseout="uhghl(['software_fk_software_software_type','qiita.software.software_type_id','qiita.software_type.software_type_id'])" transform='translate(8,0)' class='scene' d='M 3248,512L 3248,544' >
 	<title>Fk fk_software_software_type
@@ -1085,13 +1098,13 @@ study_artifact ref artifact ( artifact_id )</title>
 study_artifact ref artifact ( artifact_id )</title></path>
 <text x='307' y='1102' transform='rotate(270 307,1102)' class='relName'>artifact_id</text>
 <!-- == Fk 'study_artifact_fk_study_artifact_study' == -->
-<path id='study_artifact_fk_study_artifact_study'  onmouseover="hghl(['study_artifact_fk_study_artifact_study','qiita.study_artifact.study_id','qiita.study.study_id'])" onmouseout="uhghl(['study_artifact_fk_study_artifact_study','qiita.study_artifact.study_id','qiita.study.study_id'])" transform='translate(8,0)' class='scene' d='M 160,1120L 24,1120Q 16,1120 16,1112L 16,872Q 16,864 24,864L 32,864' >
+<path id='study_artifact_fk_study_artifact_study'  onmouseover="hghl(['study_artifact_fk_study_artifact_study','qiita.study_artifact.study_id','qiita.study.study_id'])" onmouseout="uhghl(['study_artifact_fk_study_artifact_study','qiita.study_artifact.study_id','qiita.study.study_id'])" transform='translate(8,0)' class='scene' d='M 320,1136L 328,1136Q 336,1136 336,1128L 336,872Q 336,864 328,864L 320,864' >
 	<title>Fk fk_study_artifact_study
 study_artifact ref study ( study_id )</title>
 </path>
-<path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 160,1120L 24,1120Q 16,1120 16,1112L 16,872Q 16,864 24,864L 32,864' ><title>Fk fk_study_artifact_study
+<path transform='translate(8,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 320,1136L 328,1136Q 336,1136 336,1128L 336,872Q 336,864 328,864L 320,864' ><title>Fk fk_study_artifact_study
 study_artifact ref study ( study_id )</title></path>
-<text x='117' y='1115' transform='rotate(0 117,1115)' class='relName'>study_id</text>
+<text x='330' y='1131' transform='rotate(0 330,1131)' class='relName'>study_id</text>
 <!-- == Fk 'study_environmental_package_fk_study_environmental_package_0' == -->
 <path id='study_environmental_package_fk_study_environmental_package_0'  onmouseover="hghl(['study_environmental_package_fk_study_environmental_package_0','qiita.study_environmental_package.environmental_package_name','qiita.environmental_package.environmental_package_name'])" onmouseout="uhghl(['study_environmental_package_fk_study_environmental_package_0','qiita.study_environmental_package.environmental_package_name','qiita.environmental_package.environmental_package_name'])" transform='translate(8,0)' class='scene' d='M 688,976L 736,976' >
 	<title>Fk fk_study_environmental_package_0
@@ -1276,17 +1289,17 @@ Controls what analyses are visible on what portals</title></a>
 <text x='896' y='344' text-anchor='end' class='colType'>bigint</text><a xlink:href='#qiita.analysis_sample.artifact_id'><use id='fk' x='900' y='332' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
 
 <!-- == Table 'analysis_users' == -->
-<rect class='entity' style='stroke:none;' x='304' y='168' width='144' height='80' rx='8' ry='8' />
-<path d='M 304 196 L 304 176 Q 304 168 312 168 L 440 168 Q 448 168 448 176 L 448 196 L304 196 ' style='fill:url(#tbg_D1BEF4);stroke:1;stroke-opacity:0.1;' />
-<rect class='entity' x='304' y='168' width='144' height='80' rx='8' ry='8' style='fill:none;stroke:#28272C'/>
-<a xlink:href='#qiita.analysis_users'><text x='328' y='187' >analysis_users</text><title>Table qiita.analysis_users
+<rect class='entity' style='stroke:none;' x='352' y='168' width='144' height='80' rx='8' ry='8' />
+<path d='M 352 196 L 352 176 Q 352 168 360 168 L 488 168 Q 496 168 496 176 L 496 196 L352 196 ' style='fill:url(#tbg_D1BEF4);stroke:1;stroke-opacity:0.1;' />
+<rect class='entity' x='352' y='168' width='144' height='80' rx='8' ry='8' style='fill:none;stroke:#28272C'/>
+<a xlink:href='#qiita.analysis_users'><text x='376' y='187' >analysis_users</text><title>Table qiita.analysis_users
 Links analyses to the users they are shared with</title></a>
-  <use id='nn' x='306' y='205' xlink:href='#nn'/><use id='pk' x='306' y='204' xlink:href='#pk'><title>Pk idx_analysis_users ( analysis_id, email ) idx_analysis_users_analysis ( analysis_id ) </title></use><a xlink:href='#qiita.analysis_users_analysis_id'><text id='qiita.analysis_users.analysis_id' x='323' y='215' onmouseover="hghl(['analysis_users_fk_analysis_users_analysis','qiita.analysis.analysis_id'])" onmouseout="uhghl(['analysis_users_fk_analysis_users_analysis','qiita.analysis.analysis_id'])">analysis_id</text><title>analysis_id
+  <use id='nn' x='354' y='205' xlink:href='#nn'/><use id='pk' x='354' y='204' xlink:href='#pk'><title>Pk idx_analysis_users ( analysis_id, email ) idx_analysis_users_analysis ( analysis_id ) </title></use><a xlink:href='#qiita.analysis_users_analysis_id'><text id='qiita.analysis_users.analysis_id' x='371' y='215' onmouseover="hghl(['analysis_users_fk_analysis_users_analysis','qiita.analysis.analysis_id'])" onmouseout="uhghl(['analysis_users_fk_analysis_users_analysis','qiita.analysis.analysis_id'])">analysis_id</text><title>analysis_id
 * bigint</title></a>
-<text x='432' y='216' text-anchor='end' class='colType'>bigint</text><a xlink:href='#qiita.analysis_users.analysis_id'><use id='fk' x='436' y='204' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
-  <use id='nn' x='306' y='221' xlink:href='#nn'/><use id='pk' x='306' y='220' xlink:href='#pk'><title>Pk idx_analysis_users ( analysis_id, email ) idx_analysis_users_email ( email ) </title></use><a xlink:href='#qiita.analysis_users_email'><text id='qiita.analysis_users.email' x='323' y='231' onmouseover="hghl(['analysis_users_fk_analysis_users_user','qiita.qiita_user.email'])" onmouseout="uhghl(['analysis_users_fk_analysis_users_user','qiita.qiita_user.email'])">email</text><title>email
+<text x='480' y='216' text-anchor='end' class='colType'>bigint</text><a xlink:href='#qiita.analysis_users.analysis_id'><use id='fk' x='484' y='204' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
+  <use id='nn' x='354' y='221' xlink:href='#nn'/><use id='pk' x='354' y='220' xlink:href='#pk'><title>Pk idx_analysis_users ( analysis_id, email ) idx_analysis_users_email ( email ) </title></use><a xlink:href='#qiita.analysis_users_email'><text id='qiita.analysis_users.email' x='371' y='231' onmouseover="hghl(['analysis_users_fk_analysis_users_user','qiita.qiita_user.email'])" onmouseout="uhghl(['analysis_users_fk_analysis_users_user','qiita.qiita_user.email'])">email</text><title>email
 * varchar</title></a>
-<text x='432' y='232' text-anchor='end' class='colType'>varchar</text><a xlink:href='#qiita.analysis_users.email'><use id='fk' x='436' y='220' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+<text x='480' y='232' text-anchor='end' class='colType'>varchar</text><a xlink:href='#qiita.analysis_users.email'><use id='fk' x='484' y='220' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
 
 <!-- == Table 'archive_feature_value' == -->
 <rect class='entity' style='stroke:none;' x='1312' y='40' width='256' height='96' rx='8' ry='8' />
@@ -2065,7 +2078,7 @@ jsonb</title></a>
 <path d='M 1536 788 L 1536 768 Q 1536 760 1544 760 L 1768 760 Q 1776 760 1776 768 L 1776 788 L1536 788 ' style='fill:url(#tbg_F4DDBE);stroke:1;stroke-opacity:0.1;' />
 <rect class='entity' x='1536' y='760' width='240' height='224' rx='8' ry='8' style='fill:none;stroke:#2C2927'/>
 <a xlink:href='#qiita.processing_job'><text x='1605' y='779' >processing_job</text><title>Table qiita.processing_job</title></a>
-  <use id='nn' x='1538' y='797' xlink:href='#nn'/><use id='pk' x='1538' y='796' xlink:href='#pk'><title>Pk pk_processing_job ( processing_job_id ) </title></use><a xlink:href='#qiita.processing_job_processing_job_id'><text id='qiita.processing_job.processing_job_id' x='1555' y='807' onmouseover="hghl(['analysis_processing_job_fk_analysis_processing_job_pj','qiita.analysis_processing_job.processing_job_id','artifact_output_processing_job_fk_artifact_output_processing_job_job','qiita.artifact_output_processing_job.processing_job_id','artifact_processing_job_fk_artifact_processing_job_0','qiita.artifact_processing_job.processing_job_id','parent_processing_job_fk_parent_processing_job_child','qiita.parent_processing_job.child_id','parent_processing_job_fk_parent_processing_job_parent','qiita.parent_processing_job.parent_id','prep_template_processing_job_fk_prep_template_processing_job_job','qiita.prep_template_processing_job.processing_job_id','processing_job_validator_fk_processing_job_validator_c','qiita.processing_job_validator.validator_id','processing_job_validator_fk_processing_job_validator_p','qiita.processing_job_validator.processing_job_id','processing_job_workflow_root_fk_processing_job_workflow_root_wf','qiita.processing_job_workflow_root.processing_job_id'])" onmouseout="uhghl(['analysis_processing_job_fk_analysis_processing_job_pj','qiita.analysis_processing_job.processing_job_id','artifact_output_processing_job_fk_artifact_output_processing_job_job','qiita.artifact_output_processing_job.processing_job_id','artifact_processing_job_fk_artifact_processing_job_0','qiita.artifact_processing_job.processing_job_id','parent_processing_job_fk_parent_processing_job_child','qiita.parent_processing_job.child_id','parent_processing_job_fk_parent_processing_job_parent','qiita.parent_processing_job.parent_id','prep_template_processing_job_fk_prep_template_processing_job_job','qiita.prep_template_processing_job.processing_job_id','processing_job_validator_fk_processing_job_validator_c','qiita.processing_job_validator.validator_id','processing_job_validator_fk_processing_job_validator_p','qiita.processing_job_validator.processing_job_id','processing_job_workflow_root_fk_processing_job_workflow_root_wf','qiita.processing_job_workflow_root.processing_job_id'])">processing_job_id</text><title>processing_job_id
+  <use id='nn' x='1538' y='797' xlink:href='#nn'/><use id='pk' x='1538' y='796' xlink:href='#pk'><title>Pk pk_processing_job ( processing_job_id ) </title></use><a xlink:href='#qiita.processing_job_processing_job_id'><text id='qiita.processing_job.processing_job_id' x='1555' y='807' onmouseover="hghl(['analysis_processing_job_fk_analysis_processing_job_pj','qiita.analysis_processing_job.processing_job_id','artifact_output_processing_job_fk_artifact_output_processing_job_job','qiita.artifact_output_processing_job.processing_job_id','artifact_processing_job_fk_artifact_processing_job_0','qiita.artifact_processing_job.processing_job_id','parent_processing_job_fk_parent_processing_job_child','qiita.parent_processing_job.child_id','parent_processing_job_fk_parent_processing_job_parent','qiita.parent_processing_job.parent_id','prep_template_processing_job_fk_prep_template_processing_job_job','qiita.prep_template_processing_job.processing_job_id','processing_job_validator_fk_processing_job_validator_c','qiita.processing_job_validator.validator_id','processing_job_validator_fk_processing_job_validator_p','qiita.processing_job_validator.processing_job_id','processing_job_workflow_root_fk_processing_job_workflow_root_wf','qiita.processing_job_workflow_root.processing_job_id','slurm_resource_allocations_fk_slurm_resource_allocations','qiita.slurm_resource_allocations.processing_job_id'])" onmouseout="uhghl(['analysis_processing_job_fk_analysis_processing_job_pj','qiita.analysis_processing_job.processing_job_id','artifact_output_processing_job_fk_artifact_output_processing_job_job','qiita.artifact_output_processing_job.processing_job_id','artifact_processing_job_fk_artifact_processing_job_0','qiita.artifact_processing_job.processing_job_id','parent_processing_job_fk_parent_processing_job_child','qiita.parent_processing_job.child_id','parent_processing_job_fk_parent_processing_job_parent','qiita.parent_processing_job.parent_id','prep_template_processing_job_fk_prep_template_processing_job_job','qiita.prep_template_processing_job.processing_job_id','processing_job_validator_fk_processing_job_validator_c','qiita.processing_job_validator.validator_id','processing_job_validator_fk_processing_job_validator_p','qiita.processing_job_validator.processing_job_id','processing_job_workflow_root_fk_processing_job_workflow_root_wf','qiita.processing_job_workflow_root.processing_job_id','slurm_resource_allocations_fk_slurm_resource_allocations','qiita.slurm_resource_allocations.processing_job_id'])">processing_job_id</text><title>processing_job_id
 * uuid default uuid_generate_v4()</title></a>
 <text x='1760' y='808' text-anchor='end' class='colType'>uuid</text><a xlink:href='#qiita.processing_job.processing_job_id'><use id='ref' x='1764' y='796' xlink:href='#ref'/><title>Referred by analysis_processing_job ( processing_job_id ) 
 Referred by artifact_output_processing_job ( processing_job_id ) 
@@ -2075,7 +2088,8 @@ Referred by parent_processing_job ( parent_id -&gt; processing_job_id )
 Referred by prep_template_processing_job ( processing_job_id ) 
 Referred by processing_job_validator ( validator_id -&gt; processing_job_id ) 
 Referred by processing_job_validator ( processing_job_id ) 
-Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
+Referred by processing_job_workflow_root ( processing_job_id ) 
+Referred by slurm_resource_allocations ( processing_job_id ) </title></a>
   <use id='nn' x='1538' y='813' xlink:href='#nn'/><use id='idx' x='1538' y='812' xlink:href='#idx'><title>idx_processing_job_email ( email ) </title></use><a xlink:href='#qiita.processing_job_email'><text id='qiita.processing_job.email' x='1555' y='823'>email</text><title>email
 * varchar
 The user that launched the job</title></a>
@@ -2274,6 +2288,24 @@ varchar[]</title></a>
 <text x='1072' y='1448' text-anchor='end' class='colType'>varchar</text>  <a xlink:href='#qiita.sample_x_sample_values'><text id='qiita.sample_x.sample_values' x='931' y='1463'>sample_values</text><title>sample_values
 jsonb</title></a>
 <text x='1072' y='1464' text-anchor='end' class='colType'>jsonb</text>
+<!-- == Table 'settings' == -->
+<rect class='entity' style='stroke:none;' x='64' y='152' width='256' height='144' rx='8' ry='8' />
+<path d='M 64 180 L 64 160 Q 64 152 72 152 L 312 152 Q 320 152 320 160 L 320 180 L64 180 ' style='fill:url(#tbg_F82E15);stroke:1;stroke-opacity:0.1;' />
+<rect class='entity' x='64' y='152' width='256' height='144' rx='8' ry='8' style='fill:none;stroke:#2C2727'/>
+<a xlink:href='#qiita.settings'><text x='163' y='171' >settings</text><title>Table qiita.settings</title></a>
+  <use id='nn' x='66' y='189' xlink:href='#nn'/><a xlink:href='#qiita.settings_test'><text id='qiita.settings.test' x='83' y='199'>test</text><title>test
+* boolean default true</title></a>
+<text x='304' y='200' text-anchor='end' class='colType'>boolean</text>  <use id='nn' x='66' y='205' xlink:href='#nn'/><a xlink:href='#qiita.settings_base_data_dir'><text id='qiita.settings.base_data_dir' x='83' y='215'>base_data_dir</text><title>base_data_dir
+* varchar</title></a>
+<text x='304' y='216' text-anchor='end' class='colType'>varchar</text>  <use id='nn' x='66' y='221' xlink:href='#nn'/><a xlink:href='#qiita.settings_base_work_dir'><text id='qiita.settings.base_work_dir' x='83' y='231'>base_work_dir</text><title>base_work_dir
+* varchar</title></a>
+<text x='304' y='232' text-anchor='end' class='colType'>varchar</text>  <use id='nn' x='66' y='237' xlink:href='#nn'/><a xlink:href='#qiita.settings_current_patch'><text id='qiita.settings.current_patch' x='83' y='247'>current_patch</text><title>current_patch
+* varchar default &apos;unpatched&apos;::character varying</title></a>
+<text x='304' y='248' text-anchor='end' class='colType'>varchar</text>  <a xlink:href='#qiita.settings_max_preparation_samples'><text id='qiita.settings.max_preparation_samples' x='83' y='263'>max_preparation_samples</text><title>max_preparation_samples
+integer default 800</title></a>
+<text x='304' y='264' text-anchor='end' class='colType'>integer</text>  <a xlink:href='#qiita.settings_max_artifacts_in_workflow'><text id='qiita.settings.max_artifacts_in_workflow' x='83' y='279'>max_artifacts_in_workflow</text><title>max_artifacts_in_workflow
+integer default 35</title></a>
+<text x='304' y='280' text-anchor='end' class='colType'>integer</text>
 <!-- == Table 'severity' == -->
 <rect class='entity' style='stroke:none;' x='1632' y='232' width='160' height='80' rx='8' ry='8' />
 <path d='M 1632 260 L 1632 240 Q 1632 232 1640 232 L 1784 232 Q 1792 232 1792 240 L 1792 260 L1632 260 ' style='fill:url(#tbg_F4DDBE);stroke:1;stroke-opacity:0.1;' />
@@ -2285,6 +2317,27 @@ jsonb</title></a>
   <use id='nn' x='1634' y='285' xlink:href='#nn'/><use id='unq' x='1634' y='284' xlink:href='#unq'><title>Unq idx_severity ( severity ) </title></use><a xlink:href='#qiita.severity_severity'><text id='qiita.severity.severity' x='1651' y='295'>severity</text><title>severity
 * varchar</title></a>
 <text x='1776' y='296' text-anchor='end' class='colType'>varchar</text>
+<!-- == Table 'slurm_resource_allocations' == -->
+<rect class='entity' style='stroke:none;' x='1888' y='632' width='192' height='160' rx='8' ry='8' />
+<path d='M 1888 660 L 1888 640 Q 1888 632 1896 632 L 2072 632 Q 2080 632 2080 640 L 2080 660 L1888 660 ' style='fill:url(#tbg_F4DDBE);stroke:1;stroke-opacity:0.1;' />
+<rect class='entity' x='1888' y='632' width='192' height='160' rx='8' ry='8' style='fill:none;stroke:#2C2927'/>
+<a xlink:href='#qiita.slurm_resource_allocations'><text x='1894' y='651' >slurm_resource_allocations</text><title>Table qiita.slurm_resource_allocations</title></a>
+  <use id='nn' x='1890' y='669' xlink:href='#nn'/><use id='pk' x='1890' y='668' xlink:href='#pk'><title>Pk pk_slurm_resource_allocations_processing_job_id ( processing_job_id ) </title></use><a xlink:href='#qiita.slurm_resource_allocations_processing_job_id'><text id='qiita.slurm_resource_allocations.processing_job_id' x='1907' y='679' onmouseover="hghl(['slurm_resource_allocations_fk_slurm_resource_allocations','qiita.processing_job.processing_job_id'])" onmouseout="uhghl(['slurm_resource_allocations_fk_slurm_resource_allocations','qiita.processing_job.processing_job_id'])">processing_job_id</text><title>processing_job_id
+* uuid</title></a>
+<text x='2064' y='680' text-anchor='end' class='colType'>uuid</text><a xlink:href='#qiita.slurm_resource_allocations.processing_job_id'><use id='fk' x='2068' y='668' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
+  <a xlink:href='#qiita.slurm_resource_allocations_samples'><text id='qiita.slurm_resource_allocations.samples' x='1907' y='695'>samples</text><title>samples
+integer</title></a>
+<text x='2064' y='696' text-anchor='end' class='colType'>integer</text>  <a xlink:href='#qiita.slurm_resource_allocations_columns'><text id='qiita.slurm_resource_allocations.columns' x='1907' y='711'>columns</text><title>columns
+integer</title></a>
+<text x='2064' y='712' text-anchor='end' class='colType'>integer</text>  <a xlink:href='#qiita.slurm_resource_allocations_input_size'><text id='qiita.slurm_resource_allocations.input_size' x='1907' y='727'>input_size</text><title>input_size
+bigint</title></a>
+<text x='2064' y='728' text-anchor='end' class='colType'>bigint</text>  <a xlink:href='#qiita.slurm_resource_allocations_extra_info'><text id='qiita.slurm_resource_allocations.extra_info' x='1907' y='743'>extra_info</text><title>extra_info
+varchar default null</title></a>
+<text x='2064' y='744' text-anchor='end' class='colType'>varchar</text>  <a xlink:href='#qiita.slurm_resource_allocations_memory_used'><text id='qiita.slurm_resource_allocations.memory_used' x='1907' y='759'>memory_used</text><title>memory_used
+bigint</title></a>
+<text x='2064' y='760' text-anchor='end' class='colType'>bigint</text>  <a xlink:href='#qiita.slurm_resource_allocations_walltime_used'><text id='qiita.slurm_resource_allocations.walltime_used' x='1907' y='775'>walltime_used</text><title>walltime_used
+integer</title></a>
+<text x='2064' y='776' text-anchor='end' class='colType'>integer</text>
 <!-- == Table 'software' == -->
 <rect class='entity' style='stroke:none;' x='3232' y='312' width='224' height='192' rx='8' ry='8' />
 <path d='M 3232 340 L 3232 320 Q 3232 312 3240 312 L 3448 312 Q 3456 312 3456 320 L 3456 340 L3232 340 ' style='fill:url(#tbg_F4DDBE);stroke:1;stroke-opacity:0.1;' />
@@ -2980,7 +3033,7 @@ Specific per_user_level slurm  parameters</title></a>
 </table></div></div>
 
 <br><br>
-<div class='card'><div class='card-body'><a name='qiita.analysis_users' onclick='window.scrollTo(104, 176);return false;' style='cursor:pointer;'><h5 class='card-title'>Table analysis_users</h5></a>
+<div class='card'><div class='card-body'><a name='qiita.analysis_users' onclick='window.scrollTo(152, 176);return false;' style='cursor:pointer;'><h5 class='card-title'>Table analysis_users</h5></a>
 <p class="text-muted">Links analyses to the users they are shared with</p>
 <table class='table table-sm table-bordered small' style='table-layout: fixed; word-wrap: break-word;'>
 <thead>
@@ -5685,6 +5738,46 @@ Specific per_user_level slurm  parameters</title></a>
 </table></div></div>
 
 <br><br>
+<div class='card'><div class='card-body'><a name='qiita.settings' onclick='window.scrollTo(60, 160);return false;' style='cursor:pointer;'><h5 class='card-title'>Table settings</h5></a>
+<table class='table table-sm table-bordered small' style='table-layout: fixed; word-wrap: break-word;'>
+<thead>
+<tr><th style='width:5%'>Idx</th><th style='width:40%'>Field Name</th><th>Data Type</th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='qiita.settings_test'>test</a></td>
+		<td> boolean  DEFAULT true </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='qiita.settings_base_data_dir'>base&#95;data&#95;dir</a></td>
+		<td> varchar  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='qiita.settings_base_work_dir'>base&#95;work&#95;dir</a></td>
+		<td> varchar  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='qiita.settings_current_patch'>current&#95;patch</a></td>
+		<td> varchar  DEFAULT 'unpatched'::character varying </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita.settings_max_preparation_samples'>max&#95;preparation&#95;samples</a></td>
+		<td> integer  DEFAULT 800 </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita.settings_max_artifacts_in_workflow'>max&#95;artifacts&#95;in&#95;workflow</a></td>
+		<td> integer  DEFAULT 35 </td>
+	</tr>
+</tbody>
+</table></div></div>
+
+<br><br>
 <div class='card'><div class='card-body'><a name='qiita.severity' onclick='window.scrollTo(1432, 240);return false;' style='cursor:pointer;'><h5 class='card-title'>Table severity</h5></a>
 <table class='table table-sm table-bordered small' style='table-layout: fixed; word-wrap: break-word;'>
 <thead>
@@ -5707,6 +5800,60 @@ Specific per_user_level slurm  parameters</title></a>
 	</tr>
 	<tr>		<td><svg width='14' height='14'><use xlink:href='#unq'/></svg></td><td>idx&#95;severity</td>
 		<td> ON severity</td>
+	</tr>
+</tbody>
+</table></div></div>
+
+<br><br>
+<div class='card'><div class='card-body'><a name='qiita.slurm_resource_allocations' onclick='window.scrollTo(1688, 640);return false;' style='cursor:pointer;'><h5 class='card-title'>Table slurm_resource_allocations</h5></a>
+<table class='table table-sm table-bordered small' style='table-layout: fixed; word-wrap: break-word;'>
+<thead>
+<tr><th style='width:5%'>Idx</th><th style='width:40%'>Field Name</th><th>Data Type</th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*<svg width='14' height='14'><use xlink:href='#pk'/></svg><svg width='14' height='14'><use xlink:href='#fk'/></svg></td>
+		<td><a name='qiita.slurm_resource_allocations_processing_job_id'>processing&#95;job&#95;id</a></td>
+		<td> uuid  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita.slurm_resource_allocations_samples'>samples</a></td>
+		<td> integer  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita.slurm_resource_allocations_columns'>columns</a></td>
+		<td> integer  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita.slurm_resource_allocations_input_size'>input&#95;size</a></td>
+		<td> bigint  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita.slurm_resource_allocations_extra_info'>extra&#95;info</a></td>
+		<td> varchar  DEFAULT null </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita.slurm_resource_allocations_memory_used'>memory&#95;used</a></td>
+		<td> bigint  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita.slurm_resource_allocations_walltime_used'>walltime&#95;used</a></td>
+		<td> integer  </td>
+	</tr>
+<tr><th colspan='3'>Indexes</th></tr>
+	<tr>		<td><svg width='14' height='14'><use xlink:href='#pk'/></svg></td><td>pk&#95;slurm&#95;resource&#95;allocations&#95;processing&#95;job&#95;id</td>
+		<td> ON processing&#95;job&#95;id</td>
+	</tr>
+<tr><th colspan='3'>Foreign Keys</th></tr>
+	<tr>
+		<td><svg width='14' height='14'><use xlink:href='#fk'/></svg></td><td>fk_slurm_resource_allocations</td>
+		<td > ( processing&#95;job&#95;id ) ref <a href='#qiita&#46;processing&#95;job'>processing&#95;job</a> (processing&#95;job&#95;id) </td>
 	</tr>
 </tbody>
 </table></div></div>
