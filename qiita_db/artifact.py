@@ -1574,7 +1574,15 @@ class Artifact(qdb.base.QiitaObject):
     @property
     def has_human(self):
         has_human = False
-        if self.artifact_type == 'per_sample_FASTQ':
+        # we are going to check the metadata if:
+        # - the prep data_type is _not_ target gene
+        # - the prep is not current_human_filtering
+        # - if the artifact_type is 'per_sample_FASTQ'
+        pts = self.prep_templates
+        tgs = qdb.metadata_template.constants.TARGET_GENE_DATA_TYPES
+        ntg = any([pt.data_type() not in tgs for pt in pts])
+        chf = any([not pt.current_human_filtering for pt in pts])
+        if ntg and chf and self.artifact_type == 'per_sample_FASTQ':
             st = self.study.sample_template
             if 'env_package' in st.categories:
                 sql = f"""SELECT DISTINCT sample_values->>'env_package'
