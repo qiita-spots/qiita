@@ -37,7 +37,6 @@ class Command(qdb.base.QiitaObject):
     parameters
     required_parameters
     software
-    name
     description
     cli
     parameters_table
