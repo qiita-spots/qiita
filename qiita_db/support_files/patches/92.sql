@@ -22,3 +22,8 @@ ALTER TABLE qiita.slurm_resource_allocations
 -- Apr 21, 2024
 -- Adding a new column: current_human_filtering to qiita.prep_template
 ALTER TABLE qiita.prep_template ADD current_human_filtering boolean DEFAULT False;
+
+-- Apr 22, 2024
+-- Adding a new column: reprocess_job_id to qiita.prep_template to keep track of
+-- the job that reprocessed this prep
+ALTER TABLE qiita.prep_template ADD reprocess_job_id uuid DEFAULT NULL;

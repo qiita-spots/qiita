@@ -1107,3 +1107,28 @@ class PrepTemplate(MetadataTemplate):
                      WHERE prep_template_id = %s"""
             qdb.sql_connection.TRN.add(sql, [current_human_filtering, self.id])
             qdb.sql_connection.TRN.execute()
+
+    @property
+    def reprocess_job_id(self):
+        """The job that was created to reprocess this prep info file
+
+        Returns
+        -------
+        bool or None
+            The reprocess_job_id of the prep file info
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT reprocess_job_id
+                     FROM qiita.prep_template
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @reprocess_job_id.setter
+    def reprocess_job_id(self, reprocess_job_id):
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.prep_template
+                     SET reprocess_job_id = %s
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [reprocess_job_id, self.id])
+            qdb.sql_connection.TRN.execute()
