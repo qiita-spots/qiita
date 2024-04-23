@@ -1406,6 +1406,16 @@ class ArtifactTests(TestCase):
 
         self.assertTrue(artifact.has_human)
 
+        # now if we change the pt data_type to 16S
+        pt = artifact.prep_templates[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                f"""UPDATE qiita.prep_template
+                    SET data_type_id = 1
+                    WHERE prep_template_id = {pt.id}""")
+            qdb.sql_connection.TRN.execute()
+        self.assertFalse(artifact.has_human)
+
     def test_descendants_with_jobs(self):
         # let's tests that we can connect two artifacts with different root
         # in the same analysis

@@ -1001,6 +1001,9 @@
 			<column name="creation_job_id" type="uuid" jt="1111" >
 				<defo><![CDATA[NULL]]></defo>
 			</column>
+			<column name="current_human_filtering" type="boolean" jt="1111" >
+				<defo><![CDATA[false]]></defo>
+			</column>
 			<index name="pk_prep_template" unique="PRIMARY_KEY" >
 				<column name="prep_template_id" />
 			</index>
@@ -2148,7 +2151,7 @@ $function$
 		<entity schema="qiita" name="user_level" color="D1BEF4" x="64" y="1520" />
 		<entity schema="qiita" name="visibility" color="BED3F4" x="2160" y="880" />
 		<script name="Sample SQL Editor" id="Editor_19ad" language="SQL" >
-			<string><![CDATA[SELECT artifact_id, generated_timestamp, command_id, command_parameters, visibility_id, artifact_type_id, data_type_id, submitted_to_vamps, 
+			<string><![CDATA[SELECT artifact_id, generated_timestamp, command_id, command_parameters, visibility_id, artifact_type_id, data_type_id, submitted_to_vamps,
 	name
 FROM
 	qiita.artifact t;]]></string>

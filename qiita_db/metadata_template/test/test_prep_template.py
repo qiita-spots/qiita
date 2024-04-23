@@ -1905,6 +1905,15 @@ class TestPrepTemplate(TestCase):
         pt.name = 'Prep information 1'
         self.assertEqual(pt.name, 'Prep information 1')
 
+    def test_current_human_filtering(self):
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        # by default it should be false
+        self.assertFalse(pt.current_human_filtering)
+        pt.current_human_filtering = True
+        self.assertTrue(pt.current_human_filtering)
+        pt.current_human_filtering = False
+        self.assertFalse(pt.current_human_filtering)
+
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
