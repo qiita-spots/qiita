@@ -1001,8 +1001,11 @@
 			<column name="creation_job_id" type="uuid" jt="1111" >
 				<defo><![CDATA[NULL]]></defo>
 			</column>
-			<column name="current_human_filtering" type="boolean" jt="1111" >
+			<column name="current_human_filtering" type="boolean" jt="-7" >
 				<defo><![CDATA[false]]></defo>
+			</column>
+			<column name="reprocess_job_id" type="uuid" jt="1111" >
+				<defo><![CDATA[NULL]]></defo>
 			</column>
 			<index name="pk_prep_template" unique="PRIMARY_KEY" >
 				<column name="prep_template_id" />
@@ -2109,7 +2112,7 @@ $function$
 		<entity schema="qiita" name="parent_processing_job" color="F4DDBE" x="1152" y="1024" />
 		<entity schema="qiita" name="per_study_tags" color="D1BEF4" x="656" y="1376" />
 		<entity schema="qiita" name="portal_type" color="D1BEF4" x="944" y="176" />
-		<entity schema="qiita" name="prep_template" color="BEBEF4" x="1952" y="1312" />
+		<entity schema="qiita" name="prep_template" color="BEBEF4" x="1984" y="1264" />
 		<entity schema="qiita" name="prep_template_filepath" color="BEBEF4" x="2128" y="1104" />
 		<entity schema="qiita" name="prep_template_processing_job" color="BEBEF4" x="2672" y="864" />
 		<entity schema="qiita" name="prep_template_sample" color="BEBEF4" x="1648" y="1376" />

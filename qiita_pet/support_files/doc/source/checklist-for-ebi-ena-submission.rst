@@ -25,7 +25,7 @@ applies for studies in sandbox state that will become private or public.
     `https://www.ebi.ac.uk/ena/browser/view/[accession]` or the Qiita Study
     id: `https://qiita.ucsd.edu/public/?study_id=[study-id]`
 
-`Here <https://knightlab.ucsd.edu/wordpress/wp-content/uploads/2016/04/QiitaTemplate_20181218.xlsx>`__ you will find a document outlining these requirements, with examples, when possible.
+`Here <https://knightlab.ucsd.edu/wordpress/wp-content/uploads/2016/04/QiitaPrepTemp06182020.xlsx>`__ you will find a document outlining these requirements, with examples, when possible.
 
 Note that submissions are time consuming and need full collaboration from the user.
 :red:`Do not wait until the last minute to request help.` In general, the best

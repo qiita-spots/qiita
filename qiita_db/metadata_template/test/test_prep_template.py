@@ -1914,6 +1914,21 @@ class TestPrepTemplate(TestCase):
         pt.current_human_filtering = False
         self.assertFalse(pt.current_human_filtering)
 
+    def test_reprocess_job_id(self):
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        # by default it should be None
+        self.assertIsNone(pt.reprocess_job_id)
+        # it should not accept an external_job_id
+        with self.assertRaises(ValueError):
+            pt.reprocess_job_id = '124567'
+        # but it should work fine with an uuid
+        jid = '6d368e16-2242-4cf8-87b4-a5dc40bb890b'
+        pt.reprocess_job_id = jid
+        self.assertEqual(pt.reprocess_job_id, jid)
+        # and it should be fine to return to its default value
+        pt.reprocess_job_id = None
+        self.assertIsNone(pt.reprocess_job_id)
+
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
