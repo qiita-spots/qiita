@@ -279,7 +279,6 @@ INSERT INTO qiita.filepath VALUES (19, '1_prep_1_qiime_19700101-000000.txt', 16,
 INSERT INTO qiita.filepath VALUES (20, '1_prep_1_19700101-000000.txt', 15, '3703494589', 1, 9, 26051);
 INSERT INTO qiita.filepath VALUES (21, '1_prep_1_qiime_19700101-000000.txt', 16, '3053485441', 1, 9, 36780);
 INSERT INTO qiita.filepath VALUES (22, 'biom_table.biom', 7, '1756512010', 1, 16, 1093210);
-INSERT INTO qiita.filepath VALUES (23, '1_20240503-120837.txt', 14, '211120843', 1, 9, 10590);
 
 
 --
@@ -1250,7 +1249,6 @@ INSERT INTO qiita.sample_1 VALUES ('1.SKD1.640179', '{"ph": "6.8", "temp": "15",
 --
 
 INSERT INTO qiita.sample_template_filepath VALUES (1, 17);
-INSERT INTO qiita.sample_template_filepath VALUES (1, 23);
 
 --
 -- Data for Name: software_artifact_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
