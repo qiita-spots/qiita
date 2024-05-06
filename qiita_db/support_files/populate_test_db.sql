@@ -1457,7 +1457,7 @@ SELECT pg_catalog.setval('qiita.filepath_data_directory_id_seq', 1, false);
 -- Name: filepath_filepath_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
 --
 
-SELECT pg_catalog.setval('qiita.filepath_filepath_id_seq', 23, true);
+SELECT pg_catalog.setval('qiita.filepath_filepath_id_seq', 22, true);
 
 
 --
