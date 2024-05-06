@@ -429,7 +429,10 @@ class DownloadPublicHandler(BaseHandlerDownload):
                 infofile._filepath_table, infofile._id_column, infofile.id,
                 sort='descending')[0]
 
-            basedir_len = len(get_db_files_base_dir()) + 1
+            basedir = get_db_files_base_dir()
+            basedir_len = len(basedir)
+            if not basedir.endswith('/'):
+                basedir_len += 1
             fp = x['fp'][basedir_len:]
             to_download.append((fp, fp, '-', str(x['fp_size'])))
             self._write_nginx_file_list(to_download)
