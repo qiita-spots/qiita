@@ -423,7 +423,5 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
         # for the test Study (1) so a lot of the tests actually expect this.
         # Now, trying to regenerate directly in the populate_test_db might
         # require too many dev hours so the easiest is just do it here
-        # UPDATE 01/25/2021: moving to 81.sql as we added timestamps to
-        #                    prep info files
-        if test and sql_patch_filename == '81.sql':
-            qdb.study.Study(1).sample_template.generate_files()
+    if test:
+        qdb.study.Study(1).sample_template.generate_files()
