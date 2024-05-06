@@ -101,7 +101,9 @@ class BaseHandlerDownload(BaseHandler):
             The path information needed by nginx for each file in the artifact
         """
         basedir = get_db_files_base_dir()
-        basedir_len = len(basedir) + 1
+        basedir_len = len(basedir)
+        if not basedir.endswith('/'):
+            basedir_len += 1
         to_download = []
         for i, x in enumerate(artifact.filepaths):
             # ignore if tgz as they could create problems and the
