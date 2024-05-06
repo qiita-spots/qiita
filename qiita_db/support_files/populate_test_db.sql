@@ -121,7 +121,7 @@ INSERT INTO qiita.software_type VALUES (3, 'private', 'Internal Qiita jobs');
 
 INSERT INTO qiita.software VALUES (2, 'BIOM type', '2.1.4 - Qiime2', 'The Biological Observation Matrix format', 'source ~/virtualenv/python2.7/bin/activate; export PATH=$HOME/miniconda3/bin/:$PATH; . activate qtp-biom', 'start_biom', 2, false, false);
 INSERT INTO qiita.software VALUES (3, 'Target Gene type', '0.1.0', 'Target gene artifact types plugin', 'source ~/virtualenv/python2.7/bin/activate; export PATH=$HOME/miniconda3/bin/:$PATH; source activate qiita', 'start_target_gene_types', 2, false, false);
-INSERT INTO qiita.software VALUES (4, 'Qiita', 'alpha', 'Internal Qiita jobs', 'export PATH="/home/travis/miniconda3/bin:$PATH"; source activate qiita', 'qiita-private-plugin', 3, true, false);
+INSERT INTO qiita.software VALUES (4, 'Qiita', 'alpha', 'Internal Qiita jobs', 'export PATH="source /home/runner/.profile; conda activate qiita', 'qiita-private-plugin', 3, true, false);
 INSERT INTO qiita.software VALUES (1, 'QIIMEq2', '1.9.1', 'Quantitative Insights Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data', 'source activate qiita', 'start_target_gene', 1, false, false);
 
 
