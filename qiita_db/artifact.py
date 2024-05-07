@@ -359,7 +359,7 @@ class Artifact(qdb.base.QiitaObject):
         # There are three different ways of creating an Artifact, but all of
         # them execute a set of common operations. Declare functions to avoid
         # code duplication. These functions should not be used outside of the
-        # create function, hence declaring them here
+        # CREATE OR REPLACE FUNCTION, hence declaring them here
         def _common_creation_steps(atype, cmd_id, data_type, cmd_parameters):
             gen_timestamp = datetime.now()
             visibility_id = qdb.util.convert_to_id("sandbox", "visibility")
