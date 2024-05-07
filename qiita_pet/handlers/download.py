@@ -76,7 +76,9 @@ class BaseHandlerDownload(BaseHandler):
             directory
         """
         basedir = get_db_files_base_dir()
-        basedir_len = len(basedir) + 1
+        basedir_len = len(basedir)
+        if not basedir.endswith('/'):
+            basedir_len += 1
         to_download = []
         for dp, _, fps in walk(dirpath):
             for fn in fps:
