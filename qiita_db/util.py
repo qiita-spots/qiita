@@ -410,7 +410,11 @@ def get_db_files_base_dir():
     """
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add("SELECT base_data_dir FROM settings")
-        return qdb.sql_connection.TRN.execute_fetchlast()
+        basedir = qdb.sql_connection.TRN.execute_fetchlast()
+        # making sure that it never ends in a "/" as most tests expect this
+        if basedir.endswith("/"):
+            basedir = basedir[:-1]
+        return basedir
 
 
 def get_work_base_dir():

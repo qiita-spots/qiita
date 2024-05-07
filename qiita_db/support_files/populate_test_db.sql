@@ -1,1513 +1,1612 @@
--- Populate.sql sets the increment to begin at 10000, but all tests expect it to start at 1, so set it back to 1 for the test DB population
-SELECT setval('qiita.study_study_id_seq', 1, false);
+--
+-- PostgreSQL database dump
+--
 
--- Patch 33.sql sets the increment to begin at 2000, but all tests expect it to start at 1, so set it back to 1 for the test DB population
-SELECT setval('qiita.artifact_artifact_id_seq', 1, false);
+-- Dumped from database version 13.9
+-- Dumped by pg_dump version 13.9
 
--- Insert some users in the system. Passwords are 'password' for all users
-INSERT INTO qiita.qiita_user (email, user_level_id, password, name,
-    affiliation, address, phone) VALUES
-    ('test@foo.bar', 4,
-    '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Dude',
-    'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302',
-    '111-222-3344'),
-    ('shared@foo.bar', 4,
-    '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Shared',
-    'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302',
-    '111-222-3344'),
-    ('admin@foo.bar', 1,
-    '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Admin',
-    'Owner University', '312 noname st, Apt K, Nonexistantown, CO 80302',
-    '222-444-6789'),
-    ('demo@microbio.me', 4,
-    '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Demo',
-    'Qiita Dev', '1345 Colorado Avenue', '303-492-1984');
+-- SET statement_timeout = 0;
+-- SET lock_timeout = 0;
+-- SET idle_in_transaction_session_timeout = 0;
+-- SET client_encoding = 'UTF8';
+-- SET standard_conforming_strings = on;
+-- SELECT pg_catalog.set_config('search_path', '', false);
+-- SET check_function_bodies = false;
+-- SET xmloption = content;
+-- SET client_min_messages = warning;
+-- SET row_security = off;
 
--- Insert some study persons
-INSERT INTO qiita.study_person (name, email, affiliation, address, phone) VALUES
-    ('LabDude', 'lab_dude@foo.bar', 'knight lab', '123 lab street', '121-222-3333'),
-    ('empDude', 'emp_dude@foo.bar', 'broad', NULL, '444-222-3333'),
-    ('PIDude', 'PI_dude@foo.bar', 'Wash U', '123 PI street', NULL);
+--
+-- Data for Name: severity; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Insert a study: EMP 1001
-INSERT INTO qiita.study (email, first_contact,
-    funding, timeseries_type_id, lab_person_id, metadata_complete,
-    mixs_compliant, most_recent_contact, principal_investigator_id, reprocess,
-    spatial_series, study_title, study_alias, study_description,
-    study_abstract, vamps_id, ebi_study_accession) VALUES
-    ('test@foo.bar', '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
-    '2014-05-19 16:11', 3, FALSE, FALSE,
-    'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome',
-    'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',
-    NULL, 'EBI123456-BB');
-
--- Add portal to the study
-INSERT INTO qiita.study_portal (study_id, portal_type_id) VALUES (1, 1);
-
--- Add some environmental packages to the study
-INSERT INTO qiita.study_environmental_package (study_id, environmental_package_name) VALUES (1, 'soil'), (1, 'plant-associated');
-
--- Insert study_users (share study 1 with shared user)
-INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
-
--- Insert PMIDs for study
-INSERT INTO qiita.publication (doi, pubmed_id) VALUES
-    ('10.100/123456', '123456'),
-    ('10.100/7891011', '7891011');
-INSERT INTO qiita.study_publication (study_id, publication, is_doi) VALUES
-    (1, '10.100/123456', true),
-    (1, '123456', false),
-    (1, '10.100/7891011', true),
-    (1, '7891011', false);
-
--- Insert an investigation
-INSERT INTO qiita.investigation (investigation_name, investigation_description, contact_person_id) VALUES
-    ('TestInvestigation', 'An investigation for testing purposes', 3);
-
--- Insert investigation_study (link study 1 with investigation 1)
-INSERT INTO qiita.investigation_study (investigation_id, study_id) VALUES (1, 1);
-
--- Add the study_sample for study 1
-INSERT INTO qiita.study_sample (study_id, sample_id, ebi_sample_accession, biosample_accession) VALUES
-    (1, '1.SKB8.640193', 'ERS000000', 'SAMEA0000000'),
-    (1, '1.SKD8.640184', 'ERS000001', 'SAMEA0000001'),
-    (1, '1.SKB7.640196', 'ERS000002', 'SAMEA0000002'),
-    (1, '1.SKM9.640192', 'ERS000003', 'SAMEA0000003'),
-    (1, '1.SKM4.640180', 'ERS000004', 'SAMEA0000004'),
-    (1, '1.SKM5.640177', 'ERS000005', 'SAMEA0000005'),
-    (1, '1.SKB5.640181', 'ERS000006', 'SAMEA0000006'),
-    (1, '1.SKD6.640190', 'ERS000007', 'SAMEA0000007'),
-    (1, '1.SKB2.640194', 'ERS000008', 'SAMEA0000008'),
-    (1, '1.SKD2.640178', 'ERS000009', 'SAMEA0000009'),
-    (1, '1.SKM7.640188', 'ERS000010', 'SAMEA0000010'),
-    (1, '1.SKB1.640202', 'ERS000011', 'SAMEA0000011'),
-    (1, '1.SKD1.640179', 'ERS000012', 'SAMEA0000012'),
-    (1, '1.SKD3.640198', 'ERS000013', 'SAMEA0000013'),
-    (1, '1.SKM8.640201', 'ERS000014', 'SAMEA0000014'),
-    (1, '1.SKM2.640199', 'ERS000015', 'SAMEA0000015'),
-    (1, '1.SKB9.640200', 'ERS000016', 'SAMEA0000016'),
-    (1, '1.SKD5.640186', 'ERS000017', 'SAMEA0000017'),
-    (1, '1.SKM3.640197', 'ERS000018', 'SAMEA0000018'),
-    (1, '1.SKD9.640182', 'ERS000019', 'SAMEA0000019'),
-    (1, '1.SKB4.640189', 'ERS000020', 'SAMEA0000020'),
-    (1, '1.SKD7.640191', 'ERS000021', 'SAMEA0000021'),
-    (1, '1.SKM6.640187', 'ERS000022', 'SAMEA0000022'),
-    (1, '1.SKD4.640185', 'ERS000023', 'SAMEA0000023'),
-    (1, '1.SKB3.640195', 'ERS000024', 'SAMEA0000024'),
-    (1, '1.SKB6.640176', 'ERS000025', 'SAMEA0000025'),
-    (1, '1.SKM1.640183', 'ERS000025', 'SAMEA0000026');
-
--- Crate the sample_1 dynamic table
-CREATE TABLE qiita.sample_1 (
-    sample_id                       varchar,
-    season_environment              varchar,
-    assigned_from_geo               varchar,
-    texture                         varchar,
-    taxon_id                        varchar,
-    depth                           varchar,
-    host_taxid                      varchar,
-    common_name                     varchar,
-    water_content_soil              varchar,
-    elevation                       varchar,
-    temp                            varchar,
-    tot_nitro                       varchar,
-    samp_salinity                   varchar,
-    altitude                        varchar,
-    env_biome                       varchar,
-    country                         varchar,
-    ph                              varchar,
-    anonymized_name                 varchar,
-    tot_org_carb                    varchar,
-    description_duplicate           varchar,
-    env_feature                     varchar,
-    physical_specimen_location      varchar,
-    physical_specimen_remaining     varchar,
-    dna_extracted                   varchar,
-    sample_type                     varchar,
-    env_package                     varchar default 'soil',
-    collection_timestamp            varchar,
-    host_subject_id                 varchar,
-    description                     varchar,
-    latitude                        varchar,
-    longitude                       varchar,
-    scientific_name                 varchar,
-    CONSTRAINT pk_sample_1 PRIMARY KEY ( sample_id )
-);
-
--- Populates the sample_1 dynamic table
-INSERT INTO qiita.sample_1 (sample_id, season_environment, assigned_from_geo, texture, taxon_id, depth, host_taxid, common_name, water_content_soil, elevation, temp, tot_nitro, samp_salinity, altitude, env_biome, country, ph, anonymized_name, tot_org_carb, description_duplicate, env_feature, physical_specimen_location, physical_specimen_remaining, dna_extracted, sample_type, collection_timestamp, host_subject_id, description, latitude, longitude, scientific_name) VALUES
-    ('1.SKM7.640188', 'winter', 'n', '63.1 sand, 17.7 silt, 19.2 clay', '1118232', '0.15', '3483', 'root metagenome', '0.101', '114', '15', '1.3', '7.44', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.82', 'SKM7', '3.31', 'Bucu Roots', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:B6', 'Cannabis Soil Microbiome', 60.1102854322, 74.7123248382, '1118232'),
-    ('1.SKD9.640182', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '1118232', '0.15', '3483', 'root metagenome', '0.178', '114', '15', '1.51', '7.1', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.82', 'SKD9', '4.32', 'Diesel Root', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:D3', 'Cannabis Soil Microbiome', 23.1218032799, 42.838497795, '1118232'),
-    ('1.SKM8.640201', 'winter', 'n', '63.1 sand, 17.7 silt, 19.2 clay', '1118232', '0.15', '3483', 'root metagenome', '0.101', '114', '15', '1.3', '7.44', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.82', 'SKM8', '3.31', 'Bucu Roots', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:D8', 'Cannabis Soil Microbiome', 3.21190859967, 26.8138925876, '1118232'),
-    ('1.SKB8.640193', 'winter', 'n', '64.6 sand, 17.6 silt, 17.8 clay', '1118232', '0.15', '3483', 'root metagenome', '0.164', '114', '15', '1.41', '7.15', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.94', 'SKB8', '5', 'Burmese root', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:M7', 'Cannabis Soil Microbiome', 74.0894932572, 65.3283470202, '1118232'),
-    ('1.SKD2.640178', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '410658', '0.15', '3483', 'soil metagenome', '0.178', '114', '15', '1.51', '7.1', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.8', 'SKD2', '4.32', 'Diesel bulk', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:B5', 'Cannabis Soil Microbiome', 53.5050692395, 31.6056761814, '1118232'),
-    ('1.SKM3.640197', 'winter', 'n', '63.1 sand, 17.7 silt, 19.2 clay', '410658', '0.15', '3483', 'soil metagenome', '0.101', '114', '15', '1.3', '7.44', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.82', 'SKM3', '3.31', 'Bucu bulk', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:B7', 'Cannabis Soil Microbiome', 'Not applicable', 31.2003474585, '1118232'),
-    ('1.SKM4.640180', 'winter', 'n', '63.1 sand, 17.7 silt, 19.2 clay', '939928', '0.15', '3483', 'rhizosphere metagenome', '0.101', '114', '15', '1.3', '7.44', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.82', 'SKM4', '3.31', 'Bucu Rhizo', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:D2', 'Cannabis Soil Microbiome', 'Not applicable', 'Not applicable', '1118232'),
-    ('1.SKB9.640200', 'winter', 'n', '64.6 sand, 17.6 silt, 17.8 clay', '1118232', '0.15', '3483', 'root metagenome', '0.164', '114', '15', '1.41', '7.15', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.8', 'SKB9', '5', 'Burmese root', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:B3', 'Cannabis Soil Microbiome', 12.6245524972, 96.0693176066, '1118232'),
-    ('1.SKB4.640189', 'winter', 'n', '64.6 sand, 17.6 silt, 17.8 clay', '939928', '0.15', '3483', 'rhizosphere metagenome', '0.164', '114', '15', '1.41', '7.15', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.94', 'SKB4', '5', 'Burmese Rhizo', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:D7', 'Cannabis Soil Microbiome', 43.9614715197, 82.8516734159, '1118232'),
-    ('1.SKB5.640181', 'winter', 'n', '64.6 sand, 17.6 silt, 17.8 clay', '939928', '0.15', '3483', 'rhizosphere metagenome', '0.164', '114', '15', '1.41', '7.15', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.94', 'SKB5', '5', 'Burmese Rhizo', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:M4', 'Cannabis Soil Microbiome', 10.6655599093, 70.784770579, '1118232'),
-    ('1.SKB6.640176', 'winter', 'n', '64.6 sand, 17.6 silt, 17.8 clay', '939928', '0.15', '3483', 'rhizosphere metagenome', '0.164', '114', '15', '1.41', '7.15', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.94', 'SKB6', '5', 'Burmese Rhizo', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:D5', 'Cannabis Soil Microbiome', 78.3634273709, 74.423907894, '1118232'),
-    ('1.SKM2.640199', 'winter', 'n', '63.1 sand, 17.7 silt, 19.2 clay', '410658', '0.15', '3483', 'soil metagenome', '0.101', '114', '15', '1.3', '7.44', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.82', 'SKM2', '3.31', 'Bucu bulk', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:D4', 'Cannabis Soil Microbiome', 82.8302905615, 86.3615778099, '1118232'),
-    ('1.SKM5.640177', 'winter', 'n', '63.1 sand, 17.7 silt, 19.2 clay', '939928', '0.15', '3483', 'rhizosphere metagenome', '0.101', '114', '15', '1.3', '7.44', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.82', 'SKM5', '3.31', 'Bucu Rhizo', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:M3', 'Cannabis Soil Microbiome', 44.9725384282, 66.1920014699, '1118232'),
-    ('1.SKB1.640202', 'winter', 'n', '64.6 sand, 17.6 silt, 17.8 clay', '410658', '0.15', '3483', 'soil metagenome', '0.164', '114', '15', '1.41', '7.15', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.94', 'SKB1', '5', 'Burmese bulk', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:M2', 'Cannabis Soil Microbiome', 4.59216095574, 63.5115213108, '1118232'),
-    ('1.SKD8.640184', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '1118232', '0.15', '3483', 'root metagenome', '0.178', '114', '15', '1.51', '7.1', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.8', 'SKD8', '4.32', 'Diesel Root', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:D9', 'Cannabis Soil Microbiome', 57.571893782, 32.5563076447, '1118232'),
-    ('1.SKD4.640185', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '939928', '0.15', '3483', 'rhizosphere metagenome', '0.178', '114', '15', '1.51', '7.1', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.8', 'SKD4', '4.32', 'Diesel Rhizo', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:M9', 'Cannabis Soil Microbiome', 40.8623799474, 6.66444220187, '1118232'),
-    ('1.SKB3.640195', 'winter', 'n', '64.6 sand, 17.6 silt, 17.8 clay', '410658', '0.15', '3483', 'soil metagenome', '0.164', '114', '15', '1.41', '7.15', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.94', 'SKB3', '5', 'Burmese bulk', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:M6', 'Cannabis Soil Microbiome', 95.2060749748, 27.3592668624, '1118232'),
-    ('1.SKM1.640183', 'winter', 'n', '63.1 sand, 17.7 silt, 19.2 clay', '410658', '0.15', '3483', 'soil metagenome', '0.101', '114', '15', '1.3', '7.44', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.82', 'SKM1', '3.31', 'Bucu bulk', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:D1', 'Cannabis Soil Microbiome', 38.2627021402, 3.48274264219, '1118232'),
-    ('1.SKB7.640196', 'winter', 'n', '64.6 sand, 17.6 silt, 17.8 clay', '1118232', '0.15', '3483', 'root metagenome', '0.164', '114', '15', '1.41', '7.15', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.94', 'SKB7', '5', 'Burmese root', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:M8', 'Cannabis Soil Microbiome', 13.089194595, 92.5274472082, '1118232'),
-    ('1.SKD3.640198', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '410658', '0.15', '3483', 'soil metagenome', '0.178', '114', '15', '1.51', '7.1', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.8', 'SKD3', '4.32', 'Diesel bulk', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:B1', 'Cannabis Soil Microbiome', 84.0030227585, 66.8954849864, '1118232'),
-    ('1.SKD7.640191', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '1118232', '0.15', '3483', 'root metagenome', '0.178', '114', '15', '1.51', '7.1', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.8', 'SKD7', '4.32', 'Diesel Root', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:D6', 'Cannabis Soil Microbiome', 68.51099627, 2.35063674718, '1118232'),
-    ('1.SKD6.640190', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '939928', '0.15', '3483', 'rhizosphere metagenome', '0.178', '114', '15', '1.51', '7.1', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.8', 'SKD6', '4.32', 'Diesel Rhizo', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:B9', 'Cannabis Soil Microbiome', 29.1499460692, 82.1270418227, '1118232'),
-    ('1.SKB2.640194', 'winter', 'n', '64.6 sand, 17.6 silt, 17.8 clay', '410658', '0.15', '3483', 'soil metagenome', '0.164', '114', '15', '1.41', '7.15', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.94', 'SKB2', '5', 'Burmese bulk', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:B4', 'Cannabis Soil Microbiome', 35.2374368957, 68.5041623253, '1118232'),
-    ('1.SKM9.640192', 'winter', 'n', '63.1 sand, 17.7 silt, 19.2 clay', '1118232', '0.15', '3483', 'root metagenome', '0.101', '114', '15', '1.3', '7.44', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.82', 'SKM9', '3.31', 'Bucu Roots', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:B8', 'Cannabis Soil Microbiome', 12.7065957714, 84.9722975792, '1118232'),
-    ('1.SKM6.640187', 'winter', 'n', '63.1 sand, 17.7 silt, 19.2 clay', '939928', '0.15', '3483', 'rhizosphere metagenome', '0.101', '114', '15', '1.3', '7.44', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.82', 'SKM6', '3.31', 'Bucu Rhizo', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:B2', 'Cannabis Soil Microbiome', 0.291867635913, 68.5945325743, '1118232'),
-    ('1.SKD5.640186', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '939928', '0.15', '3483', 'rhizosphere metagenome', '0.178', '114', '15', '1.51', '7.1', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.8', 'SKD5', '4.32', 'Diesel Rhizo', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:M1', 'Cannabis Soil Microbiome', 85.4121476399, 15.6526750776, '1118232'),
-    ('1.SKD1.640179', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '410658', '0.15', '3483', 'soil metagenome', '0.178', '114', '15', '1.51', '7.1', '0', 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', '6.8', 'SKD1', '4.32', 'Diesel bulk', 'ENVO:plant-associated habitat', 'ANL', TRUE, TRUE, 'ENVO:soil', '2011-11-11 13:00:00', '1001:M5', 'Cannabis Soil Microbiome', 68.0991287718, 34.8360987059, '1118232');
-
--- Create a new prep template for the added raw data
-INSERT INTO qiita.prep_template (data_type_id, preprocessing_status, investigation_type, artifact_id, name) VALUES
-     (2, 'success', 'Metagenomics', NULL, 'Prep information 1'),
-     (2, 'success', 'Metagenomics', NULL, 'Prep information 2');
-
--- Add the common prep info for study 1
-INSERT INTO qiita.prep_template_sample (prep_template_id, sample_id, ebi_experiment_accession) VALUES
-    (1, '1.SKB8.640193', 'ERX0000000'),
-    (1, '1.SKD8.640184', 'ERX0000001'),
-    (1, '1.SKB7.640196', 'ERX0000002'),
-    (1, '1.SKM9.640192', 'ERX0000003'),
-    (1, '1.SKM4.640180', 'ERX0000004'),
-    (1, '1.SKM5.640177', 'ERX0000005'),
-    (1, '1.SKB5.640181', 'ERX0000006'),
-    (1, '1.SKD6.640190', 'ERX0000007'),
-    (1, '1.SKB2.640194', 'ERX0000008'),
-    (1, '1.SKD2.640178', 'ERX0000009'),
-    (1, '1.SKM7.640188', 'ERX0000010'),
-    (1, '1.SKB1.640202', 'ERX0000011'),
-    (1, '1.SKD1.640179', 'ERX0000012'),
-    (1, '1.SKD3.640198', 'ERX0000013'),
-    (1, '1.SKM8.640201', 'ERX0000014'),
-    (1, '1.SKM2.640199', 'ERX0000015'),
-    (1, '1.SKB9.640200', 'ERX0000016'),
-    (1, '1.SKD5.640186', 'ERX0000017'),
-    (1, '1.SKM3.640197', 'ERX0000018'),
-    (1, '1.SKD9.640182', 'ERX0000019'),
-    (1, '1.SKB4.640189', 'ERX0000020'),
-    (1, '1.SKD7.640191', 'ERX0000021'),
-    (1, '1.SKM6.640187', 'ERX0000022'),
-    (1, '1.SKD4.640185', 'ERX0000023'),
-    (1, '1.SKB3.640195', 'ERX0000024'),
-    (1, '1.SKB6.640176', 'ERX0000025'),
-    (1, '1.SKM1.640183', 'ERX0000026');
-
--- Add the common prep info for study 2
-INSERT INTO qiita.prep_template_sample (prep_template_id, sample_id, ebi_experiment_accession) VALUES
-    (2, '1.SKB8.640193', 'ERX0000000'),
-    (2, '1.SKD8.640184', 'ERX0000001'),
-    (2, '1.SKB7.640196', 'ERX0000002'),
-    (2, '1.SKM9.640192', 'ERX0000003'),
-    (2, '1.SKM4.640180', 'ERX0000004'),
-    (2, '1.SKM5.640177', 'ERX0000005'),
-    (2, '1.SKB5.640181', 'ERX0000006'),
-    (2, '1.SKD6.640190', 'ERX0000007'),
-    (2, '1.SKB2.640194', 'ERX0000008'),
-    (2, '1.SKD2.640178', 'ERX0000009'),
-    (2, '1.SKM7.640188', 'ERX0000010'),
-    (2, '1.SKB1.640202', 'ERX0000011'),
-    (2, '1.SKD1.640179', 'ERX0000012'),
-    (2, '1.SKD3.640198', 'ERX0000013'),
-    (2, '1.SKM8.640201', 'ERX0000014'),
-    (2, '1.SKM2.640199', 'ERX0000015'),
-    (2, '1.SKB9.640200', 'ERX0000016'),
-    (2, '1.SKD5.640186', 'ERX0000017'),
-    (2, '1.SKM3.640197', 'ERX0000018'),
-    (2, '1.SKD9.640182', 'ERX0000019'),
-    (2, '1.SKB4.640189', 'ERX0000020'),
-    (2, '1.SKD7.640191', 'ERX0000021'),
-    (2, '1.SKM6.640187', 'ERX0000022'),
-    (2, '1.SKD4.640185', 'ERX0000023'),
-    (2, '1.SKB3.640195', 'ERX0000024'),
-    (2, '1.SKB6.640176', 'ERX0000025'),
-    (2, '1.SKM1.640183', 'ERX0000026');
-
--- Crate the prep_1 dynamic table
-CREATE TABLE qiita.prep_1 (
-    sample_id                       varchar,
-    barcode                         varchar,
-    LIBRARY_CONSTRUCTION_PROTOCOL   varchar,
-    primer                          varchar,
-    TARGET_SUBFRAGMENT              varchar,
-    target_gene                     varchar,
-    RUN_CENTER                      varchar,
-    RUN_PREFIX                      varchar,
-    RUN_DATE                        varchar,
-    EXPERIMENT_CENTER               varchar,
-    EXPERIMENT_DESIGN_DESCRIPTION   varchar,
-    EXPERIMENT_TITLE                varchar,
-    PLATFORM                        varchar,
-    INSTRUMENT_MODEL                varchar,
-    SAMP_SIZE                       varchar,
-    SEQUENCING_METH                 varchar,
-    illumina_technology             varchar,
-    SAMPLE_CENTER                   varchar,
-    pcr_primers                     varchar,
-    STUDY_CENTER                    varchar,
-    center_name                     varchar,
-    center_project_name             varchar,
-    emp_status                      varchar,
-    CONSTRAINT pk_prep_1 PRIMARY KEY ( sample_id )
-);
-
--- Crate the prep_2 dynamic table
-CREATE TABLE qiita.prep_2 (
-    sample_id                       varchar,
-    barcode                         varchar,
-    LIBRARY_CONSTRUCTION_PROTOCOL   varchar,
-    primer                          varchar,
-    TARGET_SUBFRAGMENT              varchar,
-    target_gene                     varchar,
-    RUN_CENTER                      varchar,
-    RUN_PREFIX                      varchar,
-    RUN_DATE                        varchar,
-    EXPERIMENT_CENTER               varchar,
-    EXPERIMENT_DESIGN_DESCRIPTION   varchar,
-    EXPERIMENT_TITLE                varchar,
-    PLATFORM                        varchar,
-    INSTRUMENT_MODEL                varchar,
-    SAMP_SIZE                       varchar,
-    SEQUENCING_METH                 varchar,
-    illumina_technology             varchar,
-    SAMPLE_CENTER                   varchar,
-    pcr_primers                     varchar,
-    STUDY_CENTER                    varchar,
-    center_name                     varchar,
-    center_project_name             varchar,
-    emp_status                      varchar,
-    CONSTRAINT pk_prep_2 PRIMARY KEY ( sample_id )
-);
-
--- Populates the prep_1 dynamic table
-INSERT INTO qiita.prep_1 (sample_id, barcode, LIBRARY_CONSTRUCTION_PROTOCOL, primer, TARGET_SUBFRAGMENT, target_gene, RUN_CENTER, RUN_PREFIX, RUN_DATE, EXPERIMENT_CENTER, EXPERIMENT_DESIGN_DESCRIPTION, EXPERIMENT_TITLE, PLATFORM, INSTRUMENT_MODEL, SAMP_SIZE, SEQUENCING_METH, illumina_technology, SAMPLE_CENTER, pcr_primers, STUDY_CENTER, center_name, center_project_name, emp_status) VALUES
-    ('1.SKB1.640202', 'GTCCGCAAGTTA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB2.640194', 'CGTAGAGCTCTC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB3.640195', 'CCTCTGAGAGCT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB4.640189', 'CCTCGATGCAGT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB5.640181', 'GCGGACTATTCA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB6.640176', 'CGTGCACAATTG', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB7.640196', 'CGGCCTAAGTTC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB8.640193', 'AGCGCTCACATC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB9.640200', 'TGGTTATGGCAC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD1.640179', 'CGAGGTTCTGAT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD2.640178', 'AACTCCTGTGGA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD3.640198', 'TAATGGTCGTAG', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD4.640185', 'TTGCACCGTCGA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD5.640186', 'TGCTACAGACGT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD6.640190', 'ATGGCCTGACTA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD7.640191', 'ACGCACATACAA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD8.640184', 'TGAGTGGTCTGT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD9.640182', 'GATAGCACTCGT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM1.640183', 'TAGCGCGAACTT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM2.640199', 'CATACACGCACC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM3.640197', 'ACCTCAGTCAAG', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM4.640180', 'TCGACCAAACAC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM5.640177', 'CCACCCAGTAAC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM6.640187', 'ATATCGCGATGA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM7.640188', 'CGCCGGTAATCT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM8.640201', 'CCGATGCCTTGA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM9.640192', 'AGCAGGCACGAA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP');
+INSERT INTO qiita.severity VALUES (1, 'Warning');
+INSERT INTO qiita.severity VALUES (2, 'Runtime');
+INSERT INTO qiita.severity VALUES (3, 'Fatal');
 
 
--- Populates the prep_2 dynamic table
-INSERT INTO qiita.prep_2 (sample_id, barcode, LIBRARY_CONSTRUCTION_PROTOCOL, primer, TARGET_SUBFRAGMENT, target_gene, RUN_CENTER, RUN_PREFIX, RUN_DATE, EXPERIMENT_CENTER, EXPERIMENT_DESIGN_DESCRIPTION, EXPERIMENT_TITLE, PLATFORM, INSTRUMENT_MODEL, SAMP_SIZE, SEQUENCING_METH, illumina_technology, SAMPLE_CENTER, pcr_primers, STUDY_CENTER, center_name, center_project_name, emp_status) VALUES
-    ('1.SKB1.640202', 'GTCCGCAAGTTA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB2.640194', 'CGTAGAGCTCTC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB3.640195', 'CCTCTGAGAGCT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB4.640189', 'CCTCGATGCAGT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB5.640181', 'GCGGACTATTCA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB6.640176', 'CGTGCACAATTG', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB7.640196', 'CGGCCTAAGTTC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB8.640193', 'AGCGCTCACATC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKB9.640200', 'TGGTTATGGCAC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD1.640179', 'CGAGGTTCTGAT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD2.640178', 'AACTCCTGTGGA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD3.640198', 'TAATGGTCGTAG', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD4.640185', 'TTGCACCGTCGA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD5.640186', 'TGCTACAGACGT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD6.640190', 'ATGGCCTGACTA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD7.640191', 'ACGCACATACAA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD8.640184', 'TGAGTGGTCTGT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKD9.640182', 'GATAGCACTCGT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM1.640183', 'TAGCGCGAACTT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM2.640199', 'CATACACGCACC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM3.640197', 'ACCTCAGTCAAG', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM4.640180', 'TCGACCAAACAC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM5.640177', 'CCACCCAGTAAC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM6.640187', 'ATATCGCGATGA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM7.640188', 'CGCCGGTAATCT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM8.640201', 'CCGATGCCTTGA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
-    ('1.SKM9.640192', 'AGCAGGCACGAA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP');
+--
+-- Data for Name: logging; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Link the prep template to the study
-INSERT INTO qiita.study_prep_template (study_id, prep_template_id) VALUES (1, 1);
-INSERT INTO qiita.study_prep_template (study_id, prep_template_id) VALUES (1, 2);
+INSERT INTO qiita.logging VALUES (1, '2015-11-22 21:29:30', 2, 'Error message', NULL);
+INSERT INTO qiita.logging VALUES (2, '2015-11-22 21:29:30', 2, 'Error message', '{}');
 
--- Insert some artifacts
-INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters, visibility_id, artifact_type_id, data_type_id, submitted_to_vamps, name) VALUES
-    ('2012-10-01 09:30:27', NULL, NULL, 3, 3, 2, false, 'Raw data 1'),
-    ('2012-10-01 10:30:27', 1, '{"max_barcode_errors": "1.5", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "sequence_max_n": "0", "rev_comp_mapping_barcodes": "False", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, 6, 2, false, 'Demultiplexed 1'),
-    ('2012-10-01 11:30:27', 1, '{"max_barcode_errors": "1.5", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "sequence_max_n": "0", "rev_comp_mapping_barcodes": "True", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, 6, 2, false, 'Demultiplexed 2'),
-    ('2012-10-02 17:30:00', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, 7, 2, false, 'BIOM'),
-    ('2012-10-02 17:30:00', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, 7, 2, false, 'BIOM'),
-    ('2012-10-02 17:30:00', 3, '{"reference": "2", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, 7, 1, false, 'BIOM'),
-    ('2012-10-02 17:30:00', NULL, NULL, 3, 7, 1, false, 'BIOM'),
-    ('2018-12-03 14:06:45.117389', NULL, NULL, 4, 7, 2, false, 'noname'),
-    ('2018-12-03 14:06:45.117389', 12, '{"biom_table": "8", "depth": "9000", "subsample_multinomial": "False"}', 4, 7, 2, false, 'noname');
 
--- link new artifacts with prep info files
-UPDATE qiita.prep_template SET artifact_id = 1 WHERE prep_template_id = 1;
-UPDATE qiita.prep_template SET artifact_id = 7 WHERE prep_template_id = 2;
+--
+-- Data for Name: user_level; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Link the child artifacts with their parents artifacts
-INSERT INTO qiita.parent_artifact (parent_id, artifact_id)
-    VALUES (1, 2), (1, 3),
-           (2, 4), (2, 5), (2, 6), (8, 9);
+INSERT INTO qiita.user_level VALUES (2, 'dev', 'Can access all data and info about errors', '--nice=10000');
+INSERT INTO qiita.user_level VALUES (3, 'superuser', 'Can see all studies, can run analyses', '--nice=10000');
+INSERT INTO qiita.user_level VALUES (4, 'user', 'Can see own and public data, can run analyses', '--nice=10000');
+INSERT INTO qiita.user_level VALUES (5, 'unverified', 'Email not verified', '--nice=10000');
+INSERT INTO qiita.user_level VALUES (6, 'guest', 'Can view & download public data', '--nice=10000');
+INSERT INTO qiita.user_level VALUES (1, 'admin', 'Can access and do all the things', '--nice=5000');
+INSERT INTO qiita.user_level VALUES (7, 'wet-lab admin', 'Can access the private jobs', '');
 
--- Insert filepaths for the artifacts and reference
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id)
-    VALUES ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
-           ('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
-           ('1_seqs.fna', 4, '852952723', 1, 3),
-           ('1_seqs.qual', 5, '852952723', 1, 3),
-           ('1_seqs.demux', 6, 852952723, 1, 3),
-           ('GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6),
-           ('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6),
-           ('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6),
-           ('1_study_1001_closed_reference_otu_table.biom', 7, '852952723', 1, 4),
-           ('Silva_97_otus.fasta', 10, '852952723', 1, 6),
-           ('Silva_97_otu_taxonomy.txt', 11, '852952723', 1, 6),
-           ('1_study_1001_closed_reference_otu_table_Silva.biom', 7, '852952723', 1, 4);
 
--- Link the artifact with the prep template
-UPDATE qiita.prep_template SET artifact_id = 1 WHERE prep_template_id = 1;
-UPDATE qiita.prep_template SET artifact_id = 7 WHERE prep_template_id = 2;
+--
+-- Data for Name: qiita_user; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Link the study with the artifacts
-INSERT INTO qiita.study_artifact (study_id, artifact_id)
-    VALUES (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7);
+INSERT INTO qiita.qiita_user VALUES ('test@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Dude', 'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302', '111-222-3344', NULL, NULL, NULL, false);
+INSERT INTO qiita.qiita_user VALUES ('shared@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Shared', 'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302', '111-222-3344', NULL, NULL, NULL, false);
+INSERT INTO qiita.qiita_user VALUES ('admin@foo.bar', 1, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Admin', 'Owner University', '312 noname st, Apt K, Nonexistantown, CO 80302', '222-444-6789', NULL, NULL, NULL, false);
+INSERT INTO qiita.qiita_user VALUES ('demo@microbio.me', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Demo', 'Qiita Dev', '1345 Colorado Avenue', '303-492-1984', NULL, NULL, NULL, false);
 
--- Insert EBI information for artifact 2
-INSERT INTO qiita.ebi_run_accession (sample_id, artifact_id, ebi_run_accession)
-    VALUES ('1.SKB1.640202', 2, 'ERR0000001'),
-           ('1.SKB2.640194', 2, 'ERR0000002'),
-           ('1.SKB3.640195', 2, 'ERR0000003'),
-           ('1.SKB4.640189', 2, 'ERR0000004'),
-           ('1.SKB5.640181', 2, 'ERR0000005'),
-           ('1.SKB6.640176', 2, 'ERR0000006'),
-           ('1.SKB7.640196', 2, 'ERR0000007'),
-           ('1.SKB8.640193', 2, 'ERR0000008'),
-           ('1.SKB9.640200', 2, 'ERR0000009'),
-           ('1.SKD1.640179', 2, 'ERR0000010'),
-           ('1.SKD2.640178', 2, 'ERR0000011'),
-           ('1.SKD3.640198', 2, 'ERR0000012'),
-           ('1.SKD4.640185', 2, 'ERR0000013'),
-           ('1.SKD5.640186', 2, 'ERR0000014'),
-           ('1.SKD6.640190', 2, 'ERR0000015'),
-           ('1.SKD7.640191', 2, 'ERR0000016'),
-           ('1.SKD8.640184', 2, 'ERR0000017'),
-           ('1.SKD9.640182', 2, 'ERR0000018'),
-           ('1.SKM1.640183', 2, 'ERR0000019'),
-           ('1.SKM2.640199', 2, 'ERR0000020'),
-           ('1.SKM3.640197', 2, 'ERR0000021'),
-           ('1.SKM4.640180', 2, 'ERR0000022'),
-           ('1.SKM5.640177', 2, 'ERR0000023'),
-           ('1.SKM6.640187', 2, 'ERR0000024'),
-           ('1.SKM7.640188', 2, 'ERR0000025'),
-           ('1.SKM8.640201', 2, 'ERR0000026'),
-           ('1.SKM9.640192', 2, 'ERR0000027');
 
--- Populate the reference table
-INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES
-('Greengenes', '13_8', 6, 7, 8),
-('Silva', 'test', 10, 11, NULL);
+--
+-- Data for Name: analysis; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Insert filepath for job results files
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('1_job_result.txt', 9, '852952723', 1, 2),
-('2_test_folder', 8, '852952723', 1, 2);
+INSERT INTO qiita.analysis VALUES (1, 'test@foo.bar', 'SomeAnalysis', 'A test analysis', '121112', '2018-12-03 13:52:42.751331-07', false, NULL, '');
+INSERT INTO qiita.analysis VALUES (2, 'admin@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', '22221112', '2018-12-03 13:52:42.751331-07', false, NULL, '');
+INSERT INTO qiita.analysis VALUES (3, 'test@foo.bar', 'test@foo.bar-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL, '');
+INSERT INTO qiita.analysis VALUES (4, 'admin@foo.bar', 'admin@foo.bar-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL, '');
+INSERT INTO qiita.analysis VALUES (5, 'shared@foo.bar', 'shared@foo.bar-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL, '');
+INSERT INTO qiita.analysis VALUES (6, 'demo@microbio.me', 'demo@microbio.me-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL, '');
+INSERT INTO qiita.analysis VALUES (7, 'test@foo.bar', 'test@foo.bar-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL, '');
+INSERT INTO qiita.analysis VALUES (8, 'admin@foo.bar', 'admin@foo.bar-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL, '');
+INSERT INTO qiita.analysis VALUES (9, 'shared@foo.bar', 'shared@foo.bar-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL, '');
+INSERT INTO qiita.analysis VALUES (10, 'demo@microbio.me', 'demo@microbio.me-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL, '');
 
--- Insert Analysis
-INSERT INTO qiita.analysis (email, name, description, pmid, "timestamp", dflt, logging_id) VALUES
-    ('test@foo.bar', 'SomeAnalysis', 'A test analysis', '121112', '2018-12-03 13:52:42.751331-07', false, NULL),
-    ('admin@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', '22221112', '2018-12-03 13:52:42.751331-07', false, NULL),
-    ('test@foo.bar', 'test@foo.bar-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
-    ('admin@foo.bar', 'admin@foo.bar-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
-    ('shared@foo.bar', 'shared@foo.bar-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
-    ('demo@microbio.me', 'demo@microbio.me-dflt-1', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
-    ('test@foo.bar', 'test@foo.bar-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
-    ('admin@foo.bar', 'admin@foo.bar-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
-    ('shared@foo.bar', 'shared@foo.bar-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL),
-    ('demo@microbio.me', 'demo@microbio.me-dflt-2', 'dflt', NULL, '2018-12-03 13:52:42.751331-07', true, NULL);
-INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) VALUES
-  (1, 1), (2, 1), (3, 1), (4, 1),(5, 1), (6, 1), (7, 2), (8, 2), (9, 2), (10, 2);
 
-INSERT INTO qiita.analysis_artifact (analysis_id, artifact_id) VALUES
-    (1, 8),
-    (1, 9);
+--
+-- Data for Name: artifact_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Insert filepath for analysis biom files
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-    ('1_analysis_18S.biom', 7, '852952723', 1, 1),
-    ('1_analysis_mapping.txt', 9, '852952723', 1, 1);
+INSERT INTO qiita.artifact_type VALUES (1, 'SFF', NULL, false, false, false);
+INSERT INTO qiita.artifact_type VALUES (4, 'FASTA', NULL, false, false, false);
+INSERT INTO qiita.artifact_type VALUES (2, 'FASTA_Sanger', NULL, false, false, false);
+INSERT INTO qiita.artifact_type VALUES (6, 'Demultiplexed', 'Demultiplexed and QC sequences', true, true, false);
+INSERT INTO qiita.artifact_type VALUES (8, 'beta_div_plots', 'Qiime 1 beta diversity results', false, false, false);
+INSERT INTO qiita.artifact_type VALUES (9, 'rarefaction_curves', 'Rarefaction curves', false, false, false);
+INSERT INTO qiita.artifact_type VALUES (10, 'taxa_summary', 'Taxa summary plots', false, false, false);
+INSERT INTO qiita.artifact_type VALUES (3, 'FASTQ', NULL, false, false, true);
+INSERT INTO qiita.artifact_type VALUES (5, 'per_sample_FASTQ', NULL, true, false, true);
+INSERT INTO qiita.artifact_type VALUES (7, 'BIOM', 'BIOM table', false, false, true);
 
--- Attach filepath to analysis
-INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES
-    (1, 15, 2),
-    (1, 16, NULL);
 
--- Attach samples to analysis
-INSERT INTO qiita.analysis_sample (analysis_id, artifact_id, sample_id) VALUES
-(1, 4, '1.SKB8.640193'), (1, 4, '1.SKD8.640184'), (1, 4, '1.SKB7.640196'), (1, 4, '1.SKM9.640192'), (1, 4, '1.SKM4.640180'),
-(2, 4, '1.SKB8.640193'), (2, 4, '1.SKD8.640184'), (2, 4, '1.SKB7.640196'), (2, 4, '1.SKM3.640197'),
-(1, 5, '1.SKB8.640193'), (1, 5, '1.SKD8.640184'), (1, 5, '1.SKB7.640196'), (1, 5, '1.SKM9.640192'), (1, 5, '1.SKM4.640180'),
-(2, 5, '1.SKB8.640193'), (2, 5, '1.SKD8.640184'), (2, 5, '1.SKB7.640196'), (2, 5, '1.SKM3.640197'),
-(1, 6, '1.SKB8.640193'), (1, 6, '1.SKD8.640184'), (1, 6, '1.SKB7.640196'), (1, 6, '1.SKM9.640192'), (1, 6, '1.SKM4.640180'),
-(2, 6, '1.SKB8.640193'), (2, 6, '1.SKD8.640184'), (2, 6, '1.SKB7.640196'), (2, 6, '1.SKM3.640197'),
-(3, 4, '1.SKD8.640184'), (3, 4, '1.SKB7.640196'), (3, 4, '1.SKM9.640192'), (3, 4, '1.SKM4.640180');
+--
+-- Data for Name: data_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Share analysis with shared user
-INSERT INTO qiita.analysis_users (analysis_id, email) VALUES (1, 'shared@foo.bar');
+INSERT INTO qiita.data_type VALUES (1, '16S');
+INSERT INTO qiita.data_type VALUES (2, '18S');
+INSERT INTO qiita.data_type VALUES (3, 'ITS');
+INSERT INTO qiita.data_type VALUES (4, 'Proteomic');
+INSERT INTO qiita.data_type VALUES (5, 'Metabolomic');
+INSERT INTO qiita.data_type VALUES (6, 'Metagenomic');
+INSERT INTO qiita.data_type VALUES (7, 'Multiomic');
+INSERT INTO qiita.data_type VALUES (8, 'Metatranscriptomics');
+INSERT INTO qiita.data_type VALUES (9, 'Viromics');
+INSERT INTO qiita.data_type VALUES (10, 'Genomics');
+INSERT INTO qiita.data_type VALUES (11, 'Transcriptomics');
+INSERT INTO qiita.data_type VALUES (12, 'Job Output Folder');
 
--- Add an ontology
-INSERT INTO qiita.ontology (ontology_id, ontology, fully_loaded, fullname, query_url, source_url, definition, load_date) VALUES (999999999, E'ENA', E'1', E'European Nucleotide Archive Submission Ontology', NULL, E'http://www.ebi.ac.uk/embl/Documentation/ENA-Reads.html', E'The ENA CV is to be used to annotate XML submissions to the ENA.', '2009-02-23 00:00:00');
 
--- Add some ontology values
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508974, 999999999, E'WGS', E'ENA:0000059', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508975, 999999999, E'Metagenomics', E'ENA:0000060', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508976, 999999999, E'Amplicon', E'ENA:0000061', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508984, 999999999, E'RNA-Seq', E'ENA:0000070', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508987, 999999999, E'Other', E'ENA:0000069', NULL, NULL, NULL, NULL, NULL);
+--
+-- Data for Name: software_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Create the new sample_template_filepath
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_19700101-000000.txt', 14, '852952723', 1, 9);
+INSERT INTO qiita.software_type VALUES (1, 'artifact transformation', 'A plugin that performs some kind of processing/transformation/manipulation over an artifact.');
+INSERT INTO qiita.software_type VALUES (2, 'artifact definition', 'A plugin that defines new artifact types.');
+INSERT INTO qiita.software_type VALUES (3, 'private', 'Internal Qiita jobs');
+
+
+--
+-- Data for Name: software; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.software VALUES (2, 'BIOM type', '2.1.4 - Qiime2', 'The Biological Observation Matrix format', 'source ~/virtualenv/python2.7/bin/activate; export PATH=$HOME/miniconda3/bin/:$PATH; . activate qtp-biom', 'start_biom', 2, false, false);
+INSERT INTO qiita.software VALUES (3, 'Target Gene type', '0.1.0', 'Target gene artifact types plugin', 'source ~/virtualenv/python2.7/bin/activate; export PATH=$HOME/miniconda3/bin/:$PATH; source activate qiita', 'start_target_gene_types', 2, false, false);
+INSERT INTO qiita.software VALUES (4, 'Qiita', 'alpha', 'Internal Qiita jobs', 'source /home/runner/.profile; conda activate qiita', 'qiita-private-plugin', 3, true, false);
+INSERT INTO qiita.software VALUES (1, 'QIIMEq2', '1.9.1', 'Quantitative Insights Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data', 'source activate qiita', 'start_target_gene', 1, false, false);
+
+
+--
+-- Data for Name: software_command; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.software_command VALUES (1, 'Split libraries FASTQ', 1, 'Demultiplexes and applies quality control to FASTQ data', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (2, 'Split libraries', 1, 'Demultiplexes and applies quality control to FASTA data', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (3, 'Pick closed-reference OTUs', 1, 'OTU picking using a closed reference approach', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (4, 'Validate', 2, 'Validates a new artifact of type BIOM', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (5, 'Generate HTML summary', 2, 'Generates the HTML summary of a BIOM artifact', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (6, 'Validate', 3, 'Validates a new artifact of the given target gene type', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (7, 'Generate HTML summary', 3, 'Generates the HTML summary of a given target gene type artifact', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (8, 'build_analysis_files', 4, 'Builds the files needed for the analysis', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (9, 'Summarize Taxa', 1, 'Plots taxonomy summaries at different taxonomy levels', true, true, false, NULL);
+INSERT INTO qiita.software_command VALUES (10, 'Beta Diversity', 1, 'Computes and plots beta diversity results', true, true, false, NULL);
+INSERT INTO qiita.software_command VALUES (11, 'Alpha Rarefaction', 1, 'Computes and plots alpha rarefaction results', true, true, false, NULL);
+INSERT INTO qiita.software_command VALUES (12, 'Single Rarefaction', 1, 'Rarefies the input table by random sampling without replacement', true, true, false, NULL);
+INSERT INTO qiita.software_command VALUES (13, 'release_validators', 4, 'Releases the job validators', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (14, 'submit_to_VAMPS', 4, 'submits an artifact to VAMPS', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (15, 'copy_artifact', 4, 'Creates a copy of an artifact', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (16, 'submit_to_EBI', 4, 'submits an artifact to EBI', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (17, 'delete_artifact', 4, 'Delete an artifact', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (18, 'create_sample_template', 4, 'Create a sample template', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (19, 'update_sample_template', 4, 'Updates the sample template', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (20, 'delete_study', 4, 'Deletes a full study', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (21, 'delete_sample_template', 4, 'Deletes a sample template', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (22, 'update_prep_template', 4, 'Updates the prep template', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (23, 'delete_sample_or_column', 4, 'Deletes a sample or a columns from the metadata', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (24, 'complete_job', 4, 'Completes a given job', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (25, 'delete_analysis', 4, 'Deletes a full analysis', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (26, 'list_remote_files', 4, 'retrieves list of valid study files from remote dir', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (27, 'download_remote_files', 4, 'downloads valid study files from remote dir', true, false, false, NULL);
+INSERT INTO qiita.software_command VALUES (28, 'INSDC_download', 4, 'Downloads an accession from a given INSDC', true, false, false, NULL);
+
+
+--
+-- Data for Name: visibility; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.visibility VALUES (1, 'awaiting_approval', 'Awaiting approval of metadata');
+INSERT INTO qiita.visibility VALUES (4, 'sandbox', 'Only available to the owner. No sharing');
+INSERT INTO qiita.visibility VALUES (3, 'private', 'Only visible to the owner and shared users');
+INSERT INTO qiita.visibility VALUES (2, 'public', 'Visible to everybody');
+INSERT INTO qiita.visibility VALUES (5, 'archived', 'Archived artifact');
+
+
+--
+-- Data for Name: artifact; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.artifact VALUES (1, '2012-10-01 09:30:27', NULL, NULL, 3, 3, 2, false, 'Raw data 1', NULL);
+INSERT INTO qiita.artifact VALUES (2, '2012-10-01 10:30:27', 1, '{"max_barcode_errors": "1.5", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "sequence_max_n": "0", "rev_comp_mapping_barcodes": "False", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, 6, 2, false, 'Demultiplexed 1', NULL);
+INSERT INTO qiita.artifact VALUES (3, '2012-10-01 11:30:27', 1, '{"max_barcode_errors": "1.5", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "sequence_max_n": "0", "rev_comp_mapping_barcodes": "True", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, 6, 2, false, 'Demultiplexed 2', NULL);
+INSERT INTO qiita.artifact VALUES (4, '2012-10-02 17:30:00', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, 7, 2, false, 'BIOM', NULL);
+INSERT INTO qiita.artifact VALUES (5, '2012-10-02 17:30:00', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, 7, 2, false, 'BIOM', NULL);
+INSERT INTO qiita.artifact VALUES (6, '2012-10-02 17:30:00', 3, '{"reference": "2", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, 7, 1, false, 'BIOM', NULL);
+INSERT INTO qiita.artifact VALUES (7, '2012-10-02 17:30:00', NULL, NULL, 3, 7, 1, false, 'BIOM', NULL);
+INSERT INTO qiita.artifact VALUES (8, '2018-12-03 14:06:45.117389', NULL, NULL, 4, 7, 2, false, 'noname', NULL);
+INSERT INTO qiita.artifact VALUES (9, '2018-12-03 14:06:45.117389', 12, '{"biom_table": "8", "depth": "9000", "subsample_multinomial": "False"}', 4, 7, 2, false, 'noname', NULL);
+
+
+--
+-- Data for Name: analysis_artifact; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.analysis_artifact VALUES (1, 8);
+INSERT INTO qiita.analysis_artifact VALUES (1, 9);
+
+
+--
+-- Data for Name: checksum_algorithm; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.checksum_algorithm VALUES (1, 'crc32');
+
+
+--
+-- Data for Name: data_directory; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.data_directory VALUES (1, 'analysis', 'analysis', false, true);
+INSERT INTO qiita.data_directory VALUES (2, 'job', 'job', false, true);
+INSERT INTO qiita.data_directory VALUES (3, 'preprocessed_data', 'preprocessed_data', false, true);
+INSERT INTO qiita.data_directory VALUES (4, 'processed_data', 'processed_data', false, true);
+INSERT INTO qiita.data_directory VALUES (5, 'raw_data', 'raw_data', false, true);
+INSERT INTO qiita.data_directory VALUES (6, 'reference', 'reference', false, true);
+INSERT INTO qiita.data_directory VALUES (7, 'uploads', 'uploads', false, true);
+INSERT INTO qiita.data_directory VALUES (8, 'working_dir', 'working_dir', false, true);
+INSERT INTO qiita.data_directory VALUES (9, 'templates', 'templates', false, true);
+INSERT INTO qiita.data_directory VALUES (10, 'SFF', 'SFF', true, true);
+INSERT INTO qiita.data_directory VALUES (11, 'FASTQ', 'FASTQ', true, true);
+INSERT INTO qiita.data_directory VALUES (12, 'FASTA', 'FASTA', true, true);
+INSERT INTO qiita.data_directory VALUES (13, 'FASTA_Sanger', 'FASTA_Sanger', true, true);
+INSERT INTO qiita.data_directory VALUES (14, 'per_sample_FASTQ', 'per_sample_FASTQ', true, true);
+INSERT INTO qiita.data_directory VALUES (15, 'Demultiplexed', 'Demultiplexed', true, true);
+INSERT INTO qiita.data_directory VALUES (16, 'BIOM', 'BIOM', true, true);
+
+
+--
+-- Data for Name: filepath_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.filepath_type VALUES (1, 'raw_forward_seqs');
+INSERT INTO qiita.filepath_type VALUES (2, 'raw_reverse_seqs');
+INSERT INTO qiita.filepath_type VALUES (3, 'raw_barcodes');
+INSERT INTO qiita.filepath_type VALUES (4, 'preprocessed_fasta');
+INSERT INTO qiita.filepath_type VALUES (5, 'preprocessed_fastq');
+INSERT INTO qiita.filepath_type VALUES (6, 'preprocessed_demux');
+INSERT INTO qiita.filepath_type VALUES (7, 'biom');
+INSERT INTO qiita.filepath_type VALUES (8, 'directory');
+INSERT INTO qiita.filepath_type VALUES (9, 'plain_text');
+INSERT INTO qiita.filepath_type VALUES (10, 'reference_seqs');
+INSERT INTO qiita.filepath_type VALUES (11, 'reference_tax');
+INSERT INTO qiita.filepath_type VALUES (12, 'reference_tree');
+INSERT INTO qiita.filepath_type VALUES (13, 'log');
+INSERT INTO qiita.filepath_type VALUES (14, 'sample_template');
+INSERT INTO qiita.filepath_type VALUES (15, 'prep_template');
+INSERT INTO qiita.filepath_type VALUES (16, 'qiime_map');
+INSERT INTO qiita.filepath_type VALUES (17, 'raw_sff');
+INSERT INTO qiita.filepath_type VALUES (18, 'raw_fasta');
+INSERT INTO qiita.filepath_type VALUES (19, 'raw_qual');
+INSERT INTO qiita.filepath_type VALUES (20, 'html_summary');
+INSERT INTO qiita.filepath_type VALUES (21, 'tgz');
+INSERT INTO qiita.filepath_type VALUES (22, 'html_summary_dir');
+INSERT INTO qiita.filepath_type VALUES (23, 'qzv');
+INSERT INTO qiita.filepath_type VALUES (24, 'qza');
+INSERT INTO qiita.filepath_type VALUES (25, 'bam');
+
+
+--
+-- Data for Name: filepath; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.filepath VALUES (1, '1_s_G1_L001_sequences.fastq.gz', 1, '2125826711', 1, 5, 58);
+INSERT INTO qiita.filepath VALUES (2, '1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '2125826711', 1, 5, 58);
+INSERT INTO qiita.filepath VALUES (3, '1_seqs.fna', 4, '', 1, 3, 0);
+INSERT INTO qiita.filepath VALUES (4, '1_seqs.qual', 5, '', 1, 3, 0);
+INSERT INTO qiita.filepath VALUES (5, '1_seqs.demux', 6, '', 1, 3, 0);
+INSERT INTO qiita.filepath VALUES (6, 'GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6, 1);
+INSERT INTO qiita.filepath VALUES (7, 'GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6, 1);
+INSERT INTO qiita.filepath VALUES (8, 'GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6, 1);
+INSERT INTO qiita.filepath VALUES (9, '1_study_1001_closed_reference_otu_table.biom', 7, '1579715020', 1, 4, 1256812);
+INSERT INTO qiita.filepath VALUES (10, 'Silva_97_otus.fasta', 10, '', 1, 6, 0);
+INSERT INTO qiita.filepath VALUES (11, 'Silva_97_otu_taxonomy.txt', 11, '', 1, 6, 0);
+INSERT INTO qiita.filepath VALUES (12, '1_study_1001_closed_reference_otu_table_Silva.biom', 7, '1579715020', 1, 4, 1256812);
+INSERT INTO qiita.filepath VALUES (13, '1_job_result.txt', 9, '0', 1, 2, 0);
+INSERT INTO qiita.filepath VALUES (14, '2_test_folder', 8, '', 1, 2, 0);
+INSERT INTO qiita.filepath VALUES (15, '1_analysis_18S.biom', 7, '1756512010', 1, 1, 1093210);
+INSERT INTO qiita.filepath VALUES (16, '1_analysis_mapping.txt', 9, '291340704', 1, 1, 7813);
+INSERT INTO qiita.filepath VALUES (17, '1_19700101-000000.txt', 14, '1486964984', 1, 9, 10309);
+INSERT INTO qiita.filepath VALUES (18, '1_prep_1_19700101-000000.txt', 15, '3703494589', 1, 9, 26051);
+INSERT INTO qiita.filepath VALUES (19, '1_prep_1_qiime_19700101-000000.txt', 16, '3053485441', 1, 9, 36780);
+INSERT INTO qiita.filepath VALUES (20, '1_prep_1_19700101-000000.txt', 15, '3703494589', 1, 9, 26051);
+INSERT INTO qiita.filepath VALUES (21, '1_prep_1_qiime_19700101-000000.txt', 16, '3053485441', 1, 9, 36780);
+INSERT INTO qiita.filepath VALUES (22, 'biom_table.biom', 7, '1756512010', 1, 16, 1093210);
+
+
+--
+-- Data for Name: analysis_filepath; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.analysis_filepath VALUES (1, 15, 2);
+INSERT INTO qiita.analysis_filepath VALUES (1, 16, NULL);
+
+
+--
+-- Data for Name: portal_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.portal_type VALUES (2, 'EMP', 'EMP portal');
+INSERT INTO qiita.portal_type VALUES (1, 'QIITA', 'QIITA portal. Access to all data stored in database.');
+
+
+--
+-- Data for Name: analysis_portal; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.analysis_portal VALUES (1, 1);
+INSERT INTO qiita.analysis_portal VALUES (2, 1);
+INSERT INTO qiita.analysis_portal VALUES (3, 1);
+INSERT INTO qiita.analysis_portal VALUES (4, 1);
+INSERT INTO qiita.analysis_portal VALUES (5, 1);
+INSERT INTO qiita.analysis_portal VALUES (6, 1);
+INSERT INTO qiita.analysis_portal VALUES (7, 2);
+INSERT INTO qiita.analysis_portal VALUES (8, 2);
+INSERT INTO qiita.analysis_portal VALUES (9, 2);
+INSERT INTO qiita.analysis_portal VALUES (10, 2);
+
+
+--
+-- Data for Name: processing_job_status; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.processing_job_status VALUES (1, 'queued', 'The job is waiting to be run');
+INSERT INTO qiita.processing_job_status VALUES (2, 'running', 'The job is running');
+INSERT INTO qiita.processing_job_status VALUES (3, 'success', 'The job completed successfully');
+INSERT INTO qiita.processing_job_status VALUES (4, 'error', 'The job failed');
+INSERT INTO qiita.processing_job_status VALUES (5, 'in_construction', 'The job is one of the source nodes of a workflow that is in construction');
+INSERT INTO qiita.processing_job_status VALUES (6, 'waiting', 'The job is waiting for a previous job in the workflow to be completed in order to be executed.');
+
+
+--
+-- Data for Name: processing_job; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.processing_job VALUES ('6d368e16-2242-4cf8-87b4-a5dc40bb890b', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, NULL, NULL, NULL, false, NULL);
+INSERT INTO qiita.processing_job VALUES ('4c7115e8-4c8e-424c-bf25-96c292ca1931', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, NULL, NULL, NULL, false, NULL);
+INSERT INTO qiita.processing_job VALUES ('3c9991ab-6c14-4368-a48c-841e8837a79c', 'test@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}', 3, NULL, NULL, NULL, NULL, false, NULL);
+INSERT INTO qiita.processing_job VALUES ('b72369f9-a886-4193-8d3d-f7b504168e75', 'shared@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, '2015-11-22 21:15:00', NULL, NULL, false, NULL);
+INSERT INTO qiita.processing_job VALUES ('46b76f74-e100-47aa-9bf2-c0208bcea52d', 'test@foo.bar', 1, '{"max_barcode_errors": "1.5", "sequence_max_n": "0", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "rev_comp_mapping_barcodes": "True", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, NULL, NULL, NULL, NULL, false, NULL);
+INSERT INTO qiita.processing_job VALUES ('80bf25f3-5f1d-4e10-9369-315e4244f6d5', 'test@foo.bar', 3, '{"reference": "2", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, NULL, NULL, NULL, NULL, false, NULL);
+INSERT INTO qiita.processing_job VALUES ('9ba5ae7a-41e1-4202-b396-0259aeaac366', 'test@foo.bar', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, NULL, NULL, NULL, NULL, false, NULL);
+INSERT INTO qiita.processing_job VALUES ('e5609746-a985-41a1-babf-6b3ebe9eb5a9', 'test@foo.bar', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, NULL, NULL, NULL, NULL, false, NULL);
+INSERT INTO qiita.processing_job VALUES ('6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f', 'test@foo.bar', 1, '{"max_barcode_errors": "1.5", "sequence_max_n": "0", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "rev_comp_mapping_barcodes": "False", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, NULL, NULL, NULL, NULL, false, NULL);
+INSERT INTO qiita.processing_job VALUES ('8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0', 'test@foo.bar', 12, '{"biom_table": "8", "depth": "9000", "subsample_multinomial": "False"}', 3, NULL, NULL, NULL, NULL, false, NULL);
+INSERT INTO qiita.processing_job VALUES ('063e553b-327c-4818-ab4a-adfe58e49860', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 1, NULL, NULL, NULL, NULL, true, NULL);
+INSERT INTO qiita.processing_job VALUES ('bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'test@foo.bar', 2, '{"min_seq_len":100,"max_seq_len":1000,"trim_seq_length":false,"min_qual_score":25,"max_ambig":6,"max_homopolymer":6,"max_primer_mismatch":0,"barcode_type":"golay_12","max_barcode_errors":1.5,"disable_bc_correction":false,"qual_score_window":0,"disable_primers":false,"reverse_primers":"disable","reverse_primer_mismatches":0,"truncate_ambi_bases":false,"input_data":1}', 2, NULL, '2015-11-22 21:00:00', 'demultiplexing', NULL, true, NULL);
+INSERT INTO qiita.processing_job VALUES ('d19f76ee-274e-4c1b-b3a2-a12d73507c55', 'shared@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}', 4, 1, '2015-11-22 21:30:00', 'generating demux file', NULL, true, NULL);
+INSERT INTO qiita.processing_job VALUES ('ac653cb5-76a6-4a45-929e-eb9b2dee6b63', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}', 5, NULL, NULL, NULL, NULL, true, NULL);
+
+
+--
+-- Data for Name: analysis_processing_job; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: study_person; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.study_person VALUES (1, 'LabDude', 'lab_dude@foo.bar', 'knight lab', '123 lab street', '121-222-3333');
+INSERT INTO qiita.study_person VALUES (2, 'empDude', 'emp_dude@foo.bar', 'broad', NULL, '444-222-3333');
+INSERT INTO qiita.study_person VALUES (3, 'PIDude', 'PI_dude@foo.bar', 'Wash U', '123 PI street', NULL);
+
+
+--
+-- Data for Name: timeseries_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.timeseries_type VALUES (1, 'None', 'None');
+INSERT INTO qiita.timeseries_type VALUES (2, 'real', 'single intervention');
+INSERT INTO qiita.timeseries_type VALUES (3, 'real', 'multiple intervention');
+INSERT INTO qiita.timeseries_type VALUES (4, 'real', 'combo intervention');
+INSERT INTO qiita.timeseries_type VALUES (5, 'pseudo', 'single intervention');
+INSERT INTO qiita.timeseries_type VALUES (6, 'pseudo', 'multiple intervention');
+INSERT INTO qiita.timeseries_type VALUES (7, 'pseudo', 'combo intervention');
+INSERT INTO qiita.timeseries_type VALUES (8, 'mixed', 'single intervention');
+INSERT INTO qiita.timeseries_type VALUES (9, 'mixed', 'multiple intervention');
+INSERT INTO qiita.timeseries_type VALUES (10, 'mixed', 'combo intervention');
+
+
+--
+-- Data for Name: study; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.study VALUES (1, 'test@foo.bar', '2014-05-19 16:10:00', NULL, 1, 1, true, true, '2014-05-19 16:11:00', 3, false, false, 'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome', 'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.', NULL, 'EBI123456-BB', false, '', false);
+
+
+--
+-- Data for Name: study_sample; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.study_sample VALUES ('1.SKB8.640193', 1, 'ERS000000', 'SAMEA0000000');
+INSERT INTO qiita.study_sample VALUES ('1.SKD8.640184', 1, 'ERS000001', 'SAMEA0000001');
+INSERT INTO qiita.study_sample VALUES ('1.SKB7.640196', 1, 'ERS000002', 'SAMEA0000002');
+INSERT INTO qiita.study_sample VALUES ('1.SKM9.640192', 1, 'ERS000003', 'SAMEA0000003');
+INSERT INTO qiita.study_sample VALUES ('1.SKM4.640180', 1, 'ERS000004', 'SAMEA0000004');
+INSERT INTO qiita.study_sample VALUES ('1.SKM5.640177', 1, 'ERS000005', 'SAMEA0000005');
+INSERT INTO qiita.study_sample VALUES ('1.SKB5.640181', 1, 'ERS000006', 'SAMEA0000006');
+INSERT INTO qiita.study_sample VALUES ('1.SKD6.640190', 1, 'ERS000007', 'SAMEA0000007');
+INSERT INTO qiita.study_sample VALUES ('1.SKB2.640194', 1, 'ERS000008', 'SAMEA0000008');
+INSERT INTO qiita.study_sample VALUES ('1.SKD2.640178', 1, 'ERS000009', 'SAMEA0000009');
+INSERT INTO qiita.study_sample VALUES ('1.SKM7.640188', 1, 'ERS000010', 'SAMEA0000010');
+INSERT INTO qiita.study_sample VALUES ('1.SKB1.640202', 1, 'ERS000011', 'SAMEA0000011');
+INSERT INTO qiita.study_sample VALUES ('1.SKD1.640179', 1, 'ERS000012', 'SAMEA0000012');
+INSERT INTO qiita.study_sample VALUES ('1.SKD3.640198', 1, 'ERS000013', 'SAMEA0000013');
+INSERT INTO qiita.study_sample VALUES ('1.SKM8.640201', 1, 'ERS000014', 'SAMEA0000014');
+INSERT INTO qiita.study_sample VALUES ('1.SKM2.640199', 1, 'ERS000015', 'SAMEA0000015');
+INSERT INTO qiita.study_sample VALUES ('1.SKB9.640200', 1, 'ERS000016', 'SAMEA0000016');
+INSERT INTO qiita.study_sample VALUES ('1.SKD5.640186', 1, 'ERS000017', 'SAMEA0000017');
+INSERT INTO qiita.study_sample VALUES ('1.SKM3.640197', 1, 'ERS000018', 'SAMEA0000018');
+INSERT INTO qiita.study_sample VALUES ('1.SKD9.640182', 1, 'ERS000019', 'SAMEA0000019');
+INSERT INTO qiita.study_sample VALUES ('1.SKB4.640189', 1, 'ERS000020', 'SAMEA0000020');
+INSERT INTO qiita.study_sample VALUES ('1.SKD7.640191', 1, 'ERS000021', 'SAMEA0000021');
+INSERT INTO qiita.study_sample VALUES ('1.SKM6.640187', 1, 'ERS000022', 'SAMEA0000022');
+INSERT INTO qiita.study_sample VALUES ('1.SKD4.640185', 1, 'ERS000023', 'SAMEA0000023');
+INSERT INTO qiita.study_sample VALUES ('1.SKB3.640195', 1, 'ERS000024', 'SAMEA0000024');
+INSERT INTO qiita.study_sample VALUES ('1.SKB6.640176', 1, 'ERS000025', 'SAMEA0000025');
+INSERT INTO qiita.study_sample VALUES ('1.SKM1.640183', 1, 'ERS000025', 'SAMEA0000026');
+
+
+--
+-- Data for Name: analysis_sample; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKB8.640193', 4);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKD8.640184', 4);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKB7.640196', 4);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKM9.640192', 4);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKM4.640180', 4);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKB8.640193', 4);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKD8.640184', 4);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKB7.640196', 4);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKM3.640197', 4);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKB8.640193', 5);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKD8.640184', 5);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKB7.640196', 5);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKM9.640192', 5);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKM4.640180', 5);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKB8.640193', 5);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKD8.640184', 5);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKB7.640196', 5);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKM3.640197', 5);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKB8.640193', 6);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKD8.640184', 6);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKB7.640196', 6);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKM9.640192', 6);
+INSERT INTO qiita.analysis_sample VALUES (1, '1.SKM4.640180', 6);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKB8.640193', 6);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKD8.640184', 6);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKB7.640196', 6);
+INSERT INTO qiita.analysis_sample VALUES (2, '1.SKM3.640197', 6);
+INSERT INTO qiita.analysis_sample VALUES (3, '1.SKD8.640184', 4);
+INSERT INTO qiita.analysis_sample VALUES (3, '1.SKB7.640196', 4);
+INSERT INTO qiita.analysis_sample VALUES (3, '1.SKM9.640192', 4);
+INSERT INTO qiita.analysis_sample VALUES (3, '1.SKM4.640180', 4);
+
+
+--
+-- Data for Name: analysis_users; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.analysis_users VALUES (1, 'shared@foo.bar');
+
+
+--
+-- Data for Name: archive_merging_scheme; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: archive_feature_value; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: artifact_filepath; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.artifact_filepath VALUES (1, 1);
+INSERT INTO qiita.artifact_filepath VALUES (1, 2);
+INSERT INTO qiita.artifact_filepath VALUES (2, 3);
+INSERT INTO qiita.artifact_filepath VALUES (2, 4);
+INSERT INTO qiita.artifact_filepath VALUES (2, 5);
+INSERT INTO qiita.artifact_filepath VALUES (4, 9);
+INSERT INTO qiita.artifact_filepath VALUES (5, 9);
+INSERT INTO qiita.artifact_filepath VALUES (6, 12);
+INSERT INTO qiita.artifact_filepath VALUES (7, 22);
+INSERT INTO qiita.artifact_filepath VALUES (8, 22);
+INSERT INTO qiita.artifact_filepath VALUES (9, 15);
+
+
+--
+-- Data for Name: command_output; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.command_output VALUES (1, 'demultiplexed', 1, 6, false);
+INSERT INTO qiita.command_output VALUES (2, 'demultiplexed', 2, 6, false);
+INSERT INTO qiita.command_output VALUES (3, 'OTU table', 3, 7, false);
+INSERT INTO qiita.command_output VALUES (4, 'taxa_summary', 9, 10, false);
+INSERT INTO qiita.command_output VALUES (5, 'distance_matrix', 10, 8, false);
+INSERT INTO qiita.command_output VALUES (6, 'rarefaction_curves', 11, 9, false);
+INSERT INTO qiita.command_output VALUES (7, 'rarefied_table', 12, 7, false);
+
+
+--
+-- Data for Name: artifact_output_processing_job; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.artifact_output_processing_job VALUES (3, '46b76f74-e100-47aa-9bf2-c0208bcea52d', 1);
+INSERT INTO qiita.artifact_output_processing_job VALUES (6, '80bf25f3-5f1d-4e10-9369-315e4244f6d5', 3);
+INSERT INTO qiita.artifact_output_processing_job VALUES (5, '9ba5ae7a-41e1-4202-b396-0259aeaac366', 3);
+INSERT INTO qiita.artifact_output_processing_job VALUES (4, 'e5609746-a985-41a1-babf-6b3ebe9eb5a9', 3);
+INSERT INTO qiita.artifact_output_processing_job VALUES (2, '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f', 1);
+INSERT INTO qiita.artifact_output_processing_job VALUES (9, '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0', 7);
+
+
+--
+-- Data for Name: artifact_processing_job; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.artifact_processing_job VALUES (1, '6d368e16-2242-4cf8-87b4-a5dc40bb890b');
+INSERT INTO qiita.artifact_processing_job VALUES (1, '4c7115e8-4c8e-424c-bf25-96c292ca1931');
+INSERT INTO qiita.artifact_processing_job VALUES (2, '3c9991ab-6c14-4368-a48c-841e8837a79c');
+INSERT INTO qiita.artifact_processing_job VALUES (1, '063e553b-327c-4818-ab4a-adfe58e49860');
+INSERT INTO qiita.artifact_processing_job VALUES (1, 'bcc7ebcd-39c1-43e4-af2d-822e3589f14d');
+INSERT INTO qiita.artifact_processing_job VALUES (1, 'b72369f9-a886-4193-8d3d-f7b504168e75');
+INSERT INTO qiita.artifact_processing_job VALUES (2, 'd19f76ee-274e-4c1b-b3a2-a12d73507c55');
+INSERT INTO qiita.artifact_processing_job VALUES (1, '46b76f74-e100-47aa-9bf2-c0208bcea52d');
+INSERT INTO qiita.artifact_processing_job VALUES (2, '80bf25f3-5f1d-4e10-9369-315e4244f6d5');
+INSERT INTO qiita.artifact_processing_job VALUES (2, '9ba5ae7a-41e1-4202-b396-0259aeaac366');
+INSERT INTO qiita.artifact_processing_job VALUES (2, 'e5609746-a985-41a1-babf-6b3ebe9eb5a9');
+INSERT INTO qiita.artifact_processing_job VALUES (1, '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f');
+INSERT INTO qiita.artifact_processing_job VALUES (8, '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0');
+
+
+--
+-- Data for Name: artifact_type_filepath_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.artifact_type_filepath_type VALUES (1, 17, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (2, 18, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (3, 1, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (3, 2, false);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (3, 3, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (4, 18, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (4, 19, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (5, 1, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (5, 2, false);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (6, 4, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (6, 5, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (6, 6, false);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (6, 13, false);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (7, 7, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (7, 8, false);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (7, 13, false);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (8, 8, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (9, 8, true);
+INSERT INTO qiita.artifact_type_filepath_type VALUES (10, 8, true);
+
+
+--
+-- Data for Name: controlled_vocab; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: mixs_field_description; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: column_controlled_vocabularies; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: column_ontology; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: command_parameter; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.command_parameter VALUES (1, 'input_data', 'artifact', true, NULL, 1, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (1, 'max_bad_run_length', 'integer', false, '3', 2, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (1, 'min_per_read_length_fraction', 'float', false, '0.75', 3, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (1, 'sequence_max_n', 'integer', false, '0', 4, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (1, 'rev_comp_barcode', 'bool', false, 'False', 5, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (1, 'rev_comp_mapping_barcodes', 'bool', false, 'False', 6, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (1, 'rev_comp', 'bool', false, 'False', 7, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (1, 'phred_quality_threshold', 'integer', false, '3', 8, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (1, 'barcode_type', 'string', false, 'golay_12', 9, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (1, 'max_barcode_errors', 'float', false, '1.5', 10, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'input_data', 'artifact', true, NULL, 11, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'min_seq_len', 'integer', false, '200', 12, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'max_seq_len', 'integer', false, '1000', 13, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'trim_seq_length', 'bool', false, 'False', 14, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'min_qual_score', 'integer', false, '25', 15, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'max_ambig', 'integer', false, '6', 16, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'max_homopolymer', 'integer', false, '6', 17, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'max_primer_mismatch', 'integer', false, '0', 18, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'barcode_type', 'string', false, 'golay_12', 19, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'max_barcode_errors', 'float', false, '1.5', 20, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'disable_bc_correction', 'bool', false, 'False', 21, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'qual_score_window', 'integer', false, '0', 22, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'disable_primers', 'bool', false, 'False', 23, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'reverse_primers', 'choice:["disable", "truncate_only", "truncate_remove"]', false, 'disable', 24, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'reverse_primer_mismatches', 'integer', false, '0', 25, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (2, 'truncate_ambi_bases', 'bool', false, 'False', 26, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (3, 'input_data', 'artifact', true, NULL, 27, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (3, 'reference', 'reference', false, '1', 28, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (3, 'sortmerna_e_value', 'float', false, '1', 29, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (3, 'sortmerna_max_pos', 'integer', false, '10000', 30, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (3, 'similarity', 'float', false, '0.97', 31, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (3, 'sortmerna_coverage', 'float', false, '0.97', 32, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (3, 'threads', 'integer', false, '1', 33, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (4, 'files', 'string', true, NULL, 35, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (4, 'artifact_type', 'string', true, NULL, 36, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (5, 'input_data', 'artifact', true, NULL, 37, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (6, 'template', 'prep_template', true, NULL, 38, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (6, 'files', 'string', true, NULL, 39, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (6, 'artifact_type', 'string', true, NULL, 40, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (7, 'input_data', 'artifact', true, NULL, 41, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (1, 'phred_offset', 'choice:["auto", "33", "64"]', false, 'auto', 42, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (4, 'provenance', 'string', false, NULL, 43, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (6, 'provenance', 'string', false, NULL, 44, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (4, 'analysis', 'analysis', false, NULL, 45, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (4, 'template', 'prep_template', false, NULL, 34, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (8, 'analysis', 'analysis', true, NULL, 46, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (8, 'merge_dup_sample_ids', 'bool', false, 'False', 47, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (9, 'metadata_category', 'string', false, '', 48, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (9, 'sort', 'bool', false, 'False', 49, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (10, 'tree', 'string', false, '', 50, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (10, 'metric', 'choice:["abund_jaccard","binary_chisq","binary_chord","binary_euclidean","binary_hamming","binary_jaccard","binary_lennon","binary_ochiai","binary_otu_gain","binary_pearson","binary_sorensen_dice","bray_curtis","bray_curtis_faith","bray_curtis_magurran","canberra","chisq","chord","euclidean","gower","hellinger","kulczynski","manhattan","morisita_horn","pearson","soergel","spearman_approx","specprof","unifrac","unifrac_g","unifrac_g_full_tree","unweighted_unifrac","unweighted_unifrac_full_tree","weighted_normalized_unifrac","weighted_unifrac"]', false, '"binary_jaccard"', 51, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (11, 'tree', 'string', false, '', 52, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (11, 'num_steps', 'integer', false, '10', 53, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (11, 'min_rare_depth', 'integer', false, '10', 54, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (11, 'max_rare_depth', 'integer', false, 'Default', 55, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (11, 'metrics', 'mchoice:["ace","berger_parker_d","brillouin_d","chao1","chao1_ci","dominance","doubles","enspie","equitability","esty_ci","fisher_alpha","gini_index","goods_coverage","heip_e","kempton_taylor_q","margalef","mcintosh_d","mcintosh_e","menhinick","michaelis_menten_fit","observed_otus","observed_species","osd","simpson_reciprocal","robbins","shannon","simpson","simpson_e","singles","strong","PD_whole_tree"]', false, '["chao1","observed_otus"]', 56, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (12, 'depth', 'integer', true, NULL, 57, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (12, 'subsample_multinomial', 'bool', false, 'False', 58, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (9, 'biom_table', 'artifact', true, NULL, 59, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (10, 'biom_table', 'artifact', true, NULL, 60, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (11, 'biom_table', 'artifact', true, NULL, 61, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (12, 'biom_table', 'artifact', true, NULL, 62, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (13, 'job', 'string', true, NULL, 63, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (14, 'artifact', 'integer', true, NULL, 64, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (15, 'artifact', 'integer', true, NULL, 65, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (15, 'prep_template', 'prep_template', true, NULL, 66, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (16, 'artifact', 'integer', true, NULL, 67, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (16, 'submission_type', 'choice:["ADD", "MODIFY"]', false, 'ADD', 68, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (17, 'artifact', 'integer', true, NULL, 69, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (18, 'fp', 'string', true, NULL, 70, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (18, 'study_id', 'integer', true, NULL, 71, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (18, 'is_mapping_file', 'boolean', false, 'true', 72, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (18, 'data_type', 'string', true, NULL, 73, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (19, 'study', 'integer', true, NULL, 74, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (19, 'template_fp', 'string', true, NULL, 75, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (20, 'study', 'integer', true, NULL, 76, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (21, 'study', 'integer', true, NULL, 77, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (22, 'prep_template', 'integer', true, NULL, 78, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (22, 'template_fp', 'string', true, NULL, 79, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (23, 'obj_class', 'choice:["SampleTemplate", "PrepTemplate"]', true, NULL, 80, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (23, 'obj_id', 'integer', true, NULL, 81, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (23, 'sample_or_col', 'choice:["samples", "columns"]', true, NULL, 82, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (23, 'name', 'string', true, NULL, 83, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (24, 'job_id', 'string', true, NULL, 84, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (24, 'payload', 'string', true, NULL, 85, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (4, 'name', 'string', false, 'default_name', 86, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (6, 'name', 'string', false, 'default_name', 87, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (25, 'analysis_id', 'integer', true, NULL, 88, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (6, 'analysis', 'analysis', false, NULL, 89, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (26, 'url', 'string', true, NULL, 90, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (26, 'private_key', 'string', true, NULL, 91, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (26, 'study_id', 'integer', true, NULL, 92, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (27, 'url', 'string', true, NULL, 93, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (27, 'destination', 'string', true, NULL, 94, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (27, 'private_key', 'string', true, NULL, 95, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (28, 'download_source', 'choice:["EBI-ENA", "SRA"]', false, 'EBI-ENA', 96, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (28, 'accession', 'string', false, 'None', 97, NULL, false);
+INSERT INTO qiita.command_parameter VALUES (8, 'categories', 'mchoice', true, NULL, 98, NULL, false);
+
+
+--
+-- Data for Name: controlled_vocab_values; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: default_parameter_set; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.default_parameter_set VALUES (8, 2, 'Defaults with Golay 12 barcodes', '{"min_seq_len":200,"max_seq_len":1000,"trim_seq_length":false,"min_qual_score":25,"max_ambig":6,"max_homopolymer":6,"max_primer_mismatch":0,"barcode_type":"golay_12","max_barcode_errors":1.5,"disable_bc_correction":false,"qual_score_window":0,"disable_primers":false,"reverse_primers":"disable","reverse_primer_mismatches":0,"truncate_ambi_bases":false}');
+INSERT INTO qiita.default_parameter_set VALUES (9, 2, 'Defaults with Hamming 8 barcodes', '{"min_seq_len":200,"max_seq_len":1000,"trim_seq_length":false,"min_qual_score":25,"max_ambig":6,"max_homopolymer":6,"max_primer_mismatch":0,"barcode_type":"hamming_8","max_barcode_errors":1.5,"disable_bc_correction":false,"qual_score_window":0,"disable_primers":false,"reverse_primers":"disable","reverse_primer_mismatches":0,"truncate_ambi_bases":false}');
+INSERT INTO qiita.default_parameter_set VALUES (10, 3, 'Defaults', '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1}');
+INSERT INTO qiita.default_parameter_set VALUES (11, 1, 'per sample FASTQ defaults, phred_offset 33', '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"not-barcoded","max_barcode_errors":1.5,"phred_offset":"33"}');
+INSERT INTO qiita.default_parameter_set VALUES (12, 1, 'per sample FASTQ defaults, phred_offset 64', '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"not-barcoded","max_barcode_errors":1.5,"phred_offset":"64"}');
+INSERT INTO qiita.default_parameter_set VALUES (1, 1, 'Defaults', '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"phred_offset":"auto"}');
+INSERT INTO qiita.default_parameter_set VALUES (2, 1, 'Defaults with reverse complement mapping file barcodes', '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"phred_offset":"auto"}');
+INSERT INTO qiita.default_parameter_set VALUES (3, 1, 'barcode_type 8, defaults', '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"8","max_barcode_errors":1.5,"phred_offset":"auto"}');
+INSERT INTO qiita.default_parameter_set VALUES (4, 1, 'barcode_type 8, reverse complement mapping file barcodes', '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"8","max_barcode_errors":1.5,"phred_offset":"auto"}');
+INSERT INTO qiita.default_parameter_set VALUES (5, 1, 'barcode_type 6, defaults', '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"6","max_barcode_errors":1.5,"phred_offset":"auto"}');
+INSERT INTO qiita.default_parameter_set VALUES (6, 1, 'barcode_type 6, reverse complement mapping file barcodes', '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"6","max_barcode_errors":1.5,"phred_offset":"auto"}');
+INSERT INTO qiita.default_parameter_set VALUES (7, 1, 'per sample FASTQ defaults', '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"not-barcoded","max_barcode_errors":1.5,"phred_offset":"auto"}');
+INSERT INTO qiita.default_parameter_set VALUES (13, 9, 'Defaults', '{"sort": false, "metadata_category": ""}');
+INSERT INTO qiita.default_parameter_set VALUES (14, 10, 'Unweighted UniFrac', '{"metric": "unweighted_unifrac", "tree": ""}');
+INSERT INTO qiita.default_parameter_set VALUES (15, 11, 'Defaults', '{"max_rare_depth": "Default", "tree": "", "num_steps": 10, "min_rare_depth": 10, "metrics": ["chao1", "observed_otus"]}');
+INSERT INTO qiita.default_parameter_set VALUES (16, 12, 'Defaults', '{"subsample_multinomial": "False"}');
+
+
+--
+-- Data for Name: default_workflow; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.default_workflow VALUES (3, 'Per sample FASTQ upstream workflow', true, NULL, 3, '{"prep": {}, "sample": {}}');
+INSERT INTO qiita.default_workflow VALUES (1, 'FASTQ upstream workflow', true, 'This accepts html <a href="https://qiita.ucsd.edu">Qiita!</a><br/><br/><b>BYE!</b>', 3, '{"prep": {}, "sample": {}}');
+INSERT INTO qiita.default_workflow VALUES (2, 'FASTA upstream workflow', true, 'This is another description', 3, '{"prep": {}, "sample": {}}');
+
+
+--
+-- Data for Name: default_workflow_data_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.default_workflow_data_type VALUES (1, 1);
+INSERT INTO qiita.default_workflow_data_type VALUES (1, 2);
+INSERT INTO qiita.default_workflow_data_type VALUES (2, 2);
+INSERT INTO qiita.default_workflow_data_type VALUES (3, 3);
+
+
+--
+-- Data for Name: default_workflow_node; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.default_workflow_node VALUES (1, 1, 1);
+INSERT INTO qiita.default_workflow_node VALUES (2, 1, 10);
+INSERT INTO qiita.default_workflow_node VALUES (3, 2, 8);
+INSERT INTO qiita.default_workflow_node VALUES (4, 2, 10);
+INSERT INTO qiita.default_workflow_node VALUES (5, 3, 7);
+INSERT INTO qiita.default_workflow_node VALUES (6, 3, 10);
+
+
+--
+-- Data for Name: default_workflow_edge; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.default_workflow_edge VALUES (1, 1, 2);
+INSERT INTO qiita.default_workflow_edge VALUES (2, 3, 4);
+INSERT INTO qiita.default_workflow_edge VALUES (3, 5, 6);
+
+
+--
+-- Data for Name: default_workflow_edge_connections; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.default_workflow_edge_connections VALUES (1, 1, 27);
+INSERT INTO qiita.default_workflow_edge_connections VALUES (2, 2, 27);
+INSERT INTO qiita.default_workflow_edge_connections VALUES (3, 1, 27);
+
+
+--
+-- Data for Name: download_link; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: ebi_run_accession; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKB1.640202', 'ERR0000001', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKB2.640194', 'ERR0000002', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKB3.640195', 'ERR0000003', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKB4.640189', 'ERR0000004', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKB5.640181', 'ERR0000005', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKB6.640176', 'ERR0000006', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKB7.640196', 'ERR0000007', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKB8.640193', 'ERR0000008', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKB9.640200', 'ERR0000009', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKD1.640179', 'ERR0000010', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKD2.640178', 'ERR0000011', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKD3.640198', 'ERR0000012', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKD4.640185', 'ERR0000013', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKD5.640186', 'ERR0000014', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKD6.640190', 'ERR0000015', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKD7.640191', 'ERR0000016', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKD8.640184', 'ERR0000017', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKD9.640182', 'ERR0000018', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKM1.640183', 'ERR0000019', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKM2.640199', 'ERR0000020', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKM3.640197', 'ERR0000021', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKM4.640180', 'ERR0000022', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKM5.640177', 'ERR0000023', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKM6.640187', 'ERR0000024', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKM7.640188', 'ERR0000025', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKM8.640201', 'ERR0000026', 2);
+INSERT INTO qiita.ebi_run_accession VALUES ('1.SKM9.640192', 'ERR0000027', 2);
+
+
+--
+-- Data for Name: environmental_package; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.environmental_package VALUES ('air', 'ep_air');
+INSERT INTO qiita.environmental_package VALUES ('built environment', 'ep_built_environment');
+INSERT INTO qiita.environmental_package VALUES ('host-associated', 'ep_host_associated');
+INSERT INTO qiita.environmental_package VALUES ('human-amniotic-fluid', 'ep_human_amniotic_fluid');
+INSERT INTO qiita.environmental_package VALUES ('human-associated', 'ep_human_associated');
+INSERT INTO qiita.environmental_package VALUES ('human-blood', 'ep_human_blood');
+INSERT INTO qiita.environmental_package VALUES ('human-gut', 'ep_human_gut');
+INSERT INTO qiita.environmental_package VALUES ('human-oral', 'ep_human_oral');
+INSERT INTO qiita.environmental_package VALUES ('human-skin', 'ep_human_skin');
+INSERT INTO qiita.environmental_package VALUES ('human-urine', 'ep_human_urine');
+INSERT INTO qiita.environmental_package VALUES ('human-vaginal', 'ep_human_vaginal');
+INSERT INTO qiita.environmental_package VALUES ('microbial mat/biofilm', 'ep_microbial_mat_biofilm');
+INSERT INTO qiita.environmental_package VALUES ('miscellaneous natural or artificial environment', 'ep_misc_artif');
+INSERT INTO qiita.environmental_package VALUES ('plant-associated', 'ep_plant_associated');
+INSERT INTO qiita.environmental_package VALUES ('sediment', 'ep_sediment');
+INSERT INTO qiita.environmental_package VALUES ('soil', 'ep_soil');
+INSERT INTO qiita.environmental_package VALUES ('wastewater/sludge', 'ep_wastewater_sludge');
+INSERT INTO qiita.environmental_package VALUES ('water', 'ep_water');
+
+
+--
+-- Data for Name: investigation; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.investigation VALUES (1, 'TestInvestigation', 'An investigation for testing purposes', 3);
+
+
+--
+-- Data for Name: investigation_study; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.investigation_study VALUES (1, 1);
+
+
+--
+-- Data for Name: message; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.message VALUES (1, 'message 1', '2024-05-03 12:08:36.627074', NULL);
+INSERT INTO qiita.message VALUES (2, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque sed auctor ex, non placerat sapien. Vestibulum vestibulum massa ut sapien condimentum, cursus consequat diam sodales. Nulla aliquam arcu ut massa auctor, et vehicula mauris tempor. In lacinia viverra ante quis pellentesque. Nunc vel mi accumsan, porttitor eros ut, pharetra elit. Nulla ac nisi quis dui egestas malesuada vitae ut mauris. Morbi blandit non nisl a finibus. In erat velit, congue at ipsum sit amet, venenatis bibendum sem. Curabitur vel odio sed est rutrum rutrum. Quisque efficitur ut purus in ultrices. Pellentesque eu auctor justo.', '2024-05-03 12:08:36.627074', NULL);
+INSERT INTO qiita.message VALUES (3, 'message <a href="#">3</a>', '2024-05-03 12:08:36.627074', NULL);
+
+
+--
+-- Data for Name: message_user; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.message_user VALUES ('test@foo.bar', 1, false);
+INSERT INTO qiita.message_user VALUES ('shared@foo.bar', 1, false);
+INSERT INTO qiita.message_user VALUES ('test@foo.bar', 2, false);
+INSERT INTO qiita.message_user VALUES ('test@foo.bar', 3, false);
+
+
+--
+-- Data for Name: oauth_identifiers; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.oauth_identifiers VALUES ('8mL2V1gX1kK0gXuKpEhIhzaiVxrhLvJ0OjHkeqJHKjG3d6abU2', 'qbQolcKEJ64I4jUbMxILwuTFb7IOXlYMG78QnqgtvlpIEQdiGWLUmKplz2qfnZwy7d7hqjc73qntzKTONhY27wT6cKohnNuPuKMCTLOQgrJvD6eJ2lKWH1pZeGM2zMLucZcSzlTQjYhiZruUbMeZ13GjsuFBjyVOzF8HP4cQ4xQuA1Fr8N4Yf9yQn5VqcA1byCnMWaPV95FFokdUlFCUGGEeJVRKbEn5t7qAgUlwz0B6quZICHtpiKuVDl8lNZm');
+INSERT INTO qiita.oauth_identifiers VALUES ('ROeSvinuTLAggxQLrsa6ycCw0ZvbYaPk8DYHB5fb8J6CM3CavA', 'vvbBSxs2su0Vcx4Qt4pwgCGkiq7bOemXnxDhsntSTxj9PAIFyDFOG1rNxj9xPhF8ugPxacilgs5PrRj93mYhnKHSTvMM9ksfQ6GmV3GvtCX0gAAjtE29ChyT0DZzOhwumke2ip9lumyZbYZhWAgWyyuzCmsKqvNjAXJfY70juQaGn3ySTmNXtqnVT7HYmSJYsqY07FLuL0CV696dsrbEOBja8Xi6nlhkiQ4g6d2UI55PdqMEz1J0zKnLNiQirGL');
+INSERT INTO qiita.oauth_identifiers VALUES ('CTjfltNkjT7zpR9zvXqyhmaFPsaK4kml2x1gEuxfbv5oBCbFvn', 'uvkbakS8Zwdcd4LQUiC5rUbwAgvN6WIY8wex12Ve3sFEkeplwjxb3lTid76tpPfSGKmm3gGmfXberwtQ9Qjns82NC3x9qXZ1E85M3IXXP7DZQC1kHY24V6ftx7pJCFfTjSJEhHeZLV5Uigz08Oclo3uQCkDBWBeE42QHg9XHgIy7yeW90Z9OFPfucEWnMdodSuGAhoxtkpCK6t1QsVO1cXOrY0Vk3Yay3TrAqOpfW6008FFRzakbOqKRfTVTlrg');
+INSERT INTO qiita.oauth_identifiers VALUES ('DWelYzEYJYcZ4wlqUp0bHGXojrvZVz0CNBJvOqUKcrPQ5p4UqE', NULL);
+INSERT INTO qiita.oauth_identifiers VALUES ('19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4', 'J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKhAmmCWZuabe0O5Mp28s1');
+INSERT INTO qiita.oauth_identifiers VALUES ('yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u', '9xhU5rvzq8dHCEI5sSN95jesUULrZi6pT6Wuc71fDbFbsrnWarcSq56TJLN4kP4hH');
+INSERT INTO qiita.oauth_identifiers VALUES ('dHgaXDwq665ksFPqfIoD3Jt8KRXdSioTRa4lGa5mGDnz6JTIBf', 'xqx61SD4M2EWbaS0WYv3H1nIemkvEAMIn16XMLjy5rTCqi7opCcWbfLINEwtV48bQ');
+INSERT INTO qiita.oauth_identifiers VALUES ('4MOBzUBHBtUmwhaC258H7PS0rBBLyGQrVxGPgc9g305bvVhf6h', 'rFb7jwAb3UmSUN57Bjlsi4DTl2owLwRpwCc0SggRNEVb2Ebae2p5Umnq20rNMhmqN');
+
+
+--
+-- Data for Name: oauth_software; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.oauth_software VALUES (1, 'yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u');
+INSERT INTO qiita.oauth_software VALUES (2, 'dHgaXDwq665ksFPqfIoD3Jt8KRXdSioTRa4lGa5mGDnz6JTIBf');
+INSERT INTO qiita.oauth_software VALUES (3, '4MOBzUBHBtUmwhaC258H7PS0rBBLyGQrVxGPgc9g305bvVhf6h');
+
+
+--
+-- Data for Name: ontology; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.ontology VALUES (999999999, 'ENA', true, 'European Nucleotide Archive Submission Ontology', NULL, 'http://www.ebi.ac.uk/embl/Documentation/ENA-Reads.html', 'The ENA CV is to be used to annotate XML submissions to the ENA.', '2009-02-23');
+
+
+--
+-- Data for Name: parameter_artifact_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.parameter_artifact_type VALUES (1, 3);
+INSERT INTO qiita.parameter_artifact_type VALUES (1, 5);
+INSERT INTO qiita.parameter_artifact_type VALUES (11, 1);
+INSERT INTO qiita.parameter_artifact_type VALUES (11, 2);
+INSERT INTO qiita.parameter_artifact_type VALUES (11, 4);
+INSERT INTO qiita.parameter_artifact_type VALUES (27, 6);
+INSERT INTO qiita.parameter_artifact_type VALUES (59, 7);
+INSERT INTO qiita.parameter_artifact_type VALUES (60, 7);
+INSERT INTO qiita.parameter_artifact_type VALUES (61, 7);
+INSERT INTO qiita.parameter_artifact_type VALUES (62, 7);
+
+
+--
+-- Data for Name: parent_artifact; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.parent_artifact VALUES (2, 1);
+INSERT INTO qiita.parent_artifact VALUES (3, 1);
+INSERT INTO qiita.parent_artifact VALUES (4, 2);
+INSERT INTO qiita.parent_artifact VALUES (5, 2);
+INSERT INTO qiita.parent_artifact VALUES (6, 2);
+INSERT INTO qiita.parent_artifact VALUES (9, 8);
+
+
+--
+-- Data for Name: parent_processing_job; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.parent_processing_job VALUES ('b72369f9-a886-4193-8d3d-f7b504168e75', 'd19f76ee-274e-4c1b-b3a2-a12d73507c55');
+
+
+--
+-- Data for Name: study_tags; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: per_study_tags; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: prep_1; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.prep_1 VALUES ('qiita_sample_column_names', '{"columns": ["barcode", "library_construction_protocol", "primer", "target_subfragment", "target_gene", "run_center", "run_prefix", "run_date", "experiment_center", "experiment_design_description", "experiment_title", "platform", "instrument_model", "samp_size", "sequencing_meth", "illumina_technology", "sample_center", "pcr_primers", "study_center", "center_name", "center_project_name", "emp_status"]}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKB1.640202', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "GTCCGCAAGTTA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKB2.640194', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CGTAGAGCTCTC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKB3.640195', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CCTCTGAGAGCT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKB4.640189', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CCTCGATGCAGT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKB5.640181', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "GCGGACTATTCA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKB6.640176', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CGTGCACAATTG", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKB7.640196', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CGGCCTAAGTTC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKB8.640193', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "AGCGCTCACATC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKB9.640200', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TGGTTATGGCAC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKD1.640179', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CGAGGTTCTGAT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKD2.640178', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "AACTCCTGTGGA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKD3.640198', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TAATGGTCGTAG", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKD4.640185', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TTGCACCGTCGA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKD5.640186', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TGCTACAGACGT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKD6.640190', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "ATGGCCTGACTA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKD7.640191', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "ACGCACATACAA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKD8.640184', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TGAGTGGTCTGT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKD9.640182', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "GATAGCACTCGT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKM1.640183', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TAGCGCGAACTT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKM2.640199', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CATACACGCACC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKM3.640197', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "ACCTCAGTCAAG", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKM4.640180', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TCGACCAAACAC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKM5.640177', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CCACCCAGTAAC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKM6.640187', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "ATATCGCGATGA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKM7.640188', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CGCCGGTAATCT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKM8.640201', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CCGATGCCTTGA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_1 VALUES ('1.SKM9.640192', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "AGCAGGCACGAA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+
+
+--
+-- Data for Name: prep_2; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.prep_2 VALUES ('qiita_sample_column_names', '{"columns": ["barcode", "library_construction_protocol", "primer", "target_subfragment", "target_gene", "run_center", "run_prefix", "run_date", "experiment_center", "experiment_design_description", "experiment_title", "platform", "instrument_model", "samp_size", "sequencing_meth", "illumina_technology", "sample_center", "pcr_primers", "study_center", "center_name", "center_project_name", "emp_status"]}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKB1.640202', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "GTCCGCAAGTTA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKB2.640194', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CGTAGAGCTCTC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKB3.640195', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CCTCTGAGAGCT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKB4.640189', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CCTCGATGCAGT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKB5.640181', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "GCGGACTATTCA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKB6.640176', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CGTGCACAATTG", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKB7.640196', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CGGCCTAAGTTC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKB8.640193', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "AGCGCTCACATC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKB9.640200', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TGGTTATGGCAC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKD1.640179', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CGAGGTTCTGAT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKD2.640178', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "AACTCCTGTGGA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKD3.640198', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TAATGGTCGTAG", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKD4.640185', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TTGCACCGTCGA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKD5.640186', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TGCTACAGACGT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKD6.640190', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "ATGGCCTGACTA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKD7.640191', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "ACGCACATACAA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKD8.640184', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TGAGTGGTCTGT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKD9.640182', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "GATAGCACTCGT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKM1.640183', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TAGCGCGAACTT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKM2.640199', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CATACACGCACC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKM3.640197', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "ACCTCAGTCAAG", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKM4.640180', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "TCGACCAAACAC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKM5.640177', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CCACCCAGTAAC", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKM6.640187', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "ATATCGCGATGA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKM7.640188', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CGCCGGTAATCT", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKM8.640201', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "CCGATGCCTTGA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+INSERT INTO qiita.prep_2 VALUES ('1.SKM9.640192', '{"primer": "GTGCCAGCMGCCGCGGTAA", "barcode": "AGCAGGCACGAA", "platform": "Illumina", "run_date": "8/1/12", "samp_size": ".25,g", "emp_status": "EMP", "run_center": "ANL", "run_prefix": "s_G1_L001_sequences", "center_name": "ANL", "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT", "target_gene": "16S rRNA", "study_center": "CCME", "sample_center": "ANL", "sequencing_meth": "Sequencing by synthesis", "experiment_title": "Cannabis Soil Microbiome", "instrument_model": "Illumina MiSeq", "experiment_center": "ANL", "target_subfragment": "V4", "center_project_name": null, "illumina_technology": "MiSeq", "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants from CA", "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions."}');
+
+
+--
+-- Data for Name: prep_template; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.prep_template VALUES (2, 2, 'success', 'Metagenomics', 7, 'Prep information 2', false, '2024-05-03 12:08:37.549542', '2024-05-03 12:08:37.549542', NULL);
+INSERT INTO qiita.prep_template VALUES (1, 2, 'success', 'Metagenomics', 1, 'Prep information 1', false, '1970-01-01 00:00:00', '1970-01-01 00:00:00', NULL);
+
+
+--
+-- Data for Name: prep_template_filepath; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.prep_template_filepath VALUES (1, 18);
+INSERT INTO qiita.prep_template_filepath VALUES (1, 19);
+INSERT INTO qiita.prep_template_filepath VALUES (1, 20);
+INSERT INTO qiita.prep_template_filepath VALUES (1, 21);
+
+
+--
+-- Data for Name: prep_template_processing_job; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: prep_template_sample; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKB8.640193', 'ERX0000000');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKD8.640184', 'ERX0000001');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKB7.640196', 'ERX0000002');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKM9.640192', 'ERX0000003');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKM4.640180', 'ERX0000004');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKM5.640177', 'ERX0000005');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKB5.640181', 'ERX0000006');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKD6.640190', 'ERX0000007');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKB2.640194', 'ERX0000008');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKD2.640178', 'ERX0000009');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKM7.640188', 'ERX0000010');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKB1.640202', 'ERX0000011');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKD1.640179', 'ERX0000012');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKD3.640198', 'ERX0000013');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKM8.640201', 'ERX0000014');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKM2.640199', 'ERX0000015');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKB9.640200', 'ERX0000016');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKD5.640186', 'ERX0000017');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKM3.640197', 'ERX0000018');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKD9.640182', 'ERX0000019');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKB4.640189', 'ERX0000020');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKD7.640191', 'ERX0000021');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKM6.640187', 'ERX0000022');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKD4.640185', 'ERX0000023');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKB3.640195', 'ERX0000024');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKB6.640176', 'ERX0000025');
+INSERT INTO qiita.prep_template_sample VALUES (1, '1.SKM1.640183', 'ERX0000026');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKB8.640193', 'ERX0000000');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKD8.640184', 'ERX0000001');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKB7.640196', 'ERX0000002');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKM9.640192', 'ERX0000003');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKM4.640180', 'ERX0000004');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKM5.640177', 'ERX0000005');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKB5.640181', 'ERX0000006');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKD6.640190', 'ERX0000007');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKB2.640194', 'ERX0000008');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKD2.640178', 'ERX0000009');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKM7.640188', 'ERX0000010');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKB1.640202', 'ERX0000011');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKD1.640179', 'ERX0000012');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKD3.640198', 'ERX0000013');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKM8.640201', 'ERX0000014');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKM2.640199', 'ERX0000015');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKB9.640200', 'ERX0000016');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKD5.640186', 'ERX0000017');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKM3.640197', 'ERX0000018');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKD9.640182', 'ERX0000019');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKB4.640189', 'ERX0000020');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKD7.640191', 'ERX0000021');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKM6.640187', 'ERX0000022');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKD4.640185', 'ERX0000023');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKB3.640195', 'ERX0000024');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKB6.640176', 'ERX0000025');
+INSERT INTO qiita.prep_template_sample VALUES (2, '1.SKM1.640183', 'ERX0000026');
+
+
+--
+-- Data for Name: preparation_artifact; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.preparation_artifact VALUES (1, 1);
+INSERT INTO qiita.preparation_artifact VALUES (1, 2);
+INSERT INTO qiita.preparation_artifact VALUES (1, 3);
+INSERT INTO qiita.preparation_artifact VALUES (1, 4);
+INSERT INTO qiita.preparation_artifact VALUES (1, 5);
+INSERT INTO qiita.preparation_artifact VALUES (1, 6);
+INSERT INTO qiita.preparation_artifact VALUES (2, 7);
+
+
+--
+-- Data for Name: processing_job_resource_allocation; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('REGISTER', 'single-core-8gb', 'REGISTER', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('default', 'single-core-8gb', 'RELEASE_VALIDATORS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('default', 'single-core-8gb', 'COMPLETE_JOBS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('default', 'multi-core-vlow', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 5 --mem-per-cpu 8gb --time 168:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('delete_analysis', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Calculate beta correlation', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('delete_sample_template', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('delete_study', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('delete_sample_or_column', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('create_sample_template', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('update_prep_template', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('copy_artifact', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('delete_artifact', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('download_remote_files', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('list_remote_files', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('submit_to_EBI', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Generate HTML summary', 'single-core-8gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem-per-cpu 8gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('update_sample_template', 'single-core-16gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('build_analysis_files', 'single-core-16gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Custom-axis Emperor plot', 'single-core-16gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Calculate alpha correlation', 'single-core-16gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Summarize taxa', 'single-core-16gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Perform Principal Coordinates Analysis (PCoA)', 'single-core-16gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Split libraries', 'single-core-56gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Calculate alpha diversity', 'single-core-56gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Calculate beta diversity', 'single-core-56gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Calculate beta group significance', 'single-core-56gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Filter samples by metadata', 'single-core-56gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Rarefy features', 'single-core-56gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Validate', 'single-core-56gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 60gb --time 25:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Trimming', 'single-core-120gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 120gb --time 80:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Split libraries FASTQ', 'single-core-120gb', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 1 --mem 120gb --time 80:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Deblur', 'multi-core-low', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 5 --mem 96gb --time 130:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Shogun', 'multi-core-low', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 5 --mem 96gb --time 130:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Pick closed-reference OTUs', 'multi-core-high', 'RESOURCE_PARAMS_COMMAND', '-p qiita -N 1 -n 5 --mem 120gb --time 130:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Pick closed-reference OTUs', 'single-core-24gb', 'RELEASE_VALIDATORS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem 24gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Trimming', 'single-core-24gb', 'RELEASE_VALIDATORS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem 24gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Filter samples by metadata', 'single-core-24gb', 'RELEASE_VALIDATORS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem 24gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Rarefy features', 'single-core-24gb', 'RELEASE_VALIDATORS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem 24gb --time 50:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('BIOM', 'single-core-16gb', 'COMPLETE_JOBS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('alpha_vector', 'single-core-16gb', 'COMPLETE_JOBS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('distance_matrix', 'single-core-16gb', 'COMPLETE_JOBS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Demultiplexed', 'single-core-16gb', 'COMPLETE_JOBS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('ordination_results', 'single-core-16gb', 'COMPLETE_JOBS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('q2_visualization', 'single-core-16gb', 'COMPLETE_JOBS_RESOURCE_PARAM', '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('default', NULL, 'VALIDATOR', '-p qiita -N 1 -n 1 --mem 1gb --time 4:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('per_sample_FASTQ', NULL, 'VALIDATOR', '-p qiita -N 1 -n 5 --mem 2gb --time 10:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('ordination_results', NULL, 'VALIDATOR', '-p qiita -N 1 -n 1 --mem 10gb --time 2:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('Demultiplexed', NULL, 'VALIDATOR', '-p qiita -N 1 -n 5 --mem 25gb --time 150:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('distance_matrix', NULL, 'VALIDATOR', '-p qiita -N 1 -n 1 --mem 42gb --time 150:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('BIOM', NULL, 'VALIDATOR', '-p qiita -N 1 -n 1 --mem 90gb --time 150:00:00');
+INSERT INTO qiita.processing_job_resource_allocation VALUES ('alpha_vector', NULL, 'VALIDATOR', '-p qiita -N 1 -n 1 --mem 10gb --time 70:00:00');
+
+
+--
+-- Data for Name: processing_job_validator; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+
+
+--
+-- Data for Name: processing_job_workflow; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.processing_job_workflow VALUES (1, 'shared@foo.bar', 'Testing processing workflow');
+INSERT INTO qiita.processing_job_workflow VALUES (2, 'test@foo.bar', 'Single node workflow');
+
+
+--
+-- Data for Name: processing_job_workflow_root; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.processing_job_workflow_root VALUES (1, 'b72369f9-a886-4193-8d3d-f7b504168e75');
+INSERT INTO qiita.processing_job_workflow_root VALUES (2, 'ac653cb5-76a6-4a45-929e-eb9b2dee6b63');
+
+
+--
+-- Data for Name: publication; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.publication VALUES ('10.1038/nmeth.f.303', '20383131');
+INSERT INTO qiita.publication VALUES ('10.1186/2047-217X-1-7', '23587224');
+INSERT INTO qiita.publication VALUES ('10.100/123456', '123456');
+INSERT INTO qiita.publication VALUES ('10.100/7891011', '7891011');
+
+
+--
+-- Data for Name: reference; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.reference VALUES (1, 'Greengenes', '13_8', 6, 7, 8);
+INSERT INTO qiita.reference VALUES (2, 'Silva', 'test', 10, 11, NULL);
+
+
+--
+-- Data for Name: restrictions; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.restrictions VALUES ('study_sample', 'env_package', '{air,"built environment",host-associated,human-associated,human-skin,human-oral,human-gut,human-vaginal,"microbial mat/biofilm","misc environment",plant-associated,sediment,soil,wastewater/sludge,water}');
+INSERT INTO qiita.restrictions VALUES ('prep_template_sample', 'target_gene', '{"16S rRNA","18S rRNA",ITS1/2,LSU}');
+INSERT INTO qiita.restrictions VALUES ('prep_template_sample', 'target_subfragment', '{V3,V4,V6,V9,ITS1/2}');
+INSERT INTO qiita.restrictions VALUES ('prep_template_sample', 'instrument_model', '{"454 GS","454 GS 20","454 GS FLX","454 GS FLX+","454 GS FLX Titanium","454 GS Junior","Illumina Genome Analyzer","Illumina Genome Analyzer II","Illumina Genome Analyzer IIx","Illumina HiScanSQ","Illumina HiSeq 1000","Illumina HiSeq 1500","Illumina HiSeq 2000","Illumina HiSeq 2500","Illumina HiSeq 3000","Illumina HiSeq 4000","Illumina MiSeq","Illumina MiniSeq","Illumina NovaSeq 6000","NextSeq 500","NextSeq 550","Ion Torrent PGM","Ion Torrent Proton","Ion Torrent S5","Ion Torrent S5 XL",MinION,GridION,PromethION,unspecified}');
+INSERT INTO qiita.restrictions VALUES ('prep_template_sample', 'platform', '{FASTA,Illumina,Ion_Torrent,LS454,"Oxford Nanopore"}');
+
+
+--
+-- Data for Name: sample_1; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.sample_1 VALUES ('qiita_sample_column_names', '{"columns": ["season_environment", "assigned_from_geo", "texture", "taxon_id", "depth", "host_taxid", "common_name", "water_content_soil", "elevation", "temp", "tot_nitro", "samp_salinity", "altitude", "env_biome", "country", "ph", "anonymized_name", "tot_org_carb", "description_duplicate", "env_feature", "physical_specimen_location", "physical_specimen_remaining", "dna_extracted", "sample_type", "env_package", "collection_timestamp", "host_subject_id", "description", "latitude", "longitude", "scientific_name"]}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKM7.640188', '{"ph": "6.82", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "63.1 sand, 17.7 silt, 19.2 clay", "altitude": "0", "latitude": "60.1102854322", "taxon_id": "1118232", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "74.7123248382", "tot_nitro": "1.3", "host_taxid": "3483", "common_name": "root metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "3.31", "dna_extracted": "true", "samp_salinity": "7.44", "anonymized_name": "SKM7", "host_subject_id": "1001:B6", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.101", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Bucu Roots", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKD9.640182', '{"ph": "6.82", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "66 sand, 16.3 silt, 17.7 clay", "altitude": "0", "latitude": "23.1218032799", "taxon_id": "1118232", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "42.838497795", "tot_nitro": "1.51", "host_taxid": "3483", "common_name": "root metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "4.32", "dna_extracted": "true", "samp_salinity": "7.1", "anonymized_name": "SKD9", "host_subject_id": "1001:D3", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.178", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Diesel Root", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKM8.640201', '{"ph": "6.82", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "63.1 sand, 17.7 silt, 19.2 clay", "altitude": "0", "latitude": "3.21190859967", "taxon_id": "1118232", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "26.8138925876", "tot_nitro": "1.3", "host_taxid": "3483", "common_name": "root metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "3.31", "dna_extracted": "true", "samp_salinity": "7.44", "anonymized_name": "SKM8", "host_subject_id": "1001:D8", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.101", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Bucu Roots", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKB8.640193', '{"ph": "6.94", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "64.6 sand, 17.6 silt, 17.8 clay", "altitude": "0", "latitude": "74.0894932572", "taxon_id": "1118232", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "65.3283470202", "tot_nitro": "1.41", "host_taxid": "3483", "common_name": "root metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "5", "dna_extracted": "true", "samp_salinity": "7.15", "anonymized_name": "SKB8", "host_subject_id": "1001:M7", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.164", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Burmese root", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKD2.640178', '{"ph": "6.8", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "66 sand, 16.3 silt, 17.7 clay", "altitude": "0", "latitude": "53.5050692395", "taxon_id": "410658", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "31.6056761814", "tot_nitro": "1.51", "host_taxid": "3483", "common_name": "soil metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "4.32", "dna_extracted": "true", "samp_salinity": "7.1", "anonymized_name": "SKD2", "host_subject_id": "1001:B5", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.178", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Diesel bulk", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKM3.640197', '{"ph": "6.82", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "63.1 sand, 17.7 silt, 19.2 clay", "altitude": "0", "latitude": "Not applicable", "taxon_id": "410658", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "31.2003474585", "tot_nitro": "1.3", "host_taxid": "3483", "common_name": "soil metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "3.31", "dna_extracted": "true", "samp_salinity": "7.44", "anonymized_name": "SKM3", "host_subject_id": "1001:B7", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.101", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Bucu bulk", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKM4.640180', '{"ph": "6.82", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "63.1 sand, 17.7 silt, 19.2 clay", "altitude": "0", "latitude": "Not applicable", "taxon_id": "939928", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "Not applicable", "tot_nitro": "1.3", "host_taxid": "3483", "common_name": "rhizosphere metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "3.31", "dna_extracted": "true", "samp_salinity": "7.44", "anonymized_name": "SKM4", "host_subject_id": "1001:D2", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.101", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Bucu Rhizo", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKB9.640200', '{"ph": "6.8", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "64.6 sand, 17.6 silt, 17.8 clay", "altitude": "0", "latitude": "12.6245524972", "taxon_id": "1118232", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "96.0693176066", "tot_nitro": "1.41", "host_taxid": "3483", "common_name": "root metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "5", "dna_extracted": "true", "samp_salinity": "7.15", "anonymized_name": "SKB9", "host_subject_id": "1001:B3", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.164", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Burmese root", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKB4.640189', '{"ph": "6.94", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "64.6 sand, 17.6 silt, 17.8 clay", "altitude": "0", "latitude": "43.9614715197", "taxon_id": "939928", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "82.8516734159", "tot_nitro": "1.41", "host_taxid": "3483", "common_name": "rhizosphere metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "5", "dna_extracted": "true", "samp_salinity": "7.15", "anonymized_name": "SKB4", "host_subject_id": "1001:D7", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.164", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Burmese Rhizo", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKB5.640181', '{"ph": "6.94", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "64.6 sand, 17.6 silt, 17.8 clay", "altitude": "0", "latitude": "10.6655599093", "taxon_id": "939928", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "70.784770579", "tot_nitro": "1.41", "host_taxid": "3483", "common_name": "rhizosphere metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "5", "dna_extracted": "true", "samp_salinity": "7.15", "anonymized_name": "SKB5", "host_subject_id": "1001:M4", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.164", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Burmese Rhizo", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKB6.640176', '{"ph": "6.94", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "64.6 sand, 17.6 silt, 17.8 clay", "altitude": "0", "latitude": "78.3634273709", "taxon_id": "939928", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "74.423907894", "tot_nitro": "1.41", "host_taxid": "3483", "common_name": "rhizosphere metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "5", "dna_extracted": "true", "samp_salinity": "7.15", "anonymized_name": "SKB6", "host_subject_id": "1001:D5", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.164", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Burmese Rhizo", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKM2.640199', '{"ph": "6.82", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "63.1 sand, 17.7 silt, 19.2 clay", "altitude": "0", "latitude": "82.8302905615", "taxon_id": "410658", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "86.3615778099", "tot_nitro": "1.3", "host_taxid": "3483", "common_name": "soil metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "3.31", "dna_extracted": "true", "samp_salinity": "7.44", "anonymized_name": "SKM2", "host_subject_id": "1001:D4", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.101", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Bucu bulk", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKM5.640177', '{"ph": "6.82", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "63.1 sand, 17.7 silt, 19.2 clay", "altitude": "0", "latitude": "44.9725384282", "taxon_id": "939928", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "66.1920014699", "tot_nitro": "1.3", "host_taxid": "3483", "common_name": "rhizosphere metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "3.31", "dna_extracted": "true", "samp_salinity": "7.44", "anonymized_name": "SKM5", "host_subject_id": "1001:M3", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.101", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Bucu Rhizo", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKB1.640202', '{"ph": "6.94", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "64.6 sand, 17.6 silt, 17.8 clay", "altitude": "0", "latitude": "4.59216095574", "taxon_id": "410658", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "63.5115213108", "tot_nitro": "1.41", "host_taxid": "3483", "common_name": "soil metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "5", "dna_extracted": "true", "samp_salinity": "7.15", "anonymized_name": "SKB1", "host_subject_id": "1001:M2", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.164", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Burmese bulk", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKD8.640184', '{"ph": "6.8", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "66 sand, 16.3 silt, 17.7 clay", "altitude": "0", "latitude": "57.571893782", "taxon_id": "1118232", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "32.5563076447", "tot_nitro": "1.51", "host_taxid": "3483", "common_name": "root metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "4.32", "dna_extracted": "true", "samp_salinity": "7.1", "anonymized_name": "SKD8", "host_subject_id": "1001:D9", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.178", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Diesel Root", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKD4.640185', '{"ph": "6.8", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "66 sand, 16.3 silt, 17.7 clay", "altitude": "0", "latitude": "40.8623799474", "taxon_id": "939928", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "6.66444220187", "tot_nitro": "1.51", "host_taxid": "3483", "common_name": "rhizosphere metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "4.32", "dna_extracted": "true", "samp_salinity": "7.1", "anonymized_name": "SKD4", "host_subject_id": "1001:M9", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.178", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Diesel Rhizo", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKB3.640195', '{"ph": "6.94", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "64.6 sand, 17.6 silt, 17.8 clay", "altitude": "0", "latitude": "95.2060749748", "taxon_id": "410658", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "27.3592668624", "tot_nitro": "1.41", "host_taxid": "3483", "common_name": "soil metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "5", "dna_extracted": "true", "samp_salinity": "7.15", "anonymized_name": "SKB3", "host_subject_id": "1001:M6", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.164", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Burmese bulk", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKM1.640183', '{"ph": "6.82", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "63.1 sand, 17.7 silt, 19.2 clay", "altitude": "0", "latitude": "38.2627021402", "taxon_id": "410658", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "3.48274264219", "tot_nitro": "1.3", "host_taxid": "3483", "common_name": "soil metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "3.31", "dna_extracted": "true", "samp_salinity": "7.44", "anonymized_name": "SKM1", "host_subject_id": "1001:D1", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.101", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Bucu bulk", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKB7.640196', '{"ph": "6.94", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "64.6 sand, 17.6 silt, 17.8 clay", "altitude": "0", "latitude": "13.089194595", "taxon_id": "1118232", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "92.5274472082", "tot_nitro": "1.41", "host_taxid": "3483", "common_name": "root metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "5", "dna_extracted": "true", "samp_salinity": "7.15", "anonymized_name": "SKB7", "host_subject_id": "1001:M8", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.164", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Burmese root", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKD3.640198', '{"ph": "6.8", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "66 sand, 16.3 silt, 17.7 clay", "altitude": "0", "latitude": "84.0030227585", "taxon_id": "410658", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "66.8954849864", "tot_nitro": "1.51", "host_taxid": "3483", "common_name": "soil metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "4.32", "dna_extracted": "true", "samp_salinity": "7.1", "anonymized_name": "SKD3", "host_subject_id": "1001:B1", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.178", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Diesel bulk", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKD7.640191', '{"ph": "6.8", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "66 sand, 16.3 silt, 17.7 clay", "altitude": "0", "latitude": "68.51099627", "taxon_id": "1118232", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "2.35063674718", "tot_nitro": "1.51", "host_taxid": "3483", "common_name": "root metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "4.32", "dna_extracted": "true", "samp_salinity": "7.1", "anonymized_name": "SKD7", "host_subject_id": "1001:D6", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.178", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Diesel Root", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKD6.640190', '{"ph": "6.8", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "66 sand, 16.3 silt, 17.7 clay", "altitude": "0", "latitude": "29.1499460692", "taxon_id": "939928", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "82.1270418227", "tot_nitro": "1.51", "host_taxid": "3483", "common_name": "rhizosphere metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "4.32", "dna_extracted": "true", "samp_salinity": "7.1", "anonymized_name": "SKD6", "host_subject_id": "1001:B9", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.178", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Diesel Rhizo", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKB2.640194', '{"ph": "6.94", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "64.6 sand, 17.6 silt, 17.8 clay", "altitude": "0", "latitude": "35.2374368957", "taxon_id": "410658", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "68.5041623253", "tot_nitro": "1.41", "host_taxid": "3483", "common_name": "soil metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "5", "dna_extracted": "true", "samp_salinity": "7.15", "anonymized_name": "SKB2", "host_subject_id": "1001:B4", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.164", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Burmese bulk", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKM9.640192', '{"ph": "6.82", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "63.1 sand, 17.7 silt, 19.2 clay", "altitude": "0", "latitude": "12.7065957714", "taxon_id": "1118232", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "84.9722975792", "tot_nitro": "1.3", "host_taxid": "3483", "common_name": "root metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "3.31", "dna_extracted": "true", "samp_salinity": "7.44", "anonymized_name": "SKM9", "host_subject_id": "1001:B8", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.101", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Bucu Roots", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKM6.640187', '{"ph": "6.82", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "63.1 sand, 17.7 silt, 19.2 clay", "altitude": "0", "latitude": "0.291867635913", "taxon_id": "939928", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "68.5945325743", "tot_nitro": "1.3", "host_taxid": "3483", "common_name": "rhizosphere metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "3.31", "dna_extracted": "true", "samp_salinity": "7.44", "anonymized_name": "SKM6", "host_subject_id": "1001:B2", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.101", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Bucu Rhizo", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKD5.640186', '{"ph": "6.8", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "66 sand, 16.3 silt, 17.7 clay", "altitude": "0", "latitude": "85.4121476399", "taxon_id": "939928", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "15.6526750776", "tot_nitro": "1.51", "host_taxid": "3483", "common_name": "rhizosphere metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "4.32", "dna_extracted": "true", "samp_salinity": "7.1", "anonymized_name": "SKD5", "host_subject_id": "1001:M1", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.178", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Diesel Rhizo", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+INSERT INTO qiita.sample_1 VALUES ('1.SKD1.640179', '{"ph": "6.8", "temp": "15", "depth": "0.15", "country": "GAZ:United States of America", "texture": "66 sand, 16.3 silt, 17.7 clay", "altitude": "0", "latitude": "68.0991287718", "taxon_id": "410658", "elevation": "114", "env_biome": "ENVO:Temperate grasslands, savannas, and shrubland biome", "longitude": "34.8360987059", "tot_nitro": "1.51", "host_taxid": "3483", "common_name": "soil metagenome", "description": "Cannabis Soil Microbiome", "env_feature": "ENVO:plant-associated habitat", "env_package": "soil", "sample_type": "ENVO:soil", "tot_org_carb": "4.32", "dna_extracted": "true", "samp_salinity": "7.1", "anonymized_name": "SKD1", "host_subject_id": "1001:M5", "scientific_name": "1118232", "assigned_from_geo": "n", "season_environment": "winter", "water_content_soil": "0.178", "collection_timestamp": "2011-11-11 13:00:00", "description_duplicate": "Diesel bulk", "physical_specimen_location": "ANL", "physical_specimen_remaining": "true"}');
+
+
+--
+-- Data for Name: sample_template_filepath; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
 INSERT INTO qiita.sample_template_filepath VALUES (1, 17);
 
--- Create the new prep_template_filepath
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_19700101-000000.txt', 15, '3703494589', 1, 9);
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_qiime_19700101-000000.txt', 16, '3703494589', 1, 9);
-INSERT INTO qiita.prep_template_filepath VALUES (1, 18), (1, 19);
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_19700101-000000.txt', 15, '3703494589', 1, 9);
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_qiime_19700101-000000.txt', 16, '3703494589', 1, 9);
-INSERT INTO qiita.prep_template_filepath VALUES (1, 20), (1, 21);
+--
+-- Data for Name: software_artifact_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.software_artifact_type VALUES (2, 7);
+INSERT INTO qiita.software_artifact_type VALUES (3, 1);
+INSERT INTO qiita.software_artifact_type VALUES (3, 3);
+INSERT INTO qiita.software_artifact_type VALUES (3, 4);
+INSERT INTO qiita.software_artifact_type VALUES (3, 2);
+INSERT INTO qiita.software_artifact_type VALUES (3, 5);
+INSERT INTO qiita.software_artifact_type VALUES (3, 6);
 
 
--- Inserting the BIOM artifact filepath
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-    ('biom_table.biom', 7, 3574395811, 1, 16);
+--
+-- Data for Name: software_publication; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Link the artifacts with the filepaths
-INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
-    VALUES (1, 1), (1, 2),
-           (2, 3), (2, 4), (2, 5),
-           (4, 9), (5, 9), (6, 12), (7, 22),
-           (8, 22), (9, 15);
+INSERT INTO qiita.software_publication VALUES (1, '10.1038/nmeth.f.303');
+INSERT INTO qiita.software_publication VALUES (2, '10.1186/2047-217X-1-7');
 
--- Create some test messages
-INSERT INTO qiita.message (message) VALUES ('message 1'), ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque sed auctor ex, non placerat sapien. Vestibulum vestibulum massa ut sapien condimentum, cursus consequat diam sodales. Nulla aliquam arcu ut massa auctor, et vehicula mauris tempor. In lacinia viverra ante quis pellentesque. Nunc vel mi accumsan, porttitor eros ut, pharetra elit. Nulla ac nisi quis dui egestas malesuada vitae ut mauris. Morbi blandit non nisl a finibus. In erat velit, congue at ipsum sit amet, venenatis bibendum sem. Curabitur vel odio sed est rutrum rutrum. Quisque efficitur ut purus in ultrices. Pellentesque eu auctor justo.'), ('message <a href="#">3</a>');
-INSERT INTO qiita.message_user (message_id, email) VALUES (1, 'test@foo.bar'),(1, 'shared@foo.bar'),(2, 'test@foo.bar'),(3, 'test@foo.bar');
 
--- Create a loggin entry
-INSERT INTO qiita.logging (time, severity_id, msg, information)
-    VALUES ('Sun Nov 22 21:29:30 2015', 2, 'Error message', NULL),
-           ('Sun Nov 22 21:29:30 2015', 2, 'Error message', '{}');
+--
+-- Data for Name: stats_daily; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Create some processing jobs
-INSERT INTO qiita.processing_job (processing_job_id, email, command_id, command_parameters, processing_job_status_id, logging_id, heartbeat, step, pending, hidden) VALUES
-   ('6d368e16-2242-4cf8-87b4-a5dc40bb890b', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, NULL, NULL, NULL, false),
-   ('4c7115e8-4c8e-424c-bf25-96c292ca1931', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, NULL, NULL, NULL, false),
-   ('3c9991ab-6c14-4368-a48c-841e8837a79c', 'test@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}', 3, NULL, NULL, NULL, NULL, false),
-   ('b72369f9-a886-4193-8d3d-f7b504168e75', 'shared@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, '2015-11-22 21:15:00', NULL, NULL, false),
-   ('46b76f74-e100-47aa-9bf2-c0208bcea52d', 'test@foo.bar', 1, '{"max_barcode_errors": "1.5", "sequence_max_n": "0", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "rev_comp_mapping_barcodes": "True", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, NULL, NULL, NULL, NULL, false),
-   ('80bf25f3-5f1d-4e10-9369-315e4244f6d5', 'test@foo.bar', 3, '{"reference": "2", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, NULL, NULL, NULL, NULL, false),
-   ('9ba5ae7a-41e1-4202-b396-0259aeaac366', 'test@foo.bar', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, NULL, NULL, NULL, NULL, false),
-   ('e5609746-a985-41a1-babf-6b3ebe9eb5a9', 'test@foo.bar', 3, '{"reference": "1", "similarity": "0.97", "sortmerna_e_value": "1", "sortmerna_max_pos": "10000", "input_data": "2", "threads": "1", "sortmerna_coverage": "0.97"}', 3, NULL, NULL, NULL, NULL, false),
-   ('6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f', 'test@foo.bar', 1, '{"max_barcode_errors": "1.5", "sequence_max_n": "0", "max_bad_run_length": "3", "phred_offset": "auto", "rev_comp": "False", "phred_quality_threshold": "3", "input_data": "1", "rev_comp_barcode": "False", "rev_comp_mapping_barcodes": "False", "min_per_read_length_fraction": "0.75", "barcode_type": "golay_12"}', 3, NULL, NULL, NULL, NULL, false),
-   ('8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0', 'test@foo.bar', 12, '{"biom_table": "8", "depth": "9000", "subsample_multinomial": "False"}', 3, NULL, NULL, NULL, NULL, false),
-   ('063e553b-327c-4818-ab4a-adfe58e49860', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 1, NULL, NULL, NULL, NULL, true),
-   ('bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'test@foo.bar', 2, '{"min_seq_len":100,"max_seq_len":1000,"trim_seq_length":false,"min_qual_score":25,"max_ambig":6,"max_homopolymer":6,"max_primer_mismatch":0,"barcode_type":"golay_12","max_barcode_errors":1.5,"disable_bc_correction":false,"qual_score_window":0,"disable_primers":false,"reverse_primers":"disable","reverse_primer_mismatches":0,"truncate_ambi_bases":false,"input_data":1}', 2, NULL, '2015-11-22 21:00:00', 'demultiplexing', NULL, true),
-   ('d19f76ee-274e-4c1b-b3a2-a12d73507c55', 'shared@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}', 4, 1, '2015-11-22 21:30:00', 'generating demux file', NULL, true),
-   ('ac653cb5-76a6-4a45-929e-eb9b2dee6b63', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}', 5, NULL, NULL, NULL, NULL, true);
 
-INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id) VALUES
-   (1, '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
-   (1, '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
-   (2, '3c9991ab-6c14-4368-a48c-841e8837a79c'),
-   (1, '063e553b-327c-4818-ab4a-adfe58e49860'),
-   (1, 'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
-   (1, 'b72369f9-a886-4193-8d3d-f7b504168e75'),
-   (2, 'd19f76ee-274e-4c1b-b3a2-a12d73507c55'),
-   (1, '46b76f74-e100-47aa-9bf2-c0208bcea52d'),
-   (2, '80bf25f3-5f1d-4e10-9369-315e4244f6d5'),
-   (2, '9ba5ae7a-41e1-4202-b396-0259aeaac366'),
-   (2, 'e5609746-a985-41a1-babf-6b3ebe9eb5a9'),
-   (1, '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f'),
-   (8, '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0');
 
-INSERT INTO qiita.artifact_output_processing_job (artifact_id, processing_job_id, command_output_id) VALUES
- (3, '46b76f74-e100-47aa-9bf2-c0208bcea52d', 1),
- (6, '80bf25f3-5f1d-4e10-9369-315e4244f6d5', 3),
- (5, '9ba5ae7a-41e1-4202-b396-0259aeaac366', 3),
- (4, 'e5609746-a985-41a1-babf-6b3ebe9eb5a9', 3),
- (2, '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f', 1),
- (9, '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0', 7);
+--
+-- Data for Name: study_artifact; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Add client ids and secrets
+INSERT INTO qiita.study_artifact VALUES (1, 1);
+INSERT INTO qiita.study_artifact VALUES (1, 2);
+INSERT INTO qiita.study_artifact VALUES (1, 3);
+INSERT INTO qiita.study_artifact VALUES (1, 4);
+INSERT INTO qiita.study_artifact VALUES (1, 5);
+INSERT INTO qiita.study_artifact VALUES (1, 6);
+INSERT INTO qiita.study_artifact VALUES (1, 7);
 
-INSERT INTO qiita.oauth_identifiers (client_id) VALUES ('DWelYzEYJYcZ4wlqUp0bHGXojrvZVz0CNBJvOqUKcrPQ5p4UqE');
-INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4', 'J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKhAmmCWZuabe0O5Mp28s1');
-INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u', '9xhU5rvzq8dHCEI5sSN95jesUULrZi6pT6Wuc71fDbFbsrnWarcSq56TJLN4kP4hH');
-INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('dHgaXDwq665ksFPqfIoD3Jt8KRXdSioTRa4lGa5mGDnz6JTIBf', 'xqx61SD4M2EWbaS0WYv3H1nIemkvEAMIn16XMLjy5rTCqi7opCcWbfLINEwtV48bQ');
-INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('4MOBzUBHBtUmwhaC258H7PS0rBBLyGQrVxGPgc9g305bvVhf6h', 'rFb7jwAb3UmSUN57Bjlsi4DTl2owLwRpwCc0SggRNEVb2Ebae2p5Umnq20rNMhmqN');
 
-UPDATE qiita.oauth_software SET client_id = 'yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u' WHERE software_id = 1;
-UPDATE qiita.oauth_software SET client_id = 'dHgaXDwq665ksFPqfIoD3Jt8KRXdSioTRa4lGa5mGDnz6JTIBf' WHERE software_id = 2;
-UPDATE qiita.oauth_software SET client_id = '4MOBzUBHBtUmwhaC258H7PS0rBBLyGQrVxGPgc9g305bvVhf6h' WHERE software_id = 3;
+--
+-- Data for Name: study_environmental_package; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- Add a processing workflow
-INSERT INTO qiita.processing_job_workflow (email, name)
-    VALUES ('shared@foo.bar', 'Testing processing workflow'),
-           ('test@foo.bar', 'Single node workflow');
+INSERT INTO qiita.study_environmental_package VALUES (1, 'soil');
+INSERT INTO qiita.study_environmental_package VALUES (1, 'plant-associated');
 
-INSERT INTO qiita.processing_job_workflow_root (processing_job_workflow_id, processing_job_id)
-    VALUES ('1', 'b72369f9-a886-4193-8d3d-f7b504168e75'),
-           ('2', 'ac653cb5-76a6-4a45-929e-eb9b2dee6b63');
 
-INSERT INTO qiita.parent_processing_job (parent_id, child_id)
-    VALUES ('b72369f9-a886-4193-8d3d-f7b504168e75', 'd19f76ee-274e-4c1b-b3a2-a12d73507c55');
+--
+-- Data for Name: study_portal; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
 
--- SPLIT
+INSERT INTO qiita.study_portal VALUES (1, 1);
 
-INSERT INTO qiita.processing_job(processing_job_id, email, command_id, command_parameters, processing_job_status_id)
-VALUES ('ca27ddbc-a678-4b09-8a1d-b65f52f8eb49', 'admin@foo.bar', 1, '""'::json, 1),
-('b0f36550-d97c-4dd5-ba1b-910470062801', 'admin@foo.bar', 1, '""'::json, 1),
-('b13eefd1-12b7-4c3e-a380-94ec0a3f9f91', 'admin@foo.bar', 1, '""'::json, 1),
-('469c27b7-81c4-4f41-b09d-149260961227', 'admin@foo.bar', 1, '""'::json, 1),
-('6f198e33-b4ae-47e9-973b-bd5e0b06c353', 'admin@foo.bar', 1, '""'::json, 1),
-('045eb36c-5144-4d54-a621-23eb5dc4d6ef', 'admin@foo.bar', 1, '""'::json, 1),
-('041f3278-2752-44f9-8caa-ac6ae80c98e6', 'admin@foo.bar', 1, '""'::json, 1),
-('6325e683-b215-4c56-bf5a-cbbc92330067', 'admin@foo.bar', 1, '""'::json, 1),
-('03dcca05-0d4f-48c5-bc7a-7ef884be8efc', 'admin@foo.bar', 1, '""'::json, 1),
-('8d84685f-97f4-4ea7-8857-2dcec5a20775', 'admin@foo.bar', 1, '""'::json, 1),
-('8b714fe7-51d9-492c-9b49-4fe09b595067', 'admin@foo.bar', 1, '""'::json, 1),
-('490c0623-4ed7-4064-9ffe-ba5afc0f0aa0', 'admin@foo.bar', 1, '""'::json, 1),
-('c8301f3d-a4fe-407a-9aec-b9dfee0cc2fd', 'admin@foo.bar', 1, '""'::json, 1),
-('561b9676-604a-4cdb-833f-a4a9b3afef42', 'admin@foo.bar', 1, '""'::json, 1),
-('8bc35697-f3df-42f6-8a34-830d42000bd6', 'admin@foo.bar', 1, '""'::json, 1),
-('474a4a8d-0963-4fe6-9da4-74e520532be1', 'admin@foo.bar', 1, '""'::json, 1),
-('d4d03b6f-12f1-4f47-9ad4-b5597a3e5a16', 'admin@foo.bar', 1, '""'::json, 1),
-('27d95aba-9b36-40c8-8d17-7ade170172aa', 'admin@foo.bar', 1, '""'::json, 1),
-('a8f00090-6981-4fc3-bc37-208f01e6dceb', 'admin@foo.bar', 1, '""'::json, 1),
-('d7562d61-7886-45b5-9fed-90fef6636e6f', 'admin@foo.bar', 1, '""'::json, 1),
-('e4071da6-550d-469b-91dc-f6cda658df80', 'admin@foo.bar', 1, '""'::json, 1),
-('c126e507-5f13-485f-9166-775ee7228f12', 'admin@foo.bar', 1, '""'::json, 1),
-('d73906a4-f2c7-4d03-bd55-d637365ec3bc', 'admin@foo.bar', 1, '""'::json, 1),
-('167efba9-a88e-493c-a2c6-0647556ba6dd', 'admin@foo.bar', 1, '""'::json, 1),
-('2662c176-d042-4254-bc7e-20c092fc3af1', 'admin@foo.bar', 1, '""'::json, 1),
-('54b19d0d-fa47-4c37-a4ea-e2be33d54c5b', 'admin@foo.bar', 1, '""'::json, 1),
-('8b3e969e-78c4-4a09-9767-4aa72d99ee8c', 'admin@foo.bar', 1, '""'::json, 1),
-('bef26557-60db-4987-b0bf-e9e0be77da37', 'admin@foo.bar', 1, '""'::json, 1),
-('adcf6cb4-780b-4a9d-bb7c-cd2bf12ac201', 'admin@foo.bar', 1, '""'::json, 1),
-('54464698-5860-4543-9376-d3d89722848f', 'admin@foo.bar', 1, '""'::json, 1),
-('9a8b3ea7-36d7-46f7-8602-1b39c89f5ee4', 'admin@foo.bar', 1, '""'::json, 1),
-('b57c1bc6-a805-463d-87fc-b76a186e5a63', 'admin@foo.bar', 1, '""'::json, 1),
-('0c0579c8-dc34-4211-ad87-c453e9cb10bf', 'admin@foo.bar', 1, '""'::json, 1),
-('04357795-299a-4900-9fdf-debf3be2ccc7', 'admin@foo.bar', 1, '""'::json, 1),
-('fa1617ad-daf8-496d-937f-5ad9526f57d2', 'admin@foo.bar', 1, '""'::json, 1),
-('056dd777-1c93-424a-ad7a-fbac4ff01e6b', 'admin@foo.bar', 1, '""'::json, 1),
-('1d056722-c08c-45e7-abbf-794abf85b2ba', 'admin@foo.bar', 1, '""'::json, 1),
-('a4e4457e-e191-4951-81d2-a1bd8afa7bb9', 'admin@foo.bar', 1, '""'::json, 1),
-('2bd5eedb-f4bd-4221-a31d-7a82ed1ed85c', 'admin@foo.bar', 1, '""'::json, 1),
-('59e6279e-5a92-4ad5-81cd-d83892eb35e3', 'admin@foo.bar', 1, '""'::json, 1),
-('594e5a37-e00e-44e3-8baf-a5d0fbd8d1c5', 'admin@foo.bar', 1, '""'::json, 1),
-('40e16ce2-d280-423b-908e-f74877751bb8', 'admin@foo.bar', 1, '""'::json, 1),
-('df964c5d-d204-475d-bf37-c4281c830e36', 'admin@foo.bar', 1, '""'::json, 1),
-('f1ff0a3f-5004-49d4-a781-fedab076f682', 'admin@foo.bar', 1, '""'::json, 1),
-('d5b6766a-5697-4283-b7f5-ded6295e539d', 'admin@foo.bar', 1, '""'::json, 1),
-('6e98873c-0c99-47f0-ae6f-fc12092c1c5d', 'admin@foo.bar', 1, '""'::json, 1),
-('b816de4b-42f6-4495-8a05-7cb7faefcf3e', 'admin@foo.bar', 1, '""'::json, 1),
-('2e196649-1641-4ced-bf74-f24db6123d66', 'admin@foo.bar', 1, '""'::json, 1),
-('ca8271ce-ff25-4a22-8309-149396d20d38', 'admin@foo.bar', 1, '""'::json, 1),
-('38496999-f362-45d1-a9e6-6c2ed7ad1847', 'admin@foo.bar', 1, '""'::json, 1),
-('dedeab8b-ed71-4d3d-87c1-37f607e19e5d', 'admin@foo.bar', 1, '""'::json, 1),
-('997ad2aa-59ff-4346-805c-cbe1a41bac00', 'admin@foo.bar', 1, '""'::json, 1),
-('ff866805-7add-432f-90a8-15ab4b793cdd', 'admin@foo.bar', 1, '""'::json, 1),
-('ef8a5faa-fc7b-4a09-a45a-7aa4d3dbb1f8', 'admin@foo.bar', 1, '""'::json, 1),
-('b0db6327-e4ff-4dd5-85ae-b8a060f8ed9f', 'admin@foo.bar', 1, '""'::json, 1),
-('900537c6-a4bb-4f20-9674-e0fd4851c10a', 'admin@foo.bar', 1, '""'::json, 1),
-('3fe82723-af0e-4df0-a3bf-32223b202dd5', 'admin@foo.bar', 1, '""'::json, 1),
-('6b22c272-f72c-4102-9abb-afff9d1c7d42', 'admin@foo.bar', 1, '""'::json, 1),
-('6738f416-1ce1-4cac-90ef-ead48b9b0ace', 'admin@foo.bar', 1, '""'::json, 1),
-('6ed39d69-1c01-42c1-8249-b8abf83c3608', 'admin@foo.bar', 1, '""'::json, 1),
-('d00fd8ee-7d65-469c-af2a-ca00681d224b', 'admin@foo.bar', 1, '""'::json, 1),
-('42244303-b4a1-43d3-9041-f4f811691b41', 'admin@foo.bar', 1, '""'::json, 1),
-('4ac590b9-5733-4e20-b657-3b13d9b30a4f', 'admin@foo.bar', 1, '""'::json, 1),
-('1409a826-8176-49db-84f9-04d4cac0db89', 'admin@foo.bar', 1, '""'::json, 1),
-('21917565-5c24-4b9e-947e-0a7fc18b89dc', 'admin@foo.bar', 1, '""'::json, 1),
-('cc4db5ef-c3d3-4067-98be-ee90a584a95a', 'admin@foo.bar', 1, '""'::json, 1),
-('12f627b7-19aa-4583-bce6-a7f7d4dd66a2', 'admin@foo.bar', 1, '""'::json, 1),
-('0c6dc99d-d20b-4381-a405-8813129b81ee', 'admin@foo.bar', 1, '""'::json, 1),
-('449668bf-3294-42eb-9cef-d0c007b9b27f', 'admin@foo.bar', 1, '""'::json, 1),
-('ee4c2079-e187-4a2f-ae9a-a95795a9d5fe', 'admin@foo.bar', 1, '""'::json, 1),
-('0f0d6f75-6ba3-4265-b53e-cc53a18e52b8', 'admin@foo.bar', 1, '""'::json, 1),
-('d63bdad8-ace7-4d92-a8a7-add8620460d3', 'admin@foo.bar', 1, '""'::json, 1),
-('5a856042-6a60-4f9d-b256-d03295e2d7f9', 'admin@foo.bar', 1, '""'::json, 1),
-('dd9969e8-9efe-4781-af4a-6f2f8ff70808', 'admin@foo.bar', 1, '""'::json, 1),
-('37cff1b2-c11e-4511-8625-84def4635d84', 'admin@foo.bar', 1, '""'::json, 1),
-('36f312b9-5055-443a-b07a-2ab09e8f8cfa', 'admin@foo.bar', 1, '""'::json, 1),
-('de207a0d-932f-4a81-9412-5ff8baa9cdd5', 'admin@foo.bar', 1, '""'::json, 1),
-('b567274d-4631-4aee-85df-7d6603c20cfe', 'admin@foo.bar', 1, '""'::json, 1),
-('94d07841-1b75-42a1-9407-af6a341769b1', 'admin@foo.bar', 1, '""'::json, 1),
-('d83a1dee-1451-4ea3-bd42-3881f1fa4e3e', 'admin@foo.bar', 1, '""'::json, 1),
-('3c736f54-7d2d-4cd6-9c45-8cce37ce5482', 'admin@foo.bar', 1, '""'::json, 1),
-('e600feed-52cc-4d8f-b28d-c6283dcde944', 'admin@foo.bar', 1, '""'::json, 1),
-('41624971-b40b-4e03-bb12-cce149cd6eac', 'admin@foo.bar', 1, '""'::json, 1),
-('9f769164-d25c-4e7d-b637-79f3489798c5', 'admin@foo.bar', 1, '""'::json, 1),
-('0f382217-32ed-4ea6-b7ab-c98c66e8305f', 'admin@foo.bar', 1, '""'::json, 1),
-('24d2cf39-25a1-486e-a763-f2639674f4b4', 'admin@foo.bar', 1, '""'::json, 1),
-('b303df36-67d8-4883-a109-294b61ccbe23', 'admin@foo.bar', 1, '""'::json, 1),
-('b46d8a4d-b969-4226-8719-6708c3755775', 'admin@foo.bar', 1, '""'::json, 1),
-('07b691e7-a940-4257-bea8-ebba6bc47637', 'admin@foo.bar', 1, '""'::json, 1),
-('9d624992-01fe-4ece-a7ba-ebf54da0eb7b', 'admin@foo.bar', 1, '""'::json, 1),
-('0aba4000-8b6d-47c1-a4fc-7b6a2b419b67', 'admin@foo.bar', 1, '""'::json, 1),
-('4635cab1-b1a7-4d6a-bb75-d95f0e1fd682', 'admin@foo.bar', 1, '""'::json, 1),
-('b2602d9e-7ce6-43e2-a4b3-3962f812a80a', 'admin@foo.bar', 1, '""'::json, 1),
-('f8d9c8b3-1e4f-4371-9d86-74778f7145a7', 'admin@foo.bar', 1, '""'::json, 1),
-('490bf28c-7f5b-428f-9127-c1ac19d611fc', 'admin@foo.bar', 1, '""'::json, 1),
-('a69254f1-d5d4-4f3f-991f-c197364b8187', 'admin@foo.bar', 1, '""'::json, 1),
-('702f4828-f604-44b8-a7b0-9684e77a0279', 'admin@foo.bar', 1, '""'::json, 1),
-('0d793328-c4c5-4739-b2f1-40afb4de55c8', 'admin@foo.bar', 1, '""'::json, 1),
-('7227a61e-59af-4b96-8919-efe13839889c', 'admin@foo.bar', 1, '""'::json, 1),
-('57e351db-c504-42dd-a699-fe405c1b5a27', 'admin@foo.bar', 1, '""'::json, 1),
-('88bbeb39-2fc5-4a46-8bd9-ca28a2fedef3', 'admin@foo.bar', 1, '""'::json, 1),
-('63a0101c-13b0-4c73-b4d7-00a33ae0f9ab', 'admin@foo.bar', 1, '""'::json, 1),
-('e3c17c93-5993-49fc-891a-9c9d5b9aa43c', 'admin@foo.bar', 1, '""'::json, 1),
-('6fd1fc5f-fce2-43c6-909d-8041a075ac3a', 'admin@foo.bar', 1, '""'::json, 1),
-('8ea8b437-819b-4624-b15c-a653b53c0a2e', 'admin@foo.bar', 1, '""'::json, 1),
-('c4ee461b-8d52-4338-8fa2-8a22b538456b', 'admin@foo.bar', 1, '""'::json, 1),
-('1eaa62de-c3ae-414d-9168-7fb5ece89949', 'admin@foo.bar', 1, '""'::json, 1),
-('6a63a491-c4c1-4176-9827-9460526ed319', 'admin@foo.bar', 1, '""'::json, 1),
-('733a21cf-e969-4a17-b888-820f2f9475a1', 'admin@foo.bar', 1, '""'::json, 1),
-('9a1e07e0-bac0-46e1-8b72-86a730f47c12', 'admin@foo.bar', 1, '""'::json, 1),
-('6ca8ca71-dbb7-4347-adb3-9ab02b69ef9f', 'admin@foo.bar', 1, '""'::json, 1),
-('07272b4e-88bf-4adc-9953-4b1f4cb3764f', 'admin@foo.bar', 1, '""'::json, 1),
-('8b9f9e1e-2e52-432b-8528-53f8b25ea81e', 'admin@foo.bar', 1, '""'::json, 1),
-('6395bd2a-fd1b-448b-8771-f07a77958d84', 'admin@foo.bar', 1, '""'::json, 1),
-('b05bb0d8-a8bd-4634-82f9-47c52ccd83e3', 'admin@foo.bar', 1, '""'::json, 1),
-('38ee009a-7c6a-42a2-a05f-cd3f5286cd9d', 'admin@foo.bar', 1, '""'::json, 1),
-('d0799585-1e37-4134-b71f-481dc0d2be72', 'admin@foo.bar', 1, '""'::json, 1),
-('2d5a21fd-1cdb-4ee6-8e08-584bf99ef40a', 'admin@foo.bar', 1, '""'::json, 1),
-('a4aee4f4-91d5-46e1-9280-87b8ba7eeef9', 'admin@foo.bar', 1, '""'::json, 1),
-('7e361763-962b-4f8d-8c63-1a329428f89f', 'admin@foo.bar', 1, '""'::json, 1),
-('0abb0be4-b58e-4318-8624-4fc055f9d82d', 'admin@foo.bar', 1, '""'::json, 1),
-('3497cd39-99dc-429e-8e10-67ecd7b2774a', 'admin@foo.bar', 1, '""'::json, 1),
-('0ca036c1-ceb5-4c33-993b-d8511a96208b', 'admin@foo.bar', 1, '""'::json, 1),
-('a22718ce-6e93-420b-89d6-cf2ddf104164', 'admin@foo.bar', 1, '""'::json, 1),
-('278179bb-f481-4d50-aced-5485993699a1', 'admin@foo.bar', 1, '""'::json, 1),
-('80272c6a-4312-4c93-9905-390e62a3d201', 'admin@foo.bar', 1, '""'::json, 1),
-('d5ab9552-64e1-43b2-bf46-5065612c2cda', 'admin@foo.bar', 1, '""'::json, 1),
-('af467934-f4db-464e-8ef1-b6bbbbe88667', 'admin@foo.bar', 1, '""'::json, 1),
-('cfa62dd9-c6e0-48a2-9633-ee4d813d4f51', 'admin@foo.bar', 1, '""'::json, 1),
-('bd37012e-0b22-4e3a-b0ae-eba006d87749', 'admin@foo.bar', 1, '""'::json, 1),
-('d11bb684-448c-4916-a0f8-cd5748061638', 'admin@foo.bar', 1, '""'::json, 1),
-('46cb1988-f5b7-4a27-92be-dd8b7c7289db', 'admin@foo.bar', 1, '""'::json, 1),
-('dd000d70-ee4b-46a6-9e1f-26fd85b6df3c', 'admin@foo.bar', 1, '""'::json, 1),
-('a12d7860-89d0-4640-a4a6-73738b47408a', 'admin@foo.bar', 1, '""'::json, 1),
-('aae1e730-254d-401b-884d-d9f6965203f6', 'admin@foo.bar', 1, '""'::json, 1),
-('66e2dbf0-d223-48b6-bf1e-45a40f87d1b1', 'admin@foo.bar', 1, '""'::json, 1),
-('be2e6e7d-7992-4407-a7c1-aced14e6fa12', 'admin@foo.bar', 1, '""'::json, 1),
-('671071f2-380c-42a3-88f6-a1642c07dc36', 'admin@foo.bar', 1, '""'::json, 1),
-('5db2e298-251c-409f-81a2-844b9a2b7697', 'admin@foo.bar', 1, '""'::json, 1),
-('9b0e1a4a-97a6-47fe-aa2a-6800d72fa611', 'admin@foo.bar', 1, '""'::json, 1),
-('9553c043-e844-4c9f-8367-eb5d7d51772c', 'admin@foo.bar', 1, '""'::json, 1),
-('78c3db71-ed10-457d-b048-d8142c535e14', 'admin@foo.bar', 1, '""'::json, 1),
-('60a72e37-28f8-4288-81eb-830cb2924a03', 'admin@foo.bar', 1, '""'::json, 1),
-('520e37c3-6e64-4fce-8a88-cceac2b3b5b8', 'admin@foo.bar', 1, '""'::json, 1),
-('596f24ae-49e1-4a22-bbee-0b53b1bc4b26', 'admin@foo.bar', 1, '""'::json, 1),
-('7fce7f74-0c73-4fc2-b5bc-45f570014054', 'admin@foo.bar', 1, '""'::json, 1),
-('0061bb8f-219c-4e53-8ea5-137799e5fc3c', 'admin@foo.bar', 1, '""'::json, 1),
-('09c27409-4fb5-415c-93e3-7e2233e0109e', 'admin@foo.bar', 1, '""'::json, 1),
-('1a95492b-e852-413b-8450-72eb0adcd577', 'admin@foo.bar', 1, '""'::json, 1),
-('c6315300-f68e-4bf7-b7d2-778c3409f346', 'admin@foo.bar', 1, '""'::json, 1),
-('517dd44b-61bc-47ba-a7c8-c189378f6d73', 'admin@foo.bar', 1, '""'::json, 1),
-('c167f049-4d43-4409-84be-233b44981bb8', 'admin@foo.bar', 1, '""'::json, 1),
-('2c4290f6-e59f-438f-9664-a22810b495a0', 'admin@foo.bar', 1, '""'::json, 1),
-('e7a1816e-c98c-4ae9-854c-b034d4dc77cf', 'admin@foo.bar', 1, '""'::json, 1),
-('e5a06530-b313-4b75-ad14-5bceeb690d5a', 'admin@foo.bar', 1, '""'::json, 1),
-('8d671718-8686-4cc5-899f-178a2fba763e', 'admin@foo.bar', 1, '""'::json, 1),
-('ef88e6d6-affc-4511-8842-af8f32c1b49e', 'admin@foo.bar', 1, '""'::json, 1),
-('a1e85eec-0ed6-43ad-b0b0-d50fa4a26ed8', 'admin@foo.bar', 1, '""'::json, 1),
-('79baff1d-1f54-429f-91b2-4bc4e6ed5c18', 'admin@foo.bar', 1, '""'::json, 1),
-('a318ddfc-153d-4462-b7f9-963f7b3a11b2', 'admin@foo.bar', 1, '""'::json, 1),
-('8d376621-fad2-4329-9a54-5cc8a5347e9b', 'admin@foo.bar', 1, '""'::json, 1),
-('0a78d681-284e-4898-a80c-271edad7b1d3', 'admin@foo.bar', 1, '""'::json, 1),
-('0cf2846c-a2cc-4b4c-bc53-b78bab20d678', 'admin@foo.bar', 1, '""'::json, 1),
-('43ad2854-6f47-43ad-8b8f-4e77591598c0', 'admin@foo.bar', 1, '""'::json, 1),
-('fc591b9e-f6df-457c-ac61-d3ddc8a97df6', 'admin@foo.bar', 1, '""'::json, 1),
-('3b0ee8e6-d921-4c11-a19a-e482abff09da', 'admin@foo.bar', 1, '""'::json, 1),
-('efda7c49-2865-4bf9-847a-46ec0ed48c9e', 'admin@foo.bar', 1, '""'::json, 1),
-('1ef05ca4-74d6-4cb1-a0dd-64412a5e8f26', 'admin@foo.bar', 1, '""'::json, 1),
-('f8a29cc6-a0cb-458e-938e-b30635035f74', 'admin@foo.bar', 1, '""'::json, 1),
-('69187ffb-8155-4c06-baa9-69b3c53f901e', 'admin@foo.bar', 1, '""'::json, 1),
-('d3d1f2f0-6462-453c-b346-21ae50813c3b', 'admin@foo.bar', 1, '""'::json, 1),
-('f0b99e31-aa9d-4111-b2a5-0ddcb7a2c063', 'admin@foo.bar', 1, '""'::json, 1),
-('449d5f69-50db-4c11-850e-ae578bdc68ad', 'admin@foo.bar', 1, '""'::json, 1),
-('108c14b7-9be9-4107-be16-4e70ae0bdb8d', 'admin@foo.bar', 1, '""'::json, 1),
-('3161c5b5-05c9-4513-bbc1-9b7cfbac6275', 'admin@foo.bar', 1, '""'::json, 1),
-('69fcd88b-6edf-4cde-a610-0363effd0097', 'admin@foo.bar', 1, '""'::json, 1),
-('a9b8ad78-8f0d-4352-aa0d-c9fb4eab8c2a', 'admin@foo.bar', 1, '""'::json, 1),
-('619fa191-ec16-46f2-86bd-6d8ef583db5f', 'admin@foo.bar', 1, '""'::json, 1),
-('6779287f-41eb-4733-977e-8bd8e3991a24', 'admin@foo.bar', 1, '""'::json, 1),
-('ba770cd8-8667-40c9-b97e-c714cda2f80c', 'admin@foo.bar', 1, '""'::json, 1),
-('58f871c7-830c-4d71-9300-e3779e203c5d', 'admin@foo.bar', 1, '""'::json, 1),
-('15b23bef-7bdb-4361-891e-c8a259f22230', 'admin@foo.bar', 1, '""'::json, 1),
-('246ebe66-68e4-4a9f-9a97-06f881c83cbd', 'admin@foo.bar', 1, '""'::json, 1),
-('99529852-6a5c-4d5b-b029-3455aa3a8c8d', 'admin@foo.bar', 1, '""'::json, 1),
-('1a8cffdc-13d8-4779-a38f-a9abeb854e44', 'admin@foo.bar', 1, '""'::json, 1),
-('144380ec-debc-468a-9f7a-930197d9547b', 'admin@foo.bar', 1, '""'::json, 1),
-('6365416f-e395-45d2-b558-270d0992fa0f', 'admin@foo.bar', 1, '""'::json, 1),
-('eeb06d17-12d1-45c1-ac8d-4e7473983ebf', 'admin@foo.bar', 1, '""'::json, 1),
-('4c38dfa2-b27b-4409-ba90-2c75eea4bba4', 'admin@foo.bar', 1, '""'::json, 1),
-('a70578ed-87e9-4ef7-a1d2-760d76962e40', 'admin@foo.bar', 1, '""'::json, 1),
-('eaffc15a-0d71-427b-b672-0487943d7da7', 'admin@foo.bar', 1, '""'::json, 1),
-('c86955d9-980c-46be-af88-26d4ac2d2a7d', 'admin@foo.bar', 1, '""'::json, 1),
-('7f7fd4fe-d7df-4e7d-a37c-936bc8377f5d', 'admin@foo.bar', 1, '""'::json, 1),
-('ba61cf3b-6c70-456d-8e9e-c8541a2a6407', 'admin@foo.bar', 1, '""'::json, 1),
-('ed986358-8a50-4b19-af8b-d5df11595183', 'admin@foo.bar', 1, '""'::json, 1),
-('70f9bec4-9459-46f5-aeab-ac3ac7f55cf1', 'admin@foo.bar', 1, '""'::json, 1),
-('38c42216-080e-413c-8c79-f3a27ab556bc', 'admin@foo.bar', 1, '""'::json, 1),
-('d3c8f668-6393-4e41-8160-a17e516ff500', 'admin@foo.bar', 1, '""'::json, 1),
-('692c4d20-72b3-4627-8dad-7379174604a1', 'admin@foo.bar', 1, '""'::json, 1),
-('3382c6a9-b778-4a75-9092-6c76afeeb45e', 'admin@foo.bar', 1, '""'::json, 1),
-('bbfa6b71-fd64-45a3-a66e-5d0d7f454e9d', 'admin@foo.bar', 1, '""'::json, 1),
-('27b552f9-b3be-4fbf-93dc-323774590e1b', 'admin@foo.bar', 1, '""'::json, 1),
-('4af523ba-0276-48a3-bfac-246ff361310b', 'admin@foo.bar', 1, '""'::json, 1),
-('66630aa4-c73b-4dbd-9290-b5a6ff8d0129', 'admin@foo.bar', 1, '""'::json, 1),
-('9e5aa6a4-23f4-4949-82df-748e4a651d62', 'admin@foo.bar', 1, '""'::json, 1),
-('b6965426-898a-46e1-a40f-2fe34a9d7bb1', 'admin@foo.bar', 1, '""'::json, 1),
-('052163a0-2807-40fc-8ae7-ecb8c4c1d421', 'admin@foo.bar', 1, '""'::json, 1),
-('bd0b608a-05cd-4c67-a4d9-e3337075e2e4', 'admin@foo.bar', 1, '""'::json, 1),
-('a5d9bb39-116b-49e3-97c4-831580f6729f', 'admin@foo.bar', 1, '""'::json, 1),
-('cefcf3fb-26f2-4349-9fc8-d81c63e928ff', 'admin@foo.bar', 1, '""'::json, 1),
-('c573d2c7-91bd-4dfe-a433-a6ef89a9656c', 'admin@foo.bar', 1, '""'::json, 1),
-('869f9610-e808-4935-a57e-781abc9960af', 'admin@foo.bar', 1, '""'::json, 1),
-('83c880c1-20e6-4134-aca4-ced663066543', 'admin@foo.bar', 1, '""'::json, 1),
-('cd376889-4d87-40f8-8d3e-b9a4c0623f55', 'admin@foo.bar', 1, '""'::json, 1),
-('d8d739f2-6d56-41b2-a5a7-38133f9d7bbd', 'admin@foo.bar', 1, '""'::json, 1),
-('be224c35-461b-48a3-ab48-4e4838019c64', 'admin@foo.bar', 1, '""'::json, 1),
-('8b99435f-643a-4347-b552-18a5aea558e0', 'admin@foo.bar', 1, '""'::json, 1),
-('9d372971-7763-4731-a44e-cb87a3434cc0', 'admin@foo.bar', 1, '""'::json, 1),
-('9a3a5d72-c2b0-449a-a157-1c088e0af56d', 'admin@foo.bar', 1, '""'::json, 1),
-('a8afae6b-c328-48df-bce0-bab522a98f85', 'admin@foo.bar', 1, '""'::json, 1),
-('1fa748d3-fa80-4af4-a8fa-7782a27fa585', 'admin@foo.bar', 1, '""'::json, 1),
-('559da3f1-bc29-4c26-a6ac-06b52b054594', 'admin@foo.bar', 1, '""'::json, 1),
-('cb41a3f9-0be7-4dad-b015-68016ef51022', 'admin@foo.bar', 1, '""'::json, 1),
-('19203be8-1052-4c80-9bce-fff4e77f05c8', 'admin@foo.bar', 1, '""'::json, 1),
-('a91d644d-9c86-411c-9ae2-4eeac7545d2b', 'admin@foo.bar', 1, '""'::json, 1),
-('5e0bba68-4bfb-40e1-96d1-daf1a454fd46', 'admin@foo.bar', 1, '""'::json, 1),
-('510e59c2-ba8e-4b1c-b4be-17dc59c80457', 'admin@foo.bar', 1, '""'::json, 1),
-('a4b6745c-bad5-470a-8e32-2f75236c2fce', 'admin@foo.bar', 1, '""'::json, 1),
-('f69d7684-607e-4661-a836-c09aba157c95', 'admin@foo.bar', 1, '""'::json, 1),
-('5c679aad-68f7-4855-be14-8312110bc173', 'admin@foo.bar', 1, '""'::json, 1),
-('e015a0a1-5c4f-4178-8ebc-2b9ac9e4e8b6', 'admin@foo.bar', 1, '""'::json, 1),
-('cd2374bc-649c-45e2-8540-991fb36cb487', 'admin@foo.bar', 1, '""'::json, 1),
-('7c707855-1640-42e9-82a7-d720e58874eb', 'admin@foo.bar', 1, '""'::json, 1),
-('20af2ade-f786-4305-85b1-b5272ab356e0', 'admin@foo.bar', 1, '""'::json, 1),
-('490b3500-dc03-4fa9-9cd2-78126b9333c2', 'admin@foo.bar', 1, '""'::json, 1),
-('e5504565-cf0e-4f2d-b925-1c2ca7cb5fbb', 'admin@foo.bar', 1, '""'::json, 1),
-('f9a9e2d7-b568-45d6-89b8-89cfe9991f77', 'admin@foo.bar', 1, '""'::json, 1),
-('8500b61a-9f08-49c9-a897-2773f4f383c5', 'admin@foo.bar', 1, '""'::json, 1),
-('7e8480aa-af3b-4df7-8d66-8f93a28ccb74', 'admin@foo.bar', 1, '""'::json, 1),
-('f87a89b9-4b6e-4398-8e48-0b6ec238cc97', 'admin@foo.bar', 1, '""'::json, 1),
-('92b6145c-1248-4024-b825-a8b6cb07c4b0', 'admin@foo.bar', 1, '""'::json, 1),
-('04e67d15-1907-4fd1-9a4d-48b47f6c71f8', 'admin@foo.bar', 1, '""'::json, 1),
-('f7466925-9a5c-40d8-9536-9c43ad30cc2d', 'admin@foo.bar', 1, '""'::json, 1),
-('2f21b2ec-91b2-43e2-8d70-b35b64fcaf0c', 'admin@foo.bar', 1, '""'::json, 1),
-('3df051d5-99a8-411a-b40f-bc269eeb5a6c', 'admin@foo.bar', 1, '""'::json, 1),
-('6048e851-42a4-4b0b-b040-a05cfe9686b0', 'admin@foo.bar', 1, '""'::json, 1),
-('06bbba17-3761-4e80-a7c0-56a01e92e7f2', 'admin@foo.bar', 1, '""'::json, 1),
-('1d1f338a-0b0b-4597-a960-1ecf5019dcfe', 'admin@foo.bar', 1, '""'::json, 1),
-('ba1c6fdd-bedd-45f1-a255-aa6b5e21fbd7', 'admin@foo.bar', 1, '""'::json, 1),
-('1f0a1ce3-35b9-427a-b11d-096690fe4a27', 'admin@foo.bar', 1, '""'::json, 1),
-('194ec434-bedd-4403-9e14-2351ea3c7720', 'admin@foo.bar', 1, '""'::json, 1),
-('633b6978-0c6b-400a-b466-f3eb7e2035e9', 'admin@foo.bar', 1, '""'::json, 1),
-('dd18384b-c038-48bf-b751-573163a4223d', 'admin@foo.bar', 1, '""'::json, 1),
-('635c4f2a-8417-4fae-9078-e94846c8b7b1', 'admin@foo.bar', 1, '""'::json, 1),
-('759be360-787b-410e-9e07-7db03e4df5c6', 'admin@foo.bar', 1, '""'::json, 1),
-('37d514e8-ce44-4163-b47b-f0af05397aff', 'admin@foo.bar', 1, '""'::json, 1),
-('7b0f4fc2-d772-4921-ad44-ba64f148a84d', 'admin@foo.bar', 1, '""'::json, 1),
-('9a730dc2-23b7-4c41-8270-5fa7af22d468', 'admin@foo.bar', 1, '""'::json, 1),
-('c033bd49-d4e9-4df3-9317-ce030d4b80d6', 'admin@foo.bar', 1, '""'::json, 1),
-('09ee747d-638c-4933-bbe6-4e999d4b7480', 'admin@foo.bar', 1, '""'::json, 1),
-('16060ef4-c199-493f-ab88-d4b4f06138a4', 'admin@foo.bar', 1, '""'::json, 1),
-('8c1f6f46-75e6-4439-a5c0-c4e9bad71ec0', 'admin@foo.bar', 1, '""'::json, 1),
-('22c6824e-2223-4a56-8686-dcbf3db8b2f8', 'admin@foo.bar', 1, '""'::json, 1),
-('45c822ad-7817-48b6-8208-7b65922a5b01', 'admin@foo.bar', 1, '""'::json, 1),
-('40e38e61-5426-4495-95a8-9bfd717b779e', 'admin@foo.bar', 1, '""'::json, 1),
-('6b7f13b9-d019-4cd7-9913-6cc2a2d558c0', 'admin@foo.bar', 1, '""'::json, 1),
-('643a6bdc-48a3-4624-ab93-1e70053c0f06', 'admin@foo.bar', 1, '""'::json, 1),
-('d97b7b26-6c93-4d55-bd52-c4beae6fd9fc', 'admin@foo.bar', 1, '""'::json, 1),
-('caab8faa-5ebd-4734-91d3-cc598fe332c4', 'admin@foo.bar', 1, '""'::json, 1),
-('a005ae56-c6a3-4e0f-8280-49d85e32023e', 'admin@foo.bar', 1, '""'::json, 1),
-('1a93bbf7-b118-4b67-9477-e5a067291f7e', 'admin@foo.bar', 1, '""'::json, 1),
-('670fcf04-077d-41cd-b9b6-d5eb7b37b42a', 'admin@foo.bar', 1, '""'::json, 1),
-('97704373-2097-4e0f-aa15-5a6087877b86', 'admin@foo.bar', 1, '""'::json, 1),
-('3f1f3955-04a0-4554-ad87-55b4c2b13ee4', 'admin@foo.bar', 1, '""'::json, 1),
-('97d9b7c0-b68d-41ff-954c-3755e6ff1cb9', 'admin@foo.bar', 1, '""'::json, 1),
-('15f391a5-8c92-46e0-a321-5b981848d586', 'admin@foo.bar', 1, '""'::json, 1),
-('e0d0e1ad-55f7-4486-a53a-7df8b44bd4ab', 'admin@foo.bar', 1, '""'::json, 1),
-('b5415610-17a1-4ac7-a985-a060df556451', 'admin@foo.bar', 1, '""'::json, 1),
-('80dc4574-8278-4492-9473-f6091c52b98c', 'admin@foo.bar', 1, '""'::json, 1),
-('f838c5ba-bc20-4c5c-94cb-52973b522be4', 'admin@foo.bar', 1, '""'::json, 1),
-('5a1d5e55-4fe4-4dba-9406-684ffb734c5f', 'admin@foo.bar', 1, '""'::json, 1),
-('a5f23b08-8499-4e16-9b6c-69d089c9fd09', 'admin@foo.bar', 1, '""'::json, 1),
-('2b365ffc-a96b-47a6-89c2-6d2aaae535df', 'admin@foo.bar', 1, '""'::json, 1),
-('32a9bb7f-56c2-4bbc-9120-d66d4d8debbc', 'admin@foo.bar', 1, '""'::json, 1),
-('2a1d211e-5b53-4121-93f6-49721523eda4', 'admin@foo.bar', 1, '""'::json, 1),
-('bffc8bce-1f6f-4bff-ac7f-8dad7f43895a', 'admin@foo.bar', 1, '""'::json, 1),
-('fc86707d-54ca-4eee-92d3-dbcde06ed75c', 'admin@foo.bar', 1, '""'::json, 1),
-('0c7ddae6-83d6-4db6-9a79-9720c614142b', 'admin@foo.bar', 1, '""'::json, 1),
-('9194b7f9-a420-426e-8073-78ad6607cd1d', 'admin@foo.bar', 1, '""'::json, 1),
-('db9b1f49-f848-4a40-bbbb-ed9d3848965a', 'admin@foo.bar', 1, '""'::json, 1),
-('84eff552-5723-4729-a86b-8f283874c289', 'admin@foo.bar', 1, '""'::json, 1),
-('b251dfae-0bb8-4bee-ab47-bdcc17d25b62', 'admin@foo.bar', 1, '""'::json, 1),
-('316b9754-2d5d-4822-bd72-f86f6ca9ae4b', 'admin@foo.bar', 1, '""'::json, 1),
-('d509e593-4053-406a-8ab0-8af8b1b4c8a5', 'admin@foo.bar', 1, '""'::json, 1),
-('e66faf00-0ffa-404f-ac08-7121c6337b70', 'admin@foo.bar', 1, '""'::json, 1),
-('66782585-883b-4784-a443-a2dfff848d88', 'admin@foo.bar', 1, '""'::json, 1),
-('9291cc5a-9ab4-49c0-b8a1-9fc9b6c46b44', 'admin@foo.bar', 1, '""'::json, 1),
-('decafc1b-5c70-466b-a8cc-33f29c6db3df', 'admin@foo.bar', 1, '""'::json, 1),
-('5b319607-4bec-4e36-ae54-5b7c21e91064', 'admin@foo.bar', 1, '""'::json, 1),
-('2f3f309f-51bd-43b8-80d1-10d10a1c274e', 'admin@foo.bar', 1, '""'::json, 1),
-('893621a8-d4dd-464b-8977-223470fc297e', 'admin@foo.bar', 1, '""'::json, 1),
-('12e91952-b2b1-424d-884c-865e77474bf2', 'admin@foo.bar', 1, '""'::json, 1),
-('d6946499-e2e7-4286-a95b-786b8ec633a9', 'admin@foo.bar', 1, '""'::json, 1),
-('1fa39acc-83ef-409f-91d5-13ef1934635d', 'admin@foo.bar', 1, '""'::json, 1),
-('694a13a5-9e5d-4f54-b34c-a63167a045b1', 'admin@foo.bar', 1, '""'::json, 1),
-('c4ff14f9-3a89-40d6-aa85-1fbd8dd80c17', 'admin@foo.bar', 1, '""'::json, 1),
-('d12d6d89-a8e9-4fd9-8e1c-16968035fb38', 'admin@foo.bar', 1, '""'::json, 1),
-('9627e0a4-8f47-430e-b1d2-30c1295a722f', 'admin@foo.bar', 1, '""'::json, 1),
-('f50accb5-3461-4a7f-9bff-761e4414a026', 'admin@foo.bar', 1, '""'::json, 1),
-('e0d4954f-e964-4755-bac3-bc47610206aa', 'admin@foo.bar', 1, '""'::json, 1),
-('2d60289d-1b7f-4945-8264-b01e2426c23e', 'admin@foo.bar', 1, '""'::json, 1),
-('179d0c15-5af2-4671-b807-fb374fd3b842', 'admin@foo.bar', 1, '""'::json, 1),
-('f6a8189a-caa7-4a41-bbc0-09ac46bf5a8f', 'admin@foo.bar', 1, '""'::json, 1),
-('59ca6817-c388-47ad-ba64-47989313dd44', 'admin@foo.bar', 1, '""'::json, 1),
-('61d6d576-362c-4261-859e-7209fa346f1e', 'admin@foo.bar', 1, '""'::json, 1),
-('bd89bfe7-51b0-429b-9a88-2e71c8cb7545', 'admin@foo.bar', 1, '""'::json, 1),
-('c5cc0f29-0fa0-4c44-b33c-103f0e3b6f32', 'admin@foo.bar', 1, '""'::json, 1),
-('53db452b-9234-4830-94ef-cf9ab49ef0d1', 'admin@foo.bar', 1, '""'::json, 1),
-('a268c541-fe8d-4521-8a49-e3a8439aef64', 'admin@foo.bar', 1, '""'::json, 1),
-('387f71b9-3283-4923-860b-8065a62248fd', 'admin@foo.bar', 1, '""'::json, 1),
-('8194c64a-1a43-499f-8f47-3a3935c557f4', 'admin@foo.bar', 1, '""'::json, 1),
-('294d4a3f-f8ff-4644-ab15-3ddcb4390af1', 'admin@foo.bar', 1, '""'::json, 1),
-('a373adcd-9b62-41e3-9ae4-a6f79ff45f45', 'admin@foo.bar', 1, '""'::json, 1),
-('ef7406a1-a4fa-4af2-8e67-92607ebdd8f9', 'admin@foo.bar', 1, '""'::json, 1),
-('59dbbe08-8701-4e48-95ab-3882a02ee1e7', 'admin@foo.bar', 1, '""'::json, 1),
-('088a65e5-c848-4e34-b47d-4664f9f27f83', 'admin@foo.bar', 1, '""'::json, 1),
-('45d538e2-97c5-4893-af08-f6bf04abb767', 'admin@foo.bar', 1, '""'::json, 1),
-('0b9706a2-e0a6-438f-a5b3-a094161a15a7', 'admin@foo.bar', 1, '""'::json, 1),
-('eb3650f0-7aea-4cab-a520-6e581e3bd978', 'admin@foo.bar', 1, '""'::json, 1),
-('c6635e7e-93c0-403e-b615-3e8f7da29352', 'admin@foo.bar', 1, '""'::json, 1),
-('2cb50802-1ac7-48a4-bebd-4d9be546cf69', 'admin@foo.bar', 1, '""'::json, 1),
-('1c6d9feb-17fb-40ca-a3f4-d1e7834c5d53', 'admin@foo.bar', 1, '""'::json, 1),
-('ed2a60cf-2164-4b01-a59c-07518613ef8d', 'admin@foo.bar', 1, '""'::json, 1),
-('469e8fcc-37ef-4dfb-b4cd-2b109200ce4c', 'admin@foo.bar', 1, '""'::json, 1),
-('52802b61-7df2-4e82-9ccf-5c8075c2da45', 'admin@foo.bar', 1, '""'::json, 1),
-('0c715e72-47dd-48ac-b733-a845e440e86a', 'admin@foo.bar', 1, '""'::json, 1),
-('13f6b03d-40e1-47c2-a7df-163c0e3e7d23', 'admin@foo.bar', 1, '""'::json, 1),
-('9639186c-9084-47ed-8075-3f14798eceef', 'admin@foo.bar', 1, '""'::json, 1),
-('6e54aa84-ffd1-4943-8ae2-7e75319a7e30', 'admin@foo.bar', 1, '""'::json, 1),
-('dba3182c-80c0-46ed-a9e6-64e0cf699741', 'admin@foo.bar', 1, '""'::json, 1),
-('b33244f5-30ce-4db3-94c7-4dcbe5cff4a7', 'admin@foo.bar', 1, '""'::json, 1),
-('ba196947-c2d6-4ae1-ad23-fb768c087125', 'admin@foo.bar', 1, '""'::json, 1),
-('08d92acd-992c-4500-a33a-094225dec9cb', 'admin@foo.bar', 1, '""'::json, 1),
-('b0bfe252-9f89-4160-839e-738a649de0f1', 'admin@foo.bar', 1, '""'::json, 1),
-('ea9e5e73-c141-4cf6-944a-6f43541ed747', 'admin@foo.bar', 1, '""'::json, 1),
-('b6d61911-54b5-4917-957a-11f5931f1b6e', 'admin@foo.bar', 1, '""'::json, 1),
-('3cf83989-1316-47f4-a291-03aa41da31f1', 'admin@foo.bar', 1, '""'::json, 1),
-('531b6413-c293-4a87-9444-3939eebf79bd', 'admin@foo.bar', 1, '""'::json, 1),
-('18919546-fade-4e83-b5dc-1708043bec82', 'admin@foo.bar', 1, '""'::json, 1),
-('6e6eb332-9166-4059-8a7c-cc4dfa5417f3', 'admin@foo.bar', 1, '""'::json, 1),
-('c36b0187-97f8-49c4-9f78-dfb75a04f41d', 'admin@foo.bar', 1, '""'::json, 1),
-('f9552ba6-db05-4a74-acb7-f851c627777d', 'admin@foo.bar', 1, '""'::json, 1),
-('4777ec99-b163-466f-81a8-a5e5f3c81b5d', 'admin@foo.bar', 1, '""'::json, 1),
-('3429c0f3-9f05-4234-a3ec-ead9285d9c91', 'admin@foo.bar', 1, '""'::json, 1),
-('a9e4fa1b-5f48-4143-a06e-20c6013c37f0', 'admin@foo.bar', 1, '""'::json, 1),
-('eb734567-fa4f-4aff-8ac4-e119b7cf31cc', 'admin@foo.bar', 1, '""'::json, 1),
-('52b3c3ce-0681-4992-9cd5-bdb0eddffff6', 'admin@foo.bar', 1, '""'::json, 1),
-('ddb6e8c1-700b-4c2e-834b-26ceca5be035', 'admin@foo.bar', 1, '""'::json, 1),
-('ed55d400-04c2-4aa7-be76-63eef565cbae', 'admin@foo.bar', 1, '""'::json, 1),
-('23d23e6a-7e1e-41e6-aedb-5c997c6a31a6', 'admin@foo.bar', 1, '""'::json, 1),
-('160160e6-ee83-47f7-8d59-1e6df6dd1a4d', 'admin@foo.bar', 1, '""'::json, 1),
-('e3b07a6e-145b-4551-b27c-905a1601a1f3', 'admin@foo.bar', 1, '""'::json, 1),
-('462b169a-acce-47a7-adf9-1daa0a465639', 'admin@foo.bar', 1, '""'::json, 1),
-('a43beee6-aab4-4ddd-895e-b7f95e258d17', 'admin@foo.bar', 1, '""'::json, 1),
-('4df02286-2ecd-4dd0-9d13-ec5d6b2e76d9', 'admin@foo.bar', 1, '""'::json, 1),
-('50b68208-0bdc-4ecd-9f75-2036a2332d55', 'admin@foo.bar', 1, '""'::json, 1),
-('9bba65d6-12be-4f4b-b40a-018489ebbc3b', 'admin@foo.bar', 1, '""'::json, 1),
-('40fe74d9-7fa2-4ef1-a64d-c092b3e5128b', 'admin@foo.bar', 1, '""'::json, 1),
-('716b59bd-d2f0-404e-b6c5-ad5b69e8db3a', 'admin@foo.bar', 1, '""'::json, 1),
-('cd5299dd-f160-4b8e-9eac-ea2cb54c003a', 'admin@foo.bar', 1, '""'::json, 1),
-('6140d69a-3c93-4378-bc99-fc0596aa6703', 'admin@foo.bar', 1, '""'::json, 1),
-('c03cd275-e2c0-4e28-a0a1-e07be2c24c03', 'admin@foo.bar', 1, '""'::json, 1),
-('9afa1b4a-244e-44a4-8b9c-69c229007667', 'admin@foo.bar', 1, '""'::json, 1),
-('655e4674-a14d-485b-9294-18d8e76014ca', 'admin@foo.bar', 1, '""'::json, 1),
-('2a009904-eb9e-49bd-bee0-da0bb1bfdba5', 'admin@foo.bar', 1, '""'::json, 1),
-('186f76c0-c877-428c-ab08-46cbcf4524a1', 'admin@foo.bar', 1, '""'::json, 1),
-('f5d2cdc0-0061-4a7b-9c86-bee6d7e08d29', 'admin@foo.bar', 1, '""'::json, 1),
-('f147fe13-56a8-41db-b399-ecabba242ca9', 'admin@foo.bar', 1, '""'::json, 1),
-('0bef5c46-6ad7-4a05-8c4b-8d227f0a0352', 'admin@foo.bar', 1, '""'::json, 1),
-('fc0ebaac-1bbb-4fb6-b20d-2fe74f31b5ef', 'admin@foo.bar', 1, '""'::json, 1),
-('fcd7e83f-804c-40bb-9f3d-8483cffe34c0', 'admin@foo.bar', 1, '""'::json, 1),
-('284cc76f-487e-4d49-9c2f-d4d10e74385e', 'admin@foo.bar', 1, '""'::json, 1),
-('b8e3c3ac-5b5b-4f6d-97c2-3296b0bab7e6', 'admin@foo.bar', 1, '""'::json, 1),
-('9262c5ec-b92b-425b-8fd1-10ea4905d595', 'admin@foo.bar', 1, '""'::json, 1),
-('7bae4416-a699-4985-9736-60bf2b4aa4d6', 'admin@foo.bar', 1, '""'::json, 1),
-('7cb7e7e1-48c1-4259-9856-395911e88d4d', 'admin@foo.bar', 1, '""'::json, 1),
-('b127f3dc-fc5b-4054-a20b-e9216caff4ef', 'admin@foo.bar', 1, '""'::json, 1),
-('dfb12c24-d67a-4dc4-b221-b6fb1e49602b', 'admin@foo.bar', 1, '""'::json, 1),
-('507da6a3-0df4-4e30-9763-f392eb62aac5', 'admin@foo.bar', 1, '""'::json, 1),
-('6fe5c170-4774-4576-813f-7c164866a3bf', 'admin@foo.bar', 1, '""'::json, 1),
-('3c31aad8-1e86-48be-b65c-4924388bd587', 'admin@foo.bar', 1, '""'::json, 1),
-('2b2e2473-fbc6-4e6a-9072-19f6411b0817', 'admin@foo.bar', 1, '""'::json, 1),
-('5994ad72-2f1a-416b-ba3c-9cc4a1c61c20', 'admin@foo.bar', 1, '""'::json, 1),
-('ba111653-1c15-4425-8ab9-11a5422eff1d', 'admin@foo.bar', 1, '""'::json, 1),
-('fdec2e67-e193-4185-991a-be136e63b2b0', 'admin@foo.bar', 1, '""'::json, 1),
-('6218ce6d-5208-4ebc-9e48-633b3f54cdcc', 'admin@foo.bar', 1, '""'::json, 1),
-('d6eef75a-4505-4111-9c4d-5a748d403dd2', 'admin@foo.bar', 1, '""'::json, 1),
-('7a24dba0-f6b4-48cc-b1cb-4c9b884170e6', 'admin@foo.bar', 1, '""'::json, 1),
-('ff077c77-a1ba-46ac-b5ca-d5c894242770', 'admin@foo.bar', 1, '""'::json, 1),
-('65526acd-86e9-421b-9c91-b885cd36729a', 'admin@foo.bar', 1, '""'::json, 1),
-('04d09a9f-2151-47df-8475-36fc8ec7aafc', 'admin@foo.bar', 1, '""'::json, 1),
-('7e72e913-ce87-4bc1-adf7-c3cc7d5184e5', 'admin@foo.bar', 1, '""'::json, 1),
-('9e6f2ff5-f749-4089-b828-ef29fcca1a7d', 'admin@foo.bar', 1, '""'::json, 1),
-('335635a7-8153-4e4c-9b53-e1bc145497b0', 'admin@foo.bar', 1, '""'::json, 1),
-('5452c17e-ae82-4b46-a85a-ece0501a5d5e', 'admin@foo.bar', 1, '""'::json, 1),
-('f5a06f01-7405-4ff1-b047-64f9e7505d6c', 'admin@foo.bar', 1, '""'::json, 1),
-('bf9fc8f3-39b7-4771-95e8-f858494022a5', 'admin@foo.bar', 1, '""'::json, 1),
-('98270055-d47a-4cc4-b40c-ac006f7823f6', 'admin@foo.bar', 1, '""'::json, 1),
-('009b95ec-18b6-4fa0-a0bb-0785cfe03409', 'admin@foo.bar', 1, '""'::json, 1),
-('89ae9ba5-f920-46e6-9279-40d5be29f845', 'admin@foo.bar', 1, '""'::json, 1),
-('0f24f638-13fe-4898-b3a9-b15aafb260f8', 'admin@foo.bar', 1, '""'::json, 1),
-('37d12cdd-c03b-4921-a77b-851269d3e557', 'admin@foo.bar', 1, '""'::json, 1),
-('9308c777-1c30-43ac-acf6-9454601601ba', 'admin@foo.bar', 1, '""'::json, 1),
-('a1910b9b-2d93-4239-9bc1-1250fea56837', 'admin@foo.bar', 1, '""'::json, 1),
-('1280dc5a-d797-42ca-a613-3fbce32f55a0', 'admin@foo.bar', 1, '""'::json, 1),
-('0a329ce1-1b82-4faf-a1f7-0d17e4b25251', 'admin@foo.bar', 1, '""'::json, 1),
-('3b212797-bb0b-422c-bba1-79921ce40c78', 'admin@foo.bar', 1, '""'::json, 1),
-('c14e97a2-a083-4e49-a14b-0abd23483272', 'admin@foo.bar', 1, '""'::json, 1),
-('7cd84e00-773a-4387-bcdb-37da819ce5f7', 'admin@foo.bar', 1, '""'::json, 1),
-('8553c8e2-5bc9-41b6-9f5e-96a2abfb7055', 'admin@foo.bar', 1, '""'::json, 1),
-('65212822-529e-4cf4-a427-78032b9e569b', 'admin@foo.bar', 1, '""'::json, 1),
-('3a8d8b29-d408-45ab-8d63-043741de9679', 'admin@foo.bar', 1, '""'::json, 1),
-('d68f1265-c669-4f2b-a3ab-ee0e547e0143', 'admin@foo.bar', 1, '""'::json, 1),
-('f0b0c5aa-9f97-42e3-82e4-71968f28ad15', 'admin@foo.bar', 1, '""'::json, 1),
-('1bf64e7e-4ab9-4dfa-9aeb-6402ad95c165', 'admin@foo.bar', 1, '""'::json, 1),
-('605f6954-8697-42c4-97a4-7c3aa6b3cde9', 'admin@foo.bar', 1, '""'::json, 1),
-('3688f502-6895-4041-b957-6487f6ba7c98', 'admin@foo.bar', 1, '""'::json, 1),
-('013f8041-6f36-4dcb-8af9-67ac1fd78d9e', 'admin@foo.bar', 1, '""'::json, 1),
-('58e69a18-ecef-4b61-a62f-7efc1f733731', 'admin@foo.bar', 1, '""'::json, 1),
-('e7cb303d-ffe0-4a5e-8eb0-627dd0513f51', 'admin@foo.bar', 1, '""'::json, 1),
-('7cc4a810-137c-468e-a249-60b0faf9a003', 'admin@foo.bar', 1, '""'::json, 1),
-('056330e4-36eb-4c38-b87f-56484ac69623', 'admin@foo.bar', 1, '""'::json, 1),
-('ea9e5c11-f7a7-4dcb-b8b5-20b499611b9f', 'admin@foo.bar', 1, '""'::json, 1),
-('8df2b291-adbf-4def-a172-ece656410050', 'admin@foo.bar', 1, '""'::json, 1),
-('ce47b98d-8a78-4e97-b20c-297f75394f28', 'admin@foo.bar', 1, '""'::json, 1),
-('d8e90f5f-1b10-4f00-9c3b-6bc8daf2cc8a', 'admin@foo.bar', 1, '""'::json, 1),
-('cec46141-0286-4430-ac41-ed830decb5e8', 'admin@foo.bar', 1, '""'::json, 1),
-('fc9b54c3-0447-49db-a6d0-5b913d0e285a', 'admin@foo.bar', 1, '""'::json, 1),
-('3e6d362e-3880-4b90-b693-868547ce0f5a', 'admin@foo.bar', 1, '""'::json, 1),
-('d5891efa-0e7d-409b-9bb7-b6ecc081c836', 'admin@foo.bar', 1, '""'::json, 1),
-('e4b960c8-33c6-4304-8355-9bafd70569ed', 'admin@foo.bar', 1, '""'::json, 1),
-('35c4eb46-3560-4d17-a210-979ba3037c53', 'admin@foo.bar', 1, '""'::json, 1),
-('2b85bd17-6d7e-48e0-8e02-477eb9ffe353', 'admin@foo.bar', 1, '""'::json, 1),
-('8c7e4562-dcc2-4a31-ab20-b873182b334d', 'admin@foo.bar', 1, '""'::json, 1),
-('49fda716-a469-4a6d-a3ef-3bcbd166e668', 'admin@foo.bar', 1, '""'::json, 1),
-('f424b26a-840a-42d3-a61f-3bbffd8b194d', 'admin@foo.bar', 1, '""'::json, 1),
-('7226d658-da67-4d7c-a898-e59cd77d977b', 'admin@foo.bar', 1, '""'::json, 1),
-('50dc9288-e18c-41c2-a271-601289ff5685', 'admin@foo.bar', 1, '""'::json, 1),
-('4883db35-3ca6-4b0c-9377-cf7d1d97245d', 'admin@foo.bar', 1, '""'::json, 1),
-('3ff09f4e-ada5-45d6-b7e1-fa003e31bf77', 'admin@foo.bar', 1, '""'::json, 1),
-('26c68022-6df2-4928-a4fb-220a156b86f7', 'admin@foo.bar', 1, '""'::json, 1),
-('cdd878a9-e3f1-4478-b613-90f2b2e9ccbd', 'admin@foo.bar', 1, '""'::json, 1),
-('d6e02749-45fb-4b92-8a8e-48b33b617f9c', 'admin@foo.bar', 1, '""'::json, 1),
-('47900ec7-0fea-41db-a320-c78b9da36538', 'admin@foo.bar', 1, '""'::json, 1),
-('1ef4d550-afaa-44b5-a06c-65286b9f3e00', 'admin@foo.bar', 1, '""'::json, 1),
-('8533d2a8-1fcf-4842-8826-c5458c002332', 'admin@foo.bar', 1, '""'::json, 1),
-('ab9095d1-af6d-49d5-9c87-bc2576f06135', 'admin@foo.bar', 1, '""'::json, 1),
-('61da73ff-b4ff-49a1-b775-c6215cfbd291', 'admin@foo.bar', 1, '""'::json, 1),
-('6c84dcf1-c5ea-4e69-b17f-d2d5b8d48bdf', 'admin@foo.bar', 1, '""'::json, 1),
-('dcb12603-4142-44d1-9a52-3ca3511e380e', 'admin@foo.bar', 1, '""'::json, 1),
-('a0dd0a4d-b73f-4e9d-87dd-d29efba25336', 'admin@foo.bar', 1, '""'::json, 1),;
--- SPLIT
 
-INSERT INTO qiita.slurm_resource_allocations(processing_job_id, samples, columns, input_size, extra_info, memory_used, walltime_used)
-VALUES ('ca27ddbc-a678-4b09-8a1d-b65f52f8eb49', 39, 81, 2, 'nan', 327036000, 91),
-('b0f36550-d97c-4dd5-ba1b-910470062801', 160, 212, 2, 'nan', 342204000, 219),
-('b13eefd1-12b7-4c3e-a380-94ec0a3f9f91', 62, 83, 2, 'nan', 328716000, 165),
-('469c27b7-81c4-4f41-b09d-149260961227', 16, 83, 2, 'nan', 326344000, 154),
-('6f198e33-b4ae-47e9-973b-bd5e0b06c353', 96, 152, 2, 'nan', 332492000, 185),
-('045eb36c-5144-4d54-a621-23eb5dc4d6ef', 242, 43, 2, 'nan', 369988000, 137),
-('041f3278-2752-44f9-8caa-ac6ae80c98e6', 231, 97, 2, 'nan', 375820000, 151),
-('6325e683-b215-4c56-bf5a-cbbc92330067', 120, 83, 2, 'nan', 373536000, 234),
-('03dcca05-0d4f-48c5-bc7a-7ef884be8efc', 92, 83, 2, 'nan', 372188000, 407),
-('8d84685f-97f4-4ea7-8857-2dcec5a20775', 40, 83, 2, 'nan', 368816000, 296),
-('8b714fe7-51d9-492c-9b49-4fe09b595067', 96, 87, 2, 'nan', 371972000, 138),
-('490c0623-4ed7-4064-9ffe-ba5afc0f0aa0', 28, 50, 2, 'nan', 369696000, 185),
-('c8301f3d-a4fe-407a-9aec-b9dfee0cc2fd', 12, 83, 2, 'nan', 368052000, 97),
-('561b9676-604a-4cdb-833f-a4a9b3afef42', 41, 50, 2, 'nan', 369580000, 101),
-('8bc35697-f3df-42f6-8a34-830d42000bd6', 336, 22, 2, 'nan', 369828000, 86),
-('474a4a8d-0963-4fe6-9da4-74e520532be1', 32, 80, 2, 'nan', 364956000, 105),
-('d4d03b6f-12f1-4f47-9ad4-b5597a3e5a16', 152, 66, 2, 'nan', 373528000, 129),
-('27d95aba-9b36-40c8-8d17-7ade170172aa', 36, 83, 2, 'nan', 367776000, 155),
-('a8f00090-6981-4fc3-bc37-208f01e6dceb', 44, 83, 2, 'nan', 370620000, 93),
-('d7562d61-7886-45b5-9fed-90fef6636e6f', 152, 83, 2, 'nan', 372888000, 100),
-('e4071da6-550d-469b-91dc-f6cda658df80', 32, 64, 2, 'nan', 369900000, 155),
-('c126e507-5f13-485f-9166-775ee7228f12', 28, 26, 2, 'nan', 368464000, 97),
-('d73906a4-f2c7-4d03-bd55-d637365ec3bc', 138, 89, 2, 'nan', 375516000, 288),
-('167efba9-a88e-493c-a2c6-0647556ba6dd', 35, 42, 2, 'nan', 369480000, 81),
-('2662c176-d042-4254-bc7e-20c092fc3af1', 152, 72, 2, 'nan', 373376000, 135),
-('54b19d0d-fa47-4c37-a4ea-e2be33d54c5b', 152, 80, 2, 'nan', 369868000, 92),
-('8b3e969e-78c4-4a09-9767-4aa72d99ee8c', 90, 75, 2, 'nan', 368312000, 99),
-('bef26557-60db-4987-b0bf-e9e0be77da37', 32, 83, 2, 'nan', 372748000, 100),
-('adcf6cb4-780b-4a9d-bb7c-cd2bf12ac201', 28, 51, 2, 'nan', 370832000, 139),
-('54464698-5860-4543-9376-d3d89722848f', 152, 81, 2, 'nan', 372652000, 95),
-('9a8b3ea7-36d7-46f7-8602-1b39c89f5ee4', 28, 46, 2, 'nan', 369584000, 193),
-('b57c1bc6-a805-463d-87fc-b76a186e5a63', 21302, 90, 2, 'nan', 30269928000, 187836),
-('0c0579c8-dc34-4211-ad87-c453e9cb10bf', 4566, 178, 2, 'nan', 5477396000, 11596),
-('04357795-299a-4900-9fdf-debf3be2ccc7', 56, 80, 2, 'nan', 370324000, 100),
-('fa1617ad-daf8-496d-937f-5ad9526f57d2', 214, 84, 2, 'nan', 380764000, 139),
-('056dd777-1c93-424a-ad7a-fbac4ff01e6b', 174, 81, 2, 'nan', 371052000, 105),
-('1d056722-c08c-45e7-abbf-794abf85b2ba', 376, 94, 2, 'nan', 394040000, 215),
-('a4e4457e-e191-4951-81d2-a1bd8afa7bb9', 189, 142, 2, 'nan', 382424000, 165),
-('2bd5eedb-f4bd-4221-a31d-7a82ed1ed85c', 1067, 12, 2, 'nan', 372276000, 111),
-('59e6279e-5a92-4ad5-81cd-d83892eb35e3', 6374, 49, 2, 'nan', 9936144000, 21930),
-('594e5a37-e00e-44e3-8baf-a5d0fbd8d1c5', 1917, 102, 2, 'nan', 1292284000, 1367),
-('40e16ce2-d280-423b-908e-f74877751bb8', 152, 85, 2, 'nan', 372464000, 159),
-('df964c5d-d204-475d-bf37-c4281c830e36', 266, 67, 2, 'nan', 369540000, 98),
-('f1ff0a3f-5004-49d4-a781-fedab076f682', 39, 93, 2, 'nan', 373044000, 152),
-('d5b6766a-5697-4283-b7f5-ded6295e539d', 150, 63, 2, 'nan', 374136000, 444),
-('6e98873c-0c99-47f0-ae6f-fc12092c1c5d', 856, 49, 2, 'nan', 584216000, 578),
-('b816de4b-42f6-4495-8a05-7cb7faefcf3e', 856, 48, 2, 'nan', 634320000, 557),
-('2e196649-1641-4ced-bf74-f24db6123d66', 394, 42, 2, 'nan', 380860000, 767),
-('ca8271ce-ff25-4a22-8309-149396d20d38', 384, 22, 2, 'nan', 376636000, 374),
-('38496999-f362-45d1-a9e6-6c2ed7ad1847', 69, 70, 2, 'nan', 373668000, 101),
-('dedeab8b-ed71-4d3d-87c1-37f607e19e5d', 20, 47, 2, 'nan', 365196000, 280),
-('997ad2aa-59ff-4346-805c-cbe1a41bac00', 413, 40, 2, 'nan', 412392000, 181),
-('ff866805-7add-432f-90a8-15ab4b793cdd', 1005, 137, 2, 'nan', 425864000, 165),
-('ef8a5faa-fc7b-4a09-a45a-7aa4d3dbb1f8', 177, 384, 2, 'nan', 380400000, 231),
-('b0db6327-e4ff-4dd5-85ae-b8a060f8ed9f', 96, 99, 2, 'nan', 376124000, 234),
-('900537c6-a4bb-4f20-9674-e0fd4851c10a', 22, 47, 2, 'nan', 368924000, 207),
-('3fe82723-af0e-4df0-a3bf-32223b202dd5', 12, 50, 2, 'nan', 367552000, 108),
-('6b22c272-f72c-4102-9abb-afff9d1c7d42', 14, 50, 2, 'nan', 371208000, 106),
-('6738f416-1ce1-4cac-90ef-ead48b9b0ace', 150, 77, 2, 'nan', 375128000, 886),
-('6ed39d69-1c01-42c1-8249-b8abf83c3608', 399, 844, 2, 'nan', 567664000, 508),
-('d00fd8ee-7d65-469c-af2a-ca00681d224b', 1150, 54, 2, 'nan', 394760000, 160),
-('42244303-b4a1-43d3-9041-f4f811691b41', 96, 81, 2, 'nan', 374352000, 118),
-('4ac590b9-5733-4e20-b657-3b13d9b30a4f', 399, 843, 2, 'nan', 554660000, 491),
-('1409a826-8176-49db-84f9-04d4cac0db89', 511, 146, 2, 'nan', 405100000, 228),
-('21917565-5c24-4b9e-947e-0a7fc18b89dc', 1055, 102, 2, 'nan', 594684000, 424),
-('cc4db5ef-c3d3-4067-98be-ee90a584a95a', 53, 71, 2, 'nan', 371640000, 1355),
-('12f627b7-19aa-4583-bce6-a7f7d4dd66a2', 234, 45, 2, 'nan', 372792000, 119),
-('0c6dc99d-d20b-4381-a405-8813129b81ee', 282, 54, 2, 'nan', 373592000, 255),
-('449668bf-3294-42eb-9cef-d0c007b9b27f', 5924, 12, 2, 'nan', 400672000, 105),
-('ee4c2079-e187-4a2f-ae9a-a95795a9d5fe', 476, 68, 2, 'nan', 446712000, 408),
-('0f0d6f75-6ba3-4265-b53e-cc53a18e52b8', 3042, 13, 2, 'nan', 387236000, 117),
-('d63bdad8-ace7-4d92-a8a7-add8620460d3', 353, 56, 2, 'nan', 376128000, 86),
-('5a856042-6a60-4f9d-b256-d03295e2d7f9', 96, 82, 2, 'nan', 373728000, 100),
-('dd9969e8-9efe-4781-af4a-6f2f8ff70808', 706, 56, 2, 'nan', 384544000, 202),
-('37cff1b2-c11e-4511-8625-84def4635d84', 413, 42, 2, 'nan', 374920000, 112),
-('36f312b9-5055-443a-b07a-2ab09e8f8cfa', 32, 14, 2, 'nan', 368144000, 119),
-('de207a0d-932f-4a81-9412-5ff8baa9cdd5', 384, 87, 2, 'nan', 384584000, 122),
-('b567274d-4631-4aee-85df-7d6603c20cfe', 287, 37, 2, 'nan', 391964000, 289),
-('94d07841-1b75-42a1-9407-af6a341769b1', 5540, 32, 2, 'nan', 4107984000, 3302),
-('d83a1dee-1451-4ea3-bd42-3881f1fa4e3e', 768, 87, 2, 'nan', 395492000, 126),
-('3c736f54-7d2d-4cd6-9c45-8cce37ce5482', 112, 36, 2, 'nan', 372180000, 212),
-('e600feed-52cc-4d8f-b28d-c6283dcde944', 46, 53, 2, 'nan', 368888000, 174),
-('41624971-b40b-4e03-bb12-cce149cd6eac', 39, 73, 2, 'nan', 369812000, 108),
-('9f769164-d25c-4e7d-b637-79f3489798c5', 30, 62, 2, 'nan', 368840000, 88),
-('0f382217-32ed-4ea6-b7ab-c98c66e8305f', 291, 76, 2, 'nan', 378096000, 102),
-('24d2cf39-25a1-486e-a763-f2639674f4b4', 116, 60, 2, 'nan', 367924000, 170),
-('b303df36-67d8-4883-a109-294b61ccbe23', 113, 250, 2, 'nan', 381692000, 386),
-('b46d8a4d-b969-4226-8719-6708c3755775', 391, 92, 2, 'nan', 379532000, 92),
-('07b691e7-a940-4257-bea8-ebba6bc47637', 157, 67, 2, 'nan', 379060000, 126),
-('9d624992-01fe-4ece-a7ba-ebf54da0eb7b', 33, 92, 2, 'nan', 369760000, 120),
-('0aba4000-8b6d-47c1-a4fc-7b6a2b419b67', 384, 258, 2, 'nan', 421788000, 336),
-('4635cab1-b1a7-4d6a-bb75-d95f0e1fd682', 24, 58, 2, 'nan', 333928000, 79),
-('b2602d9e-7ce6-43e2-a4b3-3962f812a80a', 353, 149, 2, 'nan', 389096000, 219),
-('f8d9c8b3-1e4f-4371-9d86-74778f7145a7', 150, 128, 2, 'nan', 376468000, 602),
-('490bf28c-7f5b-428f-9127-c1ac19d611fc', 147, 23, 2, 'nan', 371728000, 92),
-('a69254f1-d5d4-4f3f-991f-c197364b8187', 278, 35, 2, 'nan', 376404000, 116),
-('702f4828-f604-44b8-a7b0-9684e77a0279', 64, 41, 2, 'nan', 366940000, 90),
-('0d793328-c4c5-4739-b2f1-40afb4de55c8', 95, 37, 2, 'nan', 371568000, 249),
-('7227a61e-59af-4b96-8919-efe13839889c', 4302, 62, 2, 'nan', 8104616000, 18008),
-('57e351db-c504-42dd-a699-fe405c1b5a27', 1038, 37, 2, 'nan', 406872000, 245),
-('88bbeb39-2fc5-4a46-8bd9-ca28a2fedef3', 399, 970, 2, 'nan', 612944000, 517),
-('63a0101c-13b0-4c73-b4d7-00a33ae0f9ab', 119, 40, 2, 'nan', 320928000, 81),
-('e3c17c93-5993-49fc-891a-9c9d5b9aa43c', 6, 11, 2, 'nan', 370792000, 194),
-('6fd1fc5f-fce2-43c6-909d-8041a075ac3a', 537, 92, 2, 'nan', 418592000, 299),
-('8ea8b437-819b-4624-b15c-a653b53c0a2e', 32, 41, 2, 'nan', 368692000, 89),
-('c4ee461b-8d52-4338-8fa2-8a22b538456b', 12, 466, 2, 'nan', 374988000, 715),
-('1eaa62de-c3ae-414d-9168-7fb5ece89949', 16, 41, 2, 'nan', 368992000, 239),
-('6a63a491-c4c1-4176-9827-9460526ed319', 528, 76, 2, 'nan', 382696000, 99),
-('733a21cf-e969-4a17-b888-820f2f9475a1', 307, 85, 2, 'nan', 384432000, 167),
-('9a1e07e0-bac0-46e1-8b72-86a730f47c12', 862, 105, 2, 'nan', 456076000, 358),
-('6ca8ca71-dbb7-4347-adb3-9ab02b69ef9f', 669, 95, 2, 'nan', 451828000, 523),
-('07272b4e-88bf-4adc-9953-4b1f4cb3764f', 151, 15, 2, 'nan', 371468000, 83),
-('8b9f9e1e-2e52-432b-8528-53f8b25ea81e', 2259, 34, 2, 'nan', 391664000, 104),
-('6395bd2a-fd1b-448b-8771-f07a77958d84', 394, 48, 2, 'nan', 377592000, 265),
-('b05bb0d8-a8bd-4634-82f9-47c52ccd83e3', 450, 140, 2, 'nan', 390568000, 125),
-('38ee009a-7c6a-42a2-a05f-cd3f5286cd9d', 384, 92, 2, 'nan', 379920000, 107),
-('d0799585-1e37-4134-b71f-481dc0d2be72', 384, 171, 2, 'nan', 402372000, 349),
-('2d5a21fd-1cdb-4ee6-8e08-584bf99ef40a', 9, 12, 2, 'nan', 369064000, 152),
-('a4aee4f4-91d5-46e1-9280-87b8ba7eeef9', 394, 50, 2, 'nan', 378484000, 120),
-('7e361763-962b-4f8d-8c63-1a329428f89f', 384, 172, 2, 'nan', 406412000, 233),
-('0abb0be4-b58e-4318-8624-4fc055f9d82d', 3938, 91, 2, 'nan', 532680000, 246),
-('3497cd39-99dc-429e-8e10-67ecd7b2774a', 3, 79, 2, 'nan', 369232000, 193),
-('0ca036c1-ceb5-4c33-993b-d8511a96208b', 78, 40, 2, 'nan', 369532000, 88),
-('a22718ce-6e93-420b-89d6-cf2ddf104164', 57, 40, 2, 'nan', 369396000, 91),
-('278179bb-f481-4d50-aced-5485993699a1', 95, 46, 2, 'nan', 369740000, 91),
-('80272c6a-4312-4c93-9905-390e62a3d201', 384, 1747, 2, 'nan', 538556000, 2487),
-('d5ab9552-64e1-43b2-bf46-5065612c2cda', 384, 1759, 2, 'nan', 1468608000, 2527),
-('af467934-f4db-464e-8ef1-b6bbbbe88667', 394, 51, 2, 'nan', 376672000, 109),
-('cfa62dd9-c6e0-48a2-9633-ee4d813d4f51', 148, 78, 2, 'nan', 371308000, 160),
-('bd37012e-0b22-4e3a-b0ae-eba006d87749', 60, 34, 2, 'nan', 369272000, 119),
-('d11bb684-448c-4916-a0f8-cd5748061638', 48, 15, 2, 'nan', 369052000, 163),
-('46cb1988-f5b7-4a27-92be-dd8b7c7289db', 48, 15, 2, 'nan', 369052000, 147),
-('dd000d70-ee4b-46a6-9e1f-26fd85b6df3c', 412, 11, 2, 'nan', 370240000, 122),
-('a12d7860-89d0-4640-a4a6-73738b47408a', 11, 15, 2, 'nan', 368712000, 92),
-('aae1e730-254d-401b-884d-d9f6965203f6', 11, 22, 2, 'nan', 369712000, 200),
-('66e2dbf0-d223-48b6-bf1e-45a40f87d1b1', 45, 160, 2, 'nan', 363000000, 152),
-('be2e6e7d-7992-4407-a7c1-aced14e6fa12', 112, 13, 2, 'nan', 370968000, 90),
-('671071f2-380c-42a3-88f6-a1642c07dc36', 220, 68, 2, 'nan', 373128000, 233),
-('5db2e298-251c-409f-81a2-844b9a2b7697', 1232, 61, 2, 'nan', 391532000, 206),
-('9b0e1a4a-97a6-47fe-aa2a-6800d72fa611', 602, 72, 2, 'nan', 399216000, 309),
-('9553c043-e844-4c9f-8367-eb5d7d51772c', 54, 64, 2, 'nan', 371940000, 141),
-('78c3db71-ed10-457d-b048-d8142c535e14', 78, 28, 2, 'nan', 369532000, 96),
-('60a72e37-28f8-4288-81eb-830cb2924a03', 76, 33, 2, 'nan', 370068000, 198),
-('520e37c3-6e64-4fce-8a88-cceac2b3b5b8', 80, 68, 2, 'nan', 372164000, 139),
-('596f24ae-49e1-4a22-bbee-0b53b1bc4b26', 921, 486, 2, 'nan', 1131140000, 2776),
-('7fce7f74-0c73-4fc2-b5bc-45f570014054', 192, 32, 2, 'nan', 400300000, 270),
-('0061bb8f-219c-4e53-8ea5-137799e5fc3c', 95, 32, 2, 'nan', 398676000, 134),
-('09c27409-4fb5-415c-93e3-7e2233e0109e', 115, 61, 2, 'nan', 398460000, 111),
-('1a95492b-e852-413b-8450-72eb0adcd577', 460, 61, 2, 'nan', 401832000, 98),
-('c6315300-f68e-4bf7-b7d2-778c3409f346', 939, 174, 2, 'nan', 717876000, 917),
-('517dd44b-61bc-47ba-a7c8-c189378f6d73', 2591, 206, 2, 'nan', 1137112000, 2656),
-('c167f049-4d43-4409-84be-233b44981bb8', 286, 81, 2, 'nan', 400352000, 111),
-('2c4290f6-e59f-438f-9664-a22810b495a0', 22, 67, 2, 'nan', 395520000, 114),
-('e7a1816e-c98c-4ae9-854c-b034d4dc77cf', 16, 77, 2, 'nan', 394388000, 99),
-('e5a06530-b313-4b75-ad14-5bceeb690d5a', 6, 67, 2, 'nan', 394636000, 110),
-('8d671718-8686-4cc5-899f-178a2fba763e', 168, 59, 2, 'nan', 399172000, 184),
-('ef88e6d6-affc-4511-8842-af8f32c1b49e', 40, 56, 2, 'nan', 395716000, 109),
-('a1e85eec-0ed6-43ad-b0b0-d50fa4a26ed8', 24, 56, 2, 'nan', 393124000, 115),
-('79baff1d-1f54-429f-91b2-4bc4e6ed5c18', 294, 64, 2, 'nan', 401648000, 253),
-('a318ddfc-153d-4462-b7f9-963f7b3a11b2', 8, 41, 2, 'nan', 394628000, 257),
-('8d376621-fad2-4329-9a54-5cc8a5347e9b', 287, 19, 2, 'nan', 416688000, 208),
-('0a78d681-284e-4898-a80c-271edad7b1d3', 44, 43, 2, 'nan', 395092000, 153),
-('0cf2846c-a2cc-4b4c-bc53-b78bab20d678', 168, 65, 2, 'nan', 397236000, 305),
-('43ad2854-6f47-43ad-8b8f-4e77591598c0', 143, 33, 2, 'nan', 397416000, 439),
-('fc591b9e-f6df-457c-ac61-d3ddc8a97df6', 30, 43, 2, 'nan', 397724000, 105),
-('3b0ee8e6-d921-4c11-a19a-e482abff09da', 168, 67, 2, 'nan', 398316000, 141),
-('efda7c49-2865-4bf9-847a-46ec0ed48c9e', 192, 486, 2, 'nan', 471312000, 466),
-('1ef05ca4-74d6-4cb1-a0dd-64412a5e8f26', 88, 1758, 2, 'nan', 710156000, 216),
-('f8a29cc6-a0cb-458e-938e-b30635035f74', 192, 485, 2, 'nan', 473932000, 486),
-('69187ffb-8155-4c06-baa9-69b3c53f901e', 60, 57, 2, 'nan', 396240000, 519),
-('d3d1f2f0-6462-453c-b346-21ae50813c3b', 192, 125, 2, 'nan', 407884000, 128),
-('f0b99e31-aa9d-4111-b2a5-0ddcb7a2c063', 192, 67, 2, 'nan', 400544000, 166),
-('449d5f69-50db-4c11-850e-ae578bdc68ad', 288, 97, 2, 'nan', 404500000, 286),
-('108c14b7-9be9-4107-be16-4e70ae0bdb8d', 778, 68, 2, 'nan', 586496000, 225),
-('3161c5b5-05c9-4513-bbc1-9b7cfbac6275', 96, 92, 2, 'nan', 398024000, 109),
-('69fcd88b-6edf-4cde-a610-0363effd0097', 158, 66, 2, 'nan', 398412000, 113),
-('a9b8ad78-8f0d-4352-aa0d-c9fb4eab8c2a', 60, 56, 2, 'nan', 395452000, 393),
-('619fa191-ec16-46f2-86bd-6d8ef583db5f', 168, 66, 2, 'nan', 398248000, 93),
-('6779287f-41eb-4733-977e-8bd8e3991a24', 24, 10, 2, 'nan', 393820000, 174),
-('ba770cd8-8667-40c9-b97e-c714cda2f80c', 30, 40, 2, 'nan', 395556000, 129),
-('58f871c7-830c-4d71-9300-e3779e203c5d', 80, 41, 2, 'nan', 396468000, 104),
-('15b23bef-7bdb-4361-891e-c8a259f22230', 80, 34, 2, 'nan', 397080000, 216),
-('246ebe66-68e4-4a9f-9a97-06f881c83cbd', 19, 17, 2, 'nan', 395288000, 105),
-('99529852-6a5c-4d5b-b029-3455aa3a8c8d', 862, 79, 2, 'nan', 425444000, 261),
-('1a8cffdc-13d8-4779-a38f-a9abeb854e44', 173, 80, 2, 'nan', 399860000, 894),
-('144380ec-debc-468a-9f7a-930197d9547b', 233, 50, 2, 'nan', 397660000, 306),
-('6365416f-e395-45d2-b558-270d0992fa0f', 18, 10, 2, 'nan', 392916000, 143),
-('eeb06d17-12d1-45c1-ac8d-4e7473983ebf', 80, 60, 2, 'nan', 395456000, 183),
-('4c38dfa2-b27b-4409-ba90-2c75eea4bba4', 233, 53, 2, 'nan', 397488000, 93),
-('a70578ed-87e9-4ef7-a1d2-760d76962e40', 216, 58, 2, 'nan', 398032000, 193),
-('eaffc15a-0d71-427b-b672-0487943d7da7', 16, 57, 2, 'nan', 394104000, 131),
-('c86955d9-980c-46be-af88-26d4ac2d2a7d', 25, 11, 2, 'nan', 394264000, 313),
-('7f7fd4fe-d7df-4e7d-a37c-936bc8377f5d', 20, 41, 2, 'nan', 394172000, 142),
-('ba61cf3b-6c70-456d-8e9e-c8541a2a6407', 579, 42, 2, 'nan', 473148000, 321),
-('ed986358-8a50-4b19-af8b-d5df11595183', 272, 38, 2, 'nan', 397624000, 165),
-('70f9bec4-9459-46f5-aeab-ac3ac7f55cf1', 10, 36, 2, 'nan', 390764000, 78),
-('38c42216-080e-413c-8c79-f3a27ab556bc', 32, 19, 2, 'nan', 391968000, 82),
-('d3c8f668-6393-4e41-8160-a17e516ff500', 24, 466, 2, 'nan', 400796000, 222),
-('692c4d20-72b3-4627-8dad-7379174604a1', 304, 26, 2, 'nan', 397456000, 209),
-('3382c6a9-b778-4a75-9092-6c76afeeb45e', 16, 56, 2, 'nan', 390720000, 105),
-('bbfa6b71-fd64-45a3-a66e-5d0d7f454e9d', 96, 125, 2, 'nan', 400764000, 170),
-('27b552f9-b3be-4fbf-93dc-323774590e1b', 768, 94, 2, 'nan', 534576000, 860),
-('4af523ba-0276-48a3-bfac-246ff361310b', 384, 105, 2, 'nan', 413812000, 160),
-('66630aa4-c73b-4dbd-9290-b5a6ff8d0129', 137, 121, 2, 'nan', 399664000, 149),
-('9e5aa6a4-23f4-4949-82df-748e4a651d62', 137, 121, 2, 'nan', 399664000, 162),
-('b6965426-898a-46e1-a40f-2fe34a9d7bb1', 24, 41, 2, 'nan', 394588000, 95),
-('052163a0-2807-40fc-8ae7-ecb8c4c1d421', 296, 108, 2, 'nan', 405108000, 118),
-('bd0b608a-05cd-4c67-a4d9-e3337075e2e4', 36, 19, 2, 'nan', 394524000, 107),
-('a5d9bb39-116b-49e3-97c4-831580f6729f', 399, 50, 2, 'nan', 406772000, 168),
-('cefcf3fb-26f2-4349-9fc8-d81c63e928ff', 146, 60, 2, 'nan', 397560000, 115),
-('c573d2c7-91bd-4dfe-a433-a6ef89a9656c', 1093, 114, 2, 'nan', 526824000, 646),
-('869f9610-e808-4935-a57e-781abc9960af', 286, 14, 2, 'nan', 329000000, 201),
-('83c880c1-20e6-4134-aca4-ced663066543', 96, 146, 2, 'nan', 332600000, 178),
-('cd376889-4d87-40f8-8d3e-b9a4c0623f55', 183, 20, 2, 'nan', 301320000, 76),
-('d8d739f2-6d56-41b2-a5a7-38133f9d7bbd', 192, 34, 2, 'nan', 328240000, 251),
-('be224c35-461b-48a3-ab48-4e4838019c64', 10, 53, 2, 'nan', 323908000, 171),
-('8b99435f-643a-4347-b552-18a5aea558e0', 576, 104, 2, 'nan', 372232000, 257),
-('9d372971-7763-4731-a44e-cb87a3434cc0', 355, 42, 2, 'nan', 333436000, 125),
-('9a3a5d72-c2b0-449a-a157-1c088e0af56d', 511, 140, 2, 'nan', 408944000, 348),
-('a8afae6b-c328-48df-bce0-bab522a98f85', 168, 31, 2, 'nan', 327776000, 130),
-('1fa748d3-fa80-4af4-a8fa-7782a27fa585', 1728, 121, 2, 'nan', 446964000, 371),
-('559da3f1-bc29-4c26-a6ac-06b52b054594', 985, 27, 2, 'nan', 349308000, 149),
-('cb41a3f9-0be7-4dad-b015-68016ef51022', 94, 34, 2, 'nan', 326732000, 155),
-('19203be8-1052-4c80-9bce-fff4e77f05c8', 192, 86, 2, 'nan', 332644000, 88),
-('a91d644d-9c86-411c-9ae2-4eeac7545d2b', 96, 78, 2, 'nan', 329440000, 118),
-('5e0bba68-4bfb-40e1-96d1-daf1a454fd46', 355, 41, 2, 'nan', 333388000, 81),
-('510e59c2-ba8e-4b1c-b4be-17dc59c80457', 192, 103, 2, 'nan', 333004000, 94),
-('a4b6745c-bad5-470a-8e32-2f75236c2fce', 19, 80, 2, 'nan', 326460000, 180),
-('f69d7684-607e-4661-a836-c09aba157c95', 0, 0, 2, 'nan', 101468500000, 275814),
-('5c679aad-68f7-4855-be14-8312110bc173', 273, 46, 2, 'nan', 332156000, 151),
-('e015a0a1-5c4f-4178-8ebc-2b9ac9e4e8b6', 108, 22, 2, 'nan', 326384000, 94),
-('cd2374bc-649c-45e2-8540-991fb36cb487', 198, 72, 2, 'nan', 329712000, 95),
-('7c707855-1640-42e9-82a7-d720e58874eb', 4952, 780, 2, 'nan', 8902036000, 17603),
-('20af2ade-f786-4305-85b1-b5272ab356e0', 4566, 177, 2, 'nan', 9945200000, 68222),
-('490b3500-dc03-4fa9-9cd2-78126b9333c2', 372, 131, 2, 'nan', 336100000, 75),
-('e5504565-cf0e-4f2d-b925-1c2ca7cb5fbb', 353, 143, 2, 'nan', 343548000, 145),
-('f9a9e2d7-b568-45d6-89b8-89cfe9991f77', 96, 27, 2, 'nan', 326760000, 83),
-('8500b61a-9f08-49c9-a897-2773f4f383c5', 12366, 782, 2, 'nan', 54234712000, 114505),
-('7e8480aa-af3b-4df7-8d66-8f93a28ccb74', 27079, 17, 2, 'nan', 1158688000, 635),
-('f87a89b9-4b6e-4398-8e48-0b6ec238cc97', 4, 12, 2, 'nan', 325740000, 862),
-('92b6145c-1248-4024-b825-a8b6cb07c4b0', 4, 13, 2, 'nan', 323444000, 228),
-('04e67d15-1907-4fd1-9a4d-48b47f6c71f8', 18, 71, 2, 'nan', 326436000, 128),
-('f7466925-9a5c-40d8-9536-9c43ad30cc2d', 80, 63, 2, 'nan', 327592000, 96),
-('2f21b2ec-91b2-43e2-8d70-b35b64fcaf0c', 768, 224, 2, 'nan', 543720000, 2123),
-('3df051d5-99a8-411a-b40f-bc269eeb5a6c', 1536, 224, 2, 'nan', 587236000, 1428),
-('6048e851-42a4-4b0b-b040-a05cfe9686b0', 560, 48, 2, 'nan', 339844000, 120),
-('06bbba17-3761-4e80-a7c0-56a01e92e7f2', 8, 20, 2, 'nan', 326012000, 82),
-('1d1f338a-0b0b-4597-a960-1ecf5019dcfe', 92, 63, 2, 'nan', 327720000, 85),
-('ba1c6fdd-bedd-45f1-a255-aa6b5e21fbd7', 44, 45, 2, 'nan', 326472000, 83),
-('1f0a1ce3-35b9-427a-b11d-096690fe4a27', 30, 42, 2, 'nan', 326428000, 268),
-('194ec434-bedd-4403-9e14-2351ea3c7720', 1392, 189, 2, 'nan', 576900000, 825),
-('633b6978-0c6b-400a-b466-f3eb7e2035e9', 80, 65, 2, 'nan', 326916000, 129),
-('dd18384b-c038-48bf-b751-573163a4223d', 2591, 200, 2, 'nan', 1092796000, 3246),
-('635c4f2a-8417-4fae-9078-e94846c8b7b1', 3822, 78, 2, 'nan', 5082892000, 6137),
-('759be360-787b-410e-9e07-7db03e4df5c6', 14, 11, 2, 'nan', 325624000, 83),
-('37d514e8-ce44-4163-b47b-f0af05397aff', 264, 70, 2, 'nan', 332012000, 95),
-('7b0f4fc2-d772-4921-ad44-ba64f148a84d', 792, 70, 2, 'nan', 341216000, 100),
-('9a730dc2-23b7-4c41-8270-5fa7af22d468', 5, 51, 2, 'nan', 326028000, 126),
-('c033bd49-d4e9-4df3-9317-ce030d4b80d6', 320, 41, 2, 'nan', 331744000, 83),
-('09ee747d-638c-4933-bbe6-4e999d4b7480', 960, 155, 2, 'nan', 606116000, 489),
-('16060ef4-c199-493f-ab88-d4b4f06138a4', 155, 20, 2, 'nan', 330572000, 133),
-('8c1f6f46-75e6-4439-a5c0-c4e9bad71ec0', 113, 36, 2, 'nan', 331016000, 116),
-('22c6824e-2223-4a56-8686-dcbf3db8b2f8', 306, 75, 2, 'nan', 333324000, 83),
-('45c822ad-7817-48b6-8208-7b65922a5b01', 263, 72, 2, 'nan', 331556000, 96),
-('40e38e61-5426-4495-95a8-9bfd717b779e', 89, 68, 2, 'nan', 327840000, 122),
-('6b7f13b9-d019-4cd7-9913-6cc2a2d558c0', 155, 37, 2, 'nan', 331360000, 142),
-('643a6bdc-48a3-4624-ab93-1e70053c0f06', 155, 38, 2, 'nan', 332204000, 250),
-('d97b7b26-6c93-4d55-bd52-c4beae6fd9fc', 14, 46, 2, 'nan', 326240000, 84),
-('caab8faa-5ebd-4734-91d3-cc598fe332c4', 38, 31, 2, 'nan', 325800000, 169),
-('a005ae56-c6a3-4e0f-8280-49d85e32023e', 384, 85, 2, 'nan', 356464000, 166),
-('1a93bbf7-b118-4b67-9477-e5a067291f7e', 1359, 85, 2, 'nan', 1048300000, 1971),
-('670fcf04-077d-41cd-b9b6-d5eb7b37b42a', 32, 38, 2, 'nan', 326332000, 85),
-('97704373-2097-4e0f-aa15-5a6087877b86', 1216, 88, 2, 'nan', 612756000, 600),
-('3f1f3955-04a0-4554-ad87-55b4c2b13ee4', 27, 38, 2, 'nan', 300956000, 80),
-('97d9b7c0-b68d-41ff-954c-3755e6ff1cb9', 14, 31, 2, 'nan', 325888000, 161),
-('15f391a5-8c92-46e0-a321-5b981848d586', 231, 101, 2, 'nan', 341364000, 154),
-('e0d0e1ad-55f7-4486-a53a-7df8b44bd4ab', 320, 44, 2, 'nan', 352328000, 207),
-('b5415610-17a1-4ac7-a985-a060df556451', 68, 43, 2, 'nan', 329320000, 97),
-('80dc4574-8278-4492-9473-f6091c52b98c', 158, 85, 2, 'nan', 332248000, 527),
-('f838c5ba-bc20-4c5c-94cb-52973b522be4', 122, 264, 2, 'nan', 337212000, 284),
-('5a1d5e55-4fe4-4dba-9406-684ffb734c5f', 382, 94, 2, 'nan', 353788000, 178),
-('a5f23b08-8499-4e16-9b6c-69d089c9fd09', 307, 80, 2, 'nan', 350960000, 186),
-('2b365ffc-a96b-47a6-89c2-6d2aaae535df', 31, 80, 2, 'nan', 326692000, 121),
-('32a9bb7f-56c2-4bbc-9120-d66d4d8debbc', 862, 94, 2, 'nan', 422736000, 397),
-('2a1d211e-5b53-4121-93f6-49721523eda4', 2203, 76, 2, 'nan', 2450852000, 6303),
-('bffc8bce-1f6f-4bff-ac7f-8dad7f43895a', 231, 107, 2, 'nan', 339048000, 141),
-('fc86707d-54ca-4eee-92d3-dbcde06ed75c', 123, 50, 2, 'nan', 327536000, 81),
-('0c7ddae6-83d6-4db6-9a79-9720c614142b', 424, 201, 2, 'nan', 425668000, 587),
-('9194b7f9-a420-426e-8073-78ad6607cd1d', 39, 81, 2, 'nan', 301268000, 150),
-('db9b1f49-f848-4a40-bbbb-ed9d3848965a', 39, 81, 2, 'nan', 301236000, 150),
-('84eff552-5723-4729-a86b-8f283874c289', 62, 83, 2, 'nan', 328500000, 169),
-('b251dfae-0bb8-4bee-ab47-bdcc17d25b62', 16, 83, 2, 'nan', 325920000, 211),
-('316b9754-2d5d-4822-bd72-f86f6ca9ae4b', 96, 152, 2, 'nan', 331648000, 186),
-('d509e593-4053-406a-8ab0-8af8b1b4c8a5', 231, 97, 2, 'nan', 372816000, 612),
-('e66faf00-0ffa-404f-ac08-7121c6337b70', 242, 43, 2, 'nan', 368180000, 297),
-('66782585-883b-4784-a443-a2dfff848d88', 152, 83, 2, 'nan', 370720000, 348),
-('9291cc5a-9ab4-49c0-b8a1-9fc9b6c46b44', 92, 83, 2, 'nan', 371068000, 420),
-('decafc1b-5c70-466b-a8cc-33f29c6db3df', 12, 83, 2, 'nan', 366976000, 127),
-('5b319607-4bec-4e36-ae54-5b7c21e91064', 336, 22, 2, 'nan', 366464000, 97),
-('2f3f309f-51bd-43b8-80d1-10d10a1c274e', 152, 66, 2, 'nan', 371584000, 210),
-('893621a8-d4dd-464b-8977-223470fc297e', 152, 81, 2, 'nan', 365052000, 234),
-('12e91952-b2b1-424d-884c-865e77474bf2', 28, 52, 2, 'nan', 367340000, 316),
-('d6946499-e2e7-4286-a95b-786b8ec633a9', 44, 83, 2, 'nan', 367956000, 265),
-('1fa39acc-83ef-409f-91d5-13ef1934635d', 32, 64, 2, 'nan', 369696000, 240),
-('694a13a5-9e5d-4f54-b34c-a63167a045b1', 56, 80, 2, 'nan', 370264000, 251),
-('c4ff14f9-3a89-40d6-aa85-1fbd8dd80c17', 138, 89, 2, 'nan', 371388000, 347),
-('d12d6d89-a8e9-4fd9-8e1c-16968035fb38', 152, 72, 2, 'nan', 372660000, 201),
-('9627e0a4-8f47-430e-b1d2-30c1295a722f', 32, 83, 2, 'nan', 367744000, 237),
-('f50accb5-3461-4a7f-9bff-761e4414a026', 28, 51, 2, 'nan', 367140000, 156),
-('e0d4954f-e964-4755-bac3-bc47610206aa', 21302, 90, 2, 'nan', 30206900000, 193946),
-('2d60289d-1b7f-4945-8264-b01e2426c23e', 4566, 178, 2, 'nan', 5398704000, 12040),
-('179d0c15-5af2-4671-b807-fb374fd3b842', 307, 85, 2, 'nan', 373952000, 195),
-('f6a8189a-caa7-4a41-bbc0-09ac46bf5a8f', 1067, 12, 2, 'nan', 370924000, 112),
-('59ca6817-c388-47ad-ba64-47989313dd44', 6374, 49, 2, 'nan', 9769896000, 22148),
-('61d6d576-362c-4261-859e-7209fa346f1e', 152, 85, 2, 'nan', 370008000, 194),
-('bd89bfe7-51b0-429b-9a88-2e71c8cb7545', 856, 49, 2, 'nan', 481572000, 597),
-('c5cc0f29-0fa0-4c44-b33c-103f0e3b6f32', 39, 93, 2, 'nan', 371980000, 199),
-('53db452b-9234-4830-94ef-cf9ab49ef0d1', 150, 63, 2, 'nan', 372480000, 494),
-('a268c541-fe8d-4521-8a49-e3a8439aef64', 394, 42, 2, 'nan', 378392000, 1151),
-('387f71b9-3283-4923-860b-8065a62248fd', 189, 142, 2, 'nan', 380964000, 373),
-('8194c64a-1a43-499f-8f47-3a3935c557f4', 856, 48, 2, 'nan', 521784000, 784),
-('294d4a3f-f8ff-4644-ab15-3ddcb4390af1', 177, 384, 2, 'nan', 379924000, 284),
-('a373adcd-9b62-41e3-9ae4-a6f79ff45f45', 96, 99, 2, 'nan', 372380000, 265),
-('ef7406a1-a4fa-4af2-8e67-92607ebdd8f9', 1005, 137, 2, 'nan', 410232000, 168),
-('59dbbe08-8701-4e48-95ab-3882a02ee1e7', 413, 40, 2, 'nan', 405220000, 243),
-('088a65e5-c848-4e34-b47d-4664f9f27f83', 150, 77, 2, 'nan', 374532000, 1131),
-('45d538e2-97c5-4893-af08-f6bf04abb767', 1150, 54, 2, 'nan', 390968000, 368),
-('0b9706a2-e0a6-438f-a5b3-a094161a15a7', 399, 844, 2, 'nan', 539092000, 751),
-('eb3650f0-7aea-4cab-a520-6e581e3bd978', 399, 843, 2, 'nan', 539232000, 1134),
-('c6635e7e-93c0-403e-b615-3e8f7da29352', 1055, 102, 2, 'nan', 554628000, 434),
-('2cb50802-1ac7-48a4-bebd-4d9be546cf69', 413, 42, 2, 'nan', 374312000, 681),
-('1c6d9feb-17fb-40ca-a3f4-d1e7834c5d53', 96, 82, 2, 'nan', 370640000, 197),
-('ed2a60cf-2164-4b01-a59c-07518613ef8d', 282, 54, 2, 'nan', 373164000, 346),
-('469e8fcc-37ef-4dfb-b4cd-2b109200ce4c', 5924, 12, 2, 'nan', 394020000, 112),
-('52802b61-7df2-4e82-9ccf-5c8075c2da45', 96, 81, 2, 'nan', 371540000, 130),
-('0c715e72-47dd-48ac-b733-a845e440e86a', 476, 68, 2, 'nan', 426996000, 469),
-('13f6b03d-40e1-47c2-a7df-163c0e3e7d23', 353, 56, 2, 'nan', 225308000, 475),
-('9639186c-9084-47ed-8075-3f14798eceef', 384, 87, 2, 'nan', 384048000, 1021),
-('6e54aa84-ffd1-4943-8ae2-7e75319a7e30', 287, 37, 2, 'nan', 371328000, 585),
-('dba3182c-80c0-46ed-a9e6-64e0cf699741', 39, 73, 2, 'nan', 369720000, 195),
-('b33244f5-30ce-4db3-94c7-4dcbe5cff4a7', 353, 149, 2, 'nan', 388952000, 263),
-('ba196947-c2d6-4ae1-ad23-fb768c087125', 511, 146, 2, 'nan', 388392000, 235),
-('08d92acd-992c-4500-a33a-094225dec9cb', 147, 23, 2, 'nan', 371064000, 93),
-('b0bfe252-9f89-4160-839e-738a649de0f1', 95, 37, 2, 'nan', 370196000, 252),
-('ea9e5e73-c141-4cf6-944a-6f43541ed747', 768, 87, 2, 'nan', 392580000, 269),
-('b6d61911-54b5-4917-957a-11f5931f1b6e', 399, 970, 2, 'nan', 600196000, 527),
-('3cf83989-1316-47f4-a291-03aa41da31f1', 32, 41, 2, 'nan', 367032000, 92),
-('531b6413-c293-4a87-9444-3939eebf79bd', 528, 76, 2, 'nan', 382568000, 104),
-('18919546-fade-4e83-b5dc-1708043bec82', 151, 15, 2, 'nan', 367920000, 90),
-('6e6eb332-9166-4059-8a7c-cc4dfa5417f3', 394, 48, 2, 'nan', 377028000, 283),
-('c36b0187-97f8-49c4-9f78-dfb75a04f41d', 450, 140, 2, 'nan', 389624000, 126),
-('f9552ba6-db05-4a74-acb7-f851c627777d', 384, 92, 2, 'nan', 379340000, 200),
-('4777ec99-b163-466f-81a8-a5e5f3c81b5d', 862, 79, 2, 'nan', 398504000, 301),
-('3429c0f3-9f05-4234-a3ec-ead9285d9c91', 384, 171, 2, 'nan', 400700000, 448),
-('a9e4fa1b-5f48-4143-a06e-20c6013c37f0', 9, 12, 2, 'nan', 368400000, 193),
-('eb734567-fa4f-4aff-8ac4-e119b7cf31cc', 384, 172, 2, 'nan', 403540000, 337),
-('52b3c3ce-0681-4992-9cd5-bdb0eddffff6', 3938, 91, 2, 'nan', 486604000, 379),
-('ddb6e8c1-700b-4c2e-834b-26ceca5be035', 3, 79, 2, 'nan', 368916000, 219),
-('ed55d400-04c2-4aa7-be76-63eef565cbae', 3, 80, 2, 'nan', 368524000, 193),
-('23d23e6a-7e1e-41e6-aedb-5c997c6a31a6', 384, 1759, 2, 'nan', 1362084000, 2677),
-('160160e6-ee83-47f7-8d59-1e6df6dd1a4d', 394, 50, 2, 'nan', 376560000, 377),
-('e3b07a6e-145b-4551-b27c-905a1601a1f3', 60, 34, 2, 'nan', 368544000, 198),
-('462b169a-acce-47a7-adf9-1daa0a465639', 233, 50, 2, 'nan', 373160000, 382),
-('a43beee6-aab4-4ddd-895e-b7f95e258d17', 54, 64, 2, 'nan', 370380000, 308),
-('4df02286-2ecd-4dd0-9d13-ec5d6b2e76d9', 11, 15, 2, 'nan', 344776000, 108),
-('50b68208-0bdc-4ecd-9f75-2036a2332d55', 11, 22, 2, 'nan', 369672000, 201),
-('9bba65d6-12be-4f4b-b40a-018489ebbc3b', 35, 42, 2, 'nan', 368940000, 256),
-('40fe74d9-7fa2-4ef1-a64d-c092b3e5128b', 1232, 61, 2, 'nan', 391368000, 967),
-('716b59bd-d2f0-404e-b6c5-ad5b69e8db3a', 78, 28, 2, 'nan', 365844000, 152),
-('cd5299dd-f160-4b8e-9eac-ea2cb54c003a', 78, 28, 2, 'nan', 362160000, 152),
-('6140d69a-3c93-4378-bc99-fc0596aa6703', 76, 33, 2, 'nan', 369936000, 299),
-('c03cd275-e2c0-4e28-a0a1-e07be2c24c03', 602, 72, 2, 'nan', 398576000, 1664),
-('9afa1b4a-244e-44a4-8b9c-69c229007667', 80, 68, 2, 'nan', 370328000, 565),
-('655e4674-a14d-485b-9294-18d8e76014ca', 921, 486, 2, 'nan', 636868000, 2955),
-('2a009904-eb9e-49bd-bee0-da0bb1bfdba5', 192, 32, 2, 'nan', 399972000, 280),
-('186f76c0-c877-428c-ab08-46cbcf4524a1', 115, 61, 2, 'nan', 387000000, 210),
-('f5d2cdc0-0061-4a7b-9c86-bee6d7e08d29', 460, 61, 2, 'nan', 400424000, 114),
-('f147fe13-56a8-41db-b399-ecabba242ca9', 2591, 206, 2, 'nan', 896908000, 2792),
-('0bef5c46-6ad7-4a05-8c4b-8d227f0a0352', 22, 67, 2, 'nan', 392356000, 193),
-('fc0ebaac-1bbb-4fb6-b20d-2fe74f31b5ef', 16, 77, 2, 'nan', 393268000, 112),
-('fcd7e83f-804c-40bb-9f3d-8483cffe34c0', 95, 32, 2, 'nan', 395920000, 497),
-('284cc76f-487e-4d49-9c2f-d4d10e74385e', 168, 59, 2, 'nan', 398028000, 416),
-('b8e3c3ac-5b5b-4f6d-97c2-3296b0bab7e6', 40, 56, 2, 'nan', 395220000, 114),
-('9262c5ec-b92b-425b-8fd1-10ea4905d595', 24, 56, 2, 'nan', 392936000, 117),
-('7bae4416-a699-4985-9736-60bf2b4aa4d6', 8, 41, 2, 'nan', 394360000, 276),
-('7cb7e7e1-48c1-4259-9856-395911e88d4d', 143, 33, 2, 'nan', 395756000, 679),
-('b127f3dc-fc5b-4054-a20b-e9216caff4ef', 192, 485, 2, 'nan', 455936000, 698),
-('dfb12c24-d67a-4dc4-b221-b6fb1e49602b', 287, 19, 2, 'nan', 393648000, 28278),
-('507da6a3-0df4-4e30-9763-f392eb62aac5', 168, 67, 2, 'nan', 398216000, 371),
-('6fe5c170-4774-4576-813f-7c164866a3bf', 88, 1758, 2, 'nan', 709548000, 216),
-('3c31aad8-1e86-48be-b65c-4924388bd587', 192, 486, 2, 'nan', 418000000, 1123),
-('2b2e2473-fbc6-4e6a-9072-19f6411b0817', 192, 67, 2, 'nan', 400156000, 170),
-('5994ad72-2f1a-416b-ba3c-9cc4a1c61c20', 778, 68, 2, 'nan', 539272000, 227),
-('ba111653-1c15-4425-8ab9-11a5422eff1d', 96, 92, 2, 'nan', 397212000, 188),
-('fdec2e67-e193-4185-991a-be136e63b2b0', 158, 66, 2, 'nan', 396860000, 318),
-('6218ce6d-5208-4ebc-9e48-633b3f54cdcc', 60, 57, 2, 'nan', 388668000, 26827),
-('d6eef75a-4505-4111-9c4d-5a748d403dd2', 60, 56, 2, 'nan', 395448000, 561),
-('7a24dba0-f6b4-48cc-b1cb-4c9b884170e6', 168, 66, 2, 'nan', 398184000, 153),
-('ff077c77-a1ba-46ac-b5ca-d5c894242770', 80, 34, 2, 'nan', 395212000, 228),
-('65526acd-86e9-421b-9c91-b885cd36729a', 19, 17, 2, 'nan', 395088000, 166),
-('04d09a9f-2151-47df-8475-36fc8ec7aafc', 146, 60, 2, 'nan', 396424000, 784),
-('7e72e913-ce87-4bc1-adf7-c3cc7d5184e5', 233, 53, 2, 'nan', 397100000, 395),
-('9e6f2ff5-f749-4089-b828-ef29fcca1a7d', 216, 58, 2, 'nan', 396236000, 227),
-('335635a7-8153-4e4c-9b53-e1bc145497b0', 16, 57, 2, 'nan', 373140000, 156),
-('5452c17e-ae82-4b46-a85a-ece0501a5d5e', 20, 41, 2, 'nan', 393884000, 214),
-('f5a06f01-7405-4ff1-b047-64f9e7505d6c', 579, 42, 2, 'nan', 442784000, 383),
-('bf9fc8f3-39b7-4771-95e8-f858494022a5', 272, 38, 2, 'nan', 397296000, 30202),
-('98270055-d47a-4cc4-b40c-ac006f7823f6', 24, 466, 2, 'nan', 400612000, 234),
-('009b95ec-18b6-4fa0-a0bb-0785cfe03409', 304, 26, 2, 'nan', 396920000, 211),
-('89ae9ba5-f920-46e6-9279-40d5be29f845', 36, 19, 2, 'nan', 394500000, 198),
-('0f24f638-13fe-4898-b3a9-b15aafb260f8', 399, 50, 2, 'nan', 404516000, 174),
-('37d12cdd-c03b-4921-a77b-851269d3e557', 1093, 114, 2, 'nan', 482504000, 654),
-('9308c777-1c30-43ac-acf6-9454601601ba', 96, 146, 2, 'nan', 332352000, 245),
-('a1910b9b-2d93-4239-9bc1-1250fea56837', 96, 146, 2, 'nan', 331548000, 245),
-('1280dc5a-d797-42ca-a613-3fbce32f55a0', 14, 52, 2, 'nan', 300932000, 166),
-('0a329ce1-1b82-4faf-a1f7-0d17e4b25251', 576, 104, 2, 'nan', 371176000, 260),
-('3b212797-bb0b-422c-bba1-79921ce40c78', 168, 31, 2, 'nan', 327104000, 142),
-('c14e97a2-a083-4e49-a14b-0abd23483272', 1728, 121, 2, 'nan', 446280000, 376),
-('7cd84e00-773a-4387-bcdb-37da819ce5f7', 108, 22, 2, 'nan', 315832000, 140),
-('8553c8e2-5bc9-41b6-9f5e-96a2abfb7055', 192, 34, 2, 'nan', 302704000, 255),
-('65212822-529e-4cf4-a427-78032b9e569b', 198, 72, 2, 'nan', 329532000, 209),
-('3a8d8b29-d408-45ab-8d63-043741de9679', 273, 46, 2, 'nan', 331556000, 181),
-('d68f1265-c669-4f2b-a3ab-ee0e547e0143', 4566, 177, 2, 'nan', 9765660000, 70248),
-('f0b0c5aa-9f97-42e3-82e4-71968f28ad15', 511, 140, 2, 'nan', 401220000, 585),
-('1bf64e7e-4ab9-4dfa-9aeb-6402ad95c165', 353, 143, 2, 'nan', 343172000, 439),
-('605f6954-8697-42c4-97a4-7c3aa6b3cde9', 96, 27, 2, 'nan', 326164000, 182),
-('3688f502-6895-4041-b957-6487f6ba7c98', 80, 63, 2, 'nan', 325924000, 123),
-('013f8041-6f36-4dcb-8af9-67ac1fd78d9e', 8, 20, 2, 'nan', 312564000, 94),
-('58e69a18-ecef-4b61-a62f-7efc1f733731', 8, 20, 2, 'nan', 312896000, 94),
-('e7cb303d-ffe0-4a5e-8eb0-627dd0513f51', 1536, 224, 2, 'nan', 562312000, 2121),
-('7cc4a810-137c-468e-a249-60b0faf9a003', 560, 48, 2, 'nan', 339180000, 120),
-('056330e4-36eb-4c38-b87f-56484ac69623', 92, 63, 2, 'nan', 326952000, 88),
-('ea9e5c11-f7a7-4dcb-b8b5-20b499611b9f', 30, 43, 2, 'nan', 326568000, 2029),
-('8df2b291-adbf-4def-a172-ece656410050', 1392, 189, 2, 'nan', 542424000, 825),
-('ce47b98d-8a78-4e97-b20c-297f75394f28', 80, 65, 2, 'nan', 326612000, 184),
-('d8e90f5f-1b10-4f00-9c3b-6bc8daf2cc8a', 44, 45, 2, 'nan', 325972000, 95),
-('cec46141-0286-4430-ac41-ed830decb5e8', 12366, 782, 2, 'nan', 54233492000, 164399),
-('fc9b54c3-0447-49db-a6d0-5b913d0e285a', 264, 70, 2, 'nan', 331724000, 147),
-('3e6d362e-3880-4b90-b693-868547ce0f5a', 792, 70, 2, 'nan', 341096000, 110),
-('d5891efa-0e7d-409b-9bb7-b6ecc081c836', 960, 155, 2, 'nan', 522896000, 589),
-('e4b960c8-33c6-4304-8355-9bafd70569ed', 113, 36, 2, 'nan', 330756000, 162),
-('35c4eb46-3560-4d17-a210-979ba3037c53', 306, 75, 2, 'nan', 332952000, 93),
-('2b85bd17-6d7e-48e0-8e02-477eb9ffe353', 263, 72, 2, 'nan', 328812000, 153),
-('8c7e4562-dcc2-4a31-ab20-b873182b334d', 266, 67, 2, 'nan', 330156000, 124),
-('49fda716-a469-4a6d-a3ef-3bcbd166e668', 155, 38, 2, 'nan', 331720000, 609),
-('f424b26a-840a-42d3-a61f-3bbffd8b194d', 32, 38, 2, 'nan', 325684000, 216),
-('7226d658-da67-4d7c-a898-e59cd77d977b', 1216, 88, 2, 'nan', 558752000, 625),
-('50dc9288-e18c-41c2-a271-601289ff5685', 231, 101, 2, 'nan', 340116000, 158),
-('4883db35-3ca6-4b0c-9377-cf7d1d97245d', 158, 85, 2, 'nan', 332072000, 1464),
-('3ff09f4e-ada5-45d6-b7e1-fa003e31bf77', 122, 264, 2, 'nan', 337104000, 286),
-('26c68022-6df2-4928-a4fb-220a156b86f7', 382, 94, 2, 'nan', 353068000, 200),
-('cdd878a9-e3f1-4478-b613-90f2b2e9ccbd', 424, 201, 2, 'nan', 397292000, 647),
-('d6e02749-45fb-4b92-8a8e-48b33b617f9c', 307, 80, 2, 'nan', 348920000, 206),
-('47900ec7-0fea-41db-a320-c78b9da36538', 32, 80, 2, 'nan', 324068000, 240),
-('1ef4d550-afaa-44b5-a06c-65286b9f3e00', 152, 80, 2, 'nan', 325820000, 278),
-('8533d2a8-1fcf-4842-8826-c5458c002332', 31, 80, 2, 'nan', 319000000, 245),
-('ab9095d1-af6d-49d5-9c87-bc2576f06135', 68, 43, 2, 'nan', 326896000, 235),
-('61da73ff-b4ff-49a1-b775-c6215cfbd291', 231, 107, 2, 'nan', 333544000, 200),
-('6c84dcf1-c5ea-4e69-b17f-d2d5b8d48bdf', 123, 50, 2, 'nan', 327520000, 82),
-('dcb12603-4142-44d1-9a52-3ca3511e380e', 320, 44, 2, 'nan', 329448000, 475),
-('a0dd0a4d-b73f-4e9d-87dd-d29efba25336', 41, 50, 2, 'nan', 301108000, 144);
+--
+-- Data for Name: study_prep_template; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.study_prep_template VALUES (1, 1);
+INSERT INTO qiita.study_prep_template VALUES (1, 2);
+
+
+--
+-- Data for Name: study_publication; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.study_publication VALUES (1, '10.100/123456', true);
+INSERT INTO qiita.study_publication VALUES (1, '123456', false);
+INSERT INTO qiita.study_publication VALUES (1, '10.100/7891011', true);
+INSERT INTO qiita.study_publication VALUES (1, '7891011', false);
+
+
+--
+-- Data for Name: study_users; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.study_users VALUES (1, 'shared@foo.bar');
+
+
+--
+-- Data for Name: term; Type: TABLE DATA; Schema: qiita; Owner: antoniog
+--
+
+INSERT INTO qiita.term VALUES (2052508974, 999999999, NULL, 'WGS', 'ENA:0000059', NULL, NULL, NULL, NULL, NULL, false);
+INSERT INTO qiita.term VALUES (2052508975, 999999999, NULL, 'Metagenomics', 'ENA:0000060', NULL, NULL, NULL, NULL, NULL, false);
+INSERT INTO qiita.term VALUES (2052508976, 999999999, NULL, 'Amplicon', 'ENA:0000061', NULL, NULL, NULL, NULL, NULL, false);
+INSERT INTO qiita.term VALUES (2052508984, 999999999, NULL, 'RNA-Seq', 'ENA:0000070', NULL, NULL, NULL, NULL, NULL, false);
+INSERT INTO qiita.term VALUES (2052508987, 999999999, NULL, 'Other', 'ENA:0000069', NULL, NULL, NULL, NULL, NULL, false);
+
+
+--
+-- Name: analysis_analysis_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.analysis_analysis_id_seq', 10, true);
+
+
+--
+-- Name: archive_merging_scheme_archive_merging_scheme_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.archive_merging_scheme_archive_merging_scheme_id_seq', 1, false);
+
+
+--
+-- Name: artifact_artifact_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.artifact_artifact_id_seq', 9, true);
+
+
+--
+-- Name: checksum_algorithm_checksum_algorithm_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.checksum_algorithm_checksum_algorithm_id_seq', 1, true);
+
+
+--
+-- Name: column_controlled_vocabularies_controlled_vocab_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.column_controlled_vocabularies_controlled_vocab_id_seq', 1, false);
+
+
+--
+-- Name: command_output_command_output_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.command_output_command_output_id_seq', 7, true);
+
+
+--
+-- Name: command_parameter_command_parameter_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.command_parameter_command_parameter_id_seq', 98, true);
+
+
+--
+-- Name: controlled_vocab_controlled_vocab_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.controlled_vocab_controlled_vocab_id_seq', 1, false);
+
+
+--
+-- Name: controlled_vocab_values_vocab_value_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.controlled_vocab_values_vocab_value_id_seq', 1, false);
+
+
+--
+-- Name: data_directory_data_directory_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.data_directory_data_directory_id_seq', 16, true);
+
+
+--
+-- Name: data_type_data_type_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.data_type_data_type_id_seq', 12, true);
+
+
+--
+-- Name: default_parameter_set_default_parameter_set_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.default_parameter_set_default_parameter_set_id_seq', 16, true);
+
+
+--
+-- Name: default_workflow_default_workflow_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.default_workflow_default_workflow_id_seq', 3, true);
+
+
+--
+-- Name: default_workflow_edge_default_workflow_edge_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.default_workflow_edge_default_workflow_edge_id_seq', 3, true);
+
+
+--
+-- Name: default_workflow_node_default_workflow_node_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.default_workflow_node_default_workflow_node_id_seq', 6, true);
+
+
+--
+-- Name: filepath_data_directory_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.filepath_data_directory_id_seq', 1, false);
+
+
+--
+-- Name: filepath_filepath_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.filepath_filepath_id_seq', 22, true);
+
+
+--
+-- Name: filepath_type_filepath_type_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.filepath_type_filepath_type_id_seq', 25, true);
+
+
+--
+-- Name: filetype_filetype_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.filetype_filetype_id_seq', 10, true);
+
+
+--
+-- Name: investigation_investigation_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.investigation_investigation_id_seq', 1, true);
+
+
+--
+-- Name: logging_logging_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.logging_logging_id_seq', 2, true);
+
+
+--
+-- Name: message_message_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.message_message_id_seq', 3, true);
+
+
+--
+-- Name: parameter_artifact_type_command_parameter_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.parameter_artifact_type_command_parameter_id_seq', 1, false);
+
+
+--
+-- Name: portal_type_portal_type_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.portal_type_portal_type_id_seq', 3, true);
+
+
+--
+-- Name: prep_template_prep_template_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.prep_template_prep_template_id_seq', 2, true);
+
+
+--
+-- Name: processing_job_status_processing_job_status_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.processing_job_status_processing_job_status_id_seq', 6, true);
+
+
+--
+-- Name: processing_job_workflow_processing_job_workflow_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.processing_job_workflow_processing_job_workflow_id_seq', 2, true);
+
+
+--
+-- Name: reference_reference_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.reference_reference_id_seq', 2, true);
+
+
+--
+-- Name: severity_severity_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.severity_severity_id_seq', 3, true);
+
+
+--
+-- Name: software_command_command_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.software_command_command_id_seq', 28, true);
+
+
+--
+-- Name: software_software_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.software_software_id_seq', 4, true);
+
+
+--
+-- Name: software_type_software_type_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.software_type_software_type_id_seq', 3, true);
+
+
+--
+-- Name: study_person_study_person_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.study_person_study_person_id_seq', 3, true);
+
+
+--
+-- Name: study_status_study_status_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.study_status_study_status_id_seq', 5, true);
+
+
+--
+-- Name: study_study_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.study_study_id_seq', 1, true);
+
+
+--
+-- Name: term_term_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.term_term_id_seq', 1, false);
+
+
+--
+-- Name: timeseries_type_timeseries_type_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.timeseries_type_timeseries_type_id_seq', 10, true);
+
+
+--
+-- Name: user_level_user_level_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
+--
+
+SELECT pg_catalog.setval('qiita.user_level_user_level_id_seq', 7, true);
+
+
+--
+-- PostgreSQL database dump complete
+--

@@ -200,7 +200,6 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
             with open(SETTINGS_FP, newline=None) as f:
                 qdb.sql_connection.TRN.add(f.read())
             qdb.sql_connection.TRN.execute()
-
             # Insert the settings values to the database
             sql = """INSERT INTO settings
                      (test, base_data_dir, base_work_dir)
@@ -211,7 +210,6 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                       qiita_config.working_dir])
             qdb.sql_connection.TRN.execute()
             create_layout(test=test, verbose=verbose)
-
         patch(verbose=verbose, test=test)
 
         if load_ontologies:
@@ -274,7 +272,16 @@ def drop_environment(ask_for_confirmation):
     # Connect to the postgres server
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add("SELECT test FROM settings")
-        is_test_environment = qdb.sql_connection.TRN.execute_fetchflatten()[0]
+        try:
+            is_test_environment = \
+                qdb.sql_connection.TRN.execute_fetchflatten()[0]
+        except ValueError as e:
+            # if settings doesn't exist then is fine to treat this as a test
+            # environment and clean up
+            if 'UNDEFINED_TABLE. MSG: relation "settings"' in str(e):
+                is_test_environment = True
+            else:
+                raise
     qdb.sql_connection.TRN.close()
 
     if is_test_environment:
@@ -369,15 +376,12 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
     Pulls the current patch from the settings table and applies all subsequent
     patches found in the patches directory.
     """
-    # we are going to open and close 2 main transactions; this is a required
-    # change since patch 68.sql where we transition to jsonb for all info
-    # files. The 2 main transitions are: (1) get the current settings,
-    # (2) each patch in their independent transaction
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add("SELECT current_patch FROM settings")
         current_patch = qdb.sql_connection.TRN.execute_fetchlast()
         current_sql_patch_fp = join(patches_dir, current_patch)
         corresponding_py_patch = partial(join, patches_dir, 'python_patches')
+        corresponding_test_sql = partial(join, patches_dir, 'test_db_sql')
 
         sql_glob = join(patches_dir, '*.sql')
         sql_patch_files = natsorted(glob(sql_glob))
@@ -389,21 +393,17 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
         else:
             next_patch_index = sql_patch_files.index(current_sql_patch_fp) + 1
 
-    patch_update_sql = "UPDATE settings SET current_patch = %s"
+    if test:
+        with qdb.sql_connection.TRN:
+            _populate_test_db()
 
+    patch_update_sql = "UPDATE settings SET current_patch = %s"
     for sql_patch_fp in sql_patch_files[next_patch_index:]:
         sql_patch_filename = basename(sql_patch_fp)
 
-        py_patch_fp = corresponding_py_patch(
-            splitext(basename(sql_patch_fp))[0] + '.py')
-        py_patch_filename = basename(py_patch_fp)
-
-        # patch 43.sql is when we started testing patches, then in patch
-        # 68.sql is when we transitioned to jsonb for the info files; let's do
-        # this in its own transition
-        if sql_patch_filename == '68.sql' and test:
-            with qdb.sql_connection.TRN:
-                _populate_test_db()
+        patch_prefix = splitext(basename(sql_patch_fp))[0]
+        py_patch_fp = corresponding_py_patch(f'{patch_prefix}.py')
+        test_sql_fp = corresponding_test_sql(f'{patch_prefix}.sql')
 
         with qdb.sql_connection.TRN:
             with open(sql_patch_fp, newline=None) as patch_file:
@@ -413,12 +413,19 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                 qdb.sql_connection.TRN.add(
                     patch_update_sql, [sql_patch_filename])
 
+            if test and exists(test_sql_fp):
+                if verbose:
+                    print('\t\tApplying test SQL %s...'
+                          % basename(test_sql_fp))
+                with open(test_sql_fp) as test_sql:
+                    qdb.sql_connection.TRN.add(test_sql.read())
+
             qdb.sql_connection.TRN.execute()
 
             if exists(py_patch_fp):
                 if verbose:
                     print('\t\tApplying python patch %s...'
-                          % py_patch_filename)
+                          % basename(py_patch_fp))
                 with open(py_patch_fp) as py_patch:
                     exec(py_patch.read(), globals())
 
@@ -427,7 +434,5 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
         # for the test Study (1) so a lot of the tests actually expect this.
         # Now, trying to regenerate directly in the populate_test_db might
         # require too many dev hours so the easiest is just do it here
-        # UPDATE 01/25/2021: moving to 81.sql as we added timestamps to
-        #                    prep info files
-        if test and sql_patch_filename == '81.sql':
-            qdb.study.Study(1).sample_template.generate_files()
+    if test:
+        qdb.study.Study(1).sample_template.generate_files()
