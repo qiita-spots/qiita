@@ -280,6 +280,8 @@ def drop_environment(ask_for_confirmation):
             # environment and clean up
             if 'UNDEFINED_TABLE. MSG: relation "settings"' in str(e):
                 is_test_environment = True
+            else:
+                raise
     qdb.sql_connection.TRN.close()
 
     if is_test_environment:

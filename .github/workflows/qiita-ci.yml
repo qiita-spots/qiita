@@ -195,7 +195,7 @@ jobs:
           export QIITA_JOB_SCHEDULER_EPILOGUE=`/path/to/epilogue/file`
           export REDBIOM_HOST="http://localhost:7379"
 
-          # nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=${COVER_PACKAGE// / --cover-package=} -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+          nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=${COVER_PACKAGE// / --cover-package=} -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
 
           # killing the qiita server to run the next commands
           QIITA_PID=`cat /tmp/supervisord.pid`
@@ -206,24 +206,19 @@ jobs:
           if [[ "$COVER_PACKAGE" != *"qiita_db"* ]]; then
               # 1. testing that we can add some "dummy" studies to the db via
               #    CLI
-              # test_data_studies/commands.sh;
+              test_data_studies/commands.sh;
               # 2. making sure that all qiita cron jobs complete as expected
-              # all-qiita-cron-job;
+              all-qiita-cron-job;
               # 3. making sure than a production system has the expected rows
               #    in all our tables; steps: a. drop test db, b. change $QIITA_CONFIG_FP
               #    c. create new production system, c. count rows in the db.
-              # apt-get install --yes --no-install-recommends postgresql-client
-
               qiita-env drop;
               cp $QIITA_CONFIG_FP ${QIITA_CONFIG_FP}.bk
               sed 's/TEST_ENVIRONMENT = TRUE/TEST_ENVIRONMENT = FALSE/g' ${QIITA_CONFIG_FP}.bk > $QIITA_CONFIG_FP;
               qiita-env make --no-load-ontologies;
 
-              echo "######################"
-              echo "###### postgres ######"
-              echo "######################"
-              pgport=${{ job.services.postgres.ports[5432] }}
               export PGPASSWORD=postgres
+              pgport=${{ job.services.postgres.ports[5432] }}
               row_counts=`psql -h localhost -U postgres -d qiita_test -p $pgport -c "SELECT SUM(c.reltuples) FROM pg_class c JOIN pg_namespace n on n.oid = c.relnamespace WHERE n.nspname = 'qiita' AND c.relkind = 'r' AND n.nspname NOT IN ('information_schema', 'pg_catalog');"`
               if [[ $row_counts != *" 0 "* ]]; then
                  echo "***********";
