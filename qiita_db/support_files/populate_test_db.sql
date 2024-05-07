@@ -1,3 +1,5 @@
+
+
 -- Populate.sql sets the increment to begin at 10000, but all tests expect it to start at 1, so set it back to 1 for the test DB population
 SELECT setval('qiita.study_study_id_seq', 1, false);
 
@@ -585,8 +587,30 @@ INSERT INTO qiita.parent_processing_job (parent_id, child_id)
 
 -- SPLIT
 
+
+-- c. Linking some of the data_types with the default_workflows; note that this
+--    is fine for the test database but we are going to need to clean up and
+--    insert the most up to date recommendations directly in qiita.ucsd.edu
+INSERT INTO qiita.default_workflow_data_type (default_workflow_id, data_type_id) VALUES
+  -- data types:
+  --   1 | 16S
+  --   2 | 18S
+  --   3 | ITS
+  (1, 1),
+  (1, 2),
+  (2, 2),
+  (3, 3);
+
+-- d. adding descriptions
+UPDATE qiita.default_workflow
+	SET description = 'This accepts html <a href="https://qiita.ucsd.edu">Qiita!</a><br/><br/><b>BYE!</b>'
+	WHERE default_workflow_id = 1;
+UPDATE qiita.default_workflow
+	SET description = 'This is another description'
+	WHERE default_workflow_id = 2;
+
 INSERT INTO qiita.processing_job(processing_job_id, email, command_id, command_parameters, processing_job_status_id)
-VALUES ('ca27ddbc-a678-4b09-8a1d-b65f52f8eb49', 'admin@foo.bar', 1, '""'::json, 1),
+    VALUES ('ca27ddbc-a678-4b09-8a1d-b65f52f8eb49', 'admin@foo.bar', 1, '""'::json, 1),
 ('b0f36550-d97c-4dd5-ba1b-910470062801', 'admin@foo.bar', 1, '""'::json, 1),
 ('b13eefd1-12b7-4c3e-a380-94ec0a3f9f91', 'admin@foo.bar', 1, '""'::json, 1),
 ('469c27b7-81c4-4f41-b09d-149260961227', 'admin@foo.bar', 1, '""'::json, 1),
@@ -814,7 +838,6 @@ VALUES ('ca27ddbc-a678-4b09-8a1d-b65f52f8eb49', 'admin@foo.bar', 1, '""'::json, 
 ('5e0bba68-4bfb-40e1-96d1-daf1a454fd46', 'admin@foo.bar', 1, '""'::json, 1),
 ('510e59c2-ba8e-4b1c-b4be-17dc59c80457', 'admin@foo.bar', 1, '""'::json, 1),
 ('a4b6745c-bad5-470a-8e32-2f75236c2fce', 'admin@foo.bar', 1, '""'::json, 1),
-('f69d7684-607e-4661-a836-c09aba157c95', 'admin@foo.bar', 1, '""'::json, 1),
 ('5c679aad-68f7-4855-be14-8312110bc173', 'admin@foo.bar', 1, '""'::json, 1),
 ('e015a0a1-5c4f-4178-8ebc-2b9ac9e4e8b6', 'admin@foo.bar', 1, '""'::json, 1),
 ('cd2374bc-649c-45e2-8540-991fb36cb487', 'admin@foo.bar', 1, '""'::json, 1),
@@ -1046,11 +1069,11 @@ VALUES ('ca27ddbc-a678-4b09-8a1d-b65f52f8eb49', 'admin@foo.bar', 1, '""'::json, 
 ('61da73ff-b4ff-49a1-b775-c6215cfbd291', 'admin@foo.bar', 1, '""'::json, 1),
 ('6c84dcf1-c5ea-4e69-b17f-d2d5b8d48bdf', 'admin@foo.bar', 1, '""'::json, 1),
 ('dcb12603-4142-44d1-9a52-3ca3511e380e', 'admin@foo.bar', 1, '""'::json, 1),
-('a0dd0a4d-b73f-4e9d-87dd-d29efba25336', 'admin@foo.bar', 1, '""'::json, 1),;
+('a0dd0a4d-b73f-4e9d-87dd-d29efba25336', 'admin@foo.bar', 1, '""'::json, 1);
 -- SPLIT
 
 INSERT INTO qiita.slurm_resource_allocations(processing_job_id, samples, columns, input_size, extra_info, memory_used, walltime_used)
-VALUES ('ca27ddbc-a678-4b09-8a1d-b65f52f8eb49', 39, 81, 2, 'nan', 327036000, 91),
+    VALUES ('ca27ddbc-a678-4b09-8a1d-b65f52f8eb49', 39, 81, 2, 'nan', 327036000, 91),
 ('b0f36550-d97c-4dd5-ba1b-910470062801', 160, 212, 2, 'nan', 342204000, 219),
 ('b13eefd1-12b7-4c3e-a380-94ec0a3f9f91', 62, 83, 2, 'nan', 328716000, 165),
 ('469c27b7-81c4-4f41-b09d-149260961227', 16, 83, 2, 'nan', 326344000, 154),
@@ -1278,7 +1301,6 @@ VALUES ('ca27ddbc-a678-4b09-8a1d-b65f52f8eb49', 39, 81, 2, 'nan', 327036000, 91)
 ('5e0bba68-4bfb-40e1-96d1-daf1a454fd46', 355, 41, 2, 'nan', 333388000, 81),
 ('510e59c2-ba8e-4b1c-b4be-17dc59c80457', 192, 103, 2, 'nan', 333004000, 94),
 ('a4b6745c-bad5-470a-8e32-2f75236c2fce', 19, 80, 2, 'nan', 326460000, 180),
-('f69d7684-607e-4661-a836-c09aba157c95', 0, 0, 2, 'nan', 101468500000, 275814),
 ('5c679aad-68f7-4855-be14-8312110bc173', 273, 46, 2, 'nan', 332156000, 151),
 ('e015a0a1-5c4f-4178-8ebc-2b9ac9e4e8b6', 108, 22, 2, 'nan', 326384000, 94),
 ('cd2374bc-649c-45e2-8540-991fb36cb487', 198, 72, 2, 'nan', 329712000, 95),

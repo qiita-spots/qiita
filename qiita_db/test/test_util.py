@@ -1309,19 +1309,65 @@ class PurgeFilepathsTests(DBUtilTestsBase):
 
 class ResourceAllocationPlotTests(TestCase):
     def setUp(self):
-
         self.PATH_TO_DATA = ('./qiita_db/test/test_data/'
                              'jobs_2024-02-21.tsv.gz')
-        self.CNAME = "Validate"
-        self.SNAME = "Diversity types - alpha_vector"
+        self.CNAME = "Split libraries FASTQ"
+        self.SNAME = "QIIMEq2"
         self.col_name = 'samples * columns'
-        self.df = pd.read_csv(self.PATH_TO_DATA, sep='\t',
-                              dtype={'extra_info': str})
+        self.df = self.get_df()
+
+        # sra.processing_job_id AS processing_job_id,
+    # sra.samples AS samples,
+    # sra.columns AS columns,
+    # sra.input_size AS input_size,
+    # sra.extra_info AS extra_info,
+    # sra.memory_used AS memory_used,
+    # sra.walltime_used AS walltime_used,
+
+    def get_df(self):
+        with qdb.sql_connection.TRN:
+            sql = f"""
+                SELECT
+                    s.name AS sName,
+                    s.version AS sVersion,
+                    sc.command_id AS cID,
+                    sc.name AS cName,
+                    pr.processing_job_id AS processing_job_id,
+                    pr.command_parameters AS parameters,
+                    sra.samples AS samples,
+                    sra.columns AS columns,
+                    sra.input_size AS input_size,
+                    sra.extra_info AS extra_info,
+                    sra.memory_used AS memory_used,
+                    sra.walltime_used AS walltime_used
+                FROM
+                    qiita.processing_job pr
+                JOIN
+                    qiita.software_command sc ON pr.command_id = sc.command_id
+                JOIN
+                    qiita.software s ON sc.software_id = s.software_id
+                JOIN
+                    qiita.slurm_resource_allocations sra
+                    ON pr.processing_job_id = sra.processing_job_id
+                WHERE
+                    sc.name = '{self.CNAME}'
+                    AND s.name = '{self.SNAME}';
+                """
+
+            qdb.sql_connection.TRN.add(sql)
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+            columns = [
+                "sName", "sVersion", "cID", "cName",
+                "processing_job_id", "parameters", "samples", "columns",
+                "input_size", "extra_info", "MaxRSSRaw", "ElapsedRaw"]
+            df = pd.DataFrame(res, columns=columns)
+            return df
 
     def test_plot_return(self):
+
         # check the plot returns correct objects
         fig1, axs1 = qdb.util.resource_allocation_plot(
-            self.PATH_TO_DATA, self.CNAME, self.SNAME, self.col_name)
+            self.df, self.CNAME, self.SNAME, self.col_name)
         self.assertIsInstance(
             fig1, Figure,
             "Returned object fig1 is not a Matplotlib Figure")

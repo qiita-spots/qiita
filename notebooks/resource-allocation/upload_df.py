@@ -13,11 +13,9 @@ cname = "Validate"
 sname = "Diversity types - alpha_vector"
 df = df[(df.cName == cname) & (df.sName == sname)]
 
-df['samples'] = df['samples'].fillna(0).astype(int)
-df['columns'] = df['columns'].fillna(0).astype(int)
-df['input_size'] = df['input_size'].fillna(0).astype(int)
-df['MaxRSSRaw'] = df['MaxRSSRaw'].fillna(0).astype(int)
-df['ElapsedRawTime'] = df['ElapsedRawTime'].fillna(0).astype(int)
+columns_to_check = ['samples', 'columns', 'input_size', 'MaxRSSRaw', 'ElapsedRawTime']
+df = df.dropna(subset=columns_to_check)
+
 
 COL_NAME = 'samples * columns'
 df[COL_NAME] = df['samples'] * df['columns']
@@ -33,6 +31,10 @@ for curr in columns:
     max_rows.append(curr_rows)
 
 filtered_df = pd.concat(max_rows).drop_duplicates().reset_index(drop=True)
+
+
+print(len(filtered_df))
+
 
 # INSERT INTO qiita.processing_job(processing_job_id, email, command_id,
 # command_parameters, processing_job_status_id)
@@ -53,7 +55,7 @@ filtered_df = pd.concat(max_rows).drop_duplicates().reset_index(drop=True)
 # walltime_used        integer,
 
 res = ""
-
+print(df.ElapsedRaw, df.ElapsedRawTime)
 for index, row in filtered_df.iterrows():
     res += f"""('{row['QiitaID']}', 'admin@foo.bar', 1, '""'::json, 1),\n"""
 res += ";\n"
