@@ -212,7 +212,7 @@ jobs:
               # 3. making sure than a production system has the expected rows
               #    in all our tables; steps: a. drop test db, b. change $QIITA_CONFIG_FP
               #    c. create new production system, c. count rows in the db.
-              apt-get install --yes --no-install-recommends postgresql-client
+              # apt-get install --yes --no-install-recommends postgresql-client
 
               qiita-env drop;
               cp $QIITA_CONFIG_FP ${QIITA_CONFIG_FP}.bk
