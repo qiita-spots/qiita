@@ -97,14 +97,13 @@ After the initial production release of Qiita, changes to the database schema wi
 ### Patch 91.sql
 
 In May 2024 we decided to:
-* Merge all patches into the main database, this means that there are no patches younger than 92.sql.
-* Not allow INSERT/UPDATE queries within the main *.sql patches, to minimize the possibility of unnexpected changes.
+* Merge all patches into the main database schema, this means that there are no patches younger than 92.sql.
 * Added a new folder `patches/test_db_sql/` where we can store sql files that will only be applied for the test environment.
+* Added a test to the GitHub actions to test that the production database has an expected number of rows.
 
 Note that these changes mean:
 1. 92.sql is the current first sql file to patch the database.
-2. If you need to make changes to both the production and tests database you will need to use the *.py.
-3. If you need to make changes _only_ to the tests database you need to add a patch to `patches/test_db_sql/`.
+2. If you need to make changes (like INSERTS) _only_ to the tests database you need to add a patch to `patches/test_db_sql/`.
 
 ### Developer Workflow
 

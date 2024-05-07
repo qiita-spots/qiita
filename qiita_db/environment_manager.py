@@ -397,7 +397,6 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
         with qdb.sql_connection.TRN:
             _populate_test_db()
 
-    not_allowed_matches = ["insert", "update"]
     patch_update_sql = "UPDATE settings SET current_patch = %s"
     for sql_patch_fp in sql_patch_files[next_patch_index:]:
         sql_patch_filename = basename(sql_patch_fp)
@@ -410,20 +409,7 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
             with open(sql_patch_fp, newline=None) as patch_file:
                 if verbose:
                     print('\tApplying patch %s...' % sql_patch_filename)
-
-                sql = patch_file.read()
-                sql_test = any([nam in line
-                                for line in sql.split('\n')
-                                if not line.startswith('--')
-                                for nam in not_allowed_matches])
-                if sql_test:
-                    msg = (
-                        f"Patch '{basename(sql_patch_fp)}' has an invalid "
-                        f"'match {not_allowed_matches}'; please move them a "
-                        f"test patch.\n*********{sql}\n*********")
-                    raise ValueError(msg)
-
-                qdb.sql_connection.TRN.add(sql)
+                qdb.sql_connection.TRN.add(patch_file.read())
                 qdb.sql_connection.TRN.add(
                     patch_update_sql, [sql_patch_filename])
 
