@@ -381,6 +381,7 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
         current_patch = qdb.sql_connection.TRN.execute_fetchlast()
         current_sql_patch_fp = join(patches_dir, current_patch)
         corresponding_py_patch = partial(join, patches_dir, 'python_patches')
+        corresponding_test_sql = partial(join, patches_dir, 'test_db_sql')
 
         sql_glob = join(patches_dir, '*.sql')
         sql_patch_files = natsorted(glob(sql_glob))
@@ -402,15 +403,23 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
 
         patch_prefix = splitext(basename(sql_patch_fp))[0]
         py_patch_fp = corresponding_py_patch(f'{patch_prefix}.py')
+        test_sql_fp = corresponding_test_sql(f'{patch_prefix}.sql')
 
         with qdb.sql_connection.TRN:
             with open(sql_patch_fp, newline=None) as patch_file:
                 if verbose:
                     print('\tApplying patch %s...' % sql_patch_filename)
-
                 qdb.sql_connection.TRN.add(patch_file.read())
                 qdb.sql_connection.TRN.add(
                     patch_update_sql, [sql_patch_filename])
+
+            if test and exists(test_sql_fp):
+                if verbose:
+                    print('\t\tApplying test SQL %s...'
+                          % basename(test_sql_fp))
+                with open(test_sql_fp) as test_sql:
+                    qdb.sql_connection.TRN.add(test_sql.read())
+
             qdb.sql_connection.TRN.execute()
 
             if exists(py_patch_fp):

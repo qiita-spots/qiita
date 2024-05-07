@@ -94,6 +94,17 @@ After the initial production release of Qiita, changes to the database schema wi
 2. We keep fully patched versions of the DBS and HTML files in the repository
 3. We keep a patch file for each patch as required in the `qiita_db/support_files/patches` directory. Note that **the patches will be applied in order based on the natural sort order of their filename** (e.g., `2.sql` will be applied before `10.sql`, and `10.sql` will be applied before `a.sql`)
 
+### Patch 91.sql
+
+In May 2024 we decided to:
+* Merge all patches into the main database schema, this means that there are no patches younger than 92.sql.
+* Added a new folder `patches/test_db_sql/` where we can store sql files that will only be applied for the test environment.
+* Added a test to the GitHub actions to test that the production database has an expected number of rows.
+
+Note that these changes mean:
+1. 92.sql is the current first sql file to patch the database.
+2. If you need to make changes (like INSERTS) _only_ to the tests database you need to add a patch to `patches/test_db_sql/`.
+
 ### Developer Workflow
 
 1. Load the fully patched DBS file (e.g., `qiita-db.dbs`) in [DBSchema](http://www.dbschema.com/)

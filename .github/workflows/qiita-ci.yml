@@ -201,7 +201,34 @@ jobs:
           QIITA_PID=`cat /tmp/supervisord.pid`
           kill $QIITA_PID
           sleep 10
-          if [[ "$COVER_PACKAGE" != *"qiita_db"* ]]; then test_data_studies/commands.sh; all-qiita-cron-job; fi
+          # due to qiita_db tests being more complex and taking longer than
+          # the other tests we will only add some extra tests to the run that is
+          # not testing qiita_db
+          if [[ "$COVER_PACKAGE" != *"qiita_db"* ]]; then
+              # 1. testing that we can add some "dummy" studies to the db via
+              #    CLI
+              test_data_studies/commands.sh;
+              # 2. making sure that all qiita cron jobs complete as expected
+              all-qiita-cron-job;
+              # 3. making sure than a production system has the expected rows
+              #    in all our tables; steps: a. drop test db, b. change $QIITA_CONFIG_FP
+              #    c. create new production system, c. count rows in the db.
+              qiita-env drop;
+              cp $QIITA_CONFIG_FP ${QIITA_CONFIG_FP}.bk
+              sed 's/TEST_ENVIRONMENT = TRUE/TEST_ENVIRONMENT = FALSE/g' ${QIITA_CONFIG_FP}.bk > $QIITA_CONFIG_FP;
+              qiita-env make --no-load-ontologies;
+
+              export PGPASSWORD=postgres
+              pgport=${{ job.services.postgres.ports[5432] }}
+              row_counts=`psql -h localhost -U postgres -d qiita_test -p $pgport -c "SELECT SUM(c.reltuples) FROM pg_class c JOIN pg_namespace n on n.oid = c.relnamespace WHERE n.nspname = 'qiita' AND c.relkind = 'r' AND n.nspname NOT IN ('information_schema', 'pg_catalog');"`
+              if [[ `echo $row_counts` != *" 0 "* ]]; then
+                 echo "***********";
+                 echo "The number of rows in a production system is not what's expected:";
+                 echo $row_counts;
+                 echo "***********";
+                 exit 1
+              fi
+          fi
 
       - name: Submit coveralls
         uses: AndreMiras/coveralls-python-action@develop
