@@ -213,7 +213,10 @@ jobs:
               #    in all our tables; steps: a. drop test db, b. change $QIITA_CONFIG_FP
               #    c. create new production system, c. count rows in the db.
               qiita-env drop;
-              sed 's/TEST_ENVIRONMENT = TRUE/TEST_ENVIRONMENT = FALSE/g' $QIITA_CONFIG_FP > $QIITA_CONFIG_FP;
+              cp $QIITA_CONFIG_FP ${QIITA_CONFIG_FP}.bk
+              sed 's/TEST_ENVIRONMENT = TRUE/TEST_ENVIRONMENT = FALSE/g' ${QIITA_CONFIG_FP}.bk > $QIITA_CONFIG_FP;
+              echo $QIITA_CONFIG_FP
+              more $QIITA_CONFIG_FP
               qiita-env make --no-load-ontologies;
               row_counts=`psql -U postgres -d qiita_test -c "SELECT SUM(c.reltuples) FROM pg_class c JOIN pg_namespace n on n.oid = c.relnamespace WHERE n.nspname = 'qiita' AND c.relkind = 'r' AND n.nspname NOT IN ('information_schema', 'pg_catalog');"`
               if [[ $row_counts != *" 0 "* ]]; then
