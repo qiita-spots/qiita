@@ -226,6 +226,7 @@ jobs:
                  echo "The number of rows in a production system is not what's expected:";
                  echo $row_counts;
                  echo "***********";
+                 exit 1
               fi
           fi
 
