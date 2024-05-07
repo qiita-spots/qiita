@@ -412,16 +412,16 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
                     print('\tApplying patch %s...' % sql_patch_filename)
 
                 sql = patch_file.read()
-                sql_test = any([m in l
-                                for l in sql.split('\n')
-                                if not l.startswith('--')
-                                for m in not_allowed_matches])
+                sql_test = any([nam in line
+                                for line in sql.split('\n')
+                                if not line.startswith('--')
+                                for nam in not_allowed_matches])
                 if sql_test:
-                     msg = (
-                         f"Patch '{basename(sql_patch_fp)}' has an invalid "
-                         f"'match {not_allowed_matches}'; please move them a "
-                         f"test patch.\n*********{sql}\n*********")
-                     raise ValueError(msg)
+                    msg = (
+                        f"Patch '{basename(sql_patch_fp)}' has an invalid "
+                        f"'match {not_allowed_matches}'; please move them a "
+                        f"test patch.\n*********{sql}\n*********")
+                    raise ValueError(msg)
 
                 qdb.sql_connection.TRN.add(sql)
                 qdb.sql_connection.TRN.add(

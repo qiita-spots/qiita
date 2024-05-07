@@ -202,7 +202,8 @@ jobs:
           kill $QIITA_PID
           sleep 10
           # due to qiita_db tests being more complex and taking longer than
-          # the other tests we will some extra tests
+          # the other tests we will only add some extra tests to the run that is
+          # not testing qiita_db
           if [[ "$COVER_PACKAGE" != *"qiita_db"* ]]; then
               # 1. testing that we can add some "dummy" studies to the db via
               #    CLI
