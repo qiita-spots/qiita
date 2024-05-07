@@ -224,7 +224,7 @@ jobs:
               echo "######################"
               pgport=${{ job.services.postgres.ports[5432] }}
 
-              row_counts=`psql -h localhost -U postgres -d qiita_test -p $pgport -c "SELECT SUM(c.reltuples) FROM pg_class c JOIN pg_namespace n on n.oid = c.relnamespace WHERE n.nspname = 'qiita' AND c.relkind = 'r' AND n.nspname NOT IN ('information_schema', 'pg_catalog');"`
+              row_counts=`psql -h localhost -U postgres -W postgres -d qiita_test -p $pgport -c "SELECT SUM(c.reltuples) FROM pg_class c JOIN pg_namespace n on n.oid = c.relnamespace WHERE n.nspname = 'qiita' AND c.relkind = 'r' AND n.nspname NOT IN ('information_schema', 'pg_catalog');"`
               if [[ $row_counts != *" 0 "* ]]; then
                  echo "***********";
                  echo "There expected rows in a production system are not what's expected:";
