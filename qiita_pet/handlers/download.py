@@ -76,9 +76,7 @@ class BaseHandlerDownload(BaseHandler):
             directory
         """
         basedir = get_db_files_base_dir()
-        basedir_len = len(basedir)
-        if not basedir.endswith('/'):
-            basedir_len += 1
+        basedir_len = len(basedir) + 1
         to_download = []
         for dp, _, fps in walk(dirpath):
             for fn in fps:
@@ -103,9 +101,7 @@ class BaseHandlerDownload(BaseHandler):
             The path information needed by nginx for each file in the artifact
         """
         basedir = get_db_files_base_dir()
-        basedir_len = len(basedir)
-        if not basedir.endswith('/'):
-            basedir_len += 1
+        basedir_len = len(basedir) + 1
         to_download = []
         for i, x in enumerate(artifact.filepaths):
             # ignore if tgz as they could create problems and the
@@ -432,9 +428,7 @@ class DownloadPublicHandler(BaseHandlerDownload):
                 sort='descending')[0]
 
             basedir = get_db_files_base_dir()
-            basedir_len = len(basedir)
-            if not basedir.endswith('/'):
-                basedir_len += 1
+            basedir_len = len(basedir) + 1
             fp = x['fp'][basedir_len:]
             to_download.append((fp, fp, '-', str(x['fp_size'])))
             self._write_nginx_file_list(to_download)
