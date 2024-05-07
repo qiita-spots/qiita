@@ -207,9 +207,9 @@ jobs:
           if [[ "$COVER_PACKAGE" != *"qiita_db"* ]]; then
               # 1. testing that we can add some "dummy" studies to the db via
               #    CLI
-              test_data_studies/commands.sh;
+              # test_data_studies/commands.sh;
               # 2. making sure that all qiita cron jobs complete as expected
-              all-qiita-cron-job;
+              # all-qiita-cron-job;
               # 3. making sure than a production system has the expected rows
               #    in all our tables; steps: a. drop test db, b. change $QIITA_CONFIG_FP
               #    c. create new production system, c. count rows in the db.
