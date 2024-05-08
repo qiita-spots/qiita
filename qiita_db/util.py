@@ -2341,7 +2341,7 @@ def send_email(to, subject, body):
         smtp.close()
 
 
-def resource_allocation_plot(file, cname, sname, col_name):
+def resource_allocation_plot(df, cname, sname, col_name):
     """Builds resource allocation plot for given filename and jobs
 
     Parameters
@@ -2361,9 +2361,7 @@ def resource_allocation_plot(file, cname, sname, col_name):
         Returns a matplotlib object with a plot
     """
 
-    df = pd.read_csv(file, sep='\t', dtype={'extra_info': str})
-    df['ElapsedRawTime'] = pd.to_timedelta(df.ElapsedRawTime)
-    df = df[(df.cName == cname) & (df.sName == sname)]
+    # df = df[(df.cName == cname) & (df.sName == sname)]
     df.dropna(subset=['samples', 'columns'], inplace=True)
     df[col_name] = df.samples * df['columns']
     df[col_name] = df[col_name].astype(int)
