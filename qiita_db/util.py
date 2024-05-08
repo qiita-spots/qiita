@@ -73,7 +73,6 @@ import qiita_db as qdb
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-import pandas as pd
 from datetime import timedelta
 import matplotlib.pyplot as plt
 import numpy as np
