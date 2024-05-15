@@ -389,4 +389,4 @@ class ConfigurationManager(object):
                 raise ValueError(msg % (name, val, 'larger than 180°'))
 
     def _iframe(self, config):
-        self.iframe_qiimp = config.get('iframe', 'QIIMP', None)
+        self.iframe_qiimp = config.get('iframe', 'QIIMP', fallback=None)
