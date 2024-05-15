@@ -471,7 +471,6 @@ STATS_MAP_CENTER_LONGITUDE =
 
 # ----------------------------- iframes settings ---------------------------
 [iframe]
-QIIMP = https://localhost:8898/
 """
 
 if __name__ == '__main__':
