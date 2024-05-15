@@ -35,8 +35,17 @@ def env():
                                   '"password"')
 def make(load_ontologies, download_reference, add_demo_user):
     """Creates the database specified in config"""
-    qdb.environment_manager.make_environment(
-        load_ontologies, download_reference, add_demo_user)
+    try:
+        qdb.environment_manager.make_environment(
+            load_ontologies, download_reference, add_demo_user)
+    except Exception as e:
+        if "Database qiita_test already present on the system." not in str(e):
+            # this will clean our environment so we can try again without
+            # having to have an other window open to remove the current
+            # environment. This is fine as we are actually creating a new
+            # environment.
+            qdb.environment_manager.drop_environment(False)
+        raise e
 
 
 @env.command()
