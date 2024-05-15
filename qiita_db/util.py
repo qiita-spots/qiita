@@ -2380,6 +2380,41 @@ def resource_allocation_plot(df, cname, sname, col_name):
     return fig, axs
 
 
+def _retrieve_resource_data(cname, sname):
+    with qdb.sql_connection.TRN:
+        sql = """
+            SELECT
+                s.name AS sName,
+                s.version AS sVersion,
+                sc.command_id AS cID,
+                sc.name AS cName,
+                pr.processing_job_id AS processing_job_id,
+                pr.command_parameters AS parameters,
+                sra.samples AS samples,
+                sra.columns AS columns,
+                sra.input_size AS input_size,
+                sra.extra_info AS extra_info,
+                sra.memory_used AS memory_used,
+                sra.walltime_used AS walltime_used
+            FROM
+                qiita.processing_job pr
+            JOIN
+                qiita.software_command sc ON pr.command_id = sc.command_id
+            JOIN
+                qiita.software s ON sc.software_id = s.software_id
+            JOIN
+                qiita.slurm_resource_allocations sra
+                ON pr.processing_job_id = sra.processing_job_id
+            WHERE
+                sc.name = %s
+                AND s.name = %s;
+            """
+        qdb.sql_connection.TRN.add(sql, sql_args=[cname, sname])
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+        return res
+    pass
+
+
 def _resource_allocation_plot_helper(
         df, ax, cname, sname, curr, models, col_name):
     """Helper function for resource allocation plot. Builds plot for MaxRSSRaw

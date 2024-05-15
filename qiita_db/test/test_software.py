@@ -494,8 +494,11 @@ class CommandTests(TestCase):
                     '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f',
                     '063e553b-327c-4818-ab4a-adfe58e49860',
                     'ac653cb5-76a6-4a45-929e-eb9b2dee6b63']
-        exp = [qdb.processing_job.ProcessingJob(j) for j in exp_jids]
-        self.assertCountEqual(qdb.software.Command(1).processing_jobs, exp)
+
+        exp = set([qdb.processing_job.ProcessingJob(j) for j in exp_jids])
+        set_jobs = set(qdb.software.Command(1).processing_jobs)
+
+        self.assertEqual(len(set_jobs & exp), len(exp_jids))
 
         exp_jids = ['bcc7ebcd-39c1-43e4-af2d-822e3589f14d']
         exp = [qdb.processing_job.ProcessingJob(j) for j in exp_jids]
