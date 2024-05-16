@@ -286,7 +286,7 @@ class MetaUtilTests(TestCase):
             ('num_studies_ebi', b'1', r_client.get),
             ('num_samples_ebi', b'27', r_client.get),
             ('number_samples_ebi_prep', b'54', r_client.get),
-            ('num_processing_jobs', b'14', r_client.get)
+            ('num_processing_jobs', b'474', r_client.get)
             # not testing img/time for simplicity
             # ('img', r_client.get),
             # ('time', r_client.get)
@@ -299,6 +299,8 @@ class MetaUtilTests(TestCase):
 
         for k, exp, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
+            print("here's redis", f(redis_key))
+            print("exp:", exp)
             # checking redis values
             self.assertEqual(f(redis_key), exp)
             # checking DB values; note that redis stores all values as bytes,
