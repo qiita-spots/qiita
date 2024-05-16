@@ -238,6 +238,9 @@ If you are using [NGINX](https://www.nginx.com/) via conda, you are going to nee
 mkdir -p ${CONDA_PREFIX}/var/run/nginx/
 ```
 
+Note that the shipped nginx version from conda, does **not** contain the mod_zip module: https://github.com/evanmiller/mod_zip
+This leads to unexpected behaviour when generating a download link for anonymous artefact sharing, i.e. Qiita returns a flat file listing artifact filepaths instead of generating a ZIP archive that contains those files. You need to compile nginx with the additional mod_zip module yourself. (I've invested multiple hours to realize that the configure routine does not properly link shared libraries to the nginx binary. Try adding `--with-ld-opt=" -Wl,-rpath,/home/foo/lib "` to the `./auto/configure` call.)
+
 ## Start Qiita
 
 Start postgres (instructions vary depending on operating system and install method).
