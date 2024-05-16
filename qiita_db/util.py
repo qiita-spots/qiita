@@ -76,6 +76,7 @@ from email.mime.text import MIMEText
 from datetime import timedelta
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from scipy.optimize import minimize
 
 # memory constant functions defined for @resource_allocation_plot
@@ -2360,7 +2361,6 @@ def resource_allocation_plot(df, cname, sname, col_name):
         Returns a matplotlib object with a plot
     """
 
-    # df = df[(df.cName == cname) & (df.sName == sname)]
     df.dropna(subset=['samples', 'columns'], inplace=True)
     df[col_name] = df.samples * df['columns']
     df[col_name] = df[col_name].astype(int)
@@ -2380,7 +2380,7 @@ def resource_allocation_plot(df, cname, sname, col_name):
     return fig, axs
 
 
-def _retrieve_resource_data(cname, sname):
+def _retrieve_resource_data(cname, sname, columns):
     with qdb.sql_connection.TRN:
         sql = """
             SELECT
@@ -2411,8 +2411,8 @@ def _retrieve_resource_data(cname, sname):
             """
         qdb.sql_connection.TRN.add(sql, sql_args=[cname, sname])
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        return res
-    pass
+        df = pd.DataFrame(res, columns=columns)
+        return df
 
 
 def _resource_allocation_plot_helper(

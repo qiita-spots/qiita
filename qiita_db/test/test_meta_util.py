@@ -299,8 +299,6 @@ class MetaUtilTests(TestCase):
 
         for k, exp, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
-            print("here's redis", f(redis_key))
-            print("exp:", exp)
             # checking redis values
             self.assertEqual(f(redis_key), exp)
             # checking DB values; note that redis stores all values as bytes,

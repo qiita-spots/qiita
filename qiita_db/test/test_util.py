@@ -1316,9 +1316,8 @@ class ResourceAllocationPlotTests(TestCase):
                 "sName", "sVersion", "cID", "cName", "processing_job_id",
                 "parameters", "samples", "columns", "input_size", "extra_info",
                 "MaxRSSRaw", "ElapsedRaw"]
-        self.df = pd.DataFrame(
-            qdb.util._retrieve_resource_data(self.CNAME, self.SNAME),
-            columns=self.columns)
+        self.df = qdb.util._retrieve_resource_data(
+                self.CNAME, self.SNAME, self.columns)
 
     def test_plot_return(self):
         # check the plot returns correct objects
