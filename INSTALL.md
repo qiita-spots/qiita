@@ -78,7 +78,7 @@ You can reboot the system with `sudo reboot` in case any packages were updated.
 Next, we need to add the Postgres repository to our system:
 ```bash
 sudo apt update
-sudo apt install curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
+sudo apt install curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates git
 curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc|sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
 echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" |sudo tee  /etc/apt/sources.list.d/pgdg.list
 ```
