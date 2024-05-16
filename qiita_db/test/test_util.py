@@ -1316,6 +1316,9 @@ class ResourceAllocationPlotTests(TestCase):
                 "sName", "sVersion", "cID", "cName", "processing_job_id",
                 "parameters", "samples", "columns", "input_size", "extra_info",
                 "MaxRSSRaw", "ElapsedRaw"]
+
+        # df is a dataframe that represents a table with columns specified in
+        # self.columns
         self.df = qdb.util._retrieve_resource_data(
                 self.CNAME, self.SNAME, self.columns)
 

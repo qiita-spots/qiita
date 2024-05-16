@@ -1,5 +1,5 @@
--- 05/07/24 
--- tmp file for @Gossty
+-- 05/07/24
+-- This file serves as a comprehensive testcase for resource allocation plots
 
 
 INSERT INTO qiita.processing_job(processing_job_id, email, command_id, command_parameters, processing_job_status_id)
