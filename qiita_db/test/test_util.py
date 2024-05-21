@@ -1309,19 +1309,23 @@ class PurgeFilepathsTests(DBUtilTestsBase):
 
 class ResourceAllocationPlotTests(TestCase):
     def setUp(self):
-
-        self.PATH_TO_DATA = ('./qiita_db/test/test_data/'
-                             'jobs_2024-02-21.tsv.gz')
-        self.CNAME = "Validate"
-        self.SNAME = "Diversity types - alpha_vector"
+        self.CNAME = "Split libraries FASTQ"
+        self.SNAME = "QIIMEq2"
         self.col_name = 'samples * columns'
-        self.df = pd.read_csv(self.PATH_TO_DATA, sep='\t',
-                              dtype={'extra_info': str})
+        self.columns = [
+                "sName", "sVersion", "cID", "cName", "processing_job_id",
+                "parameters", "samples", "columns", "input_size", "extra_info",
+                "MaxRSSRaw", "ElapsedRaw"]
+
+        # df is a dataframe that represents a table with columns specified in
+        # self.columns
+        self.df = qdb.util._retrieve_resource_data(
+                self.CNAME, self.SNAME, self.columns)
 
     def test_plot_return(self):
         # check the plot returns correct objects
         fig1, axs1 = qdb.util.resource_allocation_plot(
-            self.PATH_TO_DATA, self.CNAME, self.SNAME, self.col_name)
+            self.df, self.CNAME, self.SNAME, self.col_name)
         self.assertIsInstance(
             fig1, Figure,
             "Returned object fig1 is not a Matplotlib Figure")
@@ -1346,7 +1350,7 @@ class ResourceAllocationPlotTests(TestCase):
         failures_df = qdb.util._resource_allocation_failures(
             self.df, k, a, b, bm, self.col_name, 'MaxRSSRaw')
         failures = failures_df.shape[0]
-        self.assertEqual(bm, qdb.util.mem_model4, msg="""Best memory model
+        self.assertEqual(bm, qdb.util.mem_model3, msg="""Best memory model
                                                 doesn't match""")
         self.assertEqual(failures, 0, "Number of failures must be 0")
 
