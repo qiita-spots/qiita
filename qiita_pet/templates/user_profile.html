@@ -19,7 +19,7 @@ $( document ).ready(function() { dualpass_validator(); });
         {% raw form_item(class_='form-control') %}
       </div>
       {% end %}
-      <div style="color:red;">{{msg}}</div>
+      <div style="color:{% if msg.startswith('ERROR:') %}red{% else %}darkgreen{% end %};">{{msg}}</div>
       <button type="submit" class="btn btn-success">Save Edits</button>
     </form>
   </div>
