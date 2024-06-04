@@ -24,14 +24,14 @@ from qiita_core.qiita_settings import qiita_config
 
 
 class UserProfile(Form):
-    def validate_general(field: StringField, infomsg: str, url_prefix: str):
+    def validate_general(value: str, infomsg: str, url_prefix: str):
         """Validate basic user inputs, i.e. check for leading/trailing
            whitespaces and leading URL prefix, like http://scholar.google.com/
 
         Parameters
         ----------
-        field : wtforms.StringField
-            The WTform user input field.
+        value : str
+            The WTform user input string.
         infomsg : str
             An error message to inform the user how to extract the correct
             value.
@@ -48,8 +48,7 @@ class UserProfile(Form):
           a) input has leading or trailing whitespaces
           b) input starts with the given url_prefix
         """
-        value = field.data
-        if value == "":
+        if (value is None) or (value == ""):
             # nothing to complain, as input is empty
             return None
 
@@ -58,11 +57,12 @@ class UserProfile(Form):
                 'Please remove all leading and trailing whitespaces from your '
                 'input.<br/>%s' % infomsg)
 
-        isPrefix = re.search("^%s" % url_prefix, value)
-        if isPrefix is not None:
-            raise ValidationError(
-                'Please remove the "%s" part from your input.<br/>%s' % (
-                    isPrefix[0], infomsg))
+        if len(url_prefix) > 0:
+            isPrefix = re.search("^%s" % url_prefix, value)
+            if isPrefix is not None:
+                raise ValidationError(
+                    'Please remove the "%s" part from your input.<br/>%s' % (
+                        isPrefix[0], infomsg))
 
         # if there is still no error raised, we return the actual value of the
         # user input
@@ -90,7 +90,7 @@ class UserProfile(Form):
                    ' every four digits are separated with a dash "-". An '
                    'example is: 0000-0002-0975-9019')
         value = UserProfile.validate_general(
-            field, infomsg, 'https://orcid.org')
+            field.data, infomsg, 'https://orcid.org')
         if value is None:
             return True
 
@@ -129,7 +129,7 @@ class UserProfile(Form):
         # we need a regex here, since we don't know the TLD the user is
         # presenting to us
         value = UserProfile.validate_general(
-            field, infomsg, r'https://scholar.google.\w{1,3}/citations\?')
+            field.data, infomsg, r'https://scholar.google.\w{1,3}/citations\?')
         if value is None:
             return True
 
@@ -171,7 +171,7 @@ class UserProfile(Form):
                    'Your ID is the part right of the last "/", in the example:'
                    ' "Rob-Knight"')
         value = UserProfile.validate_general(
-            field, infomsg, 'https://www.researchgate.net/profile/')
+            field.data, infomsg, 'https://www.researchgate.net/profile/')
         if value is None:
             return True
 
