@@ -1889,9 +1889,9 @@ CREATE TABLE qiita.qiita_user (
     pass_reset_code character varying,
     pass_reset_timestamp timestamp without time zone,
     receive_processing_job_emails boolean DEFAULT false,
-    social_orcid character varying,
-    social_researchgate character varying,
-    social_googlescholar character varying
+    social_orcid character varying DEFAULT NULL,
+    social_researchgate character varying DEFAULT NULL,
+    social_googlescholar character varying DEFAULT NULL
 );
 
 
