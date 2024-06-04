@@ -72,7 +72,10 @@ class UserTest(TestCase):
             'pass_reset_code': None,
             'pass_reset_timestamp': None,
             'user_verify_code': None,
-            'receive_processing_job_emails': True
+            'receive_processing_job_emails': True,
+            'social_orcid': None,
+            'social_researchgate': None,
+            'social_googlescholar': None
         }
 
     def tearDown(self):
@@ -125,7 +128,10 @@ class UserTest(TestCase):
             'address': None,
             'user_level_id': 5,
             'receive_processing_job_emails': False,
-            'email': 'testcreateuser@test.bar'}
+            'email': 'testcreateuser@test.bar',
+            'social_orcid': None,
+            'social_researchgate': None,
+            'social_googlescholar': None}
         self._check_correct_info(obs, exp)
 
         # Make sure new system messages are linked to user
@@ -162,7 +168,10 @@ class UserTest(TestCase):
             'user_verify_code': '',
             'user_level_id': 5,
             'receive_processing_job_emails': True,
-            'email': 'testcreateuserinfo@test.bar'}
+            'email': 'testcreateuserinfo@test.bar',
+            'social_orcid': None,
+            'social_researchgate': None,
+            'social_googlescholar': None}
         self._check_correct_info(obs, exp)
 
     def test_create_user_column_not_allowed(self):
@@ -229,7 +238,10 @@ class UserTest(TestCase):
             'pass_reset_timestamp': None,
             'user_verify_code': None,
             'receive_processing_job_emails': False,
-            'phone': '222-444-6789'
+            'phone': '222-444-6789',
+            'social_orcid': None,
+            'social_researchgate': None,
+            'social_googlescholar': None
         }
         self.assertEqual(self.user.info, expinfo)
 
