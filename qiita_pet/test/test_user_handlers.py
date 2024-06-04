@@ -37,7 +37,10 @@ class TestUserProfileHandler(TestHandlerBase):
             'affiliation': ['NEWNAME'],
             'address': ['ADDRESS'],
             'name': ['TESTDUDE'],
-            'phone': ['111-222-3333']}
+            'phone': ['111-222-3333'],
+            'social_orcid': [''],
+            'social_googlescholar': [''],
+            'social_researchgate': ['']}
         response = self.post('/profile/', post_args)
         self.assertEqual(response.code, 200)
 
