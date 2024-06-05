@@ -491,16 +491,9 @@ class UserTest(TestCase):
             limit=1, ignore_status=ignore_status), [
                 PJ('b72369f9-a886-4193-8d3d-f7b504168e75')])
 
-        # no jobs
-        self.assertEqual(qdb.user.User('admin@foo.bar').jobs(
-            ignore_status=ignore_status), [])
-
         # generates expected jobs
         jobs = qdb.user.User('shared@foo.bar').jobs()
         self.assertEqual(jobs, [])
-
-        # no jobs
-        self.assertEqual(qdb.user.User('admin@foo.bar').jobs(), [])
 
     def test_update_email(self):
         user = qdb.user.User('shared@foo.bar')

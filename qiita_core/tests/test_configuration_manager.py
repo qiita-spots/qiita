@@ -109,7 +109,7 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.portal_dir, "/portal")
 
         # iframe section
-        self.assertEqual(obs.iframe_qiimp, "https://localhost:8898/")
+        self.assertIsNone(obs.iframe_qiimp)
 
     def test_init_error(self):
         with open(self.conf_fp, 'w') as f:

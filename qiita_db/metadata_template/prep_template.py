@@ -1082,3 +1082,53 @@ class PrepTemplate(MetadataTemplate):
                      WHERE prep_template_id = %s"""
             qdb.sql_connection.TRN.add(sql, [creation_job_id, self.id])
             qdb.sql_connection.TRN.execute()
+
+    @property
+    def current_human_filtering(self):
+        """If the preparation is current with human filtering
+
+        Returns
+        -------
+        bool
+            The current_human_filtering of the prep information
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT current_human_filtering
+                     FROM qiita.prep_template
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @current_human_filtering.setter
+    def current_human_filtering(self, current_human_filtering):
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.prep_template
+                     SET current_human_filtering = %s
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [current_human_filtering, self.id])
+            qdb.sql_connection.TRN.execute()
+
+    @property
+    def reprocess_job_id(self):
+        """The job that was created to reprocess this prep info file
+
+        Returns
+        -------
+        bool or None
+            The reprocess_job_id of the prep file info
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT reprocess_job_id
+                     FROM qiita.prep_template
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @reprocess_job_id.setter
+    def reprocess_job_id(self, reprocess_job_id):
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.prep_template
+                     SET reprocess_job_id = %s
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [reprocess_job_id, self.id])
+            qdb.sql_connection.TRN.execute()
