@@ -477,11 +477,6 @@
               </li>
             </ul>
             <ul class="nav navbar-nav">
-              <li>
-                <a href="{% raw qiita_config.portal_dir %}/iframe/?iframe=qiimp">Qiimp</a>
-              </li>
-            </ul>
-            <ul class="nav navbar-nav">
               <!-- downloads -->
               <li class="dropdown">
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle">Help<b class="caret"></b></a>
@@ -647,7 +642,11 @@
           <div class="modal-body">
             <p>Please choose your login provider!</p>
             {% for idp in qiita_config.oidc %}
-              <a href="{% raw qiita_config.portal_dir %}{% raw qiita_config.oidc[idp]['redirect_endpoint'] %}" class="btn btn-success">{{qiita_config.oidc[idp]['label']}}</a>
+              {% if qiita_config.oidc[idp]['logo'] %}
+                <a href="{% raw qiita_config.portal_dir %}{% raw qiita_config.oidc[idp]['redirect_endpoint'] %}" class="btn btn-success" style="padding: 0px; border:0px;"><img src="{% raw qiita_config.portal_dir %}/static/img/{{qiita_config.oidc[idp]['logo']}}" style="max-height: 2.35em;" /></a>
+              {% else %}
+                <a href="{% raw qiita_config.portal_dir %}{% raw qiita_config.oidc[idp]['redirect_endpoint'] %}" class="btn btn-success">{{qiita_config.oidc[idp]['label']}}</a>
+              {% end %}
             {% end %}
           </div>
           <div class="modal-footer">

@@ -73,10 +73,10 @@ import qiita_db as qdb
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-import pandas as pd
 from datetime import timedelta
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from scipy.optimize import minimize
 
 # memory constant functions defined for @resource_allocation_plot
@@ -410,7 +410,11 @@ def get_db_files_base_dir():
     """
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add("SELECT base_data_dir FROM settings")
-        return qdb.sql_connection.TRN.execute_fetchlast()
+        basedir = qdb.sql_connection.TRN.execute_fetchlast()
+        # making sure that it never ends in a "/" as most tests expect this
+        if basedir.endswith("/"):
+            basedir = basedir[:-1]
+        return basedir
 
 
 def get_work_base_dir():
@@ -2337,7 +2341,7 @@ def send_email(to, subject, body):
         smtp.close()
 
 
-def resource_allocation_plot(file, cname, sname, col_name):
+def resource_allocation_plot(df, cname, sname, col_name):
     """Builds resource allocation plot for given filename and jobs
 
     Parameters
@@ -2357,9 +2361,6 @@ def resource_allocation_plot(file, cname, sname, col_name):
         Returns a matplotlib object with a plot
     """
 
-    df = pd.read_csv(file, sep='\t', dtype={'extra_info': str})
-    df['ElapsedRawTime'] = pd.to_timedelta(df.ElapsedRawTime)
-    df = df[(df.cName == cname) & (df.sName == sname)]
     df.dropna(subset=['samples', 'columns'], inplace=True)
     df[col_name] = df.samples * df['columns']
     df[col_name] = df[col_name].astype(int)
@@ -2377,6 +2378,41 @@ def resource_allocation_plot(file, cname, sname, col_name):
         df, ax, cname, sname, "ElapsedRaw", MODELS_TIME, col_name)
 
     return fig, axs
+
+
+def _retrieve_resource_data(cname, sname, columns):
+    with qdb.sql_connection.TRN:
+        sql = """
+            SELECT
+                s.name AS sName,
+                s.version AS sVersion,
+                sc.command_id AS cID,
+                sc.name AS cName,
+                pr.processing_job_id AS processing_job_id,
+                pr.command_parameters AS parameters,
+                sra.samples AS samples,
+                sra.columns AS columns,
+                sra.input_size AS input_size,
+                sra.extra_info AS extra_info,
+                sra.memory_used AS memory_used,
+                sra.walltime_used AS walltime_used
+            FROM
+                qiita.processing_job pr
+            JOIN
+                qiita.software_command sc ON pr.command_id = sc.command_id
+            JOIN
+                qiita.software s ON sc.software_id = s.software_id
+            JOIN
+                qiita.slurm_resource_allocations sra
+                ON pr.processing_job_id = sra.processing_job_id
+            WHERE
+                sc.name = %s
+                AND s.name = %s;
+            """
+        qdb.sql_connection.TRN.add(sql, sql_args=[cname, sname])
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+        df = pd.DataFrame(res, columns=columns)
+        return df
 
 
 def _resource_allocation_plot_helper(

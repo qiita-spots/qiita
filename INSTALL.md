@@ -78,7 +78,7 @@ You can reboot the system with `sudo reboot` in case any packages were updated.
 Next, we need to add the Postgres repository to our system:
 ```bash
 sudo apt update
-sudo apt install curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
+sudo apt install curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates git
 curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc|sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
 echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" |sudo tee  /etc/apt/sources.list.d/pgdg.list
 ```
@@ -237,6 +237,9 @@ If you are using [NGINX](https://www.nginx.com/) via conda, you are going to nee
 ```bash
 mkdir -p ${CONDA_PREFIX}/var/run/nginx/
 ```
+
+Note that the shipped nginx version from conda, does **not** contain the mod_zip module: https://github.com/evanmiller/mod_zip
+This leads to unexpected behaviour when generating a download link for anonymous artefact sharing, i.e. Qiita returns a flat file listing artifact filepaths instead of generating a ZIP archive that contains those files. You need to compile nginx with the additional mod_zip module yourself. (I've invested multiple hours to realize that the configure routine does not properly link shared libraries to the nginx binary. Try adding `--with-ld-opt=" -Wl,-rpath,/home/foo/lib "` to the `./auto/configure` call.)
 
 ## Start Qiita
 
