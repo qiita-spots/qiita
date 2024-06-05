@@ -332,6 +332,7 @@ class ConfigurationManagerTests(TestCase):
         obs._get_oidc(self.conf)
         self.assertTrue('openid' in obs.oidc['academicid']['scope'].split())
 
+
 CONF = """
 # ------------------------------ Main settings --------------------------------
 [main]
