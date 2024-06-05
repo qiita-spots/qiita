@@ -1350,8 +1350,15 @@ class ResourceAllocationPlotTests(TestCase):
         failures_df = qdb.util._resource_allocation_failures(
             self.df, k, a, b, bm, self.col_name, 'MaxRSSRaw')
         failures = failures_df.shape[0]
-        self.assertEqual(bm, qdb.util.mem_model3, msg="""Best memory model
-                                                doesn't match""")
+        self.assertEqual(bm, qdb.util.mem_model3,
+                         msg=f"""Best memory model
+                                 doesn't match
+                                 Coefficients:{k} {a} {b}
+                                 {qdb.util.mem_model1}, "qdb.util.mem_model1"
+                                 {qdb.util.mem_model2}, "qdb.util.mem_model2"
+                                 {qdb.util.mem_model3}, "qdb.util.mem_model3"
+                                 {qdb.util.mem_model4}, "qdb.util.mem_model4"
+                            """)
         self.assertEqual(failures, 0, "Number of failures must be 0")
 
         # check that the algorithm chooses correct model for ElapsedRaw and
