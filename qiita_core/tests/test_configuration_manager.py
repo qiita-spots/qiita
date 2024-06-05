@@ -335,6 +335,7 @@ class ConfigurationManagerTests(TestCase):
         self.assertTrue('openid' in obs.oidc['academicid']['scope'].split())
 >>>>>>> c9d413af (using the well-known json dict instead of manually providing multiple API endpoints through the config file)
 
+
 CONF = """
 # ------------------------------ Main settings --------------------------------
 [main]
