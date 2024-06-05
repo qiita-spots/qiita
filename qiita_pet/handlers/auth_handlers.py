@@ -8,17 +8,15 @@
 
 import urllib.parse
 import os
-import warnings
 import requests
 
 from tornado.escape import url_escape, json_encode, json_decode
 from tornado.auth import OAuth2Mixin
 from tornado.curl_httpclient import CurlAsyncHTTPClient
-from tornado.web import HTTPError, authenticated
+from tornado.web import HTTPError
 from tornado.httpclient import HTTPClientError
 
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.handlers.portal import PortalEditBase
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.util import execute_as_transaction
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
@@ -28,7 +26,6 @@ from qiita_db.user import User
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBDuplicateError,
                                  QiitaDBError)
 from qiita_db.logger import LogEntry
-import qiita_db as qdb
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -269,7 +266,8 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
         if self.idp is None:
             self.render("index.html", message=msg, level='warning')
 
-        idp_config = requests.get(qiita_config.oidc[self.idp]['wellknown_uri'],
+        idp_config = requests.get(
+            qiita_config.oidc[self.idp]['wellknown_uri'],
             proxies={env: os.environ[env]
                      for env in os.environ
                      if env.lower().endswith('_proxy')}).json()
