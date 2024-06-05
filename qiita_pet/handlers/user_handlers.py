@@ -6,8 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import re
+
 from tornado.web import authenticated, HTTPError
 from wtforms import Form, StringField, BooleanField, validators
+from wtforms.validators import ValidationError
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import user_jobs_get_req
@@ -21,12 +24,170 @@ from qiita_core.qiita_settings import qiita_config
 
 
 class UserProfile(Form):
+    def validate_general(value: str, infomsg: str, url_prefix: str):
+        """Validate basic user inputs, i.e. check for leading/trailing
+           whitespaces and leading URL prefix, like http://scholar.google.com/
+
+        Parameters
+        ----------
+        value : str
+            The WTform user input string.
+        infomsg : str
+            An error message to inform the user how to extract the correct
+            value.
+        url_prefix : str
+            The URL prefix of the social network
+
+        Returns
+        -------
+        None in case of empty input, otherwise the input value
+
+        Raises
+        ------
+        ValidationError if
+          a) input has leading or trailing whitespaces
+          b) input starts with the given url_prefix
+        """
+        if (value is None) or (value == ""):
+            # nothing to complain, as input is empty
+            return None
+
+        if value != value.strip():
+            raise ValidationError(
+                'Please remove all leading and trailing whitespaces from your '
+                'input.<br/>%s' % infomsg)
+
+        if len(url_prefix) > 0:
+            isPrefix = re.search("^%s" % url_prefix, value)
+            if isPrefix is not None:
+                raise ValidationError(
+                    'Please remove the "%s" part from your input.<br/>%s' % (
+                        isPrefix[0], infomsg))
+
+        # if there is still no error raised, we return the actual value of the
+        # user input
+        return value
+
+    def validator_orcid_id(form: Form, field: StringField):
+        """A WTForm validator to check if user input follows ORCID syntax.
+
+        Parameters
+        ----------
+        form : wtforms.Form
+            The WTform form enclosing the user input field.
+        field : wtforms.StringField
+            The WTform user input field.
+
+        Returns
+        -------
+        True, if user input is OK.
+
+        Raises
+        ------
+        ValidationError if user input is not valid
+        """
+        infomsg = ('Enter only your 16 digit numerical ORCID identifier, where'
+                   ' every four digits are separated with a dash "-". An '
+                   'example is: 0000-0002-0975-9019')
+        value = UserProfile.validate_general(
+            field.data, infomsg, 'https://orcid.org')
+        if value is None:
+            return True
+
+        if re.search(r"^\d{4}-\d{4}-\d{4}-\d{4}$", value) is None:
+            raise ValidationError(
+                "Your input does not follow the required format.<br/>%s" %
+                infomsg)
+
+    def validator_gscholar_id(form, field):
+        """A WTForm validator to check if user input follows google scholar ID
+           syntax.
+
+        Parameters
+        ----------
+        form : wtforms.Form
+            The WTform form enclosing the user input field.
+        field : wtforms.StringField
+            The WTform user input field.
+
+        Returns
+        -------
+        True, if user input is OK.
+
+        Raises
+        ------
+        ValidationError if user input is not valid
+        """
+        infomsg = ('To retrieve your google scholar ID, surf to your profile '
+                   'and copy the URL in your browser. It might read like '
+                   'https://scholar.google.com/citations?user=_e3QL94AAAAJ&'
+                   'hl=en<br/>Ignore everything left of the "?". The right '
+                   'part is a set of key=value pairs, separated by "&" '
+                   'characters. Find the key "user=", the right part up to '
+                   'the next "&" is your google scholar ID, in the example: '
+                   '"_e3QL94AAAAJ"')
+        # we need a regex here, since we don't know the TLD the user is
+        # presenting to us
+        value = UserProfile.validate_general(
+            field.data, infomsg, r'https://scholar.google.\w{1,3}/citations\?')
+        if value is None:
+            return True
+
+        if '&' in value:
+            raise ValidationError(
+                'Your input contains multiple key=value pairs (we found at '
+                'least one "&" character).<br/>%s' % infomsg)
+        if 'user=' in value:
+            raise ValidationError(
+                'Please remove the key "user" and the "=" character from '
+                'your input.<br/>%s' % infomsg)
+        if value.startswith('='):
+            raise ValidationError(
+                'Please remove leading "=" characters from your input.'
+                '<br/>%s' % infomsg)
+
+    def validator_rgate_id(form, field):
+        """A WTForm validator to check if user input follows ResearchGate
+           user names.
+
+        Parameters
+        ----------
+        form : wtforms.Form
+            The WTform form enclosing the user input field.
+        field : wtforms.StringField
+            The WTform user input field.
+
+        Returns
+        -------
+        True, if user input is OK.
+
+        Raises
+        ------
+        ValidationError if user input is not valid
+        """
+        infomsg = ('To retrieve your ResearchGate ID, surf to your profile '
+                   'and copy the URL in your browser. It might read like '
+                   'https://www.researchgate.net/profile/Rob-Knight<br/>'
+                   'Your ID is the part right of the last "/", in the example:'
+                   ' "Rob-Knight"')
+        value = UserProfile.validate_general(
+            field.data, infomsg, 'https://www.researchgate.net/profile/')
+        if value is None:
+            return True
+
     name = StringField("Name", [validators.required()])
     affiliation = StringField("Affiliation")
     address = StringField("Address")
     phone = StringField("Phone")
     receive_processing_job_emails = BooleanField(
         "Receive Processing Job Emails?")
+
+    social_orcid = StringField(
+        "ORCID", [validator_orcid_id], description="0000-0002-0975-9019")
+    social_googlescholar = StringField(
+        "Google Scholar", [validator_gscholar_id], description="_e3QL94AAAAJ")
+    social_researchgate = StringField(
+        "ResearchGate", [validator_rgate_id], description="Rob-Knight")
 
 
 class UserProfileHandler(BaseHandler):
@@ -44,11 +205,11 @@ class UserProfileHandler(BaseHandler):
         msg = ""
         user = self.current_user
         action = self.get_argument("action")
+        form_data = UserProfile()
         if action == "profile":
-            # tuple of colmns available for profile
+            # tuple of columns available for profile
             # FORM INPUT NAMES MUST MATCH DB COLUMN NAMES
             not_str_fields = ('receive_processing_job_emails')
-            form_data = UserProfile()
             form_data.process(data=self.request.arguments)
             profile = {name: data[0].decode('ascii')
                        if name not in not_str_fields else
@@ -59,16 +220,19 @@ class UserProfileHandler(BaseHandler):
             for field in form_data:
                 if field.name not in not_str_fields:
                     field.data = field.data[0].decode('ascii')
-            try:
-                user.info = profile
-                msg = "Profile updated successfully"
-            except Exception as e:
-                msg = "ERROR: profile could not be updated"
-                LogEntry.create('Runtime', "Cound not update profile: %s" %
-                                str(e), info={'User': user.id})
+            if form_data.validate() is False:
+                msg = ("ERROR: profile could not be updated"
+                       " as some of your above inputs must be corrected.")
+            else:
+                try:
+                    user.info = profile
+                    msg = "Profile updated successfully"
+                except Exception as e:
+                    msg = "ERROR: profile could not be updated"
+                    LogEntry.create('Runtime', "Cound not update profile: %s" %
+                                    str(e), info={'User': user.id})
 
         elif action == "password":
-            form_data = UserProfile()
             form_data.process(data=user.info)
             oldpass = self.get_argument("oldpass")
             newpass = self.get_argument("newpass")
