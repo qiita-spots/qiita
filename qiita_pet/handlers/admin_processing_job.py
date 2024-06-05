@@ -82,7 +82,8 @@ class AJAXAdminProcessingJobListing(AdminProcessingJobBaseClass):
                 msg = job.log.msg
             elif job.status == 'running':
                 msg = job.step
-            msg = msg.replace('\n', '</br>')
+            if msg is not None:
+                msg = msg.replace('\n', '</br>')
             outputs = []
             if job.status == 'success':
                 outputs = [[k, v.id] for k, v in job.outputs.items()]
