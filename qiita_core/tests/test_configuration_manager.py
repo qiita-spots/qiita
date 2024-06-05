@@ -311,9 +311,7 @@ class ConfigurationManagerTests(TestCase):
         obs._get_oidc(self.conf)
         self.assertEqual(obs.oidc['academicid']['client_id'], "foo")
 
-        self.assertTrue('gwdg.de' in obs.oidc['academicid']['authorize_url'])
-        self.assertTrue('gwdg.de' in obs.oidc['academicid']['accesstoken_url'])
-        self.assertTrue('gwdg.de' in obs.oidc['academicid']['userinfo_url'])
+        self.assertTrue('gwdg.de' in obs.oidc['academicid']['wellknown_uri'])
 
         self.assertEqual(obs.oidc['academicid']['label'],
                          'GWDG Academic Cloud')
@@ -322,6 +320,20 @@ class ConfigurationManagerTests(TestCase):
         obs._get_oidc(self.conf)
         self.assertEqual(obs.oidc['academicid']['label'], 'academicid')
 
+<<<<<<< HEAD
+=======
+        self.assertEqual(obs.oidc['academicid']['scope'], 'openid')
+        print(obs.oidc['academicid']['scope'])
+        # test fallback, if no scope is provided
+        self.conf.set(SECTION_NAME, 'SCOPE', '')
+        obs._get_oidc(self.conf)
+        self.assertEqual(obs.oidc['academicid']['scope'], 'openid')
+
+        # test if scope will be automatically extended with 'openid'
+        self.conf.set(SECTION_NAME, 'SCOPE', 'email affiliation')
+        obs._get_oidc(self.conf)
+        self.assertTrue('openid' in obs.oidc['academicid']['scope'].split())
+>>>>>>> c9d413af (using the well-known json dict instead of manually providing multiple API endpoints through the config file)
 
 CONF = """
 # ------------------------------ Main settings --------------------------------

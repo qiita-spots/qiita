@@ -137,16 +137,18 @@ class ConfigurationManager(object):
     redirect_endpoint : str
         The internal Qiita endpoint the IdP shall redirect the user after
         logging in
-    authorize_url : str
-        The URL of the IdP to obtain a code (step 1)
-    accesstoken_url : str
-        The URL of the IdP to exchange the code from step 1 for an access
-        token (step 2)
-    userinfo_url : str
-        The URL of the IdP to obtain information about the user, like email,
-        username, ...
+    wellknown_uri : str
+        The URL of the well-known json document, specifying how API end points
+        like 'authorize', 'token' or 'userinfo' are defined. See e.g.
+        https://swagger.io/docs/specification/authentication/
+            openid-connect-discovery/
     label : str
         A speaking label for the Identity Provider
+    scope : str
+        The scope, i.e. fields about a user, which Qiita requests from the
+        Identity Provider, e.g. "profile email eduperson_orcid".
+        Will be automatically extended by the scope "openid", to enable the
+        "authorize_code" OIDC flow.
 
     Raises
     ------
@@ -436,14 +438,16 @@ class ConfigurationManager(object):
                     if provider['redirect_endpoint'].endswith('/'):
                         provider['redirect_endpoint'] = provider[
                             'redirect_endpoint'][:-1]
-                provider['authorize_url'] = config.get(
-                    section_name, 'AUTHORIZE_URL')
-                provider['accesstoken_url'] = config.get(
-                    section_name, 'ACCESS_TOKEN_URL')
-                provider['userinfo_url'] = config.get(
-                    section_name, 'USERINFO_URL')
+                provider['wellknown_uri'] = config.get(
+                    section_name, 'WELLKNOWN_URI')
                 provider['label'] = config.get(section_name, 'LABEL')
                 if not provider['label']:
                     # fallback, if no label is provided
                     provider['label'] = section_name[len(PREFIX):]
                 self.oidc[section_name[len(PREFIX):]] = provider
+                provider['scope'] = config.get(
+                    section_name, 'SCOPE', fallback=None)
+                if not provider['scope']:
+                    provider['scope'] = 'openid'
+                if 'openid' not in provider['scope']:
+                    provider['scope'] = 'openid %s' % provider['scope']

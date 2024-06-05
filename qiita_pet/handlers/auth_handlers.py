@@ -9,6 +9,7 @@
 import urllib.parse
 import os
 import warnings
+import requests
 
 from tornado.escape import url_escape, json_encode, json_decode
 from tornado.auth import OAuth2Mixin
@@ -268,12 +269,14 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
         if self.idp is None:
             self.render("index.html", message=msg, level='warning')
 
-        self._OAUTH_AUTHORIZE_URL = qiita_config.oidc[self.idp][
-            'authorize_url']
-        self._OAUTH_ACCESS_TOKEN_URL = qiita_config.oidc[self.idp][
-            'accesstoken_url']
-        self._OAUTH_USERINFO_URL = qiita_config.oidc[self.idp][
-            'userinfo_url']
+        idp_config = requests.get(qiita_config.oidc[self.idp]['wellknown_uri'],
+            proxies={env: os.environ[env]
+                     for env in os.environ
+                     if env.lower().endswith('_proxy')}).json()
+
+        self._OAUTH_AUTHORIZE_URL = idp_config['authorization_endpoint']
+        self._OAUTH_ACCESS_TOKEN_URL = idp_config['token_endpoint']
+        self._OAUTH_USERINFO_URL = idp_config['userinfo_endpoint']
 
         if code:
             # step 2: we got a code and now want to exchange it for a user
@@ -333,7 +336,7 @@ class AuthLoginOIDCHandler(BaseHandler, KeycloakMixin):
                  client_id=qiita_config.oidc[self.idp]['client_id'],
                  client_secret=qiita_config.oidc[self.idp]['client_secret'],
                  response_type='code',
-                 scope=['openid']
+                 scope=[qiita_config.oidc[self.idp]['scope']]
             )
     get = post  # redirect will use GET method
 
