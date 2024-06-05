@@ -311,9 +311,7 @@ class ConfigurationManagerTests(TestCase):
         obs._get_oidc(self.conf)
         self.assertEqual(obs.oidc['academicid']['client_id'], "foo")
 
-        self.assertTrue('gwdg.de' in obs.oidc['academicid']['authorize_url'])
-        self.assertTrue('gwdg.de' in obs.oidc['academicid']['accesstoken_url'])
-        self.assertTrue('gwdg.de' in obs.oidc['academicid']['userinfo_url'])
+        self.assertTrue('gwdg.de' in obs.oidc['academicid']['wellknown_uri'])
 
         self.assertEqual(obs.oidc['academicid']['label'],
                          'GWDG Academic Cloud')
@@ -321,6 +319,18 @@ class ConfigurationManagerTests(TestCase):
         self.conf.set(SECTION_NAME, 'LABEL', '')
         obs._get_oidc(self.conf)
         self.assertEqual(obs.oidc['academicid']['label'], 'academicid')
+
+        self.assertEqual(obs.oidc['academicid']['scope'], 'openid')
+        print(obs.oidc['academicid']['scope'])
+        # test fallback, if no scope is provided
+        self.conf.set(SECTION_NAME, 'SCOPE', '')
+        obs._get_oidc(self.conf)
+        self.assertEqual(obs.oidc['academicid']['scope'], 'openid')
+
+        # test if scope will be automatically extended with 'openid'
+        self.conf.set(SECTION_NAME, 'SCOPE', 'email affiliation')
+        obs._get_oidc(self.conf)
+        self.assertTrue('openid' in obs.oidc['academicid']['scope'].split())
 
 CONF = """
 # ------------------------------ Main settings --------------------------------
@@ -513,7 +523,7 @@ CLIENT_ID = gi-qiita-prod
 
 # client secret to verify Qiita as the correct client. Not all IdPs require
 # a client secret.
-CLIENT_SECRET = 5M6zKl8SKrlnRP4tPgtrgZpCpcYCj7uK
+CLIENT_SECRET = verySecretString
 
 # redirect URL (end point in your Qiita instance), to which the IdP redirects
 # after user types in his/her credentials. If you don't want to change code in
@@ -522,17 +532,20 @@ CLIENT_SECRET = 5M6zKl8SKrlnRP4tPgtrgZpCpcYCj7uK
 # without the oidc_ prefix!
 REDIRECT_ENDPOINT = /auth/login_OIDC/academicid
 
-# URL for step 1: obtain code
-AUTHORIZE_URL = https://keycloak.sso.gwdg.de/auth/realms/academiccloud/auth
-
-# URL for step 2: obtain user token
-ACCESS_TOKEN_URL = https://keycloak.sso.gwdg.de/auth/realms/academiccloud/token
-
-# URL for step 3: obtain user infos
-USERINFO_URL = https://keycloak.sso.gwdg.de/auth/realms/academiccloud/userinfo
+# The URL of the well-known json document, specifying how API end points
+# like 'authorize', 'token' or 'userinfo' are defined. See e.g.
+# https://swagger.io/docs/specification/authentication/
+#    openid-connect-discovery/
+WELLKNOWN_URI = https://keycloak.sso.gwdg.de/.well-known/openid-configuration
 
 # a speaking label for the Identity Provider. Section name is used if empty.
 LABEL = GWDG Academic Cloud
+
+# The scope, i.e. fields about a user, which Qiita requests from the
+# Identity Provider, e.g. "profile email eduperson_orcid".
+# Will be automatically extended by the scope "openid", to enable the
+# "authorize_code" OIDC flow.
+SCOPE = openid
 """
 
 if __name__ == '__main__':
