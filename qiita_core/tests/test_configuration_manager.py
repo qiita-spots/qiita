@@ -321,7 +321,6 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.oidc['academicid']['label'], 'academicid')
 
         self.assertEqual(obs.oidc['academicid']['scope'], 'openid')
-        print(obs.oidc['academicid']['scope'])
         # test fallback, if no scope is provided
         self.conf.set(SECTION_NAME, 'SCOPE', '')
         obs._get_oidc(self.conf)
@@ -331,6 +330,13 @@ class ConfigurationManagerTests(TestCase):
         self.conf.set(SECTION_NAME, 'SCOPE', 'email affiliation')
         obs._get_oidc(self.conf)
         self.assertTrue('openid' in obs.oidc['academicid']['scope'].split())
+
+        self.assertEqual(obs.oidc['academicid']['logo'],
+                         'oidc_lifescienceAAI.png')
+        # test fallback, if no scope is provided
+        self.conf.set(SECTION_NAME, 'logo', '')
+        obs._get_oidc(self.conf)
+        self.assertEqual(obs.oidc['academicid']['logo'], None)
 
 
 CONF = """
@@ -547,6 +553,10 @@ LABEL = GWDG Academic Cloud
 # Will be automatically extended by the scope "openid", to enable the
 # "authorize_code" OIDC flow.
 SCOPE = openid
+
+# Optional. Name of a file in qiita_pet/static/img that shall be
+# displayed for login through Service Provider, instead of a plain button
+LOGO = oidc_lifescienceAAI.png
 """
 
 if __name__ == '__main__':

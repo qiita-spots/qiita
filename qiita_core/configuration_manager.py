@@ -149,6 +149,10 @@ class ConfigurationManager(object):
         Identity Provider, e.g. "profile email eduperson_orcid".
         Will be automatically extended by the scope "openid", to enable the
         "authorize_code" OIDC flow.
+    logo : str
+        Optional. Name of a file in qiita_pet/static/img that shall be
+        displayed for login through Service Provider, instead of a plain
+        button
 
     Raises
     ------
@@ -451,3 +455,5 @@ class ConfigurationManager(object):
                     provider['scope'] = 'openid'
                 if 'openid' not in provider['scope']:
                     provider['scope'] = 'openid %s' % provider['scope']
+                provider['logo'] = config.get(
+                    section_name, 'LOGO', fallback=None)
