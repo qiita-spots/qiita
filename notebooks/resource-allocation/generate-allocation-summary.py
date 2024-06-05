@@ -5,7 +5,7 @@ from io import StringIO
 from json import loads
 from os.path import join
 
-from qiita_core.util import MaxRSS_helper
+from qiita_db.util import MaxRSS_helper
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.software import Software

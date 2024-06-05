@@ -1368,6 +1368,79 @@ class ResourceAllocationPlotTests(TestCase):
                                                    doesn't match""")
         self.assertEqual(failures, 1, "Number of failures must be 1")
 
+    def test_MaxRSS_helper(self):
+        tests = [
+            ('6', 6.0),
+            ('6K', 6000),
+            ('6M', 6000000),
+            ('6G', 6000000000),
+            ('6.9', 6.9),
+            ('6.9K', 6900),
+            ('6.9M', 6900000),
+            ('6.9G', 6900000000),
+        ]
+        for x, y in tests:
+            self.assertEqual(qdb.util.MaxRSS_helper(x), y)
+
+    def test_db_update(self):
+
+        def read_slurm(id):
+            sacct_dummies = {
+                1005932: (
+                    "JobID|ElapsedRaw|MaxRSS|Submit|Start|MaxRSS|CPUTimeRAW|"
+                    "ReqMem|AllocCPUS|AveVMSize|\n"
+                    "1005932|165||2023-02-23T14:55:07|2023-02-23T14:55:08|"
+                    "|165|120Gn|1||\n"
+                    "1005932.batch|165|328716K|2023-02-23T14:55:08"
+                    "|2023-02-23T14:55:08|328716K|"
+                    "165|120Gn|1|156284K|\n"
+                    "1005932.extern|165|0|2023-02-23T14:55:08|"
+                    "2023-02-23T14:55:08|0|165|120Gn|1|108052K|"
+                ),
+                1001100: (
+                    "JobID|ElapsedRaw|MaxRSS|Submit|Start|MaxRSS|"
+                    "CPUTimeRAW|ReqMem|AllocCPUS|AveVMSize|\n"
+                    "1001100|219||2023-02-22T11:05:26|"
+                    "2023-02-22T11:05:27||219|120Gn|1||\n"
+                    "1001100.batch|219|342204K|2023-02-22T11:05:27|"
+                    "2023-02-22T11:05:27|342204K|219|120Gn|1|156284K|\n"
+                    "1001100.extern|219|0|2023-02-22T11:05:27|"
+                    "2023-02-22T11:05:27|0|219|120Gn|1|108052K|"
+                )
+            }
+
+            slurm_info = sacct_dummies.get(id)
+            return slurm_info
+
+        types = {
+            'Split libraries FASTQ': [
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b',
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931',
+                'b72369f9-a886-4193-8d3d-f7b504168e75',
+                '46b76f74-e100-47aa-9bf2-c0208bcea52d',
+                '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f'],
+            'Pick closed-reference OTUs': [
+                '3c9991ab-6c14-4368-a48c-841e8837a79c',
+                '80bf25f3-5f1d-4e10-9369-315e4244f6d5',
+                '9ba5ae7a-41e1-4202-b396-0259aeaac366',
+                'e5609746-a985-41a1-babf-6b3ebe9eb5a9',
+            ],
+            'Single Rarefaction': [
+                '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0'
+            ]
+        }
+
+        qdb.util.update_resource_allocation_table(test=read_slurm)
+
+        for curr_cname, ids in types.items():
+            updated_df = qdb.util._retrieve_resource_data(
+                    curr_cname, self.SNAME, self.columns)
+            updated_ids_set = set(updated_df['processing_job_id'])
+            previous_ids_set = set(self.df['processing_job_id'])
+            for id in ids:
+                self.assertTrue(id in updated_ids_set)
+                self.assertFalse(id in previous_ids_set)
+
 
 STUDY_INFO = {
     'study_id': 1,
