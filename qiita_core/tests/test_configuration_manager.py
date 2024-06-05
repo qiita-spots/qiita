@@ -334,7 +334,7 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.oidc['academicid']['logo'],
                          'oidc_lifescienceAAI.png')
         # test fallback, if no scope is provided
-        self.conf.set(SECTION_NAME, 'logo', '')
+        self.conf.remove_option(SECTION_NAME, 'LOGO')
         obs._get_oidc(self.conf)
         self.assertEqual(obs.oidc['academicid']['logo'], None)
 
@@ -520,7 +520,6 @@ STATS_MAP_CENTER_LONGITUDE =
 
 # ----------------------------- iframes settings ---------------------------
 [iframe]
-QIIMP = https://localhost:8898/
 
 # ------------------- External Identity Provider settings ------------------
 [oidc_academicid]
