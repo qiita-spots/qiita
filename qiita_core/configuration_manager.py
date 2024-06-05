@@ -416,7 +416,7 @@ class ConfigurationManager(object):
                 raise ValueError(msg % (name, val, 'larger than 180°'))
 
     def _iframe(self, config):
-        self.iframe_qiimp = config.get('iframe', 'QIIMP')
+        self.iframe_qiimp = config.get('iframe', 'QIIMP', fallback=None)
 
     def _get_oidc(self, config):
         """Get the configuration of the open ID connect section(s)
