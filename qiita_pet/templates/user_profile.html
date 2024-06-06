@@ -14,9 +14,17 @@ $( document ).ready(function() { dualpass_validator(); });
     <form role="form" action="{% raw qiita_config.portal_dir %}/profile/" method="post">
       <input type="hidden" name="action" value="profile">
       {% for form_item in profile %}
-      <div class="form-group">
-        <label for="oldpass" class="col-sm-10 control-label">{% raw form_item.label %}</label>
-        {% raw form_item(class_='form-control') %}
+      <div class="form-group" style="display: flex; flex-direction: column;">
+        <div style="display: inline; padding-left: 1em;">
+          {% if form_item.id.startswith('social_') %}
+            <img style="height: 24px; padding-right: 5px;" src="{% raw qiita_config.portal_dir %}/static/img/logo_{% raw form_item.id %}.png"/>
+          {% end %}
+          {% raw form_item.label %}
+        </div>
+        {% raw form_item(class_='form-control', placeholder=form_item.description) %}
+        {% if form_item.errors %}
+          <div style='color: #ff0000; padding-left: 10px;'>{% for e in form_item.errors %}{%raw e%}<br/>{% end %}</div>
+        {% end %}
       </div>
       {% end %}
       <div style="color:{% if msg.startswith('ERROR:') %}red{% else %}darkgreen{% end %};">{{msg}}</div>

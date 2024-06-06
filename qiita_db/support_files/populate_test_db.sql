@@ -50,7 +50,7 @@ INSERT INTO qiita.user_level VALUES (7, 'wet-lab admin', 'Can access the private
 -- Data for Name: qiita_user; Type: TABLE DATA; Schema: qiita; Owner: antoniog
 --
 
-INSERT INTO qiita.qiita_user VALUES ('test@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Dude', 'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302', '111-222-3344', NULL, NULL, NULL, false);
+INSERT INTO qiita.qiita_user VALUES ('test@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Dude', 'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302', '111-222-3344', NULL, NULL, NULL, false, '0000-0002-0975-9019', 'Rob-Knight', '_e3QL94AAAAJ');
 INSERT INTO qiita.qiita_user VALUES ('shared@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Shared', 'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302', '111-222-3344', NULL, NULL, NULL, false);
 INSERT INTO qiita.qiita_user VALUES ('admin@foo.bar', 1, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Admin', 'Owner University', '312 noname st, Apt K, Nonexistantown, CO 80302', '222-444-6789', NULL, NULL, NULL, false);
 INSERT INTO qiita.qiita_user VALUES ('demo@microbio.me', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Demo', 'Qiita Dev', '1345 Colorado Avenue', '303-492-1984', NULL, NULL, NULL, false);
