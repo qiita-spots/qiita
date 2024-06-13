@@ -1315,7 +1315,7 @@ class ResourceAllocationPlotTests(TestCase):
         self.columns = [
                 "sName", "sVersion", "cID", "cName", "processing_job_id",
                 "parameters", "samples", "columns", "input_size", "extra_info",
-                "MaxRSSRaw", "ElapsedRaw"]
+                "MaxRSSRaw", "ElapsedRaw", "Start", "node_name", "node_model"]
 
         # df is a dataframe that represents a table with columns specified in
         # self.columns
@@ -1397,35 +1397,8 @@ class ResourceAllocationPlotTests(TestCase):
             self.assertEqual(qdb.util.MaxRSS_helper(x), y)
 
     def test_db_update(self):
-
-        def read_slurm(id):
-            sacct_dummies = {
-                1005932: (
-                    "JobID|ElapsedRaw|MaxRSS|Submit|Start|MaxRSS|CPUTimeRAW|"
-                    "ReqMem|AllocCPUS|AveVMSize|\n"
-                    "1005932|165||2023-02-23T14:55:07|2023-02-23T14:55:08|"
-                    "|165|120Gn|1||\n"
-                    "1005932.batch|165|328716K|2023-02-23T14:55:08"
-                    "|2023-02-23T14:55:08|328716K|"
-                    "165|120Gn|1|156284K|\n"
-                    "1005932.extern|165|0|2023-02-23T14:55:08|"
-                    "2023-02-23T14:55:08|0|165|120Gn|1|108052K|"
-                ),
-                1001100: (
-                    "JobID|ElapsedRaw|MaxRSS|Submit|Start|MaxRSS|"
-                    "CPUTimeRAW|ReqMem|AllocCPUS|AveVMSize|\n"
-                    "1001100|219||2023-02-22T11:05:26|"
-                    "2023-02-22T11:05:27||219|120Gn|1||\n"
-                    "1001100.batch|219|342204K|2023-02-22T11:05:27|"
-                    "2023-02-22T11:05:27|342204K|219|120Gn|1|156284K|\n"
-                    "1001100.extern|219|0|2023-02-22T11:05:27|"
-                    "2023-02-22T11:05:27|0|219|120Gn|1|108052K|"
-                )
-            }
-
-            slurm_info = sacct_dummies.get(id)
-            return slurm_info
-
+        path_to_data = './qiita_db/test/test_data/slurm_data.txt.gz'
+        test_data = pd.read_csv(path_to_data, sep="|")
         types = {
             'Split libraries FASTQ': [
                 '6d368e16-2242-4cf8-87b4-a5dc40bb890b',
@@ -1444,7 +1417,7 @@ class ResourceAllocationPlotTests(TestCase):
             ]
         }
 
-        qdb.util.update_resource_allocation_table(test=read_slurm)
+        qdb.util.update_resource_allocation_table(test=test_data)
 
         for curr_cname, ids in types.items():
             updated_df = qdb.util._retrieve_resource_data(

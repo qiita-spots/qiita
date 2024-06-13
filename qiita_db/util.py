@@ -81,7 +81,6 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from json import loads
-from random import choice
 from scipy.optimize import minimize
 
 # memory constant functions defined for @resource_allocation_plot
@@ -2400,7 +2399,10 @@ def _retrieve_resource_data(cname, sname, columns):
                 sra.input_size AS input_size,
                 sra.extra_info AS extra_info,
                 sra.memory_used AS memory_used,
-                sra.walltime_used AS walltime_used
+                sra.walltime_used AS walltime_used,
+                sra.start_stamp AS start_stamp,
+                sra.node_name AS node_name,
+                sra.node_model AS node_model
             FROM
                 qiita.processing_job pr
             JOIN
@@ -2692,15 +2694,16 @@ def MaxRSS_helper(x):
     return y
 
 
-def update_resource_allocation_table(test=None):
+def update_resource_allocation_table(dates=['2023-04-28', '2023-05-05'],
+                                     test=None):
     # Thu, Apr 27, 2023 old allocations (from barnacle) were changed to a
     # better allocation so using job 1265533 as the before/after so we only
     # use the latests for the newest version
-    df = pd.DataFrame()
 
     sql_command = """
             SELECT
-                pj.processing_job_id AS processing_job_id
+                pj.processing_job_id AS processing_job_id,
+                pj.external_job_id AS external_job_id
             FROM
                 qiita.software_command sc
             JOIN
@@ -2719,54 +2722,71 @@ def update_resource_allocation_table(test=None):
                 pj.external_job_id::INT >= 1265533
             AND
                 sra.processing_job_id IS NULL;
-        """ if test is None else """
-        SELECT
-            pj.processing_job_id AS processing_job_id
-        FROM
-            qiita.software_command sc
-        JOIN
-            qiita.processing_job pj ON pj.command_id = sc.command_id
-        JOIN
-            qiita.processing_job_status pjs
-            ON pj.processing_job_status_id = pjs.processing_job_status_id
-        LEFT JOIN
-            qiita.slurm_resource_allocations sra
-            ON pj.processing_job_id = sra.processing_job_id
-        WHERE
-            pjs.processing_job_status = 'success'
-        AND
-            sra.processing_job_id IS NULL;
-    """
-
+        """
+    df = pd.DataFrame()
     with qdb.sql_connection.TRN:
         sql = sql_command
         qdb.sql_connection.TRN.add(sql)
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        columns = ["processing_job_id"]
+        columns = ["processing_job_id", 'external_id']
         df = pd.DataFrame(res, columns=columns)
+        df['external_id'] = df['external_id'].astype(int)
 
     data = []
-    sacct = ['sacct', '-p', '--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,'
-             'CPUTimeRAW,ReqMem,AllocCPUs,AveVMSize', '-j']
+    sacct = [
+        'sacct', '-p',
+        '--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,End,CPUTimeRAW,'
+        'ReqMem,AllocCPUs,AveVMSize', '--starttime', dates[0], '--endtime',
+        dates[1], '--user', 'qiita', '--state', 'CD']
+
+    if test is not None:
+        slurm_data = test
+    else:
+        try:
+            rvals = StringIO(check_output(sacct)).decode('ascii')
+        except TypeError as e:
+            raise e
+        slurm_data = pd.read_csv(StringIO(rvals), sep='|')
+
+    # In slurm, each JobID is represented by 3 rows in the dataframe:
+    # - external_id:        overall container for the job and its associated
+    #                       requests. When the Timelimit is hit, the container
+    #                       would take care of completing/stopping the
+    #                       external_id.batch job.
+    # - external_id.batch:  it's a container job, it provides how
+    #                       much memory it uses and cpus allocated, etc.
+    # - external_id.extern: takes into account anything that happens
+    #                       outside processing but yet is included in
+    #                       the container resources. As in, if you ssh
+    #                       to the node and do something additional or run
+    #                       a prolog script, that processing would be under
+    #                       external_id but separate from external_id.batch
+    # Here we are going to merge all this info into a single row + some
+    # other columns
+
+    def merge_rows(rows):
+        date_fmt = '%Y-%m-%dT%H:%M:%S'
+        wait_time = (
+            datetime.strptime(rows.iloc[0]['Start'], date_fmt)
+            - datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
+        tmp = rows.iloc[1].copy()
+        tmp['WaitTime'] = wait_time
+        return tmp
+
+    slurm_data['external_id'] = slurm_data['JobID'].apply(
+                                            lambda x: int(x.split('.')[0]))
+    slurm_data['external_id'] = slurm_data['external_id'].ffill()
+    slurm_data = slurm_data.groupby(
+            'external_id').apply(merge_rows).reset_index(drop=True)
+
+    # filter to only those jobs that are within the slurm_data df.
+    eids = set(slurm_data['external_id'])
+    df = df[df['external_id'].isin(eids)]
 
     for index, row in df.iterrows():
         job = qdb.processing_job.ProcessingJob(row['processing_job_id'])
         extra_info = ''
         eid = job.external_id
-        if test is not None:
-            eid = choice([1005932, 1001100])
-            rvals = test(eid)
-        else:
-            rvals = StringIO(check_output(sacct + [eid]).decode('ascii'))
-            try:
-                rvals = StringIO(check_output(sacct + [eid]).decode('ascii'))
-            except TypeError as e:
-                raise e
-
-        _d = pd.read_csv(StringIO(rvals), sep='|')
-
-        _d['processing_job_id'] = job.id
-        _d['external_id'] = eid
 
         cmd = job.command
         s = job.command.software
@@ -2806,58 +2826,25 @@ def update_resource_allocation_table(test=None):
             extra_info = job.parameters.values[
                 ('The number of rarefaction depths to include between '
                  'min_depth and max_depth. (steps)')]
-
-        # In slurm, each JobID is represented by 3 rows in the dataframe:
-        # - external_id:  overall container for the job and its associated
-        #                   requests. When the Timelimit is hit, the container
-        #                   would take care of completing/stopping the
-        #                   external_id.batch job.
-        # - external_id.batch: it's a container job, it provides how
-        #                        much memory it uses and cpus allocated, etc.
-        # - external_id.extern: takes into account anything that happens
-        #                       outside processing but yet is included in
-        #                       the container resources. As in, if you ssh
-        #                       to the node and do something additional or run
-        #                       a prolog script, that processing would be under
-        #                       external_id but separate from external_id.batch
-        # Here we are going to merge all this info into a single row + some
-        # other columns
-
-        def merge_rows(rows):
-            date_fmt = '%Y-%m-%dT%H:%M:%S'
-            wait_time = (
-                datetime.strptime(rows.iloc[0]['Start'], date_fmt)
-                - datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
-            tmp = rows.iloc[1].copy()
-            tmp['WaitTime'] = wait_time
-            return tmp
-
-        curr = _d.groupby(
-                'external_id').apply(merge_rows).reset_index(drop=True)
+        curr = slurm_data[slurm_data['external_id'] == int(eid)].iloc[0]
+        barnacle_info = curr['MaxVMSizeNode']
+        if len(barnacle_info) == 0:
+            barnacle_info = [None, None]
+        else:
+            barnacle_info = barnacle_info.split('-')
 
         row_dict = {
             'processing_job_id': job.id,
-            'external_id': eid,
-            'sId': s.id,
-            'sName': sname,
-            'sVersion': s.version,
-            'cId': cmd.id,
-            'cName': cmd.name,
             'samples': samples,
             'columns': columns,
             'input_size': input_size,
             'extra_info': extra_info,
-            'ElapsedRaw': curr['ElapsedRaw'].iloc[0],
-            'MaxRSS': curr['MaxRSS'].iloc[0],
-            'Submit': curr['Submit'].iloc[0],
-            'Start': curr['Start'].iloc[0],
-            'WaitTime': curr['WaitTime'].iloc[0],
-            'CPUTimeRAW': curr['CPUTimeRAW'].iloc[0],
-            'ReqMem': curr['ReqMem'].iloc[0],
-            'AllocCPUS': curr['AllocCPUS'].iloc[0],
-            'AveVMSize': curr['AveVMSize'].iloc[0]
+            'ElapsedRaw': curr['ElapsedRaw'],
+            'MaxRSS': curr['MaxRSS'],
+            'Start': curr['Start'],
+            'node_name': barnacle_info[0],
+            'node_model': barnacle_info[1]
         }
-
         data.append(row_dict)
     df = pd.DataFrame(data)
 
@@ -2881,13 +2868,17 @@ def update_resource_allocation_table(test=None):
                     input_size,
                     extra_info,
                     memory_used,
-                    walltime_used
+                    walltime_used,
+                    start_stamp,
+                    node_name,
+                    node_model
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             to_insert = [
                 row['processing_job_id'], row['samples'], row['columns'],
                 row['input_size'], row['extra_info'], row['MaxRSSRaw'],
-                row['ElapsedRaw']]
+                row['ElapsedRaw'], row['Start'], row['node_name'],
+                row['node_model']]
             qdb.sql_connection.TRN.add(sql, sql_args=to_insert)
             qdb.sql_connection.TRN.execute()
