@@ -2694,7 +2694,7 @@ def MaxRSS_helper(x):
     return y
 
 
-def update_resource_allocation_table(test=None):
+def update_resource_allocation_table(weeks=1, test=None):
     # Thu, Apr 27, 2023 old allocations (from barnacle) were changed to a
     # better allocation so we default start time 2023-04-28 to
     # use the latests for the newest version
@@ -2705,6 +2705,8 @@ def update_resource_allocation_table(test=None):
 
         Parameters:
         ----------
+        weeks: integer, optional
+            Number of weeks for which we want to make a request from slurm.
         test: pandas.DataFrame, optional
             Represents dataframe containing slurm data from 2023-04-28. Used
             for testing only.
@@ -2712,12 +2714,19 @@ def update_resource_allocation_table(test=None):
 
     # retrieve the most recent timestamp
     sql_timestamp = """
-        SELECT
-            sra.job_start
-        FROM
-            qiita.slurm_resource_allocations sra
-        ORDER BY job_start DESC;
-    """
+            SELECT
+                pj.external_job_id,
+                sra.job_start
+            FROM
+                qiita.processing_job pj
+            JOIN
+                qiita.slurm_resource_allocations sra
+            ON
+                pj.processing_job_id = sra.processing_job_id
+            ORDER BY
+                sra.job_start DESC
+            LIMIT 1;
+        """
 
     dates = ['', '']
 
@@ -2725,14 +2734,14 @@ def update_resource_allocation_table(test=None):
         sql = sql_timestamp
         qdb.sql_connection.TRN.add(sql)
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        columns = ['timestamp']
-        timestamps = pd.DataFrame(res, columns=columns)
-        if len(timestamps['timestamp']) == 0:
+        slurm_external_id, timestamp = res[0]
+        if slurm_external_id is None:
+            slurm_external_id = 0
+        if timestamp is None:
             dates[0] = datetime.strptime('2023-04-28', '%Y-%m-%d')
         else:
-            dates[0] = str(timestamps['timestamp'].iloc[0]).split(' ')[0]
-        date0 = datetime.strptime(dates[0], '%Y-%m-%d')
-        date1 = date0 + timedelta(weeks=1)
+            dates[0] = timestamp
+        date1 = dates[0] + timedelta(weeks)
         dates[1] = date1.strftime('%Y-%m-%d')
 
     sql_command = """
@@ -2754,12 +2763,14 @@ def update_resource_allocation_table(test=None):
             AND
                 pj.external_job_id ~ '^[0-9]+$'
             AND
+                CAST(pj.external_job_id AS INTEGER) > %s
+            AND
                 sra.processing_job_id IS NULL;
         """
     df = pd.DataFrame()
     with qdb.sql_connection.TRN:
         sql = sql_command
-        qdb.sql_connection.TRN.add(sql)
+        qdb.sql_connection.TRN.add(sql, sql_args=[slurm_external_id])
         res = qdb.sql_connection.TRN.execute_fetchindex()
         columns = ["processing_job_id", 'external_id']
         df = pd.DataFrame(res, columns=columns)
