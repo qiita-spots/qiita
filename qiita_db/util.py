@@ -2400,7 +2400,7 @@ def _retrieve_resource_data(cname, sname, columns):
                 sra.extra_info AS extra_info,
                 sra.memory_used AS memory_used,
                 sra.walltime_used AS walltime_used,
-                sra.start_stamp AS start_stamp,
+                sra.job_start AS job_start,
                 sra.node_name AS node_name,
                 sra.node_model AS node_model
             FROM
@@ -2694,11 +2694,46 @@ def MaxRSS_helper(x):
     return y
 
 
-def update_resource_allocation_table(dates=['2023-04-28', '2023-05-05'],
-                                     test=None):
+def update_resource_allocation_table(test=None):
     # Thu, Apr 27, 2023 old allocations (from barnacle) were changed to a
-    # better allocation so using job 1265533 as the before/after so we only
+    # better allocation so we default start time 2023-04-28 to
     # use the latests for the newest version
+    """
+        Updates qiita.slurm_resource_allocation SQL table with jobs from slurm.
+        Retrieves the most recent job available in the table and appends with
+        the data.
+
+        Parameters:
+        ----------
+        test: pandas.DataFrame, optional
+            Represents dataframe containing slurm data from 2023-04-28. Used
+            for testing only.
+    """
+
+    # retrieve the most recent timestamp
+    sql_timestamp = """
+        SELECT
+            sra.job_start
+        FROM
+            qiita.slurm_resource_allocations sra
+        ORDER BY job_start DESC;
+    """
+
+    dates = ['', '']
+
+    with qdb.sql_connection.TRN:
+        sql = sql_timestamp
+        qdb.sql_connection.TRN.add(sql)
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+        columns = ['timestamp']
+        timestamps = pd.DataFrame(res, columns=columns)
+        if len(timestamps['timestamp']) == 0:
+            dates[0] = datetime.strptime('2023-04-28', '%Y-%m-%d')
+        else:
+            dates[0] = str(timestamps['timestamp'].iloc[0]).split(' ')[0]
+        date0 = datetime.strptime(dates[0], '%Y-%m-%d')
+        date1 = date0 + timedelta(weeks=1)
+        dates[1] = date1.strftime('%Y-%m-%d')
 
     sql_command = """
             SELECT
@@ -2718,8 +2753,6 @@ def update_resource_allocation_table(dates=['2023-04-28', '2023-05-05'],
                 pjs.processing_job_status = 'success'
             AND
                 pj.external_job_id ~ '^[0-9]+$'
-            AND
-                pj.external_job_id::INT >= 1265533
             AND
                 sra.processing_job_id IS NULL;
         """
@@ -2869,7 +2902,7 @@ def update_resource_allocation_table(dates=['2023-04-28', '2023-05-05'],
                     extra_info,
                     memory_used,
                     walltime_used,
-                    start_stamp,
+                    job_start,
                     node_name,
                     node_model
                 )

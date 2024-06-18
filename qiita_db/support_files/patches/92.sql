@@ -10,8 +10,8 @@ CREATE  TABLE qiita.slurm_resource_allocations (
 	extra_info           varchar DEFAULT NULL,
 	memory_used          bigint,
 	walltime_used        integer,
-	start_stamp			 TIMESTAMP,
-	node_name			 varchar DEFAULT NULL,
+	job_start            TIMESTAMP,
+	node_name            varchar DEFAULT NULL,
 	node_model           varchar DEFAULT NULL,
 	CONSTRAINT pk_slurm_resource_allocations_processing_job_id PRIMARY KEY (
     processing_job_id )
