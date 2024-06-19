@@ -15,8 +15,8 @@ from json import loads
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.user_handlers import UserProfile
 from qiita_pet.handlers.base_handlers import BaseHandler
-import qiita_db as qdb
 from qiita_db.user import User
+
 
 class TestUserProfile(TestHandlerBase):
     # TODO: add proper test for this once figure out how. Issue 567

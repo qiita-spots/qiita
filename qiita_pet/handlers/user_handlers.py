@@ -385,6 +385,7 @@ class PurgeUsersAJAXHandler(PortalEditBase):
     # define columns besides email that will be displayed on website
     FIELDS = ['name', 'affiliation', 'address', 'phone',
               'creation_timestamp']
+
     @authenticated
     @execute_as_transaction
     def get(self):
@@ -397,7 +398,7 @@ class PurgeUsersAJAXHandler(PortalEditBase):
                            (creation_timestamp < (NOW() - INTERVAL '30 DAY'))
                   """.format(','.join(self.FIELDS))
             qdb.sql_connection.TRN.add(sql)
-            users =  qdb.sql_connection.TRN.execute()[1:]
+            users = qdb.sql_connection.TRN.execute()[1:]
 
         # fetching information for each user
         result = []
