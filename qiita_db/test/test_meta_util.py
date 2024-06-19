@@ -281,7 +281,7 @@ class MetaUtilTests(TestCase):
             self.assertDictEqual(f(redis_key), exp)
         # then the unique values
         vals = [
-            ('num_users', b'4', r_client.get),
+            ('num_users', b'7', r_client.get),
             ('lat_longs', b'[]', r_client.get),
             ('num_studies_ebi', b'1', r_client.get),
             ('num_samples_ebi', b'27', r_client.get),
