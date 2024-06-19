@@ -234,12 +234,6 @@ class User(qdb.base.QiitaObject):
                 cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
             qdb.sql_connection.TRN.add(sql, values)
 
-            # log timestamp of user creation
-            sql = """UPDATE qiita.{0}
-                     SET creation_timestamp = NOW()
-                     WHERE email = %s""".format(cls._table)
-            qdb.sql_connection.perform_as_transaction(sql, [email])
-
             # Add system messages to user
             sql = """INSERT INTO qiita.message_user (email, message_id)
                      SELECT %s, message_id FROM qiita.message
