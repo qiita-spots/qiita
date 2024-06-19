@@ -27,6 +27,9 @@ $( document ).ready(function() { dualpass_validator(); });
         {% end %}
       </div>
       {% end %}
+      {%if creation_timestamp is not None %}
+        <div style="padding-left: 1em; padding-bottom: 1em; color: grey;">account created at {{creation_timestamp}}</div>
+      {% end %}
       <div style="color:{% if msg.startswith('ERROR:') %}red{% else %}darkgreen{% end %};">{{msg}}</div>
       <button type="submit" class="btn btn-success">Save Edits</button>
     </form>

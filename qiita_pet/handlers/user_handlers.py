@@ -196,7 +196,9 @@ class UserProfileHandler(BaseHandler):
     def get(self):
         profile = UserProfile()
         profile.process(data=self.current_user.info)
-        self.render("user_profile.html", profile=profile, msg="", passmsg="")
+        self.render("user_profile.html", profile=profile, msg="", passmsg="",
+                    creation_timestamp=self.current_user.info[
+                        'creation_timestamp'])
 
     @authenticated
     @execute_as_transaction
@@ -248,7 +250,9 @@ class UserProfileHandler(BaseHandler):
                 else:
                     passmsg = "Incorrect old password"
         self.render("user_profile.html", user=user.id, profile=form_data,
-                    msg=msg, passmsg=passmsg)
+                    msg=msg, passmsg=passmsg,
+                    creation_timestamp=self.current_user.info[
+                        'creation_timestamp'])
 
 
 class ForgotPasswordHandler(BaseHandler):

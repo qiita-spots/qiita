@@ -75,7 +75,8 @@ class UserTest(TestCase):
             'receive_processing_job_emails': True,
             'social_orcid': None,
             'social_researchgate': None,
-            'social_googlescholar': None
+            'social_googlescholar': None,
+            'creation_timestamp': None
         }
 
     def tearDown(self):
@@ -88,7 +89,22 @@ class UserTest(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.user.User('FAIL@OMG.bar')
 
-    def _check_correct_info(self, obs, exp):
+    def _check_correct_info(self, obs, exp, ts_before=None):
+        """Compares info dict of user with special handling of specific keys.
+
+        Parameters
+        ----------
+        obs : dict
+            Observed user info dictionary.
+        exp : dict
+            Expected user info dictionary.
+        ts_before : datetime.datetime or None
+            User.create records the creation timestamp through SQL's NOW().
+            Since it is set by the database to the microsecond, we can't
+            predict it a priori and therefore simply record timestamp before
+            execution of user.create() and compare the relation.
+            The DB creation_timestamp column is optional, i.e. can be None.
+        """
         self.assertEqual(set(exp.keys()), set(obs.keys()))
         for key in exp:
             # user_verify_code and password seed randomly generated so just
@@ -97,10 +113,14 @@ class UserTest(TestCase):
                 self.assertEqual(len(obs[key]), 20)
             elif key == "password":
                 self.assertEqual(len(obs[key]), 60)
+            elif key == "creation_timestamp":
+                self.assertTrue(((exp[key] is None) and (obs[key] is None))
+                                or (ts_before <= exp[key]))
             else:
                 self.assertEqual(obs[key], exp[key])
 
     def test_create_user(self):
+        before = datetime.now()
         user = qdb.user.User.create('testcreateuser@test.bar', 'password')
 
         # adding a couple of messages
@@ -131,8 +151,9 @@ class UserTest(TestCase):
             'email': 'testcreateuser@test.bar',
             'social_orcid': None,
             'social_researchgate': None,
-            'social_googlescholar': None}
-        self._check_correct_info(obs, exp)
+            'social_googlescholar': None,
+            'creation_timestamp': datetime.now()}
+        self._check_correct_info(obs, exp, before)
 
         # Make sure new system messages are linked to user
         sql = """SELECT message_id FROM qiita.message_user
@@ -146,6 +167,7 @@ class UserTest(TestCase):
         qdb.util.clear_system_messages()
 
     def test_create_user_info(self):
+        before = datetime.now()
         user = qdb.user.User.create('testcreateuserinfo@test.bar', 'password',
                                     self.userinfo)
         self.assertEqual(user.id, 'testcreateuserinfo@test.bar')
@@ -171,8 +193,9 @@ class UserTest(TestCase):
             'email': 'testcreateuserinfo@test.bar',
             'social_orcid': None,
             'social_researchgate': None,
-            'social_googlescholar': None}
-        self._check_correct_info(obs, exp)
+            'social_googlescholar': None,
+            'creation_timestamp': datetime.now()}
+        self._check_correct_info(obs, exp, before)
 
     def test_create_user_column_not_allowed(self):
         self.userinfo["email"] = "FAIL"
@@ -241,7 +264,8 @@ class UserTest(TestCase):
             'phone': '222-444-6789',
             'social_orcid': None,
             'social_researchgate': None,
-            'social_googlescholar': None
+            'social_googlescholar': None,
+            'creation_timestamp': None
         }
         self.assertEqual(self.user.info, expinfo)
 
