@@ -54,6 +54,9 @@ INSERT INTO qiita.qiita_user VALUES ('test@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v
 INSERT INTO qiita.qiita_user VALUES ('shared@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Shared', 'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302', '111-222-3344', NULL, NULL, NULL, false);
 INSERT INTO qiita.qiita_user VALUES ('admin@foo.bar', 1, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Admin', 'Owner University', '312 noname st, Apt K, Nonexistantown, CO 80302', '222-444-6789', NULL, NULL, NULL, false);
 INSERT INTO qiita.qiita_user VALUES ('demo@microbio.me', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Demo', 'Qiita Dev', '1345 Colorado Avenue', '303-492-1984', NULL, NULL, NULL, false);
+INSERT INTO qiita.qiita_user VALUES ('justnow@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'JustNow', 'NonVeriUser', '1634 Edgemont Avenue', '303-492-1984', NULL, NULL, NULL, false, NULL, NULL, NULL, NOW());
+INSERT INTO qiita.qiita_user VALUES ('ayearago@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Oldie', 'NonVeriUser', '172 New Lane', '102-111-1984', NULL, NULL, NULL, false, NULL, NULL, NULL, NOW() - INTERVAL '1 YEAR');
+INSERT INTO qiita.qiita_user VALUES ('3Xdays@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'TooLate', 'NonVeriUser', '564 C Street', '508-492-222', NULL, NULL, NULL, false, NULL, NULL, NULL, NOW() - INTERVAL '30 DAY');
 
 
 --

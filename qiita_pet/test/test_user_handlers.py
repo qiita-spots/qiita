@@ -9,10 +9,14 @@
 from unittest import main
 from wtforms.validators import ValidationError
 from wtforms import StringField
+from mock import Mock
+from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.user_handlers import UserProfile
-
+from qiita_pet.handlers.base_handlers import BaseHandler
+import qiita_db as qdb
+from qiita_db.user import User
 
 class TestUserProfile(TestHandlerBase):
     # TODO: add proper test for this once figure out how. Issue 567
@@ -122,6 +126,33 @@ class TestUserJobsHandler(TestHandlerBase):
     def test_get(self):
         response = self.get('/user/jobs/')
         self.assertEqual(response.code, 200)
+
+
+class TestPurgeUsersAJAXHandler(TestHandlerBase):
+    def setUp(self):
+        super().setUp()
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
+
+    def test_get(self):
+        response = self.get('/admin/purge_usersAjax/?_=1718805487494')
+        obs_users_table = loads(response.body.decode('ascii'))
+        obs_users = {user['email'] for user in obs_users_table}
+        self.assertIn('ayearago@nonvalidat.ed', obs_users)
+        self.assertIn('3Xdays@nonvalidat.ed', obs_users)
+        self.assertNotIn('justnow@nonvalidat.ed', obs_users)
+
+    def test_post_removeBoth(self):
+        # remove both users
+        response = self.post('/admin/purge_users/',
+                             {'action': 'Remove',
+                              'selected': ['ayearago@nonvalidat.ed',
+                                           '3Xdays@nonvalidat.ed']})
+        self.assertEqual(response.code, 200)
+
+        # test that zero users are listed now
+        response = self.get('/admin/purge_usersAjax/?_=1718805487495')
+        obs_users_table = loads(response.body.decode('ascii'))
+        self.assertEqual(obs_users_table, [])
 
 
 if __name__ == "__main__":
