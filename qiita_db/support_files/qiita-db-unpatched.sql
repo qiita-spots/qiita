@@ -1932,13 +1932,6 @@ COMMENT ON COLUMN qiita.qiita_user.pass_reset_timestamp IS 'Time the reset code 
 
 
 --
--- Name: COLUMN qiita_user.creation_timestamp; Type: COMMENT; Schema: qiita
---
-
-COMMENT ON COLUMN qiita.qiita_user.creation_timestamp IS 'The date the user account was created';
-
-
---
 -- Name: reference; Type: TABLE; Schema: qiita
 --
 
