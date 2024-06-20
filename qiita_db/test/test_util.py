@@ -93,7 +93,8 @@ class DBUtilTests(DBUtilTestsBase):
         exp = {"email", "user_level_id", "password", "name", "affiliation",
                "address", "phone", "user_verify_code", "pass_reset_code",
                "pass_reset_timestamp", "receive_processing_job_emails",
-               "social_orcid", "social_researchgate", "social_googlescholar"}
+               "social_orcid", "social_researchgate", "social_googlescholar",
+               "creation_timestamp"}
         self.assertEqual(set(obs), exp)
 
     def test_exists_table(self):
