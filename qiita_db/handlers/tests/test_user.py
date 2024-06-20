@@ -51,10 +51,11 @@ class UsersListDBHandlerTests(OauthTestingBase):
 
         obs = loads(obs.body)
         exp = {'data': [
-            {'email': 'test@foo.bar', 'name': 'Dude'},
             {'email': 'shared@foo.bar', 'name': 'Shared'},
             {'email': 'admin@foo.bar', 'name': 'Admin'},
-            {'email': 'demo@microbio.me', 'name': 'Demo'}]}
+            {'email': 'demo@microbio.me', 'name': 'Demo'},
+            {'email': 'test@foo.bar', 'name': 'Dude'}
+            ]}
         self.assertEqual(obs, exp)
 
 
