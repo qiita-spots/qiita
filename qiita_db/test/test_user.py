@@ -76,7 +76,7 @@ class UserTest(TestCase):
             'social_orcid': None,
             'social_researchgate': None,
             'social_googlescholar': None,
-            'creation_timestamp': None
+            'creation_timestamp': datetime(2015, 12, 3, 13, 52, 42, 751331)
         }
 
     def tearDown(self):
@@ -265,8 +265,19 @@ class UserTest(TestCase):
             'social_orcid': None,
             'social_researchgate': None,
             'social_googlescholar': None,
-            'creation_timestamp': None
+            'creation_timestamp': datetime(2015, 12, 3, 13, 52, 42, 751331)
         }
+
+        # test database is re-populated during testing several times.
+        # Creation_timestamp depends on the percise timing of the repopulation,
+        # i.e. we cannot predict its value. We just test that this date should
+        # be within an hour and now. For the remainder of tests, we update
+        # our expectation.
+        self.assertTrue(datetime.now() - timedelta(hours=1) <
+                        self.user.info['creation_timestamp'] <
+                        datetime.now())
+        expinfo['creation_timestamp'] = self.user.info['creation_timestamp']
+
         self.assertEqual(self.user.info, expinfo)
 
     def test_set_info(self):

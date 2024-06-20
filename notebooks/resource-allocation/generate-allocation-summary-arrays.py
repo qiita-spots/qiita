@@ -1,4 +1,4 @@
-from qiita_core.util import MaxRSS_helper
+from qiita_db.util import MaxRSS_helper
 from qiita_db.software import Software
 import datetime
 from io import StringIO
