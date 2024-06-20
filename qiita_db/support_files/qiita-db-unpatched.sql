@@ -1891,8 +1891,7 @@ CREATE TABLE qiita.qiita_user (
     receive_processing_job_emails boolean DEFAULT false,
     social_orcid character varying DEFAULT NULL,
     social_researchgate character varying DEFAULT NULL,
-    social_googlescholar character varying DEFAULT NULL,
-    creation_timestamp timestamp without time zone DEFAULT NULL
+    social_googlescholar character varying DEFAULT NULL
 );
 
 
@@ -1930,13 +1929,6 @@ COMMENT ON COLUMN qiita.qiita_user.pass_reset_code IS 'Randomly generated code f
 --
 
 COMMENT ON COLUMN qiita.qiita_user.pass_reset_timestamp IS 'Time the reset code was generated';
-
-
---
--- Name: COLUMN qiita_user.creation_timestamp; Type: COMMENT; Schema: qiita
---
-
-COMMENT ON COLUMN qiita.qiita_user.creation_timestamp IS 'The date the user account was created';
 
 
 --
