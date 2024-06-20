@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 
 import re
+from json import dumps
+import warnings
 
 from tornado.web import authenticated, HTTPError
 from wtforms import Form, StringField, BooleanField, validators
@@ -14,6 +16,8 @@ from wtforms.validators import ValidationError
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import user_jobs_get_req
+from qiita_pet.handlers.portal import PortalEditBase
+import qiita_db as qdb
 from qiita_db.util import send_email
 from qiita_db.user import User
 from qiita_db.logger import LogEntry
@@ -375,3 +379,73 @@ class UserJobs(BaseHandler):
     def get(self):
         response = user_jobs_get_req(self.current_user)
         self.write(response)
+
+
+class PurgeUsersAJAXHandler(PortalEditBase):
+    # define columns besides email that will be displayed on website
+    FIELDS = ['name', 'affiliation', 'address', 'phone',
+              'creation_timestamp']
+
+    @authenticated
+    @execute_as_transaction
+    def get(self):
+        # retrieving users not yet verified
+        self.check_admin()
+        with qdb.sql_connection.TRN:
+            sql = """SELECT email,{0}
+                     FROM qiita.qiita_user
+                     WHERE (user_level_id=5) AND
+                           (creation_timestamp < (NOW() - INTERVAL '30 DAY'))
+                  """.format(','.join(self.FIELDS))
+            qdb.sql_connection.TRN.add(sql)
+            users = qdb.sql_connection.TRN.execute()[1:]
+
+        # fetching information for each user
+        result = []
+        for list in users:
+            for user in list:
+                usermail = user[0]
+                user_unit = {'email': usermail}
+                user_infos = User(usermail).info
+                for col in self.FIELDS:
+                    user_unit[col] = str(user_infos[col])
+                result.append(user_unit)
+        # returning information as JSON
+        self.write(dumps(result, separators=(',', ':')))
+
+
+class PurgeUsersHandler(PortalEditBase):
+    @authenticated
+    @execute_as_transaction
+    def get(self):
+        # render page and transfer headers to be included for the table
+        self.check_admin()
+        self.render('admin_purge_users.html',
+                    headers=['email'] + PurgeUsersAJAXHandler.FIELDS,
+                    submit_url="/admin/purge_users/")
+
+    def post(self):
+        # check if logged in user is admin and fetch all checked boxes as well
+        # as the action
+        self.check_admin()
+        users = map(str, self.get_arguments('selected'))
+        action = self.get_argument('action')
+
+        # depending on the action delete user from db (remove)
+        num_deleted_user = 0
+        for user in users:
+            try:
+                with warnings.catch_warnings(record=True) as warns:
+                    if action == "Remove":
+                        user_to_delete = User(user)
+                        user_to_delete.delete(user)
+                        num_deleted_user += 1
+                    else:
+                        raise HTTPError(
+                            400, reason="Unknown action: %s" % action)
+            except QiitaDBError as e:
+                self.write(action.upper() + " ERROR:<br/>" + str(e))
+                return
+        msg = '; '.join([str(w.message) for w in warns])
+        self.write(("%i non-validated user(s) successfully removed from "
+                    "database<br/>%s") % (num_deleted_user, msg))

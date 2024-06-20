@@ -926,3 +926,14 @@ INSERT INTO qiita.slurm_resource_allocations(processing_job_id, samples, columns
 ('6c84dcf1-c5ea-4e69-b17f-d2d5b8d48bdf', 123, 50, 2, 'nan', 327520000, 82, '2023-02-18T15:13:15', NULL, NULL),
 ('dcb12603-4142-44d1-9a52-3ca3511e380e', 320, 44, 2, 'nan', 329448000, 475, '2023-02-19T06:29:32', NULL, NULL),
 ('a0dd0a4d-b73f-4e9d-87dd-d29efba25336', 41, 50, 2, 'nan', 301108000, 144, '2023-02-19T09:14:27', NULL, NULL);
+
+-- for testing: provide creation date for one of the existing users
+
+UPDATE qiita.qiita_user SET creation_timestamp = '2015-12-03 13:52:42.751331-07' WHERE email = 'test@foo.bar';
+
+-- Jun 20, 2024
+-- Add some non-verified users to the test DB to test new admin page: /admin/purge_users/
+
+INSERT INTO qiita.qiita_user VALUES ('justnow@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'JustNow', 'NonVeriUser', '1634 Edgemont Avenue', '303-492-1984', NULL, NULL, NULL, false, NULL, NULL, NULL, NOW());
+INSERT INTO qiita.qiita_user VALUES ('ayearago@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Oldie', 'NonVeriUser', '172 New Lane', '102-111-1984', NULL, NULL, NULL, false, NULL, NULL, NULL, NOW() - INTERVAL '1 YEAR');
+INSERT INTO qiita.qiita_user VALUES ('3Xdays@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'TooLate', 'NonVeriUser', '564 C Street', '508-492-222', NULL, NULL, NULL, false, NULL, NULL, NULL, NOW() - INTERVAL '30 DAY');

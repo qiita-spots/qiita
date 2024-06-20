@@ -39,7 +39,3 @@ ALTER TABLE qiita.qiita_user
   ADD creation_timestamp timestamp without time zone DEFAULT NOW();
 
 COMMENT ON COLUMN qiita.qiita_user.creation_timestamp IS 'The date the user account was created';
-
--- for testing: provide creation date for one of the existing users
-
-UPDATE qiita.qiita_user SET creation_timestamp = '2015-12-03 13:52:42.751331-07' WHERE email = 'test@foo.bar';
