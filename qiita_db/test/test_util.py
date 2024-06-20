@@ -1317,7 +1317,7 @@ class ResourceAllocationPlotTests(TestCase):
         self.columns = [
                 "sName", "sVersion", "cID", "cName", "processing_job_id",
                 "parameters", "samples", "columns", "input_size", "extra_info",
-                "MaxRSSRaw", "ElapsedRaw"]
+                "MaxRSSRaw", "ElapsedRaw", "Start", "node_name", "node_model"]
 
         # df is a dataframe that represents a table with columns specified in
         # self.columns
@@ -1352,8 +1352,15 @@ class ResourceAllocationPlotTests(TestCase):
         failures_df = qdb.util._resource_allocation_failures(
             self.df, k, a, b, bm, self.col_name, 'MaxRSSRaw')
         failures = failures_df.shape[0]
-        self.assertEqual(bm, qdb.util.mem_model3, msg="""Best memory model
-                                                doesn't match""")
+        self.assertEqual(bm, qdb.util.mem_model3,
+                         msg=f"""Best memory model
+                                 doesn't match
+                                 Coefficients:{k} {a} {b}
+                                 {qdb.util.mem_model1}, "qdb.util.mem_model1"
+                                 {qdb.util.mem_model2}, "qdb.util.mem_model2"
+                                 {qdb.util.mem_model3}, "qdb.util.mem_model3"
+                                 {qdb.util.mem_model4}, "qdb.util.mem_model4"
+                            """)
         self.assertEqual(failures, 0, "Number of failures must be 0")
 
         # check that the algorithm chooses correct model for ElapsedRaw and
@@ -1366,9 +1373,62 @@ class ResourceAllocationPlotTests(TestCase):
             self.df, k, a, b, bm, self.col_name, 'ElapsedRaw')
         failures = failures_df.shape[0]
 
-        self.assertEqual(bm, qdb.util.time_model1, msg="""Best time model
-                                                   doesn't match""")
+        self.assertEqual(bm, qdb.util.time_model1,
+                         msg=f"""Best time model
+                                doesn't match
+                                Coefficients:{k} {a} {b}
+                                 {qdb.util.time_model1}, "qdb.util.time_model1"
+                                 {qdb.util.time_model2}, "qdb.util.time_model2"
+                                 {qdb.util.time_model3}, "qdb.util.time_model3"
+                                 {qdb.util.time_model4}, "qdb.util.time_model4"
+                                """)
         self.assertEqual(failures, 1, "Number of failures must be 1")
+
+    def test_MaxRSS_helper(self):
+        tests = [
+            ('6', 6.0),
+            ('6K', 6000),
+            ('6M', 6000000),
+            ('6G', 6000000000),
+            ('6.9', 6.9),
+            ('6.9K', 6900),
+            ('6.9M', 6900000),
+            ('6.9G', 6900000000),
+        ]
+        for x, y in tests:
+            self.assertEqual(qdb.util.MaxRSS_helper(x), y)
+
+    def test_db_update(self):
+        path_to_data = './qiita_db/test/test_data/slurm_data.txt.gz'
+        test_data = pd.read_csv(path_to_data, sep="|")
+        types = {
+            'Split libraries FASTQ': [
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b',
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931',
+                'b72369f9-a886-4193-8d3d-f7b504168e75',
+                '46b76f74-e100-47aa-9bf2-c0208bcea52d',
+                '6ad4d590-4fa3-44d3-9a8f-ddbb472b1b5f'],
+            'Pick closed-reference OTUs': [
+                '3c9991ab-6c14-4368-a48c-841e8837a79c',
+                '80bf25f3-5f1d-4e10-9369-315e4244f6d5',
+                '9ba5ae7a-41e1-4202-b396-0259aeaac366',
+                'e5609746-a985-41a1-babf-6b3ebe9eb5a9',
+            ],
+            'Single Rarefaction': [
+                '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0'
+            ]
+        }
+
+        qdb.util.update_resource_allocation_table(test=test_data)
+
+        for curr_cname, ids in types.items():
+            updated_df = qdb.util._retrieve_resource_data(
+                    curr_cname, self.SNAME, self.columns)
+            updated_ids_set = set(updated_df['processing_job_id'])
+            previous_ids_set = set(self.df['processing_job_id'])
+            for id in ids:
+                self.assertTrue(id in updated_ids_set)
+                self.assertFalse(id in previous_ids_set)
 
 
 STUDY_INFO = {
