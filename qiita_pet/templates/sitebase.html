@@ -334,6 +334,9 @@
   </head>
 
   <body style="padding-top: 70px; height: 100%" onload='overlay_check();'>
+    {% if qiita_config.tracking_js_code is not None %}
+      {% raw qiita_config.tracking_js_code %}
+    {% end %}
 
     <div id="qiita-main" class="qiita-main">
       <div id="navigation-bar" class="navbar navbar-default navbar-inverse navbar-fixed-top">
