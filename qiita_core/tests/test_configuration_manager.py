@@ -289,6 +289,23 @@ class ConfigurationManagerTests(TestCase):
         obs._get_portal(self.conf)
         self.assertEqual(obs.stats_map_center_longitude, -105.24827)
 
+    def test_get_tracking(self):
+        obs = ConfigurationManager()
+
+        # test for multi line content
+        self.assertTrue(len(obs.tracking_js_code) > 520)
+        self.assertIn("['setTrackerUrl'", obs.tracking_js_code)
+
+        # test that None is returned, if JS_CODE in config file, but not set
+        self.conf.set('user_tracking', 'JS_CODE', "")
+        obs._get_tracking(self.conf)
+        self.assertEqual(obs.tracking_js_code, None)
+
+        # test that if JS_CODE is not in config file, result in None
+        self.conf.remove_option('user_tracking', 'JS_CODE')
+        obs._get_tracking(self.conf)
+        self.assertEqual(obs.tracking_js_code, None)
+
 
 CONF = """
 # ------------------------------ Main settings --------------------------------
@@ -471,6 +488,25 @@ STATS_MAP_CENTER_LONGITUDE =
 
 # ----------------------------- iframes settings ---------------------------
 [iframe]
+# ----------------------------- User tracking Settings ---------------------
+[user_tracking]
+# You might want to track user on your Qiita instance. You can here inject
+# JavaScript code to the sitebase.html template, which means it will be added
+# to basically every page of Qiita.
+JS_CODE = <!-- Matomo --><script>var _paq = window._paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before
+     "trackPageView" */
+  _paq.push(['trackPageView']);_paq.push(['enableLinkTracking']);
+  (function() {var u="https://piwik.cebitec.uni-bielefeld.de/";_
+  paq.push(['setTrackerUrl', u+'matomo.php']);_
+  paq.push(['setSiteId', '21']);
+  var d=document, g=d.createElement('script'), s=d.getElementsByTagName(
+    'script')[0];
+  g.async=true;
+  g.src=u+'matomo.js';
+  s.parentNode.insertBefore(g,s);})();
+  </script><!-- End Matomo Code -->
+
 """
 
 if __name__ == '__main__':

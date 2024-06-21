@@ -127,6 +127,11 @@ class ConfigurationManager(object):
         The email address a user should write to when asking for help
     sysadmin_email : str
         The email address, Qiita sends internal notifications to a sys admin
+    tracking_js_code : str
+        You might want to track user on your Qiita instance. The content of the
+        JS_CODE variable will inject this JavaScript code to the sitebase.html
+        template, which means it will be added to basically every page of
+        Qiita.
 
     Raises
     ------
@@ -162,6 +167,7 @@ class ConfigurationManager(object):
         self._get_vamps(config)
         self._get_portal(config)
         self._iframe(config)
+        self._get_tracking(config)
 
     def _get_main(self, config):
         """Get the configuration of the main section"""
@@ -390,3 +396,11 @@ class ConfigurationManager(object):
 
     def _iframe(self, config):
         self.iframe_qiimp = config.get('iframe', 'QIIMP', fallback=None)
+
+    def _get_tracking(self, config):
+        """Get the configuration of the 'user_tracking' section"""
+
+        self.tracking_js_code = config.get(
+            'user_tracking', 'JS_CODE', fallback=None)
+        if not self.tracking_js_code:
+            self.tracking_js_code = None
