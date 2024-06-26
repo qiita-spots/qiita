@@ -47,7 +47,8 @@ class TestPortal(TestCase):
             qdb.sql_connection.TRN.add("SELECT * FROM qiita.analysis_portal")
             obs = qdb.sql_connection.TRN.execute_fetchindex()
         exp = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 2], [8, 2],
-               [9, 2], [10, 2], [11, 4], [12, 4], [13, 4], [14, 4]]
+               [9, 2], [10, 2], [11, 4], [12, 4], [13, 4], [14, 4],
+               [15, 4], [16, 4], [17, 4]]
         self.assertCountEqual(obs, exp)
 
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
