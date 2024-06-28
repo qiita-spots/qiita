@@ -970,7 +970,7 @@ class ProcessingJobTest(TestCase):
         pj = qdb.processing_job.ProcessingJob(jid)
         obs = pj._generate_notification_message('running', 'Yahoo!')
         exp = {'subject': ('Single Rarefaction: running, 8a7a8461-e8a1-'
-                           '4b4e-a428-1bc2f4d3ebd0 [Not Available]'),
+                           '4b4e-a428-1bc2f4d3ebd0 [126652530]'),
                'message': 'Analysis Job Single Rarefaction\n'
                           f'{qiita_config.base_url}/analysis/description/1/\n'
                           'New status: running'}

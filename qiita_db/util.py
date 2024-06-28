@@ -68,7 +68,9 @@ from os import makedirs
 from errno import EEXIST
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
+from subprocess import check_output
 import qiita_db as qdb
+
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -77,6 +79,8 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from io import StringIO
+from json import loads
 from scipy.optimize import minimize
 
 # memory constant functions defined for @resource_allocation_plot
@@ -2395,7 +2399,10 @@ def _retrieve_resource_data(cname, sname, columns):
                 sra.input_size AS input_size,
                 sra.extra_info AS extra_info,
                 sra.memory_used AS memory_used,
-                sra.walltime_used AS walltime_used
+                sra.walltime_used AS walltime_used,
+                sra.job_start AS job_start,
+                sra.node_name AS node_name,
+                sra.node_model AS node_model
             FROM
                 qiita.processing_job pr
             JOIN
@@ -2673,3 +2680,249 @@ def _resource_allocation_failures(df, k, a, b, model, col_name, type_):
     df[f'c{type_}'] = model(x_plot, k, a, b)
     failures_df = df[df[type_] > df[f'c{type_}']]
     return failures_df
+
+
+def MaxRSS_helper(x):
+    if x[-1] == 'K':
+        y = float(x[:-1]) * 1000
+    elif x[-1] == 'M':
+        y = float(x[:-1]) * 1000000
+    elif x[-1] == 'G':
+        y = float(x[:-1]) * 1000000000
+    else:
+        y = float(x)
+    return y
+
+
+def update_resource_allocation_table(weeks=1, test=None):
+    # Thu, Apr 27, 2023 old allocations (from barnacle) were changed to a
+    # better allocation so we default start time 2023-04-28 to
+    # use the latests for the newest version
+    """
+        Updates qiita.slurm_resource_allocation SQL table with jobs from slurm.
+        Retrieves the most recent job available in the table and appends with
+        the data.
+
+        Parameters:
+        ----------
+        weeks: integer, optional
+            Number of weeks for which we want to make a request from slurm.
+        test: pandas.DataFrame, optional
+            Represents dataframe containing slurm data from 2023-04-28. Used
+            for testing only.
+    """
+
+    # retrieve the most recent timestamp
+    sql_timestamp = """
+            SELECT
+                pj.external_job_id,
+                sra.job_start
+            FROM
+                qiita.processing_job pj
+            JOIN
+                qiita.slurm_resource_allocations sra
+            ON
+                pj.processing_job_id = sra.processing_job_id
+            ORDER BY
+                sra.job_start DESC
+            LIMIT 1;
+        """
+
+    dates = ['', '']
+
+    with qdb.sql_connection.TRN:
+        sql = sql_timestamp
+        qdb.sql_connection.TRN.add(sql)
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+        slurm_external_id, timestamp = res[0]
+        if slurm_external_id is None:
+            slurm_external_id = 0
+        if timestamp is None:
+            dates[0] = datetime.strptime('2023-04-28', '%Y-%m-%d')
+        else:
+            dates[0] = timestamp
+        date1 = dates[0] + timedelta(weeks)
+        dates[1] = date1.strftime('%Y-%m-%d')
+
+    sql_command = """
+            SELECT
+                pj.processing_job_id AS processing_job_id,
+                pj.external_job_id AS external_job_id
+            FROM
+                qiita.software_command sc
+            JOIN
+                qiita.processing_job pj ON pj.command_id = sc.command_id
+            JOIN
+                qiita.processing_job_status pjs
+                ON pj.processing_job_status_id = pjs.processing_job_status_id
+            LEFT JOIN
+                qiita.slurm_resource_allocations sra
+                ON pj.processing_job_id = sra.processing_job_id
+            WHERE
+                pjs.processing_job_status = 'success'
+            AND
+                pj.external_job_id ~ '^[0-9]+$'
+            AND
+                CAST(pj.external_job_id AS INTEGER) > %s
+            AND
+                sra.processing_job_id IS NULL;
+        """
+    df = pd.DataFrame()
+    with qdb.sql_connection.TRN:
+        sql = sql_command
+        qdb.sql_connection.TRN.add(sql, sql_args=[slurm_external_id])
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+        columns = ["processing_job_id", 'external_id']
+        df = pd.DataFrame(res, columns=columns)
+        df['external_id'] = df['external_id'].astype(int)
+
+    data = []
+    sacct = [
+        'sacct', '-p',
+        '--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,End,CPUTimeRAW,'
+        'ReqMem,AllocCPUs,AveVMSize', '--starttime', dates[0], '--endtime',
+        dates[1], '--user', 'qiita', '--state', 'CD']
+
+    if test is not None:
+        slurm_data = test
+    else:
+        try:
+            rvals = StringIO(check_output(sacct)).decode('ascii')
+        except TypeError as e:
+            raise e
+        slurm_data = pd.read_csv(StringIO(rvals), sep='|')
+
+    # In slurm, each JobID is represented by 3 rows in the dataframe:
+    # - external_id:        overall container for the job and its associated
+    #                       requests. When the Timelimit is hit, the container
+    #                       would take care of completing/stopping the
+    #                       external_id.batch job.
+    # - external_id.batch:  it's a container job, it provides how
+    #                       much memory it uses and cpus allocated, etc.
+    # - external_id.extern: takes into account anything that happens
+    #                       outside processing but yet is included in
+    #                       the container resources. As in, if you ssh
+    #                       to the node and do something additional or run
+    #                       a prolog script, that processing would be under
+    #                       external_id but separate from external_id.batch
+    # Here we are going to merge all this info into a single row + some
+    # other columns
+
+    def merge_rows(rows):
+        date_fmt = '%Y-%m-%dT%H:%M:%S'
+        wait_time = (
+            datetime.strptime(rows.iloc[0]['Start'], date_fmt)
+            - datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
+        tmp = rows.iloc[1].copy()
+        tmp['WaitTime'] = wait_time
+        return tmp
+
+    slurm_data['external_id'] = slurm_data['JobID'].apply(
+                                            lambda x: int(x.split('.')[0]))
+    slurm_data['external_id'] = slurm_data['external_id'].ffill()
+    slurm_data = slurm_data.groupby(
+            'external_id').apply(merge_rows).reset_index(drop=True)
+
+    # filter to only those jobs that are within the slurm_data df.
+    eids = set(slurm_data['external_id'])
+    df = df[df['external_id'].isin(eids)]
+
+    for index, row in df.iterrows():
+        job = qdb.processing_job.ProcessingJob(row['processing_job_id'])
+        extra_info = ''
+        eid = job.external_id
+
+        cmd = job.command
+        s = job.command.software
+        try:
+            samples, columns, input_size = job.shape
+        except qdb.exceptions.QiitaDBUnknownIDError:
+            # this will be raised if the study or the analysis has been
+            # deleted; in other words, the processing_job was ran but the
+            # details about it were erased when the user deleted them -
+            # however, we keep the job for the record
+            continue
+        except TypeError as e:
+            # similar to the except above, exept that for these 2 commands, we
+            # have the study_id as None
+            if cmd.name in {'create_sample_template', 'delete_sample_template',
+                            'list_remote_files'}:
+                continue
+            else:
+                raise e
+        sname = s.name
+
+        if cmd.name == 'release_validators':
+            ej = qdb.processing_job.ProcessingJob(job.parameters.values['job'])
+            extra_info = ej.command.name
+            samples, columns, input_size = ej.shape
+        elif cmd.name == 'complete_job':
+            artifacts = loads(job.parameters.values['payload'])['artifacts']
+            if artifacts is not None:
+                extra_info = ','.join({
+                    x['artifact_type'] for x in artifacts.values()
+                    if 'artifact_type' in x})
+        elif cmd.name == 'Validate':
+            input_size = sum([len(x) for x in loads(
+                job.parameters.values['files']).values()])
+            sname = f"{sname} - {job.parameters.values['artifact_type']}"
+        elif cmd.name == 'Alpha rarefaction curves [alpha_rarefaction]':
+            extra_info = job.parameters.values[
+                ('The number of rarefaction depths to include between '
+                 'min_depth and max_depth. (steps)')]
+        curr = slurm_data[slurm_data['external_id'] == int(eid)].iloc[0]
+        barnacle_info = curr['MaxVMSizeNode']
+        if len(barnacle_info) == 0:
+            barnacle_info = [None, None]
+        else:
+            barnacle_info = barnacle_info.split('-')
+
+        row_dict = {
+            'processing_job_id': job.id,
+            'samples': samples,
+            'columns': columns,
+            'input_size': input_size,
+            'extra_info': extra_info,
+            'ElapsedRaw': curr['ElapsedRaw'],
+            'MaxRSS': curr['MaxRSS'],
+            'Start': curr['Start'],
+            'node_name': barnacle_info[0],
+            'node_model': barnacle_info[1]
+        }
+        data.append(row_dict)
+    df = pd.DataFrame(data)
+
+    # This is important as we are transforming the MaxRSS to raw value
+    # so we need to confirm that there is no other suffixes
+    print('Make sure that only 0/K/M exist', set(
+        df.MaxRSS.apply(lambda x: str(x)[-1])))
+
+    # Generating new columns
+    df['MaxRSSRaw'] = df.MaxRSS.apply(lambda x: MaxRSS_helper(str(x)))
+    df['ElapsedRawTime'] = df.ElapsedRaw.apply(
+        lambda x: timedelta(seconds=float(x)))
+
+    for index, row in df.iterrows():
+        with qdb.sql_connection.TRN:
+            sql = """
+                INSERT INTO qiita.slurm_resource_allocations (
+                    processing_job_id,
+                    samples,
+                    columns,
+                    input_size,
+                    extra_info,
+                    memory_used,
+                    walltime_used,
+                    job_start,
+                    node_name,
+                    node_model
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            to_insert = [
+                row['processing_job_id'], row['samples'], row['columns'],
+                row['input_size'], row['extra_info'], row['MaxRSSRaw'],
+                row['ElapsedRaw'], row['Start'], row['node_name'],
+                row['node_model']]
+            qdb.sql_connection.TRN.add(sql, sql_args=to_insert)
+            qdb.sql_connection.TRN.execute()
