@@ -939,6 +939,6 @@ WHERE email = 'test@foo.bar';
 -- Jun 20, 2024
 -- Add some non-verified users to the test DB to test new admin page: /admin/purge_users/
 
-INSERT INTO qiita.qiita_user VALUES ('justnow@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'JustNow', 'NonVeriUser', '1634 Edgemont Avenue', '303-492-1984', NULL, NULL, NULL, false, NULL, NULL, NULL, NOW());
-INSERT INTO qiita.qiita_user VALUES ('ayearago@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Oldie', 'NonVeriUser', '172 New Lane', '102-111-1984', NULL, NULL, NULL, false, NULL, NULL, NULL, NOW() - INTERVAL '1 YEAR');
-INSERT INTO qiita.qiita_user VALUES ('3Xdays@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'TooLate', 'NonVeriUser', '564 C Street', '508-492-222', NULL, NULL, NULL, false, NULL, NULL, NULL, NOW() - INTERVAL '30 DAY');
+INSERT INTO qiita.qiita_user VALUES ('justnow@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'JustNow', 'NonVeriUser', '1634 Edgemont Avenue', '303-492-1984', NULL, NULL, NULL, false, NOW(), NULL, NULL, NULL);
+INSERT INTO qiita.qiita_user VALUES ('ayearago@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Oldie', 'NonVeriUser', '172 New Lane', '102-111-1984', NULL, NULL, NULL, false, NOW() - INTERVAL '1 YEAR', NULL, NULL, NULL);
+INSERT INTO qiita.qiita_user VALUES ('3Xdays@nonvalidat.ed', 5, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'TooLate', 'NonVeriUser', '564 C Street', '508-492-222', NULL, NULL, NULL, false, NOW() - INTERVAL '30 DAY', NULL, NULL, NULL);
