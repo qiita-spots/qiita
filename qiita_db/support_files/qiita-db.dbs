@@ -735,6 +735,13 @@
 				<column name="filepath_type" />
 			</index>
 		</table>
+		<table name="human_reads_filter_method" prior="human_reads_filter" >
+			<column name="human_reads_filter_method_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="human_reads_filter_method_name" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_human_reads_filter_method_human_reads_filter_method_id" unique="PRIMARY_KEY" >
+				<column name="human_reads_filter_method_id" />
+			</index>
+		</table>
 		<table name="investigation" >
 			<comment><![CDATA[Overarching investigation information.An investigation comprises one or more individual studies.]]></comment>
 			<column name="investigation_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
@@ -1007,6 +1014,9 @@
 			<column name="reprocess_job_id" type="uuid" jt="1111" >
 				<defo><![CDATA[NULL]]></defo>
 			</column>
+			<column name="human_reads_filter_method_id" type="bigint" jt="-5" >
+				<defo><![CDATA[NULL]]></defo>
+			</column>
 			<index name="pk_prep_template" unique="PRIMARY_KEY" >
 				<column name="prep_template_id" />
 			</index>
@@ -1265,6 +1275,19 @@
 			<column name="receive_processing_job_emails" type="boolean" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
+			<column name="social_orcid" type="varchar" jt="12" >
+				<defo><![CDATA[NULL]]></defo>
+			</column>
+			<column name="social_researchgate" type="varchar" jt="12" >
+				<defo><![CDATA[NULL]]></defo>
+			</column>
+			<column name="social_googlescholar" type="varchar" jt="12" >
+				<defo><![CDATA[NULL]]></defo>
+			</column>
+			<column name="creation_timestamp" type="timestamp" jt="93" >
+				<defo><![CDATA[NOW()]]></defo>
+				<comment><![CDATA[The date the user account was created]]></comment>
+			</column>
 			<index name="pk_user" unique="PRIMARY_KEY" >
 				<column name="email" />
 			</index>
@@ -1370,6 +1393,13 @@
 			</column>
 			<column name="memory_used" type="bigint" jt="-5" />
 			<column name="walltime_used" type="integer" jt="4" />
+			<column name="job_start" type="text" jt="12" />
+			<column name="node_name" type="varchar" jt="12" >
+				<defo><![CDATA[NULL]]></defo>
+			</column>
+			<column name="node_model" type="varchar" jt="12" >
+				<defo><![CDATA[NULL]]></defo>
+			</column>
 			<index name="pk_slurm_resource_allocations_processing_job_id" unique="PRIMARY_KEY" >
 				<column name="processing_job_id" />
 			</index>
@@ -2098,6 +2128,7 @@ $function$
 		<entity schema="qiita" name="environmental_package" color="C7F4BE" x="752" y="960" />
 		<entity schema="qiita" name="filepath" color="BED3F4" x="2944" y="1024" />
 		<entity schema="qiita" name="filepath_type" color="BED3F4" x="2960" y="1296" />
+		<entity schema="qiita" name="human_reads_filter_method" color="C1D8EE" x="2304" y="1312" />
 		<entity schema="qiita" name="investigation" color="C7F4BE" x="704" y="464" />
 		<entity schema="qiita" name="investigation_study" color="C7F4BE" x="736" y="688" />
 		<entity schema="qiita" name="logging" color="F4DDBE" x="1760" y="320" />
@@ -2125,14 +2156,14 @@ $function$
 		<entity schema="qiita" name="processing_job_workflow" color="F4DDBE" x="1600" y="1168" />
 		<entity schema="qiita" name="processing_job_workflow_root" color="F4DDBE" x="1600" y="1056" />
 		<entity schema="qiita" name="publication" color="F4DDBE" x="3232" y="832" />
-		<entity schema="qiita" name="qiita_user" color="D1BEF4" x="64" y="1232" />
+		<entity schema="qiita" name="qiita_user" color="D1BEF4" x="48" y="1216" />
 		<entity schema="qiita" name="reference" color="BED3F4" x="3248" y="1024" />
 		<entity schema="qiita" name="restrictions" color="BED3F4" x="2768" y="1424" />
 		<entity schema="qiita" name="sample_template_filepath" color="BED3F4" x="2720" y="1296" />
 		<entity schema="qiita" name="sample_x" color="BED3F4" x="912" y="1408" />
 		<entity schema="qiita" name="settings" color="F82E15" x="64" y="160" />
 		<entity schema="qiita" name="severity" color="F4DDBE" x="1632" y="240" />
-		<entity schema="qiita" name="slurm_resource_allocations" color="F4DDBE" x="1888" y="640" />
+		<entity schema="qiita" name="slurm_resource_allocations" color="F4DDBE" x="1888" y="624" />
 		<entity schema="qiita" name="software" color="F4DDBE" x="3232" y="320" />
 		<entity schema="qiita" name="software_artifact_type" color="BEBEF4" x="2128" y="304" />
 		<entity schema="qiita" name="software_command" color="F4DDBE" x="2880" y="320" />
