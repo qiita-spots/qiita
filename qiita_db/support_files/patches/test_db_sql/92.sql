@@ -929,7 +929,12 @@ INSERT INTO qiita.slurm_resource_allocations(processing_job_id, samples, columns
 
 -- for testing: provide creation date for one of the existing users
 
-UPDATE qiita.qiita_user SET creation_timestamp = '2015-12-03 13:52:42.751331-07' WHERE email = 'test@foo.bar';
+UPDATE qiita.qiita_user SET
+  social_orcid = '0000-0002-0975-9019',
+  social_researchgate = 'Rob-Knight',
+  social_googlescholar = '_e3QL94AAAAJ',
+  creation_timestamp = '2015-12-03 13:52:42.751331-07'
+WHERE email = 'test@foo.bar';
 
 -- Jun 20, 2024
 -- Add some non-verified users to the test DB to test new admin page: /admin/purge_users/

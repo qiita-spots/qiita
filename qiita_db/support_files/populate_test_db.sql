@@ -50,10 +50,10 @@ INSERT INTO qiita.user_level VALUES (7, 'wet-lab admin', 'Can access the private
 -- Data for Name: qiita_user; Type: TABLE DATA; Schema: qiita; Owner: antoniog
 --
 
-INSERT INTO qiita.qiita_user VALUES ('test@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Dude', 'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302', '111-222-3344', NULL, NULL, NULL, false, '0000-0002-0975-9019', 'Rob-Knight', '_e3QL94AAAAJ');
-INSERT INTO qiita.qiita_user VALUES ('shared@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Shared', 'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302', '111-222-3344', NULL, NULL, NULL, false);
-INSERT INTO qiita.qiita_user VALUES ('admin@foo.bar', 1, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Admin', 'Owner University', '312 noname st, Apt K, Nonexistantown, CO 80302', '222-444-6789', NULL, NULL, NULL, false);
-INSERT INTO qiita.qiita_user VALUES ('demo@microbio.me', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Demo', 'Qiita Dev', '1345 Colorado Avenue', '303-492-1984', NULL, NULL, NULL, false);
+INSERT INTO qiita.qiita_user VALUES ('test@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Dude', 'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302', '111-222-3344', NULL, NULL, NULL);
+INSERT INTO qiita.qiita_user VALUES ('shared@foo.bar', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Shared', 'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302', '111-222-3344', NULL, NULL, NULL);
+INSERT INTO qiita.qiita_user VALUES ('admin@foo.bar', 1, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Admin', 'Owner University', '312 noname st, Apt K, Nonexistantown, CO 80302', '222-444-6789', NULL, NULL, NULL);
+INSERT INTO qiita.qiita_user VALUES ('demo@microbio.me', 4, '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Demo', 'Qiita Dev', '1345 Colorado Avenue', '303-492-1984', NULL, NULL, NULL);
 
 
 --
@@ -329,7 +329,7 @@ INSERT INTO qiita.processing_job_status VALUES (6, 'waiting', 'The job is waitin
 -- Data for Name: processing_job; Type: TABLE DATA; Schema: qiita; Owner: antoniog
 --
 
-INSERT INTO qiita.processing_job VALUES ('6d368e16-2242-4cf8-87b4-a5dc40bb890b', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, NULL, NULL, NULL, false, 1284411757); 
+INSERT INTO qiita.processing_job VALUES ('6d368e16-2242-4cf8-87b4-a5dc40bb890b', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, NULL, NULL, NULL, false, 1284411757);
 INSERT INTO qiita.processing_job VALUES ('4c7115e8-4c8e-424c-bf25-96c292ca1931', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, NULL, NULL, NULL, false, 1287244546);
 INSERT INTO qiita.processing_job VALUES ('3c9991ab-6c14-4368-a48c-841e8837a79c', 'test@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}', 3, NULL, NULL, NULL, NULL, false, 1284411377);
 INSERT INTO qiita.processing_job VALUES ('b72369f9-a886-4193-8d3d-f7b504168e75', 'shared@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}', 3, NULL, '2015-11-22 21:15:00', NULL, NULL, false, 128552986);

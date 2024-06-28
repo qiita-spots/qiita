@@ -53,7 +53,7 @@ ALTER TABLE qiita.qiita_user ADD social_googlescholar character varying DEFAULT 
 
 CREATE  TABLE qiita.human_reads_filter_method (
 	human_reads_filter_method_id    bigint  NOT NULL,
-	human_reads_filter_method_method character varying NOT NULL;
+	human_reads_filter_method_method character varying NOT NULL,
 	CONSTRAINT pk_human_reads_filter_method_id PRIMARY KEY (
     human_reads_filter_method_id )
  );
