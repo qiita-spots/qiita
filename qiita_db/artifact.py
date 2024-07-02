@@ -1692,7 +1692,7 @@ class Artifact(qdb.base.QiitaObject):
         Returns
         -------
         str
-            The artifact name
+            The human_reads_filter_method name
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT human_reads_filter_method
