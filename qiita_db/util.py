@@ -2730,19 +2730,19 @@ def update_resource_allocation_table(weeks=1, test=None):
 
     dates = ['', '']
 
+    slurm_external_id = 0
+    start_date = datetime.strptime('2023-04-28', '%Y-%m-%d')
     with qdb.sql_connection.TRN:
         sql = sql_timestamp
         qdb.sql_connection.TRN.add(sql)
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        slurm_external_id, timestamp = res[0]
-        if slurm_external_id is None:
-            slurm_external_id = 0
-        if timestamp is None:
-            dates[0] = datetime.strptime('2023-04-28', '%Y-%m-%d')
-        else:
-            dates[0] = timestamp
-        date1 = dates[0] + timedelta(weeks)
-        dates[1] = date1.strftime('%Y-%m-%d')
+        if res:
+            sei, sd = res[0]
+            if sei is not None:
+                slurm_external_id = sei
+            if sd is not None:
+                start_date = sd
+        dates = [start_date, start_date + timedelta(weeks)]
 
     sql_command = """
             SELECT

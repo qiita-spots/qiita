@@ -3,6 +3,24 @@
 Version 2024.02
 ---------------
 
+Deployed on July 15th, 2024
+
+* Full refactor of the [DB patching system](https://github.com/qiita-spots/qiita/blob/master/CONTRIBUTING.md#patch-91sql) to make sure that a new production deployment has a fully empty database.
+* Fully removed Qiimp from Qiita.
+* Users can now add `ORCID`, `ResearchGate` and/or `GoogleScholar` information to their profile and the creation (registration) timestamp is kept in the database. Thank you @jlab.
+* Admins can now track and purge non-confirmed users from the database via the GUI (`/admin/purge_users/`). Thank you @jlab.
+* Added `qiita.slurm_resource_allocations` to store general job resource usage, which can be populated by `qiita_db.util.update_resource_allocation_table`.
+* Added `qiita_db.util.resource_allocation_plot` to generate different models to allocate resources from a given software command based on previous jobs, thank you @Gossty !
+* The stats page map can be centered via the configuration file; additionally, the Help and Admin emails are defined also via the configuration files, thank you @jlab !
+* ``Sequel IIe``, ``Revio``, and ``Onso`` are now valid instruments for the ``PacBio_SMRT`` platform.
+* Added `current_human_filtering` to the prep-information and `human_reads_filter_method` to the artifact to keep track of the method that it was used to human reads filter the raw artifact and know if it's up to date with what is expected via the best practices.
+* Added `reprocess_job_id` to the prep-information so we keep track if a preparation has been reprocessed with another job.
+* Other general fixes, like [#3385](https://github.com/qiita-spots/qiita/pull/3385), [#3397](https://github.com/qiita-spots/qiita/pull/3397), [#3399](https://github.com/qiita-spots/qiita/pull/3399), [#3400](https://github.com/qiita-spots/qiita/pull/3400), [#3409](https://github.com/qiita-spots/qiita/pull/3409), [#3410](https://github.com/qiita-spots/qiita/pull/3410).
+
+
+Version 2024.02
+---------------
+
 Deployed on February 27th, 2024
 
 * Default workflows now accept commands with multiple inputs.
