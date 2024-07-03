@@ -1684,3 +1684,51 @@ class Artifact(qdb.base.QiitaObject):
                 cids = cmds & cids
 
             return [qdb.software.Command(cid) for cid in cids]
+
+    @property
+    def human_reads_filter_method(self):
+        """The human_reads_filter_method of the artifact
+
+        Returns
+        -------
+        str
+            The human_reads_filter_method name
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT human_reads_filter_method
+                     FROM qiita.artifact
+                     LEFT JOIN qiita.human_reads_filter_method
+                        USING (human_reads_filter_method_id)
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @human_reads_filter_method.setter
+    def human_reads_filter_method(self, value):
+        """Set the human_reads_filter_method of the artifact
+
+        Parameters
+        ----------
+        value : str
+            The new artifact's human_reads_filter_method
+
+        Raises
+        ------
+        ValueError
+            If `value` doesn't exist in the database
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT human_reads_filter_method_id
+                     FROM qiita.human_reads_filter_method
+                     WHERE human_reads_filter_method = %s"""
+            qdb.sql_connection.TRN.add(sql, [value])
+            idx = qdb.sql_connection.TRN.execute_fetchflatten()
+
+            if len(idx) == 0:
+                raise ValueError(
+                    f'"{value}" is not a valid human_reads_filter_method')
+
+            sql = """UPDATE qiita.artifact
+                     SET human_reads_filter_method_id = %s
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [idx[0], self.id])

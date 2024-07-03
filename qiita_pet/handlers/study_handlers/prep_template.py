@@ -88,6 +88,13 @@ class PrepTemplateAJAX(BaseHandler):
                         'output'].html_summary_fp[1]
                     summary = relpath(_file, qiita_config.base_data_dir)
             res['creation_job_artifact_summary'] = summary
+        # res['']
+        res['human_reads_filter_method'] = None
+        a = PrepTemplate(prep_id).artifact
+        if a is not None:
+            hrfm = a.human_reads_filter_method
+            if hrfm is not None:
+                res['human_reads_filter_method'] = hrfm
 
         self.render('study_ajax/prep_summary.html', **res)
 
