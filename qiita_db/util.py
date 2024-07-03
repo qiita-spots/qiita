@@ -49,13 +49,13 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, exists, getsize
-from os import walk, remove, listdir, rename, stat
+from os import walk, remove, listdir, rename, stat, makedirs
 from glob import glob
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
 from tempfile import mkstemp
 from csv import writer as csv_writer
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import time as now
 from itertools import chain
 from contextlib import contextmanager
@@ -64,18 +64,15 @@ from humanize import naturalsize
 import hashlib
 from smtplib import SMTP, SMTP_SSL, SMTPException
 
-from os import makedirs
 from errno import EEXIST
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 from subprocess import check_output
 import qiita_db as qdb
 
-
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from datetime import timedelta
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -2742,7 +2739,7 @@ def update_resource_allocation_table(weeks=1, test=None):
                 slurm_external_id = sei
             if sd is not None:
                 start_date = sd
-        dates = [start_date, start_date + timedelta(weeks)]
+        dates = [start_date, start_date + timedelta(weeks=weeks)]
 
     sql_command = """
             SELECT
@@ -2780,8 +2777,9 @@ def update_resource_allocation_table(weeks=1, test=None):
     sacct = [
         'sacct', '-p',
         '--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,End,CPUTimeRAW,'
-        'ReqMem,AllocCPUs,AveVMSize', '--starttime', dates[0], '--endtime',
-        dates[1], '--user', 'qiita', '--state', 'CD']
+        'ReqMem,AllocCPUs,AveVMSize', '--starttime',
+        dates[0].strftime('%Y-%m-%d'), '--endtime',
+        dates[1].strftime('%Y-%m-%d'), '--user', 'qiita', '--state', 'CD']
 
     if test is not None:
         slurm_data = test

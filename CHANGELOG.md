@@ -1,6 +1,6 @@
 # Qiita changelog
 
-Version 2024.02
+Version 2024.07
 ---------------
 
 Deployed on July 15th, 2024
@@ -16,6 +16,7 @@ Deployed on July 15th, 2024
 * Added `current_human_filtering` to the prep-information and `human_reads_filter_method` to the artifact to keep track of the method that it was used to human reads filter the raw artifact and know if it's up to date with what is expected via the best practices.
 * Added `reprocess_job_id` to the prep-information so we keep track if a preparation has been reprocessed with another job.
 * Other general fixes, like [#3385](https://github.com/qiita-spots/qiita/pull/3385), [#3397](https://github.com/qiita-spots/qiita/pull/3397), [#3399](https://github.com/qiita-spots/qiita/pull/3399), [#3400](https://github.com/qiita-spots/qiita/pull/3400), [#3409](https://github.com/qiita-spots/qiita/pull/3409), [#3410](https://github.com/qiita-spots/qiita/pull/3410).
+* On June 14th, 2024 we modified the SPP to use XXXX to filter human-reads from the per-sample-FASTQ loaded to Qiita.
 
 
 Version 2024.02
