@@ -49,13 +49,13 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, exists, getsize
-from os import walk, remove, listdir, rename, stat
+from os import walk, remove, listdir, rename, stat, makedirs
 from glob import glob
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
 from tempfile import mkstemp
 from csv import writer as csv_writer
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import time as now
 from itertools import chain
 from contextlib import contextmanager
@@ -64,18 +64,15 @@ from humanize import naturalsize
 import hashlib
 from smtplib import SMTP, SMTP_SSL, SMTPException
 
-from os import makedirs
 from errno import EEXIST
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 from subprocess import check_output
 import qiita_db as qdb
 
-
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from datetime import timedelta
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -2730,19 +2727,19 @@ def update_resource_allocation_table(weeks=1, test=None):
 
     dates = ['', '']
 
+    slurm_external_id = 0
+    start_date = datetime.strptime('2023-04-28', '%Y-%m-%d')
     with qdb.sql_connection.TRN:
         sql = sql_timestamp
         qdb.sql_connection.TRN.add(sql)
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        slurm_external_id, timestamp = res[0]
-        if slurm_external_id is None:
-            slurm_external_id = 0
-        if timestamp is None:
-            dates[0] = datetime.strptime('2023-04-28', '%Y-%m-%d')
-        else:
-            dates[0] = timestamp
-        date1 = dates[0] + timedelta(weeks)
-        dates[1] = date1.strftime('%Y-%m-%d')
+        if res:
+            sei, sd = res[0]
+            if sei is not None:
+                slurm_external_id = sei
+            if sd is not None:
+                start_date = sd
+        dates = [start_date, start_date + timedelta(weeks=weeks)]
 
     sql_command = """
             SELECT
@@ -2769,27 +2766,23 @@ def update_resource_allocation_table(weeks=1, test=None):
         """
     df = pd.DataFrame()
     with qdb.sql_connection.TRN:
-        sql = sql_command
-        qdb.sql_connection.TRN.add(sql, sql_args=[slurm_external_id])
+        qdb.sql_connection.TRN.add(sql_command, sql_args=[slurm_external_id])
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        columns = ["processing_job_id", 'external_id']
-        df = pd.DataFrame(res, columns=columns)
+        df = pd.DataFrame(res, columns=["processing_job_id", 'external_id'])
         df['external_id'] = df['external_id'].astype(int)
 
     data = []
     sacct = [
         'sacct', '-p',
         '--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,End,CPUTimeRAW,'
-        'ReqMem,AllocCPUs,AveVMSize', '--starttime', dates[0], '--endtime',
-        dates[1], '--user', 'qiita', '--state', 'CD']
+        'ReqMem,AllocCPUs,AveVMSize', '--starttime',
+        dates[0].strftime('%Y-%m-%d'), '--endtime',
+        dates[1].strftime('%Y-%m-%d'), '--user', 'qiita', '--state', 'CD']
 
     if test is not None:
         slurm_data = test
     else:
-        try:
-            rvals = StringIO(check_output(sacct)).decode('ascii')
-        except TypeError as e:
-            raise e
+        rvals = check_output(sacct).decode('ascii')
         slurm_data = pd.read_csv(StringIO(rvals), sep='|')
 
     # In slurm, each JobID is represented by 3 rows in the dataframe:

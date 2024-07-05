@@ -76,11 +76,6 @@ Editing a Study
 
 .. _prepare-information-files:
 
-Creating and Working With Sample information
---------------------------------------------
-
-*  The :doc:`../qiimp` tab located at the top of the page is a useful tool for creating Qiita and EBI compatible metadata spreadsheets.
-
 Example files
 ~~~~~~~~~~~~~
 
