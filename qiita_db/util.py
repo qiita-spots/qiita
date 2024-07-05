@@ -2766,11 +2766,9 @@ def update_resource_allocation_table(weeks=1, test=None):
         """
     df = pd.DataFrame()
     with qdb.sql_connection.TRN:
-        sql = sql_command
-        qdb.sql_connection.TRN.add(sql, sql_args=[slurm_external_id])
+        qdb.sql_connection.TRN.add(sql_command, sql_args=[slurm_external_id])
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        columns = ["processing_job_id", 'external_id']
-        df = pd.DataFrame(res, columns=columns)
+        df = pd.DataFrame(res, columns=["processing_job_id", 'external_id'])
         df['external_id'] = df['external_id'].astype(int)
 
     data = []
@@ -2784,10 +2782,7 @@ def update_resource_allocation_table(weeks=1, test=None):
     if test is not None:
         slurm_data = test
     else:
-        try:
-            rvals = StringIO(check_output(sacct)).decode('ascii')
-        except TypeError as e:
-            raise e
+        rvals = check_output(sacct).decode('ascii')
         slurm_data = pd.read_csv(StringIO(rvals), sep='|')
 
     # In slurm, each JobID is represented by 3 rows in the dataframe:
