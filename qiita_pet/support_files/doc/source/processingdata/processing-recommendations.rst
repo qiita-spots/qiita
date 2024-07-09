@@ -41,6 +41,33 @@ Here we generate a single BIOM table with the OTUs/per-sample. The OTU IDs are g
 
 Currently, we have the reference databases: Greengenes version 3_8-97, Silva 119 and Unite 7. Depending on your selection is if the reference has a phylogenetic tree.
 
+The Sequencing Processing Pipeline (SPP)
+----------------------------------------
+
+The Knight Lab Sequencing Processing Pipeline is provided by the `qp-klp plugin <https://github.com/qiita-spots/qp-knight-lab-processing>`_
+and it takes the internal BCL files, converts them to per-sample-FASTQ and does the QC and human-host sequencing filtering before
+the files are linked into the preparation. In other words, this is the Knight Lab pre-processing and automatic loading
+Metagenomic pipeline. Note that this is only available to Admins and only to process internally sequenced data.
+
+Historically the Knight Lab have used these filtering steps:
+
+#. atropos & bowtie2 against GRCh38.p7 + Phi X 174
+#. fastp & minimap2 against GRCh38.p7 + Phi X 174
+#. fastp & minimap2 against GRCh38.p7 + Phi X 174 **via SPP**
+#. fastp & minimap2 against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0
+#. fastp & minimap2 against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0 **via SPP**
+#. fastp & minimap2 run in paired end and single end mode against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0 + Human Pangenome Reference Consortium release 2023
+#. fastp & minimap2 run in paired end and single end mode against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0 + Human Pangenome Reference Consortium release 2023 **via SPP**
+#. fastp & minimap2 against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0, then Movi against GRCh38.p14, T2T-CHM13v2.0 + Human Pangenome Reference Consortium release 2023
+#. fastp & minimap2 against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0, then Movi against GRCh38.p14, T2T-CHM13v2.0 + Human Pangenome Reference Consortium release 2023 **via SPP**
+
+As part of the 2024.07 release, for easier tracking, we have added this information to the database and linked to the artifacts and preparations. The goal for the near future is to use the latest filtering on all the available data.
+
+References:
+
+- `Armstrong et al. 2022 <https://journals.asm.org/doi/10.1128/msystems.01378-21>`_.
+- `Guccione, Patel et al. 2024 <https://github.com/cguccione/human_host_filtration>`_.
+
 Shotgun sequencing
 ------------------
 

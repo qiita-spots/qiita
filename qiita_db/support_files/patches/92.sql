@@ -48,19 +48,18 @@ ALTER TABLE qiita.qiita_user ADD social_orcid character varying DEFAULT NULL;
 ALTER TABLE qiita.qiita_user ADD social_researchgate character varying DEFAULT NULL;
 ALTER TABLE qiita.qiita_user ADD social_googlescholar character varying DEFAULT NULL;
 
+-- Jul 1, 2024
 -- Add human_reads_filter_method so we can keep track of the available methods
 -- and link them to the preparations
 
-CREATE  TABLE qiita.human_reads_filter_method (
-	human_reads_filter_method_id    bigint  NOT NULL,
-	human_reads_filter_method_method character varying NOT NULL,
-	CONSTRAINT pk_human_reads_filter_method_id PRIMARY KEY (
-    human_reads_filter_method_id )
- );
+CREATE TABLE qiita.human_reads_filter_method (
+	human_reads_filter_method_id    SERIAL PRIMARY KEY,
+	human_reads_filter_method character varying NOT NULL
+);
 
-ALTER TABLE qiita.prep_template
+ALTER TABLE qiita.artifact
   ADD human_reads_filter_method_id bigint DEFAULT NULL;
-ALTER TABLE qiita.prep_template
+ALTER TABLE qiita.artifact
   ADD CONSTRAINT fk_human_reads_filter_method
   FOREIGN KEY ( human_reads_filter_method_id )
   REFERENCES qiita.human_reads_filter_method ( human_reads_filter_method_id );

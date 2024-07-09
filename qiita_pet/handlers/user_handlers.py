@@ -187,11 +187,11 @@ class UserProfile(Form):
         "Receive Processing Job Emails?")
 
     social_orcid = StringField(
-        "ORCID", [validator_orcid_id], description="0000-0002-0975-9019")
+        "ORCID", [validator_orcid_id], description="")
     social_googlescholar = StringField(
-        "Google Scholar", [validator_gscholar_id], description="_e3QL94AAAAJ")
+        "Google Scholar", [validator_gscholar_id], description="")
     social_researchgate = StringField(
-        "ResearchGate", [validator_rgate_id], description="Rob-Knight")
+        "ResearchGate", [validator_rgate_id], description="")
 
 
 class UserProfileHandler(BaseHandler):
