@@ -80,7 +80,7 @@ Example files
 ~~~~~~~~~~~~~
 
 You can download an example sample information file from
-`here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__.
+`here <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__.
 
 
 Sample information file
