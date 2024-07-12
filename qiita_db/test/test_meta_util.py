@@ -519,6 +519,23 @@ class MetaUtilTests(TestCase):
             '-', '').replace(':', '').replace(' ', '-')
         self.assertEqual(tgz_obs, [time])
 
+    def test_update_resource_allocation_redis(self):
+        cname = "Split libraries FASTQ"
+        sname = "QIIMEq2"
+        col_name = "samples * columns"
+        qdb.meta_util.update_resource_allocation_redis(cname, sname)
+
+        vals = [
+            ("img", b's', r_client.get),
+            ('time', b'2024-11-11', r_client.get)
+        ]
+
+        for k, exp, f in vals:
+            redis_key = 'resources$#%s$#%s$#%s:%s' % (cname, sname, col_name, k)
+            # checking redis values
+            print(f(redis_key))
+            # self.assertEqual(f(redis_key), exp)
+
 
 if __name__ == '__main__':
     main()

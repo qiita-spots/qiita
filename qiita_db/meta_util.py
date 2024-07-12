@@ -37,11 +37,17 @@ from hashlib import md5
 from re import sub
 from json import loads, dump, dumps
 
-from qiita_db.util import create_nested_path
+from qiita_db.util import create_nested_path, _retrieve_resource_data
+from qiita_db.util import resource_allocation_plot, get_software_commands
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
 
+# global constant list used in resource_allocation_page
+columns = [
+    "sName", "sVersion", "cID", "cName", "processing_job_id",
+    "parameters", "samples", "columns", "input_size", "extra_info",
+    "MaxRSSRaw", "ElapsedRaw", "Start", "node_name", "node_model"]
 
 def _get_data_fpids(constructor, object_id):
     """Small function for getting filepath IDS associated with data object
@@ -544,5 +550,44 @@ def generate_plugin_releases():
     for k, v, f in vals:
         redis_key = 'release-archive:%s' % k
         # important to "flush" variables to avoid errors
+        r_client.delete(redis_key)
+        f(redis_key, v)
+
+
+def initialize_resource_allocations_redis():
+    time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
+    scommands = get_software_commands()
+    for software, versions in scommands.items():
+        for version, commands in versions.items():
+            for command in commands:
+                print("Generating plot for:", software, version, command)
+                update_resource_allocation_redis(command, software,
+                                                 version, time)
+    redis_key = 'resources:commands'
+    r_client.set(redis_key, str(scommands))
+
+
+def update_resource_allocation_redis(cname, sname, version, time):
+    col_name = "samples * columns"
+
+    df = _retrieve_resource_data(cname, sname, version, columns)
+    fig, axs = resource_allocation_plot(df, cname, sname, col_name)
+
+    fig.tight_layout()
+    plot = BytesIO()
+    fig.savefig(plot, format='png')
+    plot.seek(0)
+
+    img = 'data:image/png;base64,' + quote(b64encode(plot.getbuffer()).decode('ascii'))
+    plt.close(fig)
+
+    # SID, CID, col_name
+    values = [
+        ("img", img, r_client.set),
+        ('time', time, r_client.set)
+    ]
+
+    for k, v, f in values:
+        redis_key = 'resources$#%s$#%s$#%s:%s' % (cname, sname, col_name, k)
         r_client.delete(redis_key)
         f(redis_key, v)

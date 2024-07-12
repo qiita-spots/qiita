@@ -16,6 +16,7 @@ from qiita_db.util import (
     quick_mounts_purge as qiita_quick_mounts_purge)
 from qiita_db.meta_util import (
     update_redis_stats as qiita_update_redis_stats,
+    initialize_resource_allocations_redis as qiita_initialize_resource_allocations_redis,
     generate_biom_and_metadata_release as
     qiita_generate_biom_and_metadata_release,
     generate_plugin_releases as qiita_generate_plugin_releases)
@@ -46,6 +47,11 @@ def empty_trash_upload_folder(remove):
 @commands.command()
 def update_redis_stats():
     qiita_update_redis_stats()
+
+
+@commands.command()
+def initialize_resource_allocations_redis():
+    qiita_initialize_resource_allocations_redis()
 
 
 @commands.command()

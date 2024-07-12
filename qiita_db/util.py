@@ -2381,7 +2381,7 @@ def resource_allocation_plot(df, cname, sname, col_name):
     return fig, axs
 
 
-def _retrieve_resource_data(cname, sname, columns):
+def _retrieve_resource_data(cname, sname, version, columns):
     with qdb.sql_connection.TRN:
         sql = """
             SELECT
@@ -2411,9 +2411,10 @@ def _retrieve_resource_data(cname, sname, columns):
                 ON pr.processing_job_id = sra.processing_job_id
             WHERE
                 sc.name = %s
-                AND s.name = %s;
+                AND s.name = %s
+                AND s.version = %s
             """
-        qdb.sql_connection.TRN.add(sql, sql_args=[cname, sname])
+        qdb.sql_connection.TRN.add(sql, sql_args=[cname, sname, version])
         res = qdb.sql_connection.TRN.execute_fetchindex()
         df = pd.DataFrame(res, columns=columns)
         return df
@@ -2482,15 +2483,19 @@ def _resource_allocation_plot_helper(
     y_plot = best_model(x_plot, k, a, b)
     ax.plot(x_plot, y_plot, linewidth=1, color='orange')
 
+    cmin_value = min(y_plot)
+    cmax_value = max(y_plot)
+
     maxi = naturalsize(df[curr].max(), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(df[curr].max()))
-    cmax = naturalsize(max(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
-        timedelta(seconds=float(max(y_plot)))
+    cmax = naturalsize(cmax_value, gnu=True) if curr == "MaxRSSRaw" else \
+        str(timedelta(seconds=round(cmax_value, 2))).rstrip('0').rstrip('.')
 
     mini = naturalsize(df[curr].min(), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(df[curr].min()))
-    cmin = naturalsize(min(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
-        timedelta(seconds=float(min(y_plot)))
+    cmin = naturalsize(cmin_value, gnu=True) if curr == "MaxRSSRaw" else \
+        str(timedelta(seconds=round(cmin_value, 2))).rstrip('0').rstrip('.')
+
 
     x_plot = np.array(df[col_name])
     failures_df = _resource_allocation_failures(
@@ -2919,3 +2924,35 @@ def update_resource_allocation_table(weeks=1, test=None):
                 row['node_model']]
             qdb.sql_connection.TRN.add(sql, sql_args=to_insert)
             qdb.sql_connection.TRN.execute()
+
+
+def get_software_commands():
+    res = []
+    with qdb.sql_connection.TRN:
+        sql_command = """
+            SELECT DISTINCT
+                s.name AS sName,
+                s.version AS sVersion,
+                sc.name AS cName
+            FROM
+                qiita.slurm_resource_allocations sra
+            JOIN
+                qiita.processing_job pr
+                ON sra.processing_job_id = pr.processing_job_id
+            JOIN
+                qiita.software_command sc on pr.command_id = sc.command_id
+            JOIN
+                qiita.software s ON sc.software_id = s.software_id
+            """
+        qdb.sql_connection.TRN.add(sql_command)
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+
+    software_commands = dict()
+    for s_name, s_version, c_name in res:
+        if s_name not in software_commands:
+            software_commands[s_name] = {}
+        if s_version not in software_commands[s_name]:
+            software_commands[s_name][s_version] = set()
+        software_commands[s_name][s_version].add(c_name)
+
+    return software_commands

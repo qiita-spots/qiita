@@ -1311,8 +1311,9 @@ class PurgeFilepathsTests(DBUtilTestsBase):
 
 class ResourceAllocationPlotTests(TestCase):
     def setUp(self):
-        self.CNAME = "Split libraries FASTQ"
-        self.SNAME = "QIIMEq2"
+        self.cname = "Split libraries FASTQ"
+        self.sname = "QIIMEq2"
+        self.version = "1.9.1"
         self.col_name = 'samples * columns'
         self.columns = [
                 "sName", "sVersion", "cID", "cName", "processing_job_id",
@@ -1322,12 +1323,12 @@ class ResourceAllocationPlotTests(TestCase):
         # df is a dataframe that represents a table with columns specified in
         # self.columns
         self.df = qdb.util._retrieve_resource_data(
-                self.CNAME, self.SNAME, self.columns)
+                self.cname, self.sname, self.version, self.columns)
 
     def test_plot_return(self):
         # check the plot returns correct objects
         fig1, axs1 = qdb.util.resource_allocation_plot(
-            self.df, self.CNAME, self.SNAME, self.col_name)
+            self.df, self.cname, self.sname, self.col_name)
         self.assertIsInstance(
             fig1, Figure,
             "Returned object fig1 is not a Matplotlib Figure")
@@ -1338,13 +1339,13 @@ class ResourceAllocationPlotTests(TestCase):
 
     def test_minimize_const(self):
         self.df = self.df[
-            (self.df.cName == self.CNAME) & (self.df.sName == self.SNAME)]
+            (self.df.cName == self.cname) & (self.df.sName == self.sname)]
         self.df.dropna(subset=['samples', 'columns'], inplace=True)
         self.df[self.col_name] = self.df.samples * self.df['columns']
         fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
         bm, options = qdb.util._resource_allocation_plot_helper(
-            self.df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw',
+            self.df, axs[0], self.cname, self.sname, 'MaxRSSRaw',
             qdb.util.MODELS_MEM, self.col_name)
         # check that the algorithm chooses correct model for MaxRSSRaw and
         # has 0 failures
@@ -1366,7 +1367,7 @@ class ResourceAllocationPlotTests(TestCase):
         # check that the algorithm chooses correct model for ElapsedRaw and
         # has 1 failure
         bm, options = qdb.util._resource_allocation_plot_helper(
-            self.df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw',
+            self.df, axs[1], self.cname, self.sname, 'ElapsedRaw',
             qdb.util.MODELS_TIME, self.col_name)
         k, a, b = options.x
         failures_df = qdb.util._resource_allocation_failures(
@@ -1423,7 +1424,7 @@ class ResourceAllocationPlotTests(TestCase):
 
         for curr_cname, ids in types.items():
             updated_df = qdb.util._retrieve_resource_data(
-                    curr_cname, self.SNAME, self.columns)
+                    curr_cname, self.sname, self.version, self.columns)
             updated_ids_set = set(updated_df['processing_job_id'])
             previous_ids_set = set(self.df['processing_job_id'])
             for id in ids:
