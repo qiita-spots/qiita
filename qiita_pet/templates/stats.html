@@ -81,7 +81,7 @@
         vectorLayer
       ],
       view: new ol.View({
-        center: ol.proj.fromLonLat([-105.24827, 40.01027]),
+        center: ol.proj.fromLonLat([{% raw qiita_config.stats_map_center_longitude %}, {% raw qiita_config.stats_map_center_latitude %}]),
         zoom: 4
       })
     });

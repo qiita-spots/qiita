@@ -434,7 +434,7 @@
 
       <span id="prep-name-span">{{name}}</span> - ID {{prep_id}} ({{data_type}})
       {% if user_level in ('admin', 'wet-lab admin') and creation_job is not None %}
-          <a class="btn btn-default" download="{{creation_job_filename}}" href="data:text/plain;charset=utf-8,{{creation_job_filename_body}}"><span class="glyphicon glyphicon-download-alt"></span> SampleSheet</a>
+          <a class="btn btn-default" download="{{creation_job_filename}}" href="data:text/plain;charset=utf-8,encodeURIComponent({{creation_job_filename_body}})"><span class="glyphicon glyphicon-download-alt"></span> SampleSheet</a>
           {% if creation_job_artifact_summary is not None %}
             <a class="btn btn-default" target="_blank" href="{% raw qiita_config.portal_dir %}/artifact/html_summary/{{creation_job_artifact_summary}}"><span class="glyphicon glyphicon-download-alt"></span> Creation Job Output</a>
           {% end %}
@@ -467,6 +467,10 @@
 
 <div class="row">
   <div class="col-md-12">
+    {% if human_reads_filter_method is not None %}
+      <h7> The raw data of this preparation was pre-processed via: <b>{{ human_reads_filter_method }}</b></h7>
+    {% end %}
+
     <ul class="nav nav-pills">
       <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#sample-listing-tab-div">Sample Listing</a></li>
       <li style="border: 1px solid #428bca; border-radius: 5px"><a data-toggle="tab" href="#summary-tab-div">Summary</a></li>

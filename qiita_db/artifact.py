@@ -359,7 +359,7 @@ class Artifact(qdb.base.QiitaObject):
         # There are three different ways of creating an Artifact, but all of
         # them execute a set of common operations. Declare functions to avoid
         # code duplication. These functions should not be used outside of the
-        # create function, hence declaring them here
+        # CREATE OR REPLACE FUNCTION, hence declaring them here
         def _common_creation_steps(atype, cmd_id, data_type, cmd_parameters):
             gen_timestamp = datetime.now()
             visibility_id = qdb.util.convert_to_id("sandbox", "visibility")
@@ -1574,7 +1574,15 @@ class Artifact(qdb.base.QiitaObject):
     @property
     def has_human(self):
         has_human = False
-        if self.artifact_type == 'per_sample_FASTQ':
+        # we are going to check the metadata if:
+        # - the prep data_type is _not_ target gene
+        # - the prep is not current_human_filtering
+        # - if the artifact_type is 'per_sample_FASTQ'
+        pts = self.prep_templates
+        tgs = qdb.metadata_template.constants.TARGET_GENE_DATA_TYPES
+        ntg = any([pt.data_type() not in tgs for pt in pts])
+        chf = any([not pt.current_human_filtering for pt in pts])
+        if ntg and chf and self.artifact_type == 'per_sample_FASTQ':
             st = self.study.sample_template
             if 'env_package' in st.categories:
                 sql = f"""SELECT DISTINCT sample_values->>'env_package'
@@ -1676,3 +1684,51 @@ class Artifact(qdb.base.QiitaObject):
                 cids = cmds & cids
 
             return [qdb.software.Command(cid) for cid in cids]
+
+    @property
+    def human_reads_filter_method(self):
+        """The human_reads_filter_method of the artifact
+
+        Returns
+        -------
+        str
+            The human_reads_filter_method name
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT human_reads_filter_method
+                     FROM qiita.artifact
+                     LEFT JOIN qiita.human_reads_filter_method
+                        USING (human_reads_filter_method_id)
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @human_reads_filter_method.setter
+    def human_reads_filter_method(self, value):
+        """Set the human_reads_filter_method of the artifact
+
+        Parameters
+        ----------
+        value : str
+            The new artifact's human_reads_filter_method
+
+        Raises
+        ------
+        ValueError
+            If `value` doesn't exist in the database
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT human_reads_filter_method_id
+                     FROM qiita.human_reads_filter_method
+                     WHERE human_reads_filter_method = %s"""
+            qdb.sql_connection.TRN.add(sql, [value])
+            idx = qdb.sql_connection.TRN.execute_fetchflatten()
+
+            if len(idx) == 0:
+                raise ValueError(
+                    f'"{value}" is not a valid human_reads_filter_method')
+
+            sql = """UPDATE qiita.artifact
+                     SET human_reads_filter_method_id = %s
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [idx[0], self.id])

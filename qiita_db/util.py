@@ -49,13 +49,13 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, exists, getsize
-from os import walk, remove, listdir, rename, stat
+from os import walk, remove, listdir, rename, stat, makedirs
 from glob import glob
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
 from tempfile import mkstemp
 from csv import writer as csv_writer
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import time as now
 from itertools import chain
 from contextlib import contextmanager
@@ -64,14 +64,39 @@ from humanize import naturalsize
 import hashlib
 from smtplib import SMTP, SMTP_SSL, SMTPException
 
-from os import makedirs
 from errno import EEXIST
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
+from subprocess import check_output
 import qiita_db as qdb
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from io import StringIO
+from json import loads
+from scipy.optimize import minimize
+
+# memory constant functions defined for @resource_allocation_plot
+mem_model1 = (lambda x, k, a, b: k * np.log(x) + x * a + b)
+mem_model2 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 + a)
+mem_model3 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
+              a * np.log(x)**3)
+mem_model4 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
+              a * np.log(x)**2.5)
+MODELS_MEM = [mem_model1, mem_model2, mem_model3, mem_model4]
+
+# time constant functions defined for @resource_allocation_plot
+time_model1 = (lambda x, k, a, b: a + b + np.log(x) * k)
+time_model2 = (lambda x, k, a, b: a + b * x + np.log(x) * k)
+time_model3 = (lambda x, k, a, b: a + b * np.log(x)**2 + np.log(x) * k)
+time_model4 = (lambda x, k, a, b: a * np.log(x)**3 + b * np.log(x)**2
+               + np.log(x) * k)
+
+MODELS_TIME = [time_model1, time_model2, time_model3, time_model4]
 
 
 def scrub_data(s):
@@ -386,7 +411,11 @@ def get_db_files_base_dir():
     """
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add("SELECT base_data_dir FROM settings")
-        return qdb.sql_connection.TRN.execute_fetchlast()
+        basedir = qdb.sql_connection.TRN.execute_fetchlast()
+        # making sure that it never ends in a "/" as most tests expect this
+        if basedir.endswith("/"):
+            basedir = basedir[:-1]
+        return basedir
 
 
 def get_work_base_dir():
@@ -2311,3 +2340,582 @@ def send_email(to, subject, body):
         raise RuntimeError("Can't send email!")
     finally:
         smtp.close()
+
+
+def resource_allocation_plot(df, cname, sname, col_name):
+    """Builds resource allocation plot for given filename and jobs
+
+    Parameters
+    ----------
+    file : str, required
+        Builds plot for the specified file name. Usually provided as tsv.gz
+    cname: str, required
+        Specified job type
+    sname: str, required
+        Specified job sub type.
+    col_name: str, required
+        Specifies x axis for the graph
+
+    Returns
+    ----------
+    matplotlib.pyplot object
+        Returns a matplotlib object with a plot
+    """
+
+    df.dropna(subset=['samples', 'columns'], inplace=True)
+    df[col_name] = df.samples * df['columns']
+    df[col_name] = df[col_name].astype(int)
+
+    fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
+
+    ax = axs[0]
+    # models for memory
+    _resource_allocation_plot_helper(
+        df, ax, cname, sname, "MaxRSSRaw", MODELS_MEM, col_name)
+
+    ax = axs[1]
+    # models for time
+    _resource_allocation_plot_helper(
+        df, ax, cname, sname, "ElapsedRaw", MODELS_TIME, col_name)
+
+    return fig, axs
+
+
+def _retrieve_resource_data(cname, sname, columns):
+    with qdb.sql_connection.TRN:
+        sql = """
+            SELECT
+                s.name AS sName,
+                s.version AS sVersion,
+                sc.command_id AS cID,
+                sc.name AS cName,
+                pr.processing_job_id AS processing_job_id,
+                pr.command_parameters AS parameters,
+                sra.samples AS samples,
+                sra.columns AS columns,
+                sra.input_size AS input_size,
+                sra.extra_info AS extra_info,
+                sra.memory_used AS memory_used,
+                sra.walltime_used AS walltime_used,
+                sra.job_start AS job_start,
+                sra.node_name AS node_name,
+                sra.node_model AS node_model
+            FROM
+                qiita.processing_job pr
+            JOIN
+                qiita.software_command sc ON pr.command_id = sc.command_id
+            JOIN
+                qiita.software s ON sc.software_id = s.software_id
+            JOIN
+                qiita.slurm_resource_allocations sra
+                ON pr.processing_job_id = sra.processing_job_id
+            WHERE
+                sc.name = %s
+                AND s.name = %s;
+            """
+        qdb.sql_connection.TRN.add(sql, sql_args=[cname, sname])
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+        df = pd.DataFrame(res, columns=columns)
+        return df
+
+
+def _resource_allocation_plot_helper(
+        df, ax, cname, sname, curr, models, col_name):
+    """Helper function for resource allocation plot. Builds plot for MaxRSSRaw
+    and ElapsedRaw
+
+    Parameters
+    ----------
+    df: pandas dataframe, required
+        Filtered dataframe for the plot
+    ax : matplotlib axes, required
+        Axes for current subplot
+    cname: str, required
+        Specified job type
+    sname: str, required
+        Specified job sub type.
+    col_name: str, required
+        Specifies x axis for the graph
+    curr: str, required
+        Either MaxRSSRaw or ElapsedRaw
+    models: list, required
+        List of functions that will be used for visualization
+
+    """
+
+    x_data, y_data = df[col_name], df[curr]
+    ax.scatter(x_data, y_data, s=2, label="data")
+    d = dict()
+    for index, row in df.iterrows():
+        x_value = row[col_name]
+        y_value = row[curr]
+        if x_value not in d:
+            d[x_value] = []
+        d[x_value].append(y_value)
+
+    for key in d.keys():
+        # save only top point increased by 5% because our graph needs to exceed
+        # the points
+        d[key] = [max(d[key]) * 1.05]
+
+    x_data = []
+    y_data = []
+
+    # Populate the lists with data from the dictionary
+    for x, ys in d.items():
+        for y in ys:
+            x_data.append(x)
+            y_data.append(y)
+
+    x_data = np.array(x_data)
+    y_data = np.array(y_data)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_ylabel(curr)
+    ax.set_xlabel(col_name)
+
+    # 100 - number of maximum iterations, 3 - number of failures we tolerate
+    best_model, options = _resource_allocation_calculate(
+        df, x_data, y_data, models, curr, col_name, 100, 3)
+    k, a, b = options.x
+    x_plot = np.array(sorted(df[col_name].unique()))
+    y_plot = best_model(x_plot, k, a, b)
+    ax.plot(x_plot, y_plot, linewidth=1, color='orange')
+
+    maxi = naturalsize(df[curr].max(), gnu=True) if curr == "MaxRSSRaw" else \
+        timedelta(seconds=float(df[curr].max()))
+    cmax = naturalsize(max(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
+        timedelta(seconds=float(max(y_plot)))
+
+    mini = naturalsize(df[curr].min(), gnu=True) if curr == "MaxRSSRaw" else \
+        timedelta(seconds=float(df[curr].min()))
+    cmin = naturalsize(min(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
+        timedelta(seconds=float(min(y_plot)))
+
+    x_plot = np.array(df[col_name])
+    failures_df = _resource_allocation_failures(
+        df, k, a, b, best_model, col_name, curr)
+    failures = failures_df.shape[0]
+
+    ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
+               label="failures")
+
+    ax.set_title(f'{cname}: {sname}\n real: {mini} || {maxi}\n'
+                 f'calculated: {cmin} || {cmax}\n'
+                 f'failures: {failures}')
+    ax.legend(loc='upper left')
+    return best_model, options
+
+
+def _resource_allocation_calculate(
+        df, x, y, models, type_, col_name, depth, tolerance):
+    """Helper function for resource allocation plot. Calculates best_model and
+    best_result given the models list and x,y data.
+
+    Parameters
+    ----------
+    x: pandas.Series (pandas column), required
+        Represents x data for the function calculation
+    y: pandas.Series (pandas column), required
+        Represents y data for the function calculation
+    type_: str, required
+        current type (e.g. MaxRSSRaw)
+    col_name: str, required
+        Specifies x axis for the graph
+    models: list, required
+        List of functions that will be used for visualization
+    depth: int, required
+        Maximum number of iterations in binary search
+    tolerance: int, required,
+        Tolerance to number of failures possible to be considered as a model
+
+    Returns
+    ----------
+    best_model: function
+        best fitting function for the current list models
+    best_result: object
+        object containing constants for the best model (e.g. k, a, b in kx+b*a)
+    """
+
+    init = [1, 1, 1]
+    best_model = None
+    best_result = None
+    best_failures = np.inf
+    best_max = np.inf
+    for model in models:
+        # start values for binary search, where sl is left, sr is right
+        # penalty weight must be positive & non-zero, hence, sl >= 1.
+        # the upper bound for error can be an arbitrary large number
+        sl = 1
+        sr = 100000
+        left = sl
+        right = sr
+        prev_failures = np.inf
+        min_max = np.inf
+        cnt = 0
+        res = [1, 1, 1]  # k, a, b
+
+        # binary search where we find the minimum penalty weight given the
+        # scoring constraints defined in if/else statements.
+        while left < right and cnt < depth:
+            middle = (left + right) // 2
+            options = minimize(_resource_allocation_custom_loss, init,
+                               args=(x, y, model, middle))
+            k, a, b = options.x
+            failures_df = _resource_allocation_failures(
+                df, k, a, b, model, col_name, type_)
+            y_plot = model(x, k, a, b)
+            cmax = max(y_plot)
+            cmin = min(y_plot)
+            failures = failures_df.shape[0]
+
+            if failures < prev_failures:
+                prev_failures = failures
+                right = middle
+                min_max = cmax
+                res = options
+
+            elif failures > prev_failures:
+                left = middle
+            else:
+                if cmin < 0:
+                    left = middle
+                elif cmax < min_max:
+                    min_max = cmax
+                    res = options
+                    right = middle
+                else:
+                    right = middle
+
+            # proceed with binary search in a window 10k to the right
+            if left >= right and cnt < depth:
+                sl += 10000
+                sr += 10000
+                left = sl
+                right = sr
+
+            cnt += 1
+
+        # check whether we tolerate a couple failures
+        # this is helpful if the model that has e.g. 1 failure is a better fit
+        # overall based on maximum calculated value.
+        is_acceptable_based_on_failures = (
+            prev_failures <= tolerance or abs(
+                prev_failures - best_failures) < tolerance or
+            best_failures == np.inf)
+
+        # case where less failures
+        if is_acceptable_based_on_failures:
+            if min_max <= best_max:
+                best_failures = prev_failures
+                best_max = min_max
+                best_model = model
+                best_result = res
+    return best_model, best_result
+
+
+def _resource_allocation_custom_loss(params, x, y, model, p):
+    """Helper function for resource allocation plot. Calculates custom loss
+    for given model.
+
+    Parameters
+    ----------
+    params: list, required
+        Initial list of integers for the given model
+    x: pandas.Series (pandas column), required
+        Represents x data for the function calculation
+    y: pandas.Series (pandas column), required
+        Represents y data for the function calculation
+    models: list, required
+        List of functions that will be used for visualization
+    p: int, required
+        Penalty weight for custom loss function
+
+    Returns
+    ----------
+    float
+        The mean of the list returned by the loss calculation (np.where)
+    """
+    k, a, b = params
+
+    residuals = y - model(x, k, a, b)
+    # Apply a heavier penalty to points below the curve
+    penalty = p
+    weighted_residuals = np.where(residuals > 0, penalty * residuals**2,
+                                  residuals**2)
+    return np.mean(weighted_residuals)
+
+
+def _resource_allocation_failures(df, k, a, b, model, col_name, type_):
+    """Helper function for resource allocation plot. Creates a dataframe with
+    failures.
+
+    Parameters
+    ----------
+    df: pandas.Dataframe, required
+        Represents dataframe containing current jobs data
+    k: int, required
+        k constant in a model
+    a: int, required
+        a constant in a model
+    b: int, required
+        b constant in a model
+    model: function, required
+        Current function
+    col_name: str, required
+        Specifies x axis for the graph
+    type_: str, required
+        Specifies for which type we're getting failures (e.g. MaxRSSRaw)
+
+    Returns
+    ----------
+    pandas.Dataframe
+        Dataframe containing failures for current type.
+    """
+
+    x_plot = np.array(df[col_name])
+    df[f'c{type_}'] = model(x_plot, k, a, b)
+    failures_df = df[df[type_] > df[f'c{type_}']]
+    return failures_df
+
+
+def MaxRSS_helper(x):
+    if x[-1] == 'K':
+        y = float(x[:-1]) * 1000
+    elif x[-1] == 'M':
+        y = float(x[:-1]) * 1000000
+    elif x[-1] == 'G':
+        y = float(x[:-1]) * 1000000000
+    else:
+        y = float(x)
+    return y
+
+
+def update_resource_allocation_table(weeks=1, test=None):
+    # Thu, Apr 27, 2023 old allocations (from barnacle) were changed to a
+    # better allocation so we default start time 2023-04-28 to
+    # use the latests for the newest version
+    """
+        Updates qiita.slurm_resource_allocation SQL table with jobs from slurm.
+        Retrieves the most recent job available in the table and appends with
+        the data.
+
+        Parameters:
+        ----------
+        weeks: integer, optional
+            Number of weeks for which we want to make a request from slurm.
+        test: pandas.DataFrame, optional
+            Represents dataframe containing slurm data from 2023-04-28. Used
+            for testing only.
+    """
+
+    # retrieve the most recent timestamp
+    sql_timestamp = """
+            SELECT
+                pj.external_job_id,
+                sra.job_start
+            FROM
+                qiita.processing_job pj
+            JOIN
+                qiita.slurm_resource_allocations sra
+            ON
+                pj.processing_job_id = sra.processing_job_id
+            ORDER BY
+                sra.job_start DESC
+            LIMIT 1;
+        """
+
+    dates = ['', '']
+
+    slurm_external_id = 0
+    start_date = datetime.strptime('2023-04-28', '%Y-%m-%d')
+    with qdb.sql_connection.TRN:
+        sql = sql_timestamp
+        qdb.sql_connection.TRN.add(sql)
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+        if res:
+            sei, sd = res[0]
+            if sei is not None:
+                slurm_external_id = sei
+            if sd is not None:
+                start_date = sd
+        dates = [start_date, start_date + timedelta(weeks=weeks)]
+
+    sql_command = """
+            SELECT
+                pj.processing_job_id AS processing_job_id,
+                pj.external_job_id AS external_job_id
+            FROM
+                qiita.software_command sc
+            JOIN
+                qiita.processing_job pj ON pj.command_id = sc.command_id
+            JOIN
+                qiita.processing_job_status pjs
+                ON pj.processing_job_status_id = pjs.processing_job_status_id
+            LEFT JOIN
+                qiita.slurm_resource_allocations sra
+                ON pj.processing_job_id = sra.processing_job_id
+            WHERE
+                pjs.processing_job_status = 'success'
+            AND
+                pj.external_job_id ~ '^[0-9]+$'
+            AND
+                CAST(pj.external_job_id AS INTEGER) > %s
+            AND
+                sra.processing_job_id IS NULL;
+        """
+    df = pd.DataFrame()
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add(sql_command, sql_args=[slurm_external_id])
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+        df = pd.DataFrame(res, columns=["processing_job_id", 'external_id'])
+        df['external_id'] = df['external_id'].astype(int)
+
+    data = []
+    sacct = [
+        'sacct', '-p',
+        '--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,End,CPUTimeRAW,'
+        'ReqMem,AllocCPUs,AveVMSize', '--starttime',
+        dates[0].strftime('%Y-%m-%d'), '--endtime',
+        dates[1].strftime('%Y-%m-%d'), '--user', 'qiita', '--state', 'CD']
+
+    if test is not None:
+        slurm_data = test
+    else:
+        rvals = check_output(sacct).decode('ascii')
+        slurm_data = pd.read_csv(StringIO(rvals), sep='|')
+
+    # In slurm, each JobID is represented by 3 rows in the dataframe:
+    # - external_id:        overall container for the job and its associated
+    #                       requests. When the Timelimit is hit, the container
+    #                       would take care of completing/stopping the
+    #                       external_id.batch job.
+    # - external_id.batch:  it's a container job, it provides how
+    #                       much memory it uses and cpus allocated, etc.
+    # - external_id.extern: takes into account anything that happens
+    #                       outside processing but yet is included in
+    #                       the container resources. As in, if you ssh
+    #                       to the node and do something additional or run
+    #                       a prolog script, that processing would be under
+    #                       external_id but separate from external_id.batch
+    # Here we are going to merge all this info into a single row + some
+    # other columns
+
+    def merge_rows(rows):
+        date_fmt = '%Y-%m-%dT%H:%M:%S'
+        wait_time = (
+            datetime.strptime(rows.iloc[0]['Start'], date_fmt)
+            - datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
+        tmp = rows.iloc[1].copy()
+        tmp['WaitTime'] = wait_time
+        return tmp
+
+    slurm_data['external_id'] = slurm_data['JobID'].apply(
+                                            lambda x: int(x.split('.')[0]))
+    slurm_data['external_id'] = slurm_data['external_id'].ffill()
+    slurm_data = slurm_data.groupby(
+            'external_id').apply(merge_rows).reset_index(drop=True)
+
+    # filter to only those jobs that are within the slurm_data df.
+    eids = set(slurm_data['external_id'])
+    df = df[df['external_id'].isin(eids)]
+
+    for index, row in df.iterrows():
+        job = qdb.processing_job.ProcessingJob(row['processing_job_id'])
+        extra_info = ''
+        eid = job.external_id
+
+        cmd = job.command
+        s = job.command.software
+        try:
+            samples, columns, input_size = job.shape
+        except qdb.exceptions.QiitaDBUnknownIDError:
+            # this will be raised if the study or the analysis has been
+            # deleted; in other words, the processing_job was ran but the
+            # details about it were erased when the user deleted them -
+            # however, we keep the job for the record
+            continue
+        except TypeError as e:
+            # similar to the except above, exept that for these 2 commands, we
+            # have the study_id as None
+            if cmd.name in {'create_sample_template', 'delete_sample_template',
+                            'list_remote_files'}:
+                continue
+            else:
+                raise e
+        sname = s.name
+
+        if cmd.name == 'release_validators':
+            ej = qdb.processing_job.ProcessingJob(job.parameters.values['job'])
+            extra_info = ej.command.name
+            samples, columns, input_size = ej.shape
+        elif cmd.name == 'complete_job':
+            artifacts = loads(job.parameters.values['payload'])['artifacts']
+            if artifacts is not None:
+                extra_info = ','.join({
+                    x['artifact_type'] for x in artifacts.values()
+                    if 'artifact_type' in x})
+        elif cmd.name == 'Validate':
+            input_size = sum([len(x) for x in loads(
+                job.parameters.values['files']).values()])
+            sname = f"{sname} - {job.parameters.values['artifact_type']}"
+        elif cmd.name == 'Alpha rarefaction curves [alpha_rarefaction]':
+            extra_info = job.parameters.values[
+                ('The number of rarefaction depths to include between '
+                 'min_depth and max_depth. (steps)')]
+        curr = slurm_data[slurm_data['external_id'] == int(eid)].iloc[0]
+        barnacle_info = curr['MaxVMSizeNode']
+        if len(barnacle_info) == 0:
+            barnacle_info = [None, None]
+        else:
+            barnacle_info = barnacle_info.split('-')
+
+        row_dict = {
+            'processing_job_id': job.id,
+            'samples': samples,
+            'columns': columns,
+            'input_size': input_size,
+            'extra_info': extra_info,
+            'ElapsedRaw': curr['ElapsedRaw'],
+            'MaxRSS': curr['MaxRSS'],
+            'Start': curr['Start'],
+            'node_name': barnacle_info[0],
+            'node_model': barnacle_info[1]
+        }
+        data.append(row_dict)
+    df = pd.DataFrame(data)
+
+    # This is important as we are transforming the MaxRSS to raw value
+    # so we need to confirm that there is no other suffixes
+    print('Make sure that only 0/K/M exist', set(
+        df.MaxRSS.apply(lambda x: str(x)[-1])))
+
+    # Generating new columns
+    df['MaxRSSRaw'] = df.MaxRSS.apply(lambda x: MaxRSS_helper(str(x)))
+    df['ElapsedRawTime'] = df.ElapsedRaw.apply(
+        lambda x: timedelta(seconds=float(x)))
+
+    for index, row in df.iterrows():
+        with qdb.sql_connection.TRN:
+            sql = """
+                INSERT INTO qiita.slurm_resource_allocations (
+                    processing_job_id,
+                    samples,
+                    columns,
+                    input_size,
+                    extra_info,
+                    memory_used,
+                    walltime_used,
+                    job_start,
+                    node_name,
+                    node_model
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            to_insert = [
+                row['processing_job_id'], row['samples'], row['columns'],
+                row['input_size'], row['extra_info'], row['MaxRSSRaw'],
+                row['ElapsedRaw'], row['Start'], row['node_name'],
+                row['node_model']]
+            qdb.sql_connection.TRN.add(sql, sql_args=to_insert)
+            qdb.sql_connection.TRN.execute()

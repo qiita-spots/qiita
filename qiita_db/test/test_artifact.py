@@ -1243,6 +1243,7 @@ class ArtifactTests(TestCase):
     def test_visibility_setter(self):
         a = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
+
         self.assertEqual(a.visibility, "sandbox")
         a.visibility = "awaiting_approval"
         self.assertEqual(a.visibility, "awaiting_approval")
@@ -1284,6 +1285,24 @@ class ArtifactTests(TestCase):
         self.assertEqual(a4.visibility, "private")
         self.assertEqual(a5.visibility, "private")
         self.assertEqual(a6.visibility, "private")
+
+        # testing human_reads_filter_method here as in the future we might
+        # want to check that this property is inherited as visibility is;
+        # however, for the time being we don't need to do that and there is
+        # no downside on adding it here.
+        mtd = 'The greatest human filtering method'
+        self.assertEqual(mtd, a1.human_reads_filter_method)
+        self.assertIsNone(a2.human_reads_filter_method)
+        self.assertIsNone(a3.human_reads_filter_method)
+
+        # let's change some values
+        with self.assertRaisesRegex(ValueError, '"This should fail" is not a '
+                                    'valid human_reads_filter_method'):
+            a2.human_reads_filter_method = 'This should fail'
+        self.assertIsNone(a2.human_reads_filter_method)
+        a2.human_reads_filter_method = mtd
+        self.assertEqual(mtd, a2.human_reads_filter_method)
+        self.assertIsNone(a3.human_reads_filter_method)
 
     def test_ebi_run_accessions_setter(self):
         a = qdb.artifact.Artifact(3)
@@ -1405,6 +1424,16 @@ class ArtifactTests(TestCase):
         artifact.study.sample_template.update(df)
 
         self.assertTrue(artifact.has_human)
+
+        # now if we change the pt data_type to 16S
+        pt = artifact.prep_templates[0]
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                f"""UPDATE qiita.prep_template
+                    SET data_type_id = 1
+                    WHERE prep_template_id = {pt.id}""")
+            qdb.sql_connection.TRN.execute()
+        self.assertFalse(artifact.has_human)
 
     def test_descendants_with_jobs(self):
         # let's tests that we can connect two artifacts with different root

@@ -27,7 +27,6 @@ Looking for information about getting started? Please see the document here:
 
    gettingstartedguide/index.rst
    qiita-philosophy/index.rst
-   qiimp.rst
 
 Looking for information about how to process your data? Please see the document here:
 

@@ -25,7 +25,7 @@ applies for studies in sandbox state that will become private or public.
     `https://www.ebi.ac.uk/ena/browser/view/[accession]` or the Qiita Study
     id: `https://qiita.ucsd.edu/public/?study_id=[study-id]`
 
-`Here <https://knightlab.ucsd.edu/wordpress/wp-content/uploads/2016/04/QiitaTemplate_20181218.xlsx>`__ you will find a document outlining these requirements, with examples, when possible.
+`Here <https://knightlab.ucsd.edu/wordpress/wp-content/uploads/2016/04/QiitaPrepTemp06182020.xlsx>`__ you will find a document outlining these requirements, with examples, when possible.
 
 Note that submissions are time consuming and need full collaboration from the user.
 :red:`Do not wait until the last minute to request help.` In general, the best
@@ -65,7 +65,7 @@ Remember, metadata is the most important part for an analysis, without it we onl
 
   2. Verify the sample information
 
-    a. Check that the sample information file complies with `the current Qiita metadata format <https://qiita.ucsd.edu/static/doc/html/gettingstartedguide/index.html#sample-information-file>`__.
+    a. Check that the sample information file complies with `the current Qiita metadata format <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__.
     b. Minimal information:
 
       1. *sample_name*
@@ -73,7 +73,7 @@ Remember, metadata is the most important part for an analysis, without it we onl
       3. *sample_type*
       4. *taxon_id* - needs to match *scientific_name* value
       5. *scientific_name* - needs to match *taxon_id* value - this is the name of the `metagenome <https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Tree&id=12908&lvl=3&srchmode=1&keep=1&unlock>`__ referenced in the column *taxon_id* and that the two values match.  Submission will not work if the user puts *host_scientific_name* or *host_taxid* instead.  Do not accept EBI null values. For null values use *scientific_name* “metagenome” and *taxon_id* “256318”
-      6. *env_biome*, *env_feature*, *env_material*, *env_package*, for options `visit ENVO <http://ols.wordvis.com/>`__
+      6. *env_biome*, *env_feature*, *env_material*, *env_package*, for options `visit ENVO <https://www.ebi.ac.uk/ols4/index>`__
       7. *elevation*, *latitude*, *longitude*
       8. *physical_specimen_location*
       9. *collection_date*
@@ -149,13 +149,13 @@ Remember, metadata is the most important part for an analysis, without it we onl
 
     d. Double-check these fields:
 
-      1. Check the date format, should be YYYY-MM-DD (hh:mm)
+      1. Check the date format, should be: "DD-Mmm-YYYY", "Mmm-YYYY", "YYYY", "YYYY-MM-DDThh:mmZ", "YYYY-MM-DDThh:mm:ssZ", "YYYY-MM-DDThhZ", "YYYY-MM-DD", or "YYYY-MM"; and that we normally submit: "YYYY-MM-DD", or "YYYY-MM" or "YYYY".
       2. Check null values
       3. Check that the values in each field make sense, for example that sex is not a numerical gradient, or that ph does not contain “male” or “female” values
 
   3. Verify the preparation information
 
-    a. Check that the preparation information file complies with `the current Qiita metadata format <https://qiita.ucsd.edu/static/doc/html/gettingstartedguide/index.html#id1>`__
+    a. Check that the preparation information file complies with `the current Qiita metadata format <https://knightlab.ucsd.edu/wordpress/?page_id=478>`__
     b. Check that the correct Investigation type is selected on the prep info page
     c. Check for fill down errors in library_construction_protocol and target_subfragment; these are common.
     d. Minimal columns:
@@ -188,7 +188,7 @@ Remember, metadata is the most important part for an analysis, without it we onl
         +---------------------+----------------------------------------------------------------------------------------------------------+
         | ``Ion_Torrent``     |  ``Ion Torrent PGM``, ``Ion Torrent Proton``, ``Ion Torrent S5``, ``Ion Torrent S5 XL``                  |
         +---------------------+----------------------------------------------------------------------------------------------------------+
-        | ``PacBio_SMRT``     |  ``PacBio RS``, ``PacBio RS II``, ``Sequel``, ``Sequel II``                                              |
+        | ``PacBio_SMRT``     |  ``PacBio RS``, ``PacBio RS II``, ``Sequel``, ``Sequel II``, ``Sequel IIe``, ``Revio``, ``Onso``         |
         +---------------------+----------------------------------------------------------------------------------------------------------+
         | ``Oxford_Nanopore`` |  ``GridION``                                                                                             |
         +---------------------+----------------------------------------------------------------------------------------------------------+

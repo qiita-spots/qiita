@@ -15,7 +15,7 @@ class SetupTest(TestCase):
     """Tests that the test database have been successfully populated"""
 
     def test_qiita_user(self):
-        self.assertEqual(get_count("qiita.qiita_user"), 4)
+        self.assertEqual(get_count("qiita.qiita_user"), 7)
 
     def test_study_person(self):
         self.assertEqual(get_count("qiita.study_person"), 3)
