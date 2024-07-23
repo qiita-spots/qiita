@@ -2775,7 +2775,7 @@ def update_resource_allocation_table(weeks=1, test=None):
     sacct = [
         'sacct', '-p',
         '--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,End,CPUTimeRAW,'
-        'ReqMem,AllocCPUs,AveVMSize', '--starttime',
+        'ReqMem,AllocCPUs,AveVMSize,MaxVMSizeNode', '--starttime',
         dates[0].strftime('%Y-%m-%d'), '--endtime',
         dates[1].strftime('%Y-%m-%d'), '--user', 'qiita', '--state', 'CD']
 
@@ -2894,6 +2894,7 @@ def update_resource_allocation_table(weeks=1, test=None):
     df['MaxRSSRaw'] = df.MaxRSS.apply(lambda x: MaxRSS_helper(str(x)))
     df['ElapsedRawTime'] = df.ElapsedRaw.apply(
         lambda x: timedelta(seconds=float(x)))
+    df.replace({nan: None}, inplace=True)
 
     for index, row in df.iterrows():
         with qdb.sql_connection.TRN:
