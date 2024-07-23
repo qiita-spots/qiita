@@ -104,9 +104,9 @@ jobs:
       - name: Install plugins
         shell: bash -l {0}
         run: |
-          wget https://data.qiime2.org/distro/core/qiime2-2022.11-py38-linux-conda.yml
-          conda env create --quiet -n qtp-biom --file qiime2-2022.11-py38-linux-conda.yml
-          rm qiime2-2022.11-py38-linux-conda.yml
+          https://data.qiime2.org/distro/amplicon/qiime2-amplicon-2024.5-py39-linux-conda.yml
+          conda env create --quiet -n qtp-biom --file qiime2-amplicon-2024.5-py39-linux-conda.yml
+          rm qiime2-amplicon-2024.5-py39-linux-conda.yml
           export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
