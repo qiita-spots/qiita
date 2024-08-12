@@ -45,7 +45,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
-          python-version: '3.10'
+          python-version: '3.9'
 
       - name: Basic dependencies install
         env:
@@ -104,9 +104,10 @@ jobs:
       - name: Install plugins
         shell: bash -l {0}
         run: |
-          https://data.qiime2.org/distro/amplicon/qiime2-amplicon-2024.5-py39-linux-conda.yml
-          conda env create --quiet -n qtp-biom --file qiime2-amplicon-2024.5-py39-linux-conda.yml
-          rm qiime2-amplicon-2024.5-py39-linux-conda.yml
+          # making sure we have the latesets conda version before
+          # installing Q2
+          conda update conda --yes
+          conda env create -n qiime2-tiny-2024.5 --file https://data.qiime2.org/distro/tiny/qiime2-tiny-2024.5-py39-linux-conda.yml
           export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
