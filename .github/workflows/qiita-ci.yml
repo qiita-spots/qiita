@@ -104,9 +104,6 @@ jobs:
       - name: Install plugins
         shell: bash -l {0}
         run: |
-          # making sure we have the latesets conda version before
-          # installing Q2
-          conda update conda --yes
           conda env create -n qiime2-tiny-2024.5 --file https://data.qiime2.org/distro/tiny/qiime2-tiny-2024.5-py39-linux-conda.yml
           export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
