@@ -404,9 +404,8 @@ class ArtifactTestsReadOnly(TestCase):
             '"phred_offset": "auto"}')
         params = qdb.software.Parameters.load(qdb.software.Command(1),
                                               json_str=json_str)
-        user = qdb.user.User('test@foo.bar')
         wf = qdb.processing_job.ProcessingWorkflow.from_scratch(
-            user, params, name='Test WF')
+            qdb.user.User('test@foo.bar'), params, name='Test WF')
         parent = list(wf.graph.nodes())[0]
         wf.add(qdb.software.DefaultParameters(10),
                connections={parent: {'demultiplexed': 'input_data'}})
@@ -698,6 +697,8 @@ class ArtifactTests(TestCase):
                     "#1=DDFFFHHHHHJJJJJJJJJJJJGII#0\n")
 
         self._clean_up_files.extend([self.fwd, self.rev])
+
+        self.user = qdb.user.User('test@foo.bar')
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -1039,7 +1040,7 @@ class ArtifactTests(TestCase):
             '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
             '"phred_offset": ""}' % test.id)
         qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'),
+            self.user,
             qdb.software.Parameters.load(qdb.software.Command(1),
                                          json_str=json_str))
         uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
@@ -1064,7 +1065,7 @@ class ArtifactTests(TestCase):
             '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
             '"phred_offset": ""}' % test.id)
         job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'),
+            self.user,
             qdb.software.Parameters.load(qdb.software.Command(1),
                                          json_str=json_str))
         job._set_status('running')
@@ -1147,7 +1148,7 @@ class ArtifactTests(TestCase):
             '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
             '"phred_offset": ""}' % test.id)
         job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'),
+            self.user,
             qdb.software.Parameters.load(qdb.software.Command(1),
                                          json_str=json_str))
         job._set_status('success')
@@ -1177,8 +1178,7 @@ class ArtifactTests(TestCase):
         cmd = qiita_plugin.get_command('delete_artifact')
         params = qdb.software.Parameters.load(
             cmd, values_dict={'artifact': test.id})
-        job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params, True)
+        job = qdb.processing_job.ProcessingJob.create(self.user, params, True)
         job._set_status('running')
 
         # verifying that there is a job and is the same than above
@@ -1189,8 +1189,7 @@ class ArtifactTests(TestCase):
         self.assertIsNone(test.being_deleted_by)
 
         # now, let's actually remove
-        job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params, True)
+        job = qdb.processing_job.ProcessingJob.create(self.user, params, True)
         job.submit()
         # let's wait for job
         wait_for_processing_job(job.id)
@@ -1207,7 +1206,7 @@ class ArtifactTests(TestCase):
         data = {'OTU table': {'filepaths': [(fp, 'biom')],
                               'artifact_type': 'BIOM'}}
         job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'),
+            self.user,
             qdb.software.Parameters.load(
                 qdb.software.Command.get_validator('BIOM'),
                 values_dict={'files': dumps({'biom': [fp]}),
@@ -1448,28 +1447,49 @@ class ArtifactTests(TestCase):
             data_type="16S")
         self.assertEqual(len(a.analysis.artifacts), 3)
         # 3. add jobs conencting the new artifact to the other root
+        #    - currently:
         #    a -> job -> b
         #    c
-        #    job1 connects b & c
-        #    job2 connects a & c
+        #    - expected:
+        #    a --> job  -> b
+        #                  |-> job2 -> out
+        #                        ^
+        #                  |-----|---> job1 -> out
+        #    c ------------|
         cmd = qdb.software.Command.create(
             qdb.software.Software(1),
             "CommandWithMultipleInputs", "", {
-                'input_b': ['artifact:["BIOM"]', None],
-                'input_c': ['artifact:["BIOM"]', None]}, {'out': 'BIOM'})
+                'input_x': ['artifact:["BIOM"]', None],
+                'input_y': ['artifact:["BIOM"]', None]}, {'out': 'BIOM'})
         params = qdb.software.Parameters.load(
-            cmd, values_dict={'input_b': a.children[0].id, 'input_c': c.id})
-        job1 = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params)
-        params = qdb.software.Parameters.load(
-            cmd, values_dict={'input_b': a.id, 'input_c': c.id})
-        job2 = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User('test@foo.bar'), params)
+            cmd, values_dict={'input_x': a.children[0].id, 'input_y': c.id})
+        wf = qdb.processing_job.ProcessingWorkflow.from_scratch(
+            self.user, params, name='Test WF')
+        job1 = list(wf.graph.nodes())[0]
 
+        cmd_dp = qdb.software.DefaultParameters.create("", cmd)
+        wf.add(cmd_dp, req_params={'input_x': a.id, 'input_y': c.id})
+        job2 = list(wf.graph.nodes())[1]
         jobs = [j[1] for e in a.descendants_with_jobs.edges
                 for j in e if j[0] == 'job']
         self.assertIn(job1, jobs)
         self.assertIn(job2, jobs)
+
+        # 4. add job3 connecting job2 output with c as inputs
+        #    - expected:
+        #    a --> job  -> b
+        #                  |-> job2 -> out -> job3 -> out
+        #                        ^             ^
+        #                        |             |
+        #                        |             |
+        #                  |-----|---> job1 -> out
+        #    c ------------|
+        wf.add(cmd_dp, connections={
+            job1: {'out': 'input_x'}, job2: {'out': 'input_y'}})
+        job3 = list(wf.graph.nodes())[2]
+        jobs = [j[1] for e in a.descendants_with_jobs.edges
+                for j in e if j[0] == 'job']
+        self.assertIn(job3, jobs)
 
 
 @qiita_test_checker()
