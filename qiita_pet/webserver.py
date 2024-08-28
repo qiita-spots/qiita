@@ -50,8 +50,6 @@ from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.upload import (
     UploadFileHandler, StudyUploadFileHandler, StudyUploadViaRemote)
 from qiita_pet.handlers.stats import StatsHandler
-from qiita_pet.handlers.resources import ResourcesHandler
-
 from qiita_pet.handlers.download import (
     DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease,
     DownloadRawData, DownloadEBISampleAccessions, DownloadEBIPrepAccessions,
@@ -138,7 +136,6 @@ class Application(tornado.web.Application):
             (r"/admin/sample_validation/", SampleValidation),
             (r"/admin/purge_users/", PurgeUsersHandler),
             (r"/admin/purge_usersAjax/", PurgeUsersAJAXHandler),
-            (r"/admin/resources/", ResourcesHandler),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
             # Study handlers
             (r"/study/create/", StudyEditHandler),

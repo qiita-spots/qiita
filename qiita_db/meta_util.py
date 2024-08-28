@@ -588,7 +588,7 @@ def update_resource_allocation_redis():
                 if len(df) == 0:
                     print("No available data for", sname, version, cname)
                     continue
-                    
+
                 fig, axs = resource_allocation_plot(df, cname, sname, col_name)
                 titles = [0, 0]
                 images = [0, 0]
