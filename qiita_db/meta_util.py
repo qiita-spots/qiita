@@ -38,7 +38,7 @@ from re import sub
 from json import loads, dump, dumps
 
 from qiita_db.util import create_nested_path, _retrieve_resource_data
-from qiita_db.util import resource_allocation_plot, get_software_commands
+from qiita_db.util import resource_allocation_plot
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
@@ -48,6 +48,7 @@ columns = [
     "sName", "sVersion", "cID", "cName", "processing_job_id",
     "parameters", "samples", "columns", "input_size", "extra_info",
     "MaxRSSRaw", "ElapsedRaw", "Start", "node_name", "node_model"]
+
 
 def _get_data_fpids(constructor, object_id):
     """Small function for getting filepath IDS associated with data object
@@ -554,40 +555,96 @@ def generate_plugin_releases():
         f(redis_key, v)
 
 
-def initialize_resource_allocations_redis():
-    time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
+def get_software_commands():
+    # TODO change active=False to True. In test, the data is active=False.
+    software_list = [s for s in qdb.software.Software.iter(active=False)]
+    software_commands = dict()
+    for software in software_list:
+        sname = software.name
+        sversion = software.version
+        commands = software.commands
+        if sname not in software_commands:
+            software_commands[sname] = {}
+        if sversion not in software_commands[sname]:
+            software_commands[sname][sversion] = []
+        for command in commands:
+            software_commands[sname][sversion].append(command.name)
+    return software_commands
+
+
+def update_resource_allocation_redis():
+    time = datetime.now().strftime('%m-%d-%y')
     scommands = get_software_commands()
-    for software, versions in scommands.items():
-        for version, commands in versions.items():
-            for command in commands:
-                print("Generating plot for:", software, version, command)
-                update_resource_allocation_redis(command, software,
-                                                 version, time)
     redis_key = 'resources:commands'
     r_client.set(redis_key, str(scommands))
 
+    for sname, versions in scommands.items():
+        for version, commands in versions.items():
+            for cname in commands:
 
-def update_resource_allocation_redis(cname, sname, version, time):
-    col_name = "samples * columns"
+                print("Generating plot for:", sname, version, cname)
+                col_name = "samples * columns"
+                df = _retrieve_resource_data(cname, sname, version, columns)
+                if len(df) == 0:
+                    print("No available data for", sname, version, cname)
+                    continue
+                    
+                fig, axs = resource_allocation_plot(df, cname, sname, col_name)
+                titles = [0, 0]
+                images = [0, 0]
 
-    df = _retrieve_resource_data(cname, sname, version, columns)
-    fig, axs = resource_allocation_plot(df, cname, sname, col_name)
+                # Splitting 1 image plot into 2 separate for better layout.
+                for i, ax in enumerate(axs):
+                    titles[i] = ax.get_title()
+                    ax.set_title("")
+                    # new_fig, new_ax – copy with either only memory plot or
+                    # only time
+                    new_fig = plt.figure()
+                    new_ax = new_fig.add_subplot(111)
 
-    fig.tight_layout()
-    plot = BytesIO()
-    fig.savefig(plot, format='png')
-    plot.seek(0)
+                    scatter_data = ax.collections[0]
+                    new_ax.scatter(scatter_data.get_offsets()[:, 0],
+                                   scatter_data.get_offsets()[:, 1],
+                                   s=scatter_data.get_sizes(), label="data")
 
-    img = 'data:image/png;base64,' + quote(b64encode(plot.getbuffer()).decode('ascii'))
-    plt.close(fig)
+                    line = ax.lines[0]
+                    new_ax.plot(line.get_xdata(), line.get_ydata(),
+                                linewidth=1, color='orange')
 
-    # SID, CID, col_name
-    values = [
-        ("img", img, r_client.set),
-        ('time', time, r_client.set)
-    ]
+                    if len(ax.collections) > 1:
+                        failure_data = ax.collections[1]
+                        new_ax.scatter(failure_data.get_offsets()[:, 0],
+                                       failure_data.get_offsets()[:, 1],
+                                       color='red', s=3, label="failures")
 
-    for k, v, f in values:
-        redis_key = 'resources$#%s$#%s$#%s:%s' % (cname, sname, col_name, k)
-        r_client.delete(redis_key)
-        f(redis_key, v)
+                    new_ax.set_xscale('log')
+                    new_ax.set_yscale('log')
+                    new_ax.set_xlabel(ax.get_xlabel())
+                    new_ax.set_ylabel(ax.get_ylabel())
+                    new_ax.legend(loc='upper left')
+
+                    new_fig.tight_layout()
+                    plot = BytesIO()
+                    new_fig.savefig(plot, format='png')
+                    plot.seek(0)
+                    img = 'data:image/png;base64,' + quote(
+                          b64encode(plot.getvalue()).decode('ascii'))
+                    images[i] = img
+                    plt.close(new_fig)
+                plt.close(fig)
+
+                # SID, CID, col_name
+                values = [
+                    ("img_mem", images[0], r_client.set),
+                    ("img_time", images[1], r_client.set),
+                    ('time', time, r_client.set),
+                    ("title_mem", titles[0], r_client.set),
+                    ("title_time", titles[1], r_client.set)
+                ]
+                print(time, titles[0], titles[1])
+
+                for k, v, f in values:
+                    redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (
+                                cname, sname, version, col_name, k)
+                    r_client.delete(redis_key)
+                    f(redis_key, v)

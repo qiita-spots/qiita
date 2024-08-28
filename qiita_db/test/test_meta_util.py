@@ -13,6 +13,7 @@ from os import remove
 from os.path import exists, join
 
 import pandas as pd
+from datetime import datetime
 
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.util import qiita_test_checker
@@ -523,18 +524,29 @@ class MetaUtilTests(TestCase):
         cname = "Split libraries FASTQ"
         sname = "QIIMEq2"
         col_name = "samples * columns"
-        qdb.meta_util.update_resource_allocation_redis(cname, sname)
+        version = "1.9.1"
+        qdb.meta_util.update_resource_allocation_redis()
+        # since time is month, day, year, it should be equal unless test is ran
+        # at midnight.
+        time = datetime.now().strftime('%m-%d-%y')
+        title_mem_str = 'resources$#%s$#%s$#%s$#%s:%s' % (
+            cname, sname, version, col_name, 'title_mem')
+        title_mem = str(r_client.get(title_mem_str))
+        self.assertTrue(
+            "model_chosen: "
+            "k * log(x) + "
+            "b * log(x)^2 + "
+            "a * log(x)^2.5" in title_mem
+        )
 
-        vals = [
-            ("img", b's', r_client.get),
-            ('time', b'2024-11-11', r_client.get)
-        ]
-
-        for k, exp, f in vals:
-            redis_key = 'resources$#%s$#%s$#%s:%s' % (cname, sname, col_name, k)
-            # checking redis values
-            print(f(redis_key))
-            # self.assertEqual(f(redis_key), exp)
+        title_time_str = 'resources$#%s$#%s$#%s$#%s:%s' % (
+                        cname, sname, version, col_name, 'title_time')
+        title_time = str(r_client.get(title_time_str))
+        self.assertTrue("model_chosen: a + b + log(x) * k" in title_time)
+        time_create_str = 'resources$#%s$#%s$#%s$#%s:%s' % (
+            cname, sname, version, col_name, 'time')
+        time_create = str(r_client.get(time_create_str))
+        self.assertTrue(time in time_create)
 
 
 if __name__ == '__main__':

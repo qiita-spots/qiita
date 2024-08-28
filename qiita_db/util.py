@@ -99,6 +99,27 @@ time_model4 = (lambda x, k, a, b: a * np.log(x)**3 + b * np.log(x)**2
 MODELS_TIME = [time_model1, time_model2, time_model3, time_model4]
 
 
+def get_model_name(model):
+    if model == mem_model1:
+        return "k * log(x) + x * a + b"
+    elif model == mem_model2:
+        return "k * log(x) + b * log(x)^2 + a"
+    elif model == mem_model3:
+        return "k * log(x) + b * log(x)^2 + a * log(x)^3"
+    elif model == mem_model4:
+        return "k * log(x) + b * log(x)^2 + a * log(x)^2.5"
+    elif model == time_model1:
+        return "a + b + log(x) * k"
+    elif model == time_model2:
+        return "a + b * x + log(x) * k"
+    elif model == time_model3:
+        return "a + b * log(x)^2 + log(x) * k"
+    elif model == time_model4:
+        return "a * log(x)^3 + b * log(x)^2 + log(x) * k"
+    else:
+        return "Unknown model"
+
+
 def scrub_data(s):
     r"""Scrubs data fields of characters not allowed by PostgreSQL
 
@@ -2496,7 +2517,6 @@ def _resource_allocation_plot_helper(
     cmin = naturalsize(cmin_value, gnu=True) if curr == "MaxRSSRaw" else \
         str(timedelta(seconds=round(cmin_value, 2))).rstrip('0').rstrip('.')
 
-
     x_plot = np.array(df[col_name])
     failures_df = _resource_allocation_failures(
         df, k, a, b, best_model, col_name, curr)
@@ -2505,7 +2525,10 @@ def _resource_allocation_plot_helper(
     ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
                label="failures")
 
-    ax.set_title(f'{cname}: {sname}\n real: {mini} || {maxi}\n'
+    ax.set_title(
+                 f'k||a||b: {k}||{a}||{b}\n'
+                 f'model_chosen: {get_model_name(best_model)}\n'
+                 f'real: {mini} || {maxi}\n'
                  f'calculated: {cmin} || {cmax}\n'
                  f'failures: {failures}')
     ax.legend(loc='upper left')
@@ -2924,35 +2947,3 @@ def update_resource_allocation_table(weeks=1, test=None):
                 row['node_model']]
             qdb.sql_connection.TRN.add(sql, sql_args=to_insert)
             qdb.sql_connection.TRN.execute()
-
-
-def get_software_commands():
-    res = []
-    with qdb.sql_connection.TRN:
-        sql_command = """
-            SELECT DISTINCT
-                s.name AS sName,
-                s.version AS sVersion,
-                sc.name AS cName
-            FROM
-                qiita.slurm_resource_allocations sra
-            JOIN
-                qiita.processing_job pr
-                ON sra.processing_job_id = pr.processing_job_id
-            JOIN
-                qiita.software_command sc on pr.command_id = sc.command_id
-            JOIN
-                qiita.software s ON sc.software_id = s.software_id
-            """
-        qdb.sql_connection.TRN.add(sql_command)
-        res = qdb.sql_connection.TRN.execute_fetchindex()
-
-    software_commands = dict()
-    for s_name, s_version, c_name in res:
-        if s_name not in software_commands:
-            software_commands[s_name] = {}
-        if s_version not in software_commands[s_name]:
-            software_commands[s_name][s_version] = set()
-        software_commands[s_name][s_version].add(c_name)
-
-    return software_commands
