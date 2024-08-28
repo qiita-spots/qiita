@@ -2527,7 +2527,7 @@ def _resource_allocation_plot_helper(
 
     ax.set_title(
                  f'k||a||b: {k}||{a}||{b}\n'
-                 f'model_chosen: {get_model_name(best_model)}\n'
+                 f'model: {get_model_name(best_model)}\n'
                  f'real: {mini} || {maxi}\n'
                  f'calculated: {cmin} || {cmax}\n'
                  f'failures: {failures}')

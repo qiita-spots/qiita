@@ -555,9 +555,8 @@ def generate_plugin_releases():
         f(redis_key, v)
 
 
-def get_software_commands():
-    # TODO change active=False to True. In test, the data is active=False.
-    software_list = [s for s in qdb.software.Software.iter(active=False)]
+def get_software_commands(active):
+    software_list = [s for s in qdb.software.Software.iter(active=active)]
     software_commands = dict()
     for software in software_list:
         sname = software.name
@@ -572,9 +571,17 @@ def get_software_commands():
     return software_commands
 
 
-def update_resource_allocation_redis():
+def update_resource_allocation_redis(active=True):
+    """Updates redis with plots and information about current software.
+
+    Parameters
+    ----------
+    active: boolean, optional
+        Defaults to True. Should only be False when testing.
+
+    """
     time = datetime.now().strftime('%m-%d-%y')
-    scommands = get_software_commands()
+    scommands = get_software_commands(active)
     redis_key = 'resources:commands'
     r_client.set(redis_key, str(scommands))
 
@@ -582,11 +589,9 @@ def update_resource_allocation_redis():
         for version, commands in versions.items():
             for cname in commands:
 
-                print("Generating plot for:", sname, version, cname)
                 col_name = "samples * columns"
                 df = _retrieve_resource_data(cname, sname, version, columns)
                 if len(df) == 0:
-                    print("No available data for", sname, version, cname)
                     continue
 
                 fig, axs = resource_allocation_plot(df, cname, sname, col_name)
@@ -641,7 +646,6 @@ def update_resource_allocation_redis():
                     ("title_mem", titles[0], r_client.set),
                     ("title_time", titles[1], r_client.set)
                 ]
-                print(time, titles[0], titles[1])
 
                 for k, v, f in values:
                     redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (

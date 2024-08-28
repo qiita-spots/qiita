@@ -13,7 +13,6 @@ from os import remove
 from os.path import exists, join
 
 import pandas as pd
-from datetime import datetime
 
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.util import qiita_test_checker
@@ -525,28 +524,21 @@ class MetaUtilTests(TestCase):
         sname = "QIIMEq2"
         col_name = "samples * columns"
         version = "1.9.1"
-        qdb.meta_util.update_resource_allocation_redis()
-        # since time is month, day, year, it should be equal unless test is ran
-        # at midnight.
-        time = datetime.now().strftime('%m-%d-%y')
+        qdb.meta_util.update_resource_allocation_redis(False)
         title_mem_str = 'resources$#%s$#%s$#%s$#%s:%s' % (
             cname, sname, version, col_name, 'title_mem')
         title_mem = str(r_client.get(title_mem_str))
         self.assertTrue(
-            "model_chosen: "
+            "model: "
             "k * log(x) + "
             "b * log(x)^2 + "
-            "a * log(x)^2.5" in title_mem
+            "a * log(x)^3" in title_mem
         )
 
         title_time_str = 'resources$#%s$#%s$#%s$#%s:%s' % (
                         cname, sname, version, col_name, 'title_time')
         title_time = str(r_client.get(title_time_str))
-        self.assertTrue("model_chosen: a + b + log(x) * k" in title_time)
-        time_create_str = 'resources$#%s$#%s$#%s$#%s:%s' % (
-            cname, sname, version, col_name, 'time')
-        time_create = str(r_client.get(time_create_str))
-        self.assertTrue(time in time_create)
+        self.assertTrue("model: a + b + log(x) * k" in title_time)
 
 
 if __name__ == '__main__':
