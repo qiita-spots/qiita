@@ -558,15 +558,15 @@ def generate_plugin_releases():
 def get_software_commands(active):
     software_list = [s for s in qdb.software.Software.iter(active=active)]
     software_commands = defaultdict(lambda: defaultdict(list))
-    
+
     for software in software_list:
         sname = software.name
         sversion = software.version
         commands = software.commands
-        
+
         for command in commands:
             software_commands[sname][sversion].append(command.name)
-    
+
     return dict(software_commands)
 
 
