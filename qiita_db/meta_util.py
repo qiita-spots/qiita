@@ -37,14 +37,14 @@ from hashlib import md5
 from re import sub
 from json import loads, dump, dumps
 
-from qiita_db.util import create_nested_path, _retrieve_resource_data
+from qiita_db.util import create_nested_path, retrieve_resource_data
 from qiita_db.util import resource_allocation_plot
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
 
 # global constant list used in resource_allocation_page
-columns = [
+COLUMNS = [
     "sName", "sVersion", "cID", "cName", "processing_job_id",
     "parameters", "samples", "columns", "input_size", "extra_info",
     "MaxRSSRaw", "ElapsedRaw", "Start", "node_name", "node_model"]
@@ -557,18 +557,17 @@ def generate_plugin_releases():
 
 def get_software_commands(active):
     software_list = [s for s in qdb.software.Software.iter(active=active)]
-    software_commands = dict()
+    software_commands = defaultdict(lambda: defaultdict(list))
+    
     for software in software_list:
         sname = software.name
         sversion = software.version
         commands = software.commands
-        if sname not in software_commands:
-            software_commands[sname] = {}
-        if sversion not in software_commands[sname]:
-            software_commands[sname][sversion] = []
+        
         for command in commands:
             software_commands[sname][sversion].append(command.name)
-    return software_commands
+    
+    return dict(software_commands)
 
 
 def update_resource_allocation_redis(active=True):
@@ -590,7 +589,7 @@ def update_resource_allocation_redis(active=True):
             for cname in commands:
 
                 col_name = "samples * columns"
-                df = _retrieve_resource_data(cname, sname, version, columns)
+                df = retrieve_resource_data(cname, sname, version, COLUMNS)
                 if len(df) == 0:
                     continue
 

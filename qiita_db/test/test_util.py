@@ -1322,7 +1322,7 @@ class ResourceAllocationPlotTests(TestCase):
 
         # df is a dataframe that represents a table with columns specified in
         # self.columns
-        self.df = qdb.util._retrieve_resource_data(
+        self.df = qdb.util.retrieve_resource_data(
                 self.cname, self.sname, self.version, self.columns)
 
     def test_plot_return(self):
@@ -1423,7 +1423,7 @@ class ResourceAllocationPlotTests(TestCase):
         qdb.util.update_resource_allocation_table(test=test_data)
 
         for curr_cname, ids in types.items():
-            updated_df = qdb.util._retrieve_resource_data(
+            updated_df = qdb.util.retrieve_resource_data(
                     curr_cname, self.sname, self.version, self.columns)
             updated_ids_set = set(updated_df['processing_job_id'])
             previous_ids_set = set(self.df['processing_job_id'])

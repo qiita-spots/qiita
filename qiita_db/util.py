@@ -2402,7 +2402,7 @@ def resource_allocation_plot(df, cname, sname, col_name):
     return fig, axs
 
 
-def _retrieve_resource_data(cname, sname, version, columns):
+def retrieve_resource_data(cname, sname, version, columns):
     with qdb.sql_connection.TRN:
         sql = """
             SELECT
