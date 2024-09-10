@@ -815,6 +815,9 @@ class PrepTemplate(MetadataTemplate):
                 pred.append(data)
                 return pred
 
+            # this is only helpful for when there are no _get_predecessors
+            return pred
+
         # Note: we are going to use the final BIOMs to figure out which
         #       processing is missing from the back/end to the front, as this
         #       will prevent generating unnecessary steps (AKA already provided
@@ -937,6 +940,8 @@ class PrepTemplate(MetadataTemplate):
                     if set(merging_schemes[info]) >= set(cxns):
                         init_artifacts = merging_schemes[info]
                         break
+            if not predecessors:
+                pnode = node
             if init_artifacts is None:
                 pdp = pnode.default_parameter
                 pdp_cmd = pdp.command
