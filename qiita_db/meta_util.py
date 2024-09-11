@@ -566,6 +566,7 @@ def get_software_commands(active):
 
         for command in commands:
             software_commands[sname][sversion].append(command.name)
+        software_commands[sname] = dict(software_commands[sname])
 
     return dict(software_commands)
 
@@ -587,7 +588,6 @@ def update_resource_allocation_redis(active=True):
     for sname, versions in scommands.items():
         for version, commands in versions.items():
             for cname in commands:
-
                 col_name = "samples * columns"
                 df = retrieve_resource_data(cname, sname, version, COLUMNS)
                 if len(df) == 0:
