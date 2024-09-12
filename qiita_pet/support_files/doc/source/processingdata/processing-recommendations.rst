@@ -77,7 +77,7 @@ Below you will find more information about each of these options.
 
 .. note::
    The bowtie2 settings are set for interleaved processing with a maximum and minimum mismatch
-   penalties (mp=[1,1]), a penalty for ambiguities (np=1; default), read and reference gap open- and
+   penalties (mp=[1,1]), a penalty for ambiguities (np=1; default), read and reference gap open and
    extend penalties (rdg=[0,1], rfg=[0,1]), a minimum alignment score for an
    alignment to be considered valid (score-min=[L,0,-0.05]), a defined number of
    distinct, valid alignments (k=16), and the suppression of SAM records for

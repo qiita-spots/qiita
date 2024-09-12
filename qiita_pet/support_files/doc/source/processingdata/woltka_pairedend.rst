@@ -6,9 +6,9 @@ Benchmarks created by Qiyun Zhu (@qiyunzhu) on Aug 1, 2024.
 Summary
 -------
 
-Here I tested alternative read pairing schemes in the analysis of shotgun metagenomic sequencing data. Sequencing reads were aligned against a reference microbial genome database as unpaired or paired, with or without singleton and/or discordant alignments suppressed. A series of synthetic datasets were used in the analysis.
+I tested alternative read pairing schemes in the analysis of shotgun metagenomic sequencing data. Sequencing reads were aligned against a reference microbial genome database as unpaired or paired, with or without singleton and/or discordant alignments suppressed. A series of synthetic datasets were used in the analysis.
 
-The results reveal that treating reads as paired is always advantageous over unpaired. Suppressing singleton alignments further increases the accuracy of results, despite at the cost of lower mapping rate. Suppressing discordant alignments has no obvious impact on the result. Regardless of accuracy, the downstream community ecology analyses are not obviously impacted by the choice of parameters.
+The results reveal that treating reads as paired is always advantageous over unpaired. Suppressing singleton alignments further increases the accuracy of results, despite the cost of lower mapping rate. Suppressing discordant alignments has no obvious impact on the result. Regardless of accuracy, the downstream community ecology analyses are not obviously impacted by the choice of parameters.
 
 Therefore, I recommend the general adoption of paired alignments as a standard procedure. I also endorse suppressing singleton and discordant alignments, but note the favor of further tests on whether they may reduce sensitivity with complex communities.
 
