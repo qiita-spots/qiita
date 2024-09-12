@@ -19,14 +19,6 @@ Sequencing data were aligned using Bowtie2 v2.5.1 in the “very sensitive” mo
 
 - SE: Reads are treated as unpaired (Bowtie2 input: -U merged.fq)
 - PE: Reads are treated as paired (Bowtie2 input: -1 fwd.fq, -2 rev.fq)
-
-Under the paired mode, certain flags were applied:
-
-- ND: Discordant alignments are suppressed (Bowtie2 flag: --no-discordant). For example, if a pair of alignments are not pointing toward each other or are too far apart from each other in the reference genome, then both alignments are discarded. See the Bowtie2 manual for a discussion.
-- NM: Singleton alignments are suppressed (Bowtie2 flag: --no-mixed). For example, if a read was aligned but its mate was not, then the alignment was discarded.
-- NDM: Both flags were applied.
-
-Extra parameters tested:
 - PE.NU: flags `--no-exact-upfront --no-1mm-upfront`.
 
 Resulting alignment files (SAM format) were processed by Woltka v0.1.6 using default parameters to generate OGU tables.
@@ -65,8 +57,6 @@ Six metrics that rely on comparing each result against the ground truth (higher 
 The results revealed:
 
 #. PE outperforms SE in all metrics. Most importantly, it reduces false positive rate (higher precision) while retaining mapping rate. Meanwhile, the sensitivity (recall) of identifying true taxa is not obviously compromised (note the y-axis scale).
-#. Suppressing singleton alignments (no mixing; NM) further significantly reduces false positive rate (higher precision), while not obviously reducing sensitivity (recall). However, the mapping rate is also significantly reduced.
-#. Suppressing discordant alignments (no discordance; ND) seem to have little to no effect on the outcome. In fact, most profiles are identical with or without ND (but a few are not).
 #. PE.NU the two additional parameters had minimum effect on the result and make the alignment step faster. This may suggest that the additional parameters are safe to use.
 
 Therefore, I would recommend adopting paired alignment in preference to unpaired alignment. I may suggest no mixing as it has improved accuracy, but the potential adverse effect of lower mapping rate may be further explored before making a compelling recommendation. Although not having a visible effect, no discordance may be added for logical coherency.
