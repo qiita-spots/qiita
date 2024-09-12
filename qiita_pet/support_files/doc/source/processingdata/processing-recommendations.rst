@@ -71,17 +71,22 @@ References:
 Shotgun sequencing
 ------------------
 
-Qiita currently has one active shotgun metagenomics data analysis pipeline: a per sample
+Qiita currently has one active shotgun metagenomics data analysis pipeline: a per sample, paired-end
 bowtie2 alignment step with Woltka classification using either the WoLr2 (default) or RS210 databases.
 Below you will find more information about each of these options.
 
 .. note::
-   The bowtie2 settings are maximum and minimum mismatch penalties (mp=[1,1]), a
-   penalty for ambiguities (np=1; default), read and reference gap open- and
+   The bowtie2 settings are set for interleaved processing with a maximum and minimum mismatch
+   penalties (mp=[1,1]), a penalty for ambiguities (np=1; default), read and reference gap open and
    extend penalties (rdg=[0,1], rfg=[0,1]), a minimum alignment score for an
    alignment to be considered valid (score-min=[L,0,-0.05]), a defined number of
    distinct, valid alignments (k=16), and the suppression of SAM records for
-   unaligned reads, as well as SAM headers (no-unal, no-hd).
+   unaligned reads, as well as SAM headers (no-unal, no-hd), and using end-to-end alignments
+   before using the multiseed heuristic (no-exact-upfront, no-1mm-upfront). More information visit:
+
+   .. toctree::
+
+      woltka_pairedend.rst
 
 The current workflow is as follows:
 
@@ -110,10 +115,9 @@ For more information about the versions in this plugin, visit:
 
    qp-fastp-minimap2.rst
 
-Note that the command produces up to 6 output artifacts based on the aligner and database selected:
+Note that the command produces up to 5 output artifacts based on the aligner and database selected:
 
-- Alignment Profile: contains the raw alignment file and the no rank classification BIOM table
-- Per genome Predictions: contains the per genome level predictions BIOM table
+- Per genome Predictions: contains the raw alignment file and the per genome level predictions BIOM table
 - Per gene Predictions: Only WoLr2, contains the per gene level predictions BIOM table
 - KEGG Pathways: Only WoLr2, contains the functional profile
 - KEGG Ontology (KO): Only WoLr2, contains the functional profile
