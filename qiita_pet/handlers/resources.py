@@ -1,4 +1,3 @@
-
 from tornado.gen import coroutine, Task
 from tornado.web import authenticated, HTTPError
 import json
@@ -105,7 +104,7 @@ class ResourcesHandler(BaseHandler):
                 "tcalc": tcalc, "tfail": tfail,
                 "initial_load": False
             }
-            self.write(json.dumps(response_data))
+            self.write(json.dumps(response_data) + "\n")
 
         except json.JSONDecodeError:
             self.set_status(400)
@@ -129,7 +128,7 @@ class ResourcesHandler(BaseHandler):
                     "initial_load": False
                 }
                 self.set_status(200)
-                self.write(json.dumps(response_data))
+                self.write(json.dumps(response_data) + "\n")
             else:
                 self.set_status(500)
                 self.finish({"error": str(e)})
