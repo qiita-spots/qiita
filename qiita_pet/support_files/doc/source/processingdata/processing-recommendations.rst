@@ -125,7 +125,7 @@ Note that the command produces up to 5 output artifacts based on the aligner and
 
 
 .. note::
-   Woltka 0.1.4 only produces per-genome, per-gene and functional profiles as we are moving
+   Woltka 0.1.6 only produces per-genome, per-gene and functional profiles as we are moving
    to Operational Genomic Units (OGUs), which have higher resolution than taxonomic units
    for community ecology, and were shown to deliver stronger biological signals in
    downstream analyses. For more information please read: `Phylogeny-Aware Analysis of
