@@ -6,16 +6,16 @@ Benchmarks created by Qiyun Zhu (@qiyunzhu) on Aug 1, 2024.
 Summary
 -------
 
-I tested alternative read pairing schemes in the analysis of shotgun metagenomic sequencing data. Sequencing reads were aligned against a reference microbial genome database as unpaired or paired, with or without singleton and/or discordant alignments suppressed. A series of synthetic datasets were used in the analysis.
+I tested alternative read pairing schemes in the analysis of shotgun metagenomic sequencing data. Sequencing reads were aligned against a reference microbial genome database as unpaired or paired. A series of synthetic datasets were used in the analysis.
 
-The results reveal that treating reads as paired is always advantageous over unpaired. Suppressing singleton alignments further increases the accuracy of results, despite the cost of lower mapping rate. Suppressing discordant alignments has no obvious impact on the result. Regardless of accuracy, the downstream community ecology analyses are not obviously impacted by the choice of parameters.
+The results reveal that treating reads as paired is always advantageous over unpaired. Regardless of accuracy, the downstream community ecology analyses are not obviously impacted by the choice of parameters.
 
-Therefore, I recommend the general adoption of paired alignments as a standard procedure. I also endorse suppressing singleton and discordant alignments, but note the favor of further tests on whether they may reduce sensitivity with complex communities.
+Therefore, I recommend the general adoption of paired alignments as a standard procedure.
 
 Alignment parameters
 --------------------
 
-Sequencing data were aligned using Bowtie2 v2.5.1 in the “very sensitive” mode against the WoL2 database. They were treated as either unpaired or paired-end:
+Sequencing data were aligned using Bowtie2 v2.5.1 in the "very sensitive" mode against the WoL2 database. They were treated as either unpaired or paired-end:
 
 - SE: Reads are treated as unpaired (Bowtie2 input: -U merged.fq)
 - PE: Reads are treated as paired (Bowtie2 input: -1 fwd.fq, -2 rev.fq)
@@ -30,11 +30,10 @@ Five synthetic datasets were generated with 25 samples each consisting of random
 
 The results of the five Bowtie2 parameter sets were compared using nine metrics:
 
-Three metrics that only rely on each result.
+Two metrics that only rely on each result.
 
 - Mapping rate (%)
 - Number of taxa
-- Entropy (i.e., Shannon index, but without subsampling)
 
 Six metrics that rely on comparing each result against the ground truth (higher is better):
 
@@ -59,4 +58,4 @@ The results revealed:
 #. PE outperforms SE in all metrics. Most importantly, it reduces false positive rate (higher precision) while retaining mapping rate. Meanwhile, the sensitivity (recall) of identifying true taxa is not obviously compromised (note the y-axis scale).
 #. PE.NU the two additional parameters had minimum effect on the result and make the alignment step faster. This may suggest that the additional parameters are safe to use.
 
-Therefore, I would recommend adopting paired alignment in preference to unpaired alignment. I may suggest no mixing as it has improved accuracy, but the potential adverse effect of lower mapping rate may be further explored before making a compelling recommendation. Although not having a visible effect, no discordance may be added for logical coherency.
+Therefore, I would recommend adopting paired alignment in preference to unpaired alignment.
