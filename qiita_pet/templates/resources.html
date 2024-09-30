@@ -1,0 +1,272 @@
+{% extends sitebase.html %}
+{% block head %}
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/ol.css" type="text/css">
+    <style type="text/css">
+        /* Add any custom styles here */
+    </style>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/ol.js"></script>
+{% end %}
+
+{% block content %}
+<div style="width: 80%; margin: 0 auto; max-width: 1600px;">
+
+    <div id="default-message" style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 5px; margin-top: 20px;">
+        <h3>Please choose software, version, and command to view the data.</h3>
+    </div>
+
+    <form method="POST">
+      <div class="form-group">
+        <label for="software">Software:</label>
+        <select id="software" name="software" class="form-control">
+            <option value="">Select Software</option>
+        </select>
+      </div>
+    
+        <div class="form-group">
+            <label for="version">Version:</label>
+            <select id="version" name="version" class="form-control">
+                <option value="">Select Version</option>
+            </select>
+        </div>
+    
+        <div class="form-group">
+            <label for="command">Command:</label>
+            <select id="command" name="command" class="form-control">
+                <option value="">Select Command</option>
+            </select>
+        </div>
+    </form>
+
+    <div id="data-container">
+        <div id="time-container"  style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 5px; margin-top: 20px;">
+            <h3>Generated on: {{time}} </h3>
+        </div>
+
+        <table>
+            <tr>
+                <th>Memory Allocation</th>
+                <th>Time Allocation</th>
+            </tr>
+            <tr>
+                <td id="image-mem">
+                    {% if img_mem and img_mem is not None %}
+                        <img height="100%" width="100%" src="{% raw img_mem %}"/>
+                    {% else %}
+                        No memory allocation image available
+                    {% end %}
+                </td>
+                <td id="image-time">
+                    {% if img_time and img_time is not None %}
+                        <img height="100%" width="100%" src="{% raw img_time %}"/>
+                    {% else %}
+                        No time allocation image available
+                    {% end %}
+                </td>
+            </tr>
+            <tr>
+                <td id="mem-data">
+                    <ul>
+                        <li>k: {{ mk }}</li>
+                        <li>a: {{ ma }}</li>
+                        <li>b: {{ mb }}</li>
+                        <li>model: {{ mmodel }}</li>
+                        <li>real: {{ mreal }}</li>
+                        <li>calc: {{ mcalc }}</li>
+                        <li>fail: {{ mfail }}</li>
+                    </ul>
+                </td>
+                <td id="time-data">
+                    <ul>
+                        <li>k: {{ tk }}</li>
+                        <li>a: {{ ta }}</li>
+                        <li>b: {{ tb }}</li>
+                        <li>model: {{ tmodel }}</li>
+                        <li>real: {{ treal }}</li>
+                        <li>calc: {{ tcalc }}</li>
+                        <li>fail: {{ tfail }}</li>
+                    </ul>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+</div>
+
+<script>
+
+    function toggleDataVisibility(showData) {
+        const defaultMessage = document.getElementById('default-message');
+        const dataContainer = document.getElementById('data-container');
+        
+        if (showData) {
+            defaultMessage.style.display = 'none';
+            dataContainer.style.display = 'block';
+        } else {
+            defaultMessage.style.display = 'block';
+            dataContainer.style.display = 'none';
+        }
+    }
+    
+    // Call this function on initial load
+    {% if initial_load %}
+        toggleDataVisibility(false);
+    {% else %}
+        toggleDataVisibility(true);
+    {% end %}
+
+  const commandsConst = JSON.parse('{% raw commands %}');
+  console.log(commandsConst);
+
+  const softwareSelect = document.getElementById('software');
+  const versionSelect = document.getElementById('version');
+  const commandSelect = document.getElementById('command');
+
+  // Populate software options
+  for (const software in commandsConst) {
+      const option = document.createElement('option');
+      option.value = software;
+      option.textContent = software;
+      softwareSelect.appendChild(option);
+  }
+
+
+  function populateVersions(software) {
+      versionSelect.innerHTML = '<option value="">Select Version</option>';
+      commandSelect.innerHTML = '<option value="">Select Command</option>';
+      
+      if (software && commandsConst[software]) {
+          for (const version in commandsConst[software]) {
+              const option = document.createElement('option');
+              option.value = version;
+              option.textContent = version;
+              versionSelect.appendChild(option);
+          }
+      }
+  }
+
+
+  function populateCommands(software, version) {
+      commandSelect.innerHTML = '<option value="">Select Command</option>';
+      
+      if (software && version && commandsConst[software][version]) {
+          commandsConst[software][version].forEach(command => {
+              const option = document.createElement('option');
+              option.value = command;
+              option.textContent = command;
+              commandSelect.appendChild(option);
+          });
+      }
+  }
+
+  function sendPostRequest(software, version, command) {
+    const data = {
+        software: software,
+        version: version,
+        command: command
+    };
+
+    $.post(window.location.href, JSON.stringify(data), function(response, textStatus, jqXHR) {
+        if (response.status === "success") {
+            console.log(response.time)
+            // Toggle visibility based on the response
+            toggleDataVisibility(true);
+
+            // Update the time container
+            if (response.time) {
+                $('#time-container').text(`Generated on: ${response.time}`);
+            } else {
+                $('#time-container').text('Error: Plot for this command has not been generated');
+            }
+
+            // Update memory image
+            if (response.img_mem) {
+                $('#image-mem').html('<img height="100%" width="100%" src="' + response.img_mem + '"/>');
+            } else {
+                $('#image-mem').html('No memory allocation image available');
+            }
+
+            // Update time image
+            if (response.img_time) {
+                $('#image-time').html('<img height="100%" width="100%" src="' + response.img_time + '"/>');
+            } else {
+                $('#image-time').html('No time allocation image available');
+            }
+
+            // Update memory data
+            if (response.mk && response.ma && response.mb && response.mmodel && response.mreal && response.mcalc && response.mfail) {
+                $('#mem-data').html(`
+                    <ul>
+                        <li>k: ${response.mk}</li>
+                        <li>a: ${response.ma}</li>
+                        <li>b: ${response.mb}</li>
+                        <li>model: ${response.mmodel}</li>
+                        <li>real: ${response.mreal}</li>
+                        <li>calc: ${response.mcalc}</li>
+                        <li>fail: ${response.mfail}</li>
+                    </ul>
+                `);
+            } else {
+                $('#mem-data').html('No memory allocation data available');
+            }
+
+            // Update time data
+            if (response.tk && response.ta && response.tb && response.tmodel && response.treal && response.tcalc && response.tfail) {
+                $('#time-data').html(`
+                    <ul>
+                        <li>k: ${response.tk}</li>
+                        <li>a: ${response.ta}</li>
+                        <li>b: ${response.tb}</li>
+                        <li>model: ${response.tmodel}</li>
+                        <li>real: ${response.treal}</li>
+                        <li>calc: ${response.tcalc}</li>
+                        <li>fail: ${response.tfail}</li>
+                    </ul>
+                `);
+            } else {
+                $('#time-data').html('No time allocation data available');
+            }
+
+            bootstrapAlert("Data updated successfully", "success", 2200);
+        } 
+        else if (response.status === "no_data") {
+            toggleDataVisibility(false);
+            $('#default-message').html('<h3>No data available for the selected options.</h3>');
+            bootstrapAlert("No data available", "info", 2200);
+        } else {
+            toggleDataVisibility(false);
+            bootstrapAlert("Error: " + response.message, "danger", 2200);
+        }
+    }, 'json')
+    .fail(function(jqXHR, textStatus, errorThrown) {
+        console.error('Error:', errorThrown);
+        toggleDataVisibility(false);
+        bootstrapAlert("An error occurred while processing your request", "danger", 2200);
+    });
+}
+
+
+  // Event listener for software select
+  softwareSelect.addEventListener('change', function() {
+      const selectedSoftware = this.value;
+      populateVersions(selectedSoftware);
+  });
+
+  // Event listener for version select
+  versionSelect.addEventListener('change', function() {
+      const selectedSoftware = softwareSelect.value;
+      const selectedVersion = this.value;
+      populateCommands(selectedSoftware, selectedVersion);
+  });
+
+  // Event listener for command select
+  commandSelect.addEventListener('change', function() {
+      const selectedSoftware = softwareSelect.value;
+      const selectedVersion = versionSelect.value;
+      const selectedCommand = this.value;
+
+      if (selectedSoftware && selectedVersion && selectedCommand) {
+          sendPostRequest(selectedSoftware, selectedVersion, selectedCommand);
+      }
+  });
+</script>
+{% end %}
