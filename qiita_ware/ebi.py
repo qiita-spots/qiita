@@ -110,6 +110,7 @@ class EBISubmission(object):
                                     'ILLUMINA MISEQ',
                                     'ILLUMINA MINISEQ',
                                     'ILLUMINA NOVASEQ 6000',
+                                    'ILLUMINA NOVASEQ X',
                                     'NEXTSEQ 500',
                                     'NEXTSEQ 550',
                                     'UNSPECIFIED'],
@@ -539,7 +540,7 @@ class EBISubmission(object):
             library_name.text = self._get_library_name(sample_name)
 
             lg = ET.SubElement(library_descriptor, 'LIBRARY_STRATEGY')
-            lg.text = escape(clean_whitespace(library_strategy.upper()))
+            lg.text = escape(clean_whitespace(library_strategy))
 
             # hardcoding some values,
             # see https://github.com/biocore/qiita/issues/1485
