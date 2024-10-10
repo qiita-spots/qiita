@@ -14,7 +14,7 @@ Deployed on October 14th, 2024
 * `SortMeRNA v4.3.7` superseded `Sortmerna v2.1b`, which relies on Silva 138 and now produced even mates. Thank you @ekopylova and @biocodz for the support.
 * `Remove SynDNA reads` superseded `SynDNA Woltka`, which now generates even mates.
 * `Woltka v0.1.7, paired-end` superseded `Woltka v0.1.6` in `qp-woltka`; [more information](https://qiita.ucsd.edu/static/doc/html/processingdata/woltka_pairedend.html). Thank you to @qiyunzhu for the benchmarks!
-* Other general fixes, like [#3424](https://github.com/qiita-spots/qiita/pull/3424), [#3425](https://github.com/qiita-spots/qiita/pull/3425).
+* Other general fixes, like [#3424](https://github.com/qiita-spots/qiita/pull/3424), [#3425](https://github.com/qiita-spots/qiita/pull/3425), [#3439](https://github.com/qiita-spots/qiita/pull/3439).
 
 
 Version 2024.07
