@@ -423,7 +423,7 @@ the creation of the analysis or at any point within each individual analysis pag
 
 You can add the reservation string to the analysis at the time of creation (bottom of the creation
 page), or the analysis page via the reservation button (top right). Note that once the reservation
-time finished, your jobs will fail as the reservation will no longer exist so you will need to
+time finishes, your jobs will fail as the reservation will no longer exist so you will need to
 remove it - we suggest doing this before submitting new jobs.
 
 How to cite Qiita?
