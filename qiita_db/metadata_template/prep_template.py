@@ -274,7 +274,7 @@ class PrepTemplate(MetadataTemplate):
 
             # artifacts that are archived are not returned as part of the code
             # above and we need to clean them before moving forward
-            for aa in self.archived_artifacts():
+            for aa in cls(id_).archived_artifacts():
                 qdb.artifact.Artifact.delete(aa.id)
 
             # Delete the prep template filepaths
