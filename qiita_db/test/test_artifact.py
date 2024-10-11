@@ -1539,7 +1539,8 @@ class ArtifactArchiveTests(TestCase):
         mp = partial(join, mpath)
         fps = [
             mp('processed_data/1_study_1001_closed_reference_otu_table.biom'),
-            mp('processed_data/1_study_1001_closed_reference_otu_table_Silva.biom'),
+            mp('processed_data/'
+               '1_study_1001_closed_reference_otu_table_Silva.biom'),
             mp('raw_data/1_s_G1_L001_sequences.fastq.gz'),
             mp('raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz')]
         for fp in fps:
@@ -1569,6 +1570,7 @@ class ArtifactArchiveTests(TestCase):
         # bringing back the filepaths
         for fp in fps:
             copyfile(f'{fp}.bk', fp)
+
 
 if __name__ == '__main__':
     main()
