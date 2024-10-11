@@ -272,6 +272,18 @@ class PrepTemplate(MetadataTemplate):
                     "Cannot remove prep template %d because it has an artifact"
                     " associated with it" % id_)
 
+            # artifacts that are archived are not returned as part of the code
+            # above and we need to clean them before moving forward
+            sql = """SELECT artifact_id
+                     FROM qiita.preparation_artifact
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, args)
+            archived_artifacts = set(
+                qdb.sql_connection.TRN.execute_fetchflatten())
+            if archived_artifacts:
+                for aid in archived_artifacts:
+                    qdb.artifact.Artifact.delete(aid)
+
             # Delete the prep template filepaths
             sql = """DELETE FROM qiita.prep_template_filepath
                      WHERE prep_template_id = %s"""

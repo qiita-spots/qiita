@@ -929,7 +929,8 @@ class Artifact(qdb.base.QiitaObject):
             # words has more that one processing step behind it
             fine_to_send = []
             fine_to_send.extend([pt.artifact for pt in self.prep_templates])
-            fine_to_send.extend([c for a in fine_to_send for c in a.children])
+            fine_to_send.extend([c for a in fine_to_send if a is not None
+                                 for c in a.children])
             if self not in fine_to_send:
                 return False
 
