@@ -10,7 +10,7 @@ from unittest import TestCase, main
 from tempfile import mkstemp, mkdtemp
 from datetime import datetime
 from os import close, remove
-from os.path import exists, join, basename
+from os.path import exists, join, basename, dirname, abspath
 from shutil import copyfile
 from functools import partial
 from json import dumps
@@ -1529,7 +1529,22 @@ class ArtifactArchiveTests(TestCase):
         obs_artifacts = len(qdb.util.get_artifacts_information([4, 5, 6, 8]))
         self.assertEqual(2, obs_artifacts)
 
-        # now let's try to delete the prep
+        # in the tests above we generated and validated archived artifacts
+        # so this allows us to add tests to delete a prep-info with archived
+        # artifacts. The first bottleneck to do this is that this tests will
+        # actually remove files, which we will need for other tests so lets
+        # make a copy and then restore them
+        mfolder = dirname(dirname(abspath(__file__)))
+        mpath = join(mfolder, 'support_files', 'test_data')
+        mp = partial(join, mpath)
+        fps = [
+            mp('processed_data/1_study_1001_closed_reference_otu_table.biom'),
+            mp('processed_data/1_study_1001_closed_reference_otu_table_Silva.biom'),
+            mp('raw_data/1_s_G1_L001_sequences.fastq.gz'),
+            mp('raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz')]
+        for fp in fps:
+            copyfile(fp, f'{fp}.bk')
+
         PT = qdb.metadata_template.prep_template.PrepTemplate
         QEE = qdb.exceptions.QiitaDBExecutionError
         pt = A(1).prep_templates[0]
@@ -1549,8 +1564,11 @@ class ArtifactArchiveTests(TestCase):
         for aid in [3, 2, 1]:
             A.delete(aid)
 
-        PT.delete(1)
+        PT.delete(pt.id)
 
+        # bringing back the filepaths
+        for fp in fps:
+            copyfile(f'{fp}.bk', fp)
 
 if __name__ == '__main__':
     main()
