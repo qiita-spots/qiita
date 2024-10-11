@@ -23,6 +23,7 @@ from biom.util import biom_open
 from qiita_core.util import qiita_test_checker
 from qiita_core.testing import wait_for_processing_job
 import qiita_db as qdb
+from qiita_ware.private_plugin import _delete_analysis_artifacts
 
 
 class ArtifactTestsReadOnly(TestCase):
@@ -1518,7 +1519,7 @@ class ArtifactArchiveTests(TestCase):
                                     'be archived'):
             A.archive(8)
 
-        for aid in range(4, 7):
+        for aid in range(5, 7):
             ms = A(aid).merging_scheme
             A.archive(aid)
             self.assertEqual(ms, A(aid).merging_scheme)
@@ -1526,7 +1527,29 @@ class ArtifactArchiveTests(TestCase):
             self.assertCountEqual(A(1).descendants.nodes(), exp_nodes)
 
         obs_artifacts = len(qdb.util.get_artifacts_information([4, 5, 6, 8]))
-        self.assertEqual(1, obs_artifacts)
+        self.assertEqual(2, obs_artifacts)
+
+        # now let's try to delete the prep
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        QEE = qdb.exceptions.QiitaDBExecutionError
+        pt = A(1).prep_templates[0]
+        # it should fail as this prep is public and have been submitted to ENA
+        with self.assertRaisesRegex(QEE, 'Cannot remove prep template 1'):
+            PT.delete(pt.id)
+        # now, remove those restrictions + analysis + linked artifacts
+        sql = "DELETE FROM qiita.artifact_processing_job"
+        qdb.sql_connection.perform_as_transaction(sql)
+        sql = "DELETE FROM qiita.ebi_run_accession"
+        qdb.sql_connection.perform_as_transaction(sql)
+        sql = "UPDATE qiita.artifact SET visibility_id = 1"
+        qdb.sql_connection.perform_as_transaction(sql)
+        _delete_analysis_artifacts(qdb.analysis.Analysis(1))
+        _delete_analysis_artifacts(qdb.analysis.Analysis(2))
+        _delete_analysis_artifacts(qdb.analysis.Analysis(3))
+        for aid in [3, 2, 1]:
+            A.delete(aid)
+
+        PT.delete(1)
 
 
 if __name__ == '__main__':
