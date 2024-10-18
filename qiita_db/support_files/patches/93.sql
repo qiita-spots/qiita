@@ -45,11 +45,11 @@ ALTER TABLE qiita.processing_job
     ALTER COLUMN command_parameters TYPE JSONB USING command_parameters::jsonb;
 
 -- This indexing will take like 5 min
-CREATE INDEX processing_job_command_parameters_job_id ON qiita.processing_job
+CREATE INDEX IF NOT EXISTS processing_job_command_parameters_job_id ON qiita.processing_job
   USING GIN((command_parameters->>'job_id') gin_trgm_ops);
 
 -- This indexing will take like an hour
-CREATE INDEX processing_job_command_parameters_payload ON qiita.processing_job
+CREATE INDEX IF NOT EXISTS processing_job_command_parameters_payload ON qiita.processing_job
   USING GIN((command_parameters->>'payload') gin_trgm_ops);
 
 -- After the changes
