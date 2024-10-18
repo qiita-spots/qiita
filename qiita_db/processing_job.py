@@ -612,7 +612,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     # divided by 2 as we have key-value pairs
                     len_params = int(len(params)/2)
                     sql = sql.format(' AND ' + ' AND '.join(
-                        ["command_parameters->>%s = %s"] * len_params))
+                        ["command_parameters->>%s ILIKE %s"] * len_params))
                     params = [command.id] + params
                     TTRN.add(sql, params)
                 else:
