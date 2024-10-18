@@ -581,8 +581,8 @@ class ProcessingJob(qdb.base.QiitaObject):
         """
         TTRN = qdb.sql_connection.TRN
         with TTRN:
+            command = parameters.command
             if not force:
-                command = parameters.command
 
                 # check if a job with the same parameters already exists
                 sql = """SELECT processing_job_id, processing_job_status
