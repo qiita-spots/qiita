@@ -39,6 +39,7 @@
 
 -- Note: for this to work you need to have created as admin the extension
 -- CREATE EXTENSION pg_trgm;
+CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH SCHEMA public;
 
 -- This alter table will take close to 11 min
 ALTER TABLE qiita.processing_job

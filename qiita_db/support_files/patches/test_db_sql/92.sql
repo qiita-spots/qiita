@@ -952,8 +952,3 @@ INSERT INTO qiita.human_reads_filter_method (
 UPDATE qiita.artifact
   SET human_reads_filter_method_id = 1
   WHERE artifact_id = 1;
-
--- Oct 18, 2024
--- This is going to be used in 93.sql but adding it here so it happens before that
--- patch in the test database
-CREATE EXTENSION pg_trgm;
