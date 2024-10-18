@@ -583,17 +583,18 @@ class ProcessingJob(qdb.base.QiitaObject):
         with TTRN:
             command = parameters.command
             if not force:
-
                 # check if a job with the same parameters already exists
-                sql = """SELECT processing_job_id, processing_job_status
-                         FROM qiita.processing_job
-                         LEFT JOIN qiita.processing_job_status
-                            USING (processing_job_status_id)
-                         LEFT JOIN qiita.artifact_output_processing_job aopj
-                            USING (processing_job_id)
-                         WHERE command_id = %s AND processing_job_status IN (
-                            'success', 'waiting', 'running', 'in_construction')
-                         {0}"""
+                sql = """SELECT processing_job_id, email,
+                        processing_job_status, COUNT(aopj.artifact_id)
+                     FROM qiita.processing_job
+                     LEFT JOIN qiita.processing_job_status
+                        USING (processing_job_status_id)
+                     LEFT JOIN qiita.artifact_output_processing_job aopj
+                        USING (processing_job_id)
+                     WHERE command_id = %s AND processing_job_status IN (
+                        'success', 'waiting', 'running', 'in_construction') {0}
+                     GROUP BY processing_job_id, email,
+                        processing_job_status"""
 
                 # we need to use ILIKE because of booleans as they can be
                 # false or False
