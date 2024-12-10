@@ -38,7 +38,7 @@ class TestPrepAPIReadOnly(TestCase):
     def test_get_ENA_ontology(self):
         obs = _get_ENA_ontology()
         exp = {
-            'ENA': ['Amplicon', 'Metagenomics', 'RNA-Seq', 'WGS', 'Other'],
+            'ENA': ['AMPLICON', 'Metagenomics', 'RNA-Seq', 'WGS', 'Other'],
             'User': []}
         self.assertEqual(obs, exp)
 
@@ -53,7 +53,7 @@ class TestPrepAPIReadOnly(TestCase):
                            'Multiomic', 'Proteomic', 'Transcriptomics',
                            'Viromics'],
             'ontology': {
-                'ENA': ['Amplicon', 'Metagenomics', 'RNA-Seq', 'WGS', 'Other'],
+                'ENA': ['AMPLICON', 'Metagenomics', 'RNA-Seq', 'WGS', 'Other'],
                 'User': []}}
 
         self.assertEqual(obs, exp)
@@ -73,7 +73,7 @@ class TestPrepAPIReadOnly(TestCase):
                'num_columns': 22,
                'investigation_type': 'Metagenomics',
                'ontology': {
-                   'ENA': ['Amplicon', 'Metagenomics', 'RNA-Seq', 'WGS',
+                   'ENA': ['AMPLICON', 'Metagenomics', 'RNA-Seq', 'WGS',
                            'Other'],
                    'User': []},
                'artifact_attached': True,

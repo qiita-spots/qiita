@@ -35,7 +35,7 @@ class TestOntology(TestCase):
     def testTerms(self):
         obs = self.ontology.terms
         self.assertEqual(
-            obs, ['WGS', 'Metagenomics', 'Amplicon', 'RNA-Seq', 'Other'])
+            obs, ['WGS', 'Metagenomics', 'AMPLICON', 'RNA-Seq', 'Other'])
 
     def test_user_defined_terms(self):
         obs = self.ontology.user_defined_terms
