@@ -2053,23 +2053,25 @@ class ProcessingJob(qdb.base.QiitaObject):
     def trace(self):
         """ Returns as a text array the full trace of the job, from itself
             to validators and complete jobs"""
-        lines = [f'{self.id} [{self.external_id}]: '
+        lines = [f'{self.id} [{self.external_id}] ({self.status}): '
                  f'{self.command.name} | {self.resource_allocation_info}']
         cjob = self.complete_processing_job
         if cjob is not None:
-            lines.append(f'  {cjob.id} [{cjob.external_id}] | '
+            lines.append(f'  {cjob.id} [{cjob.external_id}] ({cjob.status})| '
                          f'{cjob.resource_allocation_info}')
             vjob = self.release_validator_job
             if vjob is not None:
                 lines.append(f'    {vjob.id} [{vjob.external_id}] '
-                             f'| {vjob.resource_allocation_info}')
+                             f' ({vjob.status}) | '
+                             f'{vjob.resource_allocation_info}')
         for v in self.validator_jobs:
-            lines.append(f'     {v.id} [{v.external_id}]: '
+            lines.append(f'     {v.id} [{v.external_id}] ({v.status}): '
                          f'{v.command.name} | {v.resource_allocation_info}')
             cjob = v.complete_processing_job
             if cjob is not None:
                 lines.append(f'         {cjob.id} [{cjob.external_id}] '
-                             f'| {cjob.resource_allocation_info}')
+                             f'({cjob.status}) | '
+                             f'{cjob.resource_allocation_info}')
         return lines
 
 

@@ -11,6 +11,7 @@ from copy import deepcopy
 from iteration_utilities import duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_ware.private_plugin import _delete_analysis_artifacts
 import qiita_db as qdb
 from .constants import (PREP_TEMPLATE_COLUMNS, TARGET_GENE_DATA_TYPES,
                         PREP_TEMPLATE_COLUMNS_TARGET_GENE)
@@ -135,7 +136,7 @@ class PrepTemplate(MetadataTemplate):
             # data_type being created - if possible
             if investigation_type is None:
                 if data_type_str in TARGET_GENE_DATA_TYPES:
-                    investigation_type = 'Amplicon'
+                    investigation_type = 'AMPLICON'
                 elif data_type_str == 'Metagenomic':
                     investigation_type = 'WGS'
                 elif data_type_str == 'Metatranscriptomic':
@@ -282,6 +283,19 @@ class PrepTemplate(MetadataTemplate):
                 qdb.sql_connection.TRN.execute_fetchflatten())
             if archived_artifacts:
                 for aid in archived_artifacts:
+                    # before we can delete the archived artifact, we need
+                    # to delete the analyses where they were used.
+                    sql = """SELECT analysis_id
+                             FROM qiita.analysis
+                             WHERE analysis_id IN (
+                                SELECT DISTINCT analysis_id
+                                FROM qiita.analysis_sample
+                                WHERE artifact_id IN %s)"""
+                    qdb.sql_connection.TRN.add(sql, [aid])
+                    analyses = set(
+                        qdb.sql_connection.TRN.execute_fetchflatten())
+                    for _id in analyses:
+                        _delete_analysis_artifacts(qdb.analysis.Analysis(_id))
                     qdb.artifact.Artifact.delete(aid)
 
             # Delete the prep template filepaths

@@ -55,3 +55,10 @@ CREATE INDEX IF NOT EXISTS processing_job_command_parameters_payload ON qiita.pr
 
 -- After the changes
 -- 18710.404 ms
+
+--
+
+-- Nov 5, 2024
+-- Addding contraints for the slurm_reservation column
+ALTER TABLE qiita.analysis DROP CONSTRAINT IF EXISTS analysis_slurm_reservation_valid_chars;
+ALTER TABLE qiita.analysis ADD CONSTRAINT analysis_slurm_reservation_valid_chars CHECK ( slurm_reservation ~ '^[a-zA-Z0-9_]*$' );
