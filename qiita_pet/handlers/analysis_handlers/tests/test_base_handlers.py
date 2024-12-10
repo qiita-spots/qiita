@@ -207,7 +207,7 @@ class TestBaseHandlers(TestHandlerBase):
         self.assertEqual(analysis._slurm_reservation(), [''])
 
         # now, let's change it to something different
-        reservation = 'my-reservation'
+        reservation = 'myreservation'
         arguments = {
             'op': 'replace', 'path': 'reservation', 'value': reservation}
         self.patch(f'/analysis/description/{analysis.id}/', data=arguments)
