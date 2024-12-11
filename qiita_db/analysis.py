@@ -228,7 +228,7 @@ class Analysis(qdb.base.QiitaObject):
         aids = [a.id for a in analysis.artifacts if not a.parents]
         aids.sort(reverse=True)
         for aid in aids:
-            cls.delete(aid)
+            qdb.artifact.Artifact.delete(aid)
         cls.delete(analysis.id)
 
     @classmethod

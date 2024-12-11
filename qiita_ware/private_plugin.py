@@ -307,7 +307,7 @@ def delete_study(job):
 
         # deleting analyses
         for analysis in study.analyses():
-            qdb.analysis.Analysis.delete_analysis_artifacts(analysis)
+            qdb.analysis.Analysis.delete_analysis_artifacts(analysis.id)
 
         for pt in study.prep_templates():
             if pt.artifact is not None:
