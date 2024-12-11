@@ -291,14 +291,12 @@ class PrepTemplate(MetadataTemplate):
                                 SELECT DISTINCT analysis_id
                                 FROM qiita.analysis_sample
                                 WHERE artifact_id IN %s)"""
-                    qdb.sql_connection.TRN.add(sql, [aid])
+                    qdb.sql_connection.TRN.add(sql, [tuple([aid])])
                     analyses = set(
                         qdb.sql_connection.TRN.execute_fetchflatten())
-                    if analyses:
-                        for _id in analyses:
-                            ANALYSIS.delete_analysis_artifacts(_id)
-                    else:
-                        ANALYSIS.delete(aid)
+                    for _id in analyses:
+                        ANALYSIS.delete_analysis_artifacts(_id)
+                    qdb.artifact.Artifact.delete(aid)
 
             # Delete the prep template filepaths
             sql = """DELETE FROM qiita.prep_template_filepath
