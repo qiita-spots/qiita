@@ -2334,7 +2334,7 @@ def send_email(to, subject, body):
     msg = MIMEMultipart()
     msg['From'] = qiita_config.smtp_email
     msg['To'] = to
-    msg['Subject'] = subject.replace('\n', '')
+    msg['Subject'] = subject.strip()
     msg.attach(MIMEText(body, 'plain'))
 
     # connect to smtp server, using ssl if needed
