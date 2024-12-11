@@ -135,7 +135,7 @@ class PrepTemplate(MetadataTemplate):
             # data_type being created - if possible
             if investigation_type is None:
                 if data_type_str in TARGET_GENE_DATA_TYPES:
-                    investigation_type = 'Amplicon'
+                    investigation_type = 'AMPLICON'
                 elif data_type_str == 'Metagenomic':
                     investigation_type = 'WGS'
                 elif data_type_str == 'Metatranscriptomic':
@@ -280,8 +280,22 @@ class PrepTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.add(sql, args)
             archived_artifacts = set(
                 qdb.sql_connection.TRN.execute_fetchflatten())
+            ANALYSIS = qdb.analysis.Analysis
             if archived_artifacts:
                 for aid in archived_artifacts:
+                    # before we can delete the archived artifact, we need
+                    # to delete the analyses where they were used.
+                    sql = """SELECT analysis_id
+                             FROM qiita.analysis
+                             WHERE analysis_id IN (
+                                SELECT DISTINCT analysis_id
+                                FROM qiita.analysis_sample
+                                WHERE artifact_id IN %s)"""
+                    qdb.sql_connection.TRN.add(sql, [tuple([aid])])
+                    analyses = set(
+                        qdb.sql_connection.TRN.execute_fetchflatten())
+                    for _id in analyses:
+                        ANALYSIS.delete_analysis_artifacts(_id)
                     qdb.artifact.Artifact.delete(aid)
 
             # Delete the prep template filepaths

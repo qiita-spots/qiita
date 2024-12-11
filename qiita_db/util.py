@@ -2334,7 +2334,7 @@ def send_email(to, subject, body):
     msg = MIMEMultipart()
     msg['From'] = qiita_config.smtp_email
     msg['To'] = to
-    msg['Subject'] = subject
+    msg['Subject'] = subject.strip()
     msg.attach(MIMEText(body, 'plain'))
 
     # connect to smtp server, using ssl if needed
@@ -2496,9 +2496,9 @@ def _resource_allocation_plot_helper(
     ax.set_ylabel(curr)
     ax.set_xlabel(col_name)
 
-    # 100 - number of maximum iterations, 3 - number of failures we tolerate
+    # 50 - number of maximum iterations, 3 - number of failures we tolerate
     best_model, options = _resource_allocation_calculate(
-        df, x_data, y_data, models, curr, col_name, 100, 3)
+        df, x_data, y_data, models, curr, col_name, 50, 3)
     k, a, b = options.x
     x_plot = np.array(sorted(df[col_name].unique()))
     y_plot = best_model(x_plot, k, a, b)
@@ -2593,6 +2593,8 @@ def _resource_allocation_calculate(
             failures_df = _resource_allocation_failures(
                 df, k, a, b, model, col_name, type_)
             y_plot = model(x, k, a, b)
+            if not any(y_plot):
+                continue
             cmax = max(y_plot)
             cmin = min(y_plot)
             failures = failures_df.shape[0]
@@ -2834,13 +2836,17 @@ def update_resource_allocation_table(weeks=1, test=None):
         wait_time = (
             datetime.strptime(rows.iloc[0]['Start'], date_fmt)
             - datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
-        tmp = rows.iloc[1].copy()
+        if rows.shape[0] >= 2:
+            tmp = rows.iloc[1].copy()
+        else:
+            tmp = rows.iloc[0].copy()
         tmp['WaitTime'] = wait_time
         return tmp
 
     slurm_data['external_id'] = slurm_data['JobID'].apply(
                                             lambda x: int(x.split('.')[0]))
     slurm_data['external_id'] = slurm_data['external_id'].ffill()
+
     slurm_data = slurm_data.groupby(
             'external_id').apply(merge_rows).reset_index(drop=True)
 
