@@ -881,7 +881,7 @@ class PrepTemplate(MetadataTemplate):
                          'artifact transformation']
         merging_schemes = {
             qdb.archive.Archive.get_merging_scheme_from_job(j): {
-                x: y.id for x, y in j.outputs.items()}
+                x: str(y.id) for x, y in j.outputs.items()}
             # we are going to select only the jobs that were a 'success', that
             # are not 'hidden' and that have an output - jobs that are not
             # hidden and a successs but that do not have outputs are jobs which
