@@ -808,13 +808,23 @@ class PrepTemplate(MetadataTemplate):
 
             parent_cmd_name = None
             parent_merging_scheme = None
+            phms = None
             if pcmd is not None:
                 parent_cmd_name = pcmd.name
                 parent_merging_scheme = pcmd.merging_scheme
+                if not parent_merging_scheme['ignore_parent_command']:
+                    phms = _get_node_info(workflow, parent)
 
-            return qdb.util.human_merging_scheme(
+            hms = qdb.util.human_merging_scheme(
                 ccmd.name, ccmd.merging_scheme, parent_cmd_name,
                 parent_merging_scheme, cparams, [], pparams)
+
+            # if the parent should not ignore its parent command, then we need
+            # to merge the previous result with the new one
+            if phms is not None:
+                hms = qdb.util.merge_overlapping_strings(hms, phms)
+
+            return hms
 
         def _get_predecessors(workflow, node):
             # recursive method to get predecessors of a given node
@@ -989,7 +999,7 @@ class PrepTemplate(MetadataTemplate):
                     init_artifacts = {
                         wkartifact_type: f'{starting_job.id}:'}
                 else:
-                    init_artifacts = {wkartifact_type: self.artifact.id}
+                    init_artifacts = {wkartifact_type: str(self.artifact.id)}
 
             cmds_to_create.reverse()
             current_job = None
