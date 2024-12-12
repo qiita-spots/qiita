@@ -129,12 +129,12 @@ class Archive(qdb.base.QiitaObject):
                 if not parent_merging_scheme['ignore_parent_command']:
                     gp = parent.parents[0]
                     gp_params = gp.processing_parameters
-                    gp_cmd = gp_params.command
-
-                    phms = qdb.util.human_merging_scheme(
-                        parent_cmd_name, parent_merging_scheme, gp_cmd.name,
-                        gp_cmd.merging_scheme, parent_parameters, [],
-                        gp_params.values)
+                    if gp_params is not None:
+                        gp_cmd = gp_params.command
+                        phms = qdb.util.human_merging_scheme(
+                            parent_cmd_name, parent_merging_scheme,
+                            gp_cmd.name, gp_cmd.merging_scheme,
+                            parent_parameters, [], gp_params.values)
 
             hms = qdb.util.human_merging_scheme(
                 acmd.name, acmd.merging_scheme,
