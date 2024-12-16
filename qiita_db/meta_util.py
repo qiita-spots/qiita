@@ -37,10 +37,17 @@ from hashlib import md5
 from re import sub
 from json import loads, dump, dumps
 
-from qiita_db.util import create_nested_path
+from qiita_db.util import create_nested_path, retrieve_resource_data
+from qiita_db.util import resource_allocation_plot
 from qiita_core.qiita_settings import qiita_config, r_client
 from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
+
+# global constant list used in resource_allocation_page
+COLUMNS = [
+    "sName", "sVersion", "cID", "cName", "processing_job_id",
+    "parameters", "samples", "columns", "input_size", "extra_info",
+    "MaxRSSRaw", "ElapsedRaw", "Start", "node_name", "node_model"]
 
 
 def _get_data_fpids(constructor, object_id):
@@ -546,3 +553,101 @@ def generate_plugin_releases():
         # important to "flush" variables to avoid errors
         r_client.delete(redis_key)
         f(redis_key, v)
+
+
+def get_software_commands(active):
+    software_list = [s for s in qdb.software.Software.iter(active=active)]
+    software_commands = defaultdict(lambda: defaultdict(list))
+
+    for software in software_list:
+        sname = software.name
+        sversion = software.version
+        commands = software.commands
+
+        for command in commands:
+            software_commands[sname][sversion].append(command.name)
+        software_commands[sname] = dict(software_commands[sname])
+
+    return dict(software_commands)
+
+
+def update_resource_allocation_redis(active=True):
+    """Updates redis with plots and information about current software.
+
+    Parameters
+    ----------
+    active: boolean, optional
+        Defaults to True. Should only be False when testing.
+
+    """
+    time = datetime.now().strftime('%m-%d-%y')
+    scommands = get_software_commands(active)
+    redis_key = 'resources:commands'
+    r_client.set(redis_key, str(scommands))
+
+    for sname, versions in scommands.items():
+        for version, commands in versions.items():
+            for cname in commands:
+                col_name = "samples * columns"
+                df = retrieve_resource_data(cname, sname, version, COLUMNS)
+                if len(df) == 0:
+                    continue
+
+                fig, axs = resource_allocation_plot(df, cname, sname, col_name)
+                titles = [0, 0]
+                images = [0, 0]
+
+                # Splitting 1 image plot into 2 separate for better layout.
+                for i, ax in enumerate(axs):
+                    titles[i] = ax.get_title()
+                    ax.set_title("")
+                    # new_fig, new_ax – copy with either only memory plot or
+                    # only time
+                    new_fig = plt.figure()
+                    new_ax = new_fig.add_subplot(111)
+
+                    scatter_data = ax.collections[0]
+                    new_ax.scatter(scatter_data.get_offsets()[:, 0],
+                                   scatter_data.get_offsets()[:, 1],
+                                   s=scatter_data.get_sizes(), label="data")
+
+                    line = ax.lines[0]
+                    new_ax.plot(line.get_xdata(), line.get_ydata(),
+                                linewidth=1, color='orange')
+
+                    if len(ax.collections) > 1:
+                        failure_data = ax.collections[1]
+                        new_ax.scatter(failure_data.get_offsets()[:, 0],
+                                       failure_data.get_offsets()[:, 1],
+                                       color='red', s=3, label="failures")
+
+                    new_ax.set_xscale('log')
+                    new_ax.set_yscale('log')
+                    new_ax.set_xlabel(ax.get_xlabel())
+                    new_ax.set_ylabel(ax.get_ylabel())
+                    new_ax.legend(loc='upper left')
+
+                    new_fig.tight_layout()
+                    plot = BytesIO()
+                    new_fig.savefig(plot, format='png')
+                    plot.seek(0)
+                    img = 'data:image/png;base64,' + quote(
+                          b64encode(plot.getvalue()).decode('ascii'))
+                    images[i] = img
+                    plt.close(new_fig)
+                plt.close(fig)
+
+                # SID, CID, col_name
+                values = [
+                    ("img_mem", images[0], r_client.set),
+                    ("img_time", images[1], r_client.set),
+                    ('time', time, r_client.set),
+                    ("title_mem", titles[0], r_client.set),
+                    ("title_time", titles[1], r_client.set)
+                ]
+
+                for k, v, f in values:
+                    redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (
+                                cname, sname, version, col_name, k)
+                    r_client.delete(redis_key)
+                    f(redis_key, v)

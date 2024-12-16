@@ -929,7 +929,8 @@ class Artifact(qdb.base.QiitaObject):
             # words has more that one processing step behind it
             fine_to_send = []
             fine_to_send.extend([pt.artifact for pt in self.prep_templates])
-            fine_to_send.extend([c for a in fine_to_send for c in a.children])
+            fine_to_send.extend([c for a in fine_to_send if a is not None
+                                 for c in a.children])
             if self not in fine_to_send:
                 return False
 
@@ -1342,23 +1343,6 @@ class Artifact(qdb.base.QiitaObject):
                         # If the job is in success we don't need to do anything
                         # else since it would've been added by the code above
                         if jstatus != 'success':
-                            # Connect the job with his input artifacts, the
-                            # input artifacts may or may not exist yet, so we
-                            # need to check both the input_artifacts and the
-                            # pending properties
-                            for in_art in n_obj.input_artifacts:
-                                iid = in_art.id
-                                if iid not in nodes and iid in extra_nodes:
-                                    nodes[iid] = extra_nodes[iid]
-                                _add_edge(edges, nodes[iid], nodes[n_obj.id])
-
-                            pending = n_obj.pending
-                            for pred_id in pending:
-                                for pname in pending[pred_id]:
-                                    in_node_id = '%s:%s' % (
-                                        pred_id, pending[pred_id][pname])
-                                    _add_edge(edges, nodes[in_node_id],
-                                              nodes[n_obj.id])
 
                             if jstatus != 'error':
                                 # If the job is not errored, we can add the
@@ -1380,6 +1364,34 @@ class Artifact(qdb.base.QiitaObject):
                                     queue.append(cjob.id)
                                     if cjob.id not in nodes:
                                         nodes[cjob.id] = ('job', cjob)
+
+                                    # including the outputs
+                                    for o_name, o_type in cjob.command.outputs:
+                                        node_id = '%s:%s' % (cjob.id, o_name)
+                                        node = TypeNode(
+                                            id=node_id, job_id=cjob.id,
+                                            name=o_name, type=o_type)
+                                        if node_id not in nodes:
+                                            nodes[node_id] = ('type', node)
+
+                            # Connect the job with his input artifacts, the
+                            # input artifacts may or may not exist yet, so we
+                            # need to check both the input_artifacts and the
+                            # pending properties
+                            for in_art in n_obj.input_artifacts:
+                                iid = in_art.id
+                                if iid not in nodes and iid in extra_nodes:
+                                    nodes[iid] = extra_nodes[iid]
+                                _add_edge(edges, nodes[iid], nodes[n_obj.id])
+
+                            pending = n_obj.pending
+                            for pred_id in pending:
+                                for pname in pending[pred_id]:
+                                    in_node_id = '%s:%s' % (
+                                        pred_id, pending[pred_id][pname])
+                                    _add_edge(edges, nodes[in_node_id],
+                                              nodes[n_obj.id])
+
                     elif n_type == 'type':
                         # Connect this 'future artifact' with the job that will
                         # generate it

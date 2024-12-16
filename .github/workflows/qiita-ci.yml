@@ -104,9 +104,7 @@ jobs:
       - name: Install plugins
         shell: bash -l {0}
         run: |
-          wget https://data.qiime2.org/distro/core/qiime2-2022.11-py38-linux-conda.yml
-          conda env create --quiet -n qtp-biom --file qiime2-2022.11-py38-linux-conda.yml
-          rm qiime2-2022.11-py38-linux-conda.yml
+          conda env create -n qtp-biom --file https://data.qiime2.org/distro/amplicon/qiime2-amplicon-2024.5-py39-linux-conda.yml
           export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
           export REDBIOM_HOST="http://localhost:7379"
@@ -181,7 +179,7 @@ jobs:
           echo "Connecting as $USER@localhost"
           # this line (and the -o StrictHostKeyChecking=no) is so the server
           # is added to the list of known servers
-          scp -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@localhost:/home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key /home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key_copy_1
+          scp -O -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@localhost:/home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key /home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key_copy_1
 
       - name: Main tests
         shell: bash -l {0}

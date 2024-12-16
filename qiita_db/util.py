@@ -99,6 +99,27 @@ time_model4 = (lambda x, k, a, b: a * np.log(x)**3 + b * np.log(x)**2
 MODELS_TIME = [time_model1, time_model2, time_model3, time_model4]
 
 
+def get_model_name(model):
+    if model == mem_model1:
+        return "k * log(x) + x * a + b"
+    elif model == mem_model2:
+        return "k * log(x) + b * log(x)^2 + a"
+    elif model == mem_model3:
+        return "k * log(x) + b * log(x)^2 + a * log(x)^3"
+    elif model == mem_model4:
+        return "k * log(x) + b * log(x)^2 + a * log(x)^2.5"
+    elif model == time_model1:
+        return "a + b + log(x) * k"
+    elif model == time_model2:
+        return "a + b * x + log(x) * k"
+    elif model == time_model3:
+        return "a + b * log(x)^2 + log(x) * k"
+    elif model == time_model4:
+        return "a * log(x)^3 + b * log(x)^2 + log(x) * k"
+    else:
+        return "Unknown model"
+
+
 def scrub_data(s):
     r"""Scrubs data fields of characters not allowed by PostgreSQL
 
@@ -2313,7 +2334,7 @@ def send_email(to, subject, body):
     msg = MIMEMultipart()
     msg['From'] = qiita_config.smtp_email
     msg['To'] = to
-    msg['Subject'] = subject
+    msg['Subject'] = subject.strip()
     msg.attach(MIMEText(body, 'plain'))
 
     # connect to smtp server, using ssl if needed
@@ -2381,7 +2402,7 @@ def resource_allocation_plot(df, cname, sname, col_name):
     return fig, axs
 
 
-def _retrieve_resource_data(cname, sname, columns):
+def retrieve_resource_data(cname, sname, version, columns):
     with qdb.sql_connection.TRN:
         sql = """
             SELECT
@@ -2411,9 +2432,10 @@ def _retrieve_resource_data(cname, sname, columns):
                 ON pr.processing_job_id = sra.processing_job_id
             WHERE
                 sc.name = %s
-                AND s.name = %s;
+                AND s.name = %s
+                AND s.version = %s
             """
-        qdb.sql_connection.TRN.add(sql, sql_args=[cname, sname])
+        qdb.sql_connection.TRN.add(sql, sql_args=[cname, sname, version])
         res = qdb.sql_connection.TRN.execute_fetchindex()
         df = pd.DataFrame(res, columns=columns)
         return df
@@ -2474,23 +2496,26 @@ def _resource_allocation_plot_helper(
     ax.set_ylabel(curr)
     ax.set_xlabel(col_name)
 
-    # 100 - number of maximum iterations, 3 - number of failures we tolerate
+    # 50 - number of maximum iterations, 3 - number of failures we tolerate
     best_model, options = _resource_allocation_calculate(
-        df, x_data, y_data, models, curr, col_name, 100, 3)
+        df, x_data, y_data, models, curr, col_name, 50, 3)
     k, a, b = options.x
     x_plot = np.array(sorted(df[col_name].unique()))
     y_plot = best_model(x_plot, k, a, b)
     ax.plot(x_plot, y_plot, linewidth=1, color='orange')
 
+    cmin_value = min(y_plot)
+    cmax_value = max(y_plot)
+
     maxi = naturalsize(df[curr].max(), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(df[curr].max()))
-    cmax = naturalsize(max(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
-        timedelta(seconds=float(max(y_plot)))
+    cmax = naturalsize(cmax_value, gnu=True) if curr == "MaxRSSRaw" else \
+        str(timedelta(seconds=round(cmax_value, 2))).rstrip('0').rstrip('.')
 
     mini = naturalsize(df[curr].min(), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(df[curr].min()))
-    cmin = naturalsize(min(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
-        timedelta(seconds=float(min(y_plot)))
+    cmin = naturalsize(cmin_value, gnu=True) if curr == "MaxRSSRaw" else \
+        str(timedelta(seconds=round(cmin_value, 2))).rstrip('0').rstrip('.')
 
     x_plot = np.array(df[col_name])
     failures_df = _resource_allocation_failures(
@@ -2500,7 +2525,10 @@ def _resource_allocation_plot_helper(
     ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
                label="failures")
 
-    ax.set_title(f'{cname}: {sname}\n real: {mini} || {maxi}\n'
+    ax.set_title(
+                 f'k||a||b: {k}||{a}||{b}\n'
+                 f'model: {get_model_name(best_model)}\n'
+                 f'real: {mini} || {maxi}\n'
                  f'calculated: {cmin} || {cmax}\n'
                  f'failures: {failures}')
     ax.legend(loc='upper left')
@@ -2565,6 +2593,8 @@ def _resource_allocation_calculate(
             failures_df = _resource_allocation_failures(
                 df, k, a, b, model, col_name, type_)
             y_plot = model(x, k, a, b)
+            if not any(y_plot):
+                continue
             cmax = max(y_plot)
             cmin = min(y_plot)
             failures = failures_df.shape[0]
@@ -2775,7 +2805,7 @@ def update_resource_allocation_table(weeks=1, test=None):
     sacct = [
         'sacct', '-p',
         '--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,End,CPUTimeRAW,'
-        'ReqMem,AllocCPUs,AveVMSize', '--starttime',
+        'ReqMem,AllocCPUs,AveVMSize,MaxVMSizeNode', '--starttime',
         dates[0].strftime('%Y-%m-%d'), '--endtime',
         dates[1].strftime('%Y-%m-%d'), '--user', 'qiita', '--state', 'CD']
 
@@ -2806,13 +2836,17 @@ def update_resource_allocation_table(weeks=1, test=None):
         wait_time = (
             datetime.strptime(rows.iloc[0]['Start'], date_fmt)
             - datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
-        tmp = rows.iloc[1].copy()
+        if rows.shape[0] >= 2:
+            tmp = rows.iloc[1].copy()
+        else:
+            tmp = rows.iloc[0].copy()
         tmp['WaitTime'] = wait_time
         return tmp
 
     slurm_data['external_id'] = slurm_data['JobID'].apply(
                                             lambda x: int(x.split('.')[0]))
     slurm_data['external_id'] = slurm_data['external_id'].ffill()
+
     slurm_data = slurm_data.groupby(
             'external_id').apply(merge_rows).reset_index(drop=True)
 
@@ -2894,6 +2928,7 @@ def update_resource_allocation_table(weeks=1, test=None):
     df['MaxRSSRaw'] = df.MaxRSS.apply(lambda x: MaxRSS_helper(str(x)))
     df['ElapsedRawTime'] = df.ElapsedRaw.apply(
         lambda x: timedelta(seconds=float(x)))
+    df.replace({np.nan: None}, inplace=True)
 
     for index, row in df.iterrows():
         with qdb.sql_connection.TRN:

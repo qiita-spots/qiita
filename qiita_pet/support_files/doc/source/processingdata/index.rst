@@ -202,3 +202,10 @@ Closed-Reference OTU Picking
     * **Sortmerna e_value** :ref:`[10]<reference10>` (required): Maximum e-value when clustering (local sequence alignment tool for filtering, mapping, and OTU picking) can expect to see by chance when searching a database
     * **Sortmerna max-pos** :ref:`[10]<reference10>` (required): Maximum number of positions per seed to store in the indexed database
     * **Threads** (required): Number of threads to use per job
+
+Woltka / bowtie2 paired-end
+---------------------------
+
+   .. toctree::
+
+      woltka_pairedend.rst

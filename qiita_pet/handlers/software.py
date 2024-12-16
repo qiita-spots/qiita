@@ -61,6 +61,7 @@ def _retrive_workflows(active):
         # getting the main default parameters
         nodes = []
         edges = []
+        at = w.artifact_type
 
         # first get edges as this will give us the main connected commands
         # and their order
@@ -72,18 +73,22 @@ def _retrive_workflows(active):
         #                   output_type: output_node_name}, ...}
         # for easy look up and merge of output_names
         main_nodes = dict()
+        not_used_nodes = {n.id: n for n in graph.nodes}
         for i, (x, y) in enumerate(graph.edges):
+            if x.id in not_used_nodes:
+                del not_used_nodes[x.id]
+            if y.id in not_used_nodes:
+                del not_used_nodes[y.id]
+            vals_x, input_x, output_x = _default_parameters_parsing(x)
+            vals_y, input_y, output_y = _default_parameters_parsing(y)
+
             connections = []
             for a, _, c in graph[x][y]['connections'].connections:
                 connections.append("%s | %s" % (a, c))
 
-            vals_x, input_x, output_x = _default_parameters_parsing(x)
-            vals_y, input_y, output_y = _default_parameters_parsing(y)
-
             if i == 0:
                 # we are in the first element so we can specifically select
                 # the type we are looking for
-                at = w.artifact_type
                 if at in input_x[0][1]:
                     input_x[0][1] = at
                 else:
@@ -143,6 +148,37 @@ def _retrive_workflows(active):
                 main_nodes[name_y][b] = name
 
         wparams = w.parameters
+
+        # adding nodes without edges
+        # as a first step if not_used_nodes is not empty we'll confirm that
+        # nodes/edges are empty; in theory we should never hit this
+        if not_used_nodes and (nodes or edges):
+            raise ValueError(
+                'Error, please check your workflow configuration')
+
+        # note that this block is similar but not identical to adding connected
+        # nodes
+        for i, (_, x) in enumerate(not_used_nodes.items()):
+            vals_x, input_x, output_x = _default_parameters_parsing(x)
+            if at in input_x[0][1]:
+                input_x[0][1] = at
+            else:
+                input_x[0][1] = '** WARNING, NOT DEFINED **'
+
+            name_x = vals_x[0]
+            if vals_x not in (nodes):
+                nodes.append(vals_x)
+                for a, b in input_x:
+                    if b in inputs:
+                        name = inputs[b]
+                    else:
+                        name = 'input_%s_%s' % (name_x, b)
+                    nodes.append([name, a, b])
+                    edges.append([name, vals_x[0]])
+                for a, b in output_x:
+                    name = 'output_%s_%s' % (name_x, b)
+                    nodes.append([name, a, b])
+                    edges.append([name_x, name])
 
         workflows.append(
             {'name': w.name, 'id': w.id, 'data_types': w.data_type,

@@ -135,7 +135,7 @@ class PrepTemplate(MetadataTemplate):
             # data_type being created - if possible
             if investigation_type is None:
                 if data_type_str in TARGET_GENE_DATA_TYPES:
-                    investigation_type = 'Amplicon'
+                    investigation_type = 'AMPLICON'
                 elif data_type_str == 'Metagenomic':
                     investigation_type = 'WGS'
                 elif data_type_str == 'Metatranscriptomic':
@@ -271,6 +271,32 @@ class PrepTemplate(MetadataTemplate):
                 raise qdb.exceptions.QiitaDBExecutionError(
                     "Cannot remove prep template %d because it has an artifact"
                     " associated with it" % id_)
+
+            # artifacts that are archived are not returned as part of the code
+            # above and we need to clean them before moving forward
+            sql = """SELECT artifact_id
+                     FROM qiita.preparation_artifact
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, args)
+            archived_artifacts = set(
+                qdb.sql_connection.TRN.execute_fetchflatten())
+            ANALYSIS = qdb.analysis.Analysis
+            if archived_artifacts:
+                for aid in archived_artifacts:
+                    # before we can delete the archived artifact, we need
+                    # to delete the analyses where they were used.
+                    sql = """SELECT analysis_id
+                             FROM qiita.analysis
+                             WHERE analysis_id IN (
+                                SELECT DISTINCT analysis_id
+                                FROM qiita.analysis_sample
+                                WHERE artifact_id IN %s)"""
+                    qdb.sql_connection.TRN.add(sql, [tuple([aid])])
+                    analyses = set(
+                        qdb.sql_connection.TRN.execute_fetchflatten())
+                    for _id in analyses:
+                        ANALYSIS.delete_analysis_artifacts(_id)
+                    qdb.artifact.Artifact.delete(aid)
 
             # Delete the prep template filepaths
             sql = """DELETE FROM qiita.prep_template_filepath
@@ -815,6 +841,9 @@ class PrepTemplate(MetadataTemplate):
                 pred.append(data)
                 return pred
 
+            # this is only helpful for when there are no _get_predecessors
+            return pred
+
         # Note: we are going to use the final BIOMs to figure out which
         #       processing is missing from the back/end to the front, as this
         #       will prevent generating unnecessary steps (AKA already provided
@@ -937,6 +966,8 @@ class PrepTemplate(MetadataTemplate):
                     if set(merging_schemes[info]) >= set(cxns):
                         init_artifacts = merging_schemes[info]
                         break
+            if not predecessors:
+                pnode = node
             if init_artifacts is None:
                 pdp = pnode.default_parameter
                 pdp_cmd = pdp.command

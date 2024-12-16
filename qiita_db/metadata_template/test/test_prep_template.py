@@ -911,7 +911,7 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(pt.data_type(), self.data_type)
         self.assertEqual(pt.data_type(ret_id=True), self.data_type_id)
         self.assertEqual(pt.artifact, None)
-        self.assertEqual(pt.investigation_type, 'Amplicon')
+        self.assertEqual(pt.investigation_type, 'AMPLICON')
         self.assertEqual(pt.study_id, self.test_study.id)
         self.assertEqual(pt.status, "sandbox")
         exp_sample_ids = {'%s.SKB8.640193' % self.test_study.id,
@@ -1076,7 +1076,7 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(pt.data_type(), self.data_type)
         self.assertEqual(pt.data_type(ret_id=True), self.data_type_id)
         self.assertEqual(pt.artifact, None)
-        self.assertEqual(pt.investigation_type, 'Amplicon')
+        self.assertEqual(pt.investigation_type, 'AMPLICON')
         self.assertEqual(pt.study_id, self.test_study.id)
         self.assertEqual(pt.status, 'sandbox')
         exp_sample_ids = {'%s.SKB8.640193' % self.test_study.id,
@@ -1247,7 +1247,7 @@ class TestPrepTemplate(TestCase):
         """Able to update the investigation type"""
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type_id)
-        self.assertEqual(pt.investigation_type, 'Amplicon')
+        self.assertEqual(pt.investigation_type, 'AMPLICON')
         pt.investigation_type = "Other"
         self.assertEqual(pt.investigation_type, 'Other')
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):

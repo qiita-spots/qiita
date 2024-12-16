@@ -1,5 +1,25 @@
 # Qiita changelog
 
+Version 2024.10
+---------------
+
+Deployed on October 14th, 2024
+
+* Added update_resource_allocation_redis and companion code, so resource allocations summaries are available for review. Thank you @Gossty!
+* Now is possible to have default workflows with only one step.
+* `qiita_client.update_job_step` now accepts an ignore_error optional parameter. Thank you @charles-cowart!
+* Initial changes in `qiita_client` to have more accurate variable names: `QIITA_SERVER_CERT` -> `QIITA_ROOTCA_CERT`. Thank you @charles-cowart!
+* Added `get_artifact_html_summary` to `qiita_client` to retrieve the summary file of an artifact.
+* Re-added github actions to `https://github.com/qiita-spots/qiita_client`.
+* `SortMeRNA v4.3.7` superseded `Sortmerna v2.1b`, which relies on Silva 138 and now produced even mates. Thank you @ekopylova and @biocodz for the support.
+* `Remove SynDNA reads` superseded `SynDNA Woltka`, which now generates even mates.
+* `Woltka v0.1.7, paired-end` superseded `Woltka v0.1.6` in `qp-woltka`; [more information](https://qiita.ucsd.edu/static/doc/html/processingdata/woltka_pairedend.html). Thank you to @qiyunzhu for the benchmarks!
+* Other general fixes, like [#3424](https://github.com/qiita-spots/qiita/pull/3424), [#3425](https://github.com/qiita-spots/qiita/pull/3425), [#3439](https://github.com/qiita-spots/qiita/pull/3439), [#3440](https://github.com/qiita-spots/qiita/pull/3440).
+* General SPP improvements, like: [NuQC modified to preserve metadata in fastq files](https://github.com/biocore/mg-scripts/pull/155), [use squeue instead of sacct](https://github.com/biocore/mg-scripts/pull/152), , [job aborts if Qiita study contains sample metadata columns reserved for prep-infos](https://github.com/biocore/mg-scripts/pull/151), [metapool generates OverrideCycles value](https://github.com/biocore/metagenomics_pooling_notebook/pull/225).
+* We updated the available parameters for `Filter features against reference [filter_features]`, `Non V4 16S sequence assessment [non_v4_16s]` and all the phylogenetic analytical commands so they can use `Greengenes2 2024.09`.
+
+
+
 Version 2024.07
 ---------------
 
