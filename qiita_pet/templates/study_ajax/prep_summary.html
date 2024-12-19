@@ -447,8 +447,10 @@
       {% end %}
       {% if editable %}
         <br/>
-        {% if user_level in ('admin', 'wet-lab admin') %}
-          <a class="btn btn-info" href="{% raw qiita_config.portal_dir %}/download_data_release_from_prep/{{prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Dowload Data Release</a>
+        {% if user_level in ('admin', 'wet-lab admin') and data_type in {'Metagenomic', 'Metatranscriptomic'} %}
+            <button class="btn btn-info" onclick="this.disabled=true; window.location='{% raw qiita_config.portal_dir %}/download_data_release_from_prep/{{prep_id}}';">
+                <span class="glyphicon glyphicon-download-alt"></span> Dowload Data Release
+            </button>
         {% end %}
         {% if deprecated %}
           <a class="btn btn-warning" onclick="deprecate_preparation({{prep_id}}, false);"><span class="glyphicon glyphicon-pushpin"></span> Remove Deprecation</a>
