@@ -477,9 +477,9 @@ class DownloadDataReleaseFromPrep(BaseHandlerDownload):
                     readme.append(f'\t{cn}\t{sn}\t{sv}\t{pd}')
 
         if coverages is not None:
-            aname = basename(fp["fp"])
+            aname = basename(coverages)
             nfile = join(td, aname)
-            copyfile(fp['fp'], nfile)
+            copyfile(coverages, nfile)
             files.append(nfile)
 
         fn = join(td, 'README.txt')
