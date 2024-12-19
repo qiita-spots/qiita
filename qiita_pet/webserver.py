@@ -55,7 +55,8 @@ from qiita_pet.handlers.download import (
     DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease,
     DownloadRawData, DownloadEBISampleAccessions, DownloadEBIPrepAccessions,
     DownloadUpload, DownloadPublicHandler, DownloadPublicArtifactHandler,
-    DownloadSampleInfoPerPrep, DownloadPrivateArtifactHandler)
+    DownloadSampleInfoPerPrep, DownloadPrivateArtifactHandler,
+    DownloadDataReleaseFromPrep)
 from qiita_pet.handlers.prep_template import (
     PrepTemplateHandler, PrepTemplateGraphHandler, PrepTemplateJobHandler)
 from qiita_pet.handlers.ontology import OntologyHandler
@@ -194,6 +195,8 @@ class Application(tornado.web.Application):
             (r"/software/", SoftwareHandler),
             (r"/workflows/", WorkflowsHandler),
             (r"/download/(.*)", DownloadHandler),
+            (r"/download_data_release_from_prep/(.*)",
+                DownloadDataReleaseFromPrep),
             (r"/download_study_bioms/(.*)", DownloadStudyBIOMSHandler),
             (r"/download_raw_data/(.*)", DownloadRawData),
             (r"/download_ebi_accessions/samples/(.*)",
