@@ -467,7 +467,7 @@ class DownloadDataReleaseFromPrep(BaseHandlerDownload):
         for fn, (a, fp) in bioms.items():
             aname = basename(fp["fp"])
             nname = f'{a.id}_{aname}'
-            files.append(fp['fp'], nname)
+            files.append([fp['fp'], nname])
 
             hname = ''
             if aname in human_names:
