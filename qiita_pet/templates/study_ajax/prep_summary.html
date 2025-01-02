@@ -449,7 +449,7 @@
         <br/>
         {% if user_level in ('admin', 'wet-lab admin') and data_type in {'Metagenomic', 'Metatranscriptomic'} %}
             <button class="btn btn-info" onclick="this.disabled=true; window.location='{% raw qiita_config.portal_dir %}/download_data_release_from_prep/{{prep_id}}';">
-                <span class="glyphicon glyphicon-download-alt"></span> Dowload Data Release
+                <span class="glyphicon glyphicon-download-alt"></span> Download Data Release
             </button>
         {% end %}
         {% if deprecated %}
