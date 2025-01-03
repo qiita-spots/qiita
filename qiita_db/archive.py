@@ -116,6 +116,7 @@ class Archive(qdb.base.QiitaObject):
             acmd = job.command
             parent = job.input_artifacts[0]
             parent_pparameters = parent.processing_parameters
+            phms = None
             if parent_pparameters is None:
                 parent_cmd_name = None
                 parent_parameters = None
@@ -125,11 +126,25 @@ class Archive(qdb.base.QiitaObject):
                 parent_cmd_name = pcmd.name
                 parent_parameters = parent_pparameters.values
                 parent_merging_scheme = pcmd.merging_scheme
+                if not parent_merging_scheme['ignore_parent_command']:
+                    gp = parent.parents[0]
+                    gp_params = gp.processing_parameters
+                    if gp_params is not None:
+                        gp_cmd = gp_params.command
+                        phms = qdb.util.human_merging_scheme(
+                            parent_cmd_name, parent_merging_scheme,
+                            gp_cmd.name, gp_cmd.merging_scheme,
+                            parent_parameters, [], gp_params.values)
 
-            return qdb.util.human_merging_scheme(
+            hms = qdb.util.human_merging_scheme(
                 acmd.name, acmd.merging_scheme,
                 parent_cmd_name, parent_merging_scheme,
                 job.parameters.values, [], parent_parameters)
+
+            if phms is not None:
+                hms = qdb.util.merge_overlapping_strings(hms, phms)
+
+            return hms
 
     @classmethod
     def retrieve_feature_values(cls, archive_merging_scheme=None,

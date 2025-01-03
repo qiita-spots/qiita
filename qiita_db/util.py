@@ -2955,3 +2955,25 @@ def update_resource_allocation_table(weeks=1, test=None):
                 row['node_model']]
             qdb.sql_connection.TRN.add(sql, sql_args=to_insert)
             qdb.sql_connection.TRN.execute()
+
+
+def merge_overlapping_strings(str1, str2):
+    """Helper function to merge 2 overlapping strings
+
+    Parameters
+    ----------
+    str1: str
+        Initial string
+    str2: str
+        End string
+
+    Returns
+    ----------
+    str
+        The merged strings
+    """
+    overlap = ""
+    for i in range(1, min(len(str1), len(str2)) + 1):
+        if str1.endswith(str2[:i]):
+            overlap = str2[:i]
+    return str1 + str2[len(overlap):]
