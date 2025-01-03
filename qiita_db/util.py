@@ -2114,7 +2114,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
         return []
 
     sql = """
-        SELECT analysis_id, a.name, a.description, a.timestamp,
+        SELECT analysis_id, a.name, a.description, a.timestamp, a.email,
             array_agg(DISTINCT artifact_id),
             array_agg(DISTINCT visibility),
             array_agg(DISTINCT CASE WHEN filepath_type = 'plain_text'
@@ -2135,7 +2135,8 @@ def generate_analysis_list(analysis_ids, public_only=False):
 
         qdb.sql_connection.TRN.add(sql, [tuple(analysis_ids)])
         for row in qdb.sql_connection.TRN.execute_fetchindex():
-            aid, name, description, ts, artifacts, av, mapping_files = row
+            aid, name, description, ts, owner, artifacts, \
+                av, mapping_files = row
 
             av = 'public' if set(av) == {'public'} else 'private'
             if av != 'public' and public_only:
@@ -2156,7 +2157,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
             results.append({
                 'analysis_id': aid, 'name': name, 'description': description,
                 'timestamp': ts.strftime("%m/%d/%y %H:%M:%S"),
-                'visibility': av, 'artifacts': artifacts,
+                'visibility': av, 'artifacts': artifacts, 'owner': owner,
                 'mapping_files': mapping_files})
 
     return results

@@ -38,6 +38,7 @@ class TestBaseHandlersUtils(TestCase):
                'analysis_id': 1,
                'analysis_description': 'A test analysis',
                'analysis_mapping_id': 16,
+               'analysis_owner': 'test@foo.bar',
                'analysis_is_public': False,
                'alert_type': 'info',
                'artifacts': {
@@ -67,6 +68,7 @@ class TestBaseHandlersUtils(TestCase):
                'analysis_id': 1,
                'analysis_description': 'A test analysis',
                'analysis_mapping_id': 16,
+               'analysis_owner': 'test@foo.bar',
                'analysis_is_public': False,
                'alert_type': 'info',
                'artifacts': {
@@ -98,6 +100,7 @@ class TestBaseHandlersUtils(TestCase):
                'analysis_id': 1,
                'analysis_description': 'A test analysis',
                'analysis_mapping_id': 16,
+               'analysis_owner': 'test@foo.bar',
                'analysis_is_public': False,
                'alert_type': 'danger',
                'artifacts': {
