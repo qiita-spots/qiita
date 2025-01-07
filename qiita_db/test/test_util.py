@@ -1327,8 +1327,7 @@ class ResourceAllocationPlotTests(TestCase):
 
     def test_plot_return(self):
         # check the plot returns correct objects
-        fig1, axs1 = qdb.util.resource_allocation_plot(
-            self.df, self.cname, self.sname, self.col_name)
+        fig1, axs1 = qdb.util.resource_allocation_plot(self.df, self.col_name)
         self.assertIsInstance(
             fig1, Figure,
             "Returned object fig1 is not a Matplotlib Figure")
@@ -1345,13 +1344,12 @@ class ResourceAllocationPlotTests(TestCase):
         fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
         bm, options = qdb.util._resource_allocation_plot_helper(
-            self.df, axs[0], self.cname, self.sname, 'MaxRSSRaw',
-            qdb.util.MODELS_MEM, self.col_name)
+            self.df, axs[0], 'MaxRSSRaw', qdb.util.MODELS_MEM, self.col_name)
         # check that the algorithm chooses correct model for MaxRSSRaw and
         # has 0 failures
         k, a, b = options.x
-        failures_df = qdb.util._resource_allocation_failures(
-            self.df, k, a, b, bm, self.col_name, 'MaxRSSRaw')
+        failures_df = qdb.util._resource_allocation_success_failures(
+            self.df, k, a, b, bm, self.col_name, 'MaxRSSRaw')[-1]
         failures = failures_df.shape[0]
         self.assertEqual(bm, qdb.util.mem_model3,
                          msg=f"""Best memory model
@@ -1367,11 +1365,10 @@ class ResourceAllocationPlotTests(TestCase):
         # check that the algorithm chooses correct model for ElapsedRaw and
         # has 1 failure
         bm, options = qdb.util._resource_allocation_plot_helper(
-            self.df, axs[1], self.cname, self.sname, 'ElapsedRaw',
-            qdb.util.MODELS_TIME, self.col_name)
+            self.df, axs[1], 'ElapsedRaw', qdb.util.MODELS_TIME, self.col_name)
         k, a, b = options.x
-        failures_df = qdb.util._resource_allocation_failures(
-            self.df, k, a, b, bm, self.col_name, 'ElapsedRaw')
+        failures_df = qdb.util._resource_allocation_success_failures(
+            self.df, k, a, b, bm, self.col_name, 'ElapsedRaw')[-1]
         failures = failures_df.shape[0]
 
         self.assertEqual(bm, qdb.util.time_model1,

@@ -74,6 +74,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 import numpy as np
 import pandas as pd
 from io import StringIO
@@ -2363,17 +2364,13 @@ def send_email(to, subject, body):
         smtp.close()
 
 
-def resource_allocation_plot(df, cname, sname, col_name):
+def resource_allocation_plot(df, col_name):
     """Builds resource allocation plot for given filename and jobs
 
     Parameters
     ----------
     file : str, required
         Builds plot for the specified file name. Usually provided as tsv.gz
-    cname: str, required
-        Specified job type
-    sname: str, required
-        Specified job sub type.
     col_name: str, required
         Specifies x axis for the graph
 
@@ -2392,12 +2389,12 @@ def resource_allocation_plot(df, cname, sname, col_name):
     ax = axs[0]
     # models for memory
     _resource_allocation_plot_helper(
-        df, ax, cname, sname, "MaxRSSRaw", MODELS_MEM, col_name)
+        df, ax, "MaxRSSRaw",  MODELS_MEM, col_name)
 
     ax = axs[1]
     # models for time
     _resource_allocation_plot_helper(
-        df, ax, cname, sname, "ElapsedRaw", MODELS_TIME, col_name)
+        df, ax, "ElapsedRaw",  MODELS_TIME, col_name)
 
     return fig, axs
 
@@ -2442,7 +2439,7 @@ def retrieve_resource_data(cname, sname, version, columns):
 
 
 def _resource_allocation_plot_helper(
-        df, ax, cname, sname, curr, models, col_name):
+        df, ax, curr, models, col_name):
     """Helper function for resource allocation plot. Builds plot for MaxRSSRaw
     and ElapsedRaw
 
@@ -2459,14 +2456,14 @@ def _resource_allocation_plot_helper(
     col_name: str, required
         Specifies x axis for the graph
     curr: str, required
-        Either MaxRSSRaw or ElapsedRaw
+        Either MaxRSSRaw or ElapsedRaw (y axis)
     models: list, required
         List of functions that will be used for visualization
 
     """
 
     x_data, y_data = df[col_name], df[curr]
-    ax.scatter(x_data, y_data, s=2, label="data")
+    # ax.scatter(x_data, y_data, s=2, label="data")
     d = dict()
     for index, row in df.iterrows():
         x_value = row[col_name]
@@ -2518,13 +2515,21 @@ def _resource_allocation_plot_helper(
         str(timedelta(seconds=round(cmin_value, 2))).rstrip('0').rstrip('.')
 
     x_plot = np.array(df[col_name])
-    failures_df = _resource_allocation_failures(
+    success_df, failures_df = _resource_allocation_success_failures(
         df, k, a, b, best_model, col_name, curr)
     failures = failures_df.shape[0]
-
     ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
                label="failures")
+    success_df['node_name'] = success_df['node_name'].fillna('unknown')
+    slurm_hosts = set(success_df['node_name'].tolist())
+    cmap = colormaps.get_cmap('Accent').resampled(len(slurm_hosts))
+    colors = [cmap(
+              i / (len(slurm_hosts) - 1)) for i in range(len(slurm_hosts))]
 
+    for i, host in enumerate(slurm_hosts):
+        host_df = success_df[success_df['node_name'] == host]
+        ax.scatter(host_df[col_name], host_df[curr], color=colors[i], s=3,
+                   label=host)
     ax.set_title(
                  f'k||a||b: {k}||{a}||{b}\n'
                  f'model: {get_model_name(best_model)}\n'
@@ -2590,8 +2595,10 @@ def _resource_allocation_calculate(
             options = minimize(_resource_allocation_custom_loss, init,
                                args=(x, y, model, middle))
             k, a, b = options.x
-            failures_df = _resource_allocation_failures(
-                df, k, a, b, model, col_name, type_)
+            # important: here we take the 2nd (last) value of tuple since
+            # the helper function returns success, then failures.
+            failures_df = _resource_allocation_success_failures(
+                df, k, a, b, model, col_name, type_)[-1]
             y_plot = model(x, k, a, b)
             if not any(y_plot):
                 continue
@@ -2676,9 +2683,9 @@ def _resource_allocation_custom_loss(params, x, y, model, p):
     return np.mean(weighted_residuals)
 
 
-def _resource_allocation_failures(df, k, a, b, model, col_name, type_):
+def _resource_allocation_success_failures(df, k, a, b, model, col_name, type_):
     """Helper function for resource allocation plot. Creates a dataframe with
-    failures.
+    successes and failures given current model.
 
     Parameters
     ----------
@@ -2699,14 +2706,19 @@ def _resource_allocation_failures(df, k, a, b, model, col_name, type_):
 
     Returns
     ----------
-    pandas.Dataframe
-        Dataframe containing failures for current type.
+    tuple with:
+        pandas.Dataframe
+            Dataframe containing successes for current type.
+        pandas.Dataframe
+            Dataframe containing failures for current type.
     """
 
     x_plot = np.array(df[col_name])
     df[f'c{type_}'] = model(x_plot, k, a, b)
+    success_df = df[df[type_] <= df[f'c{type_}']]
     failures_df = df[df[type_] > df[f'c{type_}']]
-    return failures_df
+    
+    return (success_df, failures_df)
 
 
 def MaxRSS_helper(x):

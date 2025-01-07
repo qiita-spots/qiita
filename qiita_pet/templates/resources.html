@@ -114,19 +114,29 @@
         toggleDataVisibility(true);
     {% end %}
 
-  const commandsConst = JSON.parse(`{% raw commands %}`);
-  const softwareSelect = document.getElementById('software');
-  const versionSelect = document.getElementById('version');
-  const commandSelect = document.getElementById('command');
+    const commandsConst = JSON.parse(`{% raw commands %}`);
+    const softwareSelect = document.getElementById('software');
+    const versionSelect = document.getElementById('version');
+    const commandSelect = document.getElementById('command');
 
-  // Populate software options
-  for (const software in commandsConst) {
-      const option = document.createElement('option');
-      option.value = software;
-      option.textContent = software;
-      softwareSelect.appendChild(option);
-  }
+    // Populate software options
+    for (const software in commandsConst) {
+        const option = document.createElement('option');
+        option.value = software;
+        option.textContent = software;
+        softwareSelect.appendChild(option);
+    }
 
+    // If there's only one software option, select it automatically
+    function autoSelectIfSingle(selectElem) {
+        const realOptions = Array.from(selectElem.options).filter(opt => opt.value !== "");
+        if (realOptions.length === 1) {
+            selectElem.value = realOptions[0].value;
+            // Trigger the change event to populate next select
+            const event = new Event('change', { bubbles: true });
+            selectElem.dispatchEvent(event);
+        }
+    }
 
   function populateVersions(software) {
       versionSelect.innerHTML = '<option value="">Select Version</option>';
@@ -140,8 +150,9 @@
               versionSelect.appendChild(option);
           }
       }
+      // Auto-select if only one version available
+      autoSelectIfSingle(versionSelect);
   }
-
 
   function populateCommands(software, version) {
       commandSelect.innerHTML = '<option value="">Select Command</option>';
@@ -154,6 +165,9 @@
               commandSelect.appendChild(option);
           });
       }
+
+      // Auto-select if only one command available
+      autoSelectIfSingle(commandSelect);
   }
 
   function sendPostRequest(software, version, command) {
@@ -224,8 +238,7 @@
             }
 
             bootstrapAlert("Data updated successfully", "success", 2200);
-        }
-        else if (response.status === "no_data") {
+        } else if (response.status === "no_data") {
             toggleDataVisibility(false);
             $('#default-message').html('<h3>No data available for the selected options.</h3>');
             bootstrapAlert("No data available", "info", 2200);
@@ -264,5 +277,9 @@
           sendPostRequest(selectedSoftware, selectedVersion, selectedCommand);
       }
   });
+
+    // Attempt auto-select after initial population of software
+    autoSelectIfSingle(softwareSelect);
+
 </script>
 {% end %}
