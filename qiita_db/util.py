@@ -94,8 +94,8 @@ MODELS_MEM = [mem_model1, mem_model2, mem_model3, mem_model4]
 time_model1 = (lambda x, k, a, b: a + b + np.log(x) * k)
 time_model2 = (lambda x, k, a, b: a + b * x + np.log(x) * k)
 time_model3 = (lambda x, k, a, b: a + b * np.log(x)**2 + np.log(x) * k)
-time_model4 = (lambda x, k, a, b: a * np.log(x)**3 + b * np.log(x)**2
-               + np.log(x) * k)
+time_model4 = (lambda x, k, a, b: a * np.log(x)**3 + b * np.log(x)**2 +
+               np.log(x) * k)
 
 MODELS_TIME = [time_model1, time_model2, time_model3, time_model4]
 
@@ -2717,7 +2717,6 @@ def _resource_allocation_success_failures(df, k, a, b, model, col_name, type_):
     df[f'c{type_}'] = model(x_plot, k, a, b)
     success_df = df[df[type_] <= df[f'c{type_}']]
     failures_df = df[df[type_] > df[f'c{type_}']]
-    
     return (success_df, failures_df)
 
 
@@ -2846,8 +2845,8 @@ def update_resource_allocation_table(weeks=1, test=None):
     def merge_rows(rows):
         date_fmt = '%Y-%m-%dT%H:%M:%S'
         wait_time = (
-            datetime.strptime(rows.iloc[0]['Start'], date_fmt)
-            - datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
+            datetime.strptime(rows.iloc[0]['Start'], date_fmt) -
+            datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
         if rows.shape[0] >= 2:
             tmp = rows.iloc[1].copy()
         else:

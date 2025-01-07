@@ -608,7 +608,6 @@ def update_resource_allocation_redis(active=True):
                     line = ax.lines[0]
                     new_ax.plot(line.get_xdata(), line.get_ydata(),
                                 linewidth=1, color='orange')
-                    
                     handles, labels = ax.get_legend_handles_labels()
                     for handle, label, scatter_data in zip(handles,
                                                            labels,
