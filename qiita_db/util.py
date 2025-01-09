@@ -2405,7 +2405,7 @@ def _retrieve_equations():
             if 'mem' in models[1]:
                 memory_models[models[1]] = lambda x, k, a, b: eval(models[2])
             else:
-                time_models[models[2]] = lambda x, k, a, b: eval(models[2])
+                time_models[models[1]] = lambda x, k, a, b: eval(models[2])
         return (memory_models, time_models)
 
 

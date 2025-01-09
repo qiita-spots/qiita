@@ -1353,11 +1353,11 @@ class ResourceAllocationPlotTests(TestCase):
             self.df, k, a, b, bm, self.col_name, 'MaxRSSRaw')[-1]
         failures = failures_df.shape[0]
 
-        self.assertEqual(bm_name, 'mem_model3',
+        self.assertEqual(bm_name, 'mem_model4',
                          msg=f"""Best memory model
                          doesn't match
-                         {bm_name} != 'mem_model3'""")
-        self.assertEqual(bm, mem_models['mem_model3'],
+                         {bm_name} != 'mem_model4'""")
+        self.assertEqual(bm, mem_models['mem_model4'],
                          msg=f"""Best memory model
                                  doesn't match
                                  Coefficients:{k} {a} {b}
@@ -1372,18 +1372,17 @@ class ResourceAllocationPlotTests(TestCase):
         failures_df = qdb.util._resource_allocation_success_failures(
             self.df, k, a, b, bm, self.col_name, 'ElapsedRaw')[-1]
         failures = failures_df.shape[0]
-
-        self.assertEqual(bm_name, 'time_model1',
+        self.assertEqual(bm_name, 'time_model4',
                          msg=f"""Best time model
                          doesn't match
-                         {bm_name} != 'time_model1'""")
+                         {bm_name} != 'time_model4'""")
 
-        self.assertEqual(bm, qdb.util.time_model1,
+        self.assertEqual(bm, time_models[bm_name],
                          msg=f"""Best time model
                                 doesn't match
                                 Coefficients:{k} {a} {b}
                                 """)
-        self.assertEqual(failures, 1, "Number of failures must be 1")
+        self.assertEqual(failures, 0, "Number of failures must be 0")
 
     def test_MaxRSS_helper(self):
         tests = [
