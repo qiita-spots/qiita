@@ -8,7 +8,7 @@ Deployed on January 15th, 2025
 * The Analysis owner is now displayed in the analysis list and the individual analysis page.
 * Admins can now use the per-preparation "Download Data Release" button to get a "BIOM" release; this version is focus on NPH data releases.
 * Improved complete_job creation time, which should result in Qiita jobs ([multiple steps](https://qiita.ucsd.edu/static/doc/html/dev/resource_allocation.html) finishing faster; for bencharks visit [patch 93.sql](https://github.com/qiita-spots/qiita/blob/master/qiita_db/support_files/patches/93.sql).
-* SPP improvements: TellSeq support added; plugin refactored to allow for easier additions like TellSeq in the future. Job restart greatly improved. Much improved handling of sample-names and ids that contain substrings like ‘I1’ and ‘R2’. New SequenceCount job can count sequences and base-paris in parallel for any list of fastq files.
+* SPP improvements: TellSeq support added; plugin refactored to allow for easier additions like TellSeq in the future. Job restart greatly improved. Much improved handling of sample-names and ids that contain substrings like ‘I1’ and ‘R2’. New SequenceCount job can count sequences and base-pairs in parallel for any list of fastq files.
 * Other general fixes [#3440](https://github.com/qiita-spots/qiita/pull/3440), [#3445](https://github.com/qiita-spots/qiita/pull/3445), [#3446](https://github.com/qiita-spots/qiita/pull/3446),
 
 
