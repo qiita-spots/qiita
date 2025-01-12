@@ -1343,7 +1343,7 @@ class ResourceAllocationPlotTests(TestCase):
         self.df[self.col_name] = self.df.samples * self.df['columns']
         fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
-        mem_models, time_models = qdb.util._retrieve_equations()
+        mem_models, time_models = qdb.util.retrieve_equations()
         bm_name, bm, options = qdb.util._resource_allocation_plot_helper(
             self.df, axs[0], 'MaxRSSRaw', mem_models, self.col_name)
         # check that the algorithm chooses correct model for MaxRSSRaw and
@@ -1357,7 +1357,7 @@ class ResourceAllocationPlotTests(TestCase):
                          msg=f"""Best memory model
                          doesn't match
                          {bm_name} != 'mem_model4'""")
-        self.assertEqual(bm, mem_models['mem_model4'],
+        self.assertEqual(bm, mem_models['mem_model4']['equation'],
                          msg=f"""Best memory model
                                  doesn't match
                                  Coefficients:{k} {a} {b}
@@ -1377,7 +1377,7 @@ class ResourceAllocationPlotTests(TestCase):
                          doesn't match
                          {bm_name} != 'time_model4'""")
 
-        self.assertEqual(bm, time_models[bm_name],
+        self.assertEqual(bm, time_models[bm_name]['equation'],
                          msg=f"""Best time model
                                 doesn't match
                                 Coefficients:{k} {a} {b}

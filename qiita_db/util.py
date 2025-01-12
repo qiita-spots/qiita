@@ -82,27 +82,6 @@ from json import loads
 from scipy.optimize import minimize
 
 
-def get_model_name(model):
-    if model == 'mem_model1':
-        return "k * log(x) + x * a + b"
-    elif model == 'mem_model2':
-        return "k * log(x) + b * log(x)^2 + a"
-    elif model == 'mem_model3':
-        return "k * log(x) + b * log(x)^2 + a * log(x)^3"
-    elif model == 'mem_model4':
-        return "k * log(x) + b * log(x)^2 + a * log(x)^2.5"
-    elif model == 'time_model1':
-        return "a + b + log(x) * k"
-    elif model == 'time_model2':
-        return "a + b * x + log(x) * k"
-    elif model == 'time_model3':
-        return "a + b * log(x)^2 + log(x) * k"
-    elif model == 'time_model4':
-        return "a * log(x)^3 + b * log(x)^2 + log(x) * k"
-    else:
-        return "Unknown model"
-
-
 def scrub_data(s):
     r"""Scrubs data fields of characters not allowed by PostgreSQL
 
@@ -2369,7 +2348,7 @@ def resource_allocation_plot(df, col_name):
     fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
     ax = axs[0]
-    mem_models, time_models = _retrieve_equations()
+    mem_models, time_models = retrieve_equations()
 
     # models for memory
     _resource_allocation_plot_helper(
@@ -2382,9 +2361,9 @@ def resource_allocation_plot(df, col_name):
     return fig, axs
 
 
-def _retrieve_equations():
+def retrieve_equations():
     '''
-    Helepr function for resource_allocation_plot.
+    Helper function for resource_allocation_plot.
     Retrieves equations from db. Creates dictionary for memory and time models.
 
     Returns
@@ -2397,16 +2376,40 @@ def _retrieve_equations():
     '''
     memory_models = {}
     time_models = {}
+    res = []
     with qdb.sql_connection.TRN:
         sql = ''' SELECT * FROM qiita.allocation_equations; '''
         qdb.sql_connection.TRN.add(sql)
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        for models in res:
-            if 'mem' in models[1]:
-                memory_models[models[1]] = lambda x, k, a, b: eval(models[2])
-            else:
-                time_models[models[1]] = lambda x, k, a, b: eval(models[2])
-        return (memory_models, time_models)
+    for models in res:
+        model_name = "Unknown model"
+        if models[1] == 'mem_model1':
+            model_name = "k * log(x) + x * a + b"
+        elif models[1] == 'mem_model2':
+            model_name = "k * log(x) + b * log(x)^2 + a"
+        elif models[1] == 'mem_model3':
+            model_name = "k * log(x) + b * log(x)^2 + a * log(x)^3"
+        elif models[1] == 'mem_model4':
+            model_name = "k * log(x) + b * log(x)^2 + a * log(x)^2.5"
+        elif models[1] == 'time_model1':
+            model_name = "a + b + log(x) * k"
+        elif models[1] == 'time_model2':
+            model_name = "a + b * x + log(x) * k"
+        elif models[1] == 'time_model3':
+            model_name = "a + b * log(x)^2 + log(x) * k"
+        elif models[1] == 'time_model4':
+            model_name = "a * log(x)^3 + b * log(x)^2 + log(x) * k"
+        if 'mem' in models[1]:
+            memory_models[models[1]] = {
+                "equation_name": model_name,
+                "equation": lambda x, k, a, b: eval(models[2])
+            }
+        else:
+            time_models[models[1]] = {
+                "equation_name": model_name,
+                "equation": lambda x, k, a, b: eval(models[2])
+            }
+    return (memory_models, time_models)
 
 
 def retrieve_resource_data(cname, sname, version, columns):
@@ -2483,9 +2486,20 @@ def _resource_allocation_plot_helper(
         Specifies x axis for the graph
     curr: str, required
         Either MaxRSSRaw or ElapsedRaw (y axis)
-    models: dictionary, required
-        Dictionary of functions that will be used for visualization
+    models: dictionary, required. Follows this structure
+        equation_name: string
+            Human readable representation of the equation
+        equation: Python lambda function
+            Lambda function representing equation to optimizse
 
+    Returns
+    -------
+    best_model_name: string
+        the name of the best model from the table
+    best_model: function
+        best fitting function for the current dictionary models
+    options: object
+        object containing constants for the best model (e.g. k, a, b in kx+b*a)
     """
 
     x_data, y_data = df[col_name], df[curr]
@@ -2560,7 +2574,7 @@ def _resource_allocation_plot_helper(
                    label=host)
     ax.set_title(
                  f'k||a||b: {k}||{a}||{b}\n'
-                 f'model: {get_model_name(best_model_name)}\n'
+                 f'model: {models[best_model_name]["equation_name"]}\n'
                  f'real: {mini} || {maxi}\n'
                  f'calculated: {cmin} || {cmax}\n'
                  f'failures: {failures}')
@@ -2583,8 +2597,11 @@ def _resource_allocation_calculate(
         current type (e.g. MaxRSSRaw)
     col_name: str, required
         Specifies x axis for the graph
-    models: dictionary, required
-        Dictionary of functions that will be used for visualization
+    models: dictionary, required. Follows this structure
+        equation_name: string
+            Human readable representation of the equation
+        equation: Python lambda function
+            Lambda function representing equation to optimizse
     depth: int, required
         Maximum number of iterations in binary search
     tolerance: int, required,
@@ -2607,6 +2624,7 @@ def _resource_allocation_calculate(
     best_failures = np.inf
     best_max = np.inf
     for model_name, model in models.items():
+        model_equation = model['equation']
         # start values for binary search, where sl is left, sr is right
         # penalty weight must be positive & non-zero, hence, sl >= 1.
         # the upper bound for error can be an arbitrary large number
@@ -2624,13 +2642,13 @@ def _resource_allocation_calculate(
         while left < right and cnt < depth:
             middle = (left + right) // 2
             options = minimize(_resource_allocation_custom_loss, init,
-                               args=(x, y, model, middle))
+                               args=(x, y, model_equation, middle))
             k, a, b = options.x
             # important: here we take the 2nd (last) value of tuple since
             # the helper function returns success, then failures.
             failures_df = _resource_allocation_success_failures(
-                df, k, a, b, model, col_name, type_)[-1]
-            y_plot = model(x, k, a, b)
+                df, k, a, b, model_equation, col_name, type_)[-1]
+            y_plot = model_equation(x, k, a, b)
             if not any(y_plot):
                 continue
             cmax = max(y_plot)
@@ -2678,7 +2696,7 @@ def _resource_allocation_calculate(
                 best_failures = prev_failures
                 best_max = min_max
                 best_model_name = model_name
-                best_model = model
+                best_model = model_equation
                 best_result = res
     return best_model_name, best_model, best_result
 
@@ -2695,8 +2713,8 @@ def _resource_allocation_custom_loss(params, x, y, model, p):
         Represents x data for the function calculation
     y: pandas.Series (pandas column), required
         Represents y data for the function calculation
-    models: list, required
-        List of functions that will be used for visualization
+    model: Python function
+        Lambda function representing current equation
     p: int, required
         Penalty weight for custom loss function
 
