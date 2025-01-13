@@ -316,7 +316,7 @@ To take advantage of this feature you need to:
    server that is OK to give access to the key created to your storage-shed; note that if
    you want to completely stop that key to work you can open that file and remove the line
    with the name of this key.
-#. Dowload your new generated key `qiita-key` (the file) to your local computer and use it
+#. Download your new generated key `qiita-key` (the file) to your local computer and use it
    in the `Key` option of "Upload via Remote Server (ADVANCED)".
 
 Using this key you can `List Files` to test the connection and verify the list of study files. Then,

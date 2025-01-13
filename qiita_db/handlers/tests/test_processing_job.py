@@ -233,9 +233,9 @@ class CompleteHandlerTests(OauthTestingBase):
         self.assertIsNotNone(cj)
         # additionally we can test that job.print_trace is correct
         self.assertEqual(job.trace, [
-            f'{job.id} [Not Available]: Validate | '
+            f'{job.id} [Not Available] (success): Validate | '
             '-p qiita -N 1 -n 1 --mem 90gb --time 150:00:00 --nice=10000',
-            f'  {cj.id} [{cj.external_id}] | '
+            f'  {cj.id} [{cj.external_id}] (success)| '
             '-p qiita -N 1 -n 1 --mem 16gb --time 10:00:00 --nice=10000'])
 
     def test_post_job_success_with_archive(self):

@@ -50,7 +50,8 @@ def _retrieve_queue_jobs():
 
     # ignore the merge-jobs and get unique values
     qiita_jids = jobs.NAME.str.replace('merge-', '').unique()
-    qiita_jids = [x.replace('.txt', '') for x in qiita_jids]
+    qiita_jids = [x.replace(
+        'finish-', '').replace('.txt', '') for x in qiita_jids]
 
     return set(qiita_jids)
 

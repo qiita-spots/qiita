@@ -2114,7 +2114,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
         return []
 
     sql = """
-        SELECT analysis_id, a.name, a.description, a.timestamp,
+        SELECT analysis_id, a.name, a.description, a.timestamp, a.email,
             array_agg(DISTINCT artifact_id),
             array_agg(DISTINCT visibility),
             array_agg(DISTINCT CASE WHEN filepath_type = 'plain_text'
@@ -2135,7 +2135,8 @@ def generate_analysis_list(analysis_ids, public_only=False):
 
         qdb.sql_connection.TRN.add(sql, [tuple(analysis_ids)])
         for row in qdb.sql_connection.TRN.execute_fetchindex():
-            aid, name, description, ts, artifacts, av, mapping_files = row
+            aid, name, description, ts, owner, artifacts, \
+                av, mapping_files = row
 
             av = 'public' if set(av) == {'public'} else 'private'
             if av != 'public' and public_only:
@@ -2156,7 +2157,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
             results.append({
                 'analysis_id': aid, 'name': name, 'description': description,
                 'timestamp': ts.strftime("%m/%d/%y %H:%M:%S"),
-                'visibility': av, 'artifacts': artifacts,
+                'visibility': av, 'artifacts': artifacts, 'owner': owner,
                 'mapping_files': mapping_files})
 
     return results
@@ -2334,7 +2335,7 @@ def send_email(to, subject, body):
     msg = MIMEMultipart()
     msg['From'] = qiita_config.smtp_email
     msg['To'] = to
-    msg['Subject'] = subject
+    msg['Subject'] = subject.strip()
     msg.attach(MIMEText(body, 'plain'))
 
     # connect to smtp server, using ssl if needed
@@ -2496,9 +2497,9 @@ def _resource_allocation_plot_helper(
     ax.set_ylabel(curr)
     ax.set_xlabel(col_name)
 
-    # 100 - number of maximum iterations, 3 - number of failures we tolerate
+    # 50 - number of maximum iterations, 3 - number of failures we tolerate
     best_model, options = _resource_allocation_calculate(
-        df, x_data, y_data, models, curr, col_name, 100, 3)
+        df, x_data, y_data, models, curr, col_name, 50, 3)
     k, a, b = options.x
     x_plot = np.array(sorted(df[col_name].unique()))
     y_plot = best_model(x_plot, k, a, b)
@@ -2593,6 +2594,8 @@ def _resource_allocation_calculate(
             failures_df = _resource_allocation_failures(
                 df, k, a, b, model, col_name, type_)
             y_plot = model(x, k, a, b)
+            if not any(y_plot):
+                continue
             cmax = max(y_plot)
             cmin = min(y_plot)
             failures = failures_df.shape[0]
@@ -2834,13 +2837,17 @@ def update_resource_allocation_table(weeks=1, test=None):
         wait_time = (
             datetime.strptime(rows.iloc[0]['Start'], date_fmt)
             - datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
-        tmp = rows.iloc[1].copy()
+        if rows.shape[0] >= 2:
+            tmp = rows.iloc[1].copy()
+        else:
+            tmp = rows.iloc[0].copy()
         tmp['WaitTime'] = wait_time
         return tmp
 
     slurm_data['external_id'] = slurm_data['JobID'].apply(
                                             lambda x: int(x.split('.')[0]))
     slurm_data['external_id'] = slurm_data['external_id'].ffill()
+
     slurm_data = slurm_data.groupby(
             'external_id').apply(merge_rows).reset_index(drop=True)
 
@@ -2948,3 +2955,25 @@ def update_resource_allocation_table(weeks=1, test=None):
                 row['node_model']]
             qdb.sql_connection.TRN.add(sql, sql_args=to_insert)
             qdb.sql_connection.TRN.execute()
+
+
+def merge_overlapping_strings(str1, str2):
+    """Helper function to merge 2 overlapping strings
+
+    Parameters
+    ----------
+    str1: str
+        Initial string
+    str2: str
+        End string
+
+    Returns
+    ----------
+    str
+        The merged strings
+    """
+    overlap = ""
+    for i in range(1, min(len(str1), len(str2)) + 1):
+        if str1.endswith(str2[:i]):
+            overlap = str2[:i]
+    return str1 + str2[len(overlap):]

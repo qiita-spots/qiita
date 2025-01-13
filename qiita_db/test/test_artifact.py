@@ -23,7 +23,6 @@ from biom.util import biom_open
 from qiita_core.util import qiita_test_checker
 from qiita_core.testing import wait_for_processing_job
 import qiita_db as qdb
-from qiita_ware.private_plugin import _delete_analysis_artifacts
 
 
 class ArtifactTestsReadOnly(TestCase):
@@ -1559,9 +1558,9 @@ class ArtifactArchiveTests(TestCase):
         qdb.sql_connection.perform_as_transaction(sql)
         sql = "UPDATE qiita.artifact SET visibility_id = 1"
         qdb.sql_connection.perform_as_transaction(sql)
-        _delete_analysis_artifacts(qdb.analysis.Analysis(1))
-        _delete_analysis_artifacts(qdb.analysis.Analysis(2))
-        _delete_analysis_artifacts(qdb.analysis.Analysis(3))
+        qdb.analysis.Analysis.delete_analysis_artifacts(1)
+        qdb.analysis.Analysis.delete_analysis_artifacts(2)
+        qdb.analysis.Analysis.delete_analysis_artifacts(3)
         for aid in [3, 2, 1]:
             A.delete(aid)
 

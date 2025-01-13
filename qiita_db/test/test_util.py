@@ -790,9 +790,11 @@ class DBUtilTests(DBUtilTestsBase):
         exp = [{'mapping_files': [
                 (16, qdb.util.get_filepath_information(16)['fullpath'])],
                 'description': 'A test analysis', 'artifacts': [8, 9], 'name':
-                'SomeAnalysis', 'analysis_id': 1, 'visibility': 'private'},
+                'SomeAnalysis', 'owner': 'test@foo.bar', 'analysis_id': 1,
+                'visibility': 'private'},
                {'mapping_files': [], 'description': 'Another test analysis',
                 'artifacts': [], 'name': 'SomeSecondAnalysis',
+                'owner': 'admin@foo.bar',
                 'analysis_id': 2, 'visibility': 'private'}]
         # removing timestamp for testing
         for i in range(len(obs)):

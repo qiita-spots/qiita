@@ -21,14 +21,14 @@
             <option value="">Select Software</option>
         </select>
       </div>
-    
+
         <div class="form-group">
             <label for="version">Version:</label>
             <select id="version" name="version" class="form-control">
                 <option value="">Select Version</option>
             </select>
         </div>
-    
+
         <div class="form-group">
             <label for="command">Command:</label>
             <select id="command" name="command" class="form-control">
@@ -89,7 +89,7 @@
             </tr>
         </table>
     </div>
-    
+
 </div>
 
 <script>
@@ -97,7 +97,7 @@
     function toggleDataVisibility(showData) {
         const defaultMessage = document.getElementById('default-message');
         const dataContainer = document.getElementById('data-container');
-        
+
         if (showData) {
             defaultMessage.style.display = 'none';
             dataContainer.style.display = 'block';
@@ -106,7 +106,7 @@
             dataContainer.style.display = 'none';
         }
     }
-    
+
     // Call this function on initial load
     {% if initial_load %}
         toggleDataVisibility(false);
@@ -114,9 +114,7 @@
         toggleDataVisibility(true);
     {% end %}
 
-  const commandsConst = JSON.parse('{% raw commands %}');
-  console.log(commandsConst);
-
+  const commandsConst = JSON.parse(`{% raw commands %}`);
   const softwareSelect = document.getElementById('software');
   const versionSelect = document.getElementById('version');
   const commandSelect = document.getElementById('command');
@@ -133,7 +131,7 @@
   function populateVersions(software) {
       versionSelect.innerHTML = '<option value="">Select Version</option>';
       commandSelect.innerHTML = '<option value="">Select Command</option>';
-      
+
       if (software && commandsConst[software]) {
           for (const version in commandsConst[software]) {
               const option = document.createElement('option');
@@ -147,7 +145,7 @@
 
   function populateCommands(software, version) {
       commandSelect.innerHTML = '<option value="">Select Command</option>';
-      
+
       if (software && version && commandsConst[software][version]) {
           commandsConst[software][version].forEach(command => {
               const option = document.createElement('option');
@@ -167,7 +165,6 @@
 
     $.post(window.location.href, JSON.stringify(data), function(response, textStatus, jqXHR) {
         if (response.status === "success") {
-            console.log(response.time)
             // Toggle visibility based on the response
             toggleDataVisibility(true);
 
@@ -227,7 +224,7 @@
             }
 
             bootstrapAlert("Data updated successfully", "success", 2200);
-        } 
+        }
         else if (response.status === "no_data") {
             toggleDataVisibility(false);
             $('#default-message').html('<h3>No data available for the selected options.</h3>');
@@ -238,7 +235,6 @@
         }
     }, 'json')
     .fail(function(jqXHR, textStatus, errorThrown) {
-        console.error('Error:', errorThrown);
         toggleDataVisibility(false);
         bootstrapAlert("An error occurred while processing your request", "danger", 2200);
     });

@@ -145,6 +145,7 @@
           <th>Analysis ID</th>
           <th>Analysis Name</th>
           <th>Visibility</th>
+          <th>Owner</th>
           <th>Creation Timestamp</th>
           <th>Mapping File</th>
           <th>Delete?</th>
@@ -167,6 +168,9 @@
           </td>
           <td>
             {{analysis['visibility']}}
+          </td>
+          <td>
+            <a href="mailto:{{analysis['owner']}}">{{analysis['owner']}}</a>
           </td>
           <td>
             {{analysis['timestamp']}}
@@ -195,6 +199,7 @@
           <th>Artifacts</th>
           <th>Analysis ID</th>
           <th>Analysis Name</th>
+          <th>Owner</th>
           <th>Creation Timestamp</th>
           <th>Mapping File</th>
         </tr>
@@ -212,6 +217,9 @@
             {% if analysis['description'] %}
               ({{analysis['description']}})
             {% end %}
+          </td>
+          <td>
+            <a href="mailto:{{analysis['owner']}}">{{analysis['owner']}}</a>
           </td>
           <td>
            {{analysis['timestamp']}}
