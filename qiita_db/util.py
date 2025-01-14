@@ -76,6 +76,7 @@ from email.mime.text import MIMEText
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import numpy as np
+from numpy import log
 import pandas as pd
 from io import StringIO
 from json import loads
