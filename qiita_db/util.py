@@ -76,7 +76,6 @@ from email.mime.text import MIMEText
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import numpy as np
-from numpy import log
 import pandas as pd
 from io import StringIO
 from json import loads
@@ -2383,31 +2382,14 @@ def retrieve_equations():
         qdb.sql_connection.TRN.add(sql)
         res = qdb.sql_connection.TRN.execute_fetchindex()
     for models in res:
-        model_name = "Unknown model"
-        if models[1] == 'mem_model1':
-            model_name = "k * log(x) + x * a + b"
-        elif models[1] == 'mem_model2':
-            model_name = "k * log(x) + b * log(x)^2 + a"
-        elif models[1] == 'mem_model3':
-            model_name = "k * log(x) + b * log(x)^2 + a * log(x)^3"
-        elif models[1] == 'mem_model4':
-            model_name = "k * log(x) + b * log(x)^2 + a * log(x)^2.5"
-        elif models[1] == 'time_model1':
-            model_name = "a + b + log(x) * k"
-        elif models[1] == 'time_model2':
-            model_name = "a + b * x + log(x) * k"
-        elif models[1] == 'time_model3':
-            model_name = "a + b * log(x)^2 + log(x) * k"
-        elif models[1] == 'time_model4':
-            model_name = "a * log(x)^3 + b * log(x)^2 + log(x) * k"
         if 'mem' in models[1]:
             memory_models[models[1]] = {
-                "equation_name": model_name,
+                "equation_name": models[2],
                 "equation": lambda x, k, a, b: eval(models[2])
             }
         else:
             time_models[models[1]] = {
-                "equation_name": model_name,
+                "equation_name": models[2],
                 "equation": lambda x, k, a, b: eval(models[2])
             }
     return (memory_models, time_models)
