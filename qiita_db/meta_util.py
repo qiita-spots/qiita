@@ -593,7 +593,7 @@ def update_resource_allocation_redis(active=True):
                 if len(df) == 0:
                     continue
 
-                fig, axs = resource_allocation_plot(df, cname, sname, col_name)
+                fig, axs = resource_allocation_plot(df, col_name)
                 titles = [0, 0]
                 images = [0, 0]
 
@@ -605,21 +605,18 @@ def update_resource_allocation_redis(active=True):
                     # only time
                     new_fig = plt.figure()
                     new_ax = new_fig.add_subplot(111)
-
-                    scatter_data = ax.collections[0]
-                    new_ax.scatter(scatter_data.get_offsets()[:, 0],
-                                   scatter_data.get_offsets()[:, 1],
-                                   s=scatter_data.get_sizes(), label="data")
-
                     line = ax.lines[0]
                     new_ax.plot(line.get_xdata(), line.get_ydata(),
                                 linewidth=1, color='orange')
-
-                    if len(ax.collections) > 1:
-                        failure_data = ax.collections[1]
-                        new_ax.scatter(failure_data.get_offsets()[:, 0],
-                                       failure_data.get_offsets()[:, 1],
-                                       color='red', s=3, label="failures")
+                    handles, labels = ax.get_legend_handles_labels()
+                    for handle, label, scatter_data in zip(handles,
+                                                           labels,
+                                                           ax.collections):
+                        color = handle.get_facecolor()
+                        new_ax.scatter(scatter_data.get_offsets()[:, 0],
+                                       scatter_data.get_offsets()[:, 1],
+                                       s=scatter_data.get_sizes(), label=label,
+                                       color=color)
 
                     new_ax.set_xscale('log')
                     new_ax.set_yscale('log')
