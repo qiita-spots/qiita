@@ -559,7 +559,7 @@ def _build_software_commands_col_names_object(active):
     '''
     Helper function for update_resource_allocation_redis
 
-    Constructs a nested dictionary containing software commands and associated 
+    Constructs a nested dictionary containing software commands and associated
     column names from the database.
     '''
 
