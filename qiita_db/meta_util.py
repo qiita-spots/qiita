@@ -622,9 +622,9 @@ def update_resource_allocation_redis(active=True):
                        f" command: {cname}"))
                 if len(df) == 0:
                     print(("No allocation resources available for" +
-                            f" software: {sname}" +
-                            f" version: {version}" +
-                            f" command: {cname}"))
+                           f" software: {sname}" +
+                           f" version: {version}" +
+                           f" command: {cname}"))
                     continue
                 # column_name_str looks like col1*col2*col3, etc
                 for col_name_str in col_name_list:
@@ -640,10 +640,10 @@ def update_resource_allocation_redis(active=True):
                         else:
                             new_column *= df_copy[curr_column]
                     print(("Building resource allocation plot for " +
-                       f" software: {sname}" +
-                       f" version: {version}" +
-                       f" command: {cname}" +
-                       f" column name: {col_name_str}"))
+                           f" software: {sname}" +
+                           f" version: {version}" +
+                           f" command: {cname}" +
+                           f" column name: {col_name_str}"))
 
                     fig, axs = resource_allocation_plot(df_copy,
                                                         col_name_str,
@@ -699,10 +699,10 @@ def update_resource_allocation_redis(active=True):
                         ("title_time", titles[1], r_client.set)
                     ]
                     print(("Saving resource allocation image for " +
-                       f" software: {sname}" +
-                       f" version: {version}" +
-                       f" command: {cname}" +
-                       f" column name: {col_name_str}"))
+                           f" software: {sname}" +
+                           f" version: {version}" +
+                           f" command: {cname}" +
+                           f" column name: {col_name_str}"))
 
                     for k, v, f in values:
                         redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (
