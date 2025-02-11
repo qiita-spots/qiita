@@ -1,5 +1,17 @@
 # Qiita changelog
 
+Version 2025.01
+---------------
+
+Deployed on January 15th, 2025
+
+* The Analysis owner is now displayed in the analysis list and the individual analysis page.
+* Admins can now use the per-preparation "Download Data Release" button to get a "BIOM" release; this version is focus on NPH data releases.
+* Improved complete_job creation time, which should result in Qiita jobs ([multiple steps](https://qiita.ucsd.edu/static/doc/html/dev/resource_allocation.html) finishing faster; for bencharks visit [patch 93.sql](https://github.com/qiita-spots/qiita/blob/master/qiita_db/support_files/patches/93.sql).
+* SPP improvements: TellSeq support added; plugin refactored to allow for easier additions like TellSeq in the future. Job restart greatly improved. Much improved handling of sample-names and ids that contain substrings like ‘I1’ and ‘R2’. New SequenceCount job can count sequences and base-pairs in parallel for any list of fastq files.
+* Other general fixes [#3440](https://github.com/qiita-spots/qiita/pull/3440), [#3445](https://github.com/qiita-spots/qiita/pull/3445), [#3446](https://github.com/qiita-spots/qiita/pull/3446),
+
+
 Version 2024.10
 ---------------
 
@@ -206,7 +218,7 @@ Version 2021.11
 * Allow chucked download of metadata files in analyses; this allows to process large meta-analysis (like those for The Microsetta Initiative) without worker blockage.
 * Added to the qp-qiime2 plugin the possibility of filtering tables based on system available "FeatureData[Sequence]"; to start we added 90/100/150 bps bloom tables.
 * Now we can instantiate a study via their title (Study.from_title); this will facilitate orchestration with qebil.
-* Speed up Study listing for admins and general users; the admin study display came down from 20 to 2 seconds.  
+* Speed up Study listing for admins and general users; the admin study display came down from 20 to 2 seconds.
 * Fixed the following issues: [3142](https://github.com/qiita-spots/qiita/issues/3142), [3149](https://github.com/qiita-spots/qiita/issues/3149), [3150](https://github.com/qiita-spots/qiita/issues/3150), [3119](https://github.com/qiita-spots/qiita/issues/3119), and [3160](https://github.com/qiita-spots/qiita/issues/3160).
 
 
