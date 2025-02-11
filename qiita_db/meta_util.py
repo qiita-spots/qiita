@@ -555,20 +555,45 @@ def generate_plugin_releases():
         f(redis_key, v)
 
 
-def get_software_commands(active):
+def _build_software_commands_col_names_object(active):
+    '''
+    Helper function for update_resource_allocation_redis
+
+    Gets all the available software with the corresponding software versions,
+    with the corresponding commands, with the corresponding col_names, with
+    column names from db
+    '''
+
+    col_name_list = []
+    with qdb.sql_connection.TRN:
+        sql = ''' SELECT * FROM qiita.resource_allocation_column_names; '''
+        qdb.sql_connection.TRN.add(sql)
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+
+    for col_name in res:
+        col_name_list.append(col_name[1])
+
     software_list = [s for s in qdb.software.Software.iter(active=active)]
-    software_commands = defaultdict(lambda: defaultdict(list))
+    software_commands = defaultdict(lambda: defaultdict(
+        lambda: defaultdict(list)))
 
     for software in software_list:
         sname = software.name
         sversion = software.version
-        commands = software.commands
 
-        for command in commands:
-            software_commands[sname][sversion].append(command.name)
-        software_commands[sname] = dict(software_commands[sname])
+        for command in software.commands:
+            cmd_name = command.name
+            for col in col_name_list:
+                software_commands[sname][sversion][cmd_name].append(col)
 
-    return dict(software_commands)
+    final_obj = {
+        sname: {
+            sversion: dict(commands)
+            for sversion, commands in dict(versions).items()
+        }
+        for sname, versions in dict(software_commands).items()
+    }
+    return final_obj
 
 
 def update_resource_allocation_redis(active=True):
@@ -581,70 +606,106 @@ def update_resource_allocation_redis(active=True):
 
     """
     time = datetime.now().strftime('%m-%d-%y')
-    scommands = get_software_commands(active)
+
+    scommands = _build_software_commands_col_names_object(active)
+
     redis_key = 'resources:commands'
     r_client.set(redis_key, str(scommands))
 
     for sname, versions in scommands.items():
         for version, commands in versions.items():
-            for cname in commands:
-                col_name = "samples * columns"
+            for cname, col_name_list in commands.items():
                 df = retrieve_resource_data(cname, sname, version, COLUMNS)
+                print(("Retrieving allocation resources for " +
+                       f" software: {sname}" +
+                       f" version: {version}" +
+                       f" command: {cname}"))
                 if len(df) == 0:
+                    print(("No allocation resources available for" +
+                            f" software: {sname}" +
+                            f" version: {version}" +
+                            f" command: {cname}"))
                     continue
+                # column_name_str looks like col1*col2*col3, etc
+                for col_name_str in col_name_list:
+                    df_copy = df.copy()
+                    new_column = None
+                    col_name_split = col_name_str.split('*')
+                    df_copy.dropna(subset=col_name_split, inplace=True)
 
-                fig, axs = resource_allocation_plot(df, col_name)
-                titles = [0, 0]
-                images = [0, 0]
+                    # Create a column with the desired columns
+                    for curr_column in col_name_split:
+                        if new_column is None:
+                            new_column = df_copy[curr_column]
+                        else:
+                            new_column *= df_copy[curr_column]
+                    print(("Building resource allocation plot for " +
+                       f" software: {sname}" +
+                       f" version: {version}" +
+                       f" command: {cname}" +
+                       f" column name: {col_name_str}"))
 
-                # Splitting 1 image plot into 2 separate for better layout.
-                for i, ax in enumerate(axs):
-                    titles[i] = ax.get_title()
-                    ax.set_title("")
-                    # new_fig, new_ax – copy with either only memory plot or
-                    # only time
-                    new_fig = plt.figure()
-                    new_ax = new_fig.add_subplot(111)
-                    line = ax.lines[0]
-                    new_ax.plot(line.get_xdata(), line.get_ydata(),
-                                linewidth=1, color='orange')
-                    handles, labels = ax.get_legend_handles_labels()
-                    for handle, label, scatter_data in zip(handles,
-                                                           labels,
-                                                           ax.collections):
-                        color = handle.get_facecolor()
-                        new_ax.scatter(scatter_data.get_offsets()[:, 0],
-                                       scatter_data.get_offsets()[:, 1],
-                                       s=scatter_data.get_sizes(), label=label,
-                                       color=color)
+                    fig, axs = resource_allocation_plot(df_copy,
+                                                        col_name_str,
+                                                        new_column)
+                    titles = [0, 0]
+                    images = [0, 0]
 
-                    new_ax.set_xscale('log')
-                    new_ax.set_yscale('log')
-                    new_ax.set_xlabel(ax.get_xlabel())
-                    new_ax.set_ylabel(ax.get_ylabel())
-                    new_ax.legend(loc='upper left')
+                    # Splitting 1 image plot into 2 separate for better layout.
+                    for i, ax in enumerate(axs):
+                        titles[i] = ax.get_title()
+                        ax.set_title("")
+                        # new_fig, new_ax – copy with either only memory plot
+                        # or only time
+                        new_fig = plt.figure()
+                        new_ax = new_fig.add_subplot(111)
+                        line = ax.lines[0]
+                        new_ax.plot(line.get_xdata(), line.get_ydata(),
+                                    linewidth=1, color='orange')
+                        handles, labels = ax.get_legend_handles_labels()
+                        for handle, label, scatter_data in zip(
+                                handles,
+                                labels,
+                                ax.collections):
+                            color = handle.get_facecolor()
+                            new_ax.scatter(scatter_data.get_offsets()[:, 0],
+                                           scatter_data.get_offsets()[:, 1],
+                                           s=scatter_data.get_sizes(),
+                                           label=label,
+                                           color=color)
 
-                    new_fig.tight_layout()
-                    plot = BytesIO()
-                    new_fig.savefig(plot, format='png')
-                    plot.seek(0)
-                    img = 'data:image/png;base64,' + quote(
-                          b64encode(plot.getvalue()).decode('ascii'))
-                    images[i] = img
-                    plt.close(new_fig)
-                plt.close(fig)
+                        new_ax.set_xscale('log')
+                        new_ax.set_yscale('log')
+                        new_ax.set_xlabel(ax.get_xlabel())
+                        new_ax.set_ylabel(ax.get_ylabel())
+                        new_ax.legend(loc='upper left')
 
-                # SID, CID, col_name
-                values = [
-                    ("img_mem", images[0], r_client.set),
-                    ("img_time", images[1], r_client.set),
-                    ('time', time, r_client.set),
-                    ("title_mem", titles[0], r_client.set),
-                    ("title_time", titles[1], r_client.set)
-                ]
+                        new_fig.tight_layout()
+                        plot = BytesIO()
+                        new_fig.savefig(plot, format='png')
+                        plot.seek(0)
+                        img = 'data:image/png;base64,' + quote(
+                            b64encode(plot.getvalue()).decode('ascii'))
+                        images[i] = img
+                        plt.close(new_fig)
+                    plt.close(fig)
 
-                for k, v, f in values:
-                    redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (
-                                cname, sname, version, col_name, k)
-                    r_client.delete(redis_key)
-                    f(redis_key, v)
+                    # SID, CID, col_name
+                    values = [
+                        ("img_mem", images[0], r_client.set),
+                        ("img_time", images[1], r_client.set),
+                        ('time', time, r_client.set),
+                        ("title_mem", titles[0], r_client.set),
+                        ("title_time", titles[1], r_client.set)
+                    ]
+                    print(("Saving resource allocation image for " +
+                       f" software: {sname}" +
+                       f" version: {version}" +
+                       f" command: {cname}" +
+                       f" column name: {col_name_str}"))
+
+                    for k, v, f in values:
+                        redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (
+                                    cname, sname, version, col_name_str, k)
+                        r_client.delete(redis_key)
+                        f(redis_key, v)

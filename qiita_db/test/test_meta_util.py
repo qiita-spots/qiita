@@ -522,7 +522,7 @@ class MetaUtilTests(TestCase):
     def test_update_resource_allocation_redis(self):
         cname = "Split libraries FASTQ"
         sname = "QIIMEq2"
-        col_name = "samples * columns"
+        col_name = "samples*columns"
         version = "1.9.1"
         qdb.meta_util.update_resource_allocation_redis(False)
         title_mem_str = 'resources$#%s$#%s$#%s$#%s:%s' % (

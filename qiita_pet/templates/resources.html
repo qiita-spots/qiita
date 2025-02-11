@@ -35,6 +35,14 @@
                 <option value="">Select Command</option>
             </select>
         </div>
+
+        <div class="form-group">
+            <label for="col_name">Column Name:</label>
+            <select id="col_name" name="col_name" class="form-control">
+                <option value="">Select Column Name</option>
+            </select>
+          </div>
+        </form>
     </form>
 
     <div id="data-container">
@@ -118,6 +126,7 @@
     const softwareSelect = document.getElementById('software');
     const versionSelect = document.getElementById('version');
     const commandSelect = document.getElementById('command');
+    const colNameSelect = document.getElementById('col_name');
 
     // Populate software options
     for (const software in commandsConst) {
@@ -141,6 +150,7 @@
   function populateVersions(software) {
       versionSelect.innerHTML = '<option value="">Select Version</option>';
       commandSelect.innerHTML = '<option value="">Select Command</option>';
+      colNameSelect.innerHTML = '<option value="">Select Column Name</option>';
 
       if (software && commandsConst[software]) {
           for (const version in commandsConst[software]) {
@@ -156,25 +166,46 @@
 
   function populateCommands(software, version) {
       commandSelect.innerHTML = '<option value="">Select Command</option>';
+      colNameSelect.innerHTML = '<option value="">Select Column Name</option>';
+      console.log(software, version);
+      console.log(commandsConst[software][version]);
 
       if (software && version && commandsConst[software][version]) {
-          commandsConst[software][version].forEach(command => {
+          for (const command in commandsConst[software][version]) {
               const option = document.createElement('option');
               option.value = command;
               option.textContent = command;
               commandSelect.appendChild(option);
-          });
+          }
       }
 
       // Auto-select if only one command available
       autoSelectIfSingle(commandSelect);
   }
 
-  function sendPostRequest(software, version, command) {
+  function populateColNames(software, version, command) {
+    colNameSelect.innerHTML = '<option value="">Select Column Name</option>';
+
+    if (software && version && command && commandsConst[software][version][command]) {
+        commandsConst[software][version][command].forEach(colName => {
+            const option = document.createElement('option');
+            option.value = colName;
+            option.textContent = colName;
+            colNameSelect.appendChild(option);
+        });
+    }
+
+    // Auto-select if only one command available
+    autoSelectIfSingle(colNameSelect);
+  }
+
+  function sendPostRequest(software, version, command, colName) {
+
     const data = {
         software: software,
         version: version,
-        command: command
+        command: command,
+        col_name: colName
     };
 
     $.post(window.location.href, JSON.stringify(data), function(response, textStatus, jqXHR) {
@@ -254,6 +285,7 @@
 }
 
 
+
   // Event listener for software select
   softwareSelect.addEventListener('change', function() {
       const selectedSoftware = this.value;
@@ -272,10 +304,18 @@
       const selectedSoftware = softwareSelect.value;
       const selectedVersion = versionSelect.value;
       const selectedCommand = this.value;
+      populateColNames(selectedSoftware, selectedVersion, selectedCommand);
+  });
 
-      if (selectedSoftware && selectedVersion && selectedCommand) {
-          sendPostRequest(selectedSoftware, selectedVersion, selectedCommand);
-      }
+  colNameSelect.addEventListener('change', function() {
+    const selectedSoftware = softwareSelect.value;
+    const selectedVersion = versionSelect.value;
+    const selectedCommand = commandSelect.value;
+    const selectedColumn = this.value;
+
+    if (selectedSoftware && selectedVersion && selectedCommand && selectedColumn) {
+        sendPostRequest(selectedSoftware, selectedVersion, selectedCommand, selectedColumn);
+    }
   });
 
     // Attempt auto-select after initial population of software

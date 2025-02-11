@@ -1314,7 +1314,7 @@ class ResourceAllocationPlotTests(TestCase):
         self.cname = "Split libraries FASTQ"
         self.sname = "QIIMEq2"
         self.version = "1.9.1"
-        self.col_name = 'samples * columns'
+        self.col_name = 'samples*columns'
         self.columns = [
                 "sName", "sVersion", "cID", "cName", "processing_job_id",
                 "parameters", "samples", "columns", "input_size", "extra_info",
@@ -1325,9 +1325,13 @@ class ResourceAllocationPlotTests(TestCase):
         self.df = qdb.util.retrieve_resource_data(
                 self.cname, self.sname, self.version, self.columns)
 
+        self.df.dropna(subset=['samples', 'columns'], inplace=True)
+        self.df[self.col_name] = self.df.samples * self.df['columns']
+
     def test_plot_return(self):
         # check the plot returns correct objects
-        fig1, axs1 = qdb.util.resource_allocation_plot(self.df, self.col_name)
+        fig1, axs1 = qdb.util.resource_allocation_plot(self.df, self.col_name,
+                                                       self.df[self.col_name])
         self.assertIsInstance(
             fig1, Figure,
             "Returned object fig1 is not a Matplotlib Figure")
@@ -1337,13 +1341,10 @@ class ResourceAllocationPlotTests(TestCase):
                 "Returned object axs1 is not a single Matplotlib Axes object")
 
     def test_minimize_const(self):
-        self.df = self.df[
-            (self.df.cName == self.cname) & (self.df.sName == self.sname)]
-        self.df.dropna(subset=['samples', 'columns'], inplace=True)
-        self.df[self.col_name] = self.df.samples * self.df['columns']
+
         fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
-        mem_models, time_models = qdb.util.retrieve_equations()
+        mem_models, time_models = qdb.util._retrieve_equations()
         bm_name, bm, options = qdb.util._resource_allocation_plot_helper(
             self.df, axs[0], 'MaxRSSRaw', mem_models, self.col_name)
         # check that the algorithm chooses correct model for MaxRSSRaw and
@@ -1418,7 +1419,6 @@ class ResourceAllocationPlotTests(TestCase):
                 '8a7a8461-e8a1-4b4e-a428-1bc2f4d3ebd0'
             ]
         }
-
         qdb.util.update_resource_allocation_table(test=test_data)
 
         for curr_cname, ids in types.items():
