@@ -564,7 +564,7 @@ def update_resource_allocation_redis(active=True, verbose=False):
         Defaults to True. Should only be False when testing.
 
     verbose: boolean, optional
-        Defaults to False. Prints status on what functin
+        Defaults to False. Prints status on what function
 
     """
     time = datetime.now().strftime('%m-%d-%y')
@@ -573,7 +573,7 @@ def update_resource_allocation_redis(active=True, verbose=False):
     with qdb.sql_connection.TRN:
         sql = 'SELECT col_name FROM qiita.resource_allocation_column_names;'
         qdb.sql_connection.TRN.add(sql)
-        col_names_list = qdb.sql_connection.TRN.execute_fetchflatten()
+        col_names = qdb.sql_connection.TRN.execute_fetchflatten()
 
     # Retreave available software
     software_list = list(qdb.software.Software.iter(active=active))
@@ -590,14 +590,14 @@ def update_resource_allocation_redis(active=True, verbose=False):
 
         for command in software.commands:
             cmd_name = command.name
-            scommands[sname][sversion][cmd_name] = col_names_list
+            scommands[sname][sversion][cmd_name] = col_names
 
     redis_key = 'resources:commands'
     r_client.set(redis_key, str(scommands))
 
     for sname, versions in scommands.items():
         for version, commands in versions.items():
-            for cname, col_name_list in commands.items():
+            for cname, col_names in commands.items():
                 df = retrieve_resource_data(cname, sname, version, COLUMNS)
                 if verbose:
                     print(("Retrieving allocation resources for " +
@@ -612,9 +612,9 @@ def update_resource_allocation_redis(active=True, verbose=False):
                                f" command: {cname}"))
                     continue
                 # column_name_str looks like col1*col2*col3, etc
-                for col_name_str in col_name_list:
+                for col_name in col_names:
                     new_column = None
-                    col_name_split = col_name_str.split('*')
+                    col_name_split = col_name.split('*')
                     df_copy = df.dropna(subset=col_name_split)
 
                     # Create a column with the desired columns
@@ -628,10 +628,10 @@ def update_resource_allocation_redis(active=True, verbose=False):
                                f" software: {sname}" +
                                f" version: {version}" +
                                f" command: {cname}" +
-                               f" column name: {col_name_str}"))
+                               f" column name: {col_name}"))
 
                     fig, axs = resource_allocation_plot(df_copy,
-                                                        col_name_str,
+                                                        col_name,
                                                         new_column,
                                                         verbose=verbose)
                     titles = [0, 0]
@@ -689,10 +689,10 @@ def update_resource_allocation_redis(active=True, verbose=False):
                                f" software: {sname}" +
                                f" version: {version}" +
                                f" command: {cname}" +
-                               f" column name: {col_name_str}"))
+                               f" column name: {col_name}"))
 
                     for k, v, f in values:
                         redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (
-                                    cname, sname, version, col_name_str, k)
+                                    cname, sname, version, col_name, k)
                         r_client.delete(redis_key)
                         f(redis_key, v)
