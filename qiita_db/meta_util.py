@@ -555,47 +555,7 @@ def generate_plugin_releases():
         f(redis_key, v)
 
 
-def _build_software_commands_col_names_object(active):
-    '''
-    Helper function for update_resource_allocation_redis
-
-    Constructs a nested dictionary containing software commands and associated
-    column names from the database.
-    '''
-
-    col_name_list = []
-    with qdb.sql_connection.TRN:
-        sql = ''' SELECT * FROM qiita.resource_allocation_column_names; '''
-        qdb.sql_connection.TRN.add(sql)
-        res = qdb.sql_connection.TRN.execute_fetchindex()
-
-    for col_name in res:
-        col_name_list.append(col_name[1])
-
-    software_list = [s for s in qdb.software.Software.iter(active=active)]
-    software_commands = defaultdict(lambda: defaultdict(
-        lambda: defaultdict(list)))
-
-    for software in software_list:
-        sname = software.name
-        sversion = software.version
-
-        for command in software.commands:
-            cmd_name = command.name
-            for col in col_name_list:
-                software_commands[sname][sversion][cmd_name].append(col)
-
-    final_obj = {
-        sname: {
-            sversion: dict(commands)
-            for sversion, commands in dict(versions).items()
-        }
-        for sname, versions in dict(software_commands).items()
-    }
-    return final_obj
-
-
-def update_resource_allocation_redis(active=True):
+def update_resource_allocation_redis(active=True, verbose=False):
     """Updates redis with plots and information about current software.
 
     Parameters
@@ -603,10 +563,34 @@ def update_resource_allocation_redis(active=True):
     active: boolean, optional
         Defaults to True. Should only be False when testing.
 
+    verbose: boolean, optional
+        Defaults to False. Prints status on what functin
+
     """
     time = datetime.now().strftime('%m-%d-%y')
 
-    scommands = _build_software_commands_col_names_object(active)
+    # Retreave available col_name for commands
+    with qdb.sql_connection.TRN:
+        sql = 'SELECT col_name FROM qiita.resource_allocation_column_names;'
+        qdb.sql_connection.TRN.add(sql)
+        col_names_list = qdb.sql_connection.TRN.execute_fetchflatten()
+
+    # Retreave available software
+    software_list = list(qdb.software.Software.iter(active=active))
+    scommands = {}
+    for software in software_list:
+        sname = software.name
+        sversion = software.version
+
+        if sname not in scommands:
+            scommands[sname] = {}
+
+        if sversion not in scommands[sname]:
+            scommands[sname][sversion] = {}
+
+        for command in software.commands:
+            cmd_name = command.name
+            scommands[sname][sversion][cmd_name] = col_names_list
 
     redis_key = 'resources:commands'
     r_client.set(redis_key, str(scommands))
@@ -615,22 +599,23 @@ def update_resource_allocation_redis(active=True):
         for version, commands in versions.items():
             for cname, col_name_list in commands.items():
                 df = retrieve_resource_data(cname, sname, version, COLUMNS)
-                print(("Retrieving allocation resources for " +
-                       f" software: {sname}" +
-                       f" version: {version}" +
-                       f" command: {cname}"))
-                if len(df) == 0:
-                    print(("No allocation resources available for" +
+                if verbose:
+                    print(("Retrieving allocation resources for " +
                            f" software: {sname}" +
                            f" version: {version}" +
                            f" command: {cname}"))
+                if len(df) == 0:
+                    if verbose:
+                        print(("No allocation resources available for" +
+                               f" software: {sname}" +
+                               f" version: {version}" +
+                               f" command: {cname}"))
                     continue
                 # column_name_str looks like col1*col2*col3, etc
                 for col_name_str in col_name_list:
-                    df_copy = df.copy()
                     new_column = None
                     col_name_split = col_name_str.split('*')
-                    df_copy.dropna(subset=col_name_split, inplace=True)
+                    df_copy = df.dropna(subset=col_name_split)
 
                     # Create a column with the desired columns
                     for curr_column in col_name_split:
@@ -638,15 +623,17 @@ def update_resource_allocation_redis(active=True):
                             new_column = df_copy[curr_column]
                         else:
                             new_column *= df_copy[curr_column]
-                    print(("Building resource allocation plot for " +
-                           f" software: {sname}" +
-                           f" version: {version}" +
-                           f" command: {cname}" +
-                           f" column name: {col_name_str}"))
+                    if verbose:
+                        print(("Building resource allocation plot for " +
+                               f" software: {sname}" +
+                               f" version: {version}" +
+                               f" command: {cname}" +
+                               f" column name: {col_name_str}"))
 
                     fig, axs = resource_allocation_plot(df_copy,
                                                         col_name_str,
-                                                        new_column)
+                                                        new_column,
+                                                        verbose=verbose)
                     titles = [0, 0]
                     images = [0, 0]
 
@@ -697,11 +684,12 @@ def update_resource_allocation_redis(active=True):
                         ("title_mem", titles[0], r_client.set),
                         ("title_time", titles[1], r_client.set)
                     ]
-                    print(("Saving resource allocation image for " +
-                           f" software: {sname}" +
-                           f" version: {version}" +
-                           f" command: {cname}" +
-                           f" column name: {col_name_str}"))
+                    if verbose:
+                        print(("Saving resource allocation image for " +
+                               f" software: {sname}" +
+                               f" version: {version}" +
+                               f" command: {cname}" +
+                               f" column name: {col_name_str}"))
 
                     for k, v, f in values:
                         redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (

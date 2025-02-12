@@ -2326,7 +2326,7 @@ def send_email(to, subject, body):
         smtp.close()
 
 
-def resource_allocation_plot(df, col_name_str, curr_column):
+def resource_allocation_plot(df, col_name_str, curr_column, verbose=False):
     """Builds resource allocation plot for given filename and jobs
 
     Parameters
@@ -2350,15 +2350,17 @@ def resource_allocation_plot(df, col_name_str, curr_column):
     df[col_name_str] = curr_column
 
     # models for memory
-    print("\tCalculating best model for memory")
+    if verbose:
+        print("\tCalculating best model for memory")
     _resource_allocation_plot_helper(
-        df, ax, "MaxRSSRaw",  mem_models, col_name_str)
+        df, ax, "MaxRSSRaw",  mem_models, col_name_str, verbose=verbose)
     ax = axs[1]
 
     # models for time
-    print("\tCalculating best model for time")
+    if verbose:
+        print("\tCalculating best model for time")
     _resource_allocation_plot_helper(
-        df, ax, "ElapsedRaw",  time_models, col_name_str)
+        df, ax, "ElapsedRaw",  time_models, col_name_str, verbose=verbose)
     return fig, axs
 
 
@@ -2366,6 +2368,9 @@ def _retrieve_equations():
     '''
     Helper function for resource_allocation_plot.
     Retrieves equations from db. Creates dictionary for memory and time models.
+    This function is needed because it utilizes np as a part of eval() below.
+    In test_util.py we need to retrieve equations without importing np to
+    comply with PEP8 styling standard.
 
     Returns
     -------
@@ -2379,19 +2384,20 @@ def _retrieve_equations():
     time_models = {}
     res = []
     with qdb.sql_connection.TRN:
-        sql = ''' SELECT * FROM qiita.resource_allocation_equations; '''
+        sql = '''SELECT equation_name, expression
+                 FROM qiita.resource_allocation_equations;'''
         qdb.sql_connection.TRN.add(sql)
         res = qdb.sql_connection.TRN.execute_fetchindex()
     for models in res:
-        if 'mem' in models[1]:
-            memory_models[models[1]] = {
-                "equation_name": models[2],
-                "equation": lambda x, k, a, b: eval(models[2])
+        if 'mem' in models[0]:
+            memory_models[models[0]] = {
+                "equation_name": models[1],
+                "equation": lambda x, k, a, b: eval(models[1])
             }
         else:
-            time_models[models[1]] = {
-                "equation_name": models[2],
-                "equation": lambda x, k, a, b: eval(models[2])
+            time_models[models[0]] = {
+                "equation_name": models[1],
+                "equation": lambda x, k, a, b: eval(models[1])
             }
     return (memory_models, time_models)
 
@@ -2452,7 +2458,7 @@ def retrieve_resource_data(cname, sname, version, columns):
 
 
 def _resource_allocation_plot_helper(
-        df, ax, curr, models, col_name):
+        df, ax, curr, models, col_name, verbose=False):
     """Helper function for resource allocation plot. Builds plot for MaxRSSRaw
     and ElapsedRaw
 
@@ -2517,15 +2523,14 @@ def _resource_allocation_plot_helper(
     ax.set_ylabel(curr)
     ax.set_xlabel(col_name)
 
-    print(f"\t\tFitting best model for {curr}; column {col_name}")
+    if verbose:
+        print(f"\t\tFitting best model for {curr}; column {col_name}")
     # 50 - number of maximum iterations, 3 - number of failures we tolerate
     best_model_name, best_model, options = _resource_allocation_calculate(
         df, x_data, y_data, models, curr, col_name, 50, 3)
-    if options is None:
-        print(df)
-        print(x_data)
-        print(y_data)
-    print(f"\t\tSuccessfully chose best model for {curr}; column {col_name}")
+    if verbose:
+        print(
+            f"\t\tSuccessfully chose best model for {curr}; column {col_name}")
     k, a, b = options.x
     x_plot = np.array(sorted(df[col_name].unique()))
     y_plot = best_model(x_plot, k, a, b)
