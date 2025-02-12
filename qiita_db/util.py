@@ -2556,7 +2556,8 @@ def _resource_allocation_plot_helper(
     ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
                label="failures")
 
-    success_df.loc[:, 'node_name'] = success_df['node_name'].fillna('unknown')
+    success_df['node_name'].fillna('unknown', inplace=True)
+
     slurm_hosts = set(success_df['node_name'].tolist())
     cmap = colormaps['Accent']
     if len(slurm_hosts) > len(cmap.colors):
@@ -2763,8 +2764,8 @@ def _resource_allocation_success_failures(df, k, a, b, model, col_name, type_):
 
     x_plot = np.array(df[col_name])
     df[f'c{type_}'] = model(x_plot, k, a, b)
-    success_df = df[df[type_] <= df[f'c{type_}']]
-    failures_df = df[df[type_] > df[f'c{type_}']]
+    success_df = df[df[type_] <= df[f'c{type_}']].copy()
+    failures_df = df[df[type_] > df[f'c{type_}']].copy()
     return (success_df, failures_df)
 
 
