@@ -49,7 +49,7 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, exists, getsize
-from os import walk, remove, listdir, rename, stat, makedirs
+from os import walk, remove, listdir, stat, makedirs
 from glob import glob
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
@@ -542,7 +542,7 @@ def move_upload_files_to_trash(study_id, files_to_move):
         new_fullpath = join(foldername, trash_folder, filename)
 
         if exists(fullpath):
-            rename(fullpath, new_fullpath)
+            move(fullpath, new_fullpath)
 
 
 def get_mountpoint(mount_type, retrieve_all=False, retrieve_subdir=False):
@@ -2297,7 +2297,9 @@ def send_email(to, subject, body):
     msg = MIMEMultipart()
     msg['From'] = qiita_config.smtp_email
     msg['To'] = to
-    msg['Subject'] = subject.strip()
+    # we need to do 'replace' because the subject can have
+    # new lines in the middle of the string
+    msg['Subject'] = subject.replace('\n', '')
     msg.attach(MIMEText(body, 'plain'))
 
     # connect to smtp server, using ssl if needed

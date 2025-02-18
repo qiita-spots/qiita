@@ -22,7 +22,8 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from os import stat, rename
+from os import stat
+from shutil import move
 from os.path import join, relpath, basename
 from time import strftime, localtime
 import matplotlib.pyplot as plt
@@ -48,6 +49,8 @@ COLUMNS = [
     "sName", "sVersion", "cID", "cName", "processing_job_id",
     "parameters", "samples", "columns", "input_size", "extra_info",
     "MaxRSSRaw", "ElapsedRaw", "Start", "node_name", "node_model"]
+RAW_DATA_ARTIFACT_TYPE = {
+        'SFF', 'FASTQ', 'FASTA', 'FASTA_Sanger', 'per_sample_FASTQ'}
 
 
 def _get_data_fpids(constructor, object_id):
@@ -118,9 +121,7 @@ def validate_filepath_access_by_user(user, filepath_id):
 
             if artifact.visibility == 'public':
                 # TODO: https://github.com/biocore/qiita/issues/1724
-                if artifact.artifact_type in ['SFF', 'FASTQ', 'FASTA',
-                                              'FASTA_Sanger',
-                                              'per_sample_FASTQ']:
+                if artifact.artifact_type in RAW_DATA_ARTIFACT_TYPE:
                     study = artifact.study
                     has_access = study.has_access(user, no_public=True)
                     if (not study.public_raw_download and not has_access):
@@ -469,7 +470,7 @@ def generate_biom_and_metadata_release(study_status='public'):
         for c in iter(lambda: f.read(4096), b""):
             md5sum.update(c)
 
-    rename(tgz_name, tgz_name_final)
+    move(tgz_name, tgz_name_final)
 
     vals = [
         ('filepath', tgz_name_final[len(working_dir):], r_client.set),
@@ -543,7 +544,7 @@ def generate_plugin_releases():
         md5sum = md5()
         for c in iter(lambda: f.read(4096), b""):
             md5sum.update(c)
-    rename(tgz_name, tgz_name_final)
+    move(tgz_name, tgz_name_final)
     vals = [
         ('filepath', tgz_name_final[len(working_dir):], r_client.set),
         ('md5sum', md5sum.hexdigest(), r_client.set),
