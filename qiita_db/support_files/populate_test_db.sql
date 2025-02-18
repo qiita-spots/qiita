@@ -88,6 +88,7 @@ INSERT INTO qiita.artifact_type VALUES (5, 'per_sample_FASTQ', NULL, true, false
 INSERT INTO qiita.artifact_type VALUES (7, 'BIOM', 'BIOM table', false, false, true);
 
 
+
 --
 -- Data for Name: data_type; Type: TABLE DATA; Schema: qiita; Owner: antoniog
 --
