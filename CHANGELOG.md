@@ -1,5 +1,17 @@
 # Qiita changelog
 
+Version 2025.02
+---------------
+
+Deployed on February 24th, 2025
+
+* Replaced os.rename for shutil.move in the code to fix [#3455](https://github.com/qiita-spots/qiita/issues/3455).
+* Via qp-spades, replaced the legacy `spades` command for `cloudSPAdes` for TellSeq.
+* `FASTA_preprocessed` within qtp-sequencing now allows for results to be named using their sample-name, extra from run-prefix.
+* `Remove SynDNA inserts & plasmid reads` superseded `Remove SynDNA reads`, which now removes SynDna inserts and plasmids.
+* [ToDo] SPP changes.
+
+
 Version 2025.01
 ---------------
 
