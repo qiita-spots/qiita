@@ -2527,7 +2527,7 @@ def _resource_allocation_plot_helper(
         print(f"\t\tFitting best model for {curr}; column {col_name}")
     # 50 - number of maximum iterations, 3 - number of failures we tolerate
     best_model_name, best_model, options = _resource_allocation_calculate(
-        df, x_data, y_data, models, curr, col_name, 50, 3)
+        df, x_data, y_data, models, curr, col_name, 50, 3, verbose)
     if verbose:
         print(
             f"\t\tSuccessfully chose best model for {curr}; column {col_name}")
@@ -2553,8 +2553,9 @@ def _resource_allocation_plot_helper(
     success_df, failures_df = _resource_allocation_success_failures(
         df, k, a, b, best_model, col_name, curr)
     failures = failures_df.shape[0]
-    ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
-               label="failures")
+    if failures != 0:
+        ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
+                   label="failures")
 
     success_df['node_name'].fillna('unknown', inplace=True)
 
@@ -2580,7 +2581,7 @@ def _resource_allocation_plot_helper(
 
 
 def _resource_allocation_calculate(
-        df, x, y, models, type_, col_name, depth, tolerance):
+        df, x, y, models, type_, col_name, depth, tolerance, verbose):
     """Helper function for resource allocation plot. Calculates best_model and
     best_result given the models list and x,y data.
 
@@ -2621,6 +2622,11 @@ def _resource_allocation_calculate(
     best_failures = np.inf
     best_max = np.inf
     for model_name, model in models.items():
+        if verbose:
+            print(
+                f"\t\t\tCalculating {model_name} for {type_}; "
+                f"{col_name} {datetime.now().strftime('%b %d %H:%M:%S')}"
+            )
         model_equation = model['equation']
         # start values for binary search, where sl is left, sr is right
         # penalty weight must be positive & non-zero, hence, sl >= 1.
@@ -2763,9 +2769,9 @@ def _resource_allocation_success_failures(df, k, a, b, model, col_name, type_):
     """
 
     x_plot = np.array(df[col_name])
-    df[f'c{type_}'] = model(x_plot, k, a, b)
-    success_df = df[df[type_] <= df[f'c{type_}']].copy()
-    failures_df = df[df[type_] > df[f'c{type_}']].copy()
+    y_plot = model(x_plot, k, a, b)
+    success_df = df[df[type_] <= y_plot].copy()
+    failures_df = df[df[type_] > y_plot].copy()
     return (success_df, failures_df)
 
 

@@ -36,6 +36,8 @@ from tarfile import open as topen, TarInfo
 from hashlib import md5
 from re import sub
 from json import loads, dump, dumps
+import signal
+import traceback
 
 from qiita_db.util import create_nested_path, retrieve_resource_data
 from qiita_db.util import resource_allocation_plot
@@ -555,7 +557,8 @@ def generate_plugin_releases():
         f(redis_key, v)
 
 
-def update_resource_allocation_redis(active=True, verbose=False):
+def update_resource_allocation_redis(active=True, verbose=False,
+                                     time_limit=300):
     """Updates redis with plots and information about current software.
 
     Parameters
@@ -564,7 +567,11 @@ def update_resource_allocation_redis(active=True, verbose=False):
         Defaults to True. Should only be False when testing.
 
     verbose: boolean, optional
-        Defaults to False. Prints status on what function
+        Defaults to False. Prints status on what function is running.
+
+    time_limit: integer, optional
+        Defaults to 300, representing 5 minutes. This is the limit for how long
+        resource_allocation_plot function will run.
 
     """
     time = datetime.now().strftime('%m-%d-%y')
@@ -592,24 +599,24 @@ def update_resource_allocation_redis(active=True, verbose=False):
             cmd_name = command.name
             scommands[sname][sversion][cmd_name] = col_names
 
-    redis_key = 'resources:commands'
-    r_client.set(redis_key, str(scommands))
-
+    # software commands for which resource allocations were sucessfully
+    # calculated
+    scommands_allocation = {}
     for sname, versions in scommands.items():
         for version, commands in versions.items():
             for cname, col_names in commands.items():
                 df = retrieve_resource_data(cname, sname, version, COLUMNS)
                 if verbose:
-                    print(("Retrieving allocation resources for " +
-                           f" software: {sname}" +
-                           f" version: {version}" +
-                           f" command: {cname}"))
+                    print(("\nRetrieving allocation resources for:\n" +
+                           f"  software: {sname}\n" +
+                           f"  version: {version}\n" +
+                           f"  command: {cname}"))
                 if len(df) == 0:
                     if verbose:
-                        print(("No allocation resources available for" +
+                        print(("\nNo allocation resources available for" +
                                f" software: {sname}" +
                                f" version: {version}" +
-                               f" command: {cname}"))
+                               f" command: {cname}\n"))
                     continue
                 # column_name_str looks like col1*col2*col3, etc
                 for col_name in col_names:
@@ -624,16 +631,38 @@ def update_resource_allocation_redis(active=True, verbose=False):
                         else:
                             new_column *= df_copy[curr_column]
                     if verbose:
-                        print(("Building resource allocation plot for " +
-                               f" software: {sname}" +
-                               f" version: {version}" +
-                               f" command: {cname}" +
-                               f" column name: {col_name}"))
+                        print(
+                            ("\nBuilding resource allocation plot for:\n" +
+                             f"  software: {sname}\n" +
+                             f"  version: {version}\n" +
+                             f"  command: {cname}\n" +
+                             f"  column name: {col_name}\n" +
+                             f"  {datetime.now().strftime('%b %d %H:%M:%S')}"))
 
-                    fig, axs = resource_allocation_plot(df_copy,
-                                                        col_name,
-                                                        new_column,
-                                                        verbose=verbose)
+                    def timeout_handler(signum, frame):
+                        raise TimeoutError((
+                            "\nresource_allocation_plot " +
+                            "execution exceeded time limit." +
+                            "For:\n"
+                            f"  software: {sname}\n" +
+                            f"  version: {version}\n" +
+                            f"  command: {cname}\n" +
+                            f"  column name: {col_name}\n" +
+                            f"  {datetime.now().strftime('%b %d %H:%M:%S')}"))
+
+                    signal.signal(signal.SIGALRM, timeout_handler)
+                    signal.alarm(time_limit)
+                    try:
+                        fig, axs = resource_allocation_plot(df_copy,
+                                                            col_name,
+                                                            new_column,
+                                                            verbose=verbose)
+                        signal.alarm(0)
+                    except TimeoutError:
+                        print("Timeout reached!")
+                        traceback.print_exc()
+                        continue
+
                     titles = [0, 0]
                     images = [0, 0]
 
@@ -685,14 +714,28 @@ def update_resource_allocation_redis(active=True, verbose=False):
                         ("title_time", titles[1], r_client.set)
                     ]
                     if verbose:
-                        print(("Saving resource allocation image for " +
-                               f" software: {sname}" +
-                               f" version: {version}" +
-                               f" command: {cname}" +
-                               f" column name: {col_name}"))
+                        print(
+                            ("Saving resource allocation image for\n" +
+                             f"  software: {sname}\n" +
+                             f"  version: {version}\n" +
+                             f"  command: {cname}\n" +
+                             f"  column name: {col_name}\n" +
+                             f"  {datetime.now().strftime('%b %d %H:%M:%S')}"))
 
                     for k, v, f in values:
                         redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (
                                     cname, sname, version, col_name, k)
                         r_client.delete(redis_key)
                         f(redis_key, v)
+
+                    if sname not in scommands_allocation:
+                        scommands_allocation[sname] = {}
+                    if version not in scommands_allocation[sname]:
+                        scommands_allocation[sname][version] = {}
+                    if cname not in scommands_allocation[sname][version]:
+                        scommands_allocation[sname][version][cname] = []
+                    scommands_allocation[sname][version][cname].append(
+                        col_name)
+
+    redis_key = 'resources:commands'
+    r_client.set(redis_key, str(scommands_allocation))
