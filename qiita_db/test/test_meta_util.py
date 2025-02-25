@@ -529,16 +529,19 @@ class MetaUtilTests(TestCase):
             cname, sname, version, col_name, 'title_mem')
         title_mem = str(r_client.get(title_mem_str))
         self.assertTrue(
-            "model: "
-            "k * log(x) + "
-            "b * log(x)^2 + "
-            "a * log(x)^3" in title_mem
+            "model: (k * (np.log(x))) + "
+            "(b * ((np.log(x))**2)) + "
+            "(a * ((np.log(x))**2.5))" in title_mem
         )
 
         title_time_str = 'resources$#%s$#%s$#%s$#%s:%s' % (
                         cname, sname, version, col_name, 'title_time')
         title_time = str(r_client.get(title_time_str))
-        self.assertTrue("model: a + b + log(x) * k" in title_time)
+        self.assertTrue(
+            "model: (a * ((np.log(x))**3)) + "
+            "(b * ((np.log(x))**2)) + "
+            "((np.log(x)) * k)" in title_time
+        )
 
 
 if __name__ == '__main__':

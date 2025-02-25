@@ -22,7 +22,8 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from os import stat, rename
+from os import stat
+from shutil import move
 from os.path import join, relpath, basename
 from time import strftime, localtime
 import matplotlib.pyplot as plt
@@ -48,6 +49,8 @@ COLUMNS = [
     "sName", "sVersion", "cID", "cName", "processing_job_id",
     "parameters", "samples", "columns", "input_size", "extra_info",
     "MaxRSSRaw", "ElapsedRaw", "Start", "node_name", "node_model"]
+RAW_DATA_ARTIFACT_TYPE = {
+        'SFF', 'FASTQ', 'FASTA', 'FASTA_Sanger', 'per_sample_FASTQ'}
 
 
 def _get_data_fpids(constructor, object_id):
@@ -118,9 +121,7 @@ def validate_filepath_access_by_user(user, filepath_id):
 
             if artifact.visibility == 'public':
                 # TODO: https://github.com/biocore/qiita/issues/1724
-                if artifact.artifact_type in ['SFF', 'FASTQ', 'FASTA',
-                                              'FASTA_Sanger',
-                                              'per_sample_FASTQ']:
+                if artifact.artifact_type in RAW_DATA_ARTIFACT_TYPE:
                     study = artifact.study
                     has_access = study.has_access(user, no_public=True)
                     if (not study.public_raw_download and not has_access):
@@ -469,7 +470,7 @@ def generate_biom_and_metadata_release(study_status='public'):
         for c in iter(lambda: f.read(4096), b""):
             md5sum.update(c)
 
-    rename(tgz_name, tgz_name_final)
+    move(tgz_name, tgz_name_final)
 
     vals = [
         ('filepath', tgz_name_final[len(working_dir):], r_client.set),
@@ -543,7 +544,7 @@ def generate_plugin_releases():
         md5sum = md5()
         for c in iter(lambda: f.read(4096), b""):
             md5sum.update(c)
-    rename(tgz_name, tgz_name_final)
+    move(tgz_name, tgz_name_final)
     vals = [
         ('filepath', tgz_name_final[len(working_dir):], r_client.set),
         ('md5sum', md5sum.hexdigest(), r_client.set),
@@ -593,7 +594,7 @@ def update_resource_allocation_redis(active=True):
                 if len(df) == 0:
                     continue
 
-                fig, axs = resource_allocation_plot(df, cname, sname, col_name)
+                fig, axs = resource_allocation_plot(df, col_name)
                 titles = [0, 0]
                 images = [0, 0]
 
@@ -605,21 +606,18 @@ def update_resource_allocation_redis(active=True):
                     # only time
                     new_fig = plt.figure()
                     new_ax = new_fig.add_subplot(111)
-
-                    scatter_data = ax.collections[0]
-                    new_ax.scatter(scatter_data.get_offsets()[:, 0],
-                                   scatter_data.get_offsets()[:, 1],
-                                   s=scatter_data.get_sizes(), label="data")
-
                     line = ax.lines[0]
                     new_ax.plot(line.get_xdata(), line.get_ydata(),
                                 linewidth=1, color='orange')
-
-                    if len(ax.collections) > 1:
-                        failure_data = ax.collections[1]
-                        new_ax.scatter(failure_data.get_offsets()[:, 0],
-                                       failure_data.get_offsets()[:, 1],
-                                       color='red', s=3, label="failures")
+                    handles, labels = ax.get_legend_handles_labels()
+                    for handle, label, scatter_data in zip(handles,
+                                                           labels,
+                                                           ax.collections):
+                        color = handle.get_facecolor()
+                        new_ax.scatter(scatter_data.get_offsets()[:, 0],
+                                       scatter_data.get_offsets()[:, 1],
+                                       s=scatter_data.get_sizes(), label=label,
+                                       color=color)
 
                     new_ax.set_xscale('log')
                     new_ax.set_yscale('log')

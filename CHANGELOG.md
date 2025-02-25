@@ -1,5 +1,21 @@
 # Qiita changelog
 
+Version 2025.02
+---------------
+
+Deployed on February 24th, 2025
+
+* Replaced os.rename for shutil.move in the code to fix [#3455](https://github.com/qiita-spots/qiita/issues/3455).
+* Via qp-spades, replaced the legacy `spades` command for `cloudSPAdes` for TellSeq.
+* `FASTA_preprocessed` within qtp-sequencing now allows for results to be named using their sample-name, extra from run-prefix.
+* `Remove SynDNA inserts & plasmid reads` superseded `Remove SynDNA reads`, which now removes SynDna inserts and plasmids.
+* `update_resource_allocation_redis` now relies on using equations stored in the database vs. hardcoded; thank you @Gossty!
+* SPP: Updated prep-info file generation to identify and report filtered fastq files that could not be matched to a sample-id instead of silently ignoring them.
+* SPP: Removed legacy test code and example files for amplicon processing. Some other tests updated and repurposed.
+* SPP: jobs are now easier to restart.
+* SPP: MultiQC report generation is now a separate slurm job & use jinja2 templates; also FastQC use jinja2 templates.
+
+
 Version 2025.01
 ---------------
 
