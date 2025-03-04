@@ -289,7 +289,7 @@ class ConfigurationManagerTests(TestCase):
         obs._get_portal(self.conf)
         self.assertEqual(obs.stats_map_center_longitude, -105.24827)
 
-    def test_get_postgres(self):
+    def test_get_oidc(self):
         SECTION_NAME = 'oidc_academicid'
         obs = ConfigurationManager()
         self.assertTrue(len(obs.oidc), 1)
@@ -504,8 +504,9 @@ STATS_MAP_CENTER_LONGITUDE =
 # client ID for Qiita as registered at your Identity Provider of choice
 CLIENT_ID = gi-qiita-prod
 
-# client secret to verify Qiita as the correct client. Not all IdPs require this
-CLIENT_SECRET =
+# client secret to verify Qiita as the correct client. Not all IdPs require
+# a client secret.
+CLIENT_SECRET = verySecretString
 
 # redirect URL (end point in your Qiita instance), to which the IdP redirects
 # after user types in his/her credentials. If you don't want to change code in
@@ -514,14 +515,24 @@ CLIENT_SECRET =
 # without the oidc_ prefix!
 REDIRECT_ENDPOINT = /auth/login_OIDC/academicid
 
-# URL for step 1: obtain code
-AUTHORIZE_URL = https://keycloak.sso.gwdg.de/auth/realms/academiccloud/protocol/openid-connect/auth
+# The URL of the well-known json document, specifying how API end points
+# like 'authorize', 'token' or 'userinfo' are defined. See e.g.
+# https://swagger.io/docs/specification/authentication/
+#    openid-connect-discovery/
+WELLKNOWN_URI = https://keycloak.sso.gwdg.de/.well-known/openid-configuration
 
-# URL for step 2: obtain user token
-ACCESS_TOKEN_URL = https://keycloak.sso.gwdg.de/auth/realms/academiccloud/protocol/openid-connect/token
+# a speaking label for the Identity Provider. Section name is used if empty.
+LABEL = GWDG Academic Cloud
 
-# URL for step 3: obtain user infos
-USERINFO_URL = https://keycloak.sso.gwdg.de/auth/realms/academiccloud/protocol/openid-connect/userinfo
+# The scope, i.e. fields about a user, which Qiita requests from the
+# Identity Provider, e.g. "profile email eduperson_orcid".
+# Will be automatically extended by the scope "openid", to enable the
+# "authorize_code" OIDC flow.
+SCOPE = openid
+
+# Optional. Name of a file in qiita_pet/static/img that shall be
+# displayed for login through Service Provider, instead of a plain button
+LOGO = oidc_lifescienceAAI.png
 """
 
 if __name__ == '__main__':
