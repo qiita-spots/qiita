@@ -320,8 +320,6 @@ class ConfigurationManagerTests(TestCase):
         obs._get_oidc(self.conf)
         self.assertEqual(obs.oidc['academicid']['label'], 'academicid')
 
-<<<<<<< HEAD
-=======
         self.assertEqual(obs.oidc['academicid']['scope'], 'openid')
         # test fallback, if no scope is provided
         self.conf.set(SECTION_NAME, 'SCOPE', '')
@@ -332,7 +330,6 @@ class ConfigurationManagerTests(TestCase):
         self.conf.set(SECTION_NAME, 'SCOPE', 'email affiliation')
         obs._get_oidc(self.conf)
         self.assertTrue('openid' in obs.oidc['academicid']['scope'].split())
->>>>>>> c9d413af (using the well-known json dict instead of manually providing multiple API endpoints through the config file)
 
         self.assertEqual(obs.oidc['academicid']['logo'],
                          'oidc_lifescienceAAI.png')
