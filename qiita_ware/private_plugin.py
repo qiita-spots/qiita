@@ -292,14 +292,6 @@ def delete_sample_or_column(job):
         job._set_status('success')
 
 
-def _delete_analysis_artifacts(analysis):
-    aids = [a.id for a in analysis.artifacts if not a.parents]
-    aids.sort(reverse=True)
-    for aid in aids:
-        qdb.artifact.Artifact.delete(aid)
-    qdb.analysis.Analysis.delete(analysis.id)
-
-
 def delete_study(job):
     """Deletes a full study
 
@@ -315,7 +307,7 @@ def delete_study(job):
 
         # deleting analyses
         for analysis in study.analyses():
-            _delete_analysis_artifacts(analysis)
+            qdb.analysis.Analysis.delete_analysis_artifacts(analysis.id)
 
         for pt in study.prep_templates():
             if pt.artifact is not None:
@@ -375,9 +367,7 @@ def delete_analysis(job):
     """
     with qdb.sql_connection.TRN:
         analysis_id = job.parameters.values['analysis_id']
-        analysis = qdb.analysis.Analysis(analysis_id)
-
-        _delete_analysis_artifacts(analysis)
+        qdb.analysis.Analysis.delete_analysis_artifacts(analysis_id)
 
         r_client.delete('analysis_delete_%d' % analysis_id)
 

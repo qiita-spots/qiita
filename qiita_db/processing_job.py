@@ -582,10 +582,10 @@ class ProcessingJob(qdb.base.QiitaObject):
         TTRN = qdb.sql_connection.TRN
         with TTRN:
             command = parameters.command
-
-            # check if a job with the same parameters already exists
-            sql = """SELECT processing_job_id, email, processing_job_status,
-                        COUNT(aopj.artifact_id)
+            if not force:
+                # check if a job with the same parameters already exists
+                sql = """SELECT processing_job_id, email,
+                        processing_job_status, COUNT(aopj.artifact_id)
                      FROM qiita.processing_job
                      LEFT JOIN qiita.processing_job_status
                         USING (processing_job_status_id)
@@ -596,41 +596,42 @@ class ProcessingJob(qdb.base.QiitaObject):
                      GROUP BY processing_job_id, email,
                         processing_job_status"""
 
-            # we need to use ILIKE because of booleans as they can be
-            # false or False
-            params = []
-            for k, v in parameters.values.items():
-                # this is necessary in case we have an Iterable as a value
-                # but that is string
-                if isinstance(v, Iterable) and not isinstance(v, str):
-                    for vv in v:
-                        params.extend([k, str(vv)])
+                # we need to use ILIKE because of booleans as they can be
+                # false or False
+                params = []
+                for k, v in parameters.values.items():
+                    # this is necessary in case we have an Iterable as a value
+                    # but that is string
+                    if isinstance(v, Iterable) and not isinstance(v, str):
+                        for vv in v:
+                            params.extend([k, str(vv)])
+                    else:
+                        params.extend([k, str(v)])
+
+                if params:
+                    # divided by 2 as we have key-value pairs
+                    len_params = int(len(params)/2)
+                    sql = sql.format(' AND ' + ' AND '.join(
+                        ["command_parameters->>%s ILIKE %s"] * len_params))
+                    params = [command.id] + params
+                    TTRN.add(sql, params)
                 else:
-                    params.extend([k, str(v)])
+                    # the sql variable expects the list of parameters but if
+                    # there is no param we need to replace the {0} with an
+                    # empty string
+                    TTRN.add(sql.format(""), [command.id])
 
-            if params:
-                # divided by 2 as we have key-value pairs
-                len_params = int(len(params)/2)
-                sql = sql.format(' AND ' + ' AND '.join(
-                    ["command_parameters->>%s ILIKE %s"] * len_params))
-                params = [command.id] + params
-                TTRN.add(sql, params)
-            else:
-                # the sql variable expects the list of parameters but if there
-                # is no param we need to replace the {0} with an empty string
-                TTRN.add(sql.format(""), [command.id])
-
-            # checking that if the job status is success, it has children
-            # [2] status, [3] children count
-            existing_jobs = [r for r in TTRN.execute_fetchindex()
-                             if r[2] != 'success' or r[3] > 0]
-            if existing_jobs and not force:
-                raise ValueError(
-                    'Cannot create job because the parameters are the same as '
-                    'jobs that are queued, running or already have '
-                    'succeeded:\n%s' % '\n'.join(
-                        ["%s: %s" % (jid, status)
-                         for jid, _, status, _ in existing_jobs]))
+                # checking that if the job status is success, it has children
+                # [2] status, [3] children count
+                existing_jobs = [r for r in TTRN.execute_fetchindex()
+                                 if r[2] != 'success' or r[3] > 0]
+                if existing_jobs:
+                    raise ValueError(
+                        'Cannot create job because the parameters are the '
+                        'same as jobs that are queued, running or already '
+                        'have succeeded:\n%s' % '\n'.join(
+                            ["%s: %s" % (jid, status)
+                             for jid, _, status, _ in existing_jobs]))
 
             sql = """INSERT INTO qiita.processing_job
                         (email, command_id, command_parameters,
@@ -2052,23 +2053,25 @@ class ProcessingJob(qdb.base.QiitaObject):
     def trace(self):
         """ Returns as a text array the full trace of the job, from itself
             to validators and complete jobs"""
-        lines = [f'{self.id} [{self.external_id}]: '
+        lines = [f'{self.id} [{self.external_id}] ({self.status}): '
                  f'{self.command.name} | {self.resource_allocation_info}']
         cjob = self.complete_processing_job
         if cjob is not None:
-            lines.append(f'  {cjob.id} [{cjob.external_id}] | '
+            lines.append(f'  {cjob.id} [{cjob.external_id}] ({cjob.status})| '
                          f'{cjob.resource_allocation_info}')
             vjob = self.release_validator_job
             if vjob is not None:
                 lines.append(f'    {vjob.id} [{vjob.external_id}] '
-                             f'| {vjob.resource_allocation_info}')
+                             f' ({vjob.status}) | '
+                             f'{vjob.resource_allocation_info}')
         for v in self.validator_jobs:
-            lines.append(f'     {v.id} [{v.external_id}]: '
+            lines.append(f'     {v.id} [{v.external_id}] ({v.status}): '
                          f'{v.command.name} | {v.resource_allocation_info}')
             cjob = v.complete_processing_job
             if cjob is not None:
                 lines.append(f'         {cjob.id} [{cjob.external_id}] '
-                             f'| {cjob.resource_allocation_info}')
+                             f'({cjob.status}) | '
+                             f'{cjob.resource_allocation_info}')
         return lines
 
 

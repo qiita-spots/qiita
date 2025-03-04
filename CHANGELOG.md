@@ -1,5 +1,72 @@
 # Qiita changelog
 
+Version 2025.02
+---------------
+
+Deployed on February 24th, 2025
+
+* Replaced os.rename for shutil.move in the code to fix [#3455](https://github.com/qiita-spots/qiita/issues/3455).
+* Via qp-spades, replaced the legacy `spades` command for `cloudSPAdes` for TellSeq.
+* `FASTA_preprocessed` within qtp-sequencing now allows for results to be named using their sample-name, extra from run-prefix.
+* `Remove SynDNA inserts & plasmid reads` superseded `Remove SynDNA reads`, which now removes SynDna inserts and plasmids.
+* `update_resource_allocation_redis` now relies on using equations stored in the database vs. hardcoded; thank you @Gossty!
+* SPP: Updated prep-info file generation to identify and report filtered fastq files that could not be matched to a sample-id instead of silently ignoring them.
+* SPP: Removed legacy test code and example files for amplicon processing. Some other tests updated and repurposed.
+* SPP: jobs are now easier to restart.
+* SPP: MultiQC report generation is now a separate slurm job & use jinja2 templates; also FastQC use jinja2 templates.
+
+
+Version 2025.01
+---------------
+
+Deployed on January 15th, 2025
+
+* The Analysis owner is now displayed in the analysis list and the individual analysis page.
+* Admins can now use the per-preparation "Download Data Release" button to get a "BIOM" release; this version is focus on NPH data releases.
+* Improved complete_job creation time, which should result in Qiita jobs ([multiple steps](https://qiita.ucsd.edu/static/doc/html/dev/resource_allocation.html) finishing faster; for bencharks visit [patch 93.sql](https://github.com/qiita-spots/qiita/blob/master/qiita_db/support_files/patches/93.sql).
+* SPP improvements: TellSeq support added; plugin refactored to allow for easier additions like TellSeq in the future. Job restart greatly improved. Much improved handling of sample-names and ids that contain substrings like ‘I1’ and ‘R2’. New SequenceCount job can count sequences and base-pairs in parallel for any list of fastq files.
+* Other general fixes [#3440](https://github.com/qiita-spots/qiita/pull/3440), [#3445](https://github.com/qiita-spots/qiita/pull/3445), [#3446](https://github.com/qiita-spots/qiita/pull/3446),
+
+
+Version 2024.10
+---------------
+
+Deployed on October 14th, 2024
+
+* Added update_resource_allocation_redis and companion code, so resource allocations summaries are available for review. Thank you @Gossty!
+* Now is possible to have default workflows with only one step.
+* `qiita_client.update_job_step` now accepts an ignore_error optional parameter. Thank you @charles-cowart!
+* Initial changes in `qiita_client` to have more accurate variable names: `QIITA_SERVER_CERT` -> `QIITA_ROOTCA_CERT`. Thank you @charles-cowart!
+* Added `get_artifact_html_summary` to `qiita_client` to retrieve the summary file of an artifact.
+* Re-added github actions to `https://github.com/qiita-spots/qiita_client`.
+* `SortMeRNA v4.3.7` superseded `Sortmerna v2.1b`, which relies on Silva 138 and now produced even mates. Thank you @ekopylova and @biocodz for the support.
+* `Remove SynDNA reads` superseded `SynDNA Woltka`, which now generates even mates.
+* `Woltka v0.1.7, paired-end` superseded `Woltka v0.1.6` in `qp-woltka`; [more information](https://qiita.ucsd.edu/static/doc/html/processingdata/woltka_pairedend.html). Thank you to @qiyunzhu for the benchmarks!
+* Other general fixes, like [#3424](https://github.com/qiita-spots/qiita/pull/3424), [#3425](https://github.com/qiita-spots/qiita/pull/3425), [#3439](https://github.com/qiita-spots/qiita/pull/3439), [#3440](https://github.com/qiita-spots/qiita/pull/3440).
+* General SPP improvements, like: [NuQC modified to preserve metadata in fastq files](https://github.com/biocore/mg-scripts/pull/155), [use squeue instead of sacct](https://github.com/biocore/mg-scripts/pull/152), , [job aborts if Qiita study contains sample metadata columns reserved for prep-infos](https://github.com/biocore/mg-scripts/pull/151), [metapool generates OverrideCycles value](https://github.com/biocore/metagenomics_pooling_notebook/pull/225).
+* We updated the available parameters for `Filter features against reference [filter_features]`, `Non V4 16S sequence assessment [non_v4_16s]` and all the phylogenetic analytical commands so they can use `Greengenes2 2024.09`.
+
+
+
+Version 2024.07
+---------------
+
+Deployed on July 15th, 2024
+
+* On June 14th, 2024 we modified the SPP to use ["fastp & minimap2 against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0, then Movi against GRCh38.p14, T2T-CHM13v2.0 + Human Pangenome Reference Consortium release 2023"](https://github.com/cguccione/human_host_filtration) to filter human-reads.
+* Full refactor of the [DB patching system](https://github.com/qiita-spots/qiita/blob/master/CONTRIBUTING.md#patch-91sql) to make sure that a new production deployment has a fully empty database.
+* Fully removed Qiimp from Qiita.
+* Users can now add `ORCID`, `ResearchGate` and/or `GoogleScholar` information to their profile and the creation (registration) timestamp is kept in the database. Thank you @jlab.
+* Admins can now track and purge non-confirmed users from the database via the GUI (`/admin/purge_users/`). Thank you @jlab.
+* Added `qiita.slurm_resource_allocations` to store general job resource usage, which can be populated by `qiita_db.util.update_resource_allocation_table`.
+* Added `qiita_db.util.resource_allocation_plot` to generate different models to allocate resources from a given software command based on previous jobs, thank you @Gossty !
+* The stats page map can be centered via the configuration file; additionally, the Help and Admin emails are defined also via the configuration files, thank you @jlab !
+* ``Sequel IIe``, ``Revio``, and ``Onso`` are now valid instruments for the ``PacBio_SMRT`` platform.
+* Added `current_human_filtering` to the prep-information and `human_reads_filter_method` to the artifact to keep track of the method that it was used to human reads filter the raw artifact and know if it's up to date with what is expected via the best practices.
+* Added `reprocess_job_id` to the prep-information so we keep track if a preparation has been reprocessed with another job.
+* Other general fixes, like [#3385](https://github.com/qiita-spots/qiita/pull/3385), [#3397](https://github.com/qiita-spots/qiita/pull/3397), [#3399](https://github.com/qiita-spots/qiita/pull/3399), [#3400](https://github.com/qiita-spots/qiita/pull/3400), [#3409](https://github.com/qiita-spots/qiita/pull/3409), [#3410](https://github.com/qiita-spots/qiita/pull/3410).
+
+
 Version 2024.02
 ---------------
 
@@ -167,7 +234,7 @@ Version 2021.11
 * Allow chucked download of metadata files in analyses; this allows to process large meta-analysis (like those for The Microsetta Initiative) without worker blockage.
 * Added to the qp-qiime2 plugin the possibility of filtering tables based on system available "FeatureData[Sequence]"; to start we added 90/100/150 bps bloom tables.
 * Now we can instantiate a study via their title (Study.from_title); this will facilitate orchestration with qebil.
-* Speed up Study listing for admins and general users; the admin study display came down from 20 to 2 seconds.  
+* Speed up Study listing for admins and general users; the admin study display came down from 20 to 2 seconds.
 * Fixed the following issues: [3142](https://github.com/qiita-spots/qiita/issues/3142), [3149](https://github.com/qiita-spots/qiita/issues/3149), [3150](https://github.com/qiita-spots/qiita/issues/3150), [3119](https://github.com/qiita-spots/qiita/issues/3119), and [3160](https://github.com/qiita-spots/qiita/issues/3160).
 
 

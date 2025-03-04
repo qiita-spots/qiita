@@ -1995,9 +1995,20 @@ class DefaultWorkflow(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             db_edges = qdb.sql_connection.TRN.execute_fetchindex()
 
+            # let's track what nodes are actually being used so if they do not
+            # have an edge we still return them as part of the graph
+            used_nodes = nodes.copy()
             for edge_id, p_id, c_id in db_edges:
                 e = DefaultWorkflowEdge(edge_id)
                 g.add_edge(nodes[p_id], nodes[c_id], connections=e)
+                if p_id in used_nodes:
+                    del used_nodes[p_id]
+                if c_id in used_nodes:
+                    del used_nodes[c_id]
+            # adding the missing nodes
+            for ms in used_nodes:
+                g.add_node(nodes[ms])
+
         return g
 
     @property

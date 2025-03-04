@@ -49,13 +49,13 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, exists, getsize
-from os import walk, remove, listdir, rename, stat
+from os import walk, remove, listdir, stat, makedirs
 from glob import glob
 from shutil import move, rmtree, copy as shutil_copy
 from openpyxl import load_workbook
 from tempfile import mkstemp
 from csv import writer as csv_writer
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import time as now
 from itertools import chain
 from contextlib import contextmanager
@@ -64,42 +64,22 @@ from humanize import naturalsize
 import hashlib
 from smtplib import SMTP, SMTP_SSL, SMTPException
 
-from os import makedirs
 from errno import EEXIST
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 from subprocess import check_output
 import qiita_db as qdb
 
-
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from datetime import timedelta
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 import numpy as np
 import pandas as pd
 from io import StringIO
 from json import loads
 from scipy.optimize import minimize
-
-# memory constant functions defined for @resource_allocation_plot
-mem_model1 = (lambda x, k, a, b: k * np.log(x) + x * a + b)
-mem_model2 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 + a)
-mem_model3 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
-              a * np.log(x)**3)
-mem_model4 = (lambda x, k, a, b: k * np.log(x) + b * np.log(x)**2 +
-              a * np.log(x)**2.5)
-MODELS_MEM = [mem_model1, mem_model2, mem_model3, mem_model4]
-
-# time constant functions defined for @resource_allocation_plot
-time_model1 = (lambda x, k, a, b: a + b + np.log(x) * k)
-time_model2 = (lambda x, k, a, b: a + b * x + np.log(x) * k)
-time_model3 = (lambda x, k, a, b: a + b * np.log(x)**2 + np.log(x) * k)
-time_model4 = (lambda x, k, a, b: a * np.log(x)**3 + b * np.log(x)**2
-               + np.log(x) * k)
-
-MODELS_TIME = [time_model1, time_model2, time_model3, time_model4]
 
 
 def scrub_data(s):
@@ -562,7 +542,7 @@ def move_upload_files_to_trash(study_id, files_to_move):
         new_fullpath = join(foldername, trash_folder, filename)
 
         if exists(fullpath):
-            rename(fullpath, new_fullpath)
+            move(fullpath, new_fullpath)
 
 
 def get_mountpoint(mount_type, retrieve_all=False, retrieve_subdir=False):
@@ -2096,7 +2076,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
         return []
 
     sql = """
-        SELECT analysis_id, a.name, a.description, a.timestamp,
+        SELECT analysis_id, a.name, a.description, a.timestamp, a.email,
             array_agg(DISTINCT artifact_id),
             array_agg(DISTINCT visibility),
             array_agg(DISTINCT CASE WHEN filepath_type = 'plain_text'
@@ -2117,7 +2097,8 @@ def generate_analysis_list(analysis_ids, public_only=False):
 
         qdb.sql_connection.TRN.add(sql, [tuple(analysis_ids)])
         for row in qdb.sql_connection.TRN.execute_fetchindex():
-            aid, name, description, ts, artifacts, av, mapping_files = row
+            aid, name, description, ts, owner, artifacts, \
+                av, mapping_files = row
 
             av = 'public' if set(av) == {'public'} else 'private'
             if av != 'public' and public_only:
@@ -2138,7 +2119,7 @@ def generate_analysis_list(analysis_ids, public_only=False):
             results.append({
                 'analysis_id': aid, 'name': name, 'description': description,
                 'timestamp': ts.strftime("%m/%d/%y %H:%M:%S"),
-                'visibility': av, 'artifacts': artifacts,
+                'visibility': av, 'artifacts': artifacts, 'owner': owner,
                 'mapping_files': mapping_files})
 
     return results
@@ -2316,7 +2297,9 @@ def send_email(to, subject, body):
     msg = MIMEMultipart()
     msg['From'] = qiita_config.smtp_email
     msg['To'] = to
-    msg['Subject'] = subject
+    # we need to do 'replace' because the subject can have
+    # new lines in the middle of the string
+    msg['Subject'] = subject.replace('\n', '')
     msg.attach(MIMEText(body, 'plain'))
 
     # connect to smtp server, using ssl if needed
@@ -2345,17 +2328,13 @@ def send_email(to, subject, body):
         smtp.close()
 
 
-def resource_allocation_plot(df, cname, sname, col_name):
+def resource_allocation_plot(df, col_name):
     """Builds resource allocation plot for given filename and jobs
 
     Parameters
     ----------
     file : str, required
         Builds plot for the specified file name. Usually provided as tsv.gz
-    cname: str, required
-        Specified job type
-    sname: str, required
-        Specified job sub type.
     col_name: str, required
         Specifies x axis for the graph
 
@@ -2372,19 +2351,70 @@ def resource_allocation_plot(df, cname, sname, col_name):
     fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
     ax = axs[0]
+    mem_models, time_models = retrieve_equations()
+
     # models for memory
     _resource_allocation_plot_helper(
-        df, ax, cname, sname, "MaxRSSRaw", MODELS_MEM, col_name)
-
+        df, ax, "MaxRSSRaw",  mem_models, col_name)
     ax = axs[1]
     # models for time
     _resource_allocation_plot_helper(
-        df, ax, cname, sname, "ElapsedRaw", MODELS_TIME, col_name)
+        df, ax, "ElapsedRaw",  time_models, col_name)
 
     return fig, axs
 
 
-def _retrieve_resource_data(cname, sname, columns):
+def retrieve_equations():
+    '''
+    Helper function for resource_allocation_plot.
+    Retrieves equations from db. Creates dictionary for memory and time models.
+
+    Returns
+    -------
+    tuple
+        dict
+            memory models - potential memory models for resource allocations
+        dict
+            time models - potential time models for resource allocations
+    '''
+    memory_models = {}
+    time_models = {}
+    res = []
+    with qdb.sql_connection.TRN:
+        sql = ''' SELECT * FROM qiita.allocation_equations; '''
+        qdb.sql_connection.TRN.add(sql)
+        res = qdb.sql_connection.TRN.execute_fetchindex()
+    for models in res:
+        if 'mem' in models[1]:
+            memory_models[models[1]] = {
+                "equation_name": models[2],
+                "equation": lambda x, k, a, b: eval(models[2])
+            }
+        else:
+            time_models[models[1]] = {
+                "equation_name": models[2],
+                "equation": lambda x, k, a, b: eval(models[2])
+            }
+    return (memory_models, time_models)
+
+
+def retrieve_resource_data(cname, sname, version, columns):
+    '''
+    Retrieves resource data from db and constructs a DataFrame with relevant
+    fields.
+
+    Parameters
+    ----------
+    cname - command name for which we retrieve the resources
+    sname - software name for which we retrieve the resources
+    version - version of sftware for whhich we retrieve the resources
+    columns - column names for the DataFrame returned by this function
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with resources.
+    '''
     with qdb.sql_connection.TRN:
         sql = """
             SELECT
@@ -2414,16 +2444,17 @@ def _retrieve_resource_data(cname, sname, columns):
                 ON pr.processing_job_id = sra.processing_job_id
             WHERE
                 sc.name = %s
-                AND s.name = %s;
+                AND s.name = %s
+                AND s.version = %s
             """
-        qdb.sql_connection.TRN.add(sql, sql_args=[cname, sname])
+        qdb.sql_connection.TRN.add(sql, sql_args=[cname, sname, version])
         res = qdb.sql_connection.TRN.execute_fetchindex()
         df = pd.DataFrame(res, columns=columns)
         return df
 
 
 def _resource_allocation_plot_helper(
-        df, ax, cname, sname, curr, models, col_name):
+        df, ax, curr, models, col_name):
     """Helper function for resource allocation plot. Builds plot for MaxRSSRaw
     and ElapsedRaw
 
@@ -2440,14 +2471,25 @@ def _resource_allocation_plot_helper(
     col_name: str, required
         Specifies x axis for the graph
     curr: str, required
-        Either MaxRSSRaw or ElapsedRaw
-    models: list, required
-        List of functions that will be used for visualization
+        Either MaxRSSRaw or ElapsedRaw (y axis)
+    models: dictionary, required. Follows this structure
+        equation_name: string
+            Human readable representation of the equation
+        equation: Python lambda function
+            Lambda function representing equation to optimizse
 
+    Returns
+    -------
+    best_model_name: string
+        the name of the best model from the table
+    best_model: function
+        best fitting function for the current dictionary models
+    options: object
+        object containing constants for the best model (e.g. k, a, b in kx+b*a)
     """
 
     x_data, y_data = df[col_name], df[curr]
-    ax.scatter(x_data, y_data, s=2, label="data")
+    # ax.scatter(x_data, y_data, s=2, label="data")
     d = dict()
     for index, row in df.iterrows():
         x_value = row[col_name]
@@ -2477,37 +2519,53 @@ def _resource_allocation_plot_helper(
     ax.set_ylabel(curr)
     ax.set_xlabel(col_name)
 
-    # 100 - number of maximum iterations, 3 - number of failures we tolerate
-    best_model, options = _resource_allocation_calculate(
-        df, x_data, y_data, models, curr, col_name, 100, 3)
+    # 50 - number of maximum iterations, 3 - number of failures we tolerate
+    best_model_name, best_model, options = _resource_allocation_calculate(
+        df, x_data, y_data, models, curr, col_name, 50, 3)
     k, a, b = options.x
     x_plot = np.array(sorted(df[col_name].unique()))
     y_plot = best_model(x_plot, k, a, b)
     ax.plot(x_plot, y_plot, linewidth=1, color='orange')
 
+    cmin_value = min(y_plot)
+    cmax_value = max(y_plot)
+
     maxi = naturalsize(df[curr].max(), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(df[curr].max()))
-    cmax = naturalsize(max(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
-        timedelta(seconds=float(max(y_plot)))
+    cmax = naturalsize(cmax_value, gnu=True) if curr == "MaxRSSRaw" else \
+        str(timedelta(seconds=round(cmax_value, 2))).rstrip('0').rstrip('.')
 
     mini = naturalsize(df[curr].min(), gnu=True) if curr == "MaxRSSRaw" else \
         timedelta(seconds=float(df[curr].min()))
-    cmin = naturalsize(min(y_plot), gnu=True) if curr == "MaxRSSRaw" else \
-        timedelta(seconds=float(min(y_plot)))
+    cmin = naturalsize(cmin_value, gnu=True) if curr == "MaxRSSRaw" else \
+        str(timedelta(seconds=round(cmin_value, 2))).rstrip('0').rstrip('.')
 
     x_plot = np.array(df[col_name])
-    failures_df = _resource_allocation_failures(
+    success_df, failures_df = _resource_allocation_success_failures(
         df, k, a, b, best_model, col_name, curr)
     failures = failures_df.shape[0]
-
     ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
                label="failures")
+    success_df['node_name'] = success_df['node_name'].fillna('unknown')
+    slurm_hosts = set(success_df['node_name'].tolist())
+    cmap = colormaps.get_cmap('Accent')
+    if len(slurm_hosts) > len(cmap.colors):
+        raise ValueError(f"""'Accent' colormap only has {len(cmap.colors)}
+                     colors, but {len(slurm_hosts)} hosts are provided.""")
+    colors = cmap.colors[:len(slurm_hosts)]
 
-    ax.set_title(f'{cname}: {sname}\n real: {mini} || {maxi}\n'
+    for i, host in enumerate(slurm_hosts):
+        host_df = success_df[success_df['node_name'] == host]
+        ax.scatter(host_df[col_name], host_df[curr], color=colors[i], s=3,
+                   label=host)
+    ax.set_title(
+                 f'k||a||b: {k}||{a}||{b}\n'
+                 f'model: {models[best_model_name]["equation_name"]}\n'
+                 f'real: {mini} || {maxi}\n'
                  f'calculated: {cmin} || {cmax}\n'
                  f'failures: {failures}')
     ax.legend(loc='upper left')
-    return best_model, options
+    return best_model_name, best_model, options
 
 
 def _resource_allocation_calculate(
@@ -2525,8 +2583,11 @@ def _resource_allocation_calculate(
         current type (e.g. MaxRSSRaw)
     col_name: str, required
         Specifies x axis for the graph
-    models: list, required
-        List of functions that will be used for visualization
+    models: dictionary, required. Follows this structure
+        equation_name: string
+            Human readable representation of the equation
+        equation: Python lambda function
+            Lambda function representing equation to optimizse
     depth: int, required
         Maximum number of iterations in binary search
     tolerance: int, required,
@@ -2534,18 +2595,22 @@ def _resource_allocation_calculate(
 
     Returns
     ----------
+    best_model_name: string
+        the name of the best model from the table
     best_model: function
-        best fitting function for the current list models
+        best fitting function for the current dictionary models
     best_result: object
         object containing constants for the best model (e.g. k, a, b in kx+b*a)
     """
 
     init = [1, 1, 1]
+    best_model_name = None
     best_model = None
     best_result = None
     best_failures = np.inf
     best_max = np.inf
-    for model in models:
+    for model_name, model in models.items():
+        model_equation = model['equation']
         # start values for binary search, where sl is left, sr is right
         # penalty weight must be positive & non-zero, hence, sl >= 1.
         # the upper bound for error can be an arbitrary large number
@@ -2563,11 +2628,15 @@ def _resource_allocation_calculate(
         while left < right and cnt < depth:
             middle = (left + right) // 2
             options = minimize(_resource_allocation_custom_loss, init,
-                               args=(x, y, model, middle))
+                               args=(x, y, model_equation, middle))
             k, a, b = options.x
-            failures_df = _resource_allocation_failures(
-                df, k, a, b, model, col_name, type_)
-            y_plot = model(x, k, a, b)
+            # important: here we take the 2nd (last) value of tuple since
+            # the helper function returns success, then failures.
+            failures_df = _resource_allocation_success_failures(
+                df, k, a, b, model_equation, col_name, type_)[-1]
+            y_plot = model_equation(x, k, a, b)
+            if not any(y_plot):
+                continue
             cmax = max(y_plot)
             cmin = min(y_plot)
             failures = failures_df.shape[0]
@@ -2612,9 +2681,10 @@ def _resource_allocation_calculate(
             if min_max <= best_max:
                 best_failures = prev_failures
                 best_max = min_max
-                best_model = model
+                best_model_name = model_name
+                best_model = model_equation
                 best_result = res
-    return best_model, best_result
+    return best_model_name, best_model, best_result
 
 
 def _resource_allocation_custom_loss(params, x, y, model, p):
@@ -2629,8 +2699,8 @@ def _resource_allocation_custom_loss(params, x, y, model, p):
         Represents x data for the function calculation
     y: pandas.Series (pandas column), required
         Represents y data for the function calculation
-    models: list, required
-        List of functions that will be used for visualization
+    model: Python function
+        Lambda function representing current equation
     p: int, required
         Penalty weight for custom loss function
 
@@ -2649,9 +2719,9 @@ def _resource_allocation_custom_loss(params, x, y, model, p):
     return np.mean(weighted_residuals)
 
 
-def _resource_allocation_failures(df, k, a, b, model, col_name, type_):
+def _resource_allocation_success_failures(df, k, a, b, model, col_name, type_):
     """Helper function for resource allocation plot. Creates a dataframe with
-    failures.
+    successes and failures given current model.
 
     Parameters
     ----------
@@ -2672,14 +2742,18 @@ def _resource_allocation_failures(df, k, a, b, model, col_name, type_):
 
     Returns
     ----------
-    pandas.Dataframe
-        Dataframe containing failures for current type.
+    tuple with:
+        pandas.Dataframe
+            Dataframe containing successes for current type.
+        pandas.Dataframe
+            Dataframe containing failures for current type.
     """
 
     x_plot = np.array(df[col_name])
     df[f'c{type_}'] = model(x_plot, k, a, b)
+    success_df = df[df[type_] <= df[f'c{type_}']]
     failures_df = df[df[type_] > df[f'c{type_}']]
-    return failures_df
+    return (success_df, failures_df)
 
 
 def MaxRSS_helper(x):
@@ -2730,19 +2804,19 @@ def update_resource_allocation_table(weeks=1, test=None):
 
     dates = ['', '']
 
+    slurm_external_id = 0
+    start_date = datetime.strptime('2023-04-28', '%Y-%m-%d')
     with qdb.sql_connection.TRN:
         sql = sql_timestamp
         qdb.sql_connection.TRN.add(sql)
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        slurm_external_id, timestamp = res[0]
-        if slurm_external_id is None:
-            slurm_external_id = 0
-        if timestamp is None:
-            dates[0] = datetime.strptime('2023-04-28', '%Y-%m-%d')
-        else:
-            dates[0] = timestamp
-        date1 = dates[0] + timedelta(weeks)
-        dates[1] = date1.strftime('%Y-%m-%d')
+        if res:
+            sei, sd = res[0]
+            if sei is not None:
+                slurm_external_id = sei
+            if sd is not None:
+                start_date = sd
+        dates = [start_date, start_date + timedelta(weeks=weeks)]
 
     sql_command = """
             SELECT
@@ -2769,27 +2843,23 @@ def update_resource_allocation_table(weeks=1, test=None):
         """
     df = pd.DataFrame()
     with qdb.sql_connection.TRN:
-        sql = sql_command
-        qdb.sql_connection.TRN.add(sql, sql_args=[slurm_external_id])
+        qdb.sql_connection.TRN.add(sql_command, sql_args=[slurm_external_id])
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        columns = ["processing_job_id", 'external_id']
-        df = pd.DataFrame(res, columns=columns)
+        df = pd.DataFrame(res, columns=["processing_job_id", 'external_id'])
         df['external_id'] = df['external_id'].astype(int)
 
     data = []
     sacct = [
         'sacct', '-p',
         '--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,End,CPUTimeRAW,'
-        'ReqMem,AllocCPUs,AveVMSize', '--starttime', dates[0], '--endtime',
-        dates[1], '--user', 'qiita', '--state', 'CD']
+        'ReqMem,AllocCPUs,AveVMSize,MaxVMSizeNode', '--starttime',
+        dates[0].strftime('%Y-%m-%d'), '--endtime',
+        dates[1].strftime('%Y-%m-%d'), '--user', 'qiita', '--state', 'CD']
 
     if test is not None:
         slurm_data = test
     else:
-        try:
-            rvals = StringIO(check_output(sacct)).decode('ascii')
-        except TypeError as e:
-            raise e
+        rvals = check_output(sacct).decode('ascii')
         slurm_data = pd.read_csv(StringIO(rvals), sep='|')
 
     # In slurm, each JobID is represented by 3 rows in the dataframe:
@@ -2811,15 +2881,19 @@ def update_resource_allocation_table(weeks=1, test=None):
     def merge_rows(rows):
         date_fmt = '%Y-%m-%dT%H:%M:%S'
         wait_time = (
-            datetime.strptime(rows.iloc[0]['Start'], date_fmt)
-            - datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
-        tmp = rows.iloc[1].copy()
+            datetime.strptime(rows.iloc[0]['Start'], date_fmt) -
+            datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
+        if rows.shape[0] >= 2:
+            tmp = rows.iloc[1].copy()
+        else:
+            tmp = rows.iloc[0].copy()
         tmp['WaitTime'] = wait_time
         return tmp
 
     slurm_data['external_id'] = slurm_data['JobID'].apply(
                                             lambda x: int(x.split('.')[0]))
     slurm_data['external_id'] = slurm_data['external_id'].ffill()
+
     slurm_data = slurm_data.groupby(
             'external_id').apply(merge_rows).reset_index(drop=True)
 
@@ -2901,6 +2975,7 @@ def update_resource_allocation_table(weeks=1, test=None):
     df['MaxRSSRaw'] = df.MaxRSS.apply(lambda x: MaxRSS_helper(str(x)))
     df['ElapsedRawTime'] = df.ElapsedRaw.apply(
         lambda x: timedelta(seconds=float(x)))
+    df.replace({np.nan: None}, inplace=True)
 
     for index, row in df.iterrows():
         with qdb.sql_connection.TRN:
@@ -2926,3 +3001,25 @@ def update_resource_allocation_table(weeks=1, test=None):
                 row['node_model']]
             qdb.sql_connection.TRN.add(sql, sql_args=to_insert)
             qdb.sql_connection.TRN.execute()
+
+
+def merge_overlapping_strings(str1, str2):
+    """Helper function to merge 2 overlapping strings
+
+    Parameters
+    ----------
+    str1: str
+        Initial string
+    str2: str
+        End string
+
+    Returns
+    ----------
+    str
+        The merged strings
+    """
+    overlap = ""
+    for i in range(1, min(len(str1), len(str2)) + 1):
+        if str1.endswith(str2[:i]):
+            overlap = str2[:i]
+    return str1 + str2[len(overlap):]

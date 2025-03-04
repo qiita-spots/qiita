@@ -21,6 +21,7 @@ from qiita_db.software import Command, Software, Parameters
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.util import get_visibilities, send_email
 from qiita_db.logger import LogEntry
+from qiita_db.meta_util import RAW_DATA_ARTIFACT_TYPE
 
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
@@ -208,8 +209,7 @@ def artifact_summary_get_request(user, artifact_id):
     # TODO: https://github.com/biocore/qiita/issues/1724 Remove this hardcoded
     # values to actually get the information from the database once it stores
     # the information
-    if artifact_type in ['SFF', 'FASTQ', 'FASTA', 'FASTA_Sanger',
-                         'per_sample_FASTQ']:
+    if artifact_type in RAW_DATA_ARTIFACT_TYPE:
         # If the artifact is one of the "raw" types, only the owner of the
         # study and users that has been shared with can see the files
         study = artifact.study

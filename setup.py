@@ -10,7 +10,7 @@
 from setuptools import setup
 from glob import glob
 
-__version__ = "2024.02"
+__version__ = "2025.02"
 
 
 classes = """
@@ -105,7 +105,8 @@ setup(name='qiita-spots',
       install_requires=['psycopg2', 'click', 'bcrypt', 'pandas<2.0',
                         'biom-format', 'tornado<6.0', 'toredis', 'redis',
                         'scp', 'pyparsing', 'h5py',  'natsort', 'nose', 'pep8',
-                        'networkx', 'humanize', 'wtforms<3.0.0', 'nltk',
+                        'networkx', 'humanize==4.11', 'wtforms<3.0.0',
+                        'nltk<=3.8.1',
                         'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx<3.0',
                         'gitpython', 'redbiom', 'pyzmq', 'sphinx_rtd_theme',
                         'paramiko', 'seaborn',  'matplotlib', 'scipy<=1.10.1',
