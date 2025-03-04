@@ -41,20 +41,52 @@ Here we generate a single BIOM table with the OTUs/per-sample. The OTU IDs are g
 
 Currently, we have the reference databases: Greengenes version 3_8-97, Silva 119 and Unite 7. Depending on your selection is if the reference has a phylogenetic tree.
 
+The Sequencing Processing Pipeline (SPP)
+----------------------------------------
+
+The Knight Lab Sequencing Processing Pipeline is provided by the `qp-klp plugin <https://github.com/qiita-spots/qp-knight-lab-processing>`_
+and it takes the internal BCL files, converts them to per-sample-FASTQ and does the QC and human-host sequencing filtering before
+the files are linked into the preparation. In other words, this is the Knight Lab pre-processing and automatic loading
+Metagenomic pipeline. Note that this is only available to Admins and only to process internally sequenced data.
+
+Historically the Knight Lab have used these filtering steps:
+
+#. atropos & bowtie2 against GRCh38.p7 + Phi X 174
+#. fastp & minimap2 against GRCh38.p7 + Phi X 174
+#. fastp & minimap2 against GRCh38.p7 + Phi X 174 **via SPP**
+#. fastp & minimap2 against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0
+#. fastp & minimap2 against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0 **via SPP**
+#. fastp & minimap2 run in paired end and single end mode against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0 + Human Pangenome Reference Consortium release 2023
+#. fastp & minimap2 run in paired end and single end mode against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0 + Human Pangenome Reference Consortium release 2023 **via SPP**
+#. fastp & minimap2 against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0, then Movi against GRCh38.p14, T2T-CHM13v2.0 + Human Pangenome Reference Consortium release 2023
+#. fastp & minimap2 against GRCh38.p14 + Phi X 174 + T2T-CHM13v2.0, then Movi against GRCh38.p14, T2T-CHM13v2.0 + Human Pangenome Reference Consortium release 2023 **via SPP**
+
+As part of the 2024.07 release, for easier tracking, we have added this information to the database and linked to the artifacts and preparations. The goal for the near future is to use the latest filtering on all the available data.
+
+References:
+
+- `Armstrong et al. 2022 <https://journals.asm.org/doi/10.1128/msystems.01378-21>`_.
+- `Guccione, Patel et al. 2024 <https://github.com/cguccione/human_host_filtration>`_.
+
 Shotgun sequencing
 ------------------
 
-Qiita currently has one active shotgun metagenomics data analysis pipeline: a per sample
+Qiita currently has one active shotgun metagenomics data analysis pipeline: a per sample, paired-end
 bowtie2 alignment step with Woltka classification using either the WoLr2 (default) or RS210 databases.
 Below you will find more information about each of these options.
 
 .. note::
-   The bowtie2 settings are maximum and minimum mismatch penalties (mp=[1,1]), a
-   penalty for ambiguities (np=1; default), read and reference gap open- and
+   The bowtie2 settings are set for interleaved processing with a maximum and minimum mismatch
+   penalties (mp=[1,1]), a penalty for ambiguities (np=1; default), read and reference gap open and
    extend penalties (rdg=[0,1], rfg=[0,1]), a minimum alignment score for an
    alignment to be considered valid (score-min=[L,0,-0.05]), a defined number of
    distinct, valid alignments (k=16), and the suppression of SAM records for
-   unaligned reads, as well as SAM headers (no-unal, no-hd).
+   unaligned reads, as well as SAM headers (no-unal, no-hd), and using end-to-end alignments
+   before using the multiseed heuristic (no-exact-upfront, no-1mm-upfront). More information visit:
+
+   .. toctree::
+
+      woltka_pairedend.rst
 
 The current workflow is as follows:
 
@@ -83,10 +115,9 @@ For more information about the versions in this plugin, visit:
 
    qp-fastp-minimap2.rst
 
-Note that the command produces up to 6 output artifacts based on the aligner and database selected:
+Note that the command produces up to 5 output artifacts based on the aligner and database selected:
 
-- Alignment Profile: contains the raw alignment file and the no rank classification BIOM table
-- Per genome Predictions: contains the per genome level predictions BIOM table
+- Per genome Predictions: contains the raw alignment file and the per genome level predictions BIOM table
 - Per gene Predictions: Only WoLr2, contains the per gene level predictions BIOM table
 - KEGG Pathways: Only WoLr2, contains the functional profile
 - KEGG Ontology (KO): Only WoLr2, contains the functional profile
@@ -94,7 +125,7 @@ Note that the command produces up to 6 output artifacts based on the aligner and
 
 
 .. note::
-   Woltka 0.1.4 only produces per-genome, per-gene and functional profiles as we are moving
+   Woltka 0.1.6 only produces per-genome, per-gene and functional profiles as we are moving
    to Operational Genomic Units (OGUs), which have higher resolution than taxonomic units
    for community ecology, and were shown to deliver stronger biological signals in
    downstream analyses. For more information please read: `Phylogeny-Aware Analysis of

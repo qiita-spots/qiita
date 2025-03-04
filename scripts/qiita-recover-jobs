@@ -31,7 +31,7 @@ def _submit_jobs(jids_to_recover, recover_type):
     st = int(ceil(SLEEP_TIME/CHANCES))
     len_jids_to_recover = len(jids_to_recover)
     for i, j in enumerate(jids_to_recover):
-        print('recovering %s: %d/%d' % (recover_type, len_jids_to_recover, i))
+        print(f'recovering {j} {recover_type}: {len_jids_to_recover}/{i}')
         job = ProcessingJob(j)
         job._set_status('in_construction')
         job.submit()
@@ -50,7 +50,8 @@ def _retrieve_queue_jobs():
 
     # ignore the merge-jobs and get unique values
     qiita_jids = jobs.NAME.str.replace('merge-', '').unique()
-    qiita_jids = [x.replace('.txt', '') for x in qiita_jids]
+    qiita_jids = [x.replace(
+        'finish-', '').replace('.txt', '') for x in qiita_jids]
 
     return set(qiita_jids)
 

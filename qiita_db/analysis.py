@@ -216,6 +216,22 @@ class Analysis(qdb.base.QiitaObject):
         return instance
 
     @classmethod
+    def delete_analysis_artifacts(cls, _id):
+        """Deletes the artifacts linked to an artifact and then the analysis
+
+        Parameters
+        ----------
+        _id : int
+            The analysis id
+        """
+        analysis = cls(_id)
+        aids = [a.id for a in analysis.artifacts if not a.parents]
+        aids.sort(reverse=True)
+        for aid in aids:
+            qdb.artifact.Artifact.delete(aid)
+        cls.delete(analysis.id)
+
+    @classmethod
     def delete(cls, _id):
         """Deletes an analysis
 

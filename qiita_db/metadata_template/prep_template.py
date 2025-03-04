@@ -135,7 +135,7 @@ class PrepTemplate(MetadataTemplate):
             # data_type being created - if possible
             if investigation_type is None:
                 if data_type_str in TARGET_GENE_DATA_TYPES:
-                    investigation_type = 'Amplicon'
+                    investigation_type = 'AMPLICON'
                 elif data_type_str == 'Metagenomic':
                     investigation_type = 'WGS'
                 elif data_type_str == 'Metatranscriptomic':
@@ -271,6 +271,32 @@ class PrepTemplate(MetadataTemplate):
                 raise qdb.exceptions.QiitaDBExecutionError(
                     "Cannot remove prep template %d because it has an artifact"
                     " associated with it" % id_)
+
+            # artifacts that are archived are not returned as part of the code
+            # above and we need to clean them before moving forward
+            sql = """SELECT artifact_id
+                     FROM qiita.preparation_artifact
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, args)
+            archived_artifacts = set(
+                qdb.sql_connection.TRN.execute_fetchflatten())
+            ANALYSIS = qdb.analysis.Analysis
+            if archived_artifacts:
+                for aid in archived_artifacts:
+                    # before we can delete the archived artifact, we need
+                    # to delete the analyses where they were used.
+                    sql = """SELECT analysis_id
+                             FROM qiita.analysis
+                             WHERE analysis_id IN (
+                                SELECT DISTINCT analysis_id
+                                FROM qiita.analysis_sample
+                                WHERE artifact_id IN %s)"""
+                    qdb.sql_connection.TRN.add(sql, [tuple([aid])])
+                    analyses = set(
+                        qdb.sql_connection.TRN.execute_fetchflatten())
+                    for _id in analyses:
+                        ANALYSIS.delete_analysis_artifacts(_id)
+                    qdb.artifact.Artifact.delete(aid)
 
             # Delete the prep template filepaths
             sql = """DELETE FROM qiita.prep_template_filepath
@@ -782,13 +808,23 @@ class PrepTemplate(MetadataTemplate):
 
             parent_cmd_name = None
             parent_merging_scheme = None
+            phms = None
             if pcmd is not None:
                 parent_cmd_name = pcmd.name
                 parent_merging_scheme = pcmd.merging_scheme
+                if not parent_merging_scheme['ignore_parent_command']:
+                    phms = _get_node_info(workflow, parent)
 
-            return qdb.util.human_merging_scheme(
+            hms = qdb.util.human_merging_scheme(
                 ccmd.name, ccmd.merging_scheme, parent_cmd_name,
                 parent_merging_scheme, cparams, [], pparams)
+
+            # if the parent should not ignore its parent command, then we need
+            # to merge the previous result with the new one
+            if phms is not None:
+                hms = qdb.util.merge_overlapping_strings(hms, phms)
+
+            return hms
 
         def _get_predecessors(workflow, node):
             # recursive method to get predecessors of a given node
@@ -814,6 +850,9 @@ class PrepTemplate(MetadataTemplate):
 
                 pred.append(data)
                 return pred
+
+            # this is only helpful for when there are no _get_predecessors
+            return pred
 
         # Note: we are going to use the final BIOMs to figure out which
         #       processing is missing from the back/end to the front, as this
@@ -842,7 +881,7 @@ class PrepTemplate(MetadataTemplate):
                          'artifact transformation']
         merging_schemes = {
             qdb.archive.Archive.get_merging_scheme_from_job(j): {
-                x: y.id for x, y in j.outputs.items()}
+                x: str(y.id) for x, y in j.outputs.items()}
             # we are going to select only the jobs that were a 'success', that
             # are not 'hidden' and that have an output - jobs that are not
             # hidden and a successs but that do not have outputs are jobs which
@@ -937,6 +976,8 @@ class PrepTemplate(MetadataTemplate):
                     if set(merging_schemes[info]) >= set(cxns):
                         init_artifacts = merging_schemes[info]
                         break
+            if not predecessors:
+                pnode = node
             if init_artifacts is None:
                 pdp = pnode.default_parameter
                 pdp_cmd = pdp.command
@@ -958,7 +999,7 @@ class PrepTemplate(MetadataTemplate):
                     init_artifacts = {
                         wkartifact_type: f'{starting_job.id}:'}
                 else:
-                    init_artifacts = {wkartifact_type: self.artifact.id}
+                    init_artifacts = {wkartifact_type: str(self.artifact.id)}
 
             cmds_to_create.reverse()
             current_job = None

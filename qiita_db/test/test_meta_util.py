@@ -519,6 +519,30 @@ class MetaUtilTests(TestCase):
             '-', '').replace(':', '').replace(' ', '-')
         self.assertEqual(tgz_obs, [time])
 
+    def test_update_resource_allocation_redis(self):
+        cname = "Split libraries FASTQ"
+        sname = "QIIMEq2"
+        col_name = "samples * columns"
+        version = "1.9.1"
+        qdb.meta_util.update_resource_allocation_redis(False)
+        title_mem_str = 'resources$#%s$#%s$#%s$#%s:%s' % (
+            cname, sname, version, col_name, 'title_mem')
+        title_mem = str(r_client.get(title_mem_str))
+        self.assertTrue(
+            "model: (k * (np.log(x))) + "
+            "(b * ((np.log(x))**2)) + "
+            "(a * ((np.log(x))**2.5))" in title_mem
+        )
+
+        title_time_str = 'resources$#%s$#%s$#%s$#%s:%s' % (
+                        cname, sname, version, col_name, 'title_time')
+        title_time = str(r_client.get(title_time_str))
+        self.assertTrue(
+            "model: (a * ((np.log(x))**3)) + "
+            "(b * ((np.log(x))**2)) + "
+            "((np.log(x)) * k)" in title_time
+        )
+
 
 if __name__ == '__main__':
     main()

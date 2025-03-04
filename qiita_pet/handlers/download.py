@@ -9,7 +9,7 @@
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine
 
-from os.path import basename, getsize, join, isdir
+from os.path import basename, getsize, join, isdir, getctime
 from os import walk
 
 from .base_handlers import BaseHandler
@@ -23,7 +23,7 @@ from qiita_db.download_link import DownloadLink
 from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
                            get_filepath_information, get_mountpoint,
                            filepath_id_to_object_id, get_data_types,
-                           retrieve_filepaths)
+                           retrieve_filepaths, get_work_base_dir)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -35,6 +35,9 @@ from jose import jwt as jose_jwt
 from uuid import uuid4
 from base64 import b64encode
 from datetime import datetime, timedelta, timezone
+from tempfile import mkdtemp
+from zipfile import ZipFile
+from io import BytesIO
 
 
 class BaseHandlerDownload(BaseHandler):
@@ -371,6 +374,138 @@ class DownloadUpload(BaseHandlerDownload):
         self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('X-Accel-Redirect', '/protected/' + relpath)
         self._set_nginx_headers(basename(relpath))
+        self.finish()
+
+
+class DownloadDataReleaseFromPrep(BaseHandlerDownload):
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def get(self, prep_template_id):
+        """ This method constructs an on the fly ZIP with all the files
+            required for a data-prep release/data-delivery. Mainly sample, prep
+            info, bioms and coverage
+        """
+        user = self.current_user
+        if user.level not in ('admin', 'web-lab admin'):
+            raise HTTPError(403, reason="%s doesn't have access to download "
+                            "the data release files" % user.email)
+
+        pid = int(prep_template_id)
+        pt = PrepTemplate(pid)
+        sid = pt.study_id
+        st = SampleTemplate(sid)
+        date = datetime.now().strftime('%m%d%y-%H%M%S')
+        td = mkdtemp(dir=get_work_base_dir())
+
+        files = []
+        readme = [
+            f'Delivery created on {date}',
+            '',
+            f'Host (human) removal: {pt.artifact.human_reads_filter_method}',
+            '',
+            # this is not changing in the near future so just leaving
+            # hardcoded for now
+            'Main woltka reference: WoLr2, more info visit: '
+            'https://ftp.microbio.me/pub/wol2/',
+            '',
+            f"Qiita's prep: https://qiita.ucsd.edu/study/description/{sid}"
+            f"?prep_id={pid}",
+            '',
+        ]
+
+        # helper dict to add "user/human" friendly names to the bioms
+        human_names = {
+            'ec.biom': 'KEGG Enzyme (EC)',
+            'per-gene.biom': 'Per gene Predictions',
+            'none.biom': 'Per genome Predictions',
+            'cell_counts.biom': 'Cell counts',
+            'pathway.biom': 'KEGG Pathway',
+            'ko.biom': 'KEGG Ontology (KO)',
+            'rna_copy_counts.biom': 'RNA copy counts'
+        }
+
+        # sample-info creation
+        fn = join(td, f'sample_information_from_prep_{pid}.tsv')
+        readme.append(f'Sample information: {basename(fn)}')
+        files.append([fn, basename(fn)])
+        st.to_dataframe(samples=list(pt)).to_csv(fn, sep='\t')
+
+        # prep-info creation
+        fn = join(td, f'prep_information_{pid}.tsv')
+        readme.append(f'Prep information: {basename(fn)}')
+        files.append([fn, basename(fn)])
+        pt.to_dataframe().to_csv(fn, sep='\t')
+
+        readme.append('')
+
+        # finding the bioms to be added
+        bioms = dict()
+        coverages = None
+        for a in Study(sid).artifacts(artifact_type='BIOM'):
+            if a.prep_templates[0].id != pid:
+                continue
+            biom = None
+            for fp in a.filepaths:
+                if fp['fp_type'] == 'biom':
+                    biom = fp
+                if coverages is None and 'coverages.tgz' == basename(fp['fp']):
+                    coverages = fp['fp']
+            if biom is None:
+                continue
+            biom_fn = basename(biom['fp'])
+            # there is a small but real chance that the same prep has the same
+            # artifacts so using the latests
+            if biom_fn not in bioms:
+                bioms[biom_fn] = [a, biom]
+            else:
+                if getctime(biom['fp']) > getctime(bioms[biom_fn][1]['fp']):
+                    bioms[biom_fn] = [a, biom]
+
+        # once we have all the bioms, we can add them to the list of zips
+        # and to the readme the biom details and all the processing
+        for fn, (a, fp) in bioms.items():
+            aname = basename(fp["fp"])
+            nname = f'{a.id}_{aname}'
+            files.append([fp['fp'], nname])
+
+            hname = ''
+            if aname in human_names:
+                hname = human_names[aname]
+            readme.append(f'{nname}\t{hname}')
+
+            for an in set(a.ancestors.nodes()):
+                p = an.processing_parameters
+                if p is not None:
+                    c = p.command
+                    cn = c.name
+                    s = c.software
+                    sn = s.name
+                    sv = s.version
+                    pd = p.dump()
+                    readme.append(f'\t{cn}\t{sn}\t{sv}\t{pd}')
+
+        # if a coverage was found, add it to the list of files
+        if coverages is not None:
+            fn = basename(coverages)
+            readme.append(f'{fn}\tcoverage files')
+            files.append([coverages, fn])
+
+        fn = join(td, 'README.txt')
+        with open(fn, 'w') as fp:
+            fp.write('\n'.join(readme))
+        files.append([fn, basename(fn)])
+
+        zp_fn = f'data_release_{pid}_{date}.zip'
+        zp = BytesIO()
+        with ZipFile(zp, 'w') as zipf:
+            for fp, fn in files:
+                zipf.write(fp, fn)
+
+        self.set_header('Content-Type', 'application/zip')
+        self.set_header("Content-Disposition", f"attachment; filename={zp_fn}")
+        self.write(zp.getvalue())
+        zp.close()
         self.finish()
 
 

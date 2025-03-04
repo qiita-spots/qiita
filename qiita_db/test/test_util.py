@@ -790,9 +790,11 @@ class DBUtilTests(DBUtilTestsBase):
         exp = [{'mapping_files': [
                 (16, qdb.util.get_filepath_information(16)['fullpath'])],
                 'description': 'A test analysis', 'artifacts': [8, 9], 'name':
-                'SomeAnalysis', 'analysis_id': 1, 'visibility': 'private'},
+                'SomeAnalysis', 'owner': 'test@foo.bar', 'analysis_id': 1,
+                'visibility': 'private'},
                {'mapping_files': [], 'description': 'Another test analysis',
                 'artifacts': [], 'name': 'SomeSecondAnalysis',
+                'owner': 'admin@foo.bar',
                 'analysis_id': 2, 'visibility': 'private'}]
         # removing timestamp for testing
         for i in range(len(obs)):
@@ -1311,8 +1313,9 @@ class PurgeFilepathsTests(DBUtilTestsBase):
 
 class ResourceAllocationPlotTests(TestCase):
     def setUp(self):
-        self.CNAME = "Split libraries FASTQ"
-        self.SNAME = "QIIMEq2"
+        self.cname = "Split libraries FASTQ"
+        self.sname = "QIIMEq2"
+        self.version = "1.9.1"
         self.col_name = 'samples * columns'
         self.columns = [
                 "sName", "sVersion", "cID", "cName", "processing_job_id",
@@ -1321,13 +1324,12 @@ class ResourceAllocationPlotTests(TestCase):
 
         # df is a dataframe that represents a table with columns specified in
         # self.columns
-        self.df = qdb.util._retrieve_resource_data(
-                self.CNAME, self.SNAME, self.columns)
+        self.df = qdb.util.retrieve_resource_data(
+                self.cname, self.sname, self.version, self.columns)
 
     def test_plot_return(self):
         # check the plot returns correct objects
-        fig1, axs1 = qdb.util.resource_allocation_plot(
-            self.df, self.CNAME, self.SNAME, self.col_name)
+        fig1, axs1 = qdb.util.resource_allocation_plot(self.df, self.col_name)
         self.assertIsInstance(
             fig1, Figure,
             "Returned object fig1 is not a Matplotlib Figure")
@@ -1338,51 +1340,51 @@ class ResourceAllocationPlotTests(TestCase):
 
     def test_minimize_const(self):
         self.df = self.df[
-            (self.df.cName == self.CNAME) & (self.df.sName == self.SNAME)]
+            (self.df.cName == self.cname) & (self.df.sName == self.sname)]
         self.df.dropna(subset=['samples', 'columns'], inplace=True)
         self.df[self.col_name] = self.df.samples * self.df['columns']
         fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
 
-        bm, options = qdb.util._resource_allocation_plot_helper(
-            self.df, axs[0], self.CNAME, self.SNAME, 'MaxRSSRaw',
-            qdb.util.MODELS_MEM, self.col_name)
+        mem_models, time_models = qdb.util.retrieve_equations()
+        bm_name, bm, options = qdb.util._resource_allocation_plot_helper(
+            self.df, axs[0], 'MaxRSSRaw', mem_models, self.col_name)
         # check that the algorithm chooses correct model for MaxRSSRaw and
         # has 0 failures
         k, a, b = options.x
-        failures_df = qdb.util._resource_allocation_failures(
-            self.df, k, a, b, bm, self.col_name, 'MaxRSSRaw')
+        failures_df = qdb.util._resource_allocation_success_failures(
+            self.df, k, a, b, bm, self.col_name, 'MaxRSSRaw')[-1]
         failures = failures_df.shape[0]
-        self.assertEqual(bm, qdb.util.mem_model3,
+
+        self.assertEqual(bm_name, 'mem_model4',
+                         msg=f"""Best memory model
+                         doesn't match
+                         {bm_name} != 'mem_model4'""")
+        self.assertEqual(bm, mem_models['mem_model4']['equation'],
                          msg=f"""Best memory model
                                  doesn't match
                                  Coefficients:{k} {a} {b}
-                                 {qdb.util.mem_model1}, "qdb.util.mem_model1"
-                                 {qdb.util.mem_model2}, "qdb.util.mem_model2"
-                                 {qdb.util.mem_model3}, "qdb.util.mem_model3"
-                                 {qdb.util.mem_model4}, "qdb.util.mem_model4"
                             """)
         self.assertEqual(failures, 0, "Number of failures must be 0")
 
         # check that the algorithm chooses correct model for ElapsedRaw and
         # has 1 failure
-        bm, options = qdb.util._resource_allocation_plot_helper(
-            self.df, axs[1], self.CNAME, self.SNAME, 'ElapsedRaw',
-            qdb.util.MODELS_TIME, self.col_name)
+        bm_name, bm, options = qdb.util._resource_allocation_plot_helper(
+            self.df, axs[1], 'ElapsedRaw', time_models, self.col_name)
         k, a, b = options.x
-        failures_df = qdb.util._resource_allocation_failures(
-            self.df, k, a, b, bm, self.col_name, 'ElapsedRaw')
+        failures_df = qdb.util._resource_allocation_success_failures(
+            self.df, k, a, b, bm, self.col_name, 'ElapsedRaw')[-1]
         failures = failures_df.shape[0]
+        self.assertEqual(bm_name, 'time_model4',
+                         msg=f"""Best time model
+                         doesn't match
+                         {bm_name} != 'time_model4'""")
 
-        self.assertEqual(bm, qdb.util.time_model1,
+        self.assertEqual(bm, time_models[bm_name]['equation'],
                          msg=f"""Best time model
                                 doesn't match
                                 Coefficients:{k} {a} {b}
-                                 {qdb.util.time_model1}, "qdb.util.time_model1"
-                                 {qdb.util.time_model2}, "qdb.util.time_model2"
-                                 {qdb.util.time_model3}, "qdb.util.time_model3"
-                                 {qdb.util.time_model4}, "qdb.util.time_model4"
                                 """)
-        self.assertEqual(failures, 1, "Number of failures must be 1")
+        self.assertEqual(failures, 0, "Number of failures must be 0")
 
     def test_MaxRSS_helper(self):
         tests = [
@@ -1422,8 +1424,8 @@ class ResourceAllocationPlotTests(TestCase):
         qdb.util.update_resource_allocation_table(test=test_data)
 
         for curr_cname, ids in types.items():
-            updated_df = qdb.util._retrieve_resource_data(
-                    curr_cname, self.SNAME, self.columns)
+            updated_df = qdb.util.retrieve_resource_data(
+                    curr_cname, self.sname, self.version, self.columns)
             updated_ids_set = set(updated_df['processing_job_id'])
             previous_ids_set = set(self.df['processing_job_id'])
             for id in ids:

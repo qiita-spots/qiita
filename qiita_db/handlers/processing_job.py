@@ -146,7 +146,9 @@ class CompleteHandler(OauthBaseHandler):
                 cmd, values_dict={'job_id': job_id,
                                   'payload': self.request.body.decode(
                                       'ascii')})
-            job = qdb.processing_job.ProcessingJob.create(job.user, params)
+            # complete_job are unique so it is fine to force them to be created
+            job = qdb.processing_job.ProcessingJob.create(
+                job.user, params, force=True)
             job.submit()
 
         self.finish()

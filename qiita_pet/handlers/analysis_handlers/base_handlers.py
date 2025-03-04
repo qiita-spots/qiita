@@ -85,6 +85,7 @@ def analysis_description_handler_get_request(analysis_id, user):
             'analysis_is_public': analysis.is_public,
             'analysis_description': analysis.description,
             'analysis_mapping_id': analysis.mapping_file,
+            'analysis_owner': analysis.owner.email,
             'alert_type': alert_type,
             'artifacts': artifacts,
             'analysis_reservation': analysis._slurm_reservation()[0],
