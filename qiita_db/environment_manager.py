@@ -127,10 +127,11 @@ def _download_reference_files():
 
         _insert_processed_params(ref)
 
+
 def create_mountpoints():
-    r"""In a fresh qiita setup, sub-directories under qiita_config.base_data_dir
-        might not yet exist. To avoid failing in later steps, they are created
-        here.
+    r"""In a fresh qiita setup, sub-directories under
+        qiita_config.base_data_dir might not yet exist. To avoid failing in
+        later steps, they are created here.
     """
     with qdb.sql_connection.TRN:
         # Insert the settings values to the database
@@ -152,9 +153,10 @@ def create_mountpoints():
                 created_subdirs.append(subdir)
 
         if len(created_subdirs) > 0:
-            print("Created %i sub-directories as 'mount points' in '%s': %s" % (
-                len(created_subdirs), qiita_config.base_data_dir,
-                ', '.join(created_subdirs)))
+            print("Created %i sub-directories as 'mount points' in '%s': %s"
+                  % (len(created_subdirs), qiita_config.base_data_dir,
+                     ', '.join(created_subdirs)))
+
 
 def make_environment(load_ontologies, download_reference, add_demo_user):
     r"""Creates the new environment specified in the configuration
