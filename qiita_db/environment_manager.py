@@ -142,8 +142,7 @@ def create_mountpoints():
             for (ddid, subdir) in qdb.util.get_mountpoint(mountpoint,
                                                           retrieve_all=True):
                 if not exists(join(qiita_config.base_data_dir, subdir)):
-                    if qiita_config.test_environment and \
-                       exists(get_support_file('test_data', subdir)):
+                    if qiita_config.test_environment:
                         # if in test mode, we want to potentially fill the
                         # new directory with according test data
                         copytree(get_support_file('test_data', subdir),
