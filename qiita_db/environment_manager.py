@@ -145,7 +145,7 @@ def create_mountpoints():
                     if qiita_config.test_environment:
                         # if in test mode, we want to potentially fill the
                         # new directory with according test data
-                        copytree(get_support_file('test_data', subdir),
+                        copytree(get_support_file('test_data', mountpoint),
                                  join(qiita_config.base_data_dir, subdir))
                     else:
                         # in production mode, an empty directory is created
