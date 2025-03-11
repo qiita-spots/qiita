@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from os.path import abspath, dirname, join, exists, basename, splitext
+from shutil import copytree
 from functools import partial
 from os import mkdir
 import gzip
@@ -125,6 +126,36 @@ def _download_reference_files():
             files['taxonomy'][0], files['tree'][0])
 
         _insert_processed_params(ref)
+
+
+def create_mountpoints():
+    r"""In a fresh qiita setup, sub-directories under
+        qiita_config.base_data_dir might not yet exist. To avoid failing in
+        later steps, they are created here.
+    """
+    with qdb.sql_connection.TRN:
+        sql = """SELECT DISTINCT mountpoint FROM qiita.data_directory
+                 WHERE active = TRUE"""
+        qdb.sql_connection.TRN.add(sql)
+        created_subdirs = []
+        for mountpoint in qdb.sql_connection.TRN.execute_fetchflatten():
+            for (ddid, subdir) in qdb.util.get_mountpoint(mountpoint,
+                                                          retrieve_all=True):
+                if not exists(join(qiita_config.base_data_dir, subdir)):
+                    if qiita_config.test_environment:
+                        # if in test mode, we want to potentially fill the
+                        # new directory with according test data
+                        copytree(get_support_file('test_data', subdir),
+                                 join(qiita_config.base_data_dir, subdir))
+                    else:
+                        # in production mode, an empty directory is created
+                        mkdir(join(qiita_config.base_data_dir, subdir))
+                    created_subdirs.append(subdir)
+
+        if len(created_subdirs) > 0:
+            print("Created %i sub-directories as 'mount points':\n%s"
+                  % (len(created_subdirs),
+                     ''.join(map(lambda x: ' - %s\n' % x, created_subdirs))))
 
 
 def make_environment(load_ontologies, download_reference, add_demo_user):
@@ -396,6 +427,9 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
     if test:
         with qdb.sql_connection.TRN:
             _populate_test_db()
+
+    # create mountpoints as subdirectories in BASE_DATA_DIR
+    create_mountpoints()
 
     patch_update_sql = "UPDATE settings SET current_patch = %s"
     for sql_patch_fp in sql_patch_files[next_patch_index:]:
