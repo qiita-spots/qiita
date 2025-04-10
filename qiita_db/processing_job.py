@@ -1058,7 +1058,6 @@ class ProcessingJob(qdb.base.QiitaObject):
                     # error
                     self._set_error(str(e))
 
-
                 # note that parent_job_id is being passed transparently from
                 # submit declaration to the launcher.
                 # TODO: In proc launches should throw exceptions, that are
