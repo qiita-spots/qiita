@@ -1,5 +1,15 @@
 # Qiita changelog
 
+Version 2025.04
+---------------
+
+Deployed on April 11th, 2025
+
+* General improvements for automatic environment generation by @sjanssen2 (thank you!): [#3462](https://github.com/qiita-spots/qiita/pull/3462), [#3463](https://github.com/qiita-spots/qiita/pull/3463), [3464](https://github.com/qiita-spots/qiita/pull/3464), [#3465](https://github.com/qiita-spots/qiita/pull/3465).
+* When ProcessingJob.resource_allocation_info fails, it will now be [set as the error for the job](https://github.com/qiita-spots/qiita/pull/3466).
+* SPP: General updates and clean up: [#169](https://github.com/biocore/mg-scripts/pull/169), [#101](https://github.com/qiita-spots/qp-knight-lab-processing/pull/101).
+* `Remove SynDNA plasmid, insert, & CP026085 reads` superseded `Remove SynDNA inserts & plasmid reads`; which now removes SynDna plasmids, inserts, and CP026085 reads, in this order.
+
 Version 2025.02
 ---------------
 
