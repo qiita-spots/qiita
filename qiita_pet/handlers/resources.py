@@ -6,8 +6,7 @@ from .base_handlers import BaseHandler
 from qiita_core.qiita_settings import r_client
 from qiita_core.util import execute_as_transaction
 
-commands = 'resources:commands'
-default_col_name = "samples * columns"
+COMMANDS = 'resources:commands'
 
 
 class ResourcesHandler(BaseHandler):
@@ -34,7 +33,7 @@ class ResourcesHandler(BaseHandler):
 
     @execute_as_transaction
     def _get_commands(self, callback):
-        res = r_client.get(commands)
+        res = r_client.get(COMMANDS)
         callback(res)
 
     @authenticated
@@ -47,7 +46,6 @@ class ResourcesHandler(BaseHandler):
         commands_str = commands.decode('utf-8')
         commands_dict = ast.literal_eval(commands_str)
         commands_json = json.dumps(commands_dict)
-
         self.render('resources.html',
                     img_mem=None, img_time=None,
                     time=None,
@@ -69,9 +67,10 @@ class ResourcesHandler(BaseHandler):
             software = data.get('software')
             version = data.get('version')
             command = data.get('command')
+            col_name = data.get('col_name')
 
             resources = yield Task(self._get_resources, command, software,
-                                   version, default_col_name)
+                                   version, col_name)
 
             mcof, mmodel, mreal, mcalc, mfail = list(
                 map(lambda x: x.split(b": ")[1].strip().decode('utf-8'),
