@@ -1,0 +1,244 @@
+#!/usr/bin/env python
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+from time import sleep
+from glob import glob
+from os.path import isdir, basename, join
+from shutil import copyfile
+
+from qiita_db.study import Study
+from qiita_db.artifact import Artifact
+from qiita_db.commands import (
+    load_study_from_cmd, load_sample_template_from_cmd,
+    load_prep_template_from_cmd)
+from qiita_db.util import get_data_types, get_mountpoint, create_nested_path
+
+
+def load_qebil_study(folder, shared_with):
+    data_types = set([x.replace(' ', '_') for x in get_data_types()])
+
+    warnings = []
+    extra_notes = dict()
+
+    files = glob(f'{folder}/*')
+    files_used = []
+    qebil_status_fp = [f for f in files if f.endswith('qebil_status')][0]
+    with open(qebil_status_fp, 'r') as fp:
+        qebil_status = fp.readlines()[0]
+    if 'complete' not in qebil_status:
+        print(f'Skipping {qebil_status_fp}, not ready: {qebil_status}')
+        return
+    files_used.append(qebil_status_fp)
+
+    title_fp = [f for f in files if f.endswith('_study_title.txt')][0]
+    files_used.append(title_fp)
+    config_fp = [f for f in files if f.endswith('_study_config.txt')][0]
+    files_used.append(config_fp)
+    sample_fp = [f for f in files if f.endswith('_sample_info.tsv')][0]
+    files_used.append(sample_fp)
+
+    with open(title_fp, 'r') as fp:
+        title = fp.readlines()[0]
+
+    if Study.exists(title):
+        print(f'======> {folder}: {title} already loaded')
+        return
+
+    with open(config_fp, 'r') as fp:
+        study = load_study_from_cmd('qiita.help@gmail.com', title, fp)
+
+    print('===================')
+    print('===================')
+    print('===================')
+    print(f'study {study.id} created')
+    print('===================')
+    print('===================')
+
+    study.autoloaded = True
+    study.ebi_study_accession = study.info['study_alias'].split(';')[0]
+    sample_info = load_sample_template_from_cmd(sample_fp, study.id)
+    sample_info.ebi_sample_accessions = sample_info.get_category(
+        'secondary_sample_accession')
+    sample_info.biosample_accessions = sample_info.get_category(
+        'sample_accession')
+    # ToDo: in the future we should check that these accessions do not
+    #       exist in the system - we need to decide what to do with these.
+
+    preps = dict()
+    for f in files:
+        if '_prep_info_' not in f:
+            if (f.endswith('.log') or f.endswith('.EBI_metadata.tsv') or
+                    f.endswith('.QIIME_mapping_file.tsv')):
+                files_used.append(f)
+            continue
+
+        if 'MISSING' in f or 'TOOMANYREADS' in f:
+            warnings.append(f'Skipping: {f}')
+            if 'MISSING' in f and 'MISSING' not in extra_notes:
+                extra_notes['MISSING'] = (
+                    'One or more of the fastq files for your study were '
+                    'unavailable for download from EBI/ENA or the downloaded '
+                    'files were found to contain corrupt data and were '
+                    'excluded from our automatic association and processing. '
+                    'A list of the affected samples and their corresponding '
+                    'EBI/ENA ftp links can be found in the .MISSING '
+                    'preparation information files in the Uploads section of '
+                    'this page. If you would like to attempt to manually '
+                    'download and/or correct the fastq files, please visit '
+                    'the linked EBI/ENA project page in the Study details and '
+                    'follow our instructions for <a href="https://qiita.ucsd.'
+                    'edu/static/doc/html/gettingstartedguide/index.html#'
+                    'attaching-the-sample-information-to-the-study" '
+                    'target="_blank">manually associating and processing the '
+                    'files</a>.')
+            elif 'TOOMANYREADS' not in extra_notes:
+                extra_notes['TOOMANYREADS'] = (
+                    'One or more of the fastq files for your study were found '
+                    'to contain more read files than indicated by the single '
+                    'or paired-end read technology that EBI/ENA indicated was '
+                    'used for processing the sample. This is most likely the '
+                    'case for studies where index reads have been included in '
+                    'a separate file as part of the upload, however our '
+                    'automated system is unable to readily distinguish this. '
+                    'A list of the affected samples and their corresponding '
+                    'EBI/ENA ftp links can be found in the .TOOMANYREADS '
+                    'preparation information files in the Uploads section of '
+                    'this page. If you would like to attempt to have these '
+                    'samples processed, please visit the linked EBI/ENA '
+                    'project page in the Study details and either a) follow '
+                    'our instructions for <a href="https://qiita.ucsd.'
+                    'edu/static/doc/html/gettingstartedguide/index.html#'
+                    'attaching-the-sample-information-to-the-study" '
+                    'target="_blank">manually associating and processing the '
+                    'files</a>. or b) email Qiita Help to indicate that the '
+                    'study should be processed with the assumption that the '
+                    'first file associated with a samples is an index read '
+                    'file.')
+            continue
+        added = False
+        for dt in data_types:
+            if f'{dt}' in f:
+                if dt not in preps:
+                    preps[dt] = []
+                preps[dt].append(f)
+                added = True
+                files_used.append(f)
+                break
+        if not added:
+            warnings.append(f'Not supported: {f}')
+
+    if not preps:
+        warnings.append('No valid preparations found')
+
+    for dt, ptfps in preps.items():
+        dt = dt.replace('_', ' ')
+        print(f'==> Processing {dt}')
+        for ptfp in ptfps:
+            print(f'   {ptfp}')
+            files_used.append(ptfp)
+            pt = load_prep_template_from_cmd(ptfp, study.id, dt)
+            pt.ebi_experiment_accessions = pt.get_category(
+                'experiment_accession')
+            pt.ebi_run_accessions = pt.get_category('run_accession')
+
+            library_layout = set(pt.get_category('library_layout').values())
+
+            run_prefixes = pt.get_category('run_prefix').values()
+
+            if len(run_prefixes) != len(set(run_prefixes)):
+                warnings.append(
+                    f'Run prefixes are not unique; prep-id: {pt.id}')
+                continue
+
+            filepaths = []
+            for rp in run_prefixes:
+                matches = sorted([f for f in files
+                                  if basename(f).startswith(rp)])
+                if library_layout == {'PAIRED'}:
+                    if len(matches) != 2:
+                        warnings.append(f"{pt.id}: {rp} doesn't match PAIRED "
+                                        "library layout")
+                        continue
+                    filepaths.append((matches[0], 1))
+                    filepaths.append((matches[1], 2))
+                elif library_layout == {'SINGLE'}:
+                    if len(matches) != 1:
+                        warnings.append(f"{pt.id}: {rp} doesn't match SINGLE "
+                                        "library layout")
+                        continue
+                    filepaths.append((matches[0], 1))
+                else:
+                    warnings.append('Unknown library layout: '
+                                    f'{library_layout}; prep-id: {pt.id}')
+            files_used.extend([x for x, _ in filepaths])
+
+            lfp = len(filepaths)
+            lrp = len(run_prefixes)
+            if library_layout == {'PAIRED'} and lfp != lrp*2:
+                warnings.append('Not a valid number of files/run_prefixes '
+                                f'({lfp}/{lrp}) for "PAIRED"; prep-id: '
+                                f'{pt.id}')
+                continue
+            elif library_layout == {'SINGLE'} and lfp != lrp:
+                warnings.append('Not a valid number of files/run_prefixes '
+                                f'({lfp}/{lrp}) for "SINGLE"; prep-id: '
+                                f'{pt.id}')
+                continue
+
+            artifact = Artifact.create(filepaths, 'per_sample_FASTQ',
+                                       prep_template=pt, move_files=False)
+            print("      ")
+            print("      ")
+            print(f"      artifact {artifact.id} was created for {pt.id}")
+            print("      ")
+            print("      ")
+    notes = ''
+    if warnings:
+        notes = '<b>Warnings</b>:<ol>%s</ol>\n' % ''.join(
+            [f'<li>{x}</li>' for x in warnings])
+    missing_files = [x for x in set(files) - set(files_used)]
+    if missing_files:
+        uploads_fp = join(get_mountpoint("uploads")[0][1], str(study.id))
+        create_nested_path(uploads_fp)
+        notes = f'{notes}<b>Extra files:</b><ul>'
+
+        for mf in missing_files:
+            bn = basename(mf)
+            copyfile(mf, join(uploads_fp, bn))
+            notes = f'{notes}<li>{bn}</li>'
+        notes = f'{notes}</ul>'
+    if extra_notes:
+        notes = f'{notes}<b>Extra Notes:</b><ul>%s</ul>' % ''.join(
+            [f'<li>{x}</li>' for x in extra_notes.values()])
+
+    if notes:
+        study.notes = notes
+
+    for x in shared_with:
+        study.share(x)
+
+
+# data is a list [str, [list of Users]]
+data = [
+    # ["folder filepath", [list of Users to add as shared_with]]
+]
+
+for folder, shared_with in data:
+    SLEEP_TIME = 10
+
+    if not isdir(folder):
+        print(f'Ignoring: {folder}')
+        continue
+    print(f'\n\n\n+++> Processing {folder}, you have {SLEEP_TIME} '
+          'seconds to ctrl-c')
+    # Note: this sleep is not necessary but nice for debugging so we have time
+    #       to ctrl-c
+    sleep(10)
+
+    load_qebil_study(folder, shared_with)
