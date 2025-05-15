@@ -306,9 +306,6 @@ REQUIRE_APPROVAL = True
 # Base URL: DO NOT ADD TRAILING SLASH
 BASE_URL = https://localhost
 
-# Download path files
-UPLOAD_DATA_DIR = /tmp/
-
 # Working directory path
 WORKING_DIR = /tmp/
 
