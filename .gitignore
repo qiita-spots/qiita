@@ -75,3 +75,6 @@ notebooks/*/*.tsv.gz
 
 # jupyter notebooks input data
 notebooks/resource-allocation/data
+
+# ignore plugin SQL injection file
+qiita_db/support_files/patches/test_db_sql/91.sql
