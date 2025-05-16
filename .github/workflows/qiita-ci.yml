@@ -121,10 +121,6 @@ jobs:
 
       - name: Starting services
         shell: bash -l {0}
-        env:
-          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
-          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
-          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
         run: |
           conda activate qiita
           export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/ci_rootca.crt
@@ -173,24 +169,24 @@ jobs:
           conda deactivate
 
           echo "8. Setting up SSH"
-          mkdir -p ~/.ssh/
-          echo "$SSH_KEY" > $PWD/qiita_ware/test/test_data/test_key
-          echo "$SSH_KEY" > ~/.ssh/test_key.key
-          chmod 600 $PWD/qiita_ware/test/test_data/test_key
-          chmod 600 ~/.ssh/test_key.key
+          ssh-keygen -t rsa -b 4096 -N '' -f $PWD/qiita_ware/test/test_data/test_key
+          mkdir ~/.ssh/
+          cp $PWD/qiita_ware/test/test_data/test_key* ~/.ssh/
+          chmod 600 $PWD/qiita_ware/test/test_data/test_key*
+          chmod 600 ~/.ssh/*
           cat >>~/.ssh/config <<END
-          Host staging
-            HostName $SSH_HOST
-            User $SSH_USER
+          Host qiita
+            HostName localhost
+            User $USER
             IdentityFile ~/.ssh/staging.key
             StrictHostKeyChecking no
           END
 
           chmod 700 ~/.ssh/
-          echo "Connecting as $SSH_USER@$SSH_HOST"
+          echo "Connecting as $USER@localhost"
           # this line (and the -o StrictHostKeyChecking=no) is so the server
           # is added to the list of known servers
-          scp -vvvvv -O -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $SSH_USER@$SSH_HOST:/home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key /home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key_copy_1
+          scp -vvvvv -O -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@localhost:/home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key /home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key_copy_1
 
       - name: Main tests
         shell: bash -l {0}
