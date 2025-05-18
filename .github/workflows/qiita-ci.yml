@@ -183,8 +183,10 @@ jobs:
             StrictHostKeyChecking no
           END
           chmod 700 ~/.ssh/
-          chmod g-w $HOME
-          chmod o-w $HOME
+          # https://superuser.com/a/1145465
+          sudo chown $USER:$USER /home/$USER/{.,.ssh/,.ssh/authorized_keys}
+          sudo chmod u+rwX,go-rwX,-t /home/$USER/{.ssh/,.ssh/authorized_keys}
+          sudo chmod go-w /home/$USER/
           echo "Connecting as $USER@localhost"
           # this line (and the -o StrictHostKeyChecking=no) is so the server
           # is added to the list of known servers
