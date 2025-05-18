@@ -173,8 +173,9 @@ jobs:
           mkdir ~/.ssh/
           cp $PWD/qiita_ware/test/test_data/test_key* ~/.ssh/
           cat ~/.ssh/test_key.pub > ~/.ssh/authorized_keys
-          chmod 600 $PWD/qiita_ware/test/test_data/test_key*
-          chmod 600 ~/.ssh/*
+          cat ~/.ssh/test_key.pub > ~/.ssh/authorized_keys2
+          chmod 640 $PWD/qiita_ware/test/test_data/test_key*
+          chmod 640 ~/.ssh/*
           chmod 700 ~/.ssh/
 
           echo "Connecting as $USER@localhost"
