@@ -59,7 +59,8 @@ class SSHTests(TestCase):
     def test_download_remote_nonexist_key(self):
         with self.assertRaises(IOError):
             download_remote('scp://runner@localhost:'+self.remote_dir_path,
-                            join(self.self_dir_path, 'nokey'))
+                            join(self.self_dir_path, 'nokey'),
+                            self.temp_local_dir)
 
     def test_list_scp(self):
         kpath = join(self.temp_local_dir, 'tmp-key')
