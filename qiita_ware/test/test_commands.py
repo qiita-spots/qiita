@@ -56,12 +56,6 @@ class SSHTests(TestCase):
             list_remote('scp://runner@localhost:'+self.remote_dir_path,
                         self.test_wrong_key)
 
-    def test_download_remote_nonexist_key(self):
-        with self.assertRaises(IOError):
-            download_remote('scp://runner@localhost:'+self.remote_dir_path,
-                            join(self.self_dir_path, 'nokey'),
-                            self.temp_local_dir)
-
     def test_list_scp(self):
         kpath = join(self.temp_local_dir, 'tmp-key')
         copyfile(self.test_ssh_key, kpath)
@@ -70,6 +64,12 @@ class SSHTests(TestCase):
         # read_file_list = list_remote(
         #     'scp://runner@localhost:'+self.remote_dir_path, kpath)
         # self.assertCountEqual(read_file_list, self.exp_files)
+
+    def test_download_remote_nonexist_key(self):
+        with self.assertRaises(IOError):
+            download_remote('scp://runner@localhost:'+self.remote_dir_path,
+                            join(self.self_dir_path, 'nokey'),
+                            self.temp_local_dir)
 
     def test_download_scp(self):
         kpath = join(self.temp_local_dir, 'tmp-key')
