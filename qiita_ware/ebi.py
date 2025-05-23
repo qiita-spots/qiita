@@ -90,7 +90,8 @@ class EBISubmission(object):
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
     valid_ebi_submission_states = ('submitting')
     # valid_platforms dict of 'platform': ['valid_instrument_models']
-    valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
+    valid_platforms = {'DNBSEQ': ['DNBSEQ-G400', 'DNBSEQ-T7', 'DNBSEQ-G800'],
+                       'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
                                  '454 GS FLX+', '454 GS FLX TITANIUM',
                                  '454 GS JUNIOR', 'UNSPECIFIED'],
                        'ION_TORRENT': ['ION TORRENT PGM', 'ION TORRENT PROTON',
