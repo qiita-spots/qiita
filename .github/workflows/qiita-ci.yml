@@ -2,7 +2,7 @@
 
 on:
   push:
-    branches: [ dev ]
+    branches: [dev]
   pull_request:
 
 jobs:
@@ -45,7 +45,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
-          python-version: '3.9'
+          python-version: "3.9"
 
       - name: Basic dependencies install
         env:
@@ -169,17 +169,20 @@ jobs:
           conda deactivate
 
           echo "8. Setting up SSH"
-          ssh-keygen -t rsa -b 4096 -N '' -f $PWD/qiita_ware/test/test_data/test_key
+          ssh-keygen -t ed25519 -a 200 -N '' -f $PWD/qiita_ware/test/test_data/test_key
           mkdir ~/.ssh/
           cp $PWD/qiita_ware/test/test_data/test_key* ~/.ssh/
           cat ~/.ssh/test_key.pub > ~/.ssh/authorized_keys
+          cat ~/.ssh/test_key.pub > ~/.ssh/authorized_keys2
           chmod 600 $PWD/qiita_ware/test/test_data/test_key*
           chmod 600 ~/.ssh/*
           chmod 700 ~/.ssh/
           echo "Connecting as $USER@localhost"
           # this line (and the -o StrictHostKeyChecking=no) is so the server
           # is added to the list of known servers
-          scp -O -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@localhost:/home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key /home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key_copy_1
+
+          # 05/22/25: commenting this line out as github actions is not allowing this step
+          # scp -O -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@localhost:/home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key /home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key_copy_1
 
       - name: Main tests
         shell: bash -l {0}
@@ -239,24 +242,24 @@ jobs:
     needs: main
     runs-on: ubuntu-latest
     steps:
-    - name: Coveralls Finished
-      uses: AndreMiras/coveralls-python-action@develop
-      with:
-        github-token: ${{ secrets.github_token }}
-        parallel-finished: true
+      - name: Coveralls Finished
+        uses: AndreMiras/coveralls-python-action@develop
+        with:
+          github-token: ${{ secrets.github_token }}
+          parallel-finished: true
 
   lint:
     runs-on: ubuntu-latest
     steps:
-    - name: flake8
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
-    - name: install dependencies
-      run: python -m pip install --upgrade pip
-    - name: Check out repository code
-      uses: actions/checkout@v2
-    - name: lint
-      run: |
-        pip install -q flake8
-        flake8 qiita_* setup.py scripts/qiita* notebooks/*/*.py
+      - name: flake8
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+      - name: install dependencies
+        run: python -m pip install --upgrade pip
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: lint
+        run: |
+          pip install -q flake8
+          flake8 qiita_* setup.py scripts/qiita* notebooks/*/*.py
