@@ -77,18 +77,22 @@ class PrepTemplateAJAX(BaseHandler):
         res['alert_message'] = url_escape(res['alert_message'])
         res['user_level'] = current_user.level
         if res['creation_job'] is not None:
-            fp = res['creation_job'].parameters.values['sample_sheet']
-            res['creation_job_filename'] = fp['filename']
-            res['creation_job_filename_body'] = fp['body']
+            params = res['creation_job'].parameters.values
             summary = None
-            if res['creation_job'].status == 'success':
-                if res['creation_job'].outputs:
-                    # [0] is the id, [1] is the filepath
-                    _file = res['creation_job'].outputs[
-                        'output'].html_summary_fp[1]
-                    summary = relpath(_file, qiita_config.base_data_dir)
+            if 'sample_sheet' in params:
+                fp = params['sample_sheet']
+                res['creation_job_filename'] = fp['filename']
+                res['creation_job_filename_body'] = fp['body']
+                if res['creation_job'].status == 'success':
+                    if res['creation_job'].outputs:
+                        # [0] is the id, [1] is the filepath
+                        _file = res['creation_job'].outputs[
+                            'output'].html_summary_fp[1]
+                        summary = relpath(_file, qiita_config.base_data_dir)
+            else:
+                res['creation_job_filename'] = None
+                res['creation_job_filename_body'] = None
             res['creation_job_artifact_summary'] = summary
-        # res['']
         res['human_reads_filter_method'] = None
         a = PrepTemplate(prep_id).artifact
         if a is not None:
