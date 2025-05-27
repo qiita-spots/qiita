@@ -380,10 +380,10 @@ using https://github.com/ucsd-cmi/qebil and then loading into Qiita using
 https://github.com/qiita-spots/qiita/pull/3112. Note that as this is still
 not automatic, only an admin can do this. However, we ask the user requesting
 the studies to help us fix the metadata - try to make as close as possible to
-:ref:`checklist-for-ebi-ena-submission` so we can open them to other users. For
-whatever is worth, qebil will download whatever metadata is available in EBI-ENA
-but in our experience is not that close to Qiita's requirements; thus, the request
-for your help.
+:ref:`checklist-for-ebi-ena-submission` so we can open them to other users. qebil
+will download the associated metadata from EBI-ENA but in our experience this
+is not close to Qiita requirements and thus, we request your help in amending
+the metadata.
 
 
 Software and Data Licensing
