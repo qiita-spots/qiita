@@ -21,9 +21,6 @@ import pandas as pd
 from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
 
-from matplotlib.figure import Figure
-from matplotlib.axes import Axes
-
 
 @qiita_test_checker()
 class DBUtilTestsBase(TestCase):
