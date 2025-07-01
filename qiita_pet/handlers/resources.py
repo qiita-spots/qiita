@@ -49,10 +49,10 @@ class ResourcesHandler(BaseHandler):
         self.render('resources.html',
                     img_mem=None, img_time=None,
                     time=None,
-                    mk=None, ma=None, mb=None,
+                    # mk=None, ma=None, mb=None,
                     mmodel=None, mreal=None,
                     mcalc=None, mfail=None,
-                    tk=None, ta=None, tb=None,
+                    # tk=None, ta=None, tb=None,
                     tmodel=None, treal=None,
                     tcalc=None, tfail=None,
                     commands=commands_json,
@@ -72,16 +72,16 @@ class ResourcesHandler(BaseHandler):
             resources = yield Task(self._get_resources, command, software,
                                    version, col_name)
 
-            mcof, mmodel, mreal, mcalc, mfail = list(
+            mmodel, mreal, mcalc, mfail = list(
                 map(lambda x: x.split(b": ")[1].strip().decode('utf-8'),
                     resources['title_mem'].split(b"\n")))
 
-            tcof, tmodel, treal, tcalc, tfail = list(
+            tmodel, treal, tcalc, tfail = list(
                 map(lambda x: x.split(b": ")[1].strip().decode('utf-8'),
                     resources['title_time'].split(b"\n")))
 
-            mk, ma, mb = mcof.split("||")
-            tk, ta, tb = tcof.split("||")
+            # mk, ma, mb = mcof.split("||")
+            # tk, ta, tb = tcof.split("||")
 
             response_data = {
                 "status": "success",
@@ -94,11 +94,11 @@ class ResourcesHandler(BaseHandler):
                 "time": resources[
                     'time'].decode('utf-8') if isinstance(
                     resources['time'], bytes) else resources['time'],
-                "mk": mk, "ma": ma, "mb": mb,
-                "tk": tk, "ta": ta, "tb": tb,
+                # "mk": mk, "ma": ma, "mb": mb,
+                # "tk": tk, "ta": ta, "tb": tb,
                 "mmodel": mmodel, "mreal": mreal,
                 "mcalc": mcalc, "mfail": mfail,
-                "tcof": tcof,
+                # "tcof": tcof,
                 "tmodel": tmodel, "treal": treal,
                 "tcalc": tcalc, "tfail": tfail,
                 "initial_load": False
@@ -117,11 +117,11 @@ class ResourcesHandler(BaseHandler):
                     "img_mem": None,
                     "img_time": None,
                     "time": None,
-                    "mk": None, "ma": None, "mb": None,
-                    "tk": None, "ta": None, "tb": None,
+                    # "mk": None, "ma": None, "mb": None,
+                    # "tk": None, "ta": None, "tb": None,
                     "mmodel": None, "mreal": None,
                     "mcalc": None, "mfail": None,
-                    "tcof": None,
+                    # "tcof": None,
                     "tmodel": None, "treal": None,
                     "tcalc": None, "tfail": None,
                     "initial_load": False

@@ -557,8 +557,8 @@ def generate_plugin_releases():
         f(redis_key, v)
 
 
-def update_resource_allocation_redis(active=True, verbose=False,
-                                     time_limit=300):
+def update_resource_allocation_redis(active=False, verbose=True,
+                                     time_limit=900):
     """Updates redis with plots and information about current software.
 
     Parameters
@@ -613,9 +613,9 @@ def update_resource_allocation_redis(active=True, verbose=False,
                            f"  command: {cname}"))
                 if len(df) == 0:
                     if verbose:
-                        print(("\nNo allocation resources available for" +
-                               f" software: {sname}" +
-                               f" version: {version}" +
+                        print(("\nNo allocation resources available for:\n" +
+                               f" software: {sname}\n" +
+                               f" version: {version}\n" +
                                f" command: {cname}\n"))
                     continue
                 # column_name_str looks like col1*col2*col3, etc

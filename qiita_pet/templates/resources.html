@@ -74,9 +74,7 @@
             <tr>
                 <td id="mem-data">
                     <ul>
-                        <li>k: {{ mk }}</li>
-                        <li>a: {{ ma }}</li>
-                        <li>b: {{ mb }}</li>
+
                         <li>model: {{ mmodel }}</li>
                         <li>real: {{ mreal }}</li>
                         <li>calc: {{ mcalc }}</li>
@@ -85,9 +83,6 @@
                 </td>
                 <td id="time-data">
                     <ul>
-                        <li>k: {{ tk }}</li>
-                        <li>a: {{ ta }}</li>
-                        <li>b: {{ tb }}</li>
                         <li>model: {{ tmodel }}</li>
                         <li>real: {{ treal }}</li>
                         <li>calc: {{ tcalc }}</li>
@@ -235,12 +230,9 @@
             }
 
             // Update memory data
-            if (response.mk && response.ma && response.mb && response.mmodel && response.mreal && response.mcalc && response.mfail) {
+            if (response.mmodel && response.mreal && response.mcalc && response.mfail) {
                 $('#mem-data').html(`
                     <ul>
-                        <li>k: ${response.mk}</li>
-                        <li>a: ${response.ma}</li>
-                        <li>b: ${response.mb}</li>
                         <li>model: ${response.mmodel}</li>
                         <li>real: ${response.mreal}</li>
                         <li>calc: ${response.mcalc}</li>
@@ -252,12 +244,9 @@
             }
 
             // Update time data
-            if (response.tk && response.ta && response.tb && response.tmodel && response.treal && response.tcalc && response.tfail) {
+            if (response.tmodel && response.treal && response.tcalc && response.tfail) {
                 $('#time-data').html(`
                     <ul>
-                        <li>k: ${response.tk}</li>
-                        <li>a: ${response.ta}</li>
-                        <li>b: ${response.tb}</li>
                         <li>model: ${response.tmodel}</li>
                         <li>real: ${response.treal}</li>
                         <li>calc: ${response.tcalc}</li>
