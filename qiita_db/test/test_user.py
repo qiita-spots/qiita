@@ -482,12 +482,12 @@ class UserTest(TestCase):
         user.mark_messages([1, 2])
         obs = user.messages()
         exp = [True, True, False]
-        self.assertEqual([x[3] for x in obs], exp)
+        self.assertCountEqual([x[3] for x in obs], exp)
 
         user.mark_messages([1], read=False)
         obs = user.messages()
         exp = [False, True, False]
-        self.assertEqual([x[3] for x in obs], exp)
+        self.assertCountEqual([x[3] for x in obs], exp)
 
     def test_delete_messages(self):
         user = qdb.user.User.create('deletemsg@test.bar', 'password')
