@@ -433,11 +433,12 @@
       {% end %}
 
       <span id="prep-name-span">{{name}}</span> - ID {{prep_id}} ({{data_type}})
-      {% if user_level in ('admin', 'wet-lab admin') and creation_job is not None %}
-          <a class="btn btn-default" download="{{creation_job_filename}}" href="data:text/plain;charset=utf-8,{{creation_job_filename_body}}"><span class="glyphicon glyphicon-download-alt"></span> SampleSheet</a>
-          {% if creation_job_artifact_summary is not None %}
-            <a class="btn btn-default" target="_blank" href="{% raw qiita_config.portal_dir %}/artifact/html_summary/{{creation_job_artifact_summary}}"><span class="glyphicon glyphicon-download-alt"></span> Creation Job Output</a>
+
+      {% if editable and creation_job is not None and creation_job_artifact_summary is not None %}
+          {% if creation_job_filename != 'None' %}
+             <a class="btn btn-default" download="{{creation_job_filename}}" href="data:text/plain;charset=utf-8,{{creation_job_filename_body}}"><span class="glyphicon glyphicon-download-alt"></span> SampleSheet</a>
           {% end %}
+          <a class="btn btn-default" target="_blank" href="{% raw qiita_config.portal_dir %}/artifact/html_summary/{{creation_job_artifact_summary}}"><span class="glyphicon glyphicon-download-alt"></span> Creation Job Output</a>
       {% end %}
       <a class="btn btn-default" data-toggle="modal" data-target="#update-prep-name"><span class="glyphicon glyphicon-pencil"></span> Edit name</a>
       <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep_id}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
