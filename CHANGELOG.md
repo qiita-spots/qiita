@@ -12,6 +12,7 @@ Deployed on July 14th, 2025
 * SPP: Added integration tests via a couple of PRs: [#129](https://github.com/qiita-spots/qp-knight-lab-processing/pull/129) & [#131](https://github.com/qiita-spots/qp-knight-lab-processing/pull/131).
 * SPP: Added new command `Human Filter & QC existing Prep` to facilitate human-filtering existing preparations.
 * SPP: Cleaned and centralized sequencers information to [kl-metapool](https://github.com/biocore/kl-metapool) & added `MiSeq i100`, thank you @AmandaBirmingham.
+* SPP: Added a new [subsample method](https://github.com/qiita-spots/qp-knight-lab-processing/pull/138) to randomly select sequences from paired files when they are larger than expected: 720,000,000.
 
 
 
