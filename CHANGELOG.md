@@ -3,7 +3,7 @@
 Version 2025.07
 ---------------
 
-Deployed on July 14th, 2025
+Deployed on July 15th, 2025
 
 * During EBI-ENA submissions now we automatically renmae `country` to `geographic location (country and/or sea)` and `collection_date` to `collection date`; as the ENA requirements changed.
 * Added platform `DNBSEQ1` and instruments: `DNBSEQ-G400`, `DNBSEQ-T7`, `DNBSEQ-G800` for EBI-ENA submissions.
@@ -13,6 +13,7 @@ Deployed on July 14th, 2025
 * SPP: Added new command `Human Filter & QC existing Prep` to facilitate human-filtering existing preparations.
 * SPP: Cleaned and centralized sequencers information to [kl-metapool](https://github.com/biocore/kl-metapool) & added `MiSeq i100`, thank you @AmandaBirmingham.
 * SPP: Added a new [subsample method](https://github.com/qiita-spots/qp-knight-lab-processing/pull/138) to randomly select sequences from paired files when they are larger than expected: 720,000,000.
+* SPP: Storing `TellReadJob/QC_Analysis_TellReadJob.html` in the results folder.
 
 
 
