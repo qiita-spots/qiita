@@ -240,7 +240,7 @@ in the `QIIME2 forum <https://forum.qiime2.org>`__. for more details:
 +----------------------------+----------------------------------------------------------------------+
 | Qiita                      | QIIME 2                                                              |
 +============================+======================================================================+
-| beta diversity .tsv        |  DistanceMatrix (QZA)                                                |
+| beta diversity .tsv        | DistanceMatrix (QZA)                                                 |
 +----------------------------+----------------------------------------------------------------------+
 | FASTA sequence files       | FeatureData[Taxonomy | Sequence] (QZA)                               |
 +----------------------------+----------------------------------------------------------------------+
@@ -369,6 +369,21 @@ specially on:
 - per sample FASTQ: run_prefix is the way to link which sample goes with which files so using here
   will facilitate loading your files to the preparation and then used for processing, without it
   Qiita will not be able to process your samples.
+
+
+Loading an existing study/project from EBI-ENA to Qiita.
+--------------------------------------------------------
+
+If you want us to load a study into Qiita, please complete `this form <https://docs.google.com/forms/d/1SIq_JNWai7cZ2wwjD8xZpTab7qBifLKu3TZm2B363CE/edit?ts=5fbe8c0b&gxids=7628>`__
+and send us an email to qiita.help@gmail.com. Then, a Qiita Admin will download your requested studies
+using https://github.com/ucsd-cmi/qebil and then loading into Qiita using
+https://github.com/qiita-spots/qiita/pull/3112. Note that as this is still
+not automatic, only an admin can do this. However, we ask the user requesting
+the studies to help us fix the metadata - try to make as close as possible to
+:ref:`checklist-for-ebi-ena-submission` so we can open them to other users. qebil
+will download the associated metadata from EBI-ENA but in our experience this
+is not close to Qiita requirements and thus, we request your help in amending
+the metadata.
 
 
 Software and Data Licensing

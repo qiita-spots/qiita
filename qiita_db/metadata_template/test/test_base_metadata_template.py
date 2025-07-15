@@ -125,12 +125,13 @@ class TestMetadataTemplateReadOnly(TestCase):
         obs = MT.prep_template.PrepTemplate(1).restrictions
         exp = {
             'target_gene': ['16S rRNA', '18S rRNA', 'ITS1/2', 'LSU'],
-            'platform': ['FASTA', 'Illumina', 'Ion_Torrent', 'LS454',
+            'platform': ['DNBSEQ', 'FASTA', 'Illumina', 'Ion_Torrent', 'LS454',
                          'Oxford Nanopore'],
             'target_subfragment': ['V3', 'V4', 'V6', 'V9', 'ITS1/2'],
             'instrument_model': [
                 '454 GS', '454 GS 20', '454 GS FLX', '454 GS FLX+',
-                '454 GS FLX Titanium', '454 GS Junior',
+                '454 GS FLX Titanium', '454 GS Junior', 'DNBSEQ-G400',
+                'DNBSEQ-T7', 'DNBSEQ-G800',
                 'Illumina Genome Analyzer', 'Illumina Genome Analyzer II',
                 'Illumina Genome Analyzer IIx', 'Illumina HiScanSQ',
                 'Illumina HiSeq 1000', 'Illumina HiSeq 1500',
