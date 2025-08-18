@@ -1049,13 +1049,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # before returning immediately, usually with a job ID that can
                 # be used to monitor the job's progress.
 
-                try:
-                    resource_params = self.resource_allocation_info
-                except qdb.exceptions.QiitaDBUnknownIDError as e:
-                    # this propagates the error to the job and using str(e)
-                    # should be fine as we just want the last calculation
-                    # error
-                    self._set_error(str(e))
+                resource_params = self.resource_allocation_info
 
                 # note that parent_job_id is being passed transparently from
                 # submit declaration to the launcher.
@@ -1111,13 +1105,23 @@ class ProcessingJob(qdb.base.QiitaObject):
                     # organized into n 'queues' or 'chains', and
                     # will all run simultaneously.
                     for dependent in dependent_jobs_list:
+                        # register dependent job as queued to make qiita
+                        # aware of this child process
+                        dependent._set_status('queued')
+
+                        dep_software = dependent.command.software
+                        dep_job_dir = join(qdb.util.get_work_base_dir(),
+                                           dependent.id)
                         p = Process(target=launcher['function'],
-                                    args=(plugin_env_script,
-                                          plugin_start_script,
+                                    args=(dep_software.environment_script,
+                                          dep_software.start_script,
                                           url,
-                                          self.id,
-                                          job_dir))
+                                          dependent.id,
+                                          dep_job_dir))
                         p.start()
+                        # assign the child process ID as external id to
+                        # the dependent
+                        dependent.external_id = p.pid
             else:
                 error = ("execute_in_process must be defined",
                          "as either true or false")
