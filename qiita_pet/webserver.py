@@ -257,7 +257,10 @@ class Application(tornado.web.Application):
                 (r"/auth/reset/(.*)", ChangeForgotPasswordHandler)
             ])
 
-        if True:  # for "cloud" endpoints
+        # expose endpoints necessary for https file communication between
+        # master and plugins IF no shared file system for base_data_dir is
+        # intended
+        if qiita_config.enable_https_plugin_filetransfer:
             handlers.extend(CLOUD_ENDPOINTS)
 
         # rest endpoints

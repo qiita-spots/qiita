@@ -55,6 +55,7 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(
             obs.valid_upload_extension,
             ["fastq", "fastq.gz", "txt", "tsv", "sff", "fna", "qual"])
+        self.assertEqual(obs.enable_https_plugin_filetransfer, False)
         self.assertEqual(obs.certificate_file, "/tmp/server.cert")
         self.assertEqual(obs.cookie_secret, "SECRET")
         self.assertEqual(obs.key_file, "/tmp/server.key")
@@ -382,6 +383,12 @@ PLUGIN_LAUNCHER = qiita-plugin-launcher
 
 # Plugins configuration directory
 PLUGIN_DIR = /tmp/
+
+# Allow BASE_DATA_DIR file content transfer through https (True or False)
+# By default, Qiita and its plugins share the filesystem of BASE_DATA_DIR.
+# You can less tightly couple selected plugins (=no shared file system) but
+# they need to get/push input/output files through https then
+ENABLE_HTTPS_PLUGIN_FILETRANSFER = False
 
 # Webserver certificate file paths
 CERTIFICATE_FILE = /tmp/server.cert

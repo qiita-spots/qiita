@@ -123,6 +123,12 @@ class ConfigurationManager(object):
         The script used to start the plugins
     plugin_dir : str
         The path to the directory containing the plugin configuration files
+    enable_https_plugin_filetransfer : bool
+        Allow BASE_DATA_DIR file content transfer through https (True or False)
+        By default, Qiita and its plugins share the filesystem of
+        BASE_DATA_DIR. You can less tightly couple selected plugins
+        (=no shared file system) but they need to get/push input/output files
+        through https then
     help_email : str
         The email address a user should write to when asking for help
     sysadmin_email : str
@@ -242,6 +248,8 @@ class ConfigurationManager(object):
         elif not isdir(self.plugin_dir):
             raise ValueError("The PLUGIN_DIR (%s) folder doesn't exist"
                              % self.plugin_dir)
+        self.enable_https_plugin_filetransfer = config.getboolean(
+            'main', 'ENABLE_HTTPS_PLUGIN_FILETRANSFER', fallback=False)
 
         self.valid_upload_extension = [ve.strip() for ve in config.get(
             'main', 'VALID_UPLOAD_EXTENSION').split(',')]
