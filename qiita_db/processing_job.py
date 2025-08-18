@@ -1049,7 +1049,13 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # before returning immediately, usually with a job ID that can
                 # be used to monitor the job's progress.
 
-                resource_params = self.resource_allocation_info
+                try:
+                    resource_params = self.resource_allocation_info
+                except qdb.exceptions.QiitaDBUnknownIDError as e:
+                    # this propagates the error to the job and using str(e)
+                    # should be fine as we just want the last calculation
+                    # error
+                    self._set_error(str(e))
 
                 # note that parent_job_id is being passed transparently from
                 # submit declaration to the launcher.
