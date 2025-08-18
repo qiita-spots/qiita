@@ -33,6 +33,12 @@ from qiita_db.metadata_template.constants import (
 from qiita_db.processing_job import _system_call as system_call
 
 
+ENA_COLS_TO_FIX = {
+    'country': 'geographic location (country and/or sea)',
+    'collection_date': 'collection date'
+}
+
+
 def clean_whitespace(text):
     """Standardizes whitespaces so there is only one space separating tokens
 
@@ -90,7 +96,8 @@ class EBISubmission(object):
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
     valid_ebi_submission_states = ('submitting')
     # valid_platforms dict of 'platform': ['valid_instrument_models']
-    valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
+    valid_platforms = {'DNBSEQ': ['DNBSEQ-G400', 'DNBSEQ-T7', 'DNBSEQ-G800'],
+                       'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
                                  '454 GS FLX+', '454 GS FLX TITANIUM',
                                  '454 GS JUNIOR', 'UNSPECIFIED'],
                        'ION_TORRENT': ['ION TORRENT PGM', 'ION TORRENT PROTON',
@@ -406,9 +413,9 @@ class EBISubmission(object):
 
         for sample_name in sorted(samples):
             sample_info = dict(self.samples[sample_name])
-            if 'country' in sample_info.keys():
-                nname = 'geographic location (country and/or sea)'
-                sample_info[nname] = sample_info['country']
+            for qname, ename in ENA_COLS_TO_FIX.items():
+                if qname in sample_info.keys():
+                    sample_info[ename] = sample_info[qname]
 
             sample_accession = self._ebi_sample_accessions[sample_name]
             if self.action in ('ADD', 'VALIDATE'):

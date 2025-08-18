@@ -1,5 +1,33 @@
 # Qiita changelog
 
+Version 2025.07
+---------------
+
+Deployed on July 15th, 2025
+
+* During EBI-ENA submissions now we automatically renmae `country` to `geographic location (country and/or sea)` and `collection_date` to `collection date`; as the ENA requirements changed.
+* Added platform `DNBSEQ1` and instruments: `DNBSEQ-G400`, `DNBSEQ-T7`, `DNBSEQ-G800` for EBI-ENA submissions.
+* Other general fixes [#3474](https://github.com/qiita-spots/qiita/pull/3474), [#3475](https://github.com/qiita-spots/qiita/pull/3475).
+* SPP: merged and deprecated [mg-scripts](https://github.com/qiita-spots/mg-scripts) to [qp-knight-lab-processing](https://github.com/qiita-spots/qp-knight-lab-processing).
+* SPP: Added integration tests via a couple of PRs: [#129](https://github.com/qiita-spots/qp-knight-lab-processing/pull/129) & [#131](https://github.com/qiita-spots/qp-knight-lab-processing/pull/131).
+* SPP: Added new command `Human Filter & QC existing Prep` to facilitate human-filtering existing preparations.
+* SPP: Cleaned and centralized sequencers information to [kl-metapool](https://github.com/biocore/kl-metapool) & added `MiSeq i100`, thank you @AmandaBirmingham.
+* SPP: Added a new [subsample method](https://github.com/qiita-spots/qp-knight-lab-processing/pull/138) to randomly select sequences from paired files when they are larger than expected: 720,000,000.
+* SPP: Storing `TellReadJob/QC_Analysis_TellReadJob.html` in the results folder.
+
+
+
+Version 2025.04
+---------------
+
+Deployed on April 11th, 2025
+
+* General improvements for automatic environment generation by @sjanssen2 (thank you!): [#3462](https://github.com/qiita-spots/qiita/pull/3462), [#3463](https://github.com/qiita-spots/qiita/pull/3463), [3464](https://github.com/qiita-spots/qiita/pull/3464), [#3465](https://github.com/qiita-spots/qiita/pull/3465).
+* When ProcessingJob.resource_allocation_info fails, it will now be [set as the error for the job](https://github.com/qiita-spots/qiita/pull/3466).
+* SPP: General updates and clean up: [#169](https://github.com/biocore/mg-scripts/pull/169), [#101](https://github.com/qiita-spots/qp-knight-lab-processing/pull/101).
+* `Remove SynDNA plasmid, insert, & CP026085 reads` superseded `Remove SynDNA inserts & plasmid reads`; which now removes SynDNA plasmids, inserts, and CP026085 reads, in this order.
+
+
 Version 2025.02
 ---------------
 
@@ -8,7 +36,7 @@ Deployed on February 24th, 2025
 * Replaced os.rename for shutil.move in the code to fix [#3455](https://github.com/qiita-spots/qiita/issues/3455).
 * Via qp-spades, replaced the legacy `spades` command for `cloudSPAdes` for TellSeq.
 * `FASTA_preprocessed` within qtp-sequencing now allows for results to be named using their sample-name, extra from run-prefix.
-* `Remove SynDNA inserts & plasmid reads` superseded `Remove SynDNA reads`, which now removes SynDna inserts and plasmids.
+* `Remove SynDNA inserts & plasmid reads` superseded `Remove SynDNA reads`, which now removes SynDNA inserts and plasmids.
 * `update_resource_allocation_redis` now relies on using equations stored in the database vs. hardcoded; thank you @Gossty!
 * SPP: Updated prep-info file generation to identify and report filtered fastq files that could not be matched to a sample-id instead of silently ignoring them.
 * SPP: Removed legacy test code and example files for amplicon processing. Some other tests updated and repurposed.

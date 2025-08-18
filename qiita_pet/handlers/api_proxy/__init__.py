@@ -38,7 +38,7 @@ from .processing import (
 from .user import (user_jobs_get_req)
 from .util import check_access, check_fp
 
-__version__ = "2025.02"
+__version__ = "2025.07"
 
 __all__ = ['prep_template_summary_get_req', 'data_types_get_req',
            'study_get_req', 'sample_template_filepaths_get_req',
