@@ -1,4 +1,4 @@
-from .file_transfer_handlers import (FetchFileFromCentralHandler, 
+from .file_transfer_handlers import (FetchFileFromCentralHandler,
                                      PushFileToCentralHandler)
 
 __all__ = ['FetchFileFromCentralHandler']
