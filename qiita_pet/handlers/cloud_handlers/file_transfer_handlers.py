@@ -30,12 +30,13 @@ class FetchFileFromCentralHandler(RequestHandler):
             # attempt to access files outside of the BASE_DATA_DIR
             # intentionally NOT reporting the actual location to avoid exposing
             # instance internal information
-            raise HTTPError(403, ("You cannot access files outside of "
-                                  "the BASE_DATA_DIR of Qiita!"))
+            raise HTTPError(403, reason=(
+                "You cannot access files outside of "
+                "the BASE_DATA_DIR of Qiita!"))
 
         if not os.path.exists(filepath):
-            raise HTTPError(403, ("The requested file is not present in "
-                                  "Qiita's BASE_DATA_DIR!"))
+            raise HTTPError(403, reason=(
+                "The requested file is not present in Qiita's BASE_DATA_DIR!"))
 
         # delivery of the file via nginx requires replacing the basedatadir 
         # with the prefix defined in the nginx configuration for the 
@@ -59,7 +60,7 @@ class PushFileToCentralHandler(RequestHandler):
     @execute_as_transaction
     def post(self):
         if not self.request.files:
-            raise HTTPError(400, 'No files to upload defined!')
+            raise HTTPError(400, reason='No files to upload defined!')
 
         # canonic version of base_data_dir
         basedatadir = os.path.abspath(qiita_config.base_data_dir)
@@ -77,8 +78,9 @@ class PushFileToCentralHandler(RequestHandler):
                 filepath = os.path.abspath(os.path.join(basedatadir, filepath))
 
                 if os.path.exists(filepath):
-                    raise HTTPError(403, ("The requested file is already "
-                                          "present in Qiita's BASE_DATA_DIR!"))
+                    raise HTTPError(403, reason=(
+                        "The requested file is already "
+                        "present in Qiita's BASE_DATA_DIR!"))
 
                 os.makedirs(os.path.dirname(filepath), exist_ok=True)
                 with open(filepath, "wb") as f:
