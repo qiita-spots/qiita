@@ -1620,11 +1620,6 @@ class Parameters(object):
             error_msg = ("The provided JSON string doesn't encode a "
                          "parameter set for command %s" % command.id)
         else:
-            if not isinstance(values_dict, dict):
-                raise qdb.exceptions.QiitaDBError(
-                    "The provided value_dict is %s (i.e. not None) but also "
-                    "not a dictionary for command %s" % (
-                        values_dict, command.id))
             parameters = deepcopy(values_dict)
             error_msg = ("The provided values dictionary doesn't encode a "
                          "parameter set for command %s" % command.id)

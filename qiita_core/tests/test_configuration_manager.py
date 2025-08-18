@@ -290,55 +290,6 @@ class ConfigurationManagerTests(TestCase):
         obs._get_portal(self.conf)
         self.assertEqual(obs.stats_map_center_longitude, -105.24827)
 
-    def test_get_oidc(self):
-        SECTION_NAME = 'oidc_academicid'
-        obs = ConfigurationManager()
-        self.assertTrue(len(obs.oidc), 1)
-        self.assertTrue(obs.oidc.keys(), [SECTION_NAME])
-
-        # assert endpoint starts with /
-        self.conf.set(SECTION_NAME, 'REDIRECT_ENDPOINT', 'auth/something')
-        obs._get_oidc(self.conf)
-        self.assertEqual(obs.oidc['academicid']['redirect_endpoint'],
-                         '/auth/something')
-
-        # assert endpoint does not end with /
-        self.conf.set(SECTION_NAME, 'REDIRECT_ENDPOINT', 'auth/something/')
-        obs._get_oidc(self.conf)
-        self.assertEqual(obs.oidc['academicid']['redirect_endpoint'],
-                         '/auth/something')
-
-        self.conf.set(SECTION_NAME, 'CLIENT_ID', 'foo')
-        obs._get_oidc(self.conf)
-        self.assertEqual(obs.oidc['academicid']['client_id'], "foo")
-
-        self.assertTrue('gwdg.de' in obs.oidc['academicid']['wellknown_uri'])
-
-        self.assertEqual(obs.oidc['academicid']['label'],
-                         'GWDG Academic Cloud')
-        # test fallback, if no label is provided
-        self.conf.set(SECTION_NAME, 'LABEL', '')
-        obs._get_oidc(self.conf)
-        self.assertEqual(obs.oidc['academicid']['label'], 'academicid')
-
-        self.assertEqual(obs.oidc['academicid']['scope'], 'openid')
-        # test fallback, if no scope is provided
-        self.conf.set(SECTION_NAME, 'SCOPE', '')
-        obs._get_oidc(self.conf)
-        self.assertEqual(obs.oidc['academicid']['scope'], 'openid')
-
-        # test if scope will be automatically extended with 'openid'
-        self.conf.set(SECTION_NAME, 'SCOPE', 'email affiliation')
-        obs._get_oidc(self.conf)
-        self.assertTrue('openid' in obs.oidc['academicid']['scope'].split())
-
-        self.assertEqual(obs.oidc['academicid']['logo'],
-                         'oidc_lifescienceAAI.png')
-        # test fallback, if no scope is provided
-        self.conf.remove_option(SECTION_NAME, 'LOGO')
-        obs._get_oidc(self.conf)
-        self.assertEqual(obs.oidc['academicid']['logo'], None)
-
 
 CONF = """
 # ------------------------------ Main settings --------------------------------
@@ -527,42 +478,6 @@ STATS_MAP_CENTER_LONGITUDE =
 
 # ----------------------------- iframes settings ---------------------------
 [iframe]
-
-# ------------------- External Identity Provider settings ------------------
-[oidc_academicid]
-
-# client ID for Qiita as registered at your Identity Provider of choice
-CLIENT_ID = gi-qiita-prod
-
-# client secret to verify Qiita as the correct client. Not all IdPs require
-# a client secret.
-CLIENT_SECRET = verySecretString
-
-# redirect URL (end point in your Qiita instance), to which the IdP redirects
-# after user types in his/her credentials. If you don't want to change code in
-# qiita_pet/webserver.py the URL must follow the pattern:
-# base_URL/auth/login_OIDC/foo where foo is the name of this config section
-# without the oidc_ prefix!
-REDIRECT_ENDPOINT = /auth/login_OIDC/academicid
-
-# The URL of the well-known json document, specifying how API end points
-# like 'authorize', 'token' or 'userinfo' are defined. See e.g.
-# https://swagger.io/docs/specification/authentication/
-#    openid-connect-discovery/
-WELLKNOWN_URI = https://keycloak.sso.gwdg.de/.well-known/openid-configuration
-
-# a speaking label for the Identity Provider. Section name is used if empty.
-LABEL = GWDG Academic Cloud
-
-# The scope, i.e. fields about a user, which Qiita requests from the
-# Identity Provider, e.g. "profile email eduperson_orcid".
-# Will be automatically extended by the scope "openid", to enable the
-# "authorize_code" OIDC flow.
-SCOPE = openid
-
-# Optional. Name of a file in qiita_pet/static/img that shall be
-# displayed for login through Service Provider, instead of a plain button
-LOGO = oidc_lifescienceAAI.png
 """
 
 if __name__ == '__main__':

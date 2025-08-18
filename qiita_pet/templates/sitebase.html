@@ -445,18 +445,6 @@
                 </ul>
               </li>
             </ul>
-            <!-- log in via external identity provider, iff given in config file -->
-            {% elif len(qiita_config.oidc) == 1 %}
-              {% for idp in qiita_config.oidc %}
-                <form class="navbar-form navbar-right" role="form" action="{% raw qiita_config.portal_dir %}{% raw qiita_config.oidc[idp]['redirect_endpoint'] %}" method="post">
-                  <button type="submit" class="btn btn-success" name="{{idp}}">Sign In</button>
-                </form>
-              {% end %}
-            <!-- if multiple alternative identity providers are configures, user must make a choice -->
-            {% elif len(qiita_config.oidc) > 1 %}
-              <ul class="navbar-form navbar-right" role="form" method="post">
-                <a type="button" data-toggle="modal" data-target=".qiita-oidc" class="btn btn-success">Sign In</a>
-              </ul>
             <!-- otherwise show the login form -->
             {% else %}
             <form action="{% raw qiita_config.portal_dir %}/auth/create/" class="navbar-form navbar-right">
@@ -632,30 +620,5 @@
 
       </div>
     </div>
-
-    <!-- login via multiple identity service provider shown as a modal view -->
-    <div class="modal fade qiita-oidc" tabindex="-1" role="dialog" aria-labelledby="Login through external service provider">
-      <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title">Login</h4>
-          </div>
-          <div class="modal-body">
-            <p>Please choose your login provider!</p>
-            {% for idp in qiita_config.oidc %}
-              {% if qiita_config.oidc[idp]['logo'] %}
-                <a href="{% raw qiita_config.portal_dir %}{% raw qiita_config.oidc[idp]['redirect_endpoint'] %}" class="btn btn-success" style="padding: 0px; border:0px;"><img src="{% raw qiita_config.portal_dir %}/static/img/{{qiita_config.oidc[idp]['logo']}}" style="max-height: 2.35em;" /></a>
-              {% else %}
-                <a href="{% raw qiita_config.portal_dir %}{% raw qiita_config.oidc[idp]['redirect_endpoint'] %}" class="btn btn-success">{{qiita_config.oidc[idp]['label']}}</a>
-              {% end %}
-            {% end %}
-          </div>
-          <div class="modal-footer">
-          </div>
-        </div>
-      </div>
-    </div>
-
   </body>
 </html>

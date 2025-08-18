@@ -20,8 +20,7 @@ from qiita_core.util import is_test_environment
 from qiita_pet.handlers.base_handlers import (
     MainHandler, NoPageHandler, IFrame)
 from qiita_pet.handlers.auth_handlers import (
-    AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler,
-    AuthLoginOIDCHandler)
+    AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
 from qiita_pet.handlers.user_handlers import (
     ChangeForgotPasswordHandler, ForgotPasswordHandler, UserProfileHandler,
     UserMessagesHander, UserJobs, PurgeUsersAJAXHandler, PurgeUsersHandler)
@@ -108,7 +107,12 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", MainHandler),
+            (r"/auth/login/", AuthLoginHandler),
             (r"/auth/logout/", AuthLogoutHandler),
+            (r"/auth/create/", AuthCreateHandler),
+            (r"/auth/verify/(.*)", AuthVerifyHandler),
+            (r"/auth/forgot/", ForgotPasswordHandler),
+            (r"/auth/reset/(.*)", ChangeForgotPasswordHandler),
             (r"/profile/", UserProfileHandler),
             (r"/user/messages/", UserMessagesHander),
             (r"/user/jobs/", UserJobs),
@@ -241,22 +245,6 @@ class Application(tornado.web.Application):
             (r"/qiita_db/studies/(.*)", APIStudiesListing)
         ]
 
-        # only expose open id connect endpoints iff at least one was configured
-        # through the settings file
-        if len(qiita_config.oidc) > 0:
-            handlers.extend([
-                (r"/auth/login_OIDC/(.*)", AuthLoginOIDCHandler)
-            ])
-        else:
-            # Qiita's traditional, internal user authentication
-            handlers.extend([
-                (r"/auth/login/", AuthLoginHandler),
-                (r"/auth/create/", AuthCreateHandler),
-                (r"/auth/verify/(.*)", AuthVerifyHandler),
-                (r"/auth/forgot/", ForgotPasswordHandler),
-                (r"/auth/reset/(.*)", ChangeForgotPasswordHandler)
-            ])
-
         # expose endpoints necessary for https file communication between
         # master and plugins IF no shared file system for base_data_dir is
         # intended
@@ -294,5 +282,4 @@ class Application(tornado.web.Application):
             "cookie_secret": qiita_config.cookie_secret,
             "login_url": "%s/auth/login/" % qiita_config.portal_dir,
         }
-
         tornado.web.Application.__init__(self, handlers, **settings)

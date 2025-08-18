@@ -245,54 +245,6 @@ class User(qdb.base.QiitaObject):
             return cls(email)
 
     @classmethod
-    def create_oidc(cls, email, user_info, idp):
-        """Creates a new user with information obtained from an external
-           identity provider
-
-        Parameters
-        ----------
-        email : str
-            The user's email fetched from the User Info of the Identity
-            Provider upon successful authentication.
-        user_info : dict
-            User information provided by the external identity provider
-        idp : str
-            The label of the external identity provider as set in config file
-
-        Raises
-        ------
-        IncorrectEmailError
-            Email string given is not a valid email
-        """
-        if not validate_email(email):
-            raise IncorrectEmailError("Bad email given: %s" % email)
-        info = {}
-        # email and password are minimal needed information, password indicates
-        # OIDC user registration purely for admins
-        info['email'] = email
-        info['password'] = "not_necessary_due_to_OIDC"
-        # verify code is necessary to manually authorize users on the admin
-        # page
-        info['user_verify_code'] = idp
-        # check if we got useful information from the IdP
-        if 'name' in user_info.keys():
-            info['name'] = user_info['name']
-
-        qdb.util.check_table_cols(info, cls._table)
-        columns = info.keys()
-        values = [info[col] for col in columns]
-
-        # create user
-        sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
-            cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
-
-        qdb.sql_connection.TRN.add(sql, values)
-
-        qdb.sql_connection.TRN.execute()
-
-        return cls(email)
-
-    @classmethod
     def verify_code(cls, email, code, code_type):
         """Verify that a code and email match
 
