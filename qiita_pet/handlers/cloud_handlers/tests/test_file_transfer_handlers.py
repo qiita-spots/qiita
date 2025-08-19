@@ -15,16 +15,18 @@ class FetchFileFromCentralHandlerTests(OauthTestingBase):
         endpoint = '/cloud/fetch_file_from_central/'
         base_data_dir = qdb.util.get_db_files_base_dir()
 
-        obs = self.get(endpoint + 'nonexistingfile')
+        obs = self.get_authed(endpoint + 'nonexistingfile')
         self.assertEqual(obs.status_code, 403)
         self.assertIn('outside of the BASE_DATA_DIR', obs.reason)
 
-        obs = self.get(endpoint + base_data_dir[1:] + '/nonexistingfile')
+        obs = self.get_authed(
+            endpoint + base_data_dir[1:] + '/nonexistingfile')
         self.assertEqual(obs.status_code, 403)
         self.assertIn('The requested file is not present', obs.reason)
 
-        obs = self.get(endpoint + base_data_dir[1:] +
-                       '/raw_data/FASTA_QUAL_preprocessing.fna')
+        obs = self.get_authed(
+            endpoint + base_data_dir[1:] +
+            '/raw_data/FASTA_QUAL_preprocessing.fna')
         self.assertEqual(obs.status_code, 200)
         self.assertIn('FLP3FBN01ELBSX length=250 xy=1766_01', str(obs.content))
 
@@ -56,20 +58,19 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
         self._files_to_remove.append(fp_target2)
 
         # test raise error if no file is given
-        obs = self.post(endpoint)
+        obs = self.post_authed(endpoint)
         self.assertEqual(obs.reason, "No files to upload defined!")
 
         # test correct mechanism
         with open(fp_source, 'rb') as fh:
-            obs = self.post(endpoint,
-                            files={'bar/': fh})
+            obs = self.post_authed(endpoint, files={'bar/': fh})
             self.assertIn('Stored 1 files into BASE_DATA_DIR of Qiita',
                           str(obs.content))
             self.assertTrue(filecmp.cmp(fp_source, fp_target, shallow=False))
 
         # check if error is raised, if file already exists
         with open(fp_source, 'rb') as fh:
-            obs = self.post(endpoint, files={'bar/': fh})
+            obs = self.post_authed(endpoint, files={'bar/': fh})
             self.assertIn("already present in Qiita's BASE_DATA_DIR!",
                           obs.reason)
 
@@ -78,7 +79,8 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
             remove(fp_target)
         with open(fp_source, 'rb') as fh1:
             with open(fp_source2, 'rb') as fh2:
-                obs = self.post(endpoint, files={'bar/': fh1, 'barr/': fh2})
+                obs = self.post_authed(
+                    endpoint, files={'bar/': fh1, 'barr/': fh2})
                 self.assertIn('Stored 2 files into BASE_DATA_DIR of Qiita',
                               str(obs.content))
                 self.assertTrue(filecmp.cmp(fp_source, fp_target,

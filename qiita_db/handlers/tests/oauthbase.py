@@ -50,7 +50,7 @@ class OauthTestingBase(TestHandlerBase):
         self._token = resp.json()['access_token']
         print('obtained access_token = %s' % self._token, file=sys.stderr)
 
-    def post(self, url, **kwargs):
+    def post_authed(self, url, **kwargs):
         if 'headers' not in kwargs:
             kwargs['headers'] = {}
         if 'Authorization' not in kwargs['headers']:
@@ -62,7 +62,7 @@ class OauthTestingBase(TestHandlerBase):
 
         return r
 
-    def get(self, url):
+    def get_authed(self, url):
         r = self._session.get(qiita_config.base_url + url, verify=self._verify,
                               headers={'Authorization': 'Bearer %s' %
                                        self._token})
