@@ -188,13 +188,6 @@ jobs:
           # 05/22/25: commenting this line out as github actions is not allowing this step
           # scp -O -o StrictHostKeyChecking=no -i $PWD/qiita_ware/test/test_data/test_key $USER@localhost:/home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key /home/runner/work/qiita/qiita/qiita_ware/test/test_data/random_key_copy_1
 
-      - name: debugStefan
-        shell: bash -l {0}
-        env:
-          COVER_PACKAGE: ${{ matrix.cover_package }}
-        run: |
-          find /home/runner/work/qiita/qiita/qiita_db/support_files/test_data/ -type f
-
       - name: Main tests
         shell: bash -l {0}
         env:
