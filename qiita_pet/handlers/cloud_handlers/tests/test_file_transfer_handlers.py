@@ -1,7 +1,6 @@
 from unittest import main
 from os.path import exists, basename
 from os import remove
-import sys
 import filecmp
 
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
@@ -25,14 +24,9 @@ class FetchFileFromCentralHandlerTests(OauthTestingBase):
         self.assertEqual(obs.status_code, 403)
         self.assertIn('The requested file is not present', obs.reason)
 
-        print("STEFAN",
-              endpoint + base_data_dir[1:] +
-              '/raw_data/FASTA_QUAL_preprocessing.fna')
         obs = self.get_authed(
             endpoint + base_data_dir[1:] +
             '/raw_data/FASTA_QUAL_preprocessing.fna')
-        print("STEFAN2", obs.reason)
-        print("STFAN3", obs.__dict__)
         self.assertEqual(obs.status_code, 200)
         self.assertIn('FLP3FBN01ELBSX length=250 xy=1766_01', str(obs.content))
 
