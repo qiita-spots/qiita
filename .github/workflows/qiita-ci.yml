@@ -192,7 +192,7 @@ jobs:
         env:
           COVER_PACKAGE: ${{ matrix.cover_package }}
         run: |
-          find /qiita/qiita_db/support_files/test_data/ -type f
+          find /home/runner/work/qiita/qiita/qiita_db/support_files/test_data/ -type f
 
       - name: Main tests
         shell: bash -l {0}
