@@ -85,6 +85,7 @@ from qiita_db.util import get_mountpoint
 from qiita_pet.handlers.rest import ENDPOINTS as REST_ENDPOINTS
 from qiita_pet.handlers.qiita_redbiom import RedbiomPublicSearch
 from qiita_pet.handlers.public import PublicHandler
+from qiita_pet.handlers.cloud_handlers import ENDPOINTS as CLOUD_ENDPOINTS
 
 if qiita_config.portal == "QIITA":
     from qiita_pet.handlers.portal import (
@@ -243,6 +244,11 @@ class Application(tornado.web.Application):
             (r"/qiita_db/archive/observations/", APIArchiveObservations),
             (r"/qiita_db/studies/(.*)", APIStudiesListing)
         ]
+
+        # expose endpoints necessary for https file communication between
+        # master and plugins IF no shared file system for base_data_dir is
+        # intended
+        handlers.extend(CLOUD_ENDPOINTS)
 
         # rest endpoints
         handlers.extend(REST_ENDPOINTS)

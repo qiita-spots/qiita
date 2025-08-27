@@ -148,6 +148,7 @@ jobs:
 
           echo "4. Setting up nginx"
           mkdir -p /usr/share/miniconda/envs/qiita/var/run/nginx/
+          sed -i "s|alias /Users/username|alias /home/runner/work/qiita|" ${PWD}/qiita_pet/nginx_example.conf
           nginx -c ${PWD}/qiita_pet/nginx_example.conf
 
           echo "5. Setting up qiita"
