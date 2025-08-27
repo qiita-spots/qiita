@@ -58,9 +58,6 @@ jobs:
           pgport=${{ job.services.postgres.ports[5432] }}
           sed -i "s/PORT = 5432/PORT = $pgport/" qiita_core/support_files/config_test.cfg
 
-          # enable endpoints for HTTPS file transfer from/to plugin(s) and qiita main
-          sed -i "s/ENABLE_HTTPS_PLUGIN_FILETRANSFER = False/ENABLE_HTTPS_PLUGIN_FILETRANSFER = True/" qiita_core/support_files/config_test.cfg
-
           # PGPASSWORD is read by pg_restore, which is called by the build_db process.
           export PGPASSWORD=postgres
 
