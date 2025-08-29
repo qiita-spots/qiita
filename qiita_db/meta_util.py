@@ -37,6 +37,8 @@ from tarfile import open as topen, TarInfo
 from hashlib import md5
 from re import sub
 from json import loads, dump, dumps
+import signal
+import traceback
 
 from qiita_db.util import create_nested_path, retrieve_resource_data
 from qiita_db.util import resource_allocation_plot
@@ -556,23 +558,8 @@ def generate_plugin_releases():
         f(redis_key, v)
 
 
-def get_software_commands(active):
-    software_list = [s for s in qdb.software.Software.iter(active=active)]
-    software_commands = defaultdict(lambda: defaultdict(list))
-
-    for software in software_list:
-        sname = software.name
-        sversion = software.version
-        commands = software.commands
-
-        for command in commands:
-            software_commands[sname][sversion].append(command.name)
-        software_commands[sname] = dict(software_commands[sname])
-
-    return dict(software_commands)
-
-
-def update_resource_allocation_redis(active=True):
+def update_resource_allocation_redis(active=False, verbose=True,
+                                     time_limit=900):
     """Updates redis with plots and information about current software.
 
     Parameters
@@ -580,72 +567,176 @@ def update_resource_allocation_redis(active=True):
     active: boolean, optional
         Defaults to True. Should only be False when testing.
 
+    verbose: boolean, optional
+        Defaults to False. Prints status on what function is running.
+
+    time_limit: integer, optional
+        Defaults to 300, representing 5 minutes. This is the limit for how long
+        resource_allocation_plot function will run.
+
     """
     time = datetime.now().strftime('%m-%d-%y')
-    scommands = get_software_commands(active)
-    redis_key = 'resources:commands'
-    r_client.set(redis_key, str(scommands))
 
+    # Retreave available col_name for commands
+    with qdb.sql_connection.TRN:
+        sql = 'SELECT col_name FROM qiita.resource_allocation_column_names;'
+        qdb.sql_connection.TRN.add(sql)
+        col_names = qdb.sql_connection.TRN.execute_fetchflatten()
+
+    # Retreave available software
+    software_list = list(qdb.software.Software.iter(active=active))
+    scommands = {}
+    for software in software_list:
+        sname = software.name
+        sversion = software.version
+
+        if sname not in scommands:
+            scommands[sname] = {}
+
+        if sversion not in scommands[sname]:
+            scommands[sname][sversion] = {}
+
+        for command in software.commands:
+            cmd_name = command.name
+            scommands[sname][sversion][cmd_name] = col_names
+
+    # software commands for which resource allocations were sucessfully
+    # calculated
+    scommands_allocation = {}
     for sname, versions in scommands.items():
         for version, commands in versions.items():
-            for cname in commands:
-                col_name = "samples * columns"
+            for cname, col_names in commands.items():
                 df = retrieve_resource_data(cname, sname, version, COLUMNS)
+                if verbose:
+                    print(("\nRetrieving allocation resources for:\n" +
+                           f"  software: {sname}\n" +
+                           f"  version: {version}\n" +
+                           f"  command: {cname}"))
                 if len(df) == 0:
+                    if verbose:
+                        print(("\nNo allocation resources available for:\n" +
+                               f" software: {sname}\n" +
+                               f" version: {version}\n" +
+                               f" command: {cname}\n"))
                     continue
+                # column_name_str looks like col1*col2*col3, etc
+                for col_name in col_names:
+                    new_column = None
+                    col_name_split = col_name.split('*')
+                    df_copy = df.dropna(subset=col_name_split)
 
-                fig, axs = resource_allocation_plot(df, col_name)
-                titles = [0, 0]
-                images = [0, 0]
+                    # Create a column with the desired columns
+                    for curr_column in col_name_split:
+                        if new_column is None:
+                            new_column = df_copy[curr_column]
+                        else:
+                            new_column *= df_copy[curr_column]
+                    if verbose:
+                        print(
+                            ("\nBuilding resource allocation plot for:\n" +
+                             f"  software: {sname}\n" +
+                             f"  version: {version}\n" +
+                             f"  command: {cname}\n" +
+                             f"  column name: {col_name}\n" +
+                             f"  {datetime.now().strftime('%b %d %H:%M:%S')}"))
 
-                # Splitting 1 image plot into 2 separate for better layout.
-                for i, ax in enumerate(axs):
-                    titles[i] = ax.get_title()
-                    ax.set_title("")
-                    # new_fig, new_ax – copy with either only memory plot or
-                    # only time
-                    new_fig = plt.figure()
-                    new_ax = new_fig.add_subplot(111)
-                    line = ax.lines[0]
-                    new_ax.plot(line.get_xdata(), line.get_ydata(),
-                                linewidth=1, color='orange')
-                    handles, labels = ax.get_legend_handles_labels()
-                    for handle, label, scatter_data in zip(handles,
-                                                           labels,
-                                                           ax.collections):
-                        color = handle.get_facecolor()
-                        new_ax.scatter(scatter_data.get_offsets()[:, 0],
-                                       scatter_data.get_offsets()[:, 1],
-                                       s=scatter_data.get_sizes(), label=label,
-                                       color=color)
+                    def timeout_handler(signum, frame):
+                        raise TimeoutError((
+                            "\nresource_allocation_plot " +
+                            "execution exceeded time limit." +
+                            "For:\n"
+                            f"  software: {sname}\n" +
+                            f"  version: {version}\n" +
+                            f"  command: {cname}\n" +
+                            f"  column name: {col_name}\n" +
+                            f"  {datetime.now().strftime('%b %d %H:%M:%S')}"))
 
-                    new_ax.set_xscale('log')
-                    new_ax.set_yscale('log')
-                    new_ax.set_xlabel(ax.get_xlabel())
-                    new_ax.set_ylabel(ax.get_ylabel())
-                    new_ax.legend(loc='upper left')
+                    signal.signal(signal.SIGALRM, timeout_handler)
+                    signal.alarm(time_limit)
+                    try:
+                        fig, axs = resource_allocation_plot(df_copy,
+                                                            col_name,
+                                                            new_column,
+                                                            verbose=verbose)
+                        signal.alarm(0)
+                    except TimeoutError:
+                        print("Timeout reached!")
+                        traceback.print_exc()
+                        continue
 
-                    new_fig.tight_layout()
-                    plot = BytesIO()
-                    new_fig.savefig(plot, format='png')
-                    plot.seek(0)
-                    img = 'data:image/png;base64,' + quote(
-                          b64encode(plot.getvalue()).decode('ascii'))
-                    images[i] = img
-                    plt.close(new_fig)
-                plt.close(fig)
+                    titles = [0, 0]
+                    images = [0, 0]
 
-                # SID, CID, col_name
-                values = [
-                    ("img_mem", images[0], r_client.set),
-                    ("img_time", images[1], r_client.set),
-                    ('time', time, r_client.set),
-                    ("title_mem", titles[0], r_client.set),
-                    ("title_time", titles[1], r_client.set)
-                ]
+                    # Splitting 1 image plot into 2 separate for better layout.
+                    for i, ax in enumerate(axs):
+                        titles[i] = ax.get_title()
+                        ax.set_title("")
+                        # new_fig, new_ax – copy with either only memory plot
+                        # or only time
+                        new_fig = plt.figure()
+                        new_ax = new_fig.add_subplot(111)
+                        line = ax.lines[0]
+                        new_ax.plot(line.get_xdata(), line.get_ydata(),
+                                    linewidth=1, color='orange')
+                        handles, labels = ax.get_legend_handles_labels()
+                        for handle, label, scatter_data in zip(
+                                handles,
+                                labels,
+                                ax.collections):
+                            color = handle.get_facecolor()
+                            new_ax.scatter(scatter_data.get_offsets()[:, 0],
+                                           scatter_data.get_offsets()[:, 1],
+                                           s=scatter_data.get_sizes(),
+                                           label=label,
+                                           color=color)
 
-                for k, v, f in values:
-                    redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (
-                                cname, sname, version, col_name, k)
-                    r_client.delete(redis_key)
-                    f(redis_key, v)
+                        new_ax.set_xscale('log')
+                        new_ax.set_yscale('log')
+                        new_ax.set_xlabel(ax.get_xlabel())
+                        new_ax.set_ylabel(ax.get_ylabel())
+                        new_ax.legend(loc='upper left')
+
+                        new_fig.tight_layout()
+                        plot = BytesIO()
+                        new_fig.savefig(plot, format='png')
+                        plot.seek(0)
+                        img = 'data:image/png;base64,' + quote(
+                            b64encode(plot.getvalue()).decode('ascii'))
+                        images[i] = img
+                        plt.close(new_fig)
+                    plt.close(fig)
+
+                    # SID, CID, col_name
+                    values = [
+                        ("img_mem", images[0], r_client.set),
+                        ("img_time", images[1], r_client.set),
+                        ('time', time, r_client.set),
+                        ("title_mem", titles[0], r_client.set),
+                        ("title_time", titles[1], r_client.set)
+                    ]
+                    if verbose:
+                        print(
+                            ("Saving resource allocation image for\n" +
+                             f"  software: {sname}\n" +
+                             f"  version: {version}\n" +
+                             f"  command: {cname}\n" +
+                             f"  column name: {col_name}\n" +
+                             f"  {datetime.now().strftime('%b %d %H:%M:%S')}"))
+
+                    for k, v, f in values:
+                        redis_key = 'resources$#%s$#%s$#%s$#%s:%s' % (
+                                    cname, sname, version, col_name, k)
+                        r_client.delete(redis_key)
+                        f(redis_key, v)
+
+                    if sname not in scommands_allocation:
+                        scommands_allocation[sname] = {}
+                    if version not in scommands_allocation[sname]:
+                        scommands_allocation[sname][version] = {}
+                    if cname not in scommands_allocation[sname][version]:
+                        scommands_allocation[sname][version][cname] = []
+                    scommands_allocation[sname][version][cname].append(
+                        col_name)
+
+    redis_key = 'resources:commands'
+    r_client.set(redis_key, str(scommands_allocation))

@@ -79,7 +79,8 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from json import loads
-from scipy.optimize import minimize
+from scipy.ndimage import maximum_filter1d
+from pysr import PySRRegressor
 
 
 def scrub_data(s):
@@ -2328,74 +2329,73 @@ def send_email(to, subject, body):
         smtp.close()
 
 
-def resource_allocation_plot(df, col_name):
+def resource_allocation_plot(df, col_name_str, curr_column, verbose=False):
     """Builds resource allocation plot for given filename and jobs
 
     Parameters
     ----------
-    file : str, required
-        Builds plot for the specified file name. Usually provided as tsv.gz
-    col_name: str, required
-        Specifies x axis for the graph
-
+    df : pd.Dataframe, required
+        Builds plot for the specified dataframe.
+    col_name_str: str, required
+        Column name for the x axis that will be used to build the plots.
+    curr_column: pd.Series, requirew
+        Pandas Series representing a column with col_name_str.
     Returns
     ----------
     matplotlib.pyplot object
         Returns a matplotlib object with a plot
     """
 
-    df.dropna(subset=['samples', 'columns'], inplace=True)
-    df[col_name] = df.samples * df['columns']
-    df[col_name] = df[col_name].astype(int)
-
     fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
-
     ax = axs[0]
-    mem_models, time_models = retrieve_equations()
+
+    df[col_name_str] = curr_column
 
     # models for memory
+    if verbose:
+        print("\tCalculating best model for memory")
     _resource_allocation_plot_helper(
-        df, ax, "MaxRSSRaw",  mem_models, col_name)
+        df, ax, "MaxRSSRaw", col_name_str, verbose=verbose)
     ax = axs[1]
-    # models for time
-    _resource_allocation_plot_helper(
-        df, ax, "ElapsedRaw",  time_models, col_name)
 
+    # models for time
+    if verbose:
+        print("\tCalculating best model for time")
+    _resource_allocation_plot_helper(
+        df, ax, "ElapsedRaw", col_name_str, verbose=verbose)
     return fig, axs
 
 
-def retrieve_equations():
-    '''
-    Helper function for resource_allocation_plot.
-    Retrieves equations from db. Creates dictionary for memory and time models.
+# def _retrieve_equations():
+#     '''
+#     Helper function for resource_allocation_plot.
+#     Retrieves equations from db. Creates dictionary for memory
+#     and time models.
+#     This function is needed because it utilizes np as a part of eval() below.
+#     In test_util.py we need to retrieve equations without importing np to
+#     comply with PEP8 styling standard.
 
-    Returns
-    -------
-    tuple
-        dict
-            memory models - potential memory models for resource allocations
-        dict
-            time models - potential time models for resource allocations
-    '''
-    memory_models = {}
-    time_models = {}
-    res = []
-    with qdb.sql_connection.TRN:
-        sql = ''' SELECT * FROM qiita.allocation_equations; '''
-        qdb.sql_connection.TRN.add(sql)
-        res = qdb.sql_connection.TRN.execute_fetchindex()
-    for models in res:
-        if 'mem' in models[1]:
-            memory_models[models[1]] = {
-                "equation_name": models[2],
-                "equation": lambda x, k, a, b: eval(models[2])
-            }
-        else:
-            time_models[models[1]] = {
-                "equation_name": models[2],
-                "equation": lambda x, k, a, b: eval(models[2])
-            }
-    return (memory_models, time_models)
+#     Returns
+#     -------
+#     tuple
+#         dict
+#             memory models - potential memory models for resource allocations
+#         dict
+#             time models - potential time models for resource allocations
+#     '''
+#     memory_models = dict()
+#     time_models = dict()
+#     with qdb.sql_connection.TRN:
+#         sql = '''SELECT equation_name, expression
+#                  FROM qiita.resource_allocation_equations;'''
+#         qdb.sql_connection.TRN.add(sql)
+#         res = qdb.sql_connection.TRN.execute_fetchindex()
+#     for models in res:
+#         if 'mem' in models[0]:
+#             memory_models[models[0]] = models[1]
+#         else:
+#             time_models[models[0]] = models[1]
+#     return memory_models, time_models
 
 
 def retrieve_resource_data(cname, sname, version, columns):
@@ -2454,7 +2454,7 @@ def retrieve_resource_data(cname, sname, version, columns):
 
 
 def _resource_allocation_plot_helper(
-        df, ax, curr, models, col_name):
+        df, ax, curr, col_name, verbose=False):
     """Helper function for resource allocation plot. Builds plot for MaxRSSRaw
     and ElapsedRaw
 
@@ -2472,60 +2472,38 @@ def _resource_allocation_plot_helper(
         Specifies x axis for the graph
     curr: str, required
         Either MaxRSSRaw or ElapsedRaw (y axis)
-    models: dictionary, required. Follows this structure
-        equation_name: string
-            Human readable representation of the equation
-        equation: Python lambda function
-            Lambda function representing equation to optimizse
 
     Returns
     -------
     best_model_name: string
         the name of the best model from the table
-    best_model: function
-        best fitting function for the current dictionary models
-    options: object
-        object containing constants for the best model (e.g. k, a, b in kx+b*a)
+    lambda_object: function
+        object containing equation for the best model
     """
 
-    x_data, y_data = df[col_name], df[curr]
-    # ax.scatter(x_data, y_data, s=2, label="data")
-    d = dict()
-    for index, row in df.iterrows():
-        x_value = row[col_name]
-        y_value = row[curr]
-        if x_value not in d:
-            d[x_value] = []
-        d[x_value].append(y_value)
+    df[col_name] = pd.to_numeric(df[col_name], errors='coerce')
+    df[curr] = pd.to_numeric(df[curr], errors='coerce')
 
-    for key in d.keys():
-        # save only top point increased by 5% because our graph needs to exceed
-        # the points
-        d[key] = [max(d[key]) * 1.05]
+    df_sorted = df.sort_values(by=col_name)
+    x_data = df_sorted[col_name]
+    y_data = df_sorted[curr]
 
-    x_data = []
-    y_data = []
-
-    # Populate the lists with data from the dictionary
-    for x, ys in d.items():
-        for y in ys:
-            x_data.append(x)
-            y_data.append(y)
-
-    x_data = np.array(x_data)
-    y_data = np.array(y_data)
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_ylabel(curr)
     ax.set_xlabel(col_name)
 
+    if verbose:
+        print(f"\t\tFitting best model for {curr}; column {col_name}")
     # 50 - number of maximum iterations, 3 - number of failures we tolerate
-    best_model_name, best_model, options = _resource_allocation_calculate(
-        df, x_data, y_data, models, curr, col_name, 50, 3)
-    k, a, b = options.x
-    x_plot = np.array(sorted(df[col_name].unique()))
-    y_plot = best_model(x_plot, k, a, b)
-    ax.plot(x_plot, y_plot, linewidth=1, color='orange')
+    best_model_name, best_model = _resource_allocation_calculate(
+        x_data, y_data, curr, col_name, verbose)
+    if verbose:
+        print(
+            f"\t\tSuccessfully chose best model for {curr}; column {col_name}")
+
+    y_plot = best_model(np.array(x_data, dtype=float).reshape(-1, 1))
+    ax.plot(x_data, y_plot, linewidth=1, color='orange')
 
     cmin_value = min(y_plot)
     cmax_value = max(y_plot)
@@ -2540,15 +2518,18 @@ def _resource_allocation_plot_helper(
     cmin = naturalsize(cmin_value, gnu=True) if curr == "MaxRSSRaw" else \
         str(timedelta(seconds=round(cmin_value, 2))).rstrip('0').rstrip('.')
 
-    x_plot = np.array(df[col_name])
-    success_df, failures_df = _resource_allocation_success_failures(
-        df, k, a, b, best_model, col_name, curr)
+    success_df, failures_df = _resource_allocation_success_failures(df_sorted,
+                                                                    y_plot,
+                                                                    curr)
     failures = failures_df.shape[0]
-    ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
-               label="failures")
-    success_df['node_name'] = success_df['node_name'].fillna('unknown')
+    if failures != 0:
+        ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
+                   label="failures")
+
+    success_df['node_name'].fillna('unknown', inplace=True)
+
     slurm_hosts = set(success_df['node_name'].tolist())
-    cmap = colormaps.get_cmap('Accent')
+    cmap = colormaps['Accent']
     if len(slurm_hosts) > len(cmap.colors):
         raise ValueError(f"""'Accent' colormap only has {len(cmap.colors)}
                      colors, but {len(slurm_hosts)} hosts are provided.""")
@@ -2559,167 +2540,67 @@ def _resource_allocation_plot_helper(
         ax.scatter(host_df[col_name], host_df[curr], color=colors[i], s=3,
                    label=host)
     ax.set_title(
-                 f'k||a||b: {k}||{a}||{b}\n'
-                 f'model: {models[best_model_name]["equation_name"]}\n'
+                 f'model: {best_model_name}\n'
                  f'real: {mini} || {maxi}\n'
                  f'calculated: {cmin} || {cmax}\n'
                  f'failures: {failures}')
     ax.legend(loc='upper left')
-    return best_model_name, best_model, options
+    return best_model_name, best_model
 
 
 def _resource_allocation_calculate(
-        df, x, y, models, type_, col_name, depth, tolerance):
+        x_data, y_data, type_, col_name, verbose):
     """Helper function for resource allocation plot. Calculates best_model and
-    best_result given the models list and x,y data.
+    best_result given  the x,y data.
 
     Parameters
     ----------
-    x: pandas.Series (pandas column), required
-        Represents x data for the function calculation
-    y: pandas.Series (pandas column), required
-        Represents y data for the function calculation
+    x_data: pandas.Series (pandas column), required
+        Sorted x_data by its index
+    y_data: pandas.Series (pandas column), required
+        Sorted by the index of y_data
     type_: str, required
         current type (e.g. MaxRSSRaw)
     col_name: str, required
         Specifies x axis for the graph
-    models: dictionary, required. Follows this structure
-        equation_name: string
-            Human readable representation of the equation
-        equation: Python lambda function
-            Lambda function representing equation to optimizse
-    depth: int, required
-        Maximum number of iterations in binary search
-    tolerance: int, required,
-        Tolerance to number of failures possible to be considered as a model
 
     Returns
     ----------
     best_model_name: string
         the name of the best model from the table
-    best_model: function
-        best fitting function for the current dictionary models
-    best_result: object
-        object containing constants for the best model (e.g. k, a, b in kx+b*a)
+    best_model: lambda function
+        lambda object containing best model with x as input
     """
+    smooth_max = maximum_filter1d(y_data, size=40)
 
-    init = [1, 1, 1]
-    best_model_name = None
-    best_model = None
-    best_result = None
-    best_failures = np.inf
-    best_max = np.inf
-    for model_name, model in models.items():
-        model_equation = model['equation']
-        # start values for binary search, where sl is left, sr is right
-        # penalty weight must be positive & non-zero, hence, sl >= 1.
-        # the upper bound for error can be an arbitrary large number
-        sl = 1
-        sr = 100000
-        left = sl
-        right = sr
-        prev_failures = np.inf
-        min_max = np.inf
-        cnt = 0
-        res = [1, 1, 1]  # k, a, b
+    if verbose:
+        print(
+            f"\t\t\tCalculating model for {type_}; "
+            f"{col_name} {datetime.now().strftime('%b %d %H:%M:%S')}"
+        )
 
-        # binary search where we find the minimum penalty weight given the
-        # scoring constraints defined in if/else statements.
-        while left < right and cnt < depth:
-            middle = (left + right) // 2
-            options = minimize(_resource_allocation_custom_loss, init,
-                               args=(x, y, model_equation, middle))
-            k, a, b = options.x
-            # important: here we take the 2nd (last) value of tuple since
-            # the helper function returns success, then failures.
-            failures_df = _resource_allocation_success_failures(
-                df, k, a, b, model_equation, col_name, type_)[-1]
-            y_plot = model_equation(x, k, a, b)
-            if not any(y_plot):
-                continue
-            cmax = max(y_plot)
-            cmin = min(y_plot)
-            failures = failures_df.shape[0]
-
-            if failures < prev_failures:
-                prev_failures = failures
-                right = middle
-                min_max = cmax
-                res = options
-
-            elif failures > prev_failures:
-                left = middle
-            else:
-                if cmin < 0:
-                    left = middle
-                elif cmax < min_max:
-                    min_max = cmax
-                    res = options
-                    right = middle
-                else:
-                    right = middle
-
-            # proceed with binary search in a window 10k to the right
-            if left >= right and cnt < depth:
-                sl += 10000
-                sr += 10000
-                left = sl
-                right = sr
-
-            cnt += 1
-
-        # check whether we tolerate a couple failures
-        # this is helpful if the model that has e.g. 1 failure is a better fit
-        # overall based on maximum calculated value.
-        is_acceptable_based_on_failures = (
-            prev_failures <= tolerance or abs(
-                prev_failures - best_failures) < tolerance or
-            best_failures == np.inf)
-
-        # case where less failures
-        if is_acceptable_based_on_failures:
-            if min_max <= best_max:
-                best_failures = prev_failures
-                best_max = min_max
-                best_model_name = model_name
-                best_model = model_equation
-                best_result = res
-    return best_model_name, best_model, best_result
+    model = PySRRegressor(
+        maxsize=20,
+        niterations=2000,
+        binary_operators=["+", "*"],
+        unary_operators=["square", "cube", "exp", 'log'],
+        elementwise_loss="""(prediction, target) ->
+                            prediction <= target ?
+                            6 * abs(target - prediction) :
+                            abs(prediction - target)""",
+        random_state=42,
+        parallelism="multithreading"
+    )
+    model.fit(
+        np.array(x_data).reshape(-1, 1),
+        np.array(smooth_max)
+    )
+    model_series = model.get_best()
+    return (model_series['equation'],
+            model_series['lambda_format'])
 
 
-def _resource_allocation_custom_loss(params, x, y, model, p):
-    """Helper function for resource allocation plot. Calculates custom loss
-    for given model.
-
-    Parameters
-    ----------
-    params: list, required
-        Initial list of integers for the given model
-    x: pandas.Series (pandas column), required
-        Represents x data for the function calculation
-    y: pandas.Series (pandas column), required
-        Represents y data for the function calculation
-    model: Python function
-        Lambda function representing current equation
-    p: int, required
-        Penalty weight for custom loss function
-
-    Returns
-    ----------
-    float
-        The mean of the list returned by the loss calculation (np.where)
-    """
-    k, a, b = params
-
-    residuals = y - model(x, k, a, b)
-    # Apply a heavier penalty to points below the curve
-    penalty = p
-    weighted_residuals = np.where(residuals > 0, penalty * residuals**2,
-                                  residuals**2)
-    return np.mean(weighted_residuals)
-
-
-def _resource_allocation_success_failures(df, k, a, b, model, col_name, type_):
+def _resource_allocation_success_failures(df, y_plot, type_):
     """Helper function for resource allocation plot. Creates a dataframe with
     successes and failures given current model.
 
@@ -2727,18 +2608,10 @@ def _resource_allocation_success_failures(df, k, a, b, model, col_name, type_):
     ----------
     df: pandas.Dataframe, required
         Represents dataframe containing current jobs data
-    k: int, required
-        k constant in a model
-    a: int, required
-        a constant in a model
-    b: int, required
-        b constant in a model
-    model: function, required
-        Current function
-    col_name: str, required
-        Specifies x axis for the graph
+    y_plot: np.array, required
+        Predicted y axis
     type_: str, required
-        Specifies for which type we're getting failures (e.g. MaxRSSRaw)
+        Specifies for which type we are getting failures (e.g. MaxRSSRaw)
 
     Returns
     ----------
@@ -2748,11 +2621,8 @@ def _resource_allocation_success_failures(df, k, a, b, model, col_name, type_):
         pandas.Dataframe
             Dataframe containing failures for current type.
     """
-
-    x_plot = np.array(df[col_name])
-    df[f'c{type_}'] = model(x_plot, k, a, b)
-    success_df = df[df[type_] <= df[f'c{type_}']]
-    failures_df = df[df[type_] > df[f'c{type_}']]
+    success_df = df[df[type_] <= y_plot].copy()
+    failures_df = df[df[type_] > y_plot].copy()
     return (success_df, failures_df)
 
 

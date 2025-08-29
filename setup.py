@@ -110,7 +110,7 @@ setup(name='qiita-spots',
                         'openpyxl', 'sphinx-bootstrap-theme', 'Sphinx<3.0',
                         'gitpython', 'redbiom', 'pyzmq', 'sphinx_rtd_theme',
                         'paramiko', 'seaborn',  'matplotlib', 'scipy<=1.10.1',
-                        'nose',
+                        'nose', 'pysr',
                         'flake8', 'six', 'qiita-files @ https://github.com/'
                         'qiita-spots/qiita-files/archive/master.zip', 'mock',
                         'python-jose', 'markdown2', 'iteration_utilities',
