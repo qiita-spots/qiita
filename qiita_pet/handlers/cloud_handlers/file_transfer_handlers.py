@@ -37,20 +37,33 @@ class FetchFileFromCentralHandler(RequestHandler):
             raise HTTPError(403, reason=(
                 "The requested file is not present in Qiita's BASE_DATA_DIR!"))
 
-        # delivery of the file via nginx requires replacing the basedatadir
-        # with the prefix defined in the nginx configuration for the
-        # base_data_dir, '/protected/' by default
-        protected_filepath = filepath.replace(basedatadir, '/protected')
-
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Transfer-Encoding', 'binary')
-        self.set_header('X-Accel-Redirect', protected_filepath)
         self.set_header('Content-Description', 'File Transfer')
         self.set_header('Expires',  '0')
         self.set_header('Cache-Control',  'no-cache')
-        self.set_header('Content-Disposition',
-                        'attachment; filename=%s' % os.path.basename(
-                            protected_filepath))
+
+        # We here need to differentiate a request that comes directly to the
+        # qiita instance (happens in testing) or was redirected through nginx
+        # (should be the default). If nginx, we can use nginx' fast file
+        # delivery mechanisms, otherwise, we need to send via slower tornado.
+        # We indirectly infer this by looking for the "X-Forwarded-For" header,
+        # which should only exists when redirectred through nginx.
+        if self.request.headers.get('X-Forwarded-For') is None:
+            self.set_header('Content-Disposition',
+                'attachment; filename=%s' % os.path.basename(filepath))
+            with open(filepath, "rb") as f:
+                self.write(f.read())
+        else:
+            # delivery of the file via nginx requires replacing the basedatadir
+            # with the prefix defined in the nginx configuration for the
+            # base_data_dir, '/protected/' by default
+            protected_filepath = filepath.replace(basedatadir, '/protected')
+            self.set_header('X-Accel-Redirect', protected_filepath)
+            self.set_header('Content-Disposition',
+                'attachment; filename=%s' % os.path.basename(
+                    protected_filepath))
+
         self.finish()
 
 
