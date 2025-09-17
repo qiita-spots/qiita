@@ -50,7 +50,8 @@ class FetchFileFromCentralHandler(RequestHandler):
         # We indirectly infer this by looking for the "X-Forwarded-For" header,
         # which should only exists when redirectred through nginx.
         if self.request.headers.get('X-Forwarded-For') is None:
-            self.set_header('Content-Disposition',
+            self.set_header(
+                'Content-Disposition',
                 'attachment; filename=%s' % os.path.basename(filepath))
             with open(filepath, "rb") as f:
                 self.write(f.read())
@@ -60,7 +61,8 @@ class FetchFileFromCentralHandler(RequestHandler):
             # base_data_dir, '/protected/' by default
             protected_filepath = filepath.replace(basedatadir, '/protected')
             self.set_header('X-Accel-Redirect', protected_filepath)
-            self.set_header('Content-Disposition',
+            self.set_header(
+                'Content-Disposition',
                 'attachment; filename=%s' % os.path.basename(
                     protected_filepath))
 
