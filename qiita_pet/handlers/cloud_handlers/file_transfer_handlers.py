@@ -3,7 +3,7 @@ import os
 from tornado.web import HTTPError, RequestHandler
 from tornado.gen import coroutine
 
-from qiita_core.util import execute_as_transaction
+from qiita_core.util import execute_as_transaction, is_test_environment
 from qiita_db.handlers.oauth2 import authenticate_oauth
 from qiita_core.qiita_settings import qiita_config
 
@@ -93,8 +93,7 @@ class PushFileToCentralHandler(RequestHandler):
                 filepath = os.path.abspath(os.path.join(basedatadir, filepath))
 
                 # prevent overwriting existing files, except in test mode
-                if os.path.exists(filepath) and \
-                   (not qiita_config.test_environment):
+                if os.path.exists(filepath) and (not is_test_environment()):
                     raise HTTPError(403, reason=(
                         "The requested file is already "
                         "present in Qiita's BASE_DATA_DIR!"))
