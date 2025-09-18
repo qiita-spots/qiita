@@ -92,7 +92,9 @@ class PushFileToCentralHandler(RequestHandler):
                     filepath = filepath[len(os.sep):]
                 filepath = os.path.abspath(os.path.join(basedatadir, filepath))
 
-                if os.path.exists(filepath):
+                # prevent overwriting existing files, except in test mode
+                if os.path.exists(filepath) and \
+                   (not qiita_config.test_environment):
                     raise HTTPError(403, reason=(
                         "The requested file is already "
                         "present in Qiita's BASE_DATA_DIR!"))

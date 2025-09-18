@@ -5,6 +5,7 @@ import filecmp
 
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
+from qiita_core.qiita_settings import qiita_config
 
 
 class FetchFileFromCentralHandlerTests(OauthTestingBase):
@@ -70,7 +71,11 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
 
         # check if error is raised, if file already exists
         with open(fp_source, 'rb') as fh:
+            # we need to let qiita thinks for this test, to NOT be in test mode
+            oldval = qiita_config.test_environment
+            qiita_config.test_environment = False
             obs = self.post_authed(endpoint, files={'bar/': fh})
+            qiita_config.test_environment = oldval
             self.assertIn("already present in Qiita's BASE_DATA_DIR!",
                           obs.reason)
 
